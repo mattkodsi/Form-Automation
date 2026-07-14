@@ -57,9 +57,9 @@ function makeSupabaseDb(client) {
   const NRCOL_REV = {}; for (const k in NRCOL) NRCOL_REV[NRCOL[k]] = k;
   const NRINT = new Set(['rent']);
 
-  const LICOL = { br: 'bedrooms', ba: 'bathrooms', avg_rent: 'avg_rent' };
+  const LICOL = { br: 'bedrooms', ba: 'bathrooms', num_units: 'num_units', avg_rent: 'avg_rent' };
   const LICOL_REV = {}; for (const k in LICOL) LICOL_REV[LICOL[k]] = k;
-  const LIINT = new Set(['avg_rent']);
+  const LIINT = new Set(['num_units', 'avg_rent']);
 
   const toInt = v => { if (v == null || String(v).trim() === '') return null; const n = Math.round(num(v)); return isNaN(n) ? null : n; };
 
