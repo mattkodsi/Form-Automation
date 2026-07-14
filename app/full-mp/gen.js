@@ -4,6 +4,8 @@
   const MON=['January','February','March','April','May','June','July','August','September','October','November','December'];
   const monthY=d=>{ if(!d) return ''; const p=String(d).slice(0,10).split('-'); return p.length===3?MON[+p[1]-1]+' '+(+p[2])+', '+p[0]:String(d); };
   const first=n=>String(n||'').trim().split(/\s+/)[0];
+  const lastWord=n=>{const p=String(n||'').trim().split(/\s+/);return p[p.length-1]||'';};
+  const salutationName=(name,prefix)=>{prefix=String(prefix||'').trim();return prefix?(prefix+' '+lastWord(name)):first(name);};
   const sigTitle=t=>{t=String(t||'').trim();if(!t)return '';if(/general partner/i.test(t))return t;t=t.replace(/\s+of\s+GP\b/i,'').trim();return t+' of General Partner';};
 
   function resolve(rec){
@@ -15,8 +17,8 @@
       date:monthY(g('cycle.submission_date')||new Date().toISOString().slice(0,10)),
       notice_date:monthY(g('tenant.date_of_notice')||new Date().toISOString().slice(0,10)),
       sign_date:monthY(g('checklist.sign_date')||new Date().toISOString().slice(0,10)),
-      property_name:g('property.name'), section8:g('property.fha'), entity:g('owner.entity_name'),
-      ca_name:g('ca.name'), ca_first:first(g('ca.name')), ca_position:g('ca.position'), ca_company:g('ca.org'),
+      property_name:g('property.name'), tenant_alias:g('tenant.property_alias'), section8:g('property.fha'), entity:g('owner.entity_name'),
+      ca_name:g('ca.name'), ca_salutation:salutationName(g('ca.name'),g('ca.prefix')), ca_position:g('ca.position'), ca_company:g('ca.org'),
       ca_address:g('ca.addr_street'), ca_csz:(g('ca.addr_city')+', '+g('ca.addr_state')+' '+g('ca.addr_zip')).replace(/^,\s*/,'').trim(),
       pm_name:g('poc.name'), pm_phone:g('poc.phone'), pm_email:g('poc.email'),
       appr_name:g('appr.name'), appr_firm:g('appr.firm'), appr_phone:g('appr.phone'), appr_email:g('appr.email'),
@@ -60,7 +62,7 @@
     // Re block
     const tab=72+34; const yre=st.y; st.line('Re:',{stay:true}); st.line('5th Year Adjustment – Rent Comparability Study',{x:tab});
     st.line(t.property_name+' (the “Project”)',{x:tab}); st.line('Section 8 Number: '+t.section8,{x:tab}); st.gap(12);
-    st.line('Dear '+t.ca_first+',',{}); st.gap(8);
+    st.line('Dear '+t.ca_salutation+',',{}); st.gap(8);
     st.para('As outlined in the Renewal HAP contract for the above site, in Section 5b(2)(b) Contract rent adjustments:');
     st.para('“At the expiration of each 5-year period of the Renewal Contract term, the contract administrator shall compare existing contract rents with comparable market rents for the market area. At such anniversary of the Renewal Contract, the contract administrator shall make any adjustments in the monthly contract rents, as reasonably determined by the contract administrator in accordance with HUD requirements, necessary to set the contract rents for all unit sizes at comparable market rents. Such adjustment may result in a negative adjustment (decrease) or positive adjustment (increase) of the contract rents for one or more unit sizes.”');
     st.para('Should you have any questions regarding the rent adjustment request, please do not hesitate to contact '+t.pm_name+' at '+t.pm_phone+' or '+t.pm_email+'.',{gapAfter:20});
@@ -86,7 +88,7 @@
     [t.ca_name,t.ca_position,t.ca_company,t.ca_address,t.ca_csz].filter(Boolean).forEach(l=>st.line(l)); st.gap(12);
     const tab=72+34; st.line('Re:',{stay:true}); st.line('5th Year Adjustment – Rent Comparability Study',{x:tab});
     st.line(t.property_name+' (the “Project”)',{x:tab}); st.line('Section 8 Number: '+t.section8,{x:tab}); st.gap(12);
-    st.line('Dear '+t.ca_first+',',{}); st.gap(8);
+    st.line('Dear '+t.ca_salutation+',',{}); st.gap(8);
     st.para('Enclosed please find the owner’s Rent Comparability Study (RCS) for the subject property. This RCS is being submitted, as required by HUD for the Section 8 HAP contract renewal.');
     st.para('This letter is also to certify to each of the following items, as required by the Section 8 Renewal Policy:',{gapAfter:8});
     st.numItem('1.','I have reviewed the content of the RCS and concluded that the RCS includes all material required by Chapter Nine and the Owner’s Checklist in Appendix 9-2-2.');
@@ -131,20 +133,21 @@
     let y=st.y; row(heads,true,y); y-=rh; rows.forEach(r=>{row(r,false,y);y-=rh;}); st.y=y-8;
   }
   async function tenantNotice(rec, letterheadBytes){
-    const { PDFDocument, StandardFonts } = PL(); const t=resolve(rec);
+    const { PDFDocument, StandardFonts } = PL(); const t=resolve(rec); const nm=t.tenant_alias||t.property_name;
     const doc=await PDFDocument.create();
     const R=await doc.embedFont(StandardFonts.TimesRoman),B=await doc.embedFont(StandardFonts.TimesRomanBold),I=await doc.embedFont(StandardFonts.TimesRomanItalic);
     const st=makeLetter(doc,R,B,I); st.y=792-58;
     let placed=false;
     if(letterheadBytes){ try{ const img=await doc.embedPng(letterheadBytes); const w=168,h=w/(img.width/img.height); st.page.drawImage(img,{x:(612-w)/2,y:792-42-h,width:w,height:h}); st.y=792-42-h-24; placed=true; }catch(e){} }
-    if(!placed){ st.center(t.property_name,{font:B,size:14}); const a=[t.mgmt_addr,[t.mgmt_city,t.mgmt_state].filter(Boolean).join(', ')+' '+t.mgmt_zip].filter(x=>x&&x.trim()).join(' · '); if(a.trim())st.center(a,{size:9.5,color:st.grey}); st.gap(16); }
+    if(!placed){ st.center(nm,{font:B,size:14}); const a=[t.mgmt_addr,[t.mgmt_city,t.mgmt_state].filter(Boolean).join(', ')+' '+t.mgmt_zip].filter(x=>x&&x.trim()).join(' · '); if(a.trim())st.center(a,{size:9.5,color:st.grey}); st.gap(16); }
     st.line('Date of Notice: '+t.notice_date); st.gap(8);
     st.para('Notice to Residents of Intention to submit a request to '+t.ca_company+' for approval of increase in maximum permissible rents.');
-    st.para('Take notice that on '+t.notice_date+' we plan to submit a request for approval of increase in maximum permissible rents for '+t.property_name+' to '+t.ca_company+'.');
+    st.para('Take notice that on '+t.notice_date+' we plan to submit a request for approval of increase in maximum permissible rents for '+nm+' to '+t.ca_company+'.',{gapAfter:0});
+    st.para('It is important to note that as long as you continue to be eligible under the applicable HUD guidelines for Section 8, your Total Tenant Payment will generally continue to be 30% of your adjusted income. It is also important to note that this rent increase only affects residents who receive subsidy under '+nm+'’s Housing Assistance Payments contract.',{font:B});
     st.para('The proposed increase is needed for the following reasons: Fifth-Year Rent Comparability Study Adjustment. The rent increases for which we have requested approval are:',{gapAfter:7});
     rentTable(st, rec); st.gap(17);
     st.para('A copy of the materials that we are submitting to '+t.ca_company+' in support of our request will be available during normal business hours at the Management Office, '+t.mgmt_addr+', '+t.mgmt_city+', '+t.mgmt_state+' '+t.mgmt_zip+', for a period of 30 days from the date of service of this notice for inspection and copying by tenants and, if tenants wish by legal or other representatives acting for them solely or as a group.');
-    st.para('During a period of 30 days from the date of service, tenants of '+t.property_name+' may submit written comments on the proposed increase to us at the Office, '+t.mgmt_addr+', '+t.mgmt_city+', '+t.mgmt_state+' '+t.mgmt_zip+'. Tenant representatives may assist tenants in preparing those comments. (If at '+t.ca_company+'’s request or otherwise, we make any material change during the comment period in the materials available for inspection or copying, we will notify the tenants of the change and the tenants will have a period of 15 days from the date of additional notice (or the remainder of any applicable period, if longer) to inspect and copy the materials as changed and to submit comments on the proposed rent increase.) The comments will be transmitted to '+t.ca_company+', along with our evaluation of them and our request for the increase.');
+    st.para('During a period of 30 days from the date of service, tenants of '+nm+' may submit written comments on the proposed increase to us at the Office, '+t.mgmt_addr+', '+t.mgmt_city+', '+t.mgmt_state+' '+t.mgmt_zip+'. Tenant representatives may assist tenants in preparing those comments. (If at '+t.ca_company+'’s request or otherwise, we make any material change during the comment period in the materials available for inspection or copying, we will notify the tenants of the change and the tenants will have a period of 15 days from the date of additional notice (or the remainder of any applicable period, if longer) to inspect and copy the materials as changed and to submit comments on the proposed rent increase.) The comments will be transmitted to '+t.ca_company+', along with our evaluation of them and our request for the increase.');
     st.para(t.ca_company+' will approve, adjust upward or downward, or disapprove the proposed increase upon reviewing the request and comments. When '+t.ca_company+' advises us in writing of its decision on our request, you will be notified. If the request is approved, any allowable increase will be put into effect only after a period of at least 30 days from the date you are served with that notice and in accordance with the term of the existing lease.',{gapAfter:34});
     st.line(t.sender_name); st.line(t.sender_title||'Community Manager');
     return await doc.save();
@@ -190,14 +193,14 @@
     const et={'Individual':198,'Corporation':199,'General Partnership':200,'Limited Partnership':201,'Joint Tenancy/Tenants in Common':202,'Trust':203};
     if(et[g('owner.entity_type')]) C(et[g('owner.entity_type')]);
     const nrIdx=[...new Set(Object.keys(rec).map(k=>(k.match(/^nonrev\.(\d+)\./)||[])[1]).filter(x=>x!=null))].sort((a,b)=>a-b);
-    const dUse=[159,162,165,168,171],dType=[160,163,166,169,172],dRent=[161,164,167,170,173]; let dr=0;
-    nrIdx.forEach(i=>{ if(dr>4)return; const use=g('nonrev.'+i+'.use'),br=g('nonrev.'+i+'.br'),ba=g('nonrev.'+i+'.ba'),rent=g('nonrev.'+i+'.rent'); if(!(use||br||ba||rent))return; T(dUse[dr],use); T(dType[dr],(String(br).replace(/(\d+)\s*BR/i,'$1 BR')+(ba?'/'+ba:'')).replace(/^\//,'')); T(dRent[dr],(rent!==''&&rent!=null)?money(rent):''); dr++; });
+    const dUse=[159,162,165,168,171],dType=[160,163,166,169,172],dRent=[161,164,167,170,173]; let dr=0,trl=0;
+    nrIdx.forEach(i=>{ if(dr>4)return; const use=g('nonrev.'+i+'.use'),br=g('nonrev.'+i+'.br'),ba=g('nonrev.'+i+'.ba'),rent=g('nonrev.'+i+'.rent'); if(!(use||br||ba||rent))return; T(dUse[dr],use); T(dType[dr],(String(br).replace(/(\d+)\s*BR/i,'$1 BR')+(ba?'/'+ba:'')).replace(/^\//,'')); T(dRent[dr],(rent!==''&&rent!=null)?money(rent):''); trl+=nmv(rent); dr++; });
+    T(174, dr?money(trl):'');
     // Part G principals: row 1 = GP entity (left) + "General Partner" (right); row 2 = signatory + title (left)
     if(g('owner.gp')){ T(206, g('owner.gp')); T(207, 'General Partner'); }
     if(g('sig.name')) T(208, (g('sig.name')+', '+sigTitle(g('sig.title'))).replace(/, $/,''));
     try{ form.getTextField('x12').setText(''); }catch(e){}
-    const today=new Date().toISOString().slice(0,10);
-    T(228,(g('sig.name')+', '+sigTitle(g('sig.title'))).replace(/, $/,'')); T(229,dfmt(g('cycle.submission_date')||today));
+    T(228,(g('sig.name')+', '+sigTitle(g('sig.title'))).replace(/, $/,''));
     return await doc.save();
   }
 

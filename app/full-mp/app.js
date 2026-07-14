@@ -7,7 +7,7 @@ const FIELD_SECTIONS=[
   {n:3,title:'Point of contact & signatory',fields:[{k:'poc.name',label:'Point of contact',col:0},{k:'poc.email',label:'Email',col:0},{k:'poc.phone',label:'Phone',col:0,type:'phone'},{k:'owner.gp',label:'General Partner',col:1},{k:'sig.name',label:'Signatory',col:1},{k:'sig.title',label:'Signatory title',col:1}]},
   {n:4,title:'Contract administrator',fields:[{k:'ca.name',label:'Name',col:0,prefix:'ca.prefix'},{k:'ca.position',label:'Position',col:0},{k:'ca.org',label:'CA organization',col:1},{k:'ca.addr',label:'CA address',col:1,type:'caaddr'}]},
   {n:5,title:'Appraiser',fields:[{k:'appr.name',label:'Appraiser name',col:0},{k:'appr.firm',label:'Appraisal company',col:0},{k:'appr.addr',label:'Appraiser address',col:0,type:'appraddr'},{k:'appr.email',label:'Email',col:1},{k:'appr.phone',label:'Phone',col:1,type:'phone'}]},
-  {n:9,title:'Tenant notice',fields:[{k:'tenant.sender_name',label:'Sender — name',col:0},{k:'tenant.sender_title',label:'Sender — title',col:0},{k:'tenant.mgmt_address',label:'Management address',col:1,type:'mgmtaddr'}]},
+  {n:9,title:'Tenant notice',fields:[{k:'tenant.sender_name',label:'Sender — name',col:0},{k:'tenant.sender_title',label:'Sender — title',col:0},{k:'tenant.mgmt_address',label:'Management address',col:1,type:'mgmtaddr'},{k:'tenant.property_alias',label:'Property name (as known to tenants)',col:1}]},
 ];
 const ADDR=['property.addr_street','property.addr_city','property.addr_state','property.addr_zip'];
 const CA_ADDR=['ca.addr_street','ca.addr_city','ca.addr_state','ca.addr_zip'];
@@ -30,7 +30,7 @@ const SEED={
   'units.0.ua_exec':['31',T],'units.0.ua_rcs':['31',T],'units.0.ua_source':['exec',T],'units.0.ua_reviewed':['',T],'units.0.ua_custom':['',T],
   'units.0.safmr_rcs':['3435',T],'units.0.safmr_hud':['3495',T],'units.0.safmr_source':['hud',T],'units.0.safmr_reviewed':['',T],
   'rent_schedule.date_eff_rs':['2026-09-01',T],'rent_schedule.date_eff_source':['rs',T],'rent_schedule.date_eff_custom':['',T],'rent_schedule.date_rents_effective':['2026-09-01',T],
-  'tenant.sender_name':['Tasha Francellno-Glenn',D],'tenant.sender_title':['Community Manager',D],'tenant.mgmt_source':['property',D],
+  'tenant.sender_name':['Tasha Francellno-Glenn',D],'tenant.sender_title':['Community Manager',D],'tenant.mgmt_source':['property',D],'tenant.property_alias':['',D],
   'tenant.mgmt_street':['',D],'tenant.mgmt_city':['',D],'tenant.mgmt_state':['',D],'tenant.mgmt_zip':['',D],
 };
 const PB_CHECK={'Range':1,'Refrigerator':1,'Carpet':1,'Heating':1,'Hot Water':1,'Cooking':1,'Parking':1};
