@@ -255,7 +255,7 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;borde
 .authsub{font-size:12.5px;color:#7c86a2;margin-top:6px}
 .autherr{color:#b91c1c;font-size:12px;margin-top:12px;min-height:15px}
 .mtoprightwrap{display:flex;align-items:center;gap:16px}
-.lihtcflag{display:inline-flex;align-items:center;gap:7px;cursor:pointer} .lihtcflag input{accent-color:#1e3a5f;width:14px;height:14px}
+.lihtchead{display:flex;align-items:center;gap:10px;flex-wrap:wrap} .lihtcflag{display:inline-flex;align-items:center;gap:8px;cursor:pointer;line-height:1.35} .lihtcflag input{accent-color:#1e3a5f;width:14px;height:14px;margin:0;flex:0 0 auto} .lihtchead .sub{line-height:1.35}
 .safmrhead{display:inline-flex;align-items:center;gap:6px} .rgh .hudbtn{font-size:9.5px;padding:1px 6px;letter-spacing:0;text-transform:none;font-weight:600;color:#b45309}
 </style></head>
 <body>
@@ -1218,7 +1218,7 @@ function renderRents(){
   if(NONREV.length){pd+=`<div class="rgh"><span style="grid-column:1">Unit type</span><span style="grid-column:2/4">Use</span><span style="grid-column:4">Contract rent</span></div>`+NONREV.map(i=>`<div class="pdrow"><div style="grid-column:1">${brbaBox('nonrev.'+i+'.br','nonrev.'+i+'.ba')}</div><div style="grid-column:2/4">${numBox('nonrev.'+i+'.use',"e.g. Manager’s unit")}</div><div style="grid-column:4">${moneyBox('nonrev.'+i+'.rent')}</div><div class="urx" style="grid-column:7"><button class="trash" data-delnonrev="${i}" title="Delete">🗑</button></div></div>`).join('');}
   pd+=`<div class="addrow" id="addNonrev">+ Add non-revenue unit</div>`;
   const lhOn=get('lihtc.enabled')==='1';
-  let lh=`<div class="pdhead"><label class="lihtcflag"><input type="checkbox" id="lihtcToggle"${lhOn?' checked':''}> This property has LIHTC units</label>${lhOn?' <span class="sub">listed on the rent schedule as unit type + average unit rent</span>':''}</div>`;
+  let lh=`<div class="pdhead lihtchead"><label class="lihtcflag"><input type="checkbox" id="lihtcToggle"${lhOn?' checked':''}><span>This property has LIHTC units</span></label>${lhOn?'<span class="sub">listed on the rent schedule as unit type + average unit rent</span>':''}</div>`;
   if(lhOn){
     if(LIHTC.length)lh+=`<div class="rgh"><span style="grid-column:1">Unit type</span><span style="grid-column:4">Average unit rent</span></div>`+LIHTC.map(i=>`<div class="pdrow"><div style="grid-column:1">${brbaBox('lihtc.'+i+'.br','lihtc.'+i+'.ba')}</div><div style="grid-column:4">${moneyBox('lihtc.'+i+'.avg_rent')}</div><div class="urx" style="grid-column:7"><button class="trash" data-dellihtc="${i}" title="Delete">🗑</button></div></div>`).join('');
     lh+=`<div class="addrow" id="addLihtc">+ Add LIHTC unit type</div>`;
@@ -1401,7 +1401,7 @@ function wireBody(){
   document.querySelectorAll('[data-deffopt]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();_pendingSnap=snapOf(['rent_schedule.date_eff_source']);form=store.editForm(form,'rent_schedule.date_eff_source',o.getAttribute('data-deffopt'));_pending=['rent_schedule.date_eff_source'];_refocusSel='[data-box="rent_schedule.date_eff_source"] .uatrigger';renderBody();scheduleHudRefresh();}));
   document.querySelectorAll('[data-delunit]').forEach(b=>b.addEventListener('click',()=>{const i=+b.getAttribute('data-delunit');const wasEmpty=!unitHasData(i)&&numf(get('units.'+i+'.num_units'))<=0;const snap={};Object.keys(form).forEach(k=>{if(k.indexOf('units.'+i+'.')===0){snap[k]=form[k];delete form[k];}});UNITS=UNITS.filter(x=>x!==i);if(wasEmpty){renderBody();setStatus('Empty unit type removed.');}else{_undoStack.push({i,snap});renderBody();setStatus('Unit type deleted — undo available below.');}}));
   document.querySelectorAll('[data-delnonrev]').forEach(b=>b.addEventListener('click',()=>{const i=+b.getAttribute('data-delnonrev');['use','br','ba','rent'].forEach(s=>delete form['nonrev.'+i+'.'+s]);NONREV=NONREV.filter(x=>x!==i);renderBody();setStatus('');}));
-  document.querySelectorAll('[data-dellihtc]').forEach(b=>b.addEventListener('click',()=>{const i=+b.getAttribute('data-dellihtc');['br','ba','avg_rent'].forEach(s=>delete form['lihtc.'+i+'.'+s]);LIHTC=LIHTC.filter(x=>x!==i);renderBody();setStatus('');}));
+  document.querySelectorAll('[data-dellihtc]').forEach(b=>b.addEventListener('click',()=>{const i=+b.getAttribute('data-dellihtc');['br','ba','avg_rent'].forEach(s=>delete form['lihtc.'+i+'.'+s]);LIHTC=LIHTC.filter(x=>x!==i);if(!LIHTC.length)form=store.editForm(form,'lihtc.enabled','');renderBody();setStatus(LIHTC.length?'':'Last LIHTC unit type removed — LIHTC section turned off.');}));
   const add=el('addUnit');if(add)add.onclick=()=>{_undoStack=[];const nx=(UNITS.length?Math.max.apply(null,UNITS):-1)+1;form=store.editForm(form,'units.'+nx+'.br','');UNITS.push(nx);renderBody();setStatus('');};
   const addn=el('addNonrev');if(addn)addn.onclick=()=>{NONREV.push(NONREV.length?Math.max.apply(null,NONREV)+1:0);renderBody();setStatus('');};
   const lt=el('lihtcToggle');if(lt)lt.onchange=()=>{form=store.editForm(form,'lihtc.enabled',lt.checked?'1':'');renderBody();setStatus(lt.checked?'LIHTC units on — they print on the rent schedule between revenue and non-revenue units.':'');};
