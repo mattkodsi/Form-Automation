@@ -645,9 +645,10 @@ function formRec(){const rec={};for(const k in form)rec[k]=form[k].value;return 
 async function genCoverLetter(){if(!(window.RCSGen&&window.PDFLib)){setStatus('Generator still loading \u2014 try again in a moment.');return;}try{setStatus('Generating cover letter\u2026');const bytes=await window.RCSGen.coverLetter(formRec(),b64ToBytes(LOGO_B64));dlPdf(bytes,(get('property.name')||'Property')+' \u2014 Cover Letter.pdf');setStatus('Cover letter downloaded.');}catch(e){setStatus('Generation failed: '+((e&&e.message)||e));}}
 function dataUrlToBytes(u){try{const i=String(u||'').indexOf(',');if(i<0)return null;return b64ToBytes(u.slice(i+1));}catch(e){return null;}}
 async function combinePdfs(list){const {PDFDocument}=window.PDFLib;const out=await PDFDocument.create();for(const b of list){if(!b)continue;const src=await PDFDocument.load(b,{ignoreEncryption:true,parseSpeed:Infinity});const pages=await out.copyPages(src,src.getPageIndices());pages.forEach(p=>out.addPage(p));}return await out.save();}
-function showPackageModal(nm,docs,combined,missingRcs){
+function showPackageModal(nm,docs,combined,missingRcs,missingLh){
   const rows=docs.map((d,i)=>'<button class="btn sm" data-dldoc="'+i+'" style="justify-content:flex-start">'+esc(d.label)+'</button>').join('');
-  const miss=missingRcs?'<div class="sub" style="color:#b45309">\u26a0 Document 04 (RCS report) isn\u2019t included \u2014 upload it in Section 1 and regenerate.</div>':'';
+  const miss=(missingRcs?'<div class="sub" style="color:#b45309;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">\u26a0 RCS report (doc 04) missing \u2014 upload it in Section 1.</div>':'')
+    +(missingLh?'<div class="sub" style="color:#b45309;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">\u26a0 No letterhead \u2014 the tenant notice used a generated header.</div>':'');
   modal('<div class="dlg-t">Package generated</div><div class="dlg-b">'+esc(nm)+' - '+docs.length+' documents. Download the combined file, or any individual document.</div><div style="display:flex;flex-direction:column;gap:7px;margin-top:14px"><button class="btn p" id="dlCombined">Combined package (PDF)</button>'+rows+miss+'<button class="btn excel" id="dlXlsx">Rent Analysis workbook (Excel) \u2014 download it on its own</button><button class="btn p" id="dlFolder" style="margin-top:11px;display:inline-flex;align-items:center;justify-content:center;gap:8px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> Download the RCS Package folder</button></div><div class="dlg-row"><span class="dlg-sp"></span><button class="btn" id="dlgCancel">Close</button></div>');
   el('dlgCancel').onclick=closeModal;
   const cbn=el('dlCombined');if(cbn)cbn.onclick=()=>dlPdf(combined,nm+' - RCS Package.pdf');
@@ -685,7 +686,7 @@ async function genPackage(){
   if(numf(get('units.'+UNITS[0]+'.num_units'))<=0){setStatus('Cannot generate the package with zero units — the first unit type needs a unit count.');return;}
   let hasLh=false;try{const L=(mpdb&&activePid)?mpdb.getLetterhead(activePid):null;hasLh=!!(L&&L.data);}catch(e){}
   if(!hasLh){const alias=get('tenant.property_alias')||get('property.name')||'the property name';
-    dialogConfirm('No letterhead uploaded','The tenant notice will print with a generated header instead \u2014 \u201c'+esc(alias)+'\u201d (the property name as tenants know it) plus the management address. To print on the real letterhead, upload it on the property page first.','Generate anyway',false,()=>{__genPackageRun();});return;}
+    dialogConfirm('No letterhead uploaded','The tenant notice will use a generated header instead: the Related logo, \u201c'+esc(alias)+'\u201d and the management address. You can upload the real letterhead on the property page.','Generate anyway',false,()=>{__genPackageRun();});return;}
   await __genPackageRun();
 }
 /* Find where the letterhead's header art ends: scan the top half of the
@@ -717,9 +718,10 @@ async function __genPackageRun(){
     if(T.checklist)docs.push({label:"Owner's checklist",file:"03. "+N+" - RCS Owner's Checklist",bytes:await window.RCSGen.fillChecklist(b64ToBytes(T.checklist),rec)});
     if(_rcsUpload)docs.push({label:'RCS report (uploaded)',file:'04. '+N+' - RCS Report',bytes:_rcsUpload.bytes});
     if(T.rentSchedule)docs.push({label:'Draft rent schedule',file:'05. '+N+' - Draft Rent Schedule',bytes:await window.RCSGen.fillRentSchedule(b64ToBytes(T.rentSchedule),rec)});
-    docs.push({label:'Tenant notice',file:'06. '+N+' - RCS Tenant Notice',bytes:await window.RCSGen.tenantNotice(rec,lh)});
+    docs.push({label:'Tenant notice',file:'06. '+N+' - RCS Tenant Notice',bytes:await window.RCSGen.tenantNotice(rec,lh,logo)});
     const combined=await combinePdfs(docs.map(d=>d.bytes));
-    showPackageModal(get('property.name')||'Property',docs,combined,!_rcsUpload);
+    let _lhOk=false;try{const L2=(mpdb&&activePid)?mpdb.getLetterhead(activePid):null;_lhOk=!!(L2&&L2.data);}catch(e){}
+    showPackageModal(get('property.name')||'Property',docs,combined,!_rcsUpload,!_lhOk);
     setStatus('Package generated - '+docs.length+' documents.'+(_rcsUpload?'':' The RCS report (document 04) is missing \u2014 upload it in Section 1 to include it.'));
   }catch(e){ setStatus('Generation failed: '+((e&&e.message)||e)); }
 }
