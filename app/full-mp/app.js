@@ -401,8 +401,8 @@ function wireBody(){
   document.querySelectorAll('[data-dellihtc]').forEach(b=>b.addEventListener('click',()=>{const i=+b.getAttribute('data-dellihtc');['br','ba','num_units','avg_rent'].forEach(s=>delete form['lihtc.'+i+'.'+s]);LIHTC=LIHTC.filter(x=>x!==i);if(!LIHTC.length)form=store.editForm(form,'lihtc.enabled','');renderBody();setStatus(LIHTC.length?'':'Last non-Section 8 unit type removed — section turned off.');}));
   const add=el('addUnit');if(add)add.onclick=()=>{_undoStack=[];const nx=(UNITS.length?Math.max.apply(null,UNITS):-1)+1;form=store.editForm(form,'units.'+nx+'.br','');UNITS.push(nx);renderBody();setStatus('');};
   const addn=el('addNonrev');if(addn)addn.onclick=()=>{NONREV.push(NONREV.length?Math.max.apply(null,NONREV)+1:0);renderBody();setStatus('');};
-  const nt=el('nonrevToggle');if(nt)nt.onchange=()=>{if(!nt.checked&&NONREV.length){nt.checked=true;setStatus('Delete the non-revenue rows first to turn this section off.');return;}form=store.editForm(form,'nonrev.enabled',nt.checked?'1':'');renderBody();setStatus('');};
-  const lt=el('lihtcToggle');if(lt)lt.onchange=()=>{form=store.editForm(form,'lihtc.enabled',lt.checked?'1':'');renderBody();setStatus(lt.checked?'Non-Section 8 units on — they print on the rent schedule between Section 8 revenue and non-revenue units.':'');};
+  const nt=el('nonrevToggle');if(nt)nt.onchange=()=>{if(!nt.checked&&NONREV.length){nt.checked=true;setStatus('Delete the non-revenue rows first to turn this section off.');return;}form=store.editForm(form,'nonrev.enabled',nt.checked?'1':'');if(nt.checked&&!NONREV.length)NONREV=[0];renderBody();setStatus('');};
+  const lt=el('lihtcToggle');if(lt)lt.onchange=()=>{form=store.editForm(form,'lihtc.enabled',lt.checked?'1':'');if(lt.checked&&!LIHTC.length){form=store.editForm(form,'lihtc.0.br','');LIHTC=[0];}renderBody();setStatus(lt.checked?'Non-Section 8 units on — they print on the rent schedule between Section 8 revenue and non-revenue units.':'');};
   const addl=el('addLihtc');if(addl)addl.onclick=()=>{const nx=(LIHTC.length?Math.max.apply(null,LIHTC):-1)+1;form=store.editForm(form,'lihtc.'+nx+'.br','');LIHTC.push(nx);renderBody();setStatus('');};
   const phs=el('pullSafmr');if(phs)phs.onclick=()=>{ensureHudSafmr({manual:true});};
   const uu=el('undoUnit');if(uu)uu.onclick=()=>{if(!_undoStack.length)return;const e=_undoStack.pop();Object.keys(e.snap).forEach(k=>{form[k]=e.snap[k];});if(UNITS.indexOf(e.i)<0)UNITS.push(e.i);UNITS.sort((a,b)=>a-b);renderBody();setStatus('Unit type restored.');};
@@ -518,7 +518,7 @@ function handleZeroUnitCommit(keys){const zk=keys.find(k=>/^(units|nonrev|lihtc)
   const m=zk.match(/^(units|nonrev|lihtc)\.(\d+)\./);const fam=m[1],i=+m[2];
   if(fam==='units'&&i===UNITS[0]){setStatus('Cannot commit zero units to the database — the first unit type needs a unit count.');return true;}
   const label=fam==='units'?'unit type':(fam==='nonrev'?'non-revenue unit':'non-Section 8 unit type');
-  dialogConfirm('Delete this '+label+'?','Committing 0 units deletes this '+label+' from the database — the row and its data are removed. This cannot be undone.','Delete & save',true,async()=>{
+  dialogConfirm('Delete this '+label+' with no unit count?','This row has no unit count. Go back and enter one, or accept — accepting removes this '+label+' and its data from the database. This cannot be undone after saving.','Delete & save',true,async()=>{
     Object.keys(form).forEach(k=>{if(k.indexOf(fam+'.'+i+'.')===0)delete form[k];});
     if(fam==='units')UNITS=UNITS.filter(x=>x!==i);
     else if(fam==='nonrev'){NONREV=NONREV.filter(x=>x!==i);if(!NONREV.length){form=store.editForm(form,'nonrev.enabled','');form=await store.saveField(form,'nonrev.enabled');}}
@@ -529,23 +529,30 @@ function handleZeroUnitCommit(keys){const zk=keys.find(k=>/^(units|nonrev|lihtc)
   return true;}
 function unitHasData(i){return ['br','ba','current','proposed','ua_exec','ua_rcs','ua_custom','safmr_hud','safmr_rcs','safmr_custom'].some(s=>{const v=get('units.'+i+'.'+s);return v!==''&&v!=null;});}
 function countlessUnits(){return UNITS.filter(i=>numf(get('units.'+i+'.num_units'))<=0);}
-async function saveNow(afterSave){clearUncheckedWriteins(['e1','e2','e3','e4','e5','s1','s2','s3','s4','s5','s6']);
-  countlessUnits().forEach(i=>Object.keys(form).forEach(k=>{if(k.indexOf('units.'+i+'.')===0)delete form[k];}));
+async function saveNow(afterSave,fixFirst){clearUncheckedWriteins(['e1','e2','e3','e4','e5','s1','s2','s3','s4','s5','s6']);
+  const first=UNITS[0];const fk='units.'+first+'.num_units';let firstFix='';
+  if(fixFirst){const c=form[fk];
+    if(c&&c.db_value!=null&&c.db_value!==''){store.revertForm(form,fk);firstFix='reverted to its last saved count';}
+    else{form=store.editForm(form,fk,'');firstFix='left blank';}}
+  countlessUnits().filter(i=>!(fixFirst&&i===first)).forEach(i=>Object.keys(form).forEach(k=>{if(k.indexOf('units.'+i+'.')===0)delete form[k];}));
   NONREV.filter(i=>numf(get('nonrev.'+i+'.num_units'))<=0).forEach(i=>Object.keys(form).forEach(k=>{if(k.indexOf('nonrev.'+i+'.')===0)delete form[k];}));
   LIHTC.filter(i=>numf(get('lihtc.'+i+'.num_units'))<=0).forEach(i=>Object.keys(form).forEach(k=>{if(k.indexOf('lihtc.'+i+'.')===0)delete form[k];}));
+  if(!Object.keys(form).some(k=>/^nonrev\.\d+\./.test(k))&&get('nonrev.enabled')==='1')form=store.editForm(form,'nonrev.enabled','');
+  if(!Object.keys(form).some(k=>/^lihtc\.\d+\./.test(k))&&get('lihtc.enabled')==='1')form=store.editForm(form,'lihtc.enabled','');
   deriveUnits();form=await store.saveToDb(form);
   if(mpdb&&activePid)await mpdb.pruneUnitRows(activePid,UNITS,NONREV,LIHTC);
-  await refreshSnap();deriveUnits();if(afterSave)afterSave();}
+  await refreshSnap();deriveUnits();if(firstFix==='left blank'&&form[fk])form[fk].source='new';if(afterSave)afterSave();
+  if(firstFix)setStatus('Saved — but zero units cannot be committed: the first unit type\u2019s count was '+firstFix+'.');}
 function requestSave(afterSave){
-  const first=UNITS[0];
-  if(unitHasData(first)&&numf(get('units.'+first+'.num_units'))<=0){setStatus('Cannot commit zero units to the database — the first unit type needs a unit count.');return;}
+  const first=UNITS[0];const fk='units.'+first+'.num_units';
+  const firstZero=numf(get(fk))<=0&&(unitHasData(first)||String(get(fk)==null?'':get(fk)).trim()!=='');
   const mu=countlessUnits().filter(unitHasData).filter(i=>i!==first);
   const mn=NONREV.filter(i=>numf(get('nonrev.'+i+'.num_units'))<=0).filter(nonrevHasData);
   const ml=LIHTC.filter(i=>numf(get('lihtc.'+i+'.num_units'))<=0).filter(lihtcHasData);
   const total=mu.length+mn.length+ml.length;
   if(total){const parts=[];if(mu.length)parts.push(mu.length+' revenue');if(mn.length)parts.push(mn.length+' non-revenue');if(ml.length)parts.push(ml.length+' non-Section 8');
-    dialogConfirm('Delete '+total+' unit type'+(total>1?'s':'')+' with no unit count?','Saving will remove '+parts.join(', ')+' row'+(total>1?'s that have':' that has')+' entered data but no unit count. This cannot be undone after saving.','Save anyway',true,()=>saveNow(afterSave));}
-  else saveNow(afterSave);}
+    dialogConfirm('Delete '+total+' unit type'+(total>1?'s':'')+' with no unit count?','Saving will remove '+parts.join(', ')+' row'+(total>1?'s that have':' that has')+' entered data but no unit count. This cannot be undone after saving.','Save anyway',true,()=>saveNow(afterSave,firstZero));}
+  else saveNow(afterSave,firstZero);}
 // New-property checklist default: all §8 boxes on except Scope of repair(2) & Scope of work(4),
 // applied as source 'new' (grey/unsaved) only when the property has never saved a checklist.
 function applyChecklistDefaults(){if(Object.keys(DBSNAP).some(k=>/^check\.\d+$/.test(k)))return;for(let i=0;i<17;i++)form=store.editForm(form,'check.'+i,(i===2||i===4)?'':'1');}
