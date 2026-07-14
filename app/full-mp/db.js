@@ -57,6 +57,7 @@ const CROSSWALK = {
   'tenant.mgmt_city': ['tenant.mgmt_address_city', 'property.tenant_mgmt_address_city'],
   'tenant.mgmt_state': ['tenant.mgmt_address_state', 'property.tenant_mgmt_address_state'],
   'tenant.mgmt_zip': ['tenant.mgmt_address_zip', 'property.tenant_mgmt_address_zip'],
+  'tenant.property_alias': ['tenant.property_alias', 'property.tenant_alias_name'],
   'assets.letterhead_name': ['assets.letterhead', 'property.letterhead_asset'],
   'appr.firm': ['study.appraiser_firm', 'submission.appraiser_firm'],
   'appr.name': ['study.appraiser_name', 'submission.appraiser_name'],
