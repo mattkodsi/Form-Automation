@@ -1,0 +1,11 @@
+{
+  "name": "rcs-renewal-automation",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "description": "HUD Section 8 RCS renewal-package automation — Phase 1: data model + persistence (form↔DB contract)",
+  "scripts": {
+    "proof": "node --experimental-strip-types --experimental-sqlite --no-warnings src/roundtrip.ts"
+  },
+  "engines": { "node": ">=22.6" }
+}
