@@ -757,7 +757,7 @@ function makeSupabaseDb(client) {
     'appr.addr_street': 'appraiser_address_street', 'appr.addr_city': 'appraiser_address_city', 'appr.addr_state': 'appraiser_address_state', 'appr.addr_zip': 'appraiser_address_zip',
     'rent_schedule.date_rents_effective': 'date_rents_effective', 'rent_schedule.date_eff_rs': 'date_eff_rs', 'rent_schedule.date_eff_source': 'date_eff_source', 'rent_schedule.date_eff_custom': 'date_eff_custom',
     'checklist.sign_date': 'checklist_sign_date', 'tenant.date_of_notice': 'tenant_date_of_notice', 'cycle.submission_date': 'submission_date',
-    'lihtc.enabled': 'has_lihtc',
+    'lihtc.enabled': 'has_lihtc', 'nonrev.enabled': 'has_nonrev',
   };
   const PSCALAR_REV = {}; for (const k in PSCALAR) PSCALAR_REV[PSCALAR[k]] = k;
 
@@ -772,9 +772,9 @@ function makeSupabaseDb(client) {
   const UCOL_REV = {}; for (const k in UCOL) UCOL_REV[UCOL[k]] = k;
   const UINT = new Set(['num_units', 'current', 'proposed', 'ua_exec', 'ua_rcs', 'ua_custom', 'num_rcs', 'safmr_rcs', 'safmr_hud', 'safmr_custom']);
 
-  const NRCOL = { use: 'use', br: 'bedrooms', ba: 'bathrooms', rent: 'monthly_rent' };
+  const NRCOL = { use: 'use', br: 'bedrooms', ba: 'bathrooms', num_units: 'num_units', rent: 'monthly_rent' };
   const NRCOL_REV = {}; for (const k in NRCOL) NRCOL_REV[NRCOL[k]] = k;
-  const NRINT = new Set(['rent']);
+  const NRINT = new Set(['num_units', 'rent']);
 
   const LICOL = { br: 'bedrooms', ba: 'bathrooms', num_units: 'num_units', avg_rent: 'avg_rent' };
   const LICOL_REV = {}; for (const k in LICOL) LICOL_REV[LICOL[k]] = k;
@@ -1214,9 +1214,12 @@ function unitCard(i,pos){const trash=UNITS.length>1?`<button class="trash" data-
   return `<div class="urow"><div class="ucells">${unitTypeCell(i)}${unitCountCell(i)}${moneyBox('units.'+i+'.current')}${moneyBox('units.'+i+'.proposed')}${uaBox(i)}${safmrBox(i)}<div class="urx">${trash}</div></div>${sub}</div>`;}
 function renderRents(){
   const cards=UNITS.map((i,pos)=>unitCard(i,pos)).join('');
-  let pd=`<div class="pdhead">Non-revenue units (Part D) <span class="sub">from the prior rent schedule — model / manager’s unit, etc.; excluded from rent totals</span></div>`;
-  if(NONREV.length){pd+=`<div class="rgh"><span style="grid-column:1">Unit type</span><span style="grid-column:2/4">Use</span><span style="grid-column:4">Contract rent</span></div>`+NONREV.map(i=>`<div class="pdrow"><div style="grid-column:1">${brbaBox('nonrev.'+i+'.br','nonrev.'+i+'.ba')}</div><div style="grid-column:2/4">${numBox('nonrev.'+i+'.use',"e.g. Manager’s unit")}</div><div style="grid-column:4">${moneyBox('nonrev.'+i+'.rent')}</div><div class="urx" style="grid-column:7"><button class="trash" data-delnonrev="${i}" title="Delete">🗑</button></div></div>`).join('');}
-  pd+=`<div class="addrow" id="addNonrev">+ Add non-revenue unit</div>`;
+  const nrOn=get('nonrev.enabled')==='1'||NONREV.length>0;
+  let pd=`<div class="pdhead"><label class="lihtcflag"><input type="checkbox" id="nonrevToggle"${nrOn?' checked':''}><span>This property has non-revenue units (Part D)</span></label>${nrOn?' <span class="sub">from the prior rent schedule — model / manager’s unit, etc.; excluded from rent totals</span>':''}</div>`;
+  if(nrOn){
+    if(NONREV.length)pd+=`<div class="rgh"><span style="grid-column:1">Unit type</span><span style="grid-column:2">Units</span><span style="grid-column:3">Contract rent</span><span style="grid-column:4/6">Use</span></div>`+NONREV.map(i=>`<div class="pdrow"><div style="grid-column:1">${brbaBox('nonrev.'+i+'.br','nonrev.'+i+'.ba')}</div><div style="grid-column:2">${numBox('nonrev.'+i+'.num_units','')}</div><div style="grid-column:3">${moneyBox('nonrev.'+i+'.rent')}</div><div style="grid-column:4/6">${numBox('nonrev.'+i+'.use',"e.g. Manager’s unit")}</div><div class="urx" style="grid-column:7"><button class="trash" data-delnonrev="${i}" title="Delete">🗑</button></div></div>`).join('');
+    pd+=`<div class="addrow" id="addNonrev">+ Add non-revenue unit</div>`;
+  }
   const lhOn=get('lihtc.enabled')==='1';
   let lh=`<div class="pdhead"><label class="lihtcflag"><input type="checkbox" id="lihtcToggle"${lhOn?' checked':''}><span>This property has LIHTC units</span></label>${lhOn?' <span class="sub">listed on the rent schedule as unit type + average unit rent</span>':''}</div>`;
   if(lhOn){
@@ -1345,7 +1348,7 @@ function renderBody(){const _sy=window.scrollY;const _anchorSel=(_refocusSel&&!_
   wireBody();renderCommand();renderBar();renderRail();renderAttention();
   if(_refocusSel&&!_mouseFocus){try{const _f=document.querySelector(_refocusSel);if(_f&&_f.focus){_f.focus({preventScroll:true});if(/^(INPUT|TEXTAREA)$/.test(_f.tagName)&&typeof _f.setSelectionRange==='function'){const _L=(_f.value||'').length;try{_f.setSelectionRange(_L,_L);}catch(_e){}}}}catch(e){}}_refocusSel=null;
   if(_anchorSel&&_anchorTop!=null){try{const _a2=document.querySelector(_anchorSel);if(_a2){const _nt=_a2.getBoundingClientRect().top;window.scrollTo(0,window.scrollY+(_nt-_anchorTop));}else window.scrollTo(0,_sy);}catch(e){try{window.scrollTo(0,_sy);}catch(_z){}}}else{try{window.scrollTo(0,_sy);}catch(e){}}}
-async function commitPending(){if(!_pending||!_pending.length)return;const keys=_pending;_pending=null;if(keys.indexOf('poc.phone')>=0){const _d=(get('poc.phone')||'').replace(/\D/g,'');if(_d.length!==0&&_d.length!==10){setStatus('Enter a complete 10-digit phone before saving.');return;}}keys.forEach(k=>{const m=k.match(/^partb\.writein\.(e1|e2|e3|e4|e5|s1|s2|s3|s4|s5|s6)(\.on)?$/);if(m)clearUncheckedWriteins([m[1]]);});for(const k of keys){const gb=groupOf(k);if(gb){for(const kk of ADDR_GROUPS[gb])form=await store.saveField(form,kk);}else{form=await store.saveField(form,k);}}await refreshSnap();_pendingSnap=null;_refocusSel=refocusSelForKey(keys[0]);renderBody();setStatus('Saved this field to the database.');}
+async function commitPending(){if(!_pending||!_pending.length)return;const keys=_pending;_pending=null;if(zeroUnitBlock(keys))return;if(keys.indexOf('poc.phone')>=0){const _d=(get('poc.phone')||'').replace(/\D/g,'');if(_d.length!==0&&_d.length!==10){setStatus('Enter a complete 10-digit phone before saving.');return;}}keys.forEach(k=>{const m=k.match(/^partb\.writein\.(e1|e2|e3|e4|e5|s1|s2|s3|s4|s5|s6)(\.on)?$/);if(m)clearUncheckedWriteins([m[1]]);});for(const k of keys){const gb=groupOf(k);if(gb){for(const kk of ADDR_GROUPS[gb])form=await store.saveField(form,kk);}else{form=await store.saveField(form,k);}}await refreshSnap();_pendingSnap=null;_refocusSel=refocusSelForKey(keys[0]);renderBody();setStatus('Saved this field to the database.');}
 function revertCellIfOver(cell){if(!cell)return false;const inIc=cell.querySelector('.ovic[data-mode="over"] [data-rev]');if(inIc){inIc.click();return true;}const box=cell.getAttribute('data-box');if(box){const note=document.querySelector('.ovnote[data-ov="'+box+'"][data-mode="over"]');if(note){const b=note.querySelector('[data-rev],[data-revaddr]');if(b){b.click();return true;}}}return false;}
 function isToggleKey(k){return /^(check\.\d+|partb\.(equipment|utilities|services)\.\d+|partb\.fuel\.\d+|partb\.writein\.[a-z0-9]+\.(on|fuel))$/.test(k);}
 function fixSavedToggles(){Object.keys(DBSNAP||{}).forEach(k=>{if(isToggleKey(k)){const dv=(DBSNAP[k]&&DBSNAP[k].value!=null)?DBSNAP[k].value:'';form[k]={value:dv,source:'database',saved_at:(DBSNAP[k]&&DBSNAP[k].saved_at)||null,prior_value:null,prior_source:null,db_value:dv};}});}
@@ -1376,7 +1379,7 @@ function wireBody(){
   document.querySelectorAll('[data-wibox]').forEach(bx=>bx.addEventListener('click',e=>{e.preventDefault();const base=bx.getAttribute('data-wibox');if(!get(base))return;const on=get(base+'.on')==='1';_pendingSnap=snapOf([base+'.on']);form=store.editForm(form,base+'.on',on?'':'1');_pending=[base+'.on'];_refocusSel='[data-wibox="'+base+'"]';renderBody();}));
   document.querySelectorAll('button[data-rev]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();b.getAttribute('data-rev').split(',').forEach(k=>coupledKeys(k).forEach(x=>store.revertForm(form,x)));renderBody();setStatus('Reverted to the on-file value.');}));
   document.querySelectorAll('button[data-revaddr]').forEach(b=>b.addEventListener('click',()=>{const _box=b.getAttribute('data-revaddr');const g=ADDR_GROUPS[_box]||ADDR;g.forEach(k=>store.revertForm(form,k));if(_box==='tenant.mgmt')store.revertForm(form,'tenant.mgmt_source');renderBody();setStatus('Address reverted.');}));
-  document.querySelectorAll('button[data-save1]').forEach(b=>b.addEventListener('click',async e=>{e.preventDefault();e.stopPropagation();const keys=[];b.getAttribute('data-save1').split(',').forEach(_k=>coupledKeys(_k).forEach(x=>{if(keys.indexOf(x)<0)keys.push(x);}));if(keys.indexOf('poc.phone')>=0){const _d=(get('poc.phone')||'').replace(/\D/g,'');if(_d.length!==0&&_d.length!==10){setStatus('Enter a complete 10-digit phone before saving.');return;}}keys.forEach(k=>{const m=k.match(/^partb\.writein\.(e1|e2|e3|e4|e5|s1|s2|s3|s4|s5|s6)(\.on)?$/);if(m)clearUncheckedWriteins([m[1]]);});for(const k of keys)form=await store.saveField(form,k);await refreshSnap();renderBody();setStatus('Saved just that field to the database.');}));
+  document.querySelectorAll('button[data-save1]').forEach(b=>b.addEventListener('click',async e=>{e.preventDefault();e.stopPropagation();const keys=[];b.getAttribute('data-save1').split(',').forEach(_k=>coupledKeys(_k).forEach(x=>{if(keys.indexOf(x)<0)keys.push(x);}));if(zeroUnitBlock(keys))return;if(keys.indexOf('poc.phone')>=0){const _d=(get('poc.phone')||'').replace(/\D/g,'');if(_d.length!==0&&_d.length!==10){setStatus('Enter a complete 10-digit phone before saving.');return;}}keys.forEach(k=>{const m=k.match(/^partb\.writein\.(e1|e2|e3|e4|e5|s1|s2|s3|s4|s5|s6)(\.on)?$/);if(m)clearUncheckedWriteins([m[1]]);});for(const k of keys)form=await store.saveField(form,k);await refreshSnap();renderBody();setStatus('Saved just that field to the database.');}));
   document.querySelectorAll('button[data-save1addr]').forEach(b=>b.addEventListener('click',async()=>{const _box=b.getAttribute('data-save1addr');const g=ADDR_GROUPS[_box]||ADDR;for(const k of g)form=await store.saveField(form,k);if(_box==='tenant.mgmt')form=await store.saveField(form,'tenant.mgmt_source');await refreshSnap();renderBody();setStatus('Saved the address to the database.');}));
   document.querySelectorAll('.uatrigger').forEach(t=>{const d=t.closest('.uadrop');if(!d)return;
     const tog=()=>{const open=d.classList.contains('open');document.querySelectorAll('.uadrop.open').forEach(x=>x.classList.remove('open'));if(!open)d.classList.add('open');};
@@ -1400,10 +1403,11 @@ function wireBody(){
   document.querySelectorAll('[data-pocopt]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();const ct=mpdb.listContacts().find(x=>x.id===o.getAttribute('data-pocopt'));_pendingSnap=snapOf(['poc.name','poc.email','poc.phone']);if(ct)pocSelectContact(ct);_pending=['poc.name','poc.email','poc.phone'];_refocusSel='[data-box="poc.name"] .pocname-in';renderBody();}));
   document.querySelectorAll('[data-deffopt]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();_pendingSnap=snapOf(['rent_schedule.date_eff_source']);form=store.editForm(form,'rent_schedule.date_eff_source',o.getAttribute('data-deffopt'));_pending=['rent_schedule.date_eff_source'];_refocusSel='[data-box="rent_schedule.date_eff_source"] .uatrigger';renderBody();scheduleHudRefresh();}));
   document.querySelectorAll('[data-delunit]').forEach(b=>b.addEventListener('click',()=>{const i=+b.getAttribute('data-delunit');const wasEmpty=!unitHasData(i)&&numf(get('units.'+i+'.num_units'))<=0;const snap={};Object.keys(form).forEach(k=>{if(k.indexOf('units.'+i+'.')===0){snap[k]=form[k];delete form[k];}});UNITS=UNITS.filter(x=>x!==i);if(wasEmpty){renderBody();setStatus('Empty unit type removed.');}else{_undoStack.push({i,snap});renderBody();setStatus('Unit type deleted — undo available below.');}}));
-  document.querySelectorAll('[data-delnonrev]').forEach(b=>b.addEventListener('click',()=>{const i=+b.getAttribute('data-delnonrev');['use','br','ba','rent'].forEach(s=>delete form['nonrev.'+i+'.'+s]);NONREV=NONREV.filter(x=>x!==i);renderBody();setStatus('');}));
+  document.querySelectorAll('[data-delnonrev]').forEach(b=>b.addEventListener('click',()=>{const i=+b.getAttribute('data-delnonrev');['use','br','ba','num_units','rent'].forEach(s=>delete form['nonrev.'+i+'.'+s]);NONREV=NONREV.filter(x=>x!==i);if(!NONREV.length)form=store.editForm(form,'nonrev.enabled','');renderBody();setStatus(NONREV.length?'':'Last non-revenue unit removed — Part D section turned off.');}));
   document.querySelectorAll('[data-dellihtc]').forEach(b=>b.addEventListener('click',()=>{const i=+b.getAttribute('data-dellihtc');['br','ba','num_units','avg_rent'].forEach(s=>delete form['lihtc.'+i+'.'+s]);LIHTC=LIHTC.filter(x=>x!==i);if(!LIHTC.length)form=store.editForm(form,'lihtc.enabled','');renderBody();setStatus(LIHTC.length?'':'Last LIHTC unit type removed — LIHTC section turned off.');}));
   const add=el('addUnit');if(add)add.onclick=()=>{_undoStack=[];const nx=(UNITS.length?Math.max.apply(null,UNITS):-1)+1;form=store.editForm(form,'units.'+nx+'.br','');UNITS.push(nx);renderBody();setStatus('');};
   const addn=el('addNonrev');if(addn)addn.onclick=()=>{NONREV.push(NONREV.length?Math.max.apply(null,NONREV)+1:0);renderBody();setStatus('');};
+  const nt=el('nonrevToggle');if(nt)nt.onchange=()=>{if(!nt.checked&&NONREV.length){nt.checked=true;setStatus('Delete the non-revenue rows first to turn this section off.');return;}form=store.editForm(form,'nonrev.enabled',nt.checked?'1':'');renderBody();setStatus('');};
   const lt=el('lihtcToggle');if(lt)lt.onchange=()=>{form=store.editForm(form,'lihtc.enabled',lt.checked?'1':'');renderBody();setStatus(lt.checked?'LIHTC units on — they print on the rent schedule between revenue and non-revenue units.':'');};
   const addl=el('addLihtc');if(addl)addl.onclick=()=>{const nx=(LIHTC.length?Math.max.apply(null,LIHTC):-1)+1;form=store.editForm(form,'lihtc.'+nx+'.br','');LIHTC.push(nx);renderBody();setStatus('');};
   const phs=el('pullSafmr');if(phs)phs.onclick=()=>{ensureHudSafmr({manual:true});};
@@ -1513,16 +1517,25 @@ function makeThumb(dataUrl,cb){try{const img=new Image();img.onload=()=>{const s
 
 /* ---- FORM: open the RCS form for the active property ----------------- */
 function nonrevEmpty(i){return ['use','br','ba','rent'].every(s=>{const v=get('nonrev.'+i+'.'+s);return v===''||v==null;});}
+function nonrevHasData(i){return ['use','br','ba','rent'].some(s=>{const v=get('nonrev.'+i+'.'+s);return v!==''&&v!=null;});}
+function lihtcHasData(i){return ['br','ba','avg_rent'].some(s=>{const v=get('lihtc.'+i+'.'+s);return v!==''&&v!=null;});}
+function zeroUnitBlock(keys){const zk=keys.find(k=>/^(units|nonrev|lihtc)\.\d+\.num_units$/.test(k));if(zk&&numf(get(zk))<=0){setStatus('Cannot save zero units — enter a unit count or delete the row.');return true;}return false;}
 function unitHasData(i){return ['br','ba','current','proposed','ua_exec','ua_rcs','ua_custom','safmr_hud','safmr_rcs','safmr_custom'].some(s=>{const v=get('units.'+i+'.'+s);return v!==''&&v!=null;});}
 function countlessUnits(){return UNITS.filter(i=>numf(get('units.'+i+'.num_units'))<=0);}
 async function saveNow(afterSave){clearUncheckedWriteins(['e1','e2','e3','e4','e5','s1','s2','s3','s4','s5','s6']);
   countlessUnits().forEach(i=>Object.keys(form).forEach(k=>{if(k.indexOf('units.'+i+'.')===0)delete form[k];}));
-  NONREV.filter(nonrevEmpty).forEach(i=>Object.keys(form).forEach(k=>{if(k.indexOf('nonrev.'+i+'.')===0)delete form[k];}));
+  NONREV.filter(i=>numf(get('nonrev.'+i+'.num_units'))<=0).forEach(i=>Object.keys(form).forEach(k=>{if(k.indexOf('nonrev.'+i+'.')===0)delete form[k];}));
+  LIHTC.filter(i=>numf(get('lihtc.'+i+'.num_units'))<=0).forEach(i=>Object.keys(form).forEach(k=>{if(k.indexOf('lihtc.'+i+'.')===0)delete form[k];}));
   deriveUnits();form=await store.saveToDb(form);
   if(mpdb&&activePid)await mpdb.pruneUnitRows(activePid,UNITS,NONREV,LIHTC);
   await refreshSnap();deriveUnits();if(afterSave)afterSave();}
-function requestSave(afterSave){const meaningful=countlessUnits().filter(unitHasData);
-  if(meaningful.length){dialogConfirm('Delete '+meaningful.length+' unit type'+(meaningful.length>1?'s':'')+' with no unit count?','Saving will remove unit type'+(meaningful.length>1?'s':'')+' that have entered data but no unit count. This cannot be undone after saving.','Save anyway',true,()=>saveNow(afterSave));}
+function requestSave(afterSave){
+  const mu=countlessUnits().filter(unitHasData);
+  const mn=NONREV.filter(i=>numf(get('nonrev.'+i+'.num_units'))<=0).filter(nonrevHasData);
+  const ml=LIHTC.filter(i=>numf(get('lihtc.'+i+'.num_units'))<=0).filter(lihtcHasData);
+  const total=mu.length+mn.length+ml.length;
+  if(total){const parts=[];if(mu.length)parts.push(mu.length+' revenue');if(mn.length)parts.push(mn.length+' non-revenue');if(ml.length)parts.push(ml.length+' LIHTC');
+    dialogConfirm('Delete '+total+' unit type'+(total>1?'s':'')+' with no unit count?','Saving will remove '+parts.join(', ')+' row'+(total>1?'s that have':' that has')+' entered data but no unit count. This cannot be undone after saving.','Save anyway',true,()=>saveNow(afterSave));}
   else saveNow(afterSave);}
 // New-property checklist default: all §8 boxes on except Scope of repair(2) & Scope of work(4),
 // applied as source 'new' (grey/unsaved) only when the property has never saved a checklist.
@@ -1796,7 +1809,7 @@ if(typeof module!=='undefined')module.exports={fmtPhone,fmtDate,sMoney,sPct,sK,a
     const liA=g('lihtc.enabled')==='1'?[...new Set(Object.keys(rec).map(k=>(k.match(/^lihtc\.(\d+)\./)||[])[1]).filter(x=>x!=null))].sort((a,b)=>a-b).filter(i=>g('lihtc.'+i+'.br')||g('lihtc.'+i+'.ba')||g('lihtc.'+i+'.avg_rent')):[];
     if(liA.length&&r<=9){ r++; liA.forEach(i=>{ if(r>10)return; const base=7+r*8; T(base, utype(g('lihtc.'+i+'.br'),g('lihtc.'+i+'.ba'))); const ln=nmv(g('lihtc.'+i+'.num_units')); if(ln)T(base+1,ln); const ar=g('lihtc.'+i+'.avg_rent'); if(ar!==''&&ar!=null)T(base+2,money(ar)); tu+=ln; r++; }); }
     const nrA=[...new Set(Object.keys(rec).map(k=>(k.match(/^nonrev\.(\d+)\./)||[])[1]).filter(x=>x!=null))].sort((a,b)=>a-b).filter(i=>g('nonrev.'+i+'.use')||g('nonrev.'+i+'.br')||g('nonrev.'+i+'.ba')||g('nonrev.'+i+'.rent'));
-    if(nrA.length&&r<=9){ r++; nrA.forEach(i=>{ if(r>10)return; const base=7+r*8; T(base, g('nonrev.'+i+'.use')||utype(g('nonrev.'+i+'.br'),g('nonrev.'+i+'.ba'))); T(base+1,'1'); tu+=1; r++; }); }
+    if(nrA.length&&r<=9){ r++; nrA.forEach(i=>{ if(r>10)return; const base=7+r*8; T(base, g('nonrev.'+i+'.use')||utype(g('nonrev.'+i+'.br'),g('nonrev.'+i+'.ba'))); const nn=nmv(g('nonrev.'+i+'.num_units'))||1; T(base+1,nn); tu+=nn; r++; }); }
     T('94a',tu||''); T('95',money(tc)); T('96',money(tc*12));
     const eq=[99,100,101,102,103,104,105]; for(let k=0;k<7;k++) if(g('partb.equipment.'+k)==='1') C(eq[k]);
     const ut=[116,118,120,122,124], ff=[117,119,121,123,125];
