@@ -132,13 +132,22 @@
     const row=(vals,hd,y)=>{let x=x0; vals.forEach((v,ci)=>{ st.page.drawRectangle({x,y:y-rh,width:cw[ci],height:rh,borderColor:line,borderWidth:0.6, color: hd?navy:undefined}); const f=hd?B:R,col=hd?white:st.ink,ss=10.5,w=f.widthOfTextAtSize(String(v),ss); st.page.drawText(String(v),{x:x+(cw[ci]-w)/2,y:y-rh+7,size:ss,font:f,color:col}); x+=cw[ci]; }); };
     let y=st.y; row(heads,true,y); y-=rh; rows.forEach(r=>{row(r,false,y);y-=rh;}); st.y=y-8;
   }
-  async function tenantNotice(rec, letterheadBytes){
+  async function tenantNotice(rec, letterhead){
     const { PDFDocument, StandardFonts } = PL(); const t=resolve(rec); const nm=t.tenant_alias||t.property_name;
     const doc=await PDFDocument.create();
     const R=await doc.embedFont(StandardFonts.TimesRoman),B=await doc.embedFont(StandardFonts.TimesRomanBold),I=await doc.embedFont(StandardFonts.TimesRomanItalic);
     const st=makeLetter(doc,R,B,I); st.y=792-58;
     let placed=false;
-    if(letterheadBytes){ try{ const img=await doc.embedPng(letterheadBytes); const w=168,h=w/(img.width/img.height); st.page.drawImage(img,{x:(612-w)/2,y:792-42-h,width:w,height:h}); st.y=792-42-h-24; placed=true; }catch(e){} }
+    // Letterhead is an underlay: the first page prints ON it (continuation
+    // pages stay plain, like feeding letterhead paper for page 1 only).
+    const lh=letterhead&&(letterhead.pdf||letterhead.png)?letterhead:(letterhead?{png:letterhead}:null);
+    if(lh&&lh.pdf){ try{ const srcDoc=await PDFDocument.load(lh.pdf,{parseSpeed:Infinity}); const [lp]=await doc.embedPdf(srcDoc); st.page.drawPage(lp,{x:0,y:0,width:612,height:792}); st.y=792-150; placed=true; }catch(e){} }
+    else if(lh&&lh.png){ try{ const img=await doc.embedPng(lh.png);
+      if(img.height>=img.width){ // page-shaped snapshot of the letterhead -> full-page underlay
+        st.page.drawImage(img,{x:0,y:0,width:612,height:792}); st.y=792-150; placed=true;
+      } else { // banner / logo strip across the top at real size
+        const ar=img.width/img.height; let h=110,w=h*ar; const maxW=612-2*72; if(w>maxW){w=maxW;h=w/ar;}
+        st.page.drawImage(img,{x:(612-w)/2,y:792-42-h,width:w,height:h}); st.y=792-42-h-24; placed=true; } }catch(e){} }
     if(!placed){ st.center(nm,{font:B,size:14}); const a=[t.mgmt_addr,[t.mgmt_city,t.mgmt_state].filter(Boolean).join(', ')+' '+t.mgmt_zip].filter(x=>x&&x.trim()).join(' · '); if(a.trim())st.center(a,{size:9.5,color:st.grey}); st.gap(16); }
     st.line('Date of Notice: '+t.notice_date); st.gap(8);
     st.para('Notice to Residents of Intention to submit a request to '+t.ca_company+' for approval of increase in maximum permissible rents.');

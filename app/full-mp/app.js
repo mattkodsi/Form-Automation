@@ -539,16 +539,17 @@ function renderLauncher(){
   const pct=Math.round(p.completeness*100);const a=mpdb.propertyAnalysis(activePid);const lh=mpdb.getLetterhead(activePid);
   const rcsLine=(a.total_units&&a.proposed_gpr)?((a.pass?'PASS':'OVER')+' &middot; '+sPct(a.pct)+' &middot; '+money(a.proposed_gpr)+'/mo'):(a.total_units?'rents not entered yet':'set up units &amp; rents');
   const soon=(code,name)=>'<div class="progcard soon"><div class="pg-h"><span class="pg-code">'+code+'</span><span class="soonchip">Coming soon</span></div><div class="pg-name">'+name+'</div></div>';
-  const lhSub=lh.data?'Property letterhead &middot; reused on every package':'<span style="color:#b4552d">Not print-ready &mdash; re-upload the image so it prints on the tenant notice</span>';
+  const lhIsPdf=String(lh.data||'').indexOf('data:application/pdf')===0;
+  const lhSub=lh.data?(lhIsPdf?'PDF letterhead &middot; the tenant notice prints on it full-page':'Property letterhead &middot; reused on every package'):'<span style="color:#b4552d">Not print-ready &mdash; re-upload the letterhead (PDF, PNG or JPG) so it prints on the tenant notice</span>';
   const letter=lh.name
     ?'<div class="letter has"><div class="lh-doc">'+(lh.thumb?'<img src="'+esc(lh.thumb)+'">':docIcon())+'</div><div class="lh-info"><b>'+esc(lh.name)+'</b><i>'+lhSub+'</i></div><div class="lh-act"><button class="btn sm" id="lhReplace">Replace</button><button class="btn sm" id="lhRemove">Remove</button></div></div>'
-    :'<div class="letter empty"><div class="lh-doc">'+docIcon()+'</div><div class="lh-info"><b>Add the property letterhead</b><i>Used on the tenant notice &middot; PNG or JPG image, stored once</i></div><button class="btn sm" id="lhAdd">Upload</button></div>';
+    :'<div class="letter empty"><div class="lh-doc">'+docIcon()+'</div><div class="lh-info"><b>Add the property letterhead</b><i>Used on the tenant notice &middot; PDF, PNG or JPG, stored once</i></div><button class="btn sm" id="lhAdd">Upload</button></div>';
   el('launcherBody').innerHTML=
     '<div class="lhead"><div class="lh-left"><div class="lh-name">'+esc(p.name)+'</div>'
       +'<div class="lh-meta">'+esc(p.fha)+(p.city_state?' &middot; '+esc(p.city_state):'')+(p.total_units?' &middot; '+p.total_units+' units':'')+'</div>'
       +(p.entity?'<div class="lh-entity">'+esc(p.entity)+'</div>':'')+'</div>'
       +'<div class="lh-right"><div class="lh-tools"><button class="txtbtn" id="pRename">Rename</button><span class="dotsep">&middot;</span><button class="txtbtn del" id="pDelete">Delete</button></div><div class="lh-ring">'+ringSvg(pct,46)+'</div><div class="lh-rlab">'+pct+'% complete</div></div></div>'
-    +'<div class="lsec"><div class="lsec-t">Property letterhead</div>'+letter+'<div class="lh-note">The Related Affordable cover-letter and ownership-entity letterheads are constant &mdash; built into the templates. Only the property&rsquo;s own letterhead (used on the tenant notice) is uploaded here.</div><input type="file" id="lhFile" accept="image/*" style="display:none"></div>'
+    +'<div class="lsec"><div class="lsec-t">Property letterhead</div>'+letter+'<div class="lh-note">The Related Affordable cover-letter and ownership-entity letterheads are constant &mdash; built into the templates. Only the property&rsquo;s own letterhead (used on the tenant notice) is uploaded here.</div><input type="file" id="lhFile" accept="image/*,.pdf,application/pdf" style="display:none"></div>'
     +'<div class="lsec"><div class="lsec-t">Choose a program</div>'
       +'<button class="progcard active" id="openRCS"><div class="pg-h"><span class="pg-code">RCS</span><span class="pg-arrow">Open &rarr;</span></div><div class="pg-name">Rent Comparability Study</div>'+rcsAffPane(a)+'</button>'
       +'<div class="progrow">'+soon('OCAF','Operating Cost Adjustment Factor')+soon('UAF','Utility Allowance Factor')+soon('BBRA','Budget-Based Rent Adjustment')+'</div></div>';
@@ -562,7 +563,13 @@ function wireLetterhead(){
   ['lhAdd','lhReplace'].forEach(id=>{const b=el(id);if(b)b.onclick=pick;});
   const rm=el('lhRemove');if(rm)rm.onclick=async()=>{await mpdb.setLetterhead(activePid,'','','');renderLauncher();};
   if(file)file.onchange=()=>{const f=file.files&&file.files[0];if(!f)return;file.value='';
-    if(!/^image\//.test(f.type)){dialogConfirm('Letterhead','Only a PNG or JPG image can be placed on the generated tenant notice. Export the letterhead as an image and upload that.','OK',false,()=>{});return;}
+    if(f.type==='application/pdf'||/\.pdf$/i.test(f.name)){
+      if(f.size>4*1024*1024){dialogConfirm('Letterhead','This PDF is over 4 MB. Export a lighter letterhead PDF (or a PNG/JPG) and upload that.','OK',false,()=>{});return;}
+      const rd=new FileReader();rd.onload=async e=>{const u=String(e.target.result||'');
+        if(u.indexOf('data:application/pdf')!==0){dialogConfirm('Letterhead','That file could not be read as a PDF.','OK',false,()=>{});return;}
+        await mpdb.setLetterhead(activePid,f.name,'',u);renderLauncher();};
+      rd.readAsDataURL(f);return;}
+    if(!/^image\//.test(f.type)){dialogConfirm('Letterhead','Upload the letterhead as a PDF, PNG or JPG. (Word files: use File \u2192 Save As \u2192 PDF once, then upload that.)','OK',false,()=>{});return;}
     const rd=new FileReader();rd.onload=e=>makeRender(e.target.result,render=>makeThumb(e.target.result,async t=>{await mpdb.setLetterhead(activePid,f.name,t,render);renderLauncher();}));rd.readAsDataURL(f);};
 }
 function makeThumb(dataUrl,cb){try{const img=new Image();img.onload=()=>{const s=Math.min(1,120/Math.max(img.width,img.height));const c=document.createElement('canvas');c.width=Math.max(1,Math.round(img.width*s));c.height=Math.max(1,Math.round(img.height*s));c.getContext('2d').drawImage(img,0,0,c.width,c.height);cb(c.toDataURL('image/jpeg',0.72));};img.onerror=()=>cb('');img.src=dataUrl;}catch(e){cb('');}}
@@ -678,7 +685,8 @@ async function genPackage(){
   if(numf(get('units.'+UNITS[0]+'.num_units'))<=0){setStatus('Cannot generate the package with zero units — the first unit type needs a unit count.');return;}
   const T=window.RCSTemplates||{};
   try{ setStatus('Generating package...'); const rec=formRec(); const logo=b64ToBytes(LOGO_B64);
-    let lh=null; try{ const L=(mpdb&&activePid)?mpdb.getLetterhead(activePid):null; if(L&&L.data)lh=dataUrlToBytes(L.data); }catch(e){}
+    let lh=null; try{ const L=(mpdb&&activePid)?mpdb.getLetterhead(activePid):null;
+      if(L&&L.data){const by=dataUrlToBytes(L.data);if(by)lh=(String(L.data).indexOf('data:application/pdf')===0)?{pdf:by}:{png:by};} }catch(e){}
     const N=get('property.name')||'Property'; const docs=[];
     docs.push({label:'Cover letter (CA)',file:'01. '+N+' - Cover Letter',bytes:await window.RCSGen.coverLetter(rec,logo)});
     docs.push({label:'Owner cover letter',file:'02. '+N+' - RCS Owner Cover Letter',bytes:await window.RCSGen.ownerLetter(rec)});
