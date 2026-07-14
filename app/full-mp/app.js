@@ -109,7 +109,7 @@ function labelFor(k){for(const s of FIELD_SECTIONS){const f=s.fields.find(f=>f.k
 function ovBtns(k){return `<button class="revert" data-rev="${k}">↺ revert</button><button class="save1" data-save1="${k}">✓ save this field</button>`;}
 function ovNote(kk){const keys=Array.isArray(kk)?kk:[kk];const j=keys.join(',');const m=modeOf(keys);return `<div class="ovnote" data-ov="${j}" data-mode="${m}" style="display:${m?'flex':'none'}"><span class="om-over">changed from stored record</span><span class="om-new">new — not saved yet</span>${ovBtns(j)}</div>`;}
 function ovNoteAddr(box){const keys=ADDR_GROUPS[box];const m=modeOf(keys);return `<div class="ovnote" data-ov="${box}" data-mode="${m}" style="display:${m?'flex':'none'}"><span class="om-over">changed from stored record</span><span class="om-new">new — not saved yet</span><button class="revert" data-revaddr="${box}">↺ revert</button><button class="save1" data-save1addr="${box}">✓ save this field</button></div>`;}
-function csDrop(key,options,ph,cls,clearable){const cur=get(key);const has=cur!==''&&cur!=null;const lab=has?cur:(ph||'—');const menu=options.map(o=>'<div class="uaopt" data-csopt="'+esc(o)+'" data-cskey="'+key+'">'+esc(o)+'</div>').join('');const clr=(clearable&&has)?'<span class="csclear" data-csclear="'+key+'" title="Clear">✕</span>':'';return '<div class="uadrop cs '+(cls||'')+(clearable?' clearable':'')+'"><div class="uatrigger" tabindex="0" data-trigfor="'+key+'"><span class="ualab">'+esc(lab)+'</span>'+clr+'<span class="cvx">▾</span></div><div class="uamenu">'+menu+'</div></div>';}
+function csDrop(key,options,ph,cls,clearable,tint){const cur=get(key);const has=cur!==''&&cur!=null;const lab=has?cur:(ph||'—');const menu=options.map(o=>'<div class="uaopt" data-csopt="'+esc(o)+'" data-cskey="'+key+'">'+esc(o)+'</div>').join('');const clr=(clearable&&has)?'<span class="csclear" data-csclear="'+key+'" title="Clear">✕</span>':'';return '<div class="uadrop cs '+(cls||'')+(clearable?' clearable':'')+'"><div class="uatrigger" tabindex="0" data-trigfor="'+key+'"'+(tint?' style="'+tint+'"':'')+'><span class="ualab">'+esc(lab)+'</span>'+clr+'<span class="cvx">▾</span></div><div class="uamenu">'+menu+'</div></div>';}
 function dateEffResolved(){const src=get('rent_schedule.date_eff_source')||(get('rent_schedule.date_eff_rs')?'rs':'custom');return src==='custom'?get('rent_schedule.date_eff_custom'):get('rent_schedule.date_eff_rs');}
 function dateEffCell(){const rs=get('rent_schedule.date_eff_rs');const src=get('rent_schedule.date_eff_source')||(rs?'rs':'custom');const custom=get('rent_schedule.date_eff_custom');
   const rsLab=rs?(fmtDate(rs)+' · from RS'):'— · no RS date parsed';
@@ -147,35 +147,35 @@ function dirFill(pairs){pairs.forEach(p=>{form=store.editForm(form,p[0],p[1]||''
 function dirList(kind){return (mpdb&&mpdb.listDir)?mpdb.listDir(kind):[];}
 function dirNote(fk){const P=DIR_PICK[fk];const m=modeOf(P.modeKeys);const j=P.keys.join(',');return `<div class="ovnote" data-ov="${P.modeKeys.join(',')}" data-mode="${m}" style="display:${m?'flex':'none'}"><span class="om-over">changed from stored record</span><span class="om-new">new \u2014 not saved yet</span><button class="revert" data-rev="${j}">\u21ba revert</button><button class="save1" data-save1="${j}">\u2713 save this field</button></div>`;}
 function dirCell(f){const k=f.k;const P=DIR_PICK[k];const list=dirList(P.kind);const cur=get(k);
-  const st=f.prefix?comboSrc([f.k,f.prefix]):srcOf(k);const c=CLR[st]||CLR.new;
-  const pre=f.prefix?csDrop(f.prefix,['Ms.','Mr.','Dr.','Mx.'],'\u2014','csnarrow',true):'';
+  const st=f.prefix?baseSrc([f.prefix,f.k]):srcOf(k);const c=CLR[st]||CLR.new;const nameTint=(f.prefix&&partHot(k))?tintStyle(k):'';
+  const pre=f.prefix?csDrop(f.prefix,['Ms.','Mr.','Dr.','Mx.'],'\u2014','csnarrow',true,partHot(f.prefix)?tintStyle(f.prefix):''):'';
   const menu=list.length?('<div class="uamenu">'+list.map(ct=>{const s=P.sub(ct);return '<div class="uaopt" data-dirid="'+esc(ct.id)+'" data-dirfor="'+k+'">'+esc(ct.name)+(s?'<span class="uasub">'+esc(s)+'</span>':'')+'</div>';}).join('')+'</div>'):'';
   const pick=list.length?('<div class="uadrop pocpick"><div class="uatrigger" tabindex="0" title="Pick a saved '+esc(P.one)+'"><span class="cvx">&#9662;</span></div>'+menu+'</div>'):'';
-  return `<div class="field"><div class="flabel">${f.label}</div><div class="fbox poccell" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}">${pre}<input class="pocname-in" type="text" data-k="${k}" value="${esc(cur)}" placeholder="Type a name, or pick a saved ${esc(P.one)}" autocomplete="off">${pick}</div>${dirNote(k)}</div>`;}
+  return `<div class="field"><div class="flabel">${f.label}</div><div class="fbox poccell" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}">${pre}<input class="pocname-in" type="text" data-k="${k}" style="${nameTint}" value="${esc(cur)}" placeholder="Type a name, or pick a saved ${esc(P.one)}" autocomplete="off">${pick}</div>${dirNote(k)}</div>`;}
 function fieldCell(f){if(f.type==='addr')return addrCell();if(f.type==='caaddr')return caAddrCell();if(f.type==='appraddr')return apprAddrCell();if(f.type==='mgmtaddr')return mgmtCell();if(f.type==='select')return selectCell(f);if(f.k==='poc.name')return pocCell();if(DIR_PICK[f.k])return dirCell(f);
   const s=form[f.k]||{value:'',source:'new'};
-  const st=f.prefix?comboSrc([f.k,f.prefix]):s.source;const c=CLR[st]||CLR.new;
-  const pre=f.prefix?csDrop(f.prefix,['Ms.','Mr.','Dr.','Mx.'],'—','csnarrow',true):'';
-  return `<div class="field"><div class="flabel">${f.label}</div><div class="fbox" data-box="${f.k}" style="background:${c[1]};border-left-color:${c[0]}">${pre}<input type="text" data-k="${f.k}"${f.type==='phone'?' data-phone="1" inputmode="tel" maxlength="14"':''} value="${esc(s.value)}" autocomplete="off"></div>${ovNote(f.prefix?[f.prefix,f.k]:f.k)}</div>`;}
+  const st=f.prefix?baseSrc([f.prefix,f.k]):s.source;const c=CLR[st]||CLR.new;
+  const pre=f.prefix?csDrop(f.prefix,['Ms.','Mr.','Dr.','Mx.'],'—','csnarrow',true,partHot(f.prefix)?tintStyle(f.prefix):''):'';
+  return `<div class="field"><div class="flabel">${f.label}</div><div class="fbox" data-box="${f.k}" style="background:${c[1]};border-left-color:${c[0]}">${pre}<input type="text" data-k="${f.k}" style="${f.prefix&&partHot(f.k)?tintStyle(f.k):''}"${f.type==='phone'?' data-phone="1" inputmode="tel" maxlength="14"':''} value="${esc(s.value)}" autocomplete="off"></div>${ovNote(f.prefix?[f.prefix,f.k]:f.k)}</div>`;}
 function addrAgg(){if(ADDR.some(k=>srcOf(k)==='overridden'))return'overridden';if(ADDR.some(k=>srcOf(k)==='database'))return'database';return'new';}
 function addrCell(){return compAddrCell(ADDR,'property.addr','Address');}
 function caAddrCell(){return compAddrCell(CA_ADDR,'ca.addr','CA address');}
 function apprAddrCell(){return compAddrCell(APPR_ADDR,'appr.addr','Appraiser address');}
 function selectCell(f){const c=CLR[srcOf(f.k)]||CLR.new;return `<div class="field"><div class="flabel">${f.label}</div><div class="fbox seldrop" data-box="${f.k}" style="background:${c[1]};border-left-color:${c[0]}">${csDrop(f.k,f.opts,f.ph||'Select…')}${ovIcons(f.k)}</div>${ovNote(f.k)}</div>`;}
-function compAddrCell(keys,box,label){const a=aggSrc(keys);const c=CLR[a]||CLR.new;const ov=a==='overridden';
+function compAddrCell(keys,box,label){const a=baseSrc(keys);const c=CLR[a]||CLR.new;const ti=k=>partHot(k)?(';'+tintStyle(k)):'';
   return `<div class="field"><div class="flabel">${label}</div><div class="fbox addr" data-box="${box}" style="background:${c[1]};border-left-color:${c[0]}">
-     <input type="text" data-k="${keys[0]}" value="${esc(get(keys[0]))}" placeholder="Street" style="flex:2.2"><span class="adiv"></span>
-     <input type="text" data-k="${keys[1]}" value="${esc(get(keys[1]))}" placeholder="City" style="flex:1.3"><span class="adiv"></span>
-     ${csDrop(keys[2],STATES,'ST','csnarrow')}<span class="adiv"></span>
-     <input type="text" data-k="${keys[3]}" value="${esc(get(keys[3]))}" placeholder="ZIP" style="width:64px"></div>
+     <input type="text" data-k="${keys[0]}" value="${esc(get(keys[0]))}" placeholder="Street" style="flex:2.2${ti(keys[0])}"><span class="adiv"></span>
+     <input type="text" data-k="${keys[1]}" value="${esc(get(keys[1]))}" placeholder="City" style="flex:1.3${ti(keys[1])}"><span class="adiv"></span>
+     ${csDrop(keys[2],STATES,'ST','csnarrow',false,partHot(keys[2])?tintStyle(keys[2]):'')}<span class="adiv"></span>
+     <input type="text" data-k="${keys[3]}" value="${esc(get(keys[3]))}" placeholder="ZIP" style="width:64px${ti(keys[3])}"></div>
    ${ovNoteAddr(box)}</div>`;}
 function mgmtCell(){const src=get('tenant.mgmt_source')||'property';const propHas=ADDR.some(k=>get(k)!=='');
-  if(src==='custom'){const a=aggSrc(MGMT_ADDR);const c=CLR[a]||CLR.new;const ov=a==='overridden';
+  if(src==='custom'){const a=baseSrc(MGMT_ADDR);const c=CLR[a]||CLR.new;const ti=k=>partHot(k)?(';'+tintStyle(k)):'';
     return `<div class="field"><div class="flabel">Management address <span class="mgmtswitch" data-mgmt="property">↺ use property address</span></div><div class="fbox addr" data-box="tenant.mgmt" style="background:${c[1]};border-left-color:${c[0]}">
-       <input type="text" data-k="tenant.mgmt_street" value="${esc(get('tenant.mgmt_street'))}" placeholder="Street" style="flex:2.2"><span class="adiv"></span>
-       <input type="text" data-k="tenant.mgmt_city" value="${esc(get('tenant.mgmt_city'))}" placeholder="City" style="flex:1.3"><span class="adiv"></span>
-       ${csDrop('tenant.mgmt_state',STATES,'ST','csnarrow')}<span class="adiv"></span>
-       <input type="text" data-k="tenant.mgmt_zip" value="${esc(get('tenant.mgmt_zip'))}" placeholder="ZIP" style="width:64px"></div>
+       <input type="text" data-k="tenant.mgmt_street" value="${esc(get('tenant.mgmt_street'))}" placeholder="Street" style="flex:2.2${ti('tenant.mgmt_street')}"><span class="adiv"></span>
+       <input type="text" data-k="tenant.mgmt_city" value="${esc(get('tenant.mgmt_city'))}" placeholder="City" style="flex:1.3${ti('tenant.mgmt_city')}"><span class="adiv"></span>
+       ${csDrop('tenant.mgmt_state',STATES,'ST','csnarrow',false,partHot('tenant.mgmt_state')?tintStyle('tenant.mgmt_state'):'')}<span class="adiv"></span>
+       <input type="text" data-k="tenant.mgmt_zip" value="${esc(get('tenant.mgmt_zip'))}" placeholder="ZIP" style="width:64px${ti('tenant.mgmt_zip')}"></div>
      ${ovNoteAddr('tenant.mgmt')}</div>`;}
   const pretty=propHas?(get('property.addr_street')+', '+get('property.addr_city')+' '+get('property.addr_state')+' '+get('property.addr_zip')).replace(/\s+/g,' ').replace(/^,\s*/,'').trim():'';
   const inner=propHas?('<span class="mgmtprop">'+esc(pretty)+'</span><span class="srctag">· property</span>'):('<span class="mgmtph">Set the property address in Section 2, or pick a different address</span>');
@@ -187,8 +187,8 @@ function renderFieldSection(sec){const cols=[[],[]];sec.fields.forEach(f=>cols[f
 function boxColor(k){return CLR[srcOf(k)]||CLR.new;}
 function moneyBox(k){const c=boxColor(k);return `<div class="rbox money" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><span class="cur">$</span><input type="text" data-money="1" data-k="${k}" value="${esc(fmtMoney(get(k)))}">${ovIcons(k)}</div>`;}
 function numBox(k,ph){const c=boxColor(k);return `<div class="rbox" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><input type="text" data-k="${k}" value="${esc(get(k))}" placeholder="${esc(ph||'')}">${ovIcons(k)}</div>`;}
-function brbaBox(brK,baK){const st=comboSrc([brK,baK]);const c=CLR[st]||CLR.new;
-  return `<div class="rbox brba" data-box="${brK}" style="background:${c[1]};border-left-color:${c[0]}">${csDrop(brK,BR_OPTS,'BR','',true)}<span class="slash">/</span>${csDrop(baK,BA_OPTS,'BA','',true)}${ovIcons([brK,baK])}</div>`;}
+function brbaBox(brK,baK){const st=baseSrc([brK,baK]);const c=CLR[st]||CLR.new;
+  return `<div class="rbox brba" data-box="${brK}" style="background:${c[1]};border-left-color:${c[0]}">${csDrop(brK,BR_OPTS,'BR','',true,partHot(brK)?tintStyle(brK):'')}<span class="slash">/</span>${csDrop(baK,BA_OPTS,'BA','',true,partHot(baK)?tintStyle(baK):'')}${ovIcons([brK,baK])}</div>`;}
 function uaBox(i){const src=get('units.'+i+'.ua_source')||defUaSrc(i),exec=get('units.'+i+'.ua_exec'),rcs=get('units.'+i+'.ua_rcs'),custom=get('units.'+i+'.ua_custom');
   const hasAny=numf(exec)>0||numf(rcs)>0||numf(custom)>0;
   const lab=src==='rcs'?('$<input class="uac-in srcedit" data-srcedit="ua" data-si="'+i+'" data-money="1" value="'+esc(fmtMoney(rcs))+'"><span class="srctag">· RCS report</span>'):(src==='custom'?('$<input class="uac-in" data-money="1" data-k="units.'+i+'.ua_custom" value="'+esc(fmtMoney(custom))+'" placeholder="0">'):('$<input class="uac-in srcedit" data-srcedit="ua" data-si="'+i+'" data-money="1" value="'+esc(fmtMoney(exec))+'"><span class="srctag">· Executed RS</span>'));
@@ -205,8 +205,8 @@ function typeUnresolved(i){return typeConflict(i)&&!typeReviewedOf(i);}
 function numConflict(i){const nR=get('units.'+i+'.num_rcs');return (nR!==''&&nR!=null)&&numf(nR)!==numf(get('units.'+i+'.num_units'));}
 function numReviewedOf(i){return get('units.'+i+'.num_reviewed')==='1';}
 function numUnresolved(i){return numConflict(i)&&!numReviewedOf(i);}
-function unitTypeCell(i){const brK='units.'+i+'.br',baK='units.'+i+'.ba';const st=typeUnresolved(i)?'overridden':comboSrc([brK,baK]);const c=CLR[st]||CLR.new;
-  return `<div class="rbox brba" data-box="${brK}" style="background:${c[1]};border-left-color:${c[0]}">${csDrop(brK,BR_OPTS,'BR','',true)}<span class="slash">/</span>${csDrop(baK,BA_OPTS,'BA','',true)}${ovIcons([brK,baK])}</div>`;}
+function unitTypeCell(i){const brK='units.'+i+'.br',baK='units.'+i+'.ba';const conf=typeUnresolved(i);const st=conf?'overridden':baseSrc([brK,baK]);const c=CLR[st]||CLR.new;
+  return `<div class="rbox brba" data-box="${brK}" style="background:${c[1]};border-left-color:${c[0]}">${csDrop(brK,BR_OPTS,'BR','',true,(!conf&&partHot(brK))?tintStyle(brK):'')}<span class="slash">/</span>${csDrop(baK,BA_OPTS,'BA','',true,(!conf&&partHot(baK))?tintStyle(baK):'')}${ovIcons([brK,baK])}</div>`;}
 function unitCountCell(i){const k='units.'+i+'.num_units';const st=numUnresolved(i)?'overridden':srcOf(k);const c=CLR[st]||CLR.new;return `<div class="rbox" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><input type="text" data-k="${k}" value="${esc(get(k))}">${ovIcons(k)}</div>`;}
 function typeNote(i){if(!typeConflict(i))return '';const br=get('units.'+i+'.br'),ba=get('units.'+i+'.ba'),brR=get('units.'+i+'.br_rcs')||br,baR=get('units.'+i+'.ba_rcs')||ba;
   if(typeUnresolved(i))return '<div class="ucnote warn">⚠ RS '+br+'/'+ba+' · RCS '+brR+'/'+baR+' <span class="pick"><button class="urev" data-typ="rs" data-ci="'+i+'">keep RS</button><button class="urev sv" data-typ="rcs" data-ci="'+i+'">use RCS</button></span></div>';
@@ -391,8 +391,21 @@ function revertPending(){if(!_pending||!_pending.length)return false;const keys=
 function paintAddr(){const c=CLR[addrAgg()]||CLR.new;const box=document.querySelector('[data-box="property.addr"]');if(box){box.style.background=c[1];box.style.borderLeftColor=c[0];}const ov=document.querySelector('[data-ov="property.addr"]');if(ov)ov.style.display=addrAgg()==='overridden'?'flex':'none';}
 function aggSrc(keys){if(keys.some(k=>srcOf(k)==='overridden'))return'overridden';if(keys.some(k=>srcOf(k)==='database'))return'database';if(keys.some(k=>srcOf(k)==='this-cycle'))return'this-cycle';return'new';}
 function groupOf(k){for(const b in ADDR_GROUPS){if(ADDR_GROUPS[b].indexOf(k)>=0)return b;}return null;}
-function paintGroup(b){const keys=ADDR_GROUPS[b];const a=aggSrc(keys);const c=CLR[a]||CLR.new;const box=document.querySelector('[data-box="'+b+'"]');if(box){box.style.background=c[1];box.style.borderLeftColor=c[0];}const ov=document.querySelector('[data-ov="'+b+'"]');if(ov){const m=modeOf(keys);ov.setAttribute('data-mode',m);ov.style.display=m?'flex':'none';}}
-function paintCell(k){const gb=groupOf(k);if(gb)return paintGroup(gb);const s=form[k];if(!s)return;const _sr=(k==='rent_schedule.date_rents_effective'&&s.source==='database')?'this-cycle':s.source;const c=CLR[_sr]||CLR.new;const box=document.querySelector('[data-box="'+k+'"]');if(box){box.style.background=c[1];box.style.borderLeftColor=c[0];}const ov=document.querySelector('[data-ov="'+k+'"]');if(ov){const m=modeOf(k);ov.setAttribute('data-mode',m);ov.style.display=m?'flex':'none';}document.querySelectorAll('[data-ovic]').forEach(o=>{const ks=o.getAttribute('data-ovic').split(',');if(ks.indexOf(k)>=0){const m=modeOf(ks);o.setAttribute('data-mode',m);o.style.display=m?'inline-flex':'none';}});}
+function partHot(k){const s=srcOf(k);return s==='overridden'||(s==='new'&&get(k)!==''&&get(k)!=null);}
+function baseSrc(keys){const cold=keys.filter(k=>!partHot(k));return aggSrc(cold.length?cold:keys);}
+function tintStyle(k){const c=CLR[srcOf(k)]||CLR.new;return 'background:'+c[1]+';box-shadow:inset 3px 0 0 '+c[0]+';border-radius:6px';}
+function paintGroup(b){const keys=ADDR_GROUPS[b];const a=baseSrc(keys);const c=CLR[a]||CLR.new;const box=document.querySelector('[data-box="'+b+'"]');
+  if(box){box.style.background=c[1];box.style.borderLeftColor=c[0];
+    keys.forEach(k=>{const inp=box.querySelector('input[data-k="'+k+'"]');if(!inp)return;
+      if(partHot(k)){const pc=CLR[srcOf(k)]||CLR.new;inp.style.background=pc[1];inp.style.boxShadow='inset 3px 0 0 '+pc[0];inp.style.borderRadius='6px';}
+      else{inp.style.background='transparent';inp.style.boxShadow='none';}});}
+  const ov=document.querySelector('[data-ov="'+b+'"]');if(ov){const m=modeOf(keys);ov.setAttribute('data-mode',m);ov.style.display=m?'flex':'none';}}
+function paintCaName(){const keys=['ca.prefix','ca.name'];const a=baseSrc(keys);const c=CLR[a]||CLR.new;const box=document.querySelector('[data-box="ca.name"]');
+  if(box){box.style.background=c[1];box.style.borderLeftColor=c[0];const inp=box.querySelector('input[data-k="ca.name"]');
+    if(inp){if(partHot('ca.name')){const pc=CLR[srcOf('ca.name')]||CLR.new;inp.style.background=pc[1];inp.style.boxShadow='inset 3px 0 0 '+pc[0];inp.style.borderRadius='6px';}
+      else{inp.style.background='transparent';inp.style.boxShadow='none';}}}
+  const ov=document.querySelector('.ovnote[data-ov="ca.prefix,ca.name"]');if(ov){const m=modeOf(keys);ov.setAttribute('data-mode',m);ov.style.display=m?'flex':'none';}}
+function paintCell(k){const gb=groupOf(k);if(gb)return paintGroup(gb);if(k==='ca.name'||k==='ca.prefix')return paintCaName();const s=form[k];if(!s)return;const _sr=(k==='rent_schedule.date_rents_effective'&&s.source==='database')?'this-cycle':s.source;const c=CLR[_sr]||CLR.new;const box=document.querySelector('[data-box="'+k+'"]');if(box){box.style.background=c[1];box.style.borderLeftColor=c[0];}const ov=document.querySelector('[data-ov="'+k+'"]');if(ov){const m=modeOf(k);ov.setAttribute('data-mode',m);ov.style.display=m?'flex':'none';}document.querySelectorAll('[data-ovic]').forEach(o=>{const ks=o.getAttribute('data-ovic').split(',');if(ks.indexOf(k)>=0){const m=modeOf(ks);o.setAttribute('data-mode',m);o.style.display=m?'inline-flex':'none';}});}
 function clearUncheckedWriteins(ids){ids.forEach(id=>{if(get('partb.writein.'+id)&&get('partb.writein.'+id+'.on')!=='1'){form=store.editForm(form,'partb.writein.'+id,'');form=store.editForm(form,'partb.writein.'+id+'.on','');}});}
 function wireArrowNav(){document.querySelectorAll('.fbox:not(.uacell),.rbox:not(.uacell)').forEach(cell=>{const items=[...cell.querySelectorAll('input[data-k],.uatrigger')];if(items.length<2)return;items.forEach((it,idx)=>{it.addEventListener('keydown',e=>{if(e.key!=='ArrowLeft'&&e.key!=='ArrowRight')return;const isInput=/^(INPUT|TEXTAREA)$/.test(it.tagName);if(isInput){const v=(it.value||'');const at0=it.selectionStart===0&&it.selectionEnd===0;const atE=it.selectionStart===v.length&&it.selectionEnd===v.length;if(e.key==='ArrowLeft'&&!at0)return;if(e.key==='ArrowRight'&&!atE)return;}else{const dd=it.closest('.uadrop');if(dd&&dd.classList.contains('open'))dd.classList.remove('open');}const ni=e.key==='ArrowRight'?items[idx+1]:items[idx-1];if(!ni)return;e.preventDefault();ni.focus({preventScroll:true});if(/^(INPUT|TEXTAREA)$/.test(ni.tagName)){try{const L=(ni.value||'').length;const pos=e.key==='ArrowRight'?0:L;ni.setSelectionRange(pos,pos);}catch(_e){}}});});});}
 function wireBody(){

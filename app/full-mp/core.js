@@ -10,8 +10,11 @@ function makeStore(adapter, FIELDS) {
     clearDb: () => adapter.clearDb(),
     emptyForm(){ const f={}; for(const {key} of FIELDS) f[key]=blank(); return f; },
     async fillForm(){ const db=await adapter.getDb(); const f=this.emptyForm();
-      for(const key of Object.keys(db)){ const r=db[key]; if(r&&r.value!=null&&r.value!=='')
-        f[key]={value:r.value,source:'database',saved_at:r.saved_at,prior_value:null,prior_source:null,db_value:r.value}; }
+      for(const key of Object.keys(db)){ const r=db[key]; if(!r||r.value==null) continue;
+        // A record saved blank keeps db_value:'' so a later entry reads as an
+        // override (and revert restores the saved blank), not first-time data.
+        if(r.value==='') f[key]={value:'',source:'new',saved_at:r.saved_at,prior_value:null,prior_source:null,db_value:''};
+        else f[key]={value:r.value,source:'database',saved_at:r.saved_at,prior_value:null,prior_source:null,db_value:r.value}; }
       return f; },
     editForm(form,key,v){ if(!form[key]) form[key]=blank(); const cur=form[key], onFile=cur.db_value;
       if(onFile!=null && onFile!==''){ if(v===onFile) form[key]={...cur,value:v,source:'database',prior_value:null,prior_source:null};
