@@ -38,7 +38,7 @@ function makeSupabaseDb(client) {
     'appr.addr_street': 'appraiser_address_street', 'appr.addr_city': 'appraiser_address_city', 'appr.addr_state': 'appraiser_address_state', 'appr.addr_zip': 'appraiser_address_zip',
     'rent_schedule.date_rents_effective': 'date_rents_effective', 'rent_schedule.date_eff_rs': 'date_eff_rs', 'rent_schedule.date_eff_source': 'date_eff_source', 'rent_schedule.date_eff_custom': 'date_eff_custom',
     'checklist.sign_date': 'checklist_sign_date', 'tenant.date_of_notice': 'tenant_date_of_notice', 'cycle.submission_date': 'submission_date',
-    'lihtc.enabled': 'has_lihtc',
+    'lihtc.enabled': 'has_lihtc', 'nonrev.enabled': 'has_nonrev',
   };
   const PSCALAR_REV = {}; for (const k in PSCALAR) PSCALAR_REV[PSCALAR[k]] = k;
 
@@ -53,9 +53,9 @@ function makeSupabaseDb(client) {
   const UCOL_REV = {}; for (const k in UCOL) UCOL_REV[UCOL[k]] = k;
   const UINT = new Set(['num_units', 'current', 'proposed', 'ua_exec', 'ua_rcs', 'ua_custom', 'num_rcs', 'safmr_rcs', 'safmr_hud', 'safmr_custom']);
 
-  const NRCOL = { use: 'use', br: 'bedrooms', ba: 'bathrooms', rent: 'monthly_rent' };
+  const NRCOL = { use: 'use', br: 'bedrooms', ba: 'bathrooms', num_units: 'num_units', rent: 'monthly_rent' };
   const NRCOL_REV = {}; for (const k in NRCOL) NRCOL_REV[NRCOL[k]] = k;
-  const NRINT = new Set(['rent']);
+  const NRINT = new Set(['num_units', 'rent']);
 
   const LICOL = { br: 'bedrooms', ba: 'bathrooms', num_units: 'num_units', avg_rent: 'avg_rent' };
   const LICOL_REV = {}; for (const k in LICOL) LICOL_REV[LICOL[k]] = k;

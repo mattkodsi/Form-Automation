@@ -180,7 +180,7 @@
     const liA=g('lihtc.enabled')==='1'?[...new Set(Object.keys(rec).map(k=>(k.match(/^lihtc\.(\d+)\./)||[])[1]).filter(x=>x!=null))].sort((a,b)=>a-b).filter(i=>g('lihtc.'+i+'.br')||g('lihtc.'+i+'.ba')||g('lihtc.'+i+'.avg_rent')):[];
     if(liA.length&&r<=9){ r++; liA.forEach(i=>{ if(r>10)return; const base=7+r*8; T(base, utype(g('lihtc.'+i+'.br'),g('lihtc.'+i+'.ba'))); const ln=nmv(g('lihtc.'+i+'.num_units')); if(ln)T(base+1,ln); const ar=g('lihtc.'+i+'.avg_rent'); if(ar!==''&&ar!=null)T(base+2,money(ar)); tu+=ln; r++; }); }
     const nrA=[...new Set(Object.keys(rec).map(k=>(k.match(/^nonrev\.(\d+)\./)||[])[1]).filter(x=>x!=null))].sort((a,b)=>a-b).filter(i=>g('nonrev.'+i+'.use')||g('nonrev.'+i+'.br')||g('nonrev.'+i+'.ba')||g('nonrev.'+i+'.rent'));
-    if(nrA.length&&r<=9){ r++; nrA.forEach(i=>{ if(r>10)return; const base=7+r*8; T(base, g('nonrev.'+i+'.use')||utype(g('nonrev.'+i+'.br'),g('nonrev.'+i+'.ba'))); T(base+1,'1'); tu+=1; r++; }); }
+    if(nrA.length&&r<=9){ r++; nrA.forEach(i=>{ if(r>10)return; const base=7+r*8; T(base, g('nonrev.'+i+'.use')||utype(g('nonrev.'+i+'.br'),g('nonrev.'+i+'.ba'))); const nn=nmv(g('nonrev.'+i+'.num_units'))||1; T(base+1,nn); tu+=nn; r++; }); }
     T('94a',tu||''); T('95',money(tc)); T('96',money(tc*12));
     const eq=[99,100,101,102,103,104,105]; for(let k=0;k<7;k++) if(g('partb.equipment.'+k)==='1') C(eq[k]);
     const ut=[116,118,120,122,124], ff=[117,119,121,123,125];
