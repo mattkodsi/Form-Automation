@@ -92,8 +92,10 @@ counterpart's proposed rent, once RCS parsing exists).
   function through a service-role-only RPC `public.get_hud_token()` (migration
   `add_get_hud_token_rpc`). The token is NEVER in git/index.html; an `HUD_API_TOKEN`
   edge-function env secret, if ever set, takes precedence. Token source: Matt's inbox
-  ("HUD API Token", 2026-07-14). NOTE: the token is registered for the FMR dataset only —
-  NOT the USPS crosswalk dataset (hence the Census-geocoder leg).
+  ("HUD API Token", 2026-07-14). The token has the FMR **and** USPS-crosswalk datasets
+  (crosswalk enabled later the same day) — ZIP→county now uses HUD's own crosswalk
+  (type 2, highest res_ratio wins); the Census geocoder is only the no-ZIP fallback,
+  so ZIP alone is enough to pull.
 - **Section 6 "⤓ Pull HUD SAFMR" button** (`app.js` `pullHudSafmr()`, wired next to
   addUnit/addNonrev; CSS `.hudpull` in `shell.head.html`): fills `units.{i}.safmr_hud`
   with **round(1.5 × base SAFMR)** per unit type (db.js:109 — the field holds the 150%
