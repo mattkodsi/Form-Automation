@@ -251,7 +251,7 @@ async function ensureHudSafmr(opts){opts=opts||{};const manual=!!opts.manual;
   if(_hud.key===key&&_hud.data){const n=applyHudSafmr();if(n)renderKeepFocus();if(manual||n)hudStatus(n);return;}
   if(_hud.inflight===key)return;
   _hud.inflight=key;
-  const b0=el('pullSafmr');if(b0){b0.disabled=true;b0.textContent='HUD…';}
+  const b0=el('pullSafmr');if(b0)b0.disabled=true;
   try{
     const r=await supaClient.functions.invoke('hud-safmr',{body:{street:p.street,city:p.city,state:p.state,zip:p.zip,year:p.year}});
     if(r.error){let m='request failed';try{m=(await r.error.context.json()).error||m;}catch(e){m=r.error.message||m;}throw new Error(m);}
@@ -261,7 +261,7 @@ async function ensureHudSafmr(opts){opts=opts||{};const manual=!!opts.manual;
     const pNow=hudParams();if(pNow.zip+'|'+pNow.year!==key)return; // form/property changed while fetching — cache it, don't apply
     const n=applyHudSafmr();if(n)renderKeepFocus();hudStatus(n);
   }catch(e){_hud.inflight=null;if(manual)setStatus('HUD SAFMR pull failed: '+(e&&e.message?e.message:e));}
-  finally{const b=el('pullSafmr');if(b){b.disabled=false;b.textContent='⤓ HUD';}}
+  finally{const b=el('pullSafmr');if(b)b.disabled=false;}
 }
 
 function provColor(k){return (CLR[srcOf(k)]||CLR.new)[0];}
