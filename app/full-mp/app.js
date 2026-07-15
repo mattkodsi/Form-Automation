@@ -676,7 +676,7 @@ async function dlPackageFolder(nm,docs,combined){
     docs.forEach(d=>files.push({name:'RCS Package/'+d.file+'.pdf',data:d.bytes}));
     let xlNote='';
     try{files.push({name:'RCS Package/'+nm+' - RCS Analysis.xlsx',data:await buildRentAnalysisBytes()});
-      if(UNITS.length>6)xlNote=' Note: the Excel template holds 6 unit types \u2014 '+(UNITS.length-6)+' extra row(s) were left off the workbook.';}
+      if(UNITS.length>11)xlNote=' Note: the Excel template holds 11 unit types \u2014 '+(UNITS.length-11)+' extra row(s) were left off the workbook.';}
     catch(e){xlNote=' (the Rent Analysis workbook could not be built: '+((e&&e.message)||e)+')';}
     dlFile(window.RCSXlsx.makeZip(files),nm+' - RCS Package.zip','application/zip');
     setStatus('RCS Package folder downloaded \u2014 the combined report, each document, and the Rent Analysis workbook, all in one folder.'+xlNote);
@@ -692,7 +692,7 @@ async function genRentAnalysis(){
   try{setStatus('Building the Rent Analysis workbook\u2026');
     const N=get('property.name')||'Property';
     dlFile(await buildRentAnalysisBytes(),N+' - RCS Analysis.xlsx','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    setStatus('Rent Analysis workbook downloaded.'+(UNITS.length>6?' Note: the template holds 6 unit types \u2014 '+(UNITS.length-6)+' extra row(s) were left off.':''));
+    setStatus('Rent Analysis workbook downloaded.'+(UNITS.length>11?' Note: the template holds 11 unit types \u2014 '+(UNITS.length-11)+' extra row(s) were left off.':''));
   }catch(e){setStatus('Excel generation failed: '+((e&&e.message)||e));}
 }
 async function genPackage(){
