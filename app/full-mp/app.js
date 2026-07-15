@@ -502,11 +502,12 @@ function openMenu(){renderMenu();show('Menu');}
 function renderMenu(){
   const q=((el('menuSearch')&&el('menuSearch').value)||'').toLowerCase();
   const all=mpdb.listProperties();
-  const props=all.filter(p=>!q||(p.name+' '+p.fha+' '+(p.city_state||'')).toLowerCase().indexOf(q)>=0);if(sortMode==='updated'){const idn=x=>parseInt(String(x).replace(/\D/g,''),10)||0;props.sort((a,b)=>String(b.updated_at||'').localeCompare(String(a.updated_at||''))||(idn(b.id)-idn(a.id)));}
+  const props=all.filter(p=>!q||(p.name+' '+(p.alias||'')+' '+p.fha+' '+(p.city_state||'')).toLowerCase().indexOf(q)>=0);if(sortMode==='updated'){const idn=x=>parseInt(String(x).replace(/\D/g,''),10)||0;props.sort((a,b)=>String(b.updated_at||'').localeCompare(String(a.updated_at||''))||(idn(b.id)-idn(a.id)));}
   const need=all.filter(p=>p.completeness<1).length;
   if(el('menuCount'))el('menuCount').textContent=all.length+(all.length===1?' property':' properties')+(all.length?(need?'  ·  '+need+' need'+(need===1?'s':'')+' review':'  ·  all complete'):'');
   const card=p=>{const pct=Math.round(p.completeness*100);
-    return '<button class="pcard" data-open="'+p.id+'"><div class="pc-top"><div class="pc-name">'+esc(p.name)+'</div>'+ringSvg(pct)+'</div>'
+    const al=(p.alias||'').trim();const showAl=al&&al.toLowerCase()!==String(p.name||'').trim().toLowerCase();
+    return '<button class="pcard" data-open="'+p.id+'"><div class="pc-top"><div class="pc-name">'+esc(p.name)+(showAl?'<span class="pc-alias">&ldquo;'+esc(al)+'&rdquo;</span>':'')+'</div>'+ringSvg(pct)+'</div>'
       +'<div class="pc-meta">'+esc(p.fha)+(p.city_state?' &middot; '+esc(p.city_state):'')+'</div><div class="pc-div"></div>'
       +'<div class="pc-foot"><span class="pc-units">'+p.total_units+' unit'+(p.total_units===1?'':'s')+(p.unit_types?' &middot; '+p.unit_types+' type'+(p.unit_types===1?'':'s'):'')+'</span><span class="pc-upd" title="'+esc(updTitle(p.updated_at))+'">Updated '+relTime(p.updated_at)+'</span></div></button>';};
   const newTile='<button class="pcard newcard" id="tileNew"><span class="plus">+</span><span>New property</span></button>';

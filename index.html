@@ -164,7 +164,7 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;borde
 .pcard{text-align:left;font:inherit;background:#fff;border:1px solid #e6ebf3;border-radius:14px;padding:18px 18px 15px;cursor:pointer;display:flex;flex-direction:column;transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease;min-height:134px}
 .pcard:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(30,58,95,.12);border-color:#c7d2e6}
 .pc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
-.pc-name{font-size:15.5px;font-weight:700;color:#1f2937;line-height:1.32}
+.pc-name{font-size:15.5px;font-weight:700;color:#1f2937;line-height:1.32} .pc-alias{font-size:12px;font-weight:400;color:#8791a5;margin-left:7px}
 .pc-meta{font-size:12px;color:#7c86a2;margin-top:6px}
 .pc-div{border-top:1px solid #eef1f6;margin-top:auto}
 .pc-foot{display:flex;align-items:center;justify-content:space-between;margin-top:11px;gap:8px}
@@ -649,7 +649,7 @@ async function makeDb(adapter, opts) {
       return {
         id: p.id, name: dv(p, 'property.name') || '(unnamed property)', fha: dv(p, 'property.fha') || '—',
         city_state: (dv(p, 'property.addr_city') || '') + (dv(p, 'property.addr_state') ? ', ' + dv(p, 'property.addr_state') : ''),
-        entity: dv(p, 'owner.entity_name') || '', unit_types: uc.types, total_units: uc.units,
+        entity: dv(p, 'owner.entity_name') || '', alias: dv(p, 'tenant.property_alias') || '', unit_types: uc.types, total_units: uc.units,
         completeness: completenessOf(p), created_at: p.created_at, updated_at: p.updated_at || p.created_at,
         has_letterhead: dv(p, 'assets.letterhead_name') !== '',
       };
@@ -950,7 +950,7 @@ function makeSupabaseDb(client) {
           return {
             id: p.id, name: dv(p, 'property.name') || '(unnamed property)', fha: dv(p, 'property.fha') || '—',
             city_state: (dv(p, 'property.addr_city') || '') + (dv(p, 'property.addr_state') ? ', ' + dv(p, 'property.addr_state') : ''),
-            entity: dv(p, 'owner.entity_name') || '', unit_types: uc.types, total_units: uc.units,
+            entity: dv(p, 'owner.entity_name') || '', alias: dv(p, 'tenant.property_alias') || '', unit_types: uc.types, total_units: uc.units,
             completeness: completenessOf(p), created_at: p.created_at, updated_at: p.updated_at || p.created_at,
             has_letterhead: dv(p, 'assets.letterhead_name') !== '',
           };
@@ -1560,11 +1560,12 @@ function openMenu(){renderMenu();show('Menu');}
 function renderMenu(){
   const q=((el('menuSearch')&&el('menuSearch').value)||'').toLowerCase();
   const all=mpdb.listProperties();
-  const props=all.filter(p=>!q||(p.name+' '+p.fha+' '+(p.city_state||'')).toLowerCase().indexOf(q)>=0);if(sortMode==='updated'){const idn=x=>parseInt(String(x).replace(/\D/g,''),10)||0;props.sort((a,b)=>String(b.updated_at||'').localeCompare(String(a.updated_at||''))||(idn(b.id)-idn(a.id)));}
+  const props=all.filter(p=>!q||(p.name+' '+(p.alias||'')+' '+p.fha+' '+(p.city_state||'')).toLowerCase().indexOf(q)>=0);if(sortMode==='updated'){const idn=x=>parseInt(String(x).replace(/\D/g,''),10)||0;props.sort((a,b)=>String(b.updated_at||'').localeCompare(String(a.updated_at||''))||(idn(b.id)-idn(a.id)));}
   const need=all.filter(p=>p.completeness<1).length;
   if(el('menuCount'))el('menuCount').textContent=all.length+(all.length===1?' property':' properties')+(all.length?(need?'  ·  '+need+' need'+(need===1?'s':'')+' review':'  ·  all complete'):'');
   const card=p=>{const pct=Math.round(p.completeness*100);
-    return '<button class="pcard" data-open="'+p.id+'"><div class="pc-top"><div class="pc-name">'+esc(p.name)+'</div>'+ringSvg(pct)+'</div>'
+    const al=(p.alias||'').trim();const showAl=al&&al.toLowerCase()!==String(p.name||'').trim().toLowerCase();
+    return '<button class="pcard" data-open="'+p.id+'"><div class="pc-top"><div class="pc-name">'+esc(p.name)+(showAl?'<span class="pc-alias">&ldquo;'+esc(al)+'&rdquo;</span>':'')+'</div>'+ringSvg(pct)+'</div>'
       +'<div class="pc-meta">'+esc(p.fha)+(p.city_state?' &middot; '+esc(p.city_state):'')+'</div><div class="pc-div"></div>'
       +'<div class="pc-foot"><span class="pc-units">'+p.total_units+' unit'+(p.total_units===1?'':'s')+(p.unit_types?' &middot; '+p.unit_types+' type'+(p.unit_types===1?'':'s'):'')+'</span><span class="pc-upd" title="'+esc(updTitle(p.updated_at))+'">Updated '+relTime(p.updated_at)+'</span></div></button>';};
   const newTile='<button class="pcard newcard" id="tileNew"><span class="plus">+</span><span>New property</span></button>';

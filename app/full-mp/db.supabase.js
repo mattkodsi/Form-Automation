@@ -217,7 +217,7 @@ function makeSupabaseDb(client) {
           return {
             id: p.id, name: dv(p, 'property.name') || '(unnamed property)', fha: dv(p, 'property.fha') || '—',
             city_state: (dv(p, 'property.addr_city') || '') + (dv(p, 'property.addr_state') ? ', ' + dv(p, 'property.addr_state') : ''),
-            entity: dv(p, 'owner.entity_name') || '', unit_types: uc.types, total_units: uc.units,
+            entity: dv(p, 'owner.entity_name') || '', alias: dv(p, 'tenant.property_alias') || '', unit_types: uc.types, total_units: uc.units,
             completeness: completenessOf(p), created_at: p.created_at, updated_at: p.updated_at || p.created_at,
             has_letterhead: dv(p, 'assets.letterhead_name') !== '',
           };
