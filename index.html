@@ -1504,7 +1504,8 @@ function wireBody(){
   const addn=el('addNonrev');if(addn)addn.onclick=()=>{_undoNR=[];NONREV.push(NONREV.length?Math.max.apply(null,NONREV)+1:0);renderBody();setStatus('');};
   const nt=el('nonrevToggle');if(nt)nt.onchange=()=>{if(!nt.checked&&NONREV.length){nt.checked=true;setStatus('Delete the non-revenue rows first to turn this section off.');return;}form=store.editForm(form,'nonrev.enabled',nt.checked?'1':'');if(nt.checked&&!NONREV.length){_undoNR=[];NONREV=[0];}renderBody();setStatus('');};
   const lt=el('lihtcToggle');if(lt)lt.onchange=()=>{
-    if(!lt.checked&&LIHTC.some(i=>lihtcHasData(i)||numf(get('lihtc.'+i+'.num_units'))>0)){
+    if(!lt.checked&&LIHTC.some(i=>numf(get('lihtc.'+i+'.num_units'))>0)){lt.checked=true;setStatus('Delete the non-Section 8 rows first to turn this section off.');return;}
+    if(!lt.checked&&LIHTC.some(lihtcHasData)){
       lt.checked=true;
       dialogConfirm('Turn off non-Section 8 units?','The section still holds '+LIHTC.length+' row'+(LIHTC.length>1?'s':'')+' with values. Turned off, the rows are left out of every generated document, and your next \u201cUpdate database\u201d removes them for good \u2014 re-check the box before saving to bring them back.','Turn off',true,()=>{form=store.editForm(form,'lihtc.enabled','');renderBody();setStatus('Non-Section 8 units off \u2014 the hidden rows are removed on your next Update database.');});
       return;}
