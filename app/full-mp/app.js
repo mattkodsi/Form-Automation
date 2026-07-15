@@ -105,8 +105,10 @@ function dateEffCell(){const rs=get('rent_schedule.date_eff_rs');const src=get('
 function pocSelectContact(ct){form=store.editForm(form,'poc.name',ct.name||'');form=store.editForm(form,'poc.email',ct.email||'');form=store.editForm(form,'poc.phone',fmtPhone(ct.phone||''));}
 function pocNote(){const m=modeOf('poc.name');return `<div class="ovnote" data-ov="poc.name" data-mode="${m}" style="display:${m?'flex':'none'}"><span class="om-over">changed from stored record</span><span class="om-new">new — not saved yet</span><button class="revert" data-rev="poc.name,poc.email,poc.phone">↺ revert</button><button class="save1" data-save1="poc.name,poc.email,poc.phone">✓ save this field</button></div>`;}
 function pocCell(){const k='poc.name';const contacts=(mpdb?mpdb.listContacts():[]);const cur=get(k);const c=CLR[srcOf(k)]||CLR.new;
-  const menu=contacts.length?('<div class="uamenu">'+contacts.map(ct=>'<div class="uaopt" data-pocopt="'+esc(ct.id)+'">'+esc(ct.name)+(ct.email?'<span class="uasub">'+esc(ct.email)+'</span>':'')+'</div>').join('')+'</div>'):'';
-  const pick=contacts.length?('<div class="uadrop pocpick"><div class="uatrigger" tabindex="0" title="Pick a saved contact"><span class="cvx">&#9662;</span></div>'+menu+'</div>'):'';
+  const nvp=navVal('poc.name');
+  const navRow=(nvp?'<div class="uaopt" data-pocnav="1">'+esc(nvp)+'<span class="uasub">Navigator</span></div>':'<div class="uaopt navdim">\u2014<span class="uasub">Navigator \u00b7 not available</span></div>')+'<div class="uaopt navdim">\u2014<span class="uasub">RCS report \u00b7 not available</span></div>';
+  const menu='<div class="uamenu">'+navRow+contacts.map(ct=>'<div class="uaopt" data-pocopt="'+esc(ct.id)+'">'+esc(ct.name)+(ct.email?'<span class="uasub">'+esc(ct.email)+'</span>':'')+'</div>').join('')+'</div>';
+  const pick='<div class="uadrop pocpick"><div class="uatrigger" tabindex="0" title="Pick a saved contact"><span class="cvx">&#9662;</span></div>'+menu+'</div>';
   return `<div class="field"><div class="flabel">Point of contact</div><div class="fbox poccell" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><input class="pocname-in" data-k="poc.name" value="${esc(cur)}" placeholder="Type a name, or pick a saved contact" autocomplete="off">${pick}</div>${pocNote()}</div>`;}
 /* Saved-contact pickers (appraiser / CA / signatory) — same mechanics as the
    PM point-of-contact cell: picking a saved contact fills its whole section as
@@ -131,24 +133,81 @@ function dirNote(fk){const P=DIR_PICK[fk];const m=modeOf(P.modeKeys);const j=P.k
 function dirCell(f){const k=f.k;const P=DIR_PICK[k];const list=dirList(P.kind);const cur=get(k);
   const st=f.prefix?baseSrc([f.prefix,f.k]):srcOf(k);const c=CLR[st]||CLR.new;const nameTint=(f.prefix&&partHot(k))?tintStyle(k):'';
   const pre=f.prefix?csDrop(f.prefix,['Ms.','Mr.','Dr.','Mx.'],'\u2014','csnarrow',true,partHot(f.prefix)?tintStyle(f.prefix):''):'';
-  const menu=list.length?('<div class="uamenu">'+list.map(ct=>{const s=P.sub(ct);return '<div class="uaopt" data-dirid="'+esc(ct.id)+'" data-dirfor="'+k+'">'+esc(ct.name)+(s?'<span class="uasub">'+esc(s)+'</span>':'')+'</div>';}).join('')+'</div>'):'';
-  const pick=list.length?('<div class="uadrop pocpick"><div class="uatrigger" tabindex="0" title="Pick a saved '+esc(P.one)+'"><span class="cvx">&#9662;</span></div>'+menu+'</div>'):'';
+  const srcRow=DIR_SRCROW[k]?('<div class="uaopt navdim">\u2014<span class="uasub">'+esc(DIR_SRCROW[k])+' \u00b7 not available</span></div>'):'';
+  const menu='<div class="uamenu">'+srcRow+list.map(ct=>{const s=P.sub(ct);return '<div class="uaopt" data-dirid="'+esc(ct.id)+'" data-dirfor="'+k+'">'+esc(ct.name)+(s?'<span class="uasub">'+esc(s)+'</span>':'')+'</div>';}).join('')+'</div>';
+  const pick=(srcRow||list.length)?('<div class="uadrop pocpick"><div class="uatrigger" tabindex="0" title="Pick a saved '+esc(P.one)+'"><span class="cvx">&#9662;</span></div>'+menu+'</div>'):'';
   return `<div class="field"><div class="flabel">${f.label}</div><div class="fbox poccell" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}">${pre}<input class="pocname-in" type="text" data-k="${k}" style="${nameTint}" value="${esc(cur)}" placeholder="Type a name, or pick a saved ${esc(P.one)}" autocomplete="off">${pick}</div>${dirNote(k)}</div>`;}
+/* ============ External-source dropdowns (Navigator / RS / RCS) ============
+   The UI layer of NAVIGATOR-SOURCING-SPEC.md: sourced options sit at the top
+   of each cell's dropdown in precedence order; a source with no data is a
+   dimmed "\u2014 \u00b7 not available" row, never an error.
+   No Navigator provider ships in this build. The Navigator integration plugs
+   in by setting window.NavigatorSource before boot:
+     listProperties() -> [{id, name}]   portfolio for the New-property picker
+     value(flatKey)   -> string|null    the active property's value for a form
+                                        flat key (the spec \u00a73 cells)
+   value() is called synchronously on every render, so the provider should
+   fetch a snapshot when the form opens (copy ensureHudSafmr()'s lifecycle),
+   answer from that snapshot, and call renderBody() when fresh data lands.
+   Executed-RS / RCS-report rows stay "not available" until document parsing
+   lands (still a stub); they render now so all three sources light up
+   uniformly. The form never writes back to Navigator. */
+function navProps(){try{const p=window.NavigatorSource;const l=(p&&p.listProperties)?p.listProperties():[];return Array.isArray(l)?l:[];}catch(e){return [];}}
+function navVal(k){try{const p=window.NavigatorSource;const v=(p&&p.value)?p.value(k):null;return (v==null||v==='')?null:String(v);}catch(e){return null;}}
+function navPick(k,rows){
+  const menu='<div class="uamenu">'+rows.map(r=> r.val!=null
+    ?'<div class="uaopt" data-navk="'+k+'" data-navv="'+esc(r.val)+'" data-navtag="'+esc(r.tag)+'">'+esc(r.val)+'<span class="uasub">'+esc(r.tag)+'</span></div>'
+    :'<div class="uaopt navdim">\u2014<span class="uasub">'+esc(r.tag)+' \u00b7 not available</span></div>').join('')+'</div>';
+  return '<div class="uadrop pocpick"><div class="uatrigger" tabindex="0" title="Pull from a source"><span class="cvx">&#9662;</span></div>'+menu+'</div>';
+}
+/* Per-cell source rows in precedence order (spec \u00a73). val:null renders dim. */
+const NAVPICK_ROWS={
+ 'property.name':()=>[{tag:'Navigator',val:navVal('property.name')},{tag:'RCS report',val:null}],
+ 'property.fha':()=>[{tag:'Executed RS',val:null},{tag:'Navigator',val:navVal('property.fha')},{tag:'RCS report',val:null}],
+ 'owner.entity_name':()=>[{tag:'Executed RS',val:null},{tag:'Navigator',val:navVal('owner.entity_name')}],
+ 'owner.gp':()=>[{tag:'Executed RS',val:null}],
+ 'sig.title':()=>[{tag:'Executed RS',val:null}],
+ 'appr.firm':()=>[{tag:'RCS report',val:null}],
+ 'appr.email':()=>[{tag:'RCS report',val:null}],
+ 'appr.phone':()=>[{tag:'RCS report',val:null}],
+ 'tenant.sender_name':()=>[{tag:'Navigator',val:navVal('tenant.sender_name')}],
+};
+/* Address groups: one dropdown pulls the whole street/city/state/zip group. */
+const NAVGROUP={
+ 'property.addr':()=>{const st=navVal('property.addr_street'),ci=navVal('property.addr_city'),sa=navVal('property.addr_state'),zp=navVal('property.addr_zip');
+   return [{tag:'Navigator',apply:(st||ci||sa||zp)?{'property.addr_street':st||'','property.addr_city':ci||'','property.addr_state':sa||'','property.addr_zip':zp||''}:null},{tag:'RCS report',apply:null}];},
+ 'appr.addr':()=>[{tag:'RCS report',apply:null}],
+};
+function navGroupPick(box){const rows=NAVGROUP[box]().map((r,ix)=> r.apply
+  ?'<div class="uaopt" data-navgrp="'+box+'" data-navgix="'+ix+'">'+esc(r.apply[Object.keys(r.apply)[0]])+'\u2026<span class="uasub">'+esc(r.tag)+'</span></div>'
+  :'<div class="uaopt navdim">\u2014<span class="uasub">'+esc(r.tag)+' \u00b7 not available</span></div>').join('');
+  return '<div class="uadrop pocpick"><div class="uatrigger" tabindex="0" title="Pull from a source"><span class="cvx">&#9662;</span></div><div class="uamenu">'+rows+'</div></div>';}
+/* Dim source rows atop the existing contact-picker menus (spec \u00a73 notes). */
+const DIR_SRCROW={'appr.name':'RCS report','sig.name':'Executed RS'};
+function moneySrcTag(k){if(/^units\.\d+\.current$/.test(k))return 'Executed RS';if(/^units\.\d+\.proposed$/.test(k))return 'RCS report';if(/^nonrev\.\d+\.rent$/.test(k))return 'Executed RS';return null;}
+function dimPick(tag){return '<div class="uadrop pocpick"><div class="uatrigger" tabindex="0" title="Source"><span class="cvx">&#9662;</span></div><div class="uamenu"><div class="uaopt navdim">\u2014<span class="uasub">'+esc(tag)+' \u00b7 not available</span></div></div></div>';}
+/* ================== end external-source dropdowns ================== */
 function fieldCell(f){if(f.type==='addr')return addrCell();if(f.type==='caaddr')return caAddrCell();if(f.type==='appraddr')return apprAddrCell();if(f.type==='mgmtaddr')return mgmtCell();if(f.type==='select')return selectCell(f);if(f.k==='poc.name')return pocCell();if(DIR_PICK[f.k])return dirCell(f);
   const s=form[f.k]||{value:'',source:'new'};
   const st=f.prefix?baseSrc([f.prefix,f.k]):s.source;const c=CLR[st]||CLR.new;
   const pre=f.prefix?csDrop(f.prefix,['Ms.','Mr.','Dr.','Mx.'],'—','csnarrow',true,partHot(f.prefix)?tintStyle(f.prefix):''):'';
-  return `<div class="field"><div class="flabel">${f.label}</div><div class="fbox" data-box="${f.k}" style="background:${c[1]};border-left-color:${c[0]}">${pre}<input type="text" data-k="${f.k}" style="${f.prefix&&partHot(f.k)?tintStyle(f.k):''}"${f.type==='phone'?' data-phone="1" inputmode="tel" maxlength="14"':''} value="${esc(s.value)}" autocomplete="off"></div>${ovNote(f.prefix?[f.prefix,f.k]:f.k)}</div>`;}
+  return `<div class="field"><div class="flabel">${f.label}</div><div class="fbox" data-box="${f.k}" style="background:${c[1]};border-left-color:${c[0]}">${pre}<input type="text" data-k="${f.k}" style="${f.prefix&&partHot(f.k)?tintStyle(f.k):''}"${f.type==='phone'?' data-phone="1" inputmode="tel" maxlength="14"':''} value="${esc(s.value)}" autocomplete="off">${NAVPICK_ROWS[f.k]?navPick(f.k,NAVPICK_ROWS[f.k]()):''}</div>${ovNote(f.prefix?[f.prefix,f.k]:f.k)}</div>`;}
 function addrCell(){return compAddrCell(ADDR,'property.addr','Address');}
 function caAddrCell(){return compAddrCell(CA_ADDR,'ca.addr','CA address');}
 function apprAddrCell(){return compAddrCell(APPR_ADDR,'appr.addr','Appraiser address');}
-function selectCell(f){const c=CLR[srcOf(f.k)]||CLR.new;return `<div class="field"><div class="flabel">${f.label}</div><div class="fbox seldrop" data-box="${f.k}" style="background:${c[1]};border-left-color:${c[0]}">${csDrop(f.k,f.opts,f.ph||'Select…')}${ovIcons(f.k)}</div>${ovNote(f.k)}</div>`;}
+function selectCell(f){const c=CLR[srcOf(f.k)]||CLR.new;let dd=csDrop(f.k,f.opts,f.ph||'Select…');
+  if(f.k==='owner.entity_type'){const nv=navVal('owner.entity_type');
+    const navRows='<div class="uaopt navdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>'
+      +(nv?'<div class="uaopt" data-cskey="owner.entity_type" data-csopt="'+esc(nv)+'">'+esc(nv)+'<span class="uasub">Navigator</span></div>'
+          :'<div class="uaopt navdim">\u2014<span class="uasub">Navigator \u00b7 not available</span></div>');
+    dd=dd.replace('<div class="uamenu">','<div class="uamenu">'+navRows);}
+  return `<div class="field"><div class="flabel">${f.label}</div><div class="fbox seldrop" data-box="${f.k}" style="background:${c[1]};border-left-color:${c[0]}">${dd}${ovIcons(f.k)}</div>${ovNote(f.k)}</div>`;}
 function compAddrCell(keys,box,label){const a=baseSrc(keys);const c=CLR[a]||CLR.new;const ti=k=>partHot(k)?(';'+tintStyle(k)):'';
   return `<div class="field"><div class="flabel">${label}</div><div class="fbox addr" data-box="${box}" style="background:${c[1]};border-left-color:${c[0]}">
      <input type="text" data-k="${keys[0]}" value="${esc(get(keys[0]))}" placeholder="Street" style="flex:2.2${ti(keys[0])}"><span class="adiv"></span>
      <input type="text" data-k="${keys[1]}" value="${esc(get(keys[1]))}" placeholder="City" style="flex:1.3${ti(keys[1])}"><span class="adiv"></span>
      ${csDrop(keys[2],STATES,'ST','csnarrow',false,partHot(keys[2])?tintStyle(keys[2]):'')}<span class="adiv"></span>
-     <input type="text" data-k="${keys[3]}" value="${esc(get(keys[3]))}" placeholder="ZIP" style="width:64px${ti(keys[3])}"></div>
+     <input type="text" data-k="${keys[3]}" value="${esc(get(keys[3]))}" placeholder="ZIP" style="width:64px${ti(keys[3])}">${NAVGROUP[box]?navGroupPick(box):''}</div>
    ${ovNoteAddr(box)}</div>`;}
 function mgmtCell(){const src=get('tenant.mgmt_source')||'property';const propHas=ADDR.some(k=>get(k)!=='');
   if(src==='custom'){const a=baseSrc(MGMT_ADDR);const c=CLR[a]||CLR.new;const ti=k=>partHot(k)?(';'+tintStyle(k)):'';
@@ -166,7 +225,7 @@ function mgmtCell(){const src=get('tenant.mgmt_source')||'property';const propHa
 function renderFieldSection(sec){const cols=[[],[]];sec.fields.forEach(f=>cols[f.col].push(fieldCell(f)));return card(sec.n,sectionPill(sec.n),`<div class="cols"><div>${cols[0].join('')}</div><div>${cols[1].join('')}</div></div>`);}
 
 function boxColor(k){return CLR[srcOf(k)]||CLR.new;}
-function moneyBox(k){const c=boxColor(k);return `<div class="rbox money" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><span class="cur">$</span><input type="text" data-money="1" data-k="${k}" value="${esc(fmtMoney(get(k)))}">${ovIcons(k)}</div>`;}
+function moneyBox(k){const c=boxColor(k);const _mt=moneySrcTag(k);return `<div class="rbox money" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><span class="cur">$</span><input type="text" data-money="1" data-k="${k}" value="${esc(fmtMoney(get(k)))}">${_mt?dimPick(_mt):''}${ovIcons(k)}</div>`;}
 function numBox(k,ph){const c=boxColor(k);return `<div class="rbox" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><input type="text" data-k="${k}" value="${esc(get(k))}" placeholder="${esc(ph||'')}">${ovIcons(k)}</div>`;}
 function brbaBox(brK,baK){const st=baseSrc([brK,baK]);const c=CLR[st]||CLR.new;
   return `<div class="rbox brba" data-box="${brK}" style="background:${c[1]};border-left-color:${c[0]}">${csDrop(brK,BR_OPTS,'BR','',true,partHot(brK)?tintStyle(brK):'')}<span class="slash">/</span>${csDrop(baK,BA_OPTS,'BA','',true,partHot(baK)?tintStyle(baK):'')}${ovIcons([brK,baK])}</div>`;}
@@ -302,7 +361,7 @@ function writein(id,hasFuel){const val=get('partb.writein.'+id);const on=get('pa
   const attr=hasFuel?` data-util="1"`:` data-wion="partb.writein.${id}.on"`;
   return `<span class="cb wi ${state}${hasFuel?' util':''}"><span class="box wibox" data-wibox="partb.writein.${id}" style="${boxStyle('partb.writein.'+id+'.on')}">${on?'✓':''}</span><input type="text" class="witext" data-k="partb.writein.${id}"${attr} placeholder="write-in…" value="${esc(val)}">${f}${ovIcons(ks)}</span>`;}
 function renderPartB(){const eq=PARTB.equipment,sv=PARTB.services;
-  return card(7,sectionPill(7),`<div class="pbnote">Preprinted labels check-only; dashed slots are write-ins — the box checks itself when you type in it.</div>
+  return card(7,sectionPill(7),`<div class="pbnote">Preprinted labels check-only; dashed slots are write-ins — the box checks itself when you type in it. <b>Source: Executed RS</b> \u2014 this whole section auto-fills once the executed Rent Schedule is parsed.</div>
   <div class="pbgrp">Equipment / furnishings</div><div class="cols3"><div>${cbx('partb.equipment.0',eq[0])}${cbx('partb.equipment.1',eq[1])}${cbx('partb.equipment.2',eq[2])}${cbx('partb.equipment.3',eq[3])}</div>
     <div>${cbx('partb.equipment.4',eq[4])}${cbx('partb.equipment.5',eq[5])}${cbx('partb.equipment.6',eq[6])}${writein('e1')}</div>
     <div>${writein('e2')}${writein('e3')}${writein('e4')}${writein('e5')}</div></div>
@@ -436,6 +495,9 @@ function wireBody(){
   document.querySelectorAll('[data-num]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();const i=b.getAttribute('data-ci'),w=b.getAttribute('data-num');if(w==='rcs'){const nR=get('units.'+i+'.num_rcs');if(nR)form=store.editForm(form,'units.'+i+'.num_units',nR);}form=store.editForm(form,'units.'+i+'.num_reviewed','1');renderBody();setStatus('Units resolved — using '+(w==='rcs'?'RCS':'RS')+'.');}));
   document.querySelectorAll('.uac-in,.mgmt-in').forEach(inp=>{inp.addEventListener('mousedown',e=>e.stopPropagation());inp.addEventListener('click',e=>e.stopPropagation());});
   document.querySelectorAll('.srcedit').forEach(inp=>{inp.addEventListener('input',()=>{const fam=inp.getAttribute('data-srcedit'),i=inp.getAttribute('data-si');let key,val;if(fam==='dateeff'){val=fmtDateInput(inp.value);form=store.editForm(form,'rent_schedule.date_eff_source','custom');form=store.editForm(form,'rent_schedule.date_eff_custom',val);key='rent_schedule.date_eff_custom';scheduleHudRefresh();}else{val=cleanNum(inp.value);form=store.editForm(form,'units.'+i+'.'+fam+'_source','custom');form=store.editForm(form,'units.'+i+'.'+fam+'_custom',val);key='units.'+i+'.'+fam+'_custom';}renderBody();const ni=document.querySelector('[data-k="'+key+'"]');if(ni){ni.focus({preventScroll:true});try{const L=(ni.value||'').length;ni.setSelectionRange(L,L);}catch(e){}}});});
+  document.querySelectorAll('[data-navk]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();const k=o.getAttribute('data-navk');_pendingSnap=snapOf([k]);form=store.editForm(form,k,o.getAttribute('data-navv'));if(form[k])form[k].source='this-cycle';_pending=[k];_refocusSel='[data-k="'+k+'"]';renderBody();setStatus('Pulled from '+(o.getAttribute('data-navtag')||'source')+'.');}));
+  document.querySelectorAll('[data-navgrp]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();const box=o.getAttribute('data-navgrp');const r=NAVGROUP[box]()[+o.getAttribute('data-navgix')];if(!r||!r.apply)return;const keys=Object.keys(r.apply);_pendingSnap=snapOf(keys);keys.forEach(k=>{form=store.editForm(form,k,r.apply[k]);if(form[k])form[k].source='this-cycle';});_pending=keys.slice();_refocusSel='[data-box="'+box+'"] input';renderBody();setStatus('Address pulled from '+r.tag+'.');}));
+  document.querySelectorAll('[data-pocnav]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();const nm=navVal('poc.name');if(!nm)return;const saved=(mpdb?mpdb.listContacts():[]).find(x=>((x.name||'').trim().toLowerCase()===nm.trim().toLowerCase()));const c={name:nm,email:navVal('poc.email')||(saved&&saved.email)||'',phone:navVal('poc.phone')||(saved&&saved.phone)||''};_pendingSnap=snapOf(['poc.name','poc.email','poc.phone']);pocSelectContact(c);['poc.name','poc.email','poc.phone'].forEach(k=>{if(form[k])form[k].source='this-cycle';});_pending=['poc.name','poc.email','poc.phone'];_refocusSel='[data-box="poc.name"] .pocname-in';renderBody();setStatus('POC pulled from Navigator.');}));
   document.querySelectorAll('[data-pocopt]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();const ct=mpdb.listContacts().find(x=>x.id===o.getAttribute('data-pocopt'));_pendingSnap=snapOf(['poc.name','poc.email','poc.phone']);if(ct)pocSelectContact(ct);_pending=['poc.name','poc.email','poc.phone'];_refocusSel='[data-box="poc.name"] .pocname-in';renderBody();}));
   document.querySelectorAll('[data-dirid]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();const fk=o.getAttribute('data-dirfor');const P=DIR_PICK[fk];const ct=dirList(P.kind).find(x=>x.id===o.getAttribute('data-dirid'));_pendingSnap=snapOf(P.keys);if(ct)P.apply(ct);_pending=P.keys.slice();_refocusSel='[data-box="'+fk+'"] .pocname-in';renderBody();}));
   document.querySelectorAll('[data-deffopt]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();_pendingSnap=snapOf(['rent_schedule.date_eff_source']);form=store.editForm(form,'rent_schedule.date_eff_source',o.getAttribute('data-deffopt'));_pending=['rent_schedule.date_eff_source'];_refocusSel='[data-box="rent_schedule.date_eff_source"] .uatrigger';renderBody();scheduleHudRefresh();}));
@@ -525,7 +587,30 @@ function renderMenu(){
   const tn=el('tileNew');if(tn)tn.onclick=createProperty;
   const mc=el('mClear');if(mc)mc.onclick=()=>{if(el('menuSearch'))el('menuSearch').value='';renderMenu();};
 }
-function createProperty(){dialogInput('New property','Property name','','Create',nm=>{const r=mpdb.createProperty((nm||'').trim());openLauncher(r.pid);});}
+function createProperty(){
+  const props=navProps();
+  if(!props.length){dialogInput('New property','Property name','','Create',nm=>{const r=mpdb.createProperty((nm||'').trim());openLauncher(r.pid);});return;}
+  const rows=props.map(p=>'<div class="uaopt" data-navprop="'+esc(p.name)+'" data-navpid="'+esc(p.id==null?'':String(p.id))+'" style="padding:9px 12px;cursor:pointer">'+esc(p.name)+'<span class="uasub">Navigator</span></div>').join('');
+  modal('<div class="dlg-t">New property</div><div class="dlg-field"><label>Property name</label><input id="dlgIn" autocomplete="off" placeholder="Type a name, or pick from Navigator"></div>'
+    +'<div style="margin:10px 0 4px;font-size:11px;font-weight:700;letter-spacing:.4px;color:#8791a5">NAVIGATOR PROPERTIES \u2014 TYPE ABOVE TO FILTER</div>'
+    +'<div id="navList" style="max-height:200px;overflow:auto;border:1px solid #e0e5ee;border-radius:8px">'+rows+'</div>'
+    +'<div class="dlg-row"><button class="btn" id="dlgCancel">Cancel</button><span class="dlg-sp"></span><button class="btn p" id="dlgOk">Create</button></div>');
+  const inp=el('dlgIn'),list=el('navList');let pickedId='';
+  const filter=()=>{const q=(inp.value||'').trim().toLowerCase();let vis=0;
+    const score=n=>{const s=n.toLowerCase();if(!q)return 0;if(s.startsWith(q))return 0;if(s.split(/\s+/).some(w=>w.startsWith(q)))return 1;if(s.indexOf(q)>=0)return 2;return 3;};
+    const rows=[...list.querySelectorAll('[data-navprop]')];
+    rows.forEach(r=>{r._sc=score(r.getAttribute('data-navprop'));const on=r._sc<3;r.style.display=on?'':'none';if(on)vis++;});
+    rows.slice().sort((x,y)=>x._sc-y._sc||x.getAttribute('data-navprop').localeCompare(y.getAttribute('data-navprop'))).forEach(r=>list.appendChild(r));
+    list.style.display=vis?'':'none';};
+  inp.addEventListener('input',()=>{pickedId='';filter();});inp.focus();
+  list.querySelectorAll('[data-navprop]').forEach(r=>r.onclick=()=>{inp.value=r.getAttribute('data-navprop');pickedId=r.getAttribute('data-navpid')||'';filter();inp.focus();});
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();el('dlgOk').click();}else if(e.key==='Escape')closeModal();});
+  el('dlgCancel').onclick=closeModal;
+  el('dlgOk').onclick=()=>{const v=(el('dlgIn').value||'').trim();closeModal();const r=mpdb.createProperty(v);
+    /* pickedId = Navigator property id (spec \u00a72) \u2014 persisting it needs the
+       navigator_property_id column; unused until the integration lands. */
+    void pickedId;openLauncher(r.pid);};
+}
 
 /* ---- LAUNCHER: property summary + program picker --------------------- */
 function openLauncher(pid){activePid=pid;renderLauncher();show('Launcher');}

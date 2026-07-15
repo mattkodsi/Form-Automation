@@ -4,8 +4,19 @@ This is the piece the original handoff did not cover: **which form cells pull
 from Navigator's saved property data, and how**. It was left out deliberately —
 the Navigator APIs live on your side, so the wiring was always going to be
 yours. This document specifies the intended behavior precisely so the feature
-lands consistent with everything the app already does. Nothing here is
-implemented yet; the app in the package is unmodified.
+lands consistent with everything the app already does.
+
+> **Status (2026-07-15):** the app now ships the **UI layer** of this spec —
+> every §3 cell renders its source rows at the top of its dropdown in
+> precedence order (dimmed `— · not available` while a source has no data),
+> the New-property dialog becomes the §2 pick-or-type combobox when a
+> portfolio is available, and picker menu styles are unified. It is wired to
+> a provider seam: the Navigator integration sets `window.NavigatorSource =
+> { listProperties(), value(flatKey) }` (grep `NavigatorSource` in
+> `app/full-mp/app.js` for the contract comment) and the rows light up. Still
+> to build on the integration side: the provider itself, the
+> `navigator_property_id` column + snapshot persistence (§4.3), and the
+> parsed RS/RCS feeds.
 
 ## 1. The governing principle: Navigator is a *source*, not the store
 
