@@ -1432,7 +1432,7 @@ function aggSrc(keys){if(keys.some(k=>srcOf(k)==='overridden'))return'overridden
 function groupOf(k){for(const b in ADDR_GROUPS){if(ADDR_GROUPS[b].indexOf(k)>=0)return b;}return null;}
 function partHot(k){const s=srcOf(k);return s==='overridden'||(s==='new'&&get(k)!==''&&get(k)!=null);}
 function baseSrc(keys){const cold=keys.filter(k=>!partHot(k));return aggSrc(cold.length?cold:keys);}
-function tintStyle(k){const c=CLR[srcOf(k)]||CLR.new;return 'background:'+c[1]+';box-shadow:inset 3px 0 0 '+c[0]+';border-radius:6px';}
+function tintStyle(k){const c=CLR[srcOf(k)]||CLR.new;return 'background:linear-gradient('+c[0]+','+c[0]+') no-repeat left 4px center/3px 60%,'+c[1]+';border-radius:6px';} // inset bar, not an inset shadow: shadows bend around the pill radius into a "(" crescent
 function paintGroup(b){const keys=ADDR_GROUPS[b];const a=baseSrc(keys);const c=CLR[a]||CLR.new;const box=document.querySelector('[data-box="'+b+'"]');
   if(box){box.style.background=c[1];box.style.borderLeftColor=c[0];
     keys.forEach(k=>{const inp=box.querySelector('input[data-k="'+k+'"]');if(!inp)return;
@@ -1613,7 +1613,15 @@ function wireLetterhead(){
 }
 function makeThumb(dataUrl,cb){try{const img=new Image();img.onload=()=>{const s=Math.min(1,120/Math.max(img.width,img.height));const c=document.createElement('canvas');c.width=Math.max(1,Math.round(img.width*s));c.height=Math.max(1,Math.round(img.height*s));c.getContext('2d').drawImage(img,0,0,c.width,c.height);cb(c.toDataURL('image/jpeg',0.72));};img.onerror=()=>cb('');img.src=dataUrl;}catch(e){cb('');}}
 /* print-quality letterhead: downscale to max 1200px and re-encode as PNG (gen.js embeds PNG only) */
-function makeRender(dataUrl,cb){try{const img=new Image();img.onload=()=>{const s=Math.min(1,1200/Math.max(img.width,img.height));const c=document.createElement('canvas');c.width=Math.max(1,Math.round(img.width*s));c.height=Math.max(1,Math.round(img.height*s));c.getContext('2d').drawImage(img,0,0,c.width,c.height);cb(c.toDataURL('image/png'));};img.onerror=()=>cb('');img.src=dataUrl;}catch(e){cb('');}}
+function makeRender(dataUrl,cb){try{const img=new Image();img.onload=()=>{
+  // Print quality: keep up to 3000px on the long side (~270 dpi on letter paper),
+  // stepping down only if the encoded PNG would get unreasonably heavy to store.
+  const caps=[3000,2200,1500]; let out='';
+  for(const cap of caps){ const s=Math.min(1,cap/Math.max(img.width,img.height));
+    const c=document.createElement('canvas'); c.width=Math.max(1,Math.round(img.width*s)); c.height=Math.max(1,Math.round(img.height*s));
+    c.getContext('2d').drawImage(img,0,0,c.width,c.height); out=c.toDataURL('image/png');
+    if(out.length<=5500000) break; }
+  cb(out);};img.onerror=()=>cb('');img.src=dataUrl;}catch(e){cb('');}}
 
 /* ---- FORM: open the RCS form for the active property ----------------- */
 function nonrevEmpty(i){return ['use','br','ba','rent'].every(s=>{const v=get('nonrev.'+i+'.'+s);return v===''||v==null;});}
