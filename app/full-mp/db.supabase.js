@@ -176,6 +176,18 @@ function makeSupabaseDb(client) {
   /* ---- per-property write serialization ---------------------------------- */
   const _q = {};
   function enqueue(pid, fn) { const prev = _q[pid] || Promise.resolve(); const next = prev.then(fn, fn); _q[pid] = next.catch(() => { }); return next; }
+  /* Coalesce full-property pushes: while one is QUEUED (not yet running),
+     further saves ride it — pushProperty reads the mirror at execution time,
+     so the single push carries every change. Callers all await the same
+     promise and all see a failure if the push fails. */
+  const _pend = {};
+  function pushSoon(pid) {
+    if (_pend[pid]) return _pend[pid].p;
+    const t = {}; t.p = new Promise((res, rej) => { t.res = res; t.rej = rej; });
+    _pend[pid] = t;
+    enqueue(pid, async () => { delete _pend[pid]; try { await pushProperty(pid); t.res(); } catch (e) { t.rej(e); } });
+    return t.p;
+  }
 
   /* ---- registry helpers (mirror db.js) ----------------------------------- */
   const REQUIRED_DURABLE = ['property.name', 'property.fha', 'property.addr_street', 'property.addr_city', 'property.addr_state', 'property.addr_zip', 'owner.entity_name', 'sig.name', 'ca.org', 'ca.name'];
@@ -236,7 +248,7 @@ function makeSupabaseDb(client) {
       saveForm(pid, form) {
         const p = D.props[pid]; if (!p) throw new Error('no such property ' + pid);
         for (const k in form) place(p, k, (form[k] && form[k].value != null ? form[k].value : ''), today());
-        touch(pid); return enqueue(pid, () => pushProperty(pid));
+        touch(pid); return pushSoon(pid);
       },
       pruneUnitRows(pid, keepU, keepNR, keepLI) {
         const p = D.props[pid]; if (!p) return Promise.resolve();
@@ -248,13 +260,13 @@ function makeSupabaseDb(client) {
           else if (k.indexOf('nonrev.') === 0) { const i = nidx(k); if (i !== null && !kn.has(i)) delete b[k]; }
           else if (k.indexOf('lihtc.') === 0) { const i = uidx(k); if (i !== null && !kl.has(i)) delete b[k]; }
         }));
-        touch(pid); return enqueue(pid, () => pushProperty(pid));
+        touch(pid); return pushSoon(pid);
       },
       getFlat(pid) { return bucketsOf(pid); },
       saveFlat(pid, map) {
         const p = D.props[pid]; if (!p) throw new Error('no property ' + pid);
         for (const k in map) place(p, k, (map[k] && map[k].value != null ? map[k].value : ''), (map[k] && map[k].saved_at) ? map[k].saved_at : today());
-        touch(pid); return enqueue(pid, () => pushProperty(pid));
+        touch(pid); return pushSoon(pid);
       },
       setLetterhead(pid, name, thumb, data) {
         const p = D.props[pid]; if (!p) return Promise.resolve();

@@ -23,6 +23,13 @@ function makeStore(adapter, FIELDS) {
     revertForm(form,key){ const cur=form[key]; if(!cur||cur.source!=='overridden') return false;
       form[key]={...cur,value:cur.prior_value,source:cur.prior_source||'database',prior_value:null,prior_source:null}; return true; },
     async saveField(form,key){ const db=await adapter.getDb(); const v=form[key].value; db[key]={value:(v==null?'':v),source:'database',saved_at:today()}; await adapter.saveDb(db); form[key]={value:db[key].value,source:'database',saved_at:db[key].saved_at,prior_value:null,prior_source:null,db_value:db[key].value}; return form; },
+    /* Batch form of saveField: one adapter round-trip (=> one backend push)
+       for a group of keys saved together (contact fills, address groups). */
+    async saveFields(form,keys){ const db=await adapter.getDb();
+      for(const key of keys){ const v=form[key].value; db[key]={value:(v==null?'':v),source:'database',saved_at:today()}; }
+      await adapter.saveDb(db);
+      for(const key of keys) form[key]={value:db[key].value,source:'database',saved_at:db[key].saved_at,prior_value:null,prior_source:null,db_value:db[key].value};
+      return form; },
     async saveToDb(form){ const db=await adapter.getDb();
       for(const key of Object.keys(form)){ const v=form[key].value; db[key]={value:(v==null?'':v),source:'database',saved_at:today()}; }
       await adapter.saveDb(db);

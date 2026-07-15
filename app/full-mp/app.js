@@ -18,19 +18,19 @@ const PARTB={equipment:['Range','Refrigerator','Air Conditioner','Disposal','Dis
 const CHECKLIST_FLAT=['Signed cover letter','Signed owner’s checklist','Scope of repair','Appraiser’s transmittal letter','Scope of work','Subject description (+ photos)','Subject’s market area ID','Neighborhood description','Selection-of-comparables narrative','Locator map (subject + comps)','Rent comparability grid (per type)','Adjustments & conclusions narrative','Comparable profiles (+ photo)','Appraiser’s certification','Appraiser’s license copy (if temp)','Gross rents computation (project + SAFMR)','Gross rents vs SAFMR comparison'];
 const SECTION_TITLES={1:'Source documents',2:'Property',3:'Point of contact & signatory',4:'Contract administrator',5:'Appraiser',6:'Rents & unit mix',7:'Items included in rent (Part B)',8:"Owner’s checklist",9:'Tenant notice'};
 const D='database',T='this-cycle',O='overridden';
-const SEED={
-  'property.name':['Gates Manor Apartments',D],'property.addr_street':['1135 Wilmette Ave',D],'property.addr_city':['Wilmette',D],'property.addr_state':['IL',D],'property.addr_zip':['60091',D],'property.fha':['IL06H121063',D],
-  'owner.entity_name':['Gates Manor Preservation, L.P.',D],'owner.entity_type':['Limited Partnership',D],
-  'poc.name':['Claire Beatty',D],'poc.email':['cbeatty@related.com',D],'poc.phone':['(929) 618-8405',D],
-  'owner.gp':['Related (GP)',D],'sig.name':['David Pearson',D],'sig.title':['Vice President',D],
-  'ca.org':['National Housing Compliance',D],'ca.prefix':['Ms.',D],'ca.name':['Heather Gross',D],'ca.position':['Asset Manager',D],
-  'ca.addr_street':['1975 Lakeside Parkway, Suite 310',D],'ca.addr_city':['Tucker',D],'ca.addr_state':['GA',D],'ca.addr_zip':['30084-5860',D],
-  'appr.firm':['Belfry Valuation',T],'appr.name':['Aaron M. Zabel',T],'appr.email':['azabel@belfryvaluation.com',T],'appr.phone':['(708) 500-2380',T],'appr.addr_street':['',T],'appr.addr_city':['',T],'appr.addr_state':['',T],'appr.addr_zip':['',T],
-  'units.0.br':['1BR',D],'units.0.ba':['1BA',D],'units.0.num_units':['51',D],'units.0.current':['1903',T],'units.0.proposed':['2725',T],
-  'units.0.ua_exec':['31',T],'units.0.ua_rcs':['31',T],'units.0.ua_source':['exec',T],'units.0.ua_reviewed':['',T],'units.0.ua_custom':['',T],
-  'units.0.safmr_rcs':['3435',T],'units.0.safmr_hud':['3495',T],'units.0.safmr_source':['hud',T],'units.0.safmr_reviewed':['',T],
-  'rent_schedule.date_eff_rs':['2026-09-01',T],'rent_schedule.date_eff_source':['rs',T],'rent_schedule.date_eff_custom':['',T],'rent_schedule.date_rents_effective':['2026-09-01',T],
-  'tenant.sender_name':['Tasha Francellno-Glenn',D],'tenant.sender_title':['Community Manager',D],'tenant.mgmt_source':['property',D],'tenant.property_alias':['',D],
+const SEED={ // key manifest only — the VALUES are never read (ALL_KEYS below feeds the store), so no sample data ships in the public bundle
+  'property.name':['',D],'property.addr_street':['',D],'property.addr_city':['',D],'property.addr_state':['',D],'property.addr_zip':['',D],'property.fha':['',D],
+  'owner.entity_name':['',D],'owner.entity_type':['',D],
+  'poc.name':['',D],'poc.email':['',D],'poc.phone':['',D],
+  'owner.gp':['',D],'sig.name':['',D],'sig.title':['',D],
+  'ca.org':['',D],'ca.prefix':['',D],'ca.name':['',D],'ca.position':['',D],
+  'ca.addr_street':['',D],'ca.addr_city':['',D],'ca.addr_state':['',D],'ca.addr_zip':['',D],
+  'appr.firm':['',T],'appr.name':['',T],'appr.email':['',T],'appr.phone':['',T],'appr.addr_street':['',T],'appr.addr_city':['',T],'appr.addr_state':['',T],'appr.addr_zip':['',T],
+  'units.0.br':['',D],'units.0.ba':['',D],'units.0.num_units':['',D],'units.0.current':['',T],'units.0.proposed':['',T],
+  'units.0.ua_exec':['',T],'units.0.ua_rcs':['',T],'units.0.ua_source':['',T],'units.0.ua_reviewed':['',T],'units.0.ua_custom':['',T],
+  'units.0.safmr_rcs':['',T],'units.0.safmr_hud':['',T],'units.0.safmr_source':['',T],'units.0.safmr_reviewed':['',T],
+  'rent_schedule.date_eff_rs':['',T],'rent_schedule.date_eff_source':['',T],'rent_schedule.date_eff_custom':['',T],'rent_schedule.date_rents_effective':['',T],
+  'tenant.sender_name':['',D],'tenant.sender_title':['',D],'tenant.mgmt_source':['',D],'tenant.property_alias':['',D],
   'tenant.mgmt_street':['',D],'tenant.mgmt_city':['',D],'tenant.mgmt_state':['',D],'tenant.mgmt_zip':['',D],
 };
 const PB_CHECK={'Range':1,'Refrigerator':1,'Carpet':1,'Heating':1,'Hot Water':1,'Cooking':1,'Parking':1};
@@ -38,10 +38,6 @@ const PB_FUEL={0:'G',1:'',2:'G',3:'G',4:''};
 Object.entries(PARTB).forEach(([g,items])=>items.forEach((it,i)=>{SEED['partb.'+g+'.'+i]=[PB_CHECK[it]?'1':'',D];}));
 Object.entries(PB_FUEL).forEach(([i,f])=>SEED['partb.fuel.'+i]=[f,D]);
 ['e1','e2','e3','e4','e5','u1','s1','s2','s3','s4','s5','s6'].forEach(id=>{SEED['partb.writein.'+id]=['',D];SEED['partb.writein.'+id+'.on']=['',D];});
-SEED['partb.writein.e1']=['Microwave',D];SEED['partb.writein.e1.on']=['1',D];
-SEED['partb.writein.e2']=['Mini Blinds',D];SEED['partb.writein.e2.on']=['1',D];
-SEED['partb.writein.s1']=['Fitness Center',D];SEED['partb.writein.s1.on']=['1',D];
-SEED['partb.writein.s2']=['Community RM',D];SEED['partb.writein.s2.on']=['1',D];
 SEED['partb.writein.u1.fuel']=['',D];
 CHECKLIST_FLAT.forEach((it,i)=>{const off=/scope of repair/i.test(it)||/scope of work/i.test(it);SEED['check.'+i]=[off?'':'1',D];});
 const ALL_KEYS=Object.keys(SEED).map(k=>({key:k}));
@@ -68,13 +64,10 @@ const clamp=n=>Math.max(0,Math.min(100,n));
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const setStatus=t=>{el('status').textContent=t||'';};
 const srcOf=k=>form[k]?form[k].source:'new';
+function saveFailed(e){setStatus('\u26a0 Save failed \u2014 this change is NOT in the database yet. Check your connection and try again. ('+((e&&e.message)||e)+')');}
+function saveFailedModal(e){dialogConfirm('Save failed','The change did not reach the database \u2014 check your connection and try again.<div class="sub" style="margin-top:7px;color:#8791a5">'+esc((e&&e.message)||e)+'</div>','OK',false,function(){});}
 let DBSNAP={};
 async function refreshSnap(){DBSNAP=await bridge.getDb();}
-function keysChanged(p){const all=new Set([...Object.keys(form),...Object.keys(DBSNAP)].filter(k=>k.startsWith(p)));for(const k of all){const fv=form[k]?(form[k].value||''):'';const sv=DBSNAP[k]?(DBSNAP[k].value||''):'';if(fv!==sv)return true;}return false;}
-function dbIdxSize(p){const s=new Set();Object.keys(DBSNAP).forEach(k=>{if(k.startsWith(p)&&DBSNAP[k].value!==''){const m=k.slice(p.length).match(/^(\d+)\./);if(m)s.add(m[1]);}});return s.size;}
-function unitsChanged(){return UNITS.length!==dbIdxSize('units.')||keysChanged('units.');}
-function nonrevChanged(){return NONREV.length!==dbIdxSize('nonrev.')||keysChanged('nonrev.');}
-function comboSrc(keys){const b=srcOf(keys[0]);if(keys.some(k=>srcOf(k)==='overridden'))return'overridden';if(keys.some(k=>srcOf(k)==='new'&&get(k)!==''&&get(k)!=null))return(b==='database'||b==='this-cycle')?'new':b;return b;}
 function modeOf(kk){const keys=Array.isArray(kk)?kk:[kk];if(keys.some(k=>srcOf(k)==='overridden'))return 'over';if(keys.some(k=>srcOf(k)==='new'&&get(k)!==''&&get(k)!=null))return 'new';return '';}
 function ovIcons(kk){const keys=Array.isArray(kk)?kk:[kk];const j=keys.join(',');const m=modeOf(keys);return `<span class="ovic" data-ovic="${j}" data-mode="${m}" style="display:${m?'inline-flex':'none'}"><button class="miniic rv" data-rev="${j}" title="Revert to on-file">↺</button><button class="miniic sv" data-save1="${j}" title="Save this field to the database">✓</button></span>`;}
 
@@ -97,15 +90,6 @@ function analysis(){let cg=0,pg=0,tot=0,sc=0,sp=0,nd=0,ceil=0,safmrMissing=false
   const perUnit=nd?(sp-sc)/nd:0;const pct=sc?Math.round((sp-sc)/sc*100):0;
   return{cg,pg,ceil,headroom:ceil-pg,pass:(ceil>0&&pg<ceil),perUnit,dMo:pg-cg,dYr:(pg-cg)*12,pct,tot,safmrMissing,safmrConflict,safmrOver};}
 
-function labelFor(k){for(const s of FIELD_SECTIONS){const f=s.fields.find(f=>f.k===k);if(f)return s.title+' — '+f.label;}
-  const A={'appr.addr_street':'Appraiser Street','appr.addr_city':'Appraiser City','appr.addr_state':'Appraiser State','appr.addr_zip':'Appraiser ZIP','tenant.mgmt_source':'Tenant notice — Management address source','property.addr_street':'Property — Street','property.addr_city':'Property — City','property.addr_state':'Property — State','property.addr_zip':'Property — ZIP','ca.prefix':'Contract administrator — Name prefix','safmr.hud':'SAFMR — HUD dataset','safmr.rcs':'SAFMR — RCS report'};if(A[k])return A[k];
-  let m=k.match(/^units\.(\d+)\.(.+)$/);if(m){const nm={br:'Bedrooms',ba:'Bathrooms',num_units:'Units',current:'Current rent',proposed:'Proposed rent',ua_exec:'UA (exec RS)',ua_rcs:'UA (RCS)',ua_source:'UA source chosen',ua_custom:'UA (custom)',ua_reviewed:'UA reviewed'};return 'Rents — unit '+(+m[1]+1)+' · '+(nm[m[2]]||m[2]);}
-  m=k.match(/^nonrev\.(\d+)\.(.+)$/);if(m){const nm={use:'Use',br:'Bedrooms',ba:'Bathrooms',rent:'Contract rent'};return 'Non-revenue unit '+(+m[1]+1)+' · '+(nm[m[2]]||m[2]);}
-  m=k.match(/^partb\.(equipment|utilities|services)\.(\d+)$/);if(m)return 'Part B '+m[1]+' — '+(PARTB[m[1]][+m[2]]||'');
-  m=k.match(/^partb\.fuel\.(\d+)$/);if(m)return 'Part B fuel — '+(PARTB.utilities[+m[1]]||'');
-  m=k.match(/^partb\.writein\.([a-z0-9]+)(\.on|\.fuel)?$/);if(m)return 'Part B write-in — '+m[1]+(m[2]==='.on'?' (checked)':(m[2]==='.fuel'?' (fuel)':' (label)'));
-  m=k.match(/^check\.(\d+)$/);if(m)return "Owner’s checklist — "+(CHECKLIST_FLAT[+m[1]]||'');return k;}
-
 function ovBtns(k){return `<button class="revert" data-rev="${k}">↺ revert</button><button class="save1" data-save1="${k}">✓ save this field</button>`;}
 function ovNote(kk){const keys=Array.isArray(kk)?kk:[kk];const j=keys.join(',');const m=modeOf(keys);return `<div class="ovnote" data-ov="${j}" data-mode="${m}" style="display:${m?'flex':'none'}"><span class="om-over">changed from stored record</span><span class="om-new">new — not saved yet</span>${ovBtns(j)}</div>`;}
 function ovNoteAddr(box){const keys=ADDR_GROUPS[box];const m=modeOf(keys);return `<div class="ovnote" data-ov="${box}" data-mode="${m}" style="display:${m?'flex':'none'}"><span class="om-over">changed from stored record</span><span class="om-new">new — not saved yet</span><button class="revert" data-revaddr="${box}">↺ revert</button><button class="save1" data-save1addr="${box}">✓ save this field</button></div>`;}
@@ -118,10 +102,8 @@ function dateEffCell(){const rs=get('rent_schedule.date_eff_rs');const src=get('
   const boxKey=(src==='custom')?'rent_schedule.date_eff_custom':'rent_schedule.date_eff_source';
   const menu='<div class="uamenu"><div class="uaopt" data-deffopt="rs">'+esc(rsLab)+'</div><div class="uaopt" data-deffopt="custom">Custom…</div></div>';
   return `<div class="field"><div class="flabel">Date rents will be effective</div><div class="fbox uacell" data-box="${boxKey}" style="background:${c[1]};border-left-color:${c[0]}"><div class="uadrop" style="flex:1;min-width:0"><div class="uatrigger" tabindex="0">${lab}<span class="cvx">▾</span></div>${menu}</div>${src==='custom'?ovIcons('rent_schedule.date_eff_custom'):''}</div></div>`;}
-function pocSetGreen(name,email,phone){form=store.editForm(form,'poc.name',name||'');form=store.editForm(form,'poc.email',email||'');form=store.editForm(form,'poc.phone',fmtPhone(phone||''));['poc.name','poc.email','poc.phone'].forEach(kk=>{if(form[kk])form[kk].source='this-cycle';});}
 function pocSelectContact(ct){form=store.editForm(form,'poc.name',ct.name||'');form=store.editForm(form,'poc.email',ct.email||'');form=store.editForm(form,'poc.phone',fmtPhone(ct.phone||''));}
 function pocNote(){const m=modeOf('poc.name');return `<div class="ovnote" data-ov="poc.name" data-mode="${m}" style="display:${m?'flex':'none'}"><span class="om-over">changed from stored record</span><span class="om-new">new — not saved yet</span><button class="revert" data-rev="poc.name,poc.email,poc.phone">↺ revert</button><button class="save1" data-save1="poc.name,poc.email,poc.phone">✓ save this field</button></div>`;}
-function pocApplyParsed(name){const ct=(mpdb?mpdb.listContacts():[]).find(c=>String(c.name||'').trim().toLowerCase()===String(name||'').trim().toLowerCase());if(ct){pocSetGreen(ct.name,ct.email,ct.phone);}else{form=store.editForm(form,'poc.name',name||'');form=store.editForm(form,'poc.email','');form=store.editForm(form,'poc.phone','');if(form['poc.name'])form['poc.name'].source='this-cycle';}}
 function pocCell(){const k='poc.name';const contacts=(mpdb?mpdb.listContacts():[]);const cur=get(k);const c=CLR[srcOf(k)]||CLR.new;
   const menu=contacts.length?('<div class="uamenu">'+contacts.map(ct=>'<div class="uaopt" data-pocopt="'+esc(ct.id)+'">'+esc(ct.name)+(ct.email?'<span class="uasub">'+esc(ct.email)+'</span>':'')+'</div>').join('')+'</div>'):'';
   const pick=contacts.length?('<div class="uadrop pocpick"><div class="uatrigger" tabindex="0" title="Pick a saved contact"><span class="cvx">&#9662;</span></div>'+menu+'</div>'):'';
@@ -157,7 +139,6 @@ function fieldCell(f){if(f.type==='addr')return addrCell();if(f.type==='caaddr')
   const st=f.prefix?baseSrc([f.prefix,f.k]):s.source;const c=CLR[st]||CLR.new;
   const pre=f.prefix?csDrop(f.prefix,['Ms.','Mr.','Dr.','Mx.'],'—','csnarrow',true,partHot(f.prefix)?tintStyle(f.prefix):''):'';
   return `<div class="field"><div class="flabel">${f.label}</div><div class="fbox" data-box="${f.k}" style="background:${c[1]};border-left-color:${c[0]}">${pre}<input type="text" data-k="${f.k}" style="${f.prefix&&partHot(f.k)?tintStyle(f.k):''}"${f.type==='phone'?' data-phone="1" inputmode="tel" maxlength="14"':''} value="${esc(s.value)}" autocomplete="off"></div>${ovNote(f.prefix?[f.prefix,f.k]:f.k)}</div>`;}
-function addrAgg(){if(ADDR.some(k=>srcOf(k)==='overridden'))return'overridden';if(ADDR.some(k=>srcOf(k)==='database'))return'database';return'new';}
 function addrCell(){return compAddrCell(ADDR,'property.addr','Address');}
 function caAddrCell(){return compAddrCell(CA_ADDR,'ca.addr','CA address');}
 function apprAddrCell(){return compAddrCell(APPR_ADDR,'appr.addr','Appraiser address');}
@@ -225,6 +206,23 @@ function safmrNote(i){const res=safmrResolvedOf(i),hud=numf(get('units.'+i+'.saf
   if(res>0){const pro=numf(get('units.'+i+'.proposed'));if(pro>0)return '<div class="ucnote '+(pro<res?'ok':'warn')+'">'+(pro<res?'✓ ':'✗ ')+'$'+pro.toLocaleString()+(pro<res?' < ':' ≥ ')+'$'+res.toLocaleString()+' · 150% SAFMR</div>';return '<div class="ucnote ok">150% SAFMR $'+res.toLocaleString()+'</div>';}
   if(numf(get('units.'+i+'.num_units'))>0)return '<div class="ucnote warn">⚠ needed for the 150% test</div>';
   return '';}
+/* Rent-schedule capacity. Part A prints 11 rows: the Section 8 rows, then
+   (when non-S8 units exist) a banner row + those rows; non-rev rows print in
+   Part D, which holds 5. Warn whenever a generated document would trim data. */
+function rsCapacity(){
+  const R=UNITS.filter(i=>numf(get('units.'+i+'.num_units'))||numf(get('units.'+i+'.proposed'))||get('units.'+i+'.br')||get('units.'+i+'.ba')).length;
+  const L=get('lihtc.enabled')==='1'?LIHTC.filter(i=>get('lihtc.'+i+'.br')||get('lihtc.'+i+'.ba')||get('lihtc.'+i+'.avg_rent')).length:0;
+  const N=NONREV.filter(i=>get('nonrev.'+i+'.use')||get('nonrev.'+i+'.br')||get('nonrev.'+i+'.ba')||get('nonrev.'+i+'.rent')).length;
+  const cut=Math.max(0,R+(L?1+L:0)-11);
+  const nrOver=Math.max(0,N-5);
+  const msgs=[],flags=[];
+  if(cut){msgs.push('Too many unit types \u2014 rent schedule Part A holds 11 rows'+(L?(' and your '+R+' Section 8 + banner + '+L+' non-Section 8 rows need '+(R+1+L)):'')+'. The last '+cut+' row'+(cut>1?'s':'')+' will be left off the generated rent schedule.');
+    flags.push(cut+' unit-type row'+(cut>1?'s':'')+' over the rent schedule\u2019s 11-row limit');}
+  if(nrOver){msgs.push('Rent schedule Part D holds 5 non-revenue rows \u2014 the last '+nrOver+' will be left off (and out of the Part D rent total).');
+    flags.push(nrOver+' non-revenue unit'+(nrOver>1?'s':'')+' over Part D\u2019s 5 rows');}
+  return {R,L,N,cut,nrOver,msgs,flags};
+}
+function capNote(){const c=rsCapacity();if(!c.msgs.length)return '';return '<div class="ucnote warn" style="display:block;margin:0 0 10px">\u26a0 '+c.msgs.map(esc).join('<br>')+'</div>';}
 function refreshFlags(){document.querySelectorAll('[data-pill]').forEach(p=>{const n=+p.getAttribute('data-pill');const st=sectionStatus(n);p.className='pill '+(st==='warn'?'warn':'ok');p.textContent=st==='warn'?'review':'confirmed';});renderRail();renderAttention();}
 function unitCard(i,pos){const trash=UNITS.length>1?`<button class="trash" data-delunit="${i}" title="Delete this unit type">✕</button>`:'';
   const _c=numf(get('units.'+i+'.current')),_p=numf(get('units.'+i+'.proposed'));const _d=_p-_c,_pc=_c>0?Math.round(_d/_c*100):0;
@@ -249,7 +247,7 @@ function renderRents(){
   }
   lh+=undoBits('LI');
   const rgHead='<div class="rgh"><span>Unit type</span><span>Units</span><span>Current rent</span><span>Proposed rent</span><span>Utility allowance</span><span class="safmrhead">150% SAFMR<button class="urev hudbtn" id="pullSafmr" title="Re-pull 150% ceilings from HUD for this property’s ZIP">⤓ HUD</button></span><span></span></div>';
-  return card(6,sectionPill(6),`<div class="reseff">${dateEffCell()}</div><div class="ucards">${UNITS.length?rgHead:''}${cards}</div><div class="addrow" id="addUnit">+ Add unit type</div>${_undoStack.length?(' <span class="addrow ghostlink" id="undoUnit">↩ Undo delete'+(_undoStack.length>1?(' ('+_undoStack.length+')'):'')+'</span><button class="undocommit" id="undoCommit" title="Keep deletions — dismiss undo">✓</button>'):''}<div class="partd">${lh}</div><div class="partd">${pd}</div>`);}
+  return card(6,sectionPill(6),`<div class="reseff">${dateEffCell()}</div>${capNote()}<div class="ucards">${UNITS.length?rgHead:''}${cards}</div><div class="addrow" id="addUnit">+ Add unit type</div>${_undoStack.length?(' <span class="addrow ghostlink" id="undoUnit">↩ Undo delete'+(_undoStack.length>1?(' ('+_undoStack.length+')'):'')+'</span><button class="undocommit" id="undoCommit" title="Keep deletions — dismiss undo">✓</button>'):''}<div class="partd">${lh}</div><div class="partd">${pd}</div>`);}
 
 const SAFMR_BR_KEY={'Studio':'efficiency','1BR':'br1','2BR':'br2','3BR':'br3','4BR':'br4'};
 let _hud={key:'',data:null,inflight:null};let _hudTimer=null;
@@ -327,7 +325,7 @@ function renderSources(){
   return card(1,sectionPill(1),rcs+rs+foot);}
 
 function sectionKeys(n){if(n===6)return UNITS.flatMap(i=>['units.'+i+'.br','units.'+i+'.ba','units.'+i+'.num_units','units.'+i+'.current','units.'+i+'.proposed','units.'+i+'.ua_source','units.'+i+'.safmr_source']);const fs=FIELD_SECTIONS.find(s=>s.n===n);return fs?fs.fields.flatMap(f=>f.type==='addr'?ADDR:(f.type==='caaddr'?CA_ADDR:(f.type==='appraddr'?APPR_ADDR:(f.type==='mgmtaddr'?MGMT_ADDR:(f.prefix?[f.prefix,f.k]:[f.k]))))):[];}
-function sectionStatus(n){if(n===1)return _rcsUpload?'ok':'warn';const over=sectionKeys(n).some(k=>srcOf(k)==='overridden');if(n===6&&(UNITS.some(uaUnresolved)||UNITS.some(safmrUnresolved)||UNITS.some(typeUnresolved)||UNITS.some(numUnresolved)||UNITS.some(i=>srcOf('units.'+i+'.ua_source')==='overridden')||UNITS.some(i=>srcOf('units.'+i+'.safmr_source')==='overridden')||UNITS.some(i=>{const r=safmrResolvedOf(i),p=numf(get('units.'+i+'.proposed'));return r>0&&p>0&&p>=r;})))return'warn';return over?'warn':'ok';}
+function sectionStatus(n){if(n===1)return _rcsUpload?'ok':'warn';const over=sectionKeys(n).some(k=>srcOf(k)==='overridden');if(n===6&&(UNITS.some(uaUnresolved)||UNITS.some(safmrUnresolved)||UNITS.some(typeUnresolved)||UNITS.some(numUnresolved)||UNITS.some(i=>srcOf('units.'+i+'.ua_source')==='overridden')||UNITS.some(i=>srcOf('units.'+i+'.safmr_source')==='overridden')||UNITS.some(i=>{const r=safmrResolvedOf(i),p=numf(get('units.'+i+'.proposed'));return r>0&&p>0&&p>=r;})||rsCapacity().msgs.length>0))return'warn';return over?'warn':'ok';}
 function sectionPill(n){return sectionStatus(n)==='warn'?'<span class="pill warn" data-pill="'+n+'">review</span>':'<span class="pill ok" data-pill="'+n+'">confirmed</span>';}
 function card(n,pill,body){return `<div class="card"><div class="chead"><span class="cnum">${n}</span><span class="ctitle">${SECTION_TITLES[n]}</span>${pill}<span class="chev">▾</span></div><div class="cbody">${body}</div></div>`;}
 
@@ -346,7 +344,7 @@ function renderCommand(){const a=analysis();const pCur=a.ceil>0?clamp(a.cg/a.cei
    </div>
    <div class="ccard"><div class="cck">RECORD CHECKS</div><div class="chkgrid">
      ${chk(nmOk?'ok':'warn','Property name',nmOk?esc(get('property.name')):'missing — Section 2')}${chk(fhaOk?'ok':'warn','FHA / Section 8 #',fhaOk?esc(get('property.fha')):'missing — Section 2')}${chk(sigOk?'ok':'warn','Signatory (Part H)',sigOk?(esc(get('sig.name'))+(get('sig.title')?' · '+esc(get('sig.title')):'')):'missing — Section 3')}
-     ${chk(ua[0],'Utility allowance',ua[1])}${chk(a.safmrMissing?'warn':(a.safmrOver?'warn':(a.safmrConflict?'info':'ok')),'SAFMR (150% ceiling)',a.safmrMissing?'enter or pull SAFMR per unit type':(a.safmrOver?(a.safmrOver+' type'+(a.safmrOver>1?'s':'')+' over 150% SAFMR'):(a.safmrConflict?'HUD vs RCS differ — using HUD':'per unit type · HUD')))}</div></div>
+     ${chk(ua[0],'Utility allowance',ua[1])}${chk(a.safmrMissing?'warn':(a.safmrOver?'warn':(a.safmrConflict?'info':'ok')),'SAFMR (150% ceiling)',a.safmrMissing?'enter or pull SAFMR per unit type':(a.safmrOver?(a.safmrOver+' type'+(a.safmrOver>1?'s':'')+' over 150% SAFMR'):(a.safmrConflict?'HUD vs RCS differ — using HUD':'per unit type · HUD')))}${(()=>{const c=rsCapacity();return c.msgs.length?chk('warn','Rent schedule capacity',esc(c.flags.join(' · '))):'';})()}</div></div>
    <div class="ccard"><div class="cck">THIS PACKAGE</div><div class="cctitle" style="font-size:15px">${_rcsUpload?'RCS report uploaded':'RCS report needed'}</div><div class="ccsub">${_rcsUpload?esc(_rcsUpload.name)+' — goes in as document 04':'Upload the completed RCS report in Section 1 — it becomes document 04 of the package.'}</div>
      <div class="ccsub" style="margin-top:7px;color:#33405c"><b>The 6-document package</b></div><div class="drafts">${[['Cover letter (CA)',1],['Owner cover letter',1],['Owner’s checklist',1],['RCS report (uploaded PDF)',_rcsUpload?1:0],['Draft rent schedule',1],['Tenant notice',1]].map(d=>'<span>'+(d[1]?'✓ ':'○ ')+d[0]+'</span>').join('')}</div>
      <div class="wb">Documents are generated from the form exactly as shown — use “Update database” to save your inputs. The RCS Package folder download bundles everything — the combined PDF, each document, and the Rent Analysis workbook.</div></div>`;}
@@ -362,7 +360,7 @@ function overrideCount(){const grouped=new Set();for(const b in ADDR_GROUPS)ADDR
   for(let i=0;i<5;i++){if(srcOf('partb.utilities.'+i)==='overridden'||srcOf('partb.fuel.'+i)==='overridden')c++;}
   wiBases.forEach(b=>{if(srcOf('partb.writein.'+b)==='overridden'||srcOf('partb.writein.'+b+'.on')==='overridden'||srcOf('partb.writein.'+b+'.fuel')==='overridden')c++;});
   return c;}
-function attnFlags(){const f=[];const u=UNITS.filter(uaUnresolved).length;if(u)f.push(u+' UA conflict'+(u>1?'s':'')+' to resolve');const sf=UNITS.filter(safmrUnresolved).length;if(sf)f.push(sf+' SAFMR conflict'+(sf>1?'s':'')+' to resolve');const tc=UNITS.filter(i=>typeUnresolved(i)||numUnresolved(i)).length;if(tc)f.push(tc+' unit type/count conflict'+(tc>1?'s':'')+' to resolve');const A=analysis();if(A.safmrMissing)f.push('SAFMR needed for the 150% test');if(A.safmrOver)f.push(A.safmrOver+' unit type'+(A.safmrOver>1?'s':'')+' over 150% SAFMR');const ov=overrideCount();if(ov)f.push(ov+' unsaved override'+(ov>1?'s':''));if(!_rcsUpload)f.push('the completed RCS report isn\u2019t uploaded (Section 1)');return f;}
+function attnFlags(){const f=[];const u=UNITS.filter(uaUnresolved).length;if(u)f.push(u+' UA conflict'+(u>1?'s':'')+' to resolve');const sf=UNITS.filter(safmrUnresolved).length;if(sf)f.push(sf+' SAFMR conflict'+(sf>1?'s':'')+' to resolve');const tc=UNITS.filter(i=>typeUnresolved(i)||numUnresolved(i)).length;if(tc)f.push(tc+' unit type/count conflict'+(tc>1?'s':'')+' to resolve');const A=analysis();if(A.safmrMissing)f.push('SAFMR needed for the 150% test');if(A.safmrOver)f.push(A.safmrOver+' unit type'+(A.safmrOver>1?'s':'')+' over 150% SAFMR');rsCapacity().flags.forEach(x=>f.push(x));const ov=overrideCount();if(ov)f.push(ov+' unsaved override'+(ov>1?'s':''));if(!_rcsUpload)f.push('the completed RCS report isn\u2019t uploaded (Section 1)');return f;}
 function renderRail(){const st={};[7].forEach(n=>st[n]='ok');[1,2,3,4,5,6,8,9].forEach(n=>st[n]=sectionStatus(n));let conf=0;for(let n=1;n<=9;n++)if(st[n]!=='warn')conf++;const need=9-conf;
   el('rail').innerHTML=[1,2,3,4,5,6,7,8,9].map(n=>`<div class="railitem"><span class="ri ${st[n]==='warn'?'warn':'ok'}">${st[n]==='warn'?'!':'✓'}</span><span class="rname">${n}. ${SECTION_TITLES[n]}</span></div>`).join('');
   el('railprog').innerHTML=`<b>${conf} of 9 confirmed</b>${need?`<div class="warnt">${need} need your review</div>`:''}<div class="track sm"><div style="width:${conf/9*100}%;background:#166534"></div></div>`;
@@ -376,7 +374,7 @@ function renderBody(){const _sy=window.scrollY;const _anchorSel=(_refocusSel&&!_
   wireBody();renderCommand();renderBar();renderRail();renderAttention();
   if(_refocusSel&&!_mouseFocus){try{const _f=document.querySelector(_refocusSel);if(_f&&_f.focus){_f.focus({preventScroll:true});if(/^(INPUT|TEXTAREA)$/.test(_f.tagName)&&typeof _f.setSelectionRange==='function'){const _L=(_f.value||'').length;try{_f.setSelectionRange(_L,_L);}catch(_e){}}}}catch(e){}}_refocusSel=null;
   if(_anchorSel&&_anchorTop!=null){try{const _a2=document.querySelector(_anchorSel);if(_a2){const _nt=_a2.getBoundingClientRect().top;window.scrollTo(0,window.scrollY+(_nt-_anchorTop));}else window.scrollTo(0,_sy);}catch(e){try{window.scrollTo(0,_sy);}catch(_z){}}}else{try{window.scrollTo(0,_sy);}catch(e){}}}
-async function commitPending(){if(!_pending||!_pending.length)return;const keys=_pending;_pending=null;if(handleZeroUnitCommit(keys))return;for(const _pk of ['poc.phone','appr.phone'])if(keys.indexOf(_pk)>=0){const _d=(get(_pk)||'').replace(/\D/g,'');if(_d.length!==0&&_d.length!==10){setStatus('Enter a complete 10-digit phone before saving.');return;}}keys.forEach(k=>{const m=k.match(/^partb\.writein\.(e1|e2|e3|e4|e5|s1|s2|s3|s4|s5|s6)(\.on)?$/);if(m)clearUncheckedWriteins([m[1]]);});for(const k of keys){const gb=groupOf(k);if(gb){for(const kk of ADDR_GROUPS[gb])form=await store.saveField(form,kk);}else{form=await store.saveField(form,k);}}await refreshSnap();_pendingSnap=null;_refocusSel=refocusSelForKey(keys[0]);renderBody();setStatus('Saved this field to the database.');}
+async function commitPending(){if(!_pending||!_pending.length)return;const keys=_pending;_pending=null;if(handleZeroUnitCommit(keys))return;for(const _pk of ['poc.phone','appr.phone'])if(keys.indexOf(_pk)>=0){const _d=(get(_pk)||'').replace(/\D/g,'');if(_d.length!==0&&_d.length!==10){setStatus('Enter a complete 10-digit phone before saving.');return;}}keys.forEach(k=>{const m=k.match(/^partb\.writein\.(e1|e2|e3|e4|e5|s1|s2|s3|s4|s5|s6)(\.on)?$/);if(m)clearUncheckedWriteins([m[1]]);});const _sk=[];keys.forEach(k=>{const gb=groupOf(k);(gb?ADDR_GROUPS[gb]:[k]).forEach(kk=>{if(_sk.indexOf(kk)<0)_sk.push(kk);});});try{form=await store.saveFields(form,_sk);}catch(e){saveFailed(e);return;}await refreshSnap();_pendingSnap=null;_refocusSel=refocusSelForKey(keys[0]);renderBody();setStatus('Saved this field to the database.');}
 function revertCellIfOver(cell){if(!cell)return false;const inIc=cell.querySelector('.ovic[data-mode="over"] [data-rev]');if(inIc){inIc.click();return true;}const box=cell.getAttribute('data-box');if(box){const note=document.querySelector('.ovnote[data-ov="'+box+'"][data-mode="over"]');if(note){const b=note.querySelector('[data-rev],[data-revaddr]');if(b){b.click();return true;}}}return false;}
 function isToggleKey(k){return /^(check\.\d+|partb\.(equipment|utilities|services)\.\d+|partb\.fuel\.\d+|partb\.writein\.[a-z0-9]+\.(on|fuel))$/.test(k);}
 function fixSavedToggles(){Object.keys(DBSNAP||{}).forEach(k=>{if(isToggleKey(k)){const dv=(DBSNAP[k]&&DBSNAP[k].value!=null)?DBSNAP[k].value:'';form[k]={value:dv,source:'database',saved_at:(DBSNAP[k]&&DBSNAP[k].saved_at)||null,prior_value:null,prior_source:null,db_value:dv};}});}
@@ -388,22 +386,19 @@ function keysNewDirty(keys){return !keysCanRevert(keys)&&keys.some(k=>srcOf(k)==
 function keysCanSave(keys){return keysCanRevert(keys)||keysNewDirty(keys);}
 function refocusSelForKey(k){if(/^(check\.\d+|partb\.(equipment|utilities|services)\.\d+)$/.test(k))return '[data-cb="'+k+'"]';const w=k.match(/^(partb\.writein\.[a-z0-9]+)\.on$/);if(w)return '[data-wibox="'+w[1]+'"]';const gb=groupOf(k);if(gb)return '[data-box="'+gb+'"] input,[data-box="'+gb+'"] .uatrigger';return '[data-trigfor="'+k+'"],[data-box="'+k+'"] .uatrigger,[data-k="'+k+'"]';}
 function revertPending(){if(!_pending||!_pending.length)return false;const keys=_pending;const snap=_pendingSnap;_pending=null;_pendingSnap=null;let any=false;if(snap){Object.keys(snap).forEach(k=>{const b=snap[k];const nv=form[k]?form[k].value:undefined;const bv=b?b.value:undefined;if(b)form[k]=b;else delete form[k];if(bv!==nv)any=true;});}else{keys.forEach(k=>{const gb=groupOf(k);if(gb){ADDR_GROUPS[gb].forEach(kk=>{if(store.revertForm(form,kk))any=true;});}else{if(store.revertForm(form,k))any=true;}});}if(any){_refocusSel=refocusSelForKey(keys[0]);renderBody();}setStatus('Reverted your last change.');return true;}
-function paintAddr(){const c=CLR[addrAgg()]||CLR.new;const box=document.querySelector('[data-box="property.addr"]');if(box){box.style.background=c[1];box.style.borderLeftColor=c[0];}const ov=document.querySelector('[data-ov="property.addr"]');if(ov)ov.style.display=addrAgg()==='overridden'?'flex':'none';}
 function aggSrc(keys){if(keys.some(k=>srcOf(k)==='overridden'))return'overridden';if(keys.some(k=>srcOf(k)==='database'))return'database';if(keys.some(k=>srcOf(k)==='this-cycle'))return'this-cycle';return'new';}
 function groupOf(k){for(const b in ADDR_GROUPS){if(ADDR_GROUPS[b].indexOf(k)>=0)return b;}return null;}
 function partHot(k){const s=srcOf(k);return s==='overridden'||(s==='new'&&get(k)!==''&&get(k)!=null);}
 function baseSrc(keys){const cold=keys.filter(k=>!partHot(k));return aggSrc(cold.length?cold:keys);}
 function tintStyle(k){const c=CLR[srcOf(k)]||CLR.new;return 'background:linear-gradient('+c[0]+','+c[0]+') no-repeat left 4px center/3px 60%,'+c[1]+';border-radius:6px';} // inset bar, not an inset shadow: shadows bend around the pill radius into a "(" crescent
+function applyTint(inp,k){if(partHot(k)){const pc=CLR[srcOf(k)]||CLR.new;inp.style.background='linear-gradient('+pc[0]+','+pc[0]+') no-repeat left 4px center/3px 60%,'+pc[1];inp.style.borderRadius='6px';}else{inp.style.background='transparent';}inp.style.boxShadow='none';} // live-paint twin of tintStyle — keep the two in lockstep
 function paintGroup(b){const keys=ADDR_GROUPS[b];const a=baseSrc(keys);const c=CLR[a]||CLR.new;const box=document.querySelector('[data-box="'+b+'"]');
   if(box){box.style.background=c[1];box.style.borderLeftColor=c[0];
-    keys.forEach(k=>{const inp=box.querySelector('input[data-k="'+k+'"]');if(!inp)return;
-      if(partHot(k)){const pc=CLR[srcOf(k)]||CLR.new;inp.style.background=pc[1];inp.style.boxShadow='inset 3px 0 0 '+pc[0];inp.style.borderRadius='6px';}
-      else{inp.style.background='transparent';inp.style.boxShadow='none';}});}
+    keys.forEach(k=>{const inp=box.querySelector('input[data-k="'+k+'"]');if(inp)applyTint(inp,k);});}
   const ov=document.querySelector('[data-ov="'+b+'"]');if(ov){const m=modeOf(keys);ov.setAttribute('data-mode',m);ov.style.display=m?'flex':'none';}}
 function paintCaName(){const keys=['ca.prefix','ca.name'];const a=baseSrc(keys);const c=CLR[a]||CLR.new;const box=document.querySelector('[data-box="ca.name"]');
   if(box){box.style.background=c[1];box.style.borderLeftColor=c[0];const inp=box.querySelector('input[data-k="ca.name"]');
-    if(inp){if(partHot('ca.name')){const pc=CLR[srcOf('ca.name')]||CLR.new;inp.style.background=pc[1];inp.style.boxShadow='inset 3px 0 0 '+pc[0];inp.style.borderRadius='6px';}
-      else{inp.style.background='transparent';inp.style.boxShadow='none';}}}
+    if(inp)applyTint(inp,'ca.name');}
   const ov=document.querySelector('.ovnote[data-ov="ca.prefix,ca.name"]');if(ov){const m=modeOf(keys);ov.setAttribute('data-mode',m);ov.style.display=m?'flex':'none';}}
 function paintCell(k){const gb=groupOf(k);if(gb)return paintGroup(gb);if(k==='ca.name'||k==='ca.prefix')return paintCaName();const s=form[k];if(!s)return;const _sr=(k==='rent_schedule.date_rents_effective'&&s.source==='database')?'this-cycle':s.source;const c=CLR[_sr]||CLR.new;const box=document.querySelector('[data-box="'+k+'"]');if(box){box.style.background=c[1];box.style.borderLeftColor=c[0];}const ov=document.querySelector('[data-ov="'+k+'"]');if(ov){const m=modeOf(k);ov.setAttribute('data-mode',m);ov.style.display=m?'flex':'none';}document.querySelectorAll('[data-ovic]').forEach(o=>{const ks=o.getAttribute('data-ovic').split(',');if(ks.indexOf(k)>=0){const m=modeOf(ks);o.setAttribute('data-mode',m);o.style.display=m?'inline-flex':'none';}});}
 function clearUncheckedWriteins(ids){ids.forEach(id=>{if(get('partb.writein.'+id)&&get('partb.writein.'+id+'.on')!=='1'){form=store.editForm(form,'partb.writein.'+id,'');form=store.editForm(form,'partb.writein.'+id+'.on','');}});}
@@ -412,7 +407,7 @@ function wireBody(){
   document.querySelectorAll('input[data-k]').forEach(inp=>{const k=inp.getAttribute('data-k'),wion=inp.getAttribute('data-wion');
     inp.addEventListener('input',()=>{let v=inp.value;if(inp.getAttribute('data-phone')){v=fmtPhone(v);inp.value=v;}else if(inp.getAttribute('data-money')){v=cleanNum(v);inp.value=fmtMoney(v);}else if(inp.getAttribute('data-date')){v=fmtDateInput(v);inp.value=v;}form=store.editForm(form,k,v);if(k==='property.name'&&el('hdrProp'))el('hdrProp').textContent=(v||'(unnamed property)');if(k==='property.addr_zip')scheduleHudRefresh();
       if(wion){const on=v.length>0;form=store.editForm(form,wion,on?'1':'');const cbEl=inp.closest('.cb');if(cbEl){cbEl.classList.remove('empty','unchecked','checked');cbEl.classList.add(!v?'empty':(on?'checked':'unchecked'));const bx=cbEl.querySelector('.box');if(bx){bx.textContent=on?'✓':'';bx.style.color=provColor(wion);}}}else if(inp.getAttribute('data-util')){if(v===''){form=store.editForm(form,k+'.on','');form=store.editForm(form,k+'.fuel','');}const cbEl=inp.closest('.cb');const stillOn=v!==''&&get(k+'.on')==='1';if(cbEl){cbEl.classList.remove('empty','unchecked','checked');cbEl.classList.add(!v?'empty':(stillOn?'checked':'unchecked'));const bx=cbEl.querySelector('.box');if(bx){bx.textContent=stillOn?'✓':'';bx.style.color=provColor(k+'.on');}const f3=cbEl.querySelector('[data-fuel3]');if(f3){const fk=k+'.fuel',fv=get(fk),fhas=fv!==''&&fv!=null,fc=CLR[fhas?srcOf(fk):'new']||CLR.new;f3.textContent=fhas?fv:'-';f3.style.color=fc[0];f3.style.borderColor=fc[0];f3.style.background=fc[1];}}}
-      paintCell(k);refreshFlags();if(/^units\.|^nonrev\./.test(k)){renderCommand();renderBar();const mm=k.match(/^units\.(\d+)\.(current|proposed)$/);if(mm){const ui=mm[1],me=document.querySelector('[data-metric="'+ui+'"]');if(me){const cc=numf(get('units.'+ui+'.current')),pp=numf(get('units.'+ui+'.proposed'));if(cc>0&&pp>0){me.textContent=sMoney(pp-cc)+' / unit · '+sPct(Math.round((pp-cc)/cc*100));me.style.color=(pp-cc)>=0?'#166534':'#b91c1c';}else me.textContent='';}}}setStatus('Editing — on-file changes show Overridden until you Update or Revert.');});inp.addEventListener('keydown',async e=>{if(e.key!=='Enter'&&e.key!=='Escape')return;const _keys=fieldKeys(k);if(_pending&&_pending.length&&_pending.indexOf(k)>=0){e.preventDefault();e.stopPropagation();if(e.key==='Escape')revertPending();else commitPending();return;}if(e.key==='Escape'){if(keysCanRevert(_keys)){e.preventDefault();e.stopPropagation();_keys.forEach(kk=>store.revertForm(form,kk));_refocusSel='[data-k="'+k+'"]';renderBody();setStatus('Reverted your change to the on-file value.');}else if(srcOf(k)==='new'&&(inp.value||'')!==''){e.preventDefault();e.stopPropagation();const _clr=groupOf(k)?[k]:_keys;_clr.forEach(kk=>store.editForm(form,kk,''));_refocusSel='[data-k="'+k+'"]';renderBody();setStatus('Cleared your unsaved entry.');}return;}e.preventDefault();if(handleZeroUnitCommit(_keys))return;if(k==='poc.phone'){const _d=(inp.value||'').replace(/[^0-9]/g,'');if(_d.length!==0&&_d.length!==10){setStatus('Enter a complete 10-digit phone before saving.');return;}}if(!keysCanSave(_keys))return;_keys.forEach(kk=>{if(kk.indexOf('partb.writein.')===0&&kk.indexOf('.',14)<0&&kk.slice(14)!=='u1')clearUncheckedWriteins([kk.slice(14)]);});const _sk=[];_keys.forEach(kk=>coupledKeys(kk).forEach(x=>{if(_sk.indexOf(x)<0)_sk.push(x);}));if(groupOf(k)==='tenant.mgmt'&&_sk.indexOf('tenant.mgmt_source')<0)_sk.push('tenant.mgmt_source');for(const kk of _sk)form=await store.saveField(form,kk);await refreshSnap();_refocusSel='[data-k="'+k+'"]';renderBody();setStatus('Saved this field to the database.');});if(wion)inp.addEventListener('focus',()=>{if(inp.value&&get(wion)!=='1'){form=store.editForm(form,wion,'1');const cb=inp.closest('.cb');if(cb){cb.classList.remove('unchecked','empty');cb.classList.add('checked');const bx=cb.querySelector('.box');if(bx)bx.textContent='✓';}}});});
+      paintCell(k);refreshFlags();if(/^units\.|^nonrev\./.test(k)){renderCommand();renderBar();const mm=k.match(/^units\.(\d+)\.(current|proposed)$/);if(mm){const ui=mm[1],me=document.querySelector('[data-metric="'+ui+'"]');if(me){const cc=numf(get('units.'+ui+'.current')),pp=numf(get('units.'+ui+'.proposed'));if(cc>0&&pp>0){me.textContent=sMoney(pp-cc)+' / unit · '+sPct(Math.round((pp-cc)/cc*100));me.style.color=(pp-cc)>=0?'#166534':'#b91c1c';}else me.textContent='';}}}setStatus('Editing — on-file changes show Overridden until you Update or Revert.');});inp.addEventListener('keydown',async e=>{if(e.key!=='Enter'&&e.key!=='Escape')return;const _keys=fieldKeys(k);if(_pending&&_pending.length&&_pending.indexOf(k)>=0){e.preventDefault();e.stopPropagation();if(e.key==='Escape')revertPending();else commitPending();return;}if(e.key==='Escape'){if(keysCanRevert(_keys)){e.preventDefault();e.stopPropagation();_keys.forEach(kk=>store.revertForm(form,kk));_refocusSel='[data-k="'+k+'"]';renderBody();setStatus('Reverted your change to the on-file value.');}else if(srcOf(k)==='new'&&(inp.value||'')!==''){e.preventDefault();e.stopPropagation();const _clr=groupOf(k)?[k]:_keys;_clr.forEach(kk=>store.editForm(form,kk,''));_refocusSel='[data-k="'+k+'"]';renderBody();setStatus('Cleared your unsaved entry.');}return;}e.preventDefault();if(handleZeroUnitCommit(_keys))return;if(k==='poc.phone'){const _d=(inp.value||'').replace(/[^0-9]/g,'');if(_d.length!==0&&_d.length!==10){setStatus('Enter a complete 10-digit phone before saving.');return;}}if(!keysCanSave(_keys))return;_keys.forEach(kk=>{if(kk.indexOf('partb.writein.')===0&&kk.indexOf('.',14)<0&&kk.slice(14)!=='u1')clearUncheckedWriteins([kk.slice(14)]);});const _sk=[];_keys.forEach(kk=>coupledKeys(kk).forEach(x=>{if(_sk.indexOf(x)<0)_sk.push(x);}));if(groupOf(k)==='tenant.mgmt'&&_sk.indexOf('tenant.mgmt_source')<0)_sk.push('tenant.mgmt_source');try{form=await store.saveFields(form,_sk);}catch(e){saveFailed(e);return;}await refreshSnap();_refocusSel='[data-k="'+k+'"]';renderBody();setStatus('Saved this field to the database.');});if(wion)inp.addEventListener('focus',()=>{if(inp.value&&get(wion)!=='1'){form=store.editForm(form,wion,'1');const cb=inp.closest('.cb');if(cb){cb.classList.remove('unchecked','empty');cb.classList.add('checked');const bx=cb.querySelector('.box');if(bx)bx.textContent='✓';}}});});
   document.querySelectorAll('select[data-k]').forEach(sel=>{const k=sel.getAttribute('data-k');sel.addEventListener('change',()=>{form=store.editForm(form,k,sel.value);paintCell(k);renderRail();renderAttention();});});
   document.querySelectorAll('input[data-cb]').forEach(c=>{const k=c.getAttribute('data-cb');c.addEventListener('change',()=>{_pendingSnap=snapOf([k]);form=store.editForm(form,k,c.checked?'1':'');_pending=[k];_refocusSel='[data-cb="'+k+'"]';renderBody();});});
   document.querySelectorAll('[data-fuel]').forEach(fl=>fl.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();const k=fl.getAttribute('data-fuel');const cur=(form[k]&&form[k].value)||'';const nx=cur===''?'E':(cur==='E'?'G':'');_pendingSnap=snapOf([k]);form=store.editForm(form,k,nx);_pending=[k];renderBody();}));
@@ -420,8 +415,8 @@ function wireBody(){
   document.querySelectorAll('[data-wibox]').forEach(bx=>bx.addEventListener('click',e=>{e.preventDefault();const base=bx.getAttribute('data-wibox');if(!get(base))return;const on=get(base+'.on')==='1';_pendingSnap=snapOf([base+'.on']);form=store.editForm(form,base+'.on',on?'':'1');_pending=[base+'.on'];_refocusSel='[data-wibox="'+base+'"]';renderBody();}));
   document.querySelectorAll('button[data-rev]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();b.getAttribute('data-rev').split(',').forEach(k=>coupledKeys(k).forEach(x=>store.revertForm(form,x)));renderBody();setStatus('Reverted to the on-file value.');}));
   document.querySelectorAll('button[data-revaddr]').forEach(b=>b.addEventListener('click',()=>{const _box=b.getAttribute('data-revaddr');const g=ADDR_GROUPS[_box]||ADDR;g.forEach(k=>store.revertForm(form,k));if(_box==='tenant.mgmt')store.revertForm(form,'tenant.mgmt_source');renderBody();setStatus('Address reverted.');}));
-  document.querySelectorAll('button[data-save1]').forEach(b=>b.addEventListener('click',async e=>{e.preventDefault();e.stopPropagation();const keys=[];b.getAttribute('data-save1').split(',').forEach(_k=>coupledKeys(_k).forEach(x=>{if(keys.indexOf(x)<0)keys.push(x);}));if(handleZeroUnitCommit(keys))return;for(const _pk of ['poc.phone','appr.phone'])if(keys.indexOf(_pk)>=0){const _d=(get(_pk)||'').replace(/\D/g,'');if(_d.length!==0&&_d.length!==10){setStatus('Enter a complete 10-digit phone before saving.');return;}}keys.forEach(k=>{const m=k.match(/^partb\.writein\.(e1|e2|e3|e4|e5|s1|s2|s3|s4|s5|s6)(\.on)?$/);if(m)clearUncheckedWriteins([m[1]]);});for(const k of keys)form=await store.saveField(form,k);await refreshSnap();renderBody();setStatus('Saved just that field to the database.');}));
-  document.querySelectorAll('button[data-save1addr]').forEach(b=>b.addEventListener('click',async()=>{const _box=b.getAttribute('data-save1addr');const g=ADDR_GROUPS[_box]||ADDR;for(const k of g)form=await store.saveField(form,k);if(_box==='tenant.mgmt')form=await store.saveField(form,'tenant.mgmt_source');await refreshSnap();renderBody();setStatus('Saved the address to the database.');}));
+  document.querySelectorAll('button[data-save1]').forEach(b=>b.addEventListener('click',async e=>{e.preventDefault();e.stopPropagation();const keys=[];b.getAttribute('data-save1').split(',').forEach(_k=>coupledKeys(_k).forEach(x=>{if(keys.indexOf(x)<0)keys.push(x);}));if(handleZeroUnitCommit(keys))return;for(const _pk of ['poc.phone','appr.phone'])if(keys.indexOf(_pk)>=0){const _d=(get(_pk)||'').replace(/\D/g,'');if(_d.length!==0&&_d.length!==10){setStatus('Enter a complete 10-digit phone before saving.');return;}}keys.forEach(k=>{const m=k.match(/^partb\.writein\.(e1|e2|e3|e4|e5|s1|s2|s3|s4|s5|s6)(\.on)?$/);if(m)clearUncheckedWriteins([m[1]]);});try{form=await store.saveFields(form,keys);}catch(e){saveFailed(e);return;}await refreshSnap();renderBody();setStatus('Saved just that field to the database.');}));
+  document.querySelectorAll('button[data-save1addr]').forEach(b=>b.addEventListener('click',async()=>{const _box=b.getAttribute('data-save1addr');const ks=(ADDR_GROUPS[_box]||ADDR).slice();if(_box==='tenant.mgmt')ks.push('tenant.mgmt_source');try{form=await store.saveFields(form,ks);}catch(e){saveFailed(e);return;}await refreshSnap();renderBody();setStatus('Saved the address to the database.');}));
   document.querySelectorAll('.uatrigger').forEach(t=>{const d=t.closest('.uadrop');if(!d)return;
     const tog=()=>{const open=d.classList.contains('open');document.querySelectorAll('.uadrop.open').forEach(x=>x.classList.remove('open'));if(!open)d.classList.add('open');};
     const openIt=()=>{document.querySelectorAll('.uadrop.open').forEach(x=>x.classList.remove('open'));d.classList.add('open');};
@@ -554,26 +549,26 @@ function renderLauncher(){
       +'<button class="progcard active" id="openRCS"><div class="pg-h"><span class="pg-code">RCS</span><span class="pg-arrow">Open &rarr;</span></div><div class="pg-name">Rent Comparability Study</div>'+rcsAffPane(a)+'</button>'
       +'<div class="progrow">'+soon('OCAF','Operating Cost Adjustment Factor')+soon('UAF','Utility Allowance Factor')+soon('BBRA','Budget-Based Rent Adjustment')+'</div></div>';
   el('openRCS').onclick=()=>openForm('RCS');
-  el('pRename').onclick=()=>dialogInput('Rename property','Property name',p.name,'Save',async nm=>{if(!nm)return;await mpdb.renameProperty(activePid,nm);renderLauncher();});
-  el('pDelete').onclick=()=>dialogConfirm('Delete property','This permanently removes <b>'+esc(p.name)+'</b> and its stored record.','Delete',true,async()=>{await mpdb.deleteProperty(activePid);openMenu();});
+  el('pRename').onclick=()=>dialogInput('Rename property','Property name',p.name,'Save',async nm=>{if(!nm)return;try{await mpdb.renameProperty(activePid,nm);renderLauncher();}catch(e){saveFailedModal(e);}});
+  el('pDelete').onclick=()=>dialogConfirm('Delete property','This permanently removes <b>'+esc(p.name)+'</b> and its stored record.','Delete',true,async()=>{try{await mpdb.deleteProperty(activePid);openMenu();}catch(e){saveFailedModal(e);}});
   wireLetterhead();
 }
 function wireLetterhead(){
   const file=el('lhFile');const pick=()=>file&&file.click&&file.click();
   ['lhAdd','lhReplace'].forEach(id=>{const b=el(id);if(b)b.onclick=pick;});
-  const rm=el('lhRemove');if(rm)rm.onclick=()=>dialogConfirm('Remove the letterhead?','The stored letterhead is deleted \u2014 the tenant notice will fall back to a generated header (property name + management address) until a new one is uploaded.','Remove',true,async()=>{await mpdb.setLetterhead(activePid,'','','');renderLauncher();});
+  const rm=el('lhRemove');if(rm)rm.onclick=()=>dialogConfirm('Remove the letterhead?','The stored letterhead is deleted \u2014 the tenant notice will fall back to a generated header (property name + management address) until a new one is uploaded.','Remove',true,async()=>{try{await mpdb.setLetterhead(activePid,'','','');renderLauncher();}catch(e){saveFailedModal(e);}});
   if(file)file.onchange=()=>{const f=file.files&&file.files[0];if(!f)return;file.value='';
     if(f.type==='application/pdf'||/\.pdf$/i.test(f.name)){
       if(f.size>4*1024*1024){dialogConfirm('Letterhead','This PDF is over 4 MB. Export a lighter letterhead PDF (or a PNG/JPG) and upload that.','OK',false,()=>{});return;}
       const rd=new FileReader();rd.onload=async e=>{const u=String(e.target.result||'');
         if(u.indexOf('data:application/pdf')!==0){dialogConfirm('Letterhead','That file could not be read as a PDF.','OK',false,()=>{});return;}
-        await mpdb.setLetterhead(activePid,f.name,'',u);renderLauncher();};
+        try{await mpdb.setLetterhead(activePid,f.name,'',u);renderLauncher();}catch(e){saveFailedModal(e);}};
       rd.readAsDataURL(f);return;}
     if(!/^image\//.test(f.type)){dialogConfirm('Letterhead','Upload the letterhead as a PDF, PNG or JPG. (Word files: use File \u2192 Save As \u2192 PDF once, then upload that.)','OK',false,()=>{});return;}
-    const rd=new FileReader();rd.onload=e=>makeRender(e.target.result,render=>makeThumb(e.target.result,async t=>{await mpdb.setLetterhead(activePid,f.name,t,render);renderLauncher();}));rd.readAsDataURL(f);};
+    const rd=new FileReader();rd.onload=e=>makeRender(e.target.result,render=>makeThumb(e.target.result,async t=>{try{await mpdb.setLetterhead(activePid,f.name,t,render);renderLauncher();}catch(e){saveFailedModal(e);}}));rd.readAsDataURL(f);};
 }
 function makeThumb(dataUrl,cb){try{const img=new Image();img.onload=()=>{const s=Math.min(1,120/Math.max(img.width,img.height));const c=document.createElement('canvas');c.width=Math.max(1,Math.round(img.width*s));c.height=Math.max(1,Math.round(img.height*s));c.getContext('2d').drawImage(img,0,0,c.width,c.height);cb(c.toDataURL('image/jpeg',0.72));};img.onerror=()=>cb('');img.src=dataUrl;}catch(e){cb('');}}
-/* print-quality letterhead: downscale to max 1200px and re-encode as PNG (gen.js embeds PNG only) */
+/* print-quality letterhead render — normalized to PNG (gen.js embeds PNG only) */
 function makeRender(dataUrl,cb){try{const img=new Image();img.onload=()=>{
   // Print quality: keep up to 3000px on the long side (~270 dpi on letter paper),
   // stepping down only if the encoded PNG would get unreasonably heavy to store.
@@ -585,7 +580,6 @@ function makeRender(dataUrl,cb){try{const img=new Image();img.onload=()=>{
   cb(out);};img.onerror=()=>cb('');img.src=dataUrl;}catch(e){cb('');}}
 
 /* ---- FORM: open the RCS form for the active property ----------------- */
-function nonrevEmpty(i){return ['use','br','ba','rent'].every(s=>{const v=get('nonrev.'+i+'.'+s);return v===''||v==null;});}
 function nonrevHasData(i){return ['use','br','ba','rent'].some(s=>{const v=get('nonrev.'+i+'.'+s);return v!==''&&v!=null;});}
 function lihtcHasData(i){return ['br','ba','avg_rent'].some(s=>{const v=get('lihtc.'+i+'.'+s);return v!==''&&v!=null;});}
 function handleZeroUnitCommit(keys){const zk=keys.find(k=>/^(units|nonrev|lihtc)\.\d+\.num_units$/.test(k));
@@ -593,14 +587,14 @@ function handleZeroUnitCommit(keys){const zk=keys.find(k=>/^(units|nonrev|lihtc)
   const m=zk.match(/^(units|nonrev|lihtc)\.(\d+)\./);const fam=m[1],i=+m[2];
   if(fam==='units'&&i===UNITS[0]){setStatus('Cannot commit zero units to the database — the first unit type needs a unit count.');return true;}
   const label=fam==='units'?'unit type':(fam==='nonrev'?'non-revenue unit':'non-Section 8 unit type');
-  dialogConfirm('Delete this '+label+' with no unit count?','This row has no unit count. Go back and enter one, or accept — accepting removes this '+label+' and its data from the database. This cannot be undone after saving.','Delete & save',true,async()=>{
+  dialogConfirm('Delete this '+label+' with no unit count?','This row has no unit count. Go back and enter one, or accept — accepting removes this '+label+' and its data from the database. This cannot be undone after saving.','Delete & save',true,async()=>{try{
     Object.keys(form).forEach(k=>{if(k.indexOf(fam+'.'+i+'.')===0)delete form[k];});
     if(fam==='units')UNITS=UNITS.filter(x=>x!==i);
     else if(fam==='nonrev'){NONREV=NONREV.filter(x=>x!==i);if(!NONREV.length){form=store.editForm(form,'nonrev.enabled','');form=await store.saveField(form,'nonrev.enabled');}}
     else{LIHTC=LIHTC.filter(x=>x!==i);if(!LIHTC.length){form=store.editForm(form,'lihtc.enabled','');form=await store.saveField(form,'lihtc.enabled');}}
     if(mpdb&&activePid)await mpdb.pruneUnitRows(activePid,UNITS,NONREV,LIHTC);
     await refreshSnap();renderBody();setStatus('Zero-unit '+label+' deleted and saved.');
-  });
+  }catch(e){saveFailed(e);renderBody();}});
   return true;}
 function unitHasData(i){return ['br','ba','current','proposed','ua_exec','ua_rcs','ua_custom','safmr_hud','safmr_rcs','safmr_custom'].some(s=>{const v=get('units.'+i+'.'+s);return v!==''&&v!=null;});}
 function countlessUnits(){return UNITS.filter(i=>numf(get('units.'+i+'.num_units'))<=0);}
@@ -614,8 +608,9 @@ async function saveNow(afterSave,fixFirst){clearUncheckedWriteins(['e1','e2','e3
   LIHTC.filter(i=>numf(get('lihtc.'+i+'.num_units'))<=0).forEach(i=>Object.keys(form).forEach(k=>{if(k.indexOf('lihtc.'+i+'.')===0)delete form[k];}));
   if(!Object.keys(form).some(k=>/^nonrev\.\d+\./.test(k))&&get('nonrev.enabled')==='1')form=store.editForm(form,'nonrev.enabled','');
   if(!Object.keys(form).some(k=>/^lihtc\.\d+\./.test(k))&&get('lihtc.enabled')==='1')form=store.editForm(form,'lihtc.enabled','');
-  deriveUnits();form=await store.saveToDb(form);
-  if(mpdb&&activePid)await mpdb.pruneUnitRows(activePid,UNITS,NONREV,LIHTC);
+  deriveUnits();
+  try{form=await store.saveToDb(form);if(mpdb&&activePid)await mpdb.pruneUnitRows(activePid,UNITS,NONREV,LIHTC);}
+  catch(e){saveFailed(e);return;}
   await refreshSnap();deriveUnits();if(firstFix==='left blank'&&form[fk])form[fk].source='new';if(afterSave)afterSave();
   if(firstFix)setStatus('Saved — but zero units cannot be committed: the first unit type\u2019s count was '+firstFix+'.');}
 function requestSave(afterSave){
@@ -650,13 +645,13 @@ function b64ToBytes(b64){if(!b64)return null;try{const bin=atob(b64);const a=new
 function dlFile(bytes,name,mime){const blob=new Blob([bytes],{type:mime||'application/octet-stream'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},1500);}
 function dlPdf(bytes,name){dlFile(bytes,name,'application/pdf');}
 function formRec(){const rec={};for(const k in form)rec[k]=form[k].value;return rec;}
-async function genCoverLetter(){if(!(window.RCSGen&&window.PDFLib)){setStatus('Generator still loading \u2014 try again in a moment.');return;}try{setStatus('Generating cover letter\u2026');const bytes=await window.RCSGen.coverLetter(formRec(),b64ToBytes(LOGO_B64));dlPdf(bytes,(get('property.name')||'Property')+' \u2014 Cover Letter.pdf');setStatus('Cover letter downloaded.');}catch(e){setStatus('Generation failed: '+((e&&e.message)||e));}}
 function dataUrlToBytes(u){try{const i=String(u||'').indexOf(',');if(i<0)return null;return b64ToBytes(u.slice(i+1));}catch(e){return null;}}
 async function combinePdfs(list){const {PDFDocument}=window.PDFLib;const out=await PDFDocument.create();for(const b of list){if(!b)continue;const src=await PDFDocument.load(b,{ignoreEncryption:true,parseSpeed:Infinity});const pages=await out.copyPages(src,src.getPageIndices());pages.forEach(p=>out.addPage(p));}return await out.save({objectsPerTick:Infinity});}
-function showPackageModal(nm,docs,combined,missingRcs,missingLh){
+function showPackageModal(nm,docs,combined,missingRcs,missingLh,capMsgs){
   const rows=docs.map((d,i)=>'<button class="btn sm" data-dldoc="'+i+'" style="justify-content:flex-start">'+esc(d.label)+'</button>').join('');
   const miss=(missingRcs?'<div class="sub" style="color:#b45309;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">\u26a0 RCS report (doc 04) missing \u2014 upload it in Section 1.</div>':'')
-    +(missingLh?'<div class="sub" style="color:#b45309;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">\u26a0 No letterhead \u2014 the tenant notice used a generated header.</div>':'');
+    +(missingLh?'<div class="sub" style="color:#b45309;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">\u26a0 No letterhead \u2014 the tenant notice used a generated header.</div>':'')
+    +((capMsgs||[]).map(m=>'<div class="sub" style="color:#b45309;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="'+esc(m)+'">\u26a0 '+esc(m)+'</div>').join(''));
   modal('<div class="dlg-t">Package generated</div><div class="dlg-b">'+esc(nm)+' - '+docs.length+' documents. Download the combined file, or any individual document.</div><div style="display:flex;flex-direction:column;gap:7px;margin-top:14px"><button class="btn p" id="dlCombined">Combined package (PDF)</button>'+rows+miss+'<button class="btn excel" id="dlXlsx">Rent Analysis workbook (Excel) \u2014 download it on its own</button><button class="btn p" id="dlFolder" style="margin-top:11px;display:inline-flex;align-items:center;justify-content:center;gap:8px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> Download the RCS Package folder</button></div><div class="dlg-row"><span class="dlg-sp"></span><button class="btn" id="dlgCancel">Close</button></div>');
   el('dlgCancel').onclick=closeModal;
   const cbn=el('dlCombined');if(cbn)cbn.onclick=()=>dlPdf(combined,nm+' - RCS Package.pdf');
@@ -670,7 +665,8 @@ async function dlPackageFolder(nm,docs,combined){
     const files=[{name:'RCS Package/'+nm+' - RCS Package.pdf',data:combined}];
     docs.forEach(d=>files.push({name:'RCS Package/'+d.file+'.pdf',data:d.bytes}));
     let xlNote='';
-    try{files.push({name:'RCS Package/'+nm+' - RCS Analysis.xlsx',data:await buildRentAnalysisBytes()});}
+    try{files.push({name:'RCS Package/'+nm+' - RCS Analysis.xlsx',data:await buildRentAnalysisBytes()});
+      if(UNITS.length>6)xlNote=' Note: the Excel template holds 6 unit types \u2014 '+(UNITS.length-6)+' extra row(s) were left off the workbook.';}
     catch(e){xlNote=' (the Rent Analysis workbook could not be built: '+((e&&e.message)||e)+')';}
     dlFile(window.RCSXlsx.makeZip(files),nm+' - RCS Package.zip','application/zip');
     setStatus('RCS Package folder downloaded \u2014 the combined report, each document, and the Rent Analysis workbook, all in one folder.'+xlNote);
@@ -836,7 +832,7 @@ async function __genPackageRun(){
     docs.push({label:'Tenant notice',file:'06. '+N+' - RCS Tenant Notice',bytes:await window.RCSGen.tenantNotice(rec,lh,logo)});
     const combined=await combinePdfs(docs.map(d=>d.bytes));
     let _lhOk=false;try{const L2=(mpdb&&activePid)?mpdb.getLetterhead(activePid):null;_lhOk=!!(L2&&L2.data);}catch(e){}
-    showPackageModal(get('property.name')||'Property',docs,combined,!_rcsUpload,!_lhOk);
+    showPackageModal(get('property.name')||'Property',docs,combined,!_rcsUpload,!_lhOk,rsCapacity().msgs);
     setStatus('Package generated - '+docs.length+' documents.'+(_rcsUpload?'':' The RCS report (document 04) is missing \u2014 upload it in Section 1 to include it.'));
   }catch(e){ setStatus('Generation failed: '+((e&&e.message)||e)); }
 }
@@ -890,10 +886,10 @@ function renderContacts(){const list=mpdb.listContacts();
   el('contactsBody').innerHTML=html;
   const a=el('cAdd');if(a)a.onclick=()=>contactDialog(null);
   document.querySelectorAll('[data-ced]').forEach(b=>b.onclick=()=>contactDialog(mpdb.listContacts().find(x=>x.id===b.getAttribute('data-ced'))));
-  document.querySelectorAll('[data-cdel]').forEach(b=>b.onclick=()=>{const id=b.getAttribute('data-cdel');const c=mpdb.listContacts().find(x=>x.id===id);dialogConfirm('Delete contact','Remove <b>'+esc(c?c.name:'this contact')+'</b> from PM contacts?','Delete',true,async()=>{await mpdb.deleteContact(id);renderContacts();});});
+  document.querySelectorAll('[data-cdel]').forEach(b=>b.onclick=()=>{const id=b.getAttribute('data-cdel');const c=mpdb.listContacts().find(x=>x.id===id);dialogConfirm('Delete contact','Remove <b>'+esc(c?c.name:'this contact')+'</b> from PM contacts?','Delete',true,async()=>{try{await mpdb.deleteContact(id);renderContacts();}catch(e){saveFailedModal(e);}});});
   document.querySelectorAll('[data-diradd]').forEach(b=>b.onclick=()=>dirDialog(b.getAttribute('data-diradd'),null));
   document.querySelectorAll('[data-dired]').forEach(b=>b.onclick=()=>dirDialog(b.getAttribute('data-dkind'),dirList(b.getAttribute('data-dkind')).find(x=>x.id===b.getAttribute('data-dired'))));
-  document.querySelectorAll('[data-dirdel]').forEach(b=>b.onclick=()=>{const id=b.getAttribute('data-dirdel');const S=DIR_SECTIONS.find(x=>x.kind===b.getAttribute('data-dkind'));const c=dirList(S.kind).find(x=>x.id===id);dialogConfirm('Delete '+S.one,'Remove <b>'+esc(c&&c.name?c.name:'this contact')+'</b> from '+S.title.toLowerCase()+'?','Delete',true,async()=>{await mpdb.deleteDir(id);renderContacts();});});}
+  document.querySelectorAll('[data-dirdel]').forEach(b=>b.onclick=()=>{const id=b.getAttribute('data-dirdel');const S=DIR_SECTIONS.find(x=>x.kind===b.getAttribute('data-dkind'));const c=dirList(S.kind).find(x=>x.id===id);dialogConfirm('Delete '+S.one,'Remove <b>'+esc(c&&c.name?c.name:'this contact')+'</b> from '+S.title.toLowerCase()+'?','Delete',true,async()=>{try{await mpdb.deleteDir(id);renderContacts();}catch(e){saveFailedModal(e);}});});}
 function dirDialog(kind,c){const S=DIR_SECTIONS.find(x=>x.kind===kind);c=c||{};const FLDS=S.rows.flat();
   const cell=f=>{const v=f[0]==='phone'&&c[f[0]]?fmtPhone(c[f[0]]):(c[f[0]]||'');
     const inner=f[2]?('<select id="dc_'+f[0]+'">'+[''].concat(f[2]).map(o=>'<option value="'+esc(o)+'"'+(String(v)===o?' selected':'')+'>'+(o===''?'\u2014':esc(o))+'</option>').join('')+'</select>')
@@ -903,11 +899,11 @@ function dirDialog(kind,c){const S=DIR_SECTIONS.find(x=>x.kind===kind);c=c||{};c
   const pp=el('dc_phone');if(pp&&pp.addEventListener)pp.addEventListener('input',()=>{pp.value=fmtPhone(pp.value);});
   FLDS.forEach(f=>{const ff=el('dc_'+f[0]);if(ff&&ff.addEventListener)ff.addEventListener('keydown',ev=>{if(ev.key!=='Enter')return;ev.preventDefault();const d=pp?(pp.value||'').replace(/\D/g,''):'';if(!pp||d.length===0||d.length===10)el('dlgOk').click();});});
   el('dlgCancel').onclick=closeModal;
-  el('dlgOk').onclick=async()=>{const patch={};FLDS.forEach(f=>{patch[f[0]]=(el('dc_'+f[0]).value||'').trim();});closeModal();if(c.id)await mpdb.updateDir(c.id,patch);else await mpdb.addDir(kind,patch);renderContacts();};}
+  el('dlgOk').onclick=async()=>{const patch={};FLDS.forEach(f=>{patch[f[0]]=(el('dc_'+f[0]).value||'').trim();});closeModal();try{if(c.id)await mpdb.updateDir(c.id,patch);else await mpdb.addDir(kind,patch);renderContacts();}catch(e){saveFailedModal(e);}};}
 function contactDialog(c){c=c||{};
   modal('<div class="dlg-t">'+(c.id?'Edit contact':'Add contact')+'</div><div class="dlg-field"><label>Name</label><input id="ccN" value="'+esc(c.name||'')+'" autocomplete="off"></div><div class="dlg-field"><label>Email</label><input id="ccE" value="'+esc(c.email||'')+'" autocomplete="off"></div><div class="dlg-field"><label>Phone</label><input id="ccP" value="'+esc(c.phone?fmtPhone(c.phone):'')+'" autocomplete="off"></div><div class="dlg-row"><button class="btn" id="dlgCancel">Cancel</button><span class="dlg-sp"></span><button class="btn p" id="dlgOk">Save</button></div>');
   { const pp=el('ccP'); if(pp){ pp.value=fmtPhone(pp.value||''); if(pp.addEventListener) pp.addEventListener('input',()=>{ pp.value=fmtPhone(pp.value); }); } }
   ['ccN','ccE','ccP'].forEach(id=>{const ff=el(id);if(ff&&ff.addEventListener)ff.addEventListener('keydown',ev=>{if(ev.key!=='Enter')return;ev.preventDefault();const d=(el('ccP').value||'').replace(/\D/g,'');if(d.length===0||d.length===10)el('dlgOk').click();});});
   el('dlgCancel').onclick=closeModal;
-  el('dlgOk').onclick=async()=>{const patch={name:(el('ccN').value||'').trim(),email:(el('ccE').value||'').trim(),phone:(el('ccP').value||'').trim()};closeModal();if(c.id)await mpdb.updateContact(c.id,patch);else await mpdb.addContact(patch);renderContacts();};}
+  el('dlgOk').onclick=async()=>{const patch={name:(el('ccN').value||'').trim(),email:(el('ccE').value||'').trim(),phone:(el('ccP').value||'').trim()};closeModal();try{if(c.id)await mpdb.updateContact(c.id,patch);else await mpdb.addContact(patch);renderContacts();}catch(e){saveFailedModal(e);}};}
 if(typeof module!=='undefined')module.exports={fmtPhone,fmtDate,sMoney,sPct,sK,analysis,uaResolvedOf,uaConflict,uaUnresolved,renderMenu,renderLauncher,openMenu,openForm,openLauncher,ringSvg,niceDate,isDirty,overrideCount,isStateKey,attnFlags,pbUtil,clearUncheckedWriteins,srcOf:(k)=>srcOf(k),__openForm:(pid)=>{activePid=pid;return openForm('RCS');},__edit:(k,v)=>{form=store.editForm(form,k,v);},getVal:(k)=>get(k),modeOf:(kk)=>modeOf(kk),fieldKeys:(k)=>fieldKeys(k),keysCanSave:(ks)=>keysCanSave(ks),keysCanRevert:(ks)=>keysCanRevert(ks),keysNewDirty:(ks)=>keysNewDirty(ks),__revert:(k)=>store.revertForm(form,k),coupledKeys:(k)=>coupledKeys(k),__firstPid:()=>{const ps=mpdb?mpdb.listProperties():[];return ps.length?ps[0].id:null;},__boxes:(i)=>({ua:uaBox(i),safmr:safmrBox(i)}),__saveField:async(k)=>{form=await store.saveField(form,k);},__set:(f,u)=>{form=f;UNITS=u;}};
