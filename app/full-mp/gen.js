@@ -211,8 +211,8 @@
     // non-rev rows (they stay fully listed in Part D).
     const s8A=[...new Set(Object.keys(rec).map(k=>(k.match(/^units\.(\d+)\./)||[])[1]).filter(x=>x!=null))].sort((a,b)=>a-b)
       .filter(i=>nmv(g('units.'+i+'.num_units'))||nmv(g('units.'+i+'.proposed'))||g('units.'+i+'.br')||g('units.'+i+'.ba'));
-    const liA=g('lihtc.enabled')==='1'?[...new Set(Object.keys(rec).map(k=>(k.match(/^lihtc\.(\d+)\./)||[])[1]).filter(x=>x!=null))].sort((a,b)=>a-b).filter(i=>g('lihtc.'+i+'.br')||g('lihtc.'+i+'.ba')||g('lihtc.'+i+'.avg_rent')):[];
-    const nrA=[...new Set(Object.keys(rec).map(k=>(k.match(/^nonrev\.(\d+)\./)||[])[1]).filter(x=>x!=null))].sort((a,b)=>a-b).filter(i=>g('nonrev.'+i+'.use')||g('nonrev.'+i+'.br')||g('nonrev.'+i+'.ba')||g('nonrev.'+i+'.rent'));
+    const liA=g('lihtc.enabled')==='1'?[...new Set(Object.keys(rec).map(k=>(k.match(/^lihtc\.(\d+)\./)||[])[1]).filter(x=>x!=null))].sort((a,b)=>a-b).filter(i=>g('lihtc.'+i+'.br')||g('lihtc.'+i+'.ba')||g('lihtc.'+i+'.avg_rent')||nmv(g('lihtc.'+i+'.num_units'))):[];
+    const nrA=[...new Set(Object.keys(rec).map(k=>(k.match(/^nonrev\.(\d+)\./)||[])[1]).filter(x=>x!=null))].sort((a,b)=>a-b).filter(i=>g('nonrev.'+i+'.use')||g('nonrev.'+i+'.br')||g('nonrev.'+i+'.ba')||g('nonrev.'+i+'.rent')||nmv(g('nonrev.'+i+'.num_units')));
     const mkPlan=(blank,withNr)=>{ const p=[]; s8A.forEach(i=>p.push(['s8',i]));
       if(liA.length){ p.push(['banner']); liA.forEach(i=>p.push(['li',i])); }
       if(withNr&&nrA.length){ if(blank)p.push(['blank']); nrA.forEach(i=>p.push(['nr',i])); } return p; };
@@ -274,7 +274,7 @@
     if(et[g('owner.entity_type')]) C(et[g('owner.entity_type')]);
     const nrIdx=[...new Set(Object.keys(rec).map(k=>(k.match(/^nonrev\.(\d+)\./)||[])[1]).filter(x=>x!=null))].sort((a,b)=>a-b);
     const dUse=[159,162,165,168,171],dType=[160,163,166,169,172],dRent=[161,164,167,170,173]; let dr=0,trl=0;
-    nrIdx.forEach(i=>{ if(dr>4)return; const use=g('nonrev.'+i+'.use'),br=g('nonrev.'+i+'.br'),ba=g('nonrev.'+i+'.ba'),rent=g('nonrev.'+i+'.rent'); if(!(use||br||ba||rent))return; T(dUse[dr],use); T(dType[dr],(String(br).replace(/(\d+)\s*BR/i,'$1 BR')+(ba?'/'+ba:'')).replace(/^\//,'')); T(dRent[dr],(rent!==''&&rent!=null)?money(rent):''); trl+=nmv(rent); dr++; });
+    nrIdx.forEach(i=>{ if(dr>4)return; const use=g('nonrev.'+i+'.use'),br=g('nonrev.'+i+'.br'),ba=g('nonrev.'+i+'.ba'),rent=g('nonrev.'+i+'.rent'); if(!(use||br||ba||rent||nmv(g('nonrev.'+i+'.num_units'))))return; T(dUse[dr],use); T(dType[dr],(String(br).replace(/(\d+)\s*BR/i,'$1 BR')+(ba?'/'+ba:'')).replace(/^\//,'')); T(dRent[dr],(rent!==''&&rent!=null)?money(rent):''); trl+=nmv(rent); dr++; });
     T(174, dr?money(trl):'');
     // Part G principals: row 1 = GP entity (left) + "General Partner" (right); row 2 = signatory + title (left)
     if(g('owner.gp')){ T(206, g('owner.gp')); T(207, 'General Partner'); }

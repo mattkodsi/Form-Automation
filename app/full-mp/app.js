@@ -211,8 +211,8 @@ function safmrNote(i){const res=safmrResolvedOf(i),hud=numf(get('units.'+i+'.saf
    Part D, which holds 5. Warn whenever a generated document would trim data. */
 function rsCapacity(){
   const R=UNITS.filter(i=>numf(get('units.'+i+'.num_units'))||numf(get('units.'+i+'.proposed'))||get('units.'+i+'.br')||get('units.'+i+'.ba')).length;
-  const L=get('lihtc.enabled')==='1'?LIHTC.filter(i=>get('lihtc.'+i+'.br')||get('lihtc.'+i+'.ba')||get('lihtc.'+i+'.avg_rent')).length:0;
-  const N=NONREV.filter(i=>get('nonrev.'+i+'.use')||get('nonrev.'+i+'.br')||get('nonrev.'+i+'.ba')||get('nonrev.'+i+'.rent')).length;
+  const L=get('lihtc.enabled')==='1'?LIHTC.filter(i=>get('lihtc.'+i+'.br')||get('lihtc.'+i+'.ba')||get('lihtc.'+i+'.avg_rent')||numf(get('lihtc.'+i+'.num_units'))>0).length:0;
+  const N=NONREV.filter(i=>get('nonrev.'+i+'.use')||get('nonrev.'+i+'.br')||get('nonrev.'+i+'.ba')||get('nonrev.'+i+'.rent')||numf(get('nonrev.'+i+'.num_units'))>0).length;
   const cut=Math.max(0,R+(L?1+L:0)-11);
   const nrOver=Math.max(0,N-5);
   const msgs=[],flags=[];
@@ -360,12 +360,12 @@ function overrideCount(){const grouped=new Set();for(const b in ADDR_GROUPS)ADDR
   for(let i=0;i<5;i++){if(srcOf('partb.utilities.'+i)==='overridden'||srcOf('partb.fuel.'+i)==='overridden')c++;}
   wiBases.forEach(b=>{if(srcOf('partb.writein.'+b)==='overridden'||srcOf('partb.writein.'+b+'.on')==='overridden'||srcOf('partb.writein.'+b+'.fuel')==='overridden')c++;});
   return c;}
-function attnFlags(){const f=[];const u=UNITS.filter(uaUnresolved).length;if(u)f.push(u+' UA conflict'+(u>1?'s':'')+' to resolve');const sf=UNITS.filter(safmrUnresolved).length;if(sf)f.push(sf+' SAFMR conflict'+(sf>1?'s':'')+' to resolve');const tc=UNITS.filter(i=>typeUnresolved(i)||numUnresolved(i)).length;if(tc)f.push(tc+' unit type/count conflict'+(tc>1?'s':'')+' to resolve');const A=analysis();if(A.safmrMissing)f.push('SAFMR needed for the 150% test');if(A.safmrOver)f.push(A.safmrOver+' unit type'+(A.safmrOver>1?'s':'')+' over 150% SAFMR');rsCapacity().flags.forEach(x=>f.push(x));const ov=overrideCount();if(ov)f.push(ov+' unsaved override'+(ov>1?'s':''));if(!_rcsUpload)f.push('the completed RCS report isn\u2019t uploaded (Section 1)');return f;}
+function attnFlags(){const f=[];const u=UNITS.filter(uaUnresolved).length;if(u)f.push(u+' UA conflict'+(u>1?'s':'')+' to resolve');const sf=UNITS.filter(safmrUnresolved).length;if(sf)f.push(sf+' SAFMR conflict'+(sf>1?'s':'')+' to resolve');const tc=UNITS.filter(i=>typeUnresolved(i)||numUnresolved(i)).length;if(tc)f.push(tc+' unit type/count conflict'+(tc>1?'s':'')+' to resolve');const A=analysis();if(A.safmrMissing)f.push('SAFMR needed for the 150% test');if(A.safmrOver)f.push(A.safmrOver+' unit type'+(A.safmrOver>1?'s':'')+' over 150% SAFMR');rsCapacity().flags.forEach(x=>f.push(x));const ov=overrideCount();if(ov)f.push(ov+' unsaved override'+(ov>1?'s':''));if(!_rcsUpload)f.push('The completed RCS report isn\u2019t uploaded (Section 1)');return f;}
 function renderRail(){const st={};[7].forEach(n=>st[n]='ok');[1,2,3,4,5,6,8,9].forEach(n=>st[n]=sectionStatus(n));let conf=0;for(let n=1;n<=9;n++)if(st[n]!=='warn')conf++;const need=9-conf;
   el('rail').innerHTML=[1,2,3,4,5,6,7,8,9].map(n=>`<div class="railitem"><span class="ri ${st[n]==='warn'?'warn':'ok'}">${st[n]==='warn'?'!':'✓'}</span><span class="rname">${n}. ${SECTION_TITLES[n]}</span></div>`).join('');
   el('railprog').innerHTML=`<b>${conf} of 9 confirmed</b>${need?`<div class="warnt">${need} need your review</div>`:''}<div class="track sm"><div style="width:${conf/9*100}%;background:#166534"></div></div>`;
-  const fl=attnFlags();el('railattn').style.display=fl.length?'block':'none';el('railattn').innerHTML=fl.length?`⚠ <b>${fl.length} to review</b><div class="sub">${fl.join(' · ')}</div>`:'';}
-function renderAttention(){const f=attnFlags();el('attn').style.display=f.length?'block':'none';const n=f.length;el('attn').innerHTML=n?`⚠ <b>${n} thing${n>1?'s':''} ${n>1?'need':'needs'} your attention</b><div class="sub">Flagged in amber below — ${f.join(' and ')}. (Resolve UA by picking a source; clear an override with Update database or revert.)</div>`:'';}
+  const fl=attnFlags();el('railattn').style.display=fl.length?'block':'none';el('railattn').innerHTML=fl.length?`⚠ <b>${fl.length} to review</b>${fl.map(x=>`<div class="sub" style="margin-top:6px">${x}</div>`).join('')}`:'';}
+function renderAttention(){const f=attnFlags();el('attn').style.display=f.length?'block':'none';const n=f.length;el('attn').innerHTML=n?`⚠ <b>${n} thing${n>1?'s':''} ${n>1?'need':'needs'} your attention</b>${f.map(x=>`<div class="sub" style="margin-top:7px">${x}</div>`).join('')}<div class="sub" style="margin-top:9px;opacity:.72">Flagged in amber below. Resolve UA by picking a source; clear an override with Update database or revert.</div>`:'';}
 
 function renderBar(){const a=analysis();const pCur=a.ceil>0?clamp(a.cg/a.ceil*100):0,pPro=a.ceil>0?clamp(a.pg/a.ceil*100):0;const conf=UNITS.filter(uaConflict).length,unres=UNITS.filter(uaUnresolved).length;const uaOk=conf===0||unres===0;
  const bc=(st,l)=>{const ic=st==='warn'?'⚠':(st==='info'?'ⓘ':'✓');const c=st==='warn'?'#b45309':(st==='info'?'#2563eb':'#166534');return `<span class="bchip"><b style="color:${c}">${ic}</b> ${l}</span>`;};
@@ -445,7 +445,14 @@ function wireBody(){
   const add=el('addUnit');if(add)add.onclick=()=>{_undoStack=[];const nx=(UNITS.length?Math.max.apply(null,UNITS):-1)+1;form=store.editForm(form,'units.'+nx+'.br','');UNITS.push(nx);renderBody();setStatus('');};
   const addn=el('addNonrev');if(addn)addn.onclick=()=>{_undoNR=[];NONREV.push(NONREV.length?Math.max.apply(null,NONREV)+1:0);renderBody();setStatus('');};
   const nt=el('nonrevToggle');if(nt)nt.onchange=()=>{if(!nt.checked&&NONREV.length){nt.checked=true;setStatus('Delete the non-revenue rows first to turn this section off.');return;}form=store.editForm(form,'nonrev.enabled',nt.checked?'1':'');if(nt.checked&&!NONREV.length){_undoNR=[];NONREV=[0];}renderBody();setStatus('');};
-  const lt=el('lihtcToggle');if(lt)lt.onchange=()=>{form=store.editForm(form,'lihtc.enabled',lt.checked?'1':'');if(lt.checked&&!LIHTC.length){_undoLI=[];form=store.editForm(form,'lihtc.0.br','');LIHTC=[0];}renderBody();setStatus(lt.checked?'Non-Section 8 units on — they print on the rent schedule between Section 8 revenue and non-revenue units.':'');};
+  const lt=el('lihtcToggle');if(lt)lt.onchange=()=>{
+    if(!lt.checked&&LIHTC.some(i=>lihtcHasData(i)||numf(get('lihtc.'+i+'.num_units'))>0)){
+      lt.checked=true;
+      dialogConfirm('Turn off non-Section 8 units?','The section still holds '+LIHTC.length+' row'+(LIHTC.length>1?'s':'')+' with values. Turned off, the rows are left out of every generated document, and your next \u201cUpdate database\u201d removes them for good \u2014 re-check the box before saving to bring them back.','Turn off',true,()=>{form=store.editForm(form,'lihtc.enabled','');renderBody();setStatus('Non-Section 8 units off \u2014 the hidden rows are removed on your next Update database.');});
+      return;}
+    form=store.editForm(form,'lihtc.enabled',lt.checked?'1':'');
+    if(lt.checked&&!LIHTC.length){_undoLI=[];form=store.editForm(form,'lihtc.0.br','');LIHTC=[0];}
+    renderBody();setStatus(lt.checked?'Non-Section 8 units on — they print on the rent schedule between Section 8 revenue and non-revenue units.':'');};
   const addl=el('addLihtc');if(addl)addl.onclick=()=>{_undoLI=[];const nx=(LIHTC.length?Math.max.apply(null,LIHTC):-1)+1;form=store.editForm(form,'lihtc.'+nx+'.br','');LIHTC.push(nx);renderBody();setStatus('');};
   const phs=el('pullSafmr');if(phs)phs.onclick=()=>{ensureHudSafmr({manual:true});};
   const upR=el('upRcs');if(upR)upR.onclick=()=>{const f=el('rcsFile');if(f)f.click();};
@@ -606,6 +613,7 @@ async function saveNow(afterSave,fixFirst){clearUncheckedWriteins(['e1','e2','e3
     else{form=store.editForm(form,fk,'');firstFix='left blank';}}
   countlessUnits().filter(i=>!(fixFirst&&i===first)).forEach(i=>Object.keys(form).forEach(k=>{if(k.indexOf('units.'+i+'.')===0)delete form[k];}));
   NONREV.filter(i=>numf(get('nonrev.'+i+'.num_units'))<=0).forEach(i=>Object.keys(form).forEach(k=>{if(k.indexOf('nonrev.'+i+'.')===0)delete form[k];}));
+  if(get('lihtc.enabled')!=='1'){Object.keys(form).forEach(k=>{if(/^lihtc\.\d+\./.test(k))delete form[k];});LIHTC=[];} // section off: its hidden rows go
   LIHTC.filter(i=>numf(get('lihtc.'+i+'.num_units'))<=0).forEach(i=>Object.keys(form).forEach(k=>{if(k.indexOf('lihtc.'+i+'.')===0)delete form[k];}));
   if(!Object.keys(form).some(k=>/^nonrev\.\d+\./.test(k))&&get('nonrev.enabled')==='1')form=store.editForm(form,'nonrev.enabled','');
   if(!Object.keys(form).some(k=>/^lihtc\.\d+\./.test(k))&&get('lihtc.enabled')==='1')form=store.editForm(form,'lihtc.enabled','');
@@ -619,7 +627,7 @@ function requestSave(afterSave){
   const firstZero=numf(get(fk))<=0&&(unitHasData(first)||String(get(fk)==null?'':get(fk)).trim()!=='');
   const mu=countlessUnits().filter(unitHasData).filter(i=>i!==first);
   const mn=NONREV.filter(i=>numf(get('nonrev.'+i+'.num_units'))<=0).filter(nonrevHasData);
-  const ml=LIHTC.filter(i=>numf(get('lihtc.'+i+'.num_units'))<=0).filter(lihtcHasData);
+  const ml=get('lihtc.enabled')==='1'?LIHTC.filter(i=>numf(get('lihtc.'+i+'.num_units'))<=0).filter(lihtcHasData):[];
   const total=mu.length+mn.length+ml.length;
   if(total){const parts=[];if(mu.length)parts.push(mu.length+' revenue');if(mn.length)parts.push(mn.length+' non-revenue');if(ml.length)parts.push(ml.length+' non-Section 8');
     dialogConfirm('Delete '+total+' unit type'+(total>1?'s':'')+' with no unit count?','Saving will remove '+parts.join(', ')+' row'+(total>1?'s that have':' that has')+' entered data but no unit count. This cannot be undone after saving.','Save anyway',true,()=>saveNow(afterSave,firstZero));}
