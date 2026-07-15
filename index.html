@@ -1683,7 +1683,7 @@ function dlPdf(bytes,name){dlFile(bytes,name,'application/pdf');}
 function formRec(){const rec={};for(const k in form)rec[k]=form[k].value;return rec;}
 async function genCoverLetter(){if(!(window.RCSGen&&window.PDFLib)){setStatus('Generator still loading \u2014 try again in a moment.');return;}try{setStatus('Generating cover letter\u2026');const bytes=await window.RCSGen.coverLetter(formRec(),b64ToBytes(LOGO_B64));dlPdf(bytes,(get('property.name')||'Property')+' \u2014 Cover Letter.pdf');setStatus('Cover letter downloaded.');}catch(e){setStatus('Generation failed: '+((e&&e.message)||e));}}
 function dataUrlToBytes(u){try{const i=String(u||'').indexOf(',');if(i<0)return null;return b64ToBytes(u.slice(i+1));}catch(e){return null;}}
-async function combinePdfs(list){const {PDFDocument}=window.PDFLib;const out=await PDFDocument.create();for(const b of list){if(!b)continue;const src=await PDFDocument.load(b,{ignoreEncryption:true,parseSpeed:Infinity});const pages=await out.copyPages(src,src.getPageIndices());pages.forEach(p=>out.addPage(p));}return await out.save();}
+async function combinePdfs(list){const {PDFDocument}=window.PDFLib;const out=await PDFDocument.create();for(const b of list){if(!b)continue;const src=await PDFDocument.load(b,{ignoreEncryption:true,parseSpeed:Infinity});const pages=await out.copyPages(src,src.getPageIndices());pages.forEach(p=>out.addPage(p));}return await out.save({objectsPerTick:Infinity});}
 function showPackageModal(nm,docs,combined,missingRcs,missingLh){
   const rows=docs.map((d,i)=>'<button class="btn sm" data-dldoc="'+i+'" style="justify-content:flex-start">'+esc(d.label)+'</button>').join('');
   const miss=(missingRcs?'<div class="sub" style="color:#b45309;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">\u26a0 RCS report (doc 04) missing \u2014 upload it in Section 1.</div>':'')
@@ -1741,16 +1741,123 @@ function measureLetterheadDrop(dataUrl){return new Promise(res=>{try{
       if(d[i+3]>40&&(d[i]<235||d[i+1]<235||d[i+2]<235)){if(++cnt>=3)break;}}
       if(cnt>=3)low=y;}
     if(low<0){res(null);return;}
-    res(Math.min(320,Math.max(110,Math.round((low/H)*792)+16)));
+    res(Math.min(340,Math.max(110,Math.round((low/H)*792)+36)));
   }catch(e){res(null);}};
   img.onerror=()=>res(null);img.src=dataUrl;
 }catch(e){res(null);}});}
+/* PDF letterheads: find the header's bottom edge without rasterizing. Walk
+   page 1's drawing operators with transform tracking and take the lowest
+   painted text / image / dark path that lives in the top half of the page
+   (full-height borders and page backgrounds are excluded by construction). */
+async function measurePdfLetterheadDrop(bytes){ try{
+  const PD=window.PDFLib; const doc=await PD.PDFDocument.load(bytes,{parseSpeed:Infinity});
+  const page=doc.getPage(0); const ph=page.getHeight()||792; const ctx=doc.context;
+  const deref=o=>{ try{ return (o==null)?o:(ctx.lookup(o)||o); }catch(e){ return o; } }; // lookup passes non-refs through (min build mangles class names)
+  const bstr=u8=>{ let s='';for(let i=0;i<u8.length;i++)s+=String.fromCharCode(u8[i]);return s; };
+  const streamText=s0=>{ const s=deref(s0); if(!s)return '';
+    try{ return bstr(PD.decodePDFRawStream(s).decode()); }
+    catch(e){ try{ return bstr(s.contents||s.getContents()); }catch(_){ return ''; } } };
+  const contentsOf=nd=>{ let c=deref(nd.Contents?nd.Contents():null); if(!c)return '';
+    if(c.asArray) return c.asArray().map(streamText).join('\n');
+    return streamText(c); };
+  const lex=s=>{ const out=[]; let i=0; const n=s.length;
+    while(i<n){ const c=s[i];
+      if(c==='%'){ while(i<n&&s[i]!=='\n')i++; continue; }
+      if(c==='('){ let d=1;i++; while(i<n&&d>0){ if(s[i]==='\\')i++; else if(s[i]==='(')d++; else if(s[i]===')')d--; i++; } out.push({t:'str'}); continue; }
+      if(c==='<'){ if(s[i+1]==='<'){ let d=1;i+=2; while(i<n&&d>0){ if(s[i]==='<'&&s[i+1]==='<'){d++;i+=2;continue;} if(s[i]==='>'&&s[i+1]==='>'){d--;i+=2;continue;} i++; } out.push({t:'dict'}); continue; }
+        i++; while(i<n&&s[i]!=='>')i++; i++; out.push({t:'str'}); continue; }
+      if(c==='['){ out.push({t:'['}); i++; continue; }
+      if(c===']'){ out.push({t:']'}); i++; continue; }
+      if(c==='/'){ let j=i+1; while(j<n&&!/[\s\/\[\]()<>{}%]/.test(s[j]))j++; out.push({t:'name',v:s.slice(i+1,j)}); i=j; continue; }
+      if(/\s/.test(c)){ i++; continue; }
+      let j=i; while(j<n&&!/[\s\/\[\]()<>%]/.test(s[j]))j++;
+      const w=s.slice(i,j); i=j;
+      if(w==='ID'){ const e=s.indexOf('EI',i); i=(e<0)?n:e+2; out.push({t:'op',v:'EI'}); continue; }
+      if(/^[+\-.0-9]/.test(w)&&!isNaN(parseFloat(w))) out.push({t:'num',v:parseFloat(w)});
+      else out.push({t:'op',v:w});
+    } return out; };
+  const mul=(m,q)=>[m[0]*q[0]+m[1]*q[2], m[0]*q[1]+m[1]*q[3], m[2]*q[0]+m[3]*q[2], m[2]*q[1]+m[3]*q[3], m[4]*q[0]+m[5]*q[2]+q[4], m[4]*q[1]+m[5]*q[3]+q[5]];
+  const apply=(m,x,y)=>({x:m[0]*x+m[2]*y+m[4], y:m[1]*x+m[3]*y+m[5]});
+  const wOf=st=>{ const ns=st.filter(t=>t.t==='num').map(t=>t.v);
+    if(ns.length===4) return 1-Math.min(1,(ns[0]+ns[1]+ns[2])/3+ns[3]);
+    if(ns.length===3) return (ns[0]+ns[1]+ns[2])/3;
+    if(ns.length===1) return ns[0];
+    return 0; };
+  let best=null;
+  const note2=(yMin,yMax)=>{ if(!(isFinite(yMin)&&isFinite(yMax)))return;
+    if(yMax<ph*0.55)return;            // footer / body content
+    if(yMin<ph*0.45)return;            // spans deep into the page: bg or border
+    best=(best==null)?yMin:Math.min(best,yMin); };
+  const scan=(code,res,ctm0,depth)=>{ if(depth>4||!code)return;
+    const toks=lex(code); let stack=[]; let ctm=ctm0.slice(); const gsk=[];
+    let tm=null,tlm=null,tl=0,fs=0,trm=0,fill={w:0},stroke={w:0},path=[];
+    const num=k=>{ const v=stack[stack.length-k]; return (v&&v.t==='num')?v.v:0; };
+    const pushPt=(x,y)=>{ path.push(apply(ctm,x,y)); };
+    for(const tk of toks){
+      if(tk.t!=='op'){ stack.push(tk); if(stack.length>24)stack.shift(); continue; }
+      const op=tk.v;
+      switch(op){
+        case 'q': gsk.push({ctm:ctm.slice(),fill:{w:fill.w},stroke:{w:stroke.w}}); break;
+        case 'Q': { const g0=gsk.pop(); if(g0){ ctm=g0.ctm; fill=g0.fill; stroke=g0.stroke; } break; }
+        case 'cm': ctm=mul([num(6),num(5),num(4),num(3),num(2),num(1)],ctm); break;
+        case 'BT': tm=[1,0,0,1,0,0]; tlm=tm.slice(); break;
+        case 'ET': tm=null; break;
+        case 'Tf': fs=num(1); break;
+        case 'Tm': tlm=[num(6),num(5),num(4),num(3),num(2),num(1)]; tm=tlm.slice(); break;
+        case 'Td': tlm=mul([1,0,0,1,num(2),num(1)],tlm||[1,0,0,1,0,0]); tm=tlm.slice(); break;
+        case 'TD': tl=-num(1); tlm=mul([1,0,0,1,num(2),num(1)],tlm||[1,0,0,1,0,0]); tm=tlm.slice(); break;
+        case 'TL': tl=num(1); break;
+        case 'T*': tlm=mul([1,0,0,1,0,-tl],tlm||[1,0,0,1,0,0]); tm=tlm.slice(); break;
+        case 'Tr': trm=num(1); break;
+        case "'": case '"': tlm=mul([1,0,0,1,0,-tl],tlm||[1,0,0,1,0,0]); tm=tlm.slice();
+        /* fall through */
+        case 'Tj': case 'TJ': {
+          if(tm&&trm!==3&&trm!==7&&fill.w<0.85){ const M=mul(tm,ctm); const p0=apply(M,0,0),p1=apply(M,0,fs||10);
+            const h=Math.abs(p1.y-p0.y)||10; note2(p0.y-0.25*h,p0.y+0.78*h); }
+          break; }
+        case 'g': fill={w:num(1)}; break;
+        case 'G': stroke={w:num(1)}; break;
+        case 'rg': fill={w:(num(3)+num(2)+num(1))/3}; break;
+        case 'RG': stroke={w:(num(3)+num(2)+num(1))/3}; break;
+        case 'k': fill={w:1-Math.min(1,(num(4)+num(3)+num(2))/3+num(1))}; break;
+        case 'K': stroke={w:1-Math.min(1,(num(4)+num(3)+num(2))/3+num(1))}; break;
+        case 'sc': case 'scn': fill={w:wOf(stack)}; break;
+        case 'SC': case 'SCN': stroke={w:wOf(stack)}; break;
+        case 'm': case 'l': pushPt(num(2),num(1)); break;
+        case 'c': pushPt(num(6),num(5)); pushPt(num(4),num(3)); pushPt(num(2),num(1)); break;
+        case 'v': case 'y': pushPt(num(4),num(3)); pushPt(num(2),num(1)); break;
+        case 're': { const x=num(4),yy=num(3),w2=num(2),h2=num(1); pushPt(x,yy); pushPt(x+w2,yy); pushPt(x,yy+h2); pushPt(x+w2,yy+h2); break; }
+        case 'n': path=[]; break;
+        case 'f': case 'F': case 'f*': case 'b': case 'b*': case 'B': case 'B*': case 'S': case 's': {
+          const stroking=(op==='S'||op==='s'); const both=(op[0]==='b'||op[0]==='B');
+          const dark=stroking?(stroke.w<0.85):(fill.w<0.85||(both&&stroke.w<0.85));
+          if(dark&&path.length){ let mn=1e9,mx=-1e9; path.forEach(p=>{mn=Math.min(mn,p.y);mx=Math.max(mx,p.y);}); note2(mn,mx); }
+          path=[]; break; }
+        case 'Do': { const nt=stack[stack.length-1]; const xn=(nt&&nt.t==='name')?nt.v:null;
+          if(xn&&res){ try{ const xod=deref(res.get?res.get(PD.PDFName.of('XObject')):null);
+            const xo=xod?deref(xod.get(PD.PDFName.of(xn))):null;
+            if(xo&&xo.dict){ const sub=String(xo.dict.get(PD.PDFName.of('Subtype'))||'');
+              if(/Image/.test(sub)){ const cs=[apply(ctm,0,0),apply(ctm,1,0),apply(ctm,0,1),apply(ctm,1,1)];
+                let mn=1e9,mx=-1e9; cs.forEach(p=>{mn=Math.min(mn,p.y);mx=Math.max(mx,p.y);}); note2(mn,mx); }
+              else if(/Form/.test(sub)&&depth<4){ let M=ctm; const mt=deref(xo.dict.get(PD.PDFName.of('Matrix')));
+                if(mt&&mt.asArray){ const a=mt.asArray().map(x2=>{ const d2=deref(x2); return (d2&&d2.asNumber)?d2.asNumber():(parseFloat(String(d2))||0); }); if(a.length===6)M=mul(a,ctm); }
+                const r2=deref(xo.dict.get(PD.PDFName.of('Resources')))||res;
+                scan(streamText(xo),r2,M,depth+1); } } }catch(e){} }
+          break; }
+      }
+      stack=[];
+    } };
+  scan(contentsOf(page.node), deref(page.node.Resources?page.node.Resources():null), [1,0,0,1,0,0], 0);
+  if(best==null) return null;
+  return Math.min(360,Math.max(110,Math.round(((ph-best)/ph)*792)+36));
+}catch(e){ return null; } }
 async function __genPackageRun(){
   const T=window.RCSTemplates||{};
   try{ setStatus('Generating package...'); const rec=formRec(); const logo=b64ToBytes(LOGO_B64);
     let lh=null; try{ const L=(mpdb&&activePid)?mpdb.getLetterhead(activePid):null;
       if(L&&L.data){const by=dataUrlToBytes(L.data);if(by)lh=(String(L.data).indexOf('data:application/pdf')===0)?{pdf:by}:{png:by};}
-      if(lh&&lh.png){const dr=await measureLetterheadDrop(L.data);if(dr)lh.drop=dr;} }catch(e){}
+      if(lh&&lh.png){const dr=await measureLetterheadDrop(L.data);if(dr)lh.drop=dr;}
+      if(lh&&lh.pdf){const dr=await measurePdfLetterheadDrop(lh.pdf);if(dr)lh.drop=dr;} }catch(e){}
     const N=get('property.name')||'Property'; const docs=[];
     docs.push({label:'Cover letter (CA)',file:'01. '+N+' - Cover Letter',bytes:await window.RCSGen.coverLetter(rec,logo)});
     docs.push({label:'Owner cover letter',file:'02. '+N+' - RCS Owner Cover Letter',bytes:await window.RCSGen.ownerLetter(rec)});
@@ -1923,7 +2030,7 @@ if(typeof module!=='undefined')module.exports={fmtPhone,fmtDate,sMoney,sPct,sK,a
     const wb=HB.widthOfTextAtSize(fb,fs), wr=H.widthOfTextAtSize(fr,fs), sx=(612-(wb+wr))/2;
     st.page.drawText(fb,{x:sx,y:42,size:fs,font:HB,color:fBlue});
     st.page.drawText(fr,{x:sx+wb,y:42,size:fs,font:H,color:fGrey});
-    return await doc.save();
+    return await doc.save({objectsPerTick:Infinity});
   }
 
   async function ownerLetter(rec){
@@ -1953,7 +2060,7 @@ if(typeof module!=='undefined')module.exports={fmtPhone,fmtDate,sMoney,sPct,sK,a
     st.gap(6);
     st.para('I certify that the above is all true. Please send all final decision correspondence to the undersigned, rather than the appraiser.',{gapAfter:16});
     st.line('Respectfully Submitted,'); st.gap(42); st.line(t.sig_name); st.line(t.sig_title);
-    return await doc.save();
+    return await doc.save({objectsPerTick:Infinity});
   }
 
   async function fillChecklist(templateBytes, rec){
@@ -1964,7 +2071,7 @@ if(typeof module!=='undefined')module.exports={fmtPhone,fmtDate,sMoney,sPct,sK,a
     try{ const d=form.getTextField('Date'); d.setText(t.sign_date); d.setFontSize(12); d.updateAppearances(times); }catch(e){}
     for(let i=0;i<17;i++){ try{ const cb=form.getCheckBox('Check Box'+(i+1)); if(String(rec['check.'+i]||'')==='1')cb.check(); else cb.uncheck(); }catch(e){} }
     try{ const pg=doc.getPages()[0]; const {rgb}=PL(); pg.drawRectangle({x:107,y:123,width:156,height:22,color:rgb(1,1,1)}); const sline=(t.sig_name+', '+t.sig_title).replace(/, $/,''); if(sline)pg.drawText(sline,{x:109,y:129,size:11,font:times,color:rgb(0.11,0.13,0.17)}); }catch(e){}
-    return await doc.save();
+    return await doc.save({objectsPerTick:Infinity});
   }
 
 
@@ -1989,7 +2096,7 @@ if(typeof module!=='undefined')module.exports={fmtPhone,fmtDate,sMoney,sPct,sK,a
     // line, and overflow is absorbed by trimming paragraph gaps, the
     // signature gap, and finally a hair of leading. The top drop shrinks
     // only for unmeasured (PDF) letterheads, and only as a last resort.
-    const baseDrop=(letterhead&&letterhead.drop)?letterhead.drop:150;
+    const baseDrop=(letterhead&&letterhead.drop)?letterhead.drop:((letterhead&&letterhead.pdf)?180:150);
     const measured=!!(letterhead&&letterhead.drop);
     const LEVELS=[{ga:1,lead:1,sig:34,dd:0},{ga:0.8,lead:1,sig:24,dd:0},{ga:0.6,lead:1,sig:18,dd:0},{ga:0.45,lead:0.97,sig:14,dd:0},{ga:0.45,lead:0.95,sig:12,dd:10},{ga:0.4,lead:0.93,sig:10,dd:20}];
     let out=null;
@@ -2022,12 +2129,12 @@ if(typeof module!=='undefined')module.exports={fmtPhone,fmtDate,sMoney,sPct,sK,a
       out=doc;
       if(doc.getPageCount()===1) break;
     }
-    return await out.save();
+    return await out.save({objectsPerTick:Infinity});
   }
 
 
   async function fillRentSchedule(templateBytes, rec){
-    const { PDFDocument, StandardFonts } = PL();
+    const { PDFDocument, StandardFonts, PDFName, rgb } = PL();
     const doc=await PDFDocument.load(templateBytes,{parseSpeed:Infinity}); const form=doc.getForm();
     const font=await doc.embedFont(StandardFonts.Helvetica);
     const g=k=>rec[k]!=null?String(rec[k]):'';
@@ -2042,18 +2149,61 @@ if(typeof module!=='undefined')module.exports={fmtPhone,fmtDate,sMoney,sPct,sK,a
     T(1,g('property.name')); T(2,g('property.fha')); T(3,dfmt(_dei));
     { const rp=String(_dei).slice(0,10).split('-'); if(rp.length===3){ T(4,rp[1]); T(5,rp[2]); T(6,rp[0]); } }
     const utype=(br,ba)=>{const b=String(br||'').replace(/(\d+)\s*BR/i,'$1 BR').replace(/^\s*\/?\s*$/,'').trim();const a=String(ba||'').replace(/(\d+(?:\.\d+)?)\s*BA/i,'$1 BA').trim();return (b&&a)?(b+' / '+a):(b||a);};
-    const idx=[...new Set(Object.keys(rec).map(k=>(k.match(/^units\.(\d+)\./)||[])[1]).filter(x=>x!=null))].sort((a,b)=>a-b);
-    let tu=0,tc=0,r=0;
-    idx.forEach(i=>{ if(r>10)return; const br=g('units.'+i+'.br'),ba=g('units.'+i+'.ba'),n=nmv(g('units.'+i+'.num_units')),pro=nmv(g('units.'+i+'.proposed'));
-      const us=g('units.'+i+'.ua_source')||'exec'; const ua=us==='rcs'?nmv(g('units.'+i+'.ua_rcs')):(us==='custom'?nmv(g('units.'+i+'.ua_custom')):nmv(g('units.'+i+'.ua_exec')));
-      if(!n&&!pro&&!(br||ba)) return; const base=7+r*8;
-      T(base, utype(br,ba)); T(base+1,n||''); T(base+2,money(pro)); T(base+3,money(n*pro)); T(base+4,ua||''); T(base+5,money(pro+ua));
-      tu+=n; tc+=n*pro; r++; });
+    // Part A layout: Section 8 rev rows, then a full-width "Non- Section 8
+    // Rents" banner + the LIHTC (non-S8) rows, then a blank spacer row + the
+    // non-revenue rows. Over 11 rows: drop the spacer first, then the
+    // non-rev rows (they stay fully listed in Part D).
+    const s8A=[...new Set(Object.keys(rec).map(k=>(k.match(/^units\.(\d+)\./)||[])[1]).filter(x=>x!=null))].sort((a,b)=>a-b)
+      .filter(i=>nmv(g('units.'+i+'.num_units'))||nmv(g('units.'+i+'.proposed'))||g('units.'+i+'.br')||g('units.'+i+'.ba'));
     const liA=g('lihtc.enabled')==='1'?[...new Set(Object.keys(rec).map(k=>(k.match(/^lihtc\.(\d+)\./)||[])[1]).filter(x=>x!=null))].sort((a,b)=>a-b).filter(i=>g('lihtc.'+i+'.br')||g('lihtc.'+i+'.ba')||g('lihtc.'+i+'.avg_rent')):[];
-    if(liA.length&&r<=9){ r++; liA.forEach(i=>{ if(r>10)return; const base=7+r*8; T(base, utype(g('lihtc.'+i+'.br'),g('lihtc.'+i+'.ba'))); const ln=nmv(g('lihtc.'+i+'.num_units')); if(ln)T(base+1,ln); const ar=g('lihtc.'+i+'.avg_rent'); if(ar!==''&&ar!=null)T(base+2,money(ar)); tu+=ln; r++; }); }
     const nrA=[...new Set(Object.keys(rec).map(k=>(k.match(/^nonrev\.(\d+)\./)||[])[1]).filter(x=>x!=null))].sort((a,b)=>a-b).filter(i=>g('nonrev.'+i+'.use')||g('nonrev.'+i+'.br')||g('nonrev.'+i+'.ba')||g('nonrev.'+i+'.rent'));
-    if(nrA.length&&r<=9){ r++; nrA.forEach(i=>{ if(r>10)return; const base=7+r*8; T(base, g('nonrev.'+i+'.use')||utype(g('nonrev.'+i+'.br'),g('nonrev.'+i+'.ba'))); const nn=nmv(g('nonrev.'+i+'.num_units'))||1; T(base+1,nn); tu+=nn; r++; }); }
+    const mkPlan=(blank,withNr)=>{ const p=[]; s8A.forEach(i=>p.push(['s8',i]));
+      if(liA.length){ p.push(['banner']); liA.forEach(i=>p.push(['li',i])); }
+      if(withNr&&nrA.length){ if(blank)p.push(['blank']); nrA.forEach(i=>p.push(['nr',i])); } return p; };
+    let plan=mkPlan(true,true);
+    if(plan.length>11)plan=mkPlan(false,true);
+    if(plan.length>11)plan=mkPlan(false,false);
+    if(plan.length>11)plan=plan.slice(0,11);
+    let bannerRow=null;
+    plan.forEach((row,r)=>{ const base=7+r*8;
+      if(row[0]==='banner'){ bannerRow=r; return; }
+      if(row[0]==='blank') return;
+      const i=row[1];
+      if(row[0]==='s8'){ const br=g('units.'+i+'.br'),ba=g('units.'+i+'.ba'),n=nmv(g('units.'+i+'.num_units')),pro=nmv(g('units.'+i+'.proposed'));
+        const us=g('units.'+i+'.ua_source')||'exec'; const ua=us==='rcs'?nmv(g('units.'+i+'.ua_rcs')):(us==='custom'?nmv(g('units.'+i+'.ua_custom')):nmv(g('units.'+i+'.ua_exec')));
+        T(base, utype(br,ba)); T(base+1,n||''); T(base+2,money(pro)); T(base+3,money(n*pro)); T(base+4,ua||''); T(base+5,money(pro+ua)); }
+      else if(row[0]==='li'){ const n=nmv(g('lihtc.'+i+'.num_units')),ar=g('lihtc.'+i+'.avg_rent');
+        T(base, utype(g('lihtc.'+i+'.br'),g('lihtc.'+i+'.ba'))); if(n)T(base+1,n);
+        if(ar!==''&&ar!=null){ const rv=nmv(ar); T(base+2,money(rv)); T(base+3,money(n*rv)); T(base+5,money(rv)); } }
+      else { const nn=nmv(g('nonrev.'+i+'.num_units'))||1; T(base, g('nonrev.'+i+'.use')||utype(g('nonrev.'+i+'.br'),g('nonrev.'+i+'.ba'))); T(base+1,nn); }
+    });
+    // Totals count every unit — LIHTC rents add into the contract rent
+    // potential like S8 rows, and non-rev units count even when trimmed
+    // from Part A for space.
+    let tu=0,tc=0;
+    s8A.forEach(i=>{ const n=nmv(g('units.'+i+'.num_units')); tu+=n; tc+=n*nmv(g('units.'+i+'.proposed')); });
+    liA.forEach(i=>{ const n=nmv(g('lihtc.'+i+'.num_units')); tu+=n; tc+=n*nmv(g('lihtc.'+i+'.avg_rent')); });
+    nrA.forEach(i=>{ tu+=nmv(g('nonrev.'+i+'.num_units'))||1; });
     T('94a',tu||''); T('95',money(tc)); T('96',money(tc*12));
+    // Full-width banner: remove that row's fields (so no viewer redraws a "0"
+    // over it), white out the row band, and print the centered bold label.
+    if(bannerRow!=null){ try{
+      const HB=await doc.embedFont(StandardFonts.HelveticaBold);
+      const colRect=rr=>{ try{ return form.getTextField(String(7+rr*8)).acroField.getWidgets()[0].getRectangle(); }catch(e){ return null; } };
+      let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9,pgRef=null;
+      for(let k=0;k<8;k++){ try{ const f=form.getTextField(String(7+bannerRow*8+k)); const w=f.acroField.getWidgets()[0];
+        const rc=w.getRectangle(); if(!pgRef)pgRef=w.P();
+        x0=Math.min(x0,rc.x); x1=Math.max(x1,rc.x+rc.width); y0=Math.min(y0,rc.y); y1=Math.max(y1,rc.y+rc.height);
+        try{ f.setText(''); f.updateAppearances(font); }catch(e){}
+        form.removeField(f); }catch(e){} }
+      if(x1>x0){ const pg=doc.getPages().find(p=>p.ref===pgRef)||doc.getPage(0);
+        // Band spans the row cell fully: midway to the neighbor rows' widgets,
+        // stopping short of the printed grid rules above and below.
+        const ab=colRect(bannerRow-1), be=colRect(bannerRow+1);
+        const bandTop=ab?((y1+ab.y)/2-0.5):(y1+1.5), bandBot=be?((y0+be.y+be.height)/2+0.5):(y0-1.5);
+        pg.drawRectangle({x:x0-3,y:bandBot,width:(x1-x0)+6,height:bandTop-bandBot,color:rgb(1,1,1)});
+        const lbl='Non- Section 8 Rents',fs=9.5,twd=HB.widthOfTextAtSize(lbl,fs);
+        pg.drawText(lbl,{x:x0+((x1-x0)-twd)/2,y:(bandTop+bandBot)/2-fs*0.36,size:fs,font:HB}); } }catch(e){} }
     const eq=[99,100,101,102,103,104,105]; for(let k=0;k<7;k++) if(g('partb.equipment.'+k)==='1') C(eq[k]);
     const ut=[116,118,120,122,124], ff=[117,119,121,123,125];
     for(let k=0;k<5;k++){ if(g('partb.utilities.'+k)==='1') C(ut[k]); const fu=g('partb.fuel.'+k); if(fu) T(ff[k],fu); }
@@ -2075,7 +2225,11 @@ if(typeof module!=='undefined')module.exports={fmtPhone,fmtDate,sMoney,sPct,sK,a
     if(g('sig.name')) T(208, (g('sig.name')+', '+sigTitle(g('sig.title'))).replace(/, $/,''));
     try{ form.getTextField('x12').setText(''); }catch(e){}
     T(228,(g('sig.name')+', '+sigTitle(g('sig.title'))).replace(/, $/,''));
-    return await doc.save();
+    try{ form.acroForm.dict.delete(PDFName.of('CO')); }catch(e){}
+    form.getFields().forEach(f=>{ try{ f.acroField.dict.delete(PDFName.of('AA')); }catch(e){} });
+    for(let q=7;q<=96;q++){ try{ const f=form.getTextField(String(q)); f.setFontSize(9); f.updateAppearances(font); }catch(e){} }
+    try{ const f=form.getTextField('94a'); f.setFontSize(9); f.updateAppearances(font); }catch(e){}
+    return await doc.save({objectsPerTick:Infinity});
   }
 
   const API={resolve,coverLetter,ownerLetter,tenantNotice,fillChecklist,fillRentSchedule};

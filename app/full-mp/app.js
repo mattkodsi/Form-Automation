@@ -644,7 +644,7 @@ function dlPdf(bytes,name){dlFile(bytes,name,'application/pdf');}
 function formRec(){const rec={};for(const k in form)rec[k]=form[k].value;return rec;}
 async function genCoverLetter(){if(!(window.RCSGen&&window.PDFLib)){setStatus('Generator still loading \u2014 try again in a moment.');return;}try{setStatus('Generating cover letter\u2026');const bytes=await window.RCSGen.coverLetter(formRec(),b64ToBytes(LOGO_B64));dlPdf(bytes,(get('property.name')||'Property')+' \u2014 Cover Letter.pdf');setStatus('Cover letter downloaded.');}catch(e){setStatus('Generation failed: '+((e&&e.message)||e));}}
 function dataUrlToBytes(u){try{const i=String(u||'').indexOf(',');if(i<0)return null;return b64ToBytes(u.slice(i+1));}catch(e){return null;}}
-async function combinePdfs(list){const {PDFDocument}=window.PDFLib;const out=await PDFDocument.create();for(const b of list){if(!b)continue;const src=await PDFDocument.load(b,{ignoreEncryption:true,parseSpeed:Infinity});const pages=await out.copyPages(src,src.getPageIndices());pages.forEach(p=>out.addPage(p));}return await out.save();}
+async function combinePdfs(list){const {PDFDocument}=window.PDFLib;const out=await PDFDocument.create();for(const b of list){if(!b)continue;const src=await PDFDocument.load(b,{ignoreEncryption:true,parseSpeed:Infinity});const pages=await out.copyPages(src,src.getPageIndices());pages.forEach(p=>out.addPage(p));}return await out.save({objectsPerTick:Infinity});}
 function showPackageModal(nm,docs,combined,missingRcs,missingLh){
   const rows=docs.map((d,i)=>'<button class="btn sm" data-dldoc="'+i+'" style="justify-content:flex-start">'+esc(d.label)+'</button>').join('');
   const miss=(missingRcs?'<div class="sub" style="color:#b45309;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">\u26a0 RCS report (doc 04) missing \u2014 upload it in Section 1.</div>':'')
@@ -702,16 +702,123 @@ function measureLetterheadDrop(dataUrl){return new Promise(res=>{try{
       if(d[i+3]>40&&(d[i]<235||d[i+1]<235||d[i+2]<235)){if(++cnt>=3)break;}}
       if(cnt>=3)low=y;}
     if(low<0){res(null);return;}
-    res(Math.min(320,Math.max(110,Math.round((low/H)*792)+16)));
+    res(Math.min(340,Math.max(110,Math.round((low/H)*792)+36)));
   }catch(e){res(null);}};
   img.onerror=()=>res(null);img.src=dataUrl;
 }catch(e){res(null);}});}
+/* PDF letterheads: find the header's bottom edge without rasterizing. Walk
+   page 1's drawing operators with transform tracking and take the lowest
+   painted text / image / dark path that lives in the top half of the page
+   (full-height borders and page backgrounds are excluded by construction). */
+async function measurePdfLetterheadDrop(bytes){ try{
+  const PD=window.PDFLib; const doc=await PD.PDFDocument.load(bytes,{parseSpeed:Infinity});
+  const page=doc.getPage(0); const ph=page.getHeight()||792; const ctx=doc.context;
+  const deref=o=>{ try{ return (o==null)?o:(ctx.lookup(o)||o); }catch(e){ return o; } }; // lookup passes non-refs through (min build mangles class names)
+  const bstr=u8=>{ let s='';for(let i=0;i<u8.length;i++)s+=String.fromCharCode(u8[i]);return s; };
+  const streamText=s0=>{ const s=deref(s0); if(!s)return '';
+    try{ return bstr(PD.decodePDFRawStream(s).decode()); }
+    catch(e){ try{ return bstr(s.contents||s.getContents()); }catch(_){ return ''; } } };
+  const contentsOf=nd=>{ let c=deref(nd.Contents?nd.Contents():null); if(!c)return '';
+    if(c.asArray) return c.asArray().map(streamText).join('\n');
+    return streamText(c); };
+  const lex=s=>{ const out=[]; let i=0; const n=s.length;
+    while(i<n){ const c=s[i];
+      if(c==='%'){ while(i<n&&s[i]!=='\n')i++; continue; }
+      if(c==='('){ let d=1;i++; while(i<n&&d>0){ if(s[i]==='\\')i++; else if(s[i]==='(')d++; else if(s[i]===')')d--; i++; } out.push({t:'str'}); continue; }
+      if(c==='<'){ if(s[i+1]==='<'){ let d=1;i+=2; while(i<n&&d>0){ if(s[i]==='<'&&s[i+1]==='<'){d++;i+=2;continue;} if(s[i]==='>'&&s[i+1]==='>'){d--;i+=2;continue;} i++; } out.push({t:'dict'}); continue; }
+        i++; while(i<n&&s[i]!=='>')i++; i++; out.push({t:'str'}); continue; }
+      if(c==='['){ out.push({t:'['}); i++; continue; }
+      if(c===']'){ out.push({t:']'}); i++; continue; }
+      if(c==='/'){ let j=i+1; while(j<n&&!/[\s\/\[\]()<>{}%]/.test(s[j]))j++; out.push({t:'name',v:s.slice(i+1,j)}); i=j; continue; }
+      if(/\s/.test(c)){ i++; continue; }
+      let j=i; while(j<n&&!/[\s\/\[\]()<>%]/.test(s[j]))j++;
+      const w=s.slice(i,j); i=j;
+      if(w==='ID'){ const e=s.indexOf('EI',i); i=(e<0)?n:e+2; out.push({t:'op',v:'EI'}); continue; }
+      if(/^[+\-.0-9]/.test(w)&&!isNaN(parseFloat(w))) out.push({t:'num',v:parseFloat(w)});
+      else out.push({t:'op',v:w});
+    } return out; };
+  const mul=(m,q)=>[m[0]*q[0]+m[1]*q[2], m[0]*q[1]+m[1]*q[3], m[2]*q[0]+m[3]*q[2], m[2]*q[1]+m[3]*q[3], m[4]*q[0]+m[5]*q[2]+q[4], m[4]*q[1]+m[5]*q[3]+q[5]];
+  const apply=(m,x,y)=>({x:m[0]*x+m[2]*y+m[4], y:m[1]*x+m[3]*y+m[5]});
+  const wOf=st=>{ const ns=st.filter(t=>t.t==='num').map(t=>t.v);
+    if(ns.length===4) return 1-Math.min(1,(ns[0]+ns[1]+ns[2])/3+ns[3]);
+    if(ns.length===3) return (ns[0]+ns[1]+ns[2])/3;
+    if(ns.length===1) return ns[0];
+    return 0; };
+  let best=null;
+  const note2=(yMin,yMax)=>{ if(!(isFinite(yMin)&&isFinite(yMax)))return;
+    if(yMax<ph*0.55)return;            // footer / body content
+    if(yMin<ph*0.45)return;            // spans deep into the page: bg or border
+    best=(best==null)?yMin:Math.min(best,yMin); };
+  const scan=(code,res,ctm0,depth)=>{ if(depth>4||!code)return;
+    const toks=lex(code); let stack=[]; let ctm=ctm0.slice(); const gsk=[];
+    let tm=null,tlm=null,tl=0,fs=0,trm=0,fill={w:0},stroke={w:0},path=[];
+    const num=k=>{ const v=stack[stack.length-k]; return (v&&v.t==='num')?v.v:0; };
+    const pushPt=(x,y)=>{ path.push(apply(ctm,x,y)); };
+    for(const tk of toks){
+      if(tk.t!=='op'){ stack.push(tk); if(stack.length>24)stack.shift(); continue; }
+      const op=tk.v;
+      switch(op){
+        case 'q': gsk.push({ctm:ctm.slice(),fill:{w:fill.w},stroke:{w:stroke.w}}); break;
+        case 'Q': { const g0=gsk.pop(); if(g0){ ctm=g0.ctm; fill=g0.fill; stroke=g0.stroke; } break; }
+        case 'cm': ctm=mul([num(6),num(5),num(4),num(3),num(2),num(1)],ctm); break;
+        case 'BT': tm=[1,0,0,1,0,0]; tlm=tm.slice(); break;
+        case 'ET': tm=null; break;
+        case 'Tf': fs=num(1); break;
+        case 'Tm': tlm=[num(6),num(5),num(4),num(3),num(2),num(1)]; tm=tlm.slice(); break;
+        case 'Td': tlm=mul([1,0,0,1,num(2),num(1)],tlm||[1,0,0,1,0,0]); tm=tlm.slice(); break;
+        case 'TD': tl=-num(1); tlm=mul([1,0,0,1,num(2),num(1)],tlm||[1,0,0,1,0,0]); tm=tlm.slice(); break;
+        case 'TL': tl=num(1); break;
+        case 'T*': tlm=mul([1,0,0,1,0,-tl],tlm||[1,0,0,1,0,0]); tm=tlm.slice(); break;
+        case 'Tr': trm=num(1); break;
+        case "'": case '"': tlm=mul([1,0,0,1,0,-tl],tlm||[1,0,0,1,0,0]); tm=tlm.slice();
+        /* fall through */
+        case 'Tj': case 'TJ': {
+          if(tm&&trm!==3&&trm!==7&&fill.w<0.85){ const M=mul(tm,ctm); const p0=apply(M,0,0),p1=apply(M,0,fs||10);
+            const h=Math.abs(p1.y-p0.y)||10; note2(p0.y-0.25*h,p0.y+0.78*h); }
+          break; }
+        case 'g': fill={w:num(1)}; break;
+        case 'G': stroke={w:num(1)}; break;
+        case 'rg': fill={w:(num(3)+num(2)+num(1))/3}; break;
+        case 'RG': stroke={w:(num(3)+num(2)+num(1))/3}; break;
+        case 'k': fill={w:1-Math.min(1,(num(4)+num(3)+num(2))/3+num(1))}; break;
+        case 'K': stroke={w:1-Math.min(1,(num(4)+num(3)+num(2))/3+num(1))}; break;
+        case 'sc': case 'scn': fill={w:wOf(stack)}; break;
+        case 'SC': case 'SCN': stroke={w:wOf(stack)}; break;
+        case 'm': case 'l': pushPt(num(2),num(1)); break;
+        case 'c': pushPt(num(6),num(5)); pushPt(num(4),num(3)); pushPt(num(2),num(1)); break;
+        case 'v': case 'y': pushPt(num(4),num(3)); pushPt(num(2),num(1)); break;
+        case 're': { const x=num(4),yy=num(3),w2=num(2),h2=num(1); pushPt(x,yy); pushPt(x+w2,yy); pushPt(x,yy+h2); pushPt(x+w2,yy+h2); break; }
+        case 'n': path=[]; break;
+        case 'f': case 'F': case 'f*': case 'b': case 'b*': case 'B': case 'B*': case 'S': case 's': {
+          const stroking=(op==='S'||op==='s'); const both=(op[0]==='b'||op[0]==='B');
+          const dark=stroking?(stroke.w<0.85):(fill.w<0.85||(both&&stroke.w<0.85));
+          if(dark&&path.length){ let mn=1e9,mx=-1e9; path.forEach(p=>{mn=Math.min(mn,p.y);mx=Math.max(mx,p.y);}); note2(mn,mx); }
+          path=[]; break; }
+        case 'Do': { const nt=stack[stack.length-1]; const xn=(nt&&nt.t==='name')?nt.v:null;
+          if(xn&&res){ try{ const xod=deref(res.get?res.get(PD.PDFName.of('XObject')):null);
+            const xo=xod?deref(xod.get(PD.PDFName.of(xn))):null;
+            if(xo&&xo.dict){ const sub=String(xo.dict.get(PD.PDFName.of('Subtype'))||'');
+              if(/Image/.test(sub)){ const cs=[apply(ctm,0,0),apply(ctm,1,0),apply(ctm,0,1),apply(ctm,1,1)];
+                let mn=1e9,mx=-1e9; cs.forEach(p=>{mn=Math.min(mn,p.y);mx=Math.max(mx,p.y);}); note2(mn,mx); }
+              else if(/Form/.test(sub)&&depth<4){ let M=ctm; const mt=deref(xo.dict.get(PD.PDFName.of('Matrix')));
+                if(mt&&mt.asArray){ const a=mt.asArray().map(x2=>{ const d2=deref(x2); return (d2&&d2.asNumber)?d2.asNumber():(parseFloat(String(d2))||0); }); if(a.length===6)M=mul(a,ctm); }
+                const r2=deref(xo.dict.get(PD.PDFName.of('Resources')))||res;
+                scan(streamText(xo),r2,M,depth+1); } } }catch(e){} }
+          break; }
+      }
+      stack=[];
+    } };
+  scan(contentsOf(page.node), deref(page.node.Resources?page.node.Resources():null), [1,0,0,1,0,0], 0);
+  if(best==null) return null;
+  return Math.min(360,Math.max(110,Math.round(((ph-best)/ph)*792)+36));
+}catch(e){ return null; } }
 async function __genPackageRun(){
   const T=window.RCSTemplates||{};
   try{ setStatus('Generating package...'); const rec=formRec(); const logo=b64ToBytes(LOGO_B64);
     let lh=null; try{ const L=(mpdb&&activePid)?mpdb.getLetterhead(activePid):null;
       if(L&&L.data){const by=dataUrlToBytes(L.data);if(by)lh=(String(L.data).indexOf('data:application/pdf')===0)?{pdf:by}:{png:by};}
-      if(lh&&lh.png){const dr=await measureLetterheadDrop(L.data);if(dr)lh.drop=dr;} }catch(e){}
+      if(lh&&lh.png){const dr=await measureLetterheadDrop(L.data);if(dr)lh.drop=dr;}
+      if(lh&&lh.pdf){const dr=await measurePdfLetterheadDrop(lh.pdf);if(dr)lh.drop=dr;} }catch(e){}
     const N=get('property.name')||'Property'; const docs=[];
     docs.push({label:'Cover letter (CA)',file:'01. '+N+' - Cover Letter',bytes:await window.RCSGen.coverLetter(rec,logo)});
     docs.push({label:'Owner cover letter',file:'02. '+N+' - RCS Owner Cover Letter',bytes:await window.RCSGen.ownerLetter(rec)});

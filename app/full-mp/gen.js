@@ -86,7 +86,7 @@
     const wb=HB.widthOfTextAtSize(fb,fs), wr=H.widthOfTextAtSize(fr,fs), sx=(612-(wb+wr))/2;
     st.page.drawText(fb,{x:sx,y:42,size:fs,font:HB,color:fBlue});
     st.page.drawText(fr,{x:sx+wb,y:42,size:fs,font:H,color:fGrey});
-    return await doc.save();
+    return await doc.save({objectsPerTick:Infinity});
   }
 
   async function ownerLetter(rec){
@@ -116,7 +116,7 @@
     st.gap(6);
     st.para('I certify that the above is all true. Please send all final decision correspondence to the undersigned, rather than the appraiser.',{gapAfter:16});
     st.line('Respectfully Submitted,'); st.gap(42); st.line(t.sig_name); st.line(t.sig_title);
-    return await doc.save();
+    return await doc.save({objectsPerTick:Infinity});
   }
 
   async function fillChecklist(templateBytes, rec){
@@ -127,7 +127,7 @@
     try{ const d=form.getTextField('Date'); d.setText(t.sign_date); d.setFontSize(12); d.updateAppearances(times); }catch(e){}
     for(let i=0;i<17;i++){ try{ const cb=form.getCheckBox('Check Box'+(i+1)); if(String(rec['check.'+i]||'')==='1')cb.check(); else cb.uncheck(); }catch(e){} }
     try{ const pg=doc.getPages()[0]; const {rgb}=PL(); pg.drawRectangle({x:107,y:123,width:156,height:22,color:rgb(1,1,1)}); const sline=(t.sig_name+', '+t.sig_title).replace(/, $/,''); if(sline)pg.drawText(sline,{x:109,y:129,size:11,font:times,color:rgb(0.11,0.13,0.17)}); }catch(e){}
-    return await doc.save();
+    return await doc.save({objectsPerTick:Infinity});
   }
 
 
@@ -152,7 +152,7 @@
     // line, and overflow is absorbed by trimming paragraph gaps, the
     // signature gap, and finally a hair of leading. The top drop shrinks
     // only for unmeasured (PDF) letterheads, and only as a last resort.
-    const baseDrop=(letterhead&&letterhead.drop)?letterhead.drop:150;
+    const baseDrop=(letterhead&&letterhead.drop)?letterhead.drop:((letterhead&&letterhead.pdf)?180:150);
     const measured=!!(letterhead&&letterhead.drop);
     const LEVELS=[{ga:1,lead:1,sig:34,dd:0},{ga:0.8,lead:1,sig:24,dd:0},{ga:0.6,lead:1,sig:18,dd:0},{ga:0.45,lead:0.97,sig:14,dd:0},{ga:0.45,lead:0.95,sig:12,dd:10},{ga:0.4,lead:0.93,sig:10,dd:20}];
     let out=null;
@@ -185,12 +185,12 @@
       out=doc;
       if(doc.getPageCount()===1) break;
     }
-    return await out.save();
+    return await out.save({objectsPerTick:Infinity});
   }
 
 
   async function fillRentSchedule(templateBytes, rec){
-    const { PDFDocument, StandardFonts } = PL();
+    const { PDFDocument, StandardFonts, PDFName, rgb } = PL();
     const doc=await PDFDocument.load(templateBytes,{parseSpeed:Infinity}); const form=doc.getForm();
     const font=await doc.embedFont(StandardFonts.Helvetica);
     const g=k=>rec[k]!=null?String(rec[k]):'';
@@ -205,18 +205,61 @@
     T(1,g('property.name')); T(2,g('property.fha')); T(3,dfmt(_dei));
     { const rp=String(_dei).slice(0,10).split('-'); if(rp.length===3){ T(4,rp[1]); T(5,rp[2]); T(6,rp[0]); } }
     const utype=(br,ba)=>{const b=String(br||'').replace(/(\d+)\s*BR/i,'$1 BR').replace(/^\s*\/?\s*$/,'').trim();const a=String(ba||'').replace(/(\d+(?:\.\d+)?)\s*BA/i,'$1 BA').trim();return (b&&a)?(b+' / '+a):(b||a);};
-    const idx=[...new Set(Object.keys(rec).map(k=>(k.match(/^units\.(\d+)\./)||[])[1]).filter(x=>x!=null))].sort((a,b)=>a-b);
-    let tu=0,tc=0,r=0;
-    idx.forEach(i=>{ if(r>10)return; const br=g('units.'+i+'.br'),ba=g('units.'+i+'.ba'),n=nmv(g('units.'+i+'.num_units')),pro=nmv(g('units.'+i+'.proposed'));
-      const us=g('units.'+i+'.ua_source')||'exec'; const ua=us==='rcs'?nmv(g('units.'+i+'.ua_rcs')):(us==='custom'?nmv(g('units.'+i+'.ua_custom')):nmv(g('units.'+i+'.ua_exec')));
-      if(!n&&!pro&&!(br||ba)) return; const base=7+r*8;
-      T(base, utype(br,ba)); T(base+1,n||''); T(base+2,money(pro)); T(base+3,money(n*pro)); T(base+4,ua||''); T(base+5,money(pro+ua));
-      tu+=n; tc+=n*pro; r++; });
+    // Part A layout: Section 8 rev rows, then a full-width "Non- Section 8
+    // Rents" banner + the LIHTC (non-S8) rows, then a blank spacer row + the
+    // non-revenue rows. Over 11 rows: drop the spacer first, then the
+    // non-rev rows (they stay fully listed in Part D).
+    const s8A=[...new Set(Object.keys(rec).map(k=>(k.match(/^units\.(\d+)\./)||[])[1]).filter(x=>x!=null))].sort((a,b)=>a-b)
+      .filter(i=>nmv(g('units.'+i+'.num_units'))||nmv(g('units.'+i+'.proposed'))||g('units.'+i+'.br')||g('units.'+i+'.ba'));
     const liA=g('lihtc.enabled')==='1'?[...new Set(Object.keys(rec).map(k=>(k.match(/^lihtc\.(\d+)\./)||[])[1]).filter(x=>x!=null))].sort((a,b)=>a-b).filter(i=>g('lihtc.'+i+'.br')||g('lihtc.'+i+'.ba')||g('lihtc.'+i+'.avg_rent')):[];
-    if(liA.length&&r<=9){ r++; liA.forEach(i=>{ if(r>10)return; const base=7+r*8; T(base, utype(g('lihtc.'+i+'.br'),g('lihtc.'+i+'.ba'))); const ln=nmv(g('lihtc.'+i+'.num_units')); if(ln)T(base+1,ln); const ar=g('lihtc.'+i+'.avg_rent'); if(ar!==''&&ar!=null)T(base+2,money(ar)); tu+=ln; r++; }); }
     const nrA=[...new Set(Object.keys(rec).map(k=>(k.match(/^nonrev\.(\d+)\./)||[])[1]).filter(x=>x!=null))].sort((a,b)=>a-b).filter(i=>g('nonrev.'+i+'.use')||g('nonrev.'+i+'.br')||g('nonrev.'+i+'.ba')||g('nonrev.'+i+'.rent'));
-    if(nrA.length&&r<=9){ r++; nrA.forEach(i=>{ if(r>10)return; const base=7+r*8; T(base, g('nonrev.'+i+'.use')||utype(g('nonrev.'+i+'.br'),g('nonrev.'+i+'.ba'))); const nn=nmv(g('nonrev.'+i+'.num_units'))||1; T(base+1,nn); tu+=nn; r++; }); }
+    const mkPlan=(blank,withNr)=>{ const p=[]; s8A.forEach(i=>p.push(['s8',i]));
+      if(liA.length){ p.push(['banner']); liA.forEach(i=>p.push(['li',i])); }
+      if(withNr&&nrA.length){ if(blank)p.push(['blank']); nrA.forEach(i=>p.push(['nr',i])); } return p; };
+    let plan=mkPlan(true,true);
+    if(plan.length>11)plan=mkPlan(false,true);
+    if(plan.length>11)plan=mkPlan(false,false);
+    if(plan.length>11)plan=plan.slice(0,11);
+    let bannerRow=null;
+    plan.forEach((row,r)=>{ const base=7+r*8;
+      if(row[0]==='banner'){ bannerRow=r; return; }
+      if(row[0]==='blank') return;
+      const i=row[1];
+      if(row[0]==='s8'){ const br=g('units.'+i+'.br'),ba=g('units.'+i+'.ba'),n=nmv(g('units.'+i+'.num_units')),pro=nmv(g('units.'+i+'.proposed'));
+        const us=g('units.'+i+'.ua_source')||'exec'; const ua=us==='rcs'?nmv(g('units.'+i+'.ua_rcs')):(us==='custom'?nmv(g('units.'+i+'.ua_custom')):nmv(g('units.'+i+'.ua_exec')));
+        T(base, utype(br,ba)); T(base+1,n||''); T(base+2,money(pro)); T(base+3,money(n*pro)); T(base+4,ua||''); T(base+5,money(pro+ua)); }
+      else if(row[0]==='li'){ const n=nmv(g('lihtc.'+i+'.num_units')),ar=g('lihtc.'+i+'.avg_rent');
+        T(base, utype(g('lihtc.'+i+'.br'),g('lihtc.'+i+'.ba'))); if(n)T(base+1,n);
+        if(ar!==''&&ar!=null){ const rv=nmv(ar); T(base+2,money(rv)); T(base+3,money(n*rv)); T(base+5,money(rv)); } }
+      else { const nn=nmv(g('nonrev.'+i+'.num_units'))||1; T(base, g('nonrev.'+i+'.use')||utype(g('nonrev.'+i+'.br'),g('nonrev.'+i+'.ba'))); T(base+1,nn); }
+    });
+    // Totals count every unit — LIHTC rents add into the contract rent
+    // potential like S8 rows, and non-rev units count even when trimmed
+    // from Part A for space.
+    let tu=0,tc=0;
+    s8A.forEach(i=>{ const n=nmv(g('units.'+i+'.num_units')); tu+=n; tc+=n*nmv(g('units.'+i+'.proposed')); });
+    liA.forEach(i=>{ const n=nmv(g('lihtc.'+i+'.num_units')); tu+=n; tc+=n*nmv(g('lihtc.'+i+'.avg_rent')); });
+    nrA.forEach(i=>{ tu+=nmv(g('nonrev.'+i+'.num_units'))||1; });
     T('94a',tu||''); T('95',money(tc)); T('96',money(tc*12));
+    // Full-width banner: remove that row's fields (so no viewer redraws a "0"
+    // over it), white out the row band, and print the centered bold label.
+    if(bannerRow!=null){ try{
+      const HB=await doc.embedFont(StandardFonts.HelveticaBold);
+      const colRect=rr=>{ try{ return form.getTextField(String(7+rr*8)).acroField.getWidgets()[0].getRectangle(); }catch(e){ return null; } };
+      let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9,pgRef=null;
+      for(let k=0;k<8;k++){ try{ const f=form.getTextField(String(7+bannerRow*8+k)); const w=f.acroField.getWidgets()[0];
+        const rc=w.getRectangle(); if(!pgRef)pgRef=w.P();
+        x0=Math.min(x0,rc.x); x1=Math.max(x1,rc.x+rc.width); y0=Math.min(y0,rc.y); y1=Math.max(y1,rc.y+rc.height);
+        try{ f.setText(''); f.updateAppearances(font); }catch(e){}
+        form.removeField(f); }catch(e){} }
+      if(x1>x0){ const pg=doc.getPages().find(p=>p.ref===pgRef)||doc.getPage(0);
+        // Band spans the row cell fully: midway to the neighbor rows' widgets,
+        // stopping short of the printed grid rules above and below.
+        const ab=colRect(bannerRow-1), be=colRect(bannerRow+1);
+        const bandTop=ab?((y1+ab.y)/2-0.5):(y1+1.5), bandBot=be?((y0+be.y+be.height)/2+0.5):(y0-1.5);
+        pg.drawRectangle({x:x0-3,y:bandBot,width:(x1-x0)+6,height:bandTop-bandBot,color:rgb(1,1,1)});
+        const lbl='Non- Section 8 Rents',fs=9.5,twd=HB.widthOfTextAtSize(lbl,fs);
+        pg.drawText(lbl,{x:x0+((x1-x0)-twd)/2,y:(bandTop+bandBot)/2-fs*0.36,size:fs,font:HB}); } }catch(e){} }
     const eq=[99,100,101,102,103,104,105]; for(let k=0;k<7;k++) if(g('partb.equipment.'+k)==='1') C(eq[k]);
     const ut=[116,118,120,122,124], ff=[117,119,121,123,125];
     for(let k=0;k<5;k++){ if(g('partb.utilities.'+k)==='1') C(ut[k]); const fu=g('partb.fuel.'+k); if(fu) T(ff[k],fu); }
@@ -238,7 +281,11 @@
     if(g('sig.name')) T(208, (g('sig.name')+', '+sigTitle(g('sig.title'))).replace(/, $/,''));
     try{ form.getTextField('x12').setText(''); }catch(e){}
     T(228,(g('sig.name')+', '+sigTitle(g('sig.title'))).replace(/, $/,''));
-    return await doc.save();
+    try{ form.acroForm.dict.delete(PDFName.of('CO')); }catch(e){}
+    form.getFields().forEach(f=>{ try{ f.acroField.dict.delete(PDFName.of('AA')); }catch(e){} });
+    for(let q=7;q<=96;q++){ try{ const f=form.getTextField(String(q)); f.setFontSize(9); f.updateAppearances(font); }catch(e){} }
+    try{ const f=form.getTextField('94a'); f.setFontSize(9); f.updateAppearances(font); }catch(e){}
+    return await doc.save({objectsPerTick:Infinity});
   }
 
   const API={resolve,coverLetter,ownerLetter,tenantNotice,fillChecklist,fillRentSchedule};
