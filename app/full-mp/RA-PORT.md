@@ -8,7 +8,7 @@ them and applies **assert-guarded, in-memory patches** to swap the backend:
 - drops `lib/supabase.min.js` + `config.js` + `db.supabase.js`, adds `db.cosmos.js`
 - patches `app.js`/`shell.head.html`: Supabase auth → App Service Easy Auth (Entra),
   `makeSupabaseDb` → `makeCosmosDb`, the HUD SAFMR edge function → `/api/hud-safmr`,
-  and wires our `window.NavigatorSource` seam to his AUM master registry
+  and wires our `window.RASource` seam to his AUM master registry
   (`aumIndex()`/`aumValue()` on the adapter — read-only; nothing writes back to AUM).
 
 Every patch asserts **exactly one match**, so if a seam string in our sources
@@ -36,13 +36,13 @@ next handoff.
 ## Current anchors in app.js / shell.head.html (don't move casually)
 
 1. shell: the `#viewAuth` sign-in card markup (replaced with the RA access panel)
-2. `mpdb=await makeSupabaseDb(supaClient);` (adapter swap + NavigatorSource injection)
+2. `mpdb=await makeSupabaseDb(supaClient);` (adapter swap + `window.RASource` injection)
 3. the `supaClient.functions.invoke('hud-safmr'…)` block + its no-client guard
 4. the `showAuthScreen` function body, the `bSignOut` handler, and the
    `DOMContentLoaded` boot block
-5. the create-dialog OK handler (`const r=mpdb.createProperty(v);` … `void pickedId;`)
-   — the RA patch passes `pickedId` (the picked AUM RAID) into
-   `createProperty(name, raMasterId)` for read-only prefill
+(the create dialog needs NO patch anymore — `createProperty(name, pickedId)`
+   passes the picked registry id through natively; the Supabase adapter ignores
+   the 2nd arg, the RA adapter uses it for read-only AUM prefill)
 
 Note on escaping: `build-ra.py` is Python — any literal `\uXXXX` text inside our
 JS (e.g. in comments) must be written double-backslashed in its anchor strings.

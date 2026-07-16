@@ -38,7 +38,7 @@ function makeSupabaseDb(client) {
     'appr.addr_street': 'appraiser_address_street', 'appr.addr_city': 'appraiser_address_city', 'appr.addr_state': 'appraiser_address_state', 'appr.addr_zip': 'appraiser_address_zip',
     'rent_schedule.date_rents_effective': 'date_rents_effective', 'rent_schedule.date_eff_rs': 'date_eff_rs', 'rent_schedule.date_eff_source': 'date_eff_source', 'rent_schedule.date_eff_custom': 'date_eff_custom',
     'checklist.sign_date': 'checklist_sign_date', 'tenant.date_of_notice': 'tenant_date_of_notice', 'cycle.submission_date': 'submission_date',
-    'lihtc.enabled': 'has_lihtc', 'nonrev.enabled': 'has_nonrev',
+    'ns8.enabled': 'has_ns8', 'nonrev.enabled': 'has_nonrev',
   };
   const PSCALAR_REV = {}; for (const k in PSCALAR) PSCALAR_REV[PSCALAR[k]] = k;
 
@@ -59,8 +59,8 @@ function makeSupabaseDb(client) {
   const NRCOL_REV = {}; for (const k in NRCOL) NRCOL_REV[NRCOL[k]] = k;
   const NRINT = new Set(['num_units', 'rent']);
 
-  const LICOL = { br: 'bedrooms', ba: 'bathrooms', num_units: 'num_units', avg_rent: 'avg_rent' };
-  const LICOL_REV = {}; for (const k in LICOL) LICOL_REV[LICOL[k]] = k;
+  const NS8COL = { br: 'bedrooms', ba: 'bathrooms', num_units: 'num_units', avg_rent: 'avg_rent' };
+  const NS8COL_REV = {}; for (const k in NS8COL) NS8COL_REV[NS8COL[k]] = k;
   const LIINT = new Set(['num_units', 'avg_rent']);
 
   const toInt = v => { if (v == null || String(v).trim() === '') return null; const n = Math.round(num(v)); return isNaN(n) ? null : n; };
@@ -78,7 +78,7 @@ function makeSupabaseDb(client) {
       client.from('property').select('*'),
       client.from('unit_type').select('*'),
       client.from('nonrev_unit').select('*'),
-      client.from('lihtc_unit').select('*'),
+      client.from('ns8_unit').select('*'),
       client.from('pm_contact').select('*'),
       client.from('app_contact').select('*'),
     ]);
@@ -107,7 +107,7 @@ function makeSupabaseDb(client) {
     });
     (li.data || []).forEach(n => {
       const p = D.props[n.property_id]; if (!p) return; const sa = String(n.updated_at || '').slice(0, 10);
-      for (const col in LICOL_REV) if (n[col] != null) place(p, 'lihtc.' + n.flat_index + '.' + LICOL_REV[col], n[col], sa);
+      for (const col in NS8COL_REV) if (n[col] != null) place(p, 'ns8.' + n.flat_index + '.' + NS8COL_REV[col], n[col], sa);
     });
     D.contacts = (ct.data || []).map(c => ({ id: c.id, name: c.name || '', email: c.email || '', phone: c.phone || '' }));
     D.dir = ((dr && dr.data) || []).map(c => { const r = { id: c.id, kind: c.kind || '' }; DIRF.forEach(f => r[f] = c[f] || ''); return r; });
@@ -150,12 +150,12 @@ function makeSupabaseDb(client) {
       return row;
     });
   }
-  function buildLihtcRows(pid) {
+  function buildNs8Rows(pid) {
     const m = merged(pid); const byIdx = {};
-    for (const k in m) { const g = k.match(/^lihtc\.(\d+)\.(.+)$/); if (g && LICOL[g[2]]) (byIdx[g[1]] = byIdx[g[1]] || {})[g[2]] = m[k].value; }
+    for (const k in m) { const g = k.match(/^ns8\.(\d+)\.(.+)$/); if (g && NS8COL[g[2]]) (byIdx[g[1]] = byIdx[g[1]] || {})[g[2]] = m[k].value; }
     return Object.keys(byIdx).map(i => {
       const row = { property_id: pid, flat_index: +i, updated_at: now() }; const sub = byIdx[i];
-      for (const sk in LICOL) if (sk in sub) row[LICOL[sk]] = LIINT.has(sk) ? toInt(sub[sk]) : (sub[sk] === '' ? null : sub[sk]);
+      for (const sk in NS8COL) if (sk in sub) row[NS8COL[sk]] = LIINT.has(sk) ? toInt(sub[sk]) : (sub[sk] === '' ? null : sub[sk]);
       return row;
     });
   }
@@ -168,9 +168,9 @@ function makeSupabaseDb(client) {
     const nrows = buildNonrevRows(pid);
     if (nrows.length) { r = await client.from('nonrev_unit').upsert(nrows, { onConflict: 'property_id,flat_index' }); if (r.error) throw r.error; }
     r = await client.from('nonrev_unit').delete().eq('property_id', pid).not('flat_index', 'in', notInList(nrows.map(x => x.flat_index))); if (r.error) throw r.error;
-    const lrows = buildLihtcRows(pid);
-    if (lrows.length) { r = await client.from('lihtc_unit').upsert(lrows, { onConflict: 'property_id,flat_index' }); if (r.error) throw r.error; }
-    r = await client.from('lihtc_unit').delete().eq('property_id', pid).not('flat_index', 'in', notInList(lrows.map(x => x.flat_index))); if (r.error) throw r.error;
+    const lrows = buildNs8Rows(pid);
+    if (lrows.length) { r = await client.from('ns8_unit').upsert(lrows, { onConflict: 'property_id,flat_index' }); if (r.error) throw r.error; }
+    r = await client.from('ns8_unit').delete().eq('property_id', pid).not('flat_index', 'in', notInList(lrows.map(x => x.flat_index))); if (r.error) throw r.error;
   }
 
   /* ---- per-property write serialization ---------------------------------- */
@@ -258,7 +258,7 @@ function makeSupabaseDb(client) {
         [p.durable, p.percycle].forEach(b => Object.keys(b).forEach(k => {
           if (k.indexOf('units.') === 0) { const i = uidx(k); if (i !== null && !ku.has(i)) delete b[k]; }
           else if (k.indexOf('nonrev.') === 0) { const i = nidx(k); if (i !== null && !kn.has(i)) delete b[k]; }
-          else if (k.indexOf('lihtc.') === 0) { const i = uidx(k); if (i !== null && !kl.has(i)) delete b[k]; }
+          else if (k.indexOf('ns8.') === 0) { const i = uidx(k); if (i !== null && !kl.has(i)) delete b[k]; }
         }));
         touch(pid); return pushSoon(pid);
       },

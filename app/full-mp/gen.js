@@ -206,12 +206,12 @@
     { const rp=String(_dei).slice(0,10).split('-'); if(rp.length===3){ T(4,rp[1]); T(5,rp[2]); T(6,rp[0]); } }
     const utype=(br,ba)=>{const b=String(br||'').replace(/(\d+)\s*BR/i,'$1 BR').replace(/^\s*\/?\s*$/,'').trim();const a=String(ba||'').replace(/(\d+(?:\.\d+)?)\s*BA/i,'$1 BA').trim();return (b&&a)?(b+' / '+a):(b||a);};
     // Part A layout: Section 8 rev rows, then a full-width "Non- Section 8
-    // Rents" banner + the LIHTC (non-S8) rows, then a blank spacer row + the
+    // Rents" banner + the non-Section-8 rows, then a blank spacer row + the
     // non-revenue rows. Over 11 rows: drop the spacer first, then the
     // non-rev rows (they stay fully listed in Part D).
     const s8A=[...new Set(Object.keys(rec).map(k=>(k.match(/^units\.(\d+)\./)||[])[1]).filter(x=>x!=null))].sort((a,b)=>a-b)
       .filter(i=>nmv(g('units.'+i+'.num_units'))||nmv(g('units.'+i+'.proposed'))||g('units.'+i+'.br')||g('units.'+i+'.ba'));
-    const liA=g('lihtc.enabled')==='1'?[...new Set(Object.keys(rec).map(k=>(k.match(/^lihtc\.(\d+)\./)||[])[1]).filter(x=>x!=null))].sort((a,b)=>a-b).filter(i=>g('lihtc.'+i+'.br')||g('lihtc.'+i+'.ba')||g('lihtc.'+i+'.avg_rent')||nmv(g('lihtc.'+i+'.num_units'))):[];
+    const liA=g('ns8.enabled')==='1'?[...new Set(Object.keys(rec).map(k=>(k.match(/^ns8\.(\d+)\./)||[])[1]).filter(x=>x!=null))].sort((a,b)=>a-b).filter(i=>g('ns8.'+i+'.br')||g('ns8.'+i+'.ba')||g('ns8.'+i+'.avg_rent')||nmv(g('ns8.'+i+'.num_units'))):[];
     const nrA=[...new Set(Object.keys(rec).map(k=>(k.match(/^nonrev\.(\d+)\./)||[])[1]).filter(x=>x!=null))].sort((a,b)=>a-b).filter(i=>g('nonrev.'+i+'.use')||g('nonrev.'+i+'.br')||g('nonrev.'+i+'.ba')||g('nonrev.'+i+'.rent')||nmv(g('nonrev.'+i+'.num_units')));
     const mkPlan=(blank,withNr)=>{ const p=[]; s8A.forEach(i=>p.push(['s8',i]));
       if(liA.length){ p.push(['banner']); liA.forEach(i=>p.push(['li',i])); }
@@ -228,17 +228,17 @@
       if(row[0]==='s8'){ const br=g('units.'+i+'.br'),ba=g('units.'+i+'.ba'),n=nmv(g('units.'+i+'.num_units')),pro=nmv(g('units.'+i+'.proposed'));
         const us=g('units.'+i+'.ua_source')||'exec'; const ua=us==='rcs'?nmv(g('units.'+i+'.ua_rcs')):(us==='custom'?nmv(g('units.'+i+'.ua_custom')):nmv(g('units.'+i+'.ua_exec')));
         T(base, utype(br,ba)); T(base+1,n||''); T(base+2,money(pro)); T(base+3,money(n*pro)); T(base+4,ua||''); T(base+5,money(pro+ua)); }
-      else if(row[0]==='li'){ const n=nmv(g('lihtc.'+i+'.num_units')),ar=g('lihtc.'+i+'.avg_rent');
-        T(base, utype(g('lihtc.'+i+'.br'),g('lihtc.'+i+'.ba'))); if(n)T(base+1,n);
+      else if(row[0]==='li'){ const n=nmv(g('ns8.'+i+'.num_units')),ar=g('ns8.'+i+'.avg_rent');
+        T(base, utype(g('ns8.'+i+'.br'),g('ns8.'+i+'.ba'))); if(n)T(base+1,n);
         if(ar!==''&&ar!=null){ const rv=nmv(ar); T(base+2,money(rv)); T(base+3,money(n*rv)); T(base+5,money(rv)); } }
       else { const nn=nmv(g('nonrev.'+i+'.num_units'))||1; T(base, g('nonrev.'+i+'.use')||utype(g('nonrev.'+i+'.br'),g('nonrev.'+i+'.ba'))); T(base+1,nn); }
     });
-    // Totals count every unit — LIHTC rents add into the contract rent
+    // Totals count every unit — non-S8 rents add into the contract rent
     // potential like S8 rows, and non-rev units count even when trimmed
     // from Part A for space.
     let tu=0,tc=0;
     s8A.forEach(i=>{ const n=nmv(g('units.'+i+'.num_units')); tu+=n; tc+=n*nmv(g('units.'+i+'.proposed')); });
-    liA.forEach(i=>{ const n=nmv(g('lihtc.'+i+'.num_units')); tu+=n; tc+=n*nmv(g('lihtc.'+i+'.avg_rent')); });
+    liA.forEach(i=>{ const n=nmv(g('ns8.'+i+'.num_units')); tu+=n; tc+=n*nmv(g('ns8.'+i+'.avg_rent')); });
     nrA.forEach(i=>{ tu+=nmv(g('nonrev.'+i+'.num_units'))||1; });
     T('94a',tu||''); T('95',money(tc)); T('96',money(tc*12));
     // Full-width banner: remove that row's fields (so no viewer redraws a "0"

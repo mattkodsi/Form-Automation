@@ -74,7 +74,7 @@ create table public.property (
   appraiser_address_state     text,
   appraiser_address_zip       text,
   checklist                   jsonb not null default '{}'::jsonb,  -- {"0":"1", … "16":""}
-  has_lihtc                   text,          -- '1' | '' — non-Section 8 section toggle
+  has_ns8                   text,          -- '1' | '' — non-Section 8 section toggle (renamed from has_lihtc)
   has_nonrev                  text,          -- '1' | '' — non-revenue (Part D) toggle
   created_at                  timestamptz not null default now(),
   updated_at                  timestamptz not null default now()
@@ -138,10 +138,11 @@ create table public.nonrev_unit (
 create index nonrev_unit_owner_idx on public.nonrev_unit(owner_id);
 create index nonrev_unit_property_idx on public.nonrev_unit(property_id);
 
--- -------------------------------------------------------------- lihtc_unit --
--- Non-Section 8 revenue-producing rows (flat keys lihtc.{i}.*). Print on the
+-- -------------------------------------------------------------- ns8_unit --
+-- Non-Section 8 revenue-producing rows (flat keys ns8.{i}.*; renamed from
+-- lihtc_unit 2026-07-16 — the old name was an early misunderstanding). Print on the
 -- rent schedule under the "Non- Section 8 Rents" banner with full rent math.
-create table public.lihtc_unit (
+create table public.ns8_unit (
   id            uuid primary key default gen_random_uuid(),
   owner_id      uuid not null default auth.uid() references auth.users(id) on delete cascade,
   property_id   uuid not null references public.property(id) on delete cascade,
@@ -154,8 +155,8 @@ create table public.lihtc_unit (
   updated_at    timestamptz not null default now(),
   unique (property_id, flat_index)
 );
-create index lihtc_unit_owner_idx on public.lihtc_unit(owner_id);
-create index lihtc_unit_property_idx on public.lihtc_unit(property_id);
+create index ns8_unit_owner_idx on public.ns8_unit(owner_id);
+create index ns8_unit_property_idx on public.ns8_unit(property_id);
 
 -- -------------------------------------------------------------- pm_contact --
 -- Shared PM contact list (fills the point-of-contact cell).
@@ -195,14 +196,14 @@ create index app_contact_owner_idx on public.app_contact(owner_id);
 alter table public.property    enable row level security;
 alter table public.unit_type   enable row level security;
 alter table public.nonrev_unit enable row level security;
-alter table public.lihtc_unit  enable row level security;
+alter table public.ns8_unit  enable row level security;
 alter table public.pm_contact  enable row level security;
 alter table public.app_contact enable row level security;
 
 create policy "owner_all_property"    on public.property    for all using (owner_id = auth.uid()) with check (owner_id = auth.uid());
 create policy "owner_all_unit_type"   on public.unit_type   for all using (owner_id = auth.uid()) with check (owner_id = auth.uid());
 create policy "owner_all_nonrev_unit" on public.nonrev_unit for all using (owner_id = auth.uid()) with check (owner_id = auth.uid());
-create policy "owner_all_lihtc_unit"  on public.lihtc_unit  for all using (owner_id = auth.uid()) with check (owner_id = auth.uid());
+create policy "owner_all_ns8_unit"  on public.ns8_unit  for all using (owner_id = auth.uid()) with check (owner_id = auth.uid());
 create policy "owner_all_pm_contact"  on public.pm_contact  for all using (owner_id = auth.uid()) with check (owner_id = auth.uid());
 create policy "owner_all_app_contact" on public.app_contact for all using (owner_id = auth.uid()) with check (owner_id = auth.uid());
 
