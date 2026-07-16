@@ -59,8 +59,11 @@ function makeCosmosDb() {
       };
       ['durable', 'percycle'].forEach(bkt => {
         const src = doc[bkt] || {};
-        for (const k in src) {
+        for (let k in src) {
           const cell = src[k]; if (!cell || cell.value == null) continue;
+          // legacy key migration (2026-07-16): lihtc.* renamed to ns8.*
+          if (k === 'lihtc.enabled') k = 'ns8.enabled';
+          else if (k.indexOf('lihtc.') === 0) k = 'ns8.' + k.slice(6);
           // re-route through isPerCycleKey so durable/percycle stay canonical
           place(p, k, cell.value, cell.saved_at || '');
         }
@@ -210,7 +213,7 @@ function makeCosmosDb() {
         [p.durable, p.percycle].forEach(b => Object.keys(b).forEach(k => {
           if (k.indexOf('units.') === 0) { const i = uidx(k); if (i !== null && !ku.has(i)) delete b[k]; }
           else if (k.indexOf('nonrev.') === 0) { const i = nidx(k); if (i !== null && !kn.has(i)) delete b[k]; }
-          else if (k.indexOf('lihtc.') === 0) { const i = uidx(k); if (i !== null && !kl.has(i)) delete b[k]; }
+          else if (k.indexOf('ns8.') === 0) { const i = uidx(k); if (i !== null && !kl.has(i)) delete b[k]; }
         }));
         touch(pid); return pushSoon(pid);
       },
@@ -285,7 +288,7 @@ function makeCosmosDb() {
       },
       /* AUM prefill surface (read-only) */
       aumValue(pid, k) {
-        // Per-cell AUM read for the NavigatorSource seam (same mapping as the
+        // Per-cell AUM read for the RASource seam (same mapping as the
         // create-time prefill; read-only by construction).
         const p = D.props[pid]; if (!p || !p.raMasterId) return null;
         const a = (D.aum || []).find(x => String(x.RAID || x.ra_master_id || '') === String(p.raMasterId));

@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """build-ra.py — build rcs.html (RA/Azure port) from the intern's sources.
 
-2026-07-16 update (MKOD): the intern sources now include the Navigator-source
+2026-07-16 update (MKOD): the intern sources now include the external-source
 UI natively (per-cell source dropdowns + closest-match create combobox behind
-a window.NavigatorSource seam). Patch 4 therefore shrinks: instead of
-replacing createProperty, the port now (4a) supplies NavigatorSource from the
-AUM projection and (4b) passes the picked AUM id into createProperty.
+a window.RASource seam), and createProperty(name, pickedId) passes the picked
+registry id through natively. Patch 4 therefore shrinks to ONE step: supply
+window.RASource from the AUM projection. No create-dialog patch is needed.
 
 Like their build.sh (plain concatenation) but:
   · DROPS  lib/supabase.min.js + config.js + db.supabase.js  (no Supabase)
@@ -120,31 +120,20 @@ app = patch(app,
 });""",
     'auth: DOMContentLoaded → boot directly (no module gate)')
 
-# ── 4a. Navigator seam → AUM: the intern sources render per-cell source rows
-#      and the create-time combobox through window.NavigatorSource. Supply it
-#      from the AUM projection (READ-ONLY: values come from aumIndex/aumValue;
-#      nothing is ever written back to AUM). To disable per-cell AUM rows and
-#      keep create-time prefill only, change value to ()=>null.
+# ── 4. RA source seam → AUM: the intern sources render per-cell source rows
+#      and the create-time combobox through window.RASource, and pass the
+#      picked id into createProperty(name, raMasterId) natively. Supply the
+#      provider from the AUM projection (READ-ONLY — values come from
+#      aumIndex/aumValue; nothing is ever written back to AUM). To disable the
+#      per-cell AUM rows and keep create-time prefill only, set value:()=>null.
 app = patch(app,
     "mpdb=await makeCosmosDb();",
     """mpdb=await makeCosmosDb();
-  window.NavigatorSource={
+  window.RASource={
     listProperties:()=>mpdb.aumIndex().map(a=>({id:a.raid,name:a.name})),
     value:(k)=>{const a=mpdb.getActive();return (a&&a.pid)?mpdb.aumValue(a.pid,k):null;},
   };""",
-    'nav seam: NavigatorSource from AUM')
-
-# ── 4b. create dialog: pass the picked AUM id through (the combobox itself is
-#      now upstream code; the intern left the picked id captured but unused).
-app = patch(app,
-    """  el('dlgOk').onclick=()=>{const v=(el('dlgIn').value||'').trim();closeModal();const r=mpdb.createProperty(v);
-    /* pickedId = Navigator property id (spec \\u00a72) \\u2014 persisting it needs the
-       navigator_property_id column; unused until the integration lands. */
-    void pickedId;openLauncher(r.pid);};""",
-    """  el('dlgOk').onclick=()=>{const v=(el('dlgIn').value||'').trim();closeModal();const r=mpdb.createProperty(v,pickedId);
-    if(pickedId)setStatus('Prefilled from AUM ('+pickedId+') \u2014 address, entity, and CA are from the master registry; your edits here stay in the RCS record only.');
-    openLauncher(r.pid);};""",
-    'create: pass AUM id + prefill notice')
+    'ra seam: RASource from AUM')
 
 # ── assemble ────────────────────────────────────────────────────────────────
 parts = [

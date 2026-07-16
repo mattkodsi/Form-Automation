@@ -45,7 +45,7 @@ const ALL_KEYS=Object.keys(SEED).map(k=>({key:k}));
 let mpdb=null, activePid=null;
 const bridge={getDb:async()=>mpdb?mpdb.getFlat(activePid):{},saveDb:async(m)=>mpdb.saveFlat(activePid,m),clearDb:async()=>{}};
 const store=makeStore(bridge,ALL_KEYS);
-let form=store.emptyForm(); let UNITS=[0]; let NONREV=[]; let LIHTC=[]; let _undoStack=[]; let _undoNR=[]; let _undoLI=[]; let _pending=null,_refocusSel=null,_pendingSnap=null; let _rcsUpload=null;
+let form=store.emptyForm(); let UNITS=[0]; let NONREV=[]; let NS8=[]; let _undoStack=[]; let _undoNR=[]; let _undoLI=[]; let _pending=null,_refocusSel=null,_pendingSnap=null; let _rcsUpload=null;
 
 const CLR={database:['#2563eb','#e8f0fe','On file'],'this-cycle':['#0f766e','#e9f5f2','API / this cycle'],overridden:['#b45309','#fbf1e6','Overridden'],'auto-calculated':['#2563eb','#e8f0fe','Auto-calc'],'new':['#64748b','#f6f7f9','New']};
 const TODAY=new Date().toISOString().slice(0,10);
@@ -71,7 +71,7 @@ async function refreshSnap(){DBSNAP=await bridge.getDb();}
 function modeOf(kk){const keys=Array.isArray(kk)?kk:[kk];if(keys.some(k=>srcOf(k)==='overridden'))return 'over';if(keys.some(k=>srcOf(k)==='new'&&get(k)!==''&&get(k)!=null))return 'new';return '';}
 function ovIcons(kk){const keys=Array.isArray(kk)?kk:[kk];const j=keys.join(',');const m=modeOf(keys);return `<span class="ovic" data-ovic="${j}" data-mode="${m}" style="display:${m?'inline-flex':'none'}"><button class="miniic rv" data-rev="${j}" title="Revert to on-file">↺</button><button class="miniic sv" data-save1="${j}" title="Save this field to the database">✓</button></span>`;}
 
-function deriveUnits(){const u=new Set([0]),nr=new Set(),lh=new Set();Object.keys(form).forEach(k=>{let m=k.match(/^units\.(\d+)\./);if(m)u.add(+m[1]);m=k.match(/^nonrev\.(\d+)\./);if(m)nr.add(+m[1]);m=k.match(/^lihtc\.(\d+)\./);if(m)lh.add(+m[1]);});UNITS=[...u].sort((a,b)=>a-b);NONREV=[...nr].sort((a,b)=>a-b);LIHTC=[...lh].sort((a,b)=>a-b);}
+function deriveUnits(){const u=new Set([0]),nr=new Set(),lh=new Set();Object.keys(form).forEach(k=>{let m=k.match(/^units\.(\d+)\./);if(m)u.add(+m[1]);m=k.match(/^nonrev\.(\d+)\./);if(m)nr.add(+m[1]);m=k.match(/^ns8\.(\d+)\./);if(m)lh.add(+m[1]);});UNITS=[...u].sort((a,b)=>a-b);NONREV=[...nr].sort((a,b)=>a-b);NS8=[...lh].sort((a,b)=>a-b);}
 
 function defUaSrc(i){const e=numf(get('units.'+i+'.ua_exec')),r=numf(get('units.'+i+'.ua_rcs'));return e>0?'exec':(r>0?'rcs':'custom');}
 function defSafmrSrc(i){const h=numf(get('units.'+i+'.safmr_hud')),r=numf(get('units.'+i+'.safmr_rcs'));return h>0?'hud':(r>0?'rcs':'custom');}
@@ -105,8 +105,8 @@ function dateEffCell(){const rs=get('rent_schedule.date_eff_rs');const src=get('
 function pocSelectContact(ct){form=store.editForm(form,'poc.name',ct.name||'');form=store.editForm(form,'poc.email',ct.email||'');form=store.editForm(form,'poc.phone',fmtPhone(ct.phone||''));}
 function pocNote(){const m=modeOf('poc.name');return `<div class="ovnote" data-ov="poc.name" data-mode="${m}" style="display:${m?'flex':'none'}"><span class="om-over">changed from stored record</span><span class="om-new">new — not saved yet</span><button class="revert" data-rev="poc.name,poc.email,poc.phone">↺ revert</button><button class="save1" data-save1="poc.name,poc.email,poc.phone">✓ save this field</button></div>`;}
 function pocCell(){const k='poc.name';const contacts=(mpdb?mpdb.listContacts():[]);const cur=get(k);const c=CLR[srcOf(k)]||CLR.new;
-  const nvp=navVal('poc.name');
-  const navRow=(nvp?'<div class="uaopt" data-pocnav="1">'+esc(nvp)+'<span class="uasub">Navigator</span></div>':'<div class="uaopt navdim">\u2014<span class="uasub">Navigator \u00b7 not available</span></div>')+'<div class="uaopt navdim">\u2014<span class="uasub">RCS report \u00b7 not available</span></div>';
+  const nvp=raVal('poc.name');
+  const navRow=(nvp?'<div class="uaopt" data-pocra="1">'+esc(nvp)+'<span class="uasub">Related Affordable</span></div>':'<div class="uaopt srcdim">\u2014<span class="uasub">Related Affordable \u00b7 not available</span></div>')+'<div class="uaopt srcdim">\u2014<span class="uasub">RCS report \u00b7 not available</span></div>';
   const menu='<div class="uamenu">'+navRow+contacts.map(ct=>'<div class="uaopt" data-pocopt="'+esc(ct.id)+'">'+esc(ct.name)+(ct.email?'<span class="uasub">'+esc(ct.email)+'</span>':'')+'</div>').join('')+'</div>';
   const pick='<div class="uadrop pocpick"><div class="uatrigger" tabindex="0" title="Pick a saved contact"><span class="cvx">&#9662;</span></div>'+menu+'</div>';
   return `<div class="field"><div class="flabel">Point of contact</div><div class="fbox poccell" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><input class="pocname-in" data-k="poc.name" value="${esc(cur)}" placeholder="Type a name, or pick a saved contact" autocomplete="off">${pick}</div>${pocNote()}</div>`;}
@@ -133,16 +133,16 @@ function dirNote(fk){const P=DIR_PICK[fk];const m=modeOf(P.modeKeys);const j=P.k
 function dirCell(f){const k=f.k;const P=DIR_PICK[k];const list=dirList(P.kind);const cur=get(k);
   const st=f.prefix?baseSrc([f.prefix,f.k]):srcOf(k);const c=CLR[st]||CLR.new;const nameTint=(f.prefix&&partHot(k))?tintStyle(k):'';
   const pre=f.prefix?csDrop(f.prefix,['Ms.','Mr.','Dr.','Mx.'],'\u2014','csnarrow',true,partHot(f.prefix)?tintStyle(f.prefix):''):'';
-  const srcRow=DIR_SRCROW[k]?('<div class="uaopt navdim">\u2014<span class="uasub">'+esc(DIR_SRCROW[k])+' \u00b7 not available</span></div>'):'';
+  const srcRow=DIR_SRCROW[k]?('<div class="uaopt srcdim">\u2014<span class="uasub">'+esc(DIR_SRCROW[k])+' \u00b7 not available</span></div>'):'';
   const menu='<div class="uamenu">'+srcRow+list.map(ct=>{const s=P.sub(ct);return '<div class="uaopt" data-dirid="'+esc(ct.id)+'" data-dirfor="'+k+'">'+esc(ct.name)+(s?'<span class="uasub">'+esc(s)+'</span>':'')+'</div>';}).join('')+'</div>';
   const pick=(srcRow||list.length)?('<div class="uadrop pocpick"><div class="uatrigger" tabindex="0" title="Pick a saved '+esc(P.one)+'"><span class="cvx">&#9662;</span></div>'+menu+'</div>'):'';
   return `<div class="field"><div class="flabel">${f.label}</div><div class="fbox poccell" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}">${pre}<input class="pocname-in" type="text" data-k="${k}" style="${nameTint}" value="${esc(cur)}" placeholder="Type a name, or pick a saved ${esc(P.one)}" autocomplete="off">${pick}</div>${dirNote(k)}</div>`;}
-/* ============ External-source dropdowns (Navigator / RS / RCS) ============
-   The UI layer of NAVIGATOR-SOURCING-SPEC.md: sourced options sit at the top
-   of each cell's dropdown in precedence order; a source with no data is a
-   dimmed "\u2014 \u00b7 not available" row, never an error.
-   No Navigator provider ships in this build. The Navigator integration plugs
-   in by setting window.NavigatorSource before boot:
+/* ====== External-source dropdowns (Related Affordable / RS / RCS) ======
+   Sourced options sit at the top of each cell's dropdown in precedence order;
+   a source with no data is a dimmed "\u2014 \u00b7 not available" row, never
+   an error. (Spec history: _archive/Kinley/NAVIGATOR-SOURCING-SPEC.md.)
+   No Related Affordable (RA) platform provider ships in this build. The RA
+   integration plugs in by setting window.RASource before boot:
      listProperties() -> [{id, name}]   portfolio for the New-property picker
      value(flatKey)   -> string|null    the active property's value for a form
                                         flat key (the spec \u00a73 cells)
@@ -151,56 +151,56 @@ function dirCell(f){const k=f.k;const P=DIR_PICK[k];const list=dirList(P.kind);c
    answer from that snapshot, and call renderBody() when fresh data lands.
    Executed-RS / RCS-report rows stay "not available" until document parsing
    lands (still a stub); they render now so all three sources light up
-   uniformly. The form never writes back to Navigator. */
-function navProps(){try{const p=window.NavigatorSource;const l=(p&&p.listProperties)?p.listProperties():[];return Array.isArray(l)?l:[];}catch(e){return [];}}
-function navVal(k){try{const p=window.NavigatorSource;const v=(p&&p.value)?p.value(k):null;return (v==null||v==='')?null:String(v);}catch(e){return null;}}
-function srcOptRow(attrs,val,tag){return val?('<div class="uaopt" '+attrs+'>'+val+'<span class="uasub">'+esc(tag)+'</span></div>'):('<div class="uaopt navdim">\u2014<span class="uasub">'+esc(tag)+' \u00b7 not available</span></div>');}
-function navPick(k,rows){
+   uniformly. The form never writes back to the RA platform. */
+function raProps(){try{const p=window.RASource;const l=(p&&p.listProperties)?p.listProperties():[];return Array.isArray(l)?l:[];}catch(e){return [];}}
+function raVal(k){try{const p=window.RASource;const v=(p&&p.value)?p.value(k):null;return (v==null||v==='')?null:String(v);}catch(e){return null;}}
+function srcOptRow(attrs,val,tag){return val?('<div class="uaopt" '+attrs+'>'+val+'<span class="uasub">'+esc(tag)+'</span></div>'):('<div class="uaopt srcdim">\u2014<span class="uasub">'+esc(tag)+' \u00b7 not available</span></div>');}
+function srcPick(k,rows){
   const menu='<div class="uamenu">'+rows.map(r=> r.val!=null
-    ?'<div class="uaopt" data-navk="'+k+'" data-navv="'+esc(r.val)+'" data-navtag="'+esc(r.tag)+'">'+esc(r.val)+'<span class="uasub">'+esc(r.tag)+'</span></div>'
-    :'<div class="uaopt navdim">\u2014<span class="uasub">'+esc(r.tag)+' \u00b7 not available</span></div>').join('')+'</div>';
+    ?'<div class="uaopt" data-srck="'+k+'" data-srcv="'+esc(r.val)+'" data-srctag="'+esc(r.tag)+'">'+esc(r.val)+'<span class="uasub">'+esc(r.tag)+'</span></div>'
+    :'<div class="uaopt srcdim">\u2014<span class="uasub">'+esc(r.tag)+' \u00b7 not available</span></div>').join('')+'</div>';
   return '<div class="uadrop pocpick"><div class="uatrigger" tabindex="0" title="Pull from a source"><span class="cvx">&#9662;</span></div>'+menu+'</div>';
 }
 /* Per-cell source rows in precedence order (spec \u00a73). val:null renders dim. */
-const NAVPICK_ROWS={
- 'property.name':()=>[{tag:'Navigator',val:navVal('property.name')},{tag:'RCS report',val:null}],
- 'property.fha':()=>[{tag:'Executed RS',val:null},{tag:'Navigator',val:navVal('property.fha')},{tag:'RCS report',val:null}],
- 'owner.entity_name':()=>[{tag:'Executed RS',val:null},{tag:'Navigator',val:navVal('owner.entity_name')}],
+const SRCPICK_ROWS={
+ 'property.name':()=>[{tag:'Related Affordable',val:raVal('property.name')},{tag:'RCS report',val:null}],
+ 'property.fha':()=>[{tag:'Executed RS',val:null},{tag:'Related Affordable',val:raVal('property.fha')},{tag:'RCS report',val:null}],
+ 'owner.entity_name':()=>[{tag:'Executed RS',val:null},{tag:'Related Affordable',val:raVal('owner.entity_name')}],
  'owner.gp':()=>[{tag:'Executed RS',val:null}],
  'sig.title':()=>[{tag:'Executed RS',val:null}],
  'appr.firm':()=>[{tag:'RCS report',val:null}],
  'appr.email':()=>[{tag:'RCS report',val:null}],
  'appr.phone':()=>[{tag:'RCS report',val:null}],
- 'tenant.sender_name':()=>[{tag:'Navigator',val:navVal('tenant.sender_name')}],
+ 'tenant.sender_name':()=>[{tag:'Related Affordable',val:raVal('tenant.sender_name')}],
 };
 /* Address groups: one dropdown pulls the whole street/city/state/zip group. */
-const NAVGROUP={
- 'property.addr':()=>{const st=navVal('property.addr_street'),ci=navVal('property.addr_city'),sa=navVal('property.addr_state'),zp=navVal('property.addr_zip');
-   return [{tag:'Navigator',apply:(st||ci||sa||zp)?{'property.addr_street':st||'','property.addr_city':ci||'','property.addr_state':sa||'','property.addr_zip':zp||''}:null},{tag:'RCS report',apply:null}];},
+const SRCGROUP={
+ 'property.addr':()=>{const st=raVal('property.addr_street'),ci=raVal('property.addr_city'),sa=raVal('property.addr_state'),zp=raVal('property.addr_zip');
+   return [{tag:'Related Affordable',apply:(st||ci||sa||zp)?{'property.addr_street':st||'','property.addr_city':ci||'','property.addr_state':sa||'','property.addr_zip':zp||''}:null},{tag:'RCS report',apply:null}];},
  'appr.addr':()=>[{tag:'RCS report',apply:null}],
 };
-function navGroupPick(box){const rows=NAVGROUP[box]().map((r,ix)=> r.apply
-  ?'<div class="uaopt" data-navgrp="'+box+'" data-navgix="'+ix+'">'+esc(r.apply[Object.keys(r.apply)[0]])+'\u2026<span class="uasub">'+esc(r.tag)+'</span></div>'
-  :'<div class="uaopt navdim">\u2014<span class="uasub">'+esc(r.tag)+' \u00b7 not available</span></div>').join('');
+function srcGroupPick(box){const rows=SRCGROUP[box]().map((r,ix)=> r.apply
+  ?'<div class="uaopt" data-srcgrp="'+box+'" data-srcgix="'+ix+'">'+esc(r.apply[Object.keys(r.apply)[0]])+'\u2026<span class="uasub">'+esc(r.tag)+'</span></div>'
+  :'<div class="uaopt srcdim">\u2014<span class="uasub">'+esc(r.tag)+' \u00b7 not available</span></div>').join('');
   return '<div class="uadrop pocpick"><div class="uatrigger" tabindex="0" title="Pull from a source"><span class="cvx">&#9662;</span></div><div class="uamenu">'+rows+'</div></div>';}
 /* Dim source rows atop the existing contact-picker menus (spec \u00a73 notes). */
 const DIR_SRCROW={'appr.name':'RCS report','sig.name':'Executed RS'};
 function moneySrcTag(k){if(/^units\.\d+\.current$/.test(k))return 'Executed RS';if(/^units\.\d+\.proposed$/.test(k))return 'RCS report';if(/^nonrev\.\d+\.rent$/.test(k))return 'Executed RS';return null;}
-function dimPick(tag){return '<div class="uadrop pocpick"><div class="uatrigger" tabindex="0" title="Source"><span class="cvx">&#9662;</span></div><div class="uamenu"><div class="uaopt navdim">\u2014<span class="uasub">'+esc(tag)+' \u00b7 not available</span></div></div></div>';}
+function dimPick(tag){return '<div class="uadrop pocpick"><div class="uatrigger" tabindex="0" title="Source"><span class="cvx">&#9662;</span></div><div class="uamenu"><div class="uaopt srcdim">\u2014<span class="uasub">'+esc(tag)+' \u00b7 not available</span></div></div></div>';}
 /* ================== end external-source dropdowns ================== */
 function fieldCell(f){if(f.type==='addr')return addrCell();if(f.type==='caaddr')return caAddrCell();if(f.type==='appraddr')return apprAddrCell();if(f.type==='mgmtaddr')return mgmtCell();if(f.type==='select')return selectCell(f);if(f.k==='poc.name')return pocCell();if(DIR_PICK[f.k])return dirCell(f);
   const s=form[f.k]||{value:'',source:'new'};
   const st=f.prefix?baseSrc([f.prefix,f.k]):s.source;const c=CLR[st]||CLR.new;
   const pre=f.prefix?csDrop(f.prefix,['Ms.','Mr.','Dr.','Mx.'],'—','csnarrow',true,partHot(f.prefix)?tintStyle(f.prefix):''):'';
-  return `<div class="field"><div class="flabel">${f.label}</div><div class="fbox" data-box="${f.k}" style="background:${c[1]};border-left-color:${c[0]}">${pre}<input type="text" data-k="${f.k}" style="${f.prefix&&partHot(f.k)?tintStyle(f.k):''}"${f.type==='phone'?' data-phone="1" inputmode="tel" maxlength="14"':''} value="${esc(s.value)}" autocomplete="off">${NAVPICK_ROWS[f.k]?navPick(f.k,NAVPICK_ROWS[f.k]()):''}</div>${ovNote(f.prefix?[f.prefix,f.k]:f.k)}</div>`;}
+  return `<div class="field"><div class="flabel">${f.label}</div><div class="fbox" data-box="${f.k}" style="background:${c[1]};border-left-color:${c[0]}">${pre}<input type="text" data-k="${f.k}" style="${f.prefix&&partHot(f.k)?tintStyle(f.k):''}"${f.type==='phone'?' data-phone="1" inputmode="tel" maxlength="14"':''} value="${esc(s.value)}" autocomplete="off">${SRCPICK_ROWS[f.k]?srcPick(f.k,SRCPICK_ROWS[f.k]()):''}</div>${ovNote(f.prefix?[f.prefix,f.k]:f.k)}</div>`;}
 function addrCell(){return compAddrCell(ADDR,'property.addr','Address');}
 function caAddrCell(){return compAddrCell(CA_ADDR,'ca.addr','CA address');}
 function apprAddrCell(){return compAddrCell(APPR_ADDR,'appr.addr','Appraiser address');}
 function selectCell(f){const c=CLR[srcOf(f.k)]||CLR.new;let dd=csDrop(f.k,f.opts,f.ph||'Select…');
-  if(f.k==='owner.entity_type'){const nv=navVal('owner.entity_type');
-    const navRows='<div class="uaopt navdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>'
-      +(nv?'<div class="uaopt" data-cskey="owner.entity_type" data-csopt="'+esc(nv)+'">'+esc(nv)+'<span class="uasub">Navigator</span></div>'
-          :'<div class="uaopt navdim">\u2014<span class="uasub">Navigator \u00b7 not available</span></div>');
+  if(f.k==='owner.entity_type'){const nv=raVal('owner.entity_type');
+    const navRows='<div class="uaopt srcdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>'
+      +(nv?'<div class="uaopt" data-cskey="owner.entity_type" data-csopt="'+esc(nv)+'">'+esc(nv)+'<span class="uasub">Related Affordable</span></div>'
+          :'<div class="uaopt srcdim">\u2014<span class="uasub">Related Affordable \u00b7 not available</span></div>');
     dd=dd.replace('<div class="uamenu">','<div class="uamenu">'+navRows);}
   return `<div class="field"><div class="flabel">${f.label}</div><div class="fbox seldrop" data-box="${f.k}" style="background:${c[1]};border-left-color:${c[0]}">${dd}${ovIcons(f.k)}</div>${ovNote(f.k)}</div>`;}
 function compAddrCell(keys,box,label){const a=baseSrc(keys);const c=CLR[a]||CLR.new;const ti=k=>partHot(k)?(';'+tintStyle(k)):'';
@@ -208,7 +208,7 @@ function compAddrCell(keys,box,label){const a=baseSrc(keys);const c=CLR[a]||CLR.
      <input type="text" data-k="${keys[0]}" value="${esc(get(keys[0]))}" placeholder="Street" style="flex:2.2${ti(keys[0])}"><span class="adiv"></span>
      <input type="text" data-k="${keys[1]}" value="${esc(get(keys[1]))}" placeholder="City" style="flex:1.3${ti(keys[1])}"><span class="adiv"></span>
      ${csDrop(keys[2],STATES,'ST','csnarrow',false,partHot(keys[2])?tintStyle(keys[2]):'')}<span class="adiv"></span>
-     <input type="text" data-k="${keys[3]}" value="${esc(get(keys[3]))}" placeholder="ZIP" style="width:64px${ti(keys[3])}">${NAVGROUP[box]?navGroupPick(box):''}</div>
+     <input type="text" data-k="${keys[3]}" value="${esc(get(keys[3]))}" placeholder="ZIP" style="width:64px${ti(keys[3])}">${SRCGROUP[box]?srcGroupPick(box):''}</div>
    ${ovNoteAddr(box)}</div>`;}
 function mgmtCell(){const src=get('tenant.mgmt_source')||'property';const propHas=ADDR.some(k=>get(k)!=='');
   if(src==='custom'){const a=baseSrc(MGMT_ADDR);const c=CLR[a]||CLR.new;const ti=k=>partHot(k)?(';'+tintStyle(k)):'';
@@ -271,7 +271,7 @@ function safmrNote(i){const res=safmrResolvedOf(i),hud=numf(get('units.'+i+'.saf
    Part D, which holds 5. Warn whenever a generated document would trim data. */
 function rsCapacity(){
   const R=UNITS.filter(i=>numf(get('units.'+i+'.num_units'))||numf(get('units.'+i+'.proposed'))||get('units.'+i+'.br')||get('units.'+i+'.ba')).length;
-  const L=get('lihtc.enabled')==='1'?LIHTC.filter(i=>get('lihtc.'+i+'.br')||get('lihtc.'+i+'.ba')||get('lihtc.'+i+'.avg_rent')||numf(get('lihtc.'+i+'.num_units'))>0).length:0;
+  const L=get('ns8.enabled')==='1'?NS8.filter(i=>get('ns8.'+i+'.br')||get('ns8.'+i+'.ba')||get('ns8.'+i+'.avg_rent')||numf(get('ns8.'+i+'.num_units'))>0).length:0;
   const N=NONREV.filter(i=>get('nonrev.'+i+'.use')||get('nonrev.'+i+'.br')||get('nonrev.'+i+'.ba')||get('nonrev.'+i+'.rent')||numf(get('nonrev.'+i+'.num_units'))>0).length;
   const cut=Math.max(0,R+(L?1+L:0)-11);
   const nrOver=Math.max(0,N-5);
@@ -293,17 +293,17 @@ function unitCard(i,pos){const trash=UNITS.length>1?`<button class="trash" data-
 function renderRents(){
   const cards=UNITS.map((i,pos)=>unitCard(i,pos)).join('');
   const nrOn=get('nonrev.enabled')==='1'||NONREV.length>0;
-  let pd=`<div class="pdhead"><label class="lihtcflag"><input type="checkbox" id="nonrevToggle"${nrOn?' checked':''}><span>This property has non-revenue units (Part D)</span></label>${nrOn?' <span class="sub">from the prior rent schedule — model / manager’s unit, etc.; excluded from rent totals</span>':''}</div>`;
+  let pd=`<div class="pdhead"><label class="ns8flag"><input type="checkbox" id="nonrevToggle"${nrOn?' checked':''}><span>This property has non-revenue units (Part D)</span></label>${nrOn?' <span class="sub">from the prior rent schedule — model / manager’s unit, etc.; excluded from rent totals</span>':''}</div>`;
   if(nrOn){
     if(NONREV.length)pd+=`<div class="rgh"><span style="grid-column:1">Unit type</span><span style="grid-column:2">Units</span><span style="grid-column:3">Contract rent</span><span style="grid-column:4/6">Use</span></div>`+NONREV.map(i=>`<div class="pdrow"><div style="grid-column:1">${brbaBox('nonrev.'+i+'.br','nonrev.'+i+'.ba')}</div><div style="grid-column:2">${numBox('nonrev.'+i+'.num_units','')}</div><div style="grid-column:3">${moneyBox('nonrev.'+i+'.rent')}</div><div style="grid-column:4/6">${numBox('nonrev.'+i+'.use',"e.g. Manager’s unit")}</div><div class="urx" style="grid-column:7"><button class="trash" data-delnonrev="${i}" title="Delete">✕</button></div></div>`).join('');
     pd+=`<div class="addrow" id="addNonrev">+ Add non-revenue unit</div>`;
   }
   pd+=undoBits('NR');
-  const lhOn=get('lihtc.enabled')==='1';
-  let lh=`<div class="pdhead"><label class="lihtcflag"><input type="checkbox" id="lihtcToggle"${lhOn?' checked':''}><span>This property has non-Section 8 revenue producing units</span></label>${lhOn?' <span class="sub">listed on the rent schedule as unit type + average unit rent</span>':''}</div>`;
+  const lhOn=get('ns8.enabled')==='1';
+  let lh=`<div class="pdhead"><label class="ns8flag"><input type="checkbox" id="ns8Toggle"${lhOn?' checked':''}><span>This property has non-Section 8 revenue producing units</span></label>${lhOn?' <span class="sub">listed on the rent schedule as unit type + average unit rent</span>':''}</div>`;
   if(lhOn){
-    if(LIHTC.length)lh+=`<div class="rgh"><span style="grid-column:1">Unit type</span><span style="grid-column:2">Units</span><span style="grid-column:3">Average unit rent</span></div>`+LIHTC.map(i=>`<div class="pdrow"><div style="grid-column:1">${brbaBox('lihtc.'+i+'.br','lihtc.'+i+'.ba')}</div><div style="grid-column:2">${numBox('lihtc.'+i+'.num_units','')}</div><div style="grid-column:3">${moneyBox('lihtc.'+i+'.avg_rent')}</div><div class="urx" style="grid-column:7"><button class="trash" data-dellihtc="${i}" title="Delete">✕</button></div></div>`).join('');
-    lh+=`<div class="addrow" id="addLihtc">+ Add non-Section 8 unit type</div>`;
+    if(NS8.length)lh+=`<div class="rgh"><span style="grid-column:1">Unit type</span><span style="grid-column:2">Units</span><span style="grid-column:3">Average unit rent</span></div>`+NS8.map(i=>`<div class="pdrow"><div style="grid-column:1">${brbaBox('ns8.'+i+'.br','ns8.'+i+'.ba')}</div><div style="grid-column:2">${numBox('ns8.'+i+'.num_units','')}</div><div style="grid-column:3">${moneyBox('ns8.'+i+'.avg_rent')}</div><div class="urx" style="grid-column:7"><button class="trash" data-delns8="${i}" title="Delete">✕</button></div></div>`).join('');
+    lh+=`<div class="addrow" id="addNs8">+ Add non-Section 8 unit type</div>`;
   }
   lh+=undoBits('LI');
   const rgHead='<div class="rgh"><span>Unit type</span><span>Units</span><span>Current rent</span><span>Proposed rent</span><span>Utility allowance</span><span class="safmrhead">150% SAFMR<button class="urev hudbtn" id="pullSafmr" title="Re-pull 150% ceilings from HUD for this property’s ZIP">⤓ HUD</button></span><span></span></div>';
@@ -350,7 +350,7 @@ async function ensureHudSafmr(opts){opts=opts||{};const manual=!!opts.manual;
   finally{const b=el('pullSafmr');if(b)b.disabled=false;}
 }
 
-function undoBits(fam){const st=fam==='LI'?_undoLI:_undoNR;if(!st.length)return '';const id=fam==='LI'?'undoLihtc':'undoNonrev';return ' <span class="addrow ghostlink" id="'+id+'">↩ Undo delete'+(st.length>1?(' ('+st.length+')'):'')+'</span><button class="undocommit" id="'+id+'C" title="Keep deletions — dismiss undo">✓</button>';}
+function undoBits(fam){const st=fam==='LI'?_undoLI:_undoNR;if(!st.length)return '';const id=fam==='LI'?'undoNs8':'undoNonrev';return ' <span class="addrow ghostlink" id="'+id+'">↩ Undo delete'+(st.length>1?(' ('+st.length+')'):'')+'</span><button class="undocommit" id="'+id+'C" title="Keep deletions — dismiss undo">✓</button>';}
 function provColor(k){return (CLR[srcOf(k)]||CLR.new)[0];}
 function boxStyle(k){const c=CLR[srcOf(k)]||CLR.new;return 'color:'+c[0]+';border-color:'+c[0]+';background:'+c[1];}
 function fuelChip(k,three){const v=get(k);const has=v!==''&&v!=null;const c=CLR[has?srcOf(k):'new']||CLR.new;const cls=three?'fuel3':'fuel';return '<span class="'+cls+(has?'':' empty')+'" data-fuel'+(three?'3':'')+'="'+k+'" style="color:'+c[0]+';border-color:'+c[0]+';background:'+c[1]+'">'+(has?esc(v):'-')+'</span>';}
@@ -496,28 +496,28 @@ function wireBody(){
   document.querySelectorAll('[data-num]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();const i=b.getAttribute('data-ci'),w=b.getAttribute('data-num');if(w==='rcs'){const nR=get('units.'+i+'.num_rcs');if(nR)form=store.editForm(form,'units.'+i+'.num_units',nR);}form=store.editForm(form,'units.'+i+'.num_reviewed','1');renderBody();setStatus('Units resolved — using '+(w==='rcs'?'RCS':'RS')+'.');}));
   document.querySelectorAll('.uac-in,.mgmt-in').forEach(inp=>{inp.addEventListener('mousedown',e=>e.stopPropagation());inp.addEventListener('click',e=>e.stopPropagation());});
   document.querySelectorAll('.srcedit').forEach(inp=>{inp.addEventListener('input',()=>{const fam=inp.getAttribute('data-srcedit'),i=inp.getAttribute('data-si');let key,val;if(fam==='dateeff'){val=fmtDateInput(inp.value);form=store.editForm(form,'rent_schedule.date_eff_source','custom');form=store.editForm(form,'rent_schedule.date_eff_custom',val);key='rent_schedule.date_eff_custom';scheduleHudRefresh();}else{val=cleanNum(inp.value);form=store.editForm(form,'units.'+i+'.'+fam+'_source','custom');form=store.editForm(form,'units.'+i+'.'+fam+'_custom',val);key='units.'+i+'.'+fam+'_custom';}renderBody();const ni=document.querySelector('[data-k="'+key+'"]');if(ni){ni.focus({preventScroll:true});try{const L=(ni.value||'').length;ni.setSelectionRange(L,L);}catch(e){}}});});
-  document.querySelectorAll('[data-navk]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();const k=o.getAttribute('data-navk');_pendingSnap=snapOf([k]);form=store.editForm(form,k,o.getAttribute('data-navv'));if(form[k])form[k].source='this-cycle';_pending=[k];_refocusSel='[data-k="'+k+'"]';renderBody();setStatus('Pulled from '+(o.getAttribute('data-navtag')||'source')+'.');}));
-  document.querySelectorAll('[data-navgrp]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();const box=o.getAttribute('data-navgrp');const r=NAVGROUP[box]()[+o.getAttribute('data-navgix')];if(!r||!r.apply)return;const keys=Object.keys(r.apply);_pendingSnap=snapOf(keys);keys.forEach(k=>{form=store.editForm(form,k,r.apply[k]);if(form[k])form[k].source='this-cycle';});_pending=keys.slice();_refocusSel='[data-box="'+box+'"] input';renderBody();setStatus('Address pulled from '+r.tag+'.');}));
-  document.querySelectorAll('[data-pocnav]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();const nm=navVal('poc.name');if(!nm)return;const saved=(mpdb?mpdb.listContacts():[]).find(x=>((x.name||'').trim().toLowerCase()===nm.trim().toLowerCase()));const c={name:nm,email:navVal('poc.email')||(saved&&saved.email)||'',phone:navVal('poc.phone')||(saved&&saved.phone)||''};_pendingSnap=snapOf(['poc.name','poc.email','poc.phone']);pocSelectContact(c);['poc.name','poc.email','poc.phone'].forEach(k=>{if(form[k])form[k].source='this-cycle';});_pending=['poc.name','poc.email','poc.phone'];_refocusSel='[data-box="poc.name"] .pocname-in';renderBody();setStatus('POC pulled from Navigator.');}));
+  document.querySelectorAll('[data-srck]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();const k=o.getAttribute('data-srck');_pendingSnap=snapOf([k]);form=store.editForm(form,k,o.getAttribute('data-srcv'));if(form[k])form[k].source='this-cycle';_pending=[k];_refocusSel='[data-k="'+k+'"]';renderBody();setStatus('Pulled from '+(o.getAttribute('data-srctag')||'source')+'.');}));
+  document.querySelectorAll('[data-srcgrp]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();const box=o.getAttribute('data-srcgrp');const r=SRCGROUP[box]()[+o.getAttribute('data-srcgix')];if(!r||!r.apply)return;const keys=Object.keys(r.apply);_pendingSnap=snapOf(keys);keys.forEach(k=>{form=store.editForm(form,k,r.apply[k]);if(form[k])form[k].source='this-cycle';});_pending=keys.slice();_refocusSel='[data-box="'+box+'"] input';renderBody();setStatus('Address pulled from '+r.tag+'.');}));
+  document.querySelectorAll('[data-pocra]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();const nm=raVal('poc.name');if(!nm)return;const saved=(mpdb?mpdb.listContacts():[]).find(x=>((x.name||'').trim().toLowerCase()===nm.trim().toLowerCase()));const c={name:nm,email:raVal('poc.email')||(saved&&saved.email)||'',phone:raVal('poc.phone')||(saved&&saved.phone)||''};_pendingSnap=snapOf(['poc.name','poc.email','poc.phone']);pocSelectContact(c);['poc.name','poc.email','poc.phone'].forEach(k=>{if(form[k])form[k].source='this-cycle';});_pending=['poc.name','poc.email','poc.phone'];_refocusSel='[data-box="poc.name"] .pocname-in';renderBody();setStatus('POC pulled from Related Affordable.');}));
   document.querySelectorAll('[data-pocopt]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();const ct=mpdb.listContacts().find(x=>x.id===o.getAttribute('data-pocopt'));_pendingSnap=snapOf(['poc.name','poc.email','poc.phone']);if(ct)pocSelectContact(ct);_pending=['poc.name','poc.email','poc.phone'];_refocusSel='[data-box="poc.name"] .pocname-in';renderBody();}));
   document.querySelectorAll('[data-dirid]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();const fk=o.getAttribute('data-dirfor');const P=DIR_PICK[fk];const ct=dirList(P.kind).find(x=>x.id===o.getAttribute('data-dirid'));_pendingSnap=snapOf(P.keys);if(ct)P.apply(ct);_pending=P.keys.slice();_refocusSel='[data-box="'+fk+'"] .pocname-in';renderBody();}));
   document.querySelectorAll('[data-deffopt]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();_pendingSnap=snapOf(['rent_schedule.date_eff_source']);form=store.editForm(form,'rent_schedule.date_eff_source',o.getAttribute('data-deffopt'));_pending=['rent_schedule.date_eff_source'];_refocusSel='[data-box="rent_schedule.date_eff_source"] .uatrigger';renderBody();scheduleHudRefresh();}));
   document.querySelectorAll('[data-delunit]').forEach(b=>b.addEventListener('click',()=>{const i=+b.getAttribute('data-delunit');const wasEmpty=!unitHasData(i)&&numf(get('units.'+i+'.num_units'))<=0;const snap={};Object.keys(form).forEach(k=>{if(k.indexOf('units.'+i+'.')===0){snap[k]=form[k];delete form[k];}});UNITS=UNITS.filter(x=>x!==i);if(wasEmpty){renderBody();setStatus('Empty unit type removed.');}else{_undoStack.push({i,snap});renderBody();setStatus('Unit type deleted — undo available below.');}}));
   document.querySelectorAll('[data-delnonrev]').forEach(b=>b.addEventListener('click',()=>{const i=+b.getAttribute('data-delnonrev');const hadData=nonrevHasData(i)||numf(get('nonrev.'+i+'.num_units'))>0;const snap={};Object.keys(form).forEach(k=>{if(k.indexOf('nonrev.'+i+'.')===0){snap[k]=form[k];delete form[k];}});NONREV=NONREV.filter(x=>x!==i);const flagCell=form['nonrev.enabled'];if(!NONREV.length)form=store.editForm(form,'nonrev.enabled','');if(hadData){_undoNR.push({i,snap,flag:flagCell});renderBody();setStatus('Non-revenue unit deleted — undo available below.');}else{renderBody();setStatus(NONREV.length?'Empty non-revenue unit removed.':'Last non-revenue unit removed — Part D section turned off.');}}));
-  document.querySelectorAll('[data-dellihtc]').forEach(b=>b.addEventListener('click',()=>{const i=+b.getAttribute('data-dellihtc');const hadData=lihtcHasData(i)||numf(get('lihtc.'+i+'.num_units'))>0;const snap={};Object.keys(form).forEach(k=>{if(k.indexOf('lihtc.'+i+'.')===0){snap[k]=form[k];delete form[k];}});LIHTC=LIHTC.filter(x=>x!==i);const flagCell=form['lihtc.enabled'];if(!LIHTC.length)form=store.editForm(form,'lihtc.enabled','');if(hadData){_undoLI.push({i,snap,flag:flagCell});renderBody();setStatus('Non-Section 8 unit type deleted — undo available below.');}else{renderBody();setStatus(LIHTC.length?'Empty non-Section 8 unit type removed.':'Last non-Section 8 unit type removed — section turned off.');}}));
+  document.querySelectorAll('[data-delns8]').forEach(b=>b.addEventListener('click',()=>{const i=+b.getAttribute('data-delns8');const hadData=ns8HasData(i)||numf(get('ns8.'+i+'.num_units'))>0;const snap={};Object.keys(form).forEach(k=>{if(k.indexOf('ns8.'+i+'.')===0){snap[k]=form[k];delete form[k];}});NS8=NS8.filter(x=>x!==i);const flagCell=form['ns8.enabled'];if(!NS8.length)form=store.editForm(form,'ns8.enabled','');if(hadData){_undoLI.push({i,snap,flag:flagCell});renderBody();setStatus('Non-Section 8 unit type deleted — undo available below.');}else{renderBody();setStatus(NS8.length?'Empty non-Section 8 unit type removed.':'Last non-Section 8 unit type removed — section turned off.');}}));
   const add=el('addUnit');if(add)add.onclick=()=>{_undoStack=[];const nx=(UNITS.length?Math.max.apply(null,UNITS):-1)+1;form=store.editForm(form,'units.'+nx+'.br','');UNITS.push(nx);renderBody();setStatus('');};
   const addn=el('addNonrev');if(addn)addn.onclick=()=>{_undoNR=[];NONREV.push(NONREV.length?Math.max.apply(null,NONREV)+1:0);renderBody();setStatus('');};
   const nt=el('nonrevToggle');if(nt)nt.onchange=()=>{if(!nt.checked&&NONREV.length){nt.checked=true;setStatus('Delete the non-revenue rows first to turn this section off.');return;}form=store.editForm(form,'nonrev.enabled',nt.checked?'1':'');if(nt.checked&&!NONREV.length){_undoNR=[];NONREV=[0];}renderBody();setStatus('');};
-  const lt=el('lihtcToggle');if(lt)lt.onchange=()=>{
-    if(!lt.checked&&LIHTC.some(i=>numf(get('lihtc.'+i+'.num_units'))>0)){lt.checked=true;setStatus('Delete the non-Section 8 rows first to turn this section off.');return;}
-    if(!lt.checked&&LIHTC.some(lihtcHasData)){
+  const lt=el('ns8Toggle');if(lt)lt.onchange=()=>{
+    if(!lt.checked&&NS8.some(i=>numf(get('ns8.'+i+'.num_units'))>0)){lt.checked=true;setStatus('Delete the non-Section 8 rows first to turn this section off.');return;}
+    if(!lt.checked&&NS8.some(ns8HasData)){
       lt.checked=true;
-      dialogConfirm('Turn off non-Section 8 units?','The section still holds '+LIHTC.length+' row'+(LIHTC.length>1?'s':'')+' with values. Turned off, the rows are left out of every generated document, and your next \u201cUpdate database\u201d removes them for good \u2014 re-check the box before saving to bring them back.','Turn off',true,()=>{form=store.editForm(form,'lihtc.enabled','');renderBody();setStatus('Non-Section 8 units off \u2014 the hidden rows are removed on your next Update database.');});
+      dialogConfirm('Turn off non-Section 8 units?','The section still holds '+NS8.length+' row'+(NS8.length>1?'s':'')+' with values. Turned off, the rows are left out of every generated document, and your next \u201cUpdate database\u201d removes them for good \u2014 re-check the box before saving to bring them back.','Turn off',true,()=>{form=store.editForm(form,'ns8.enabled','');renderBody();setStatus('Non-Section 8 units off \u2014 the hidden rows are removed on your next Update database.');});
       return;}
-    form=store.editForm(form,'lihtc.enabled',lt.checked?'1':'');
-    if(lt.checked&&!LIHTC.length){_undoLI=[];form=store.editForm(form,'lihtc.0.br','');LIHTC=[0];}
+    form=store.editForm(form,'ns8.enabled',lt.checked?'1':'');
+    if(lt.checked&&!NS8.length){_undoLI=[];form=store.editForm(form,'ns8.0.br','');NS8=[0];}
     renderBody();setStatus(lt.checked?'Non-Section 8 units on — they print on the rent schedule between Section 8 revenue and non-revenue units.':'');};
-  const addl=el('addLihtc');if(addl)addl.onclick=()=>{_undoLI=[];const nx=(LIHTC.length?Math.max.apply(null,LIHTC):-1)+1;form=store.editForm(form,'lihtc.'+nx+'.br','');LIHTC.push(nx);renderBody();setStatus('');};
+  const addl=el('addNs8');if(addl)addl.onclick=()=>{_undoLI=[];const nx=(NS8.length?Math.max.apply(null,NS8):-1)+1;form=store.editForm(form,'ns8.'+nx+'.br','');NS8.push(nx);renderBody();setStatus('');};
   const phs=el('pullSafmr');if(phs)phs.onclick=()=>{ensureHudSafmr({manual:true});};
   const upR=el('upRcs');if(upR)upR.onclick=()=>{const f=el('rcsFile');if(f)f.click();};
   const rf=el('rcsFile');if(rf)rf.onchange=()=>{const f=rf.files&&rf.files[0];if(!f)return;
@@ -528,8 +528,8 @@ function wireBody(){
   const uc=el('undoCommit');if(uc)uc.onclick=()=>{_undoStack=[];renderBody();setStatus('Deletions kept.');};
   const un=el('undoNonrev');if(un)un.onclick=()=>{if(!_undoNR.length)return;const e=_undoNR.pop();Object.keys(e.snap).forEach(k=>{form[k]=e.snap[k];});if(e.flag)form['nonrev.enabled']=e.flag;else form=store.editForm(form,'nonrev.enabled','1');if(NONREV.indexOf(e.i)<0)NONREV.push(e.i);NONREV.sort((a,b)=>a-b);renderBody();setStatus('Non-revenue unit restored.');};
   const unc=el('undoNonrevC');if(unc)unc.onclick=()=>{_undoNR=[];renderBody();setStatus('Deletions kept.');};
-  const ul=el('undoLihtc');if(ul)ul.onclick=()=>{if(!_undoLI.length)return;const e=_undoLI.pop();Object.keys(e.snap).forEach(k=>{form[k]=e.snap[k];});if(e.flag)form['lihtc.enabled']=e.flag;else form=store.editForm(form,'lihtc.enabled','1');if(LIHTC.indexOf(e.i)<0)LIHTC.push(e.i);LIHTC.sort((a,b)=>a-b);renderBody();setStatus('Non-Section 8 unit type restored.');};
-  const ulc=el('undoLihtcC');if(ulc)ulc.onclick=()=>{_undoLI=[];renderBody();setStatus('Deletions kept.');};
+  const ul=el('undoNs8');if(ul)ul.onclick=()=>{if(!_undoLI.length)return;const e=_undoLI.pop();Object.keys(e.snap).forEach(k=>{form[k]=e.snap[k];});if(e.flag)form['ns8.enabled']=e.flag;else form=store.editForm(form,'ns8.enabled','1');if(NS8.indexOf(e.i)<0)NS8.push(e.i);NS8.sort((a,b)=>a-b);renderBody();setStatus('Non-Section 8 unit type restored.');};
+  const ulc=el('undoNs8C');if(ulc)ulc.onclick=()=>{_undoLI=[];renderBody();setStatus('Deletions kept.');};
   const all=el('clAll'),none=el('clNone');if(all)all.onclick=()=>{CHECKLIST_FLAT.forEach((_,j)=>form=store.editForm(form,'check.'+j,'1'));renderBody();};if(none)none.onclick=()=>{CHECKLIST_FLAT.forEach((_,j)=>form=store.editForm(form,'check.'+j,''));renderBody();};
   document.querySelectorAll('.chead').forEach(h=>h.addEventListener('click',()=>h.parentElement.classList.toggle('collapsed')));
   document.querySelectorAll('.miniic,.revert,.save1,.urev,.undocommit,.csclear').forEach(b=>b.setAttribute('tabindex','-1'));wireArrowNav();
@@ -589,28 +589,29 @@ function renderMenu(){
   const mc=el('mClear');if(mc)mc.onclick=()=>{if(el('menuSearch'))el('menuSearch').value='';renderMenu();};
 }
 function createProperty(){
-  const props=navProps();
+  const props=raProps();
   if(!props.length){dialogInput('New property','Property name','','Create',nm=>{const r=mpdb.createProperty((nm||'').trim());openLauncher(r.pid);});return;}
-  const rows=props.map(p=>'<div class="uaopt" data-navprop="'+esc(p.name)+'" data-navpid="'+esc(p.id==null?'':String(p.id))+'" style="padding:9px 12px;cursor:pointer">'+esc(p.name)+'<span class="uasub">Navigator</span></div>').join('');
-  modal('<div class="dlg-t">New property</div><div class="dlg-field"><label>Property name</label><input id="dlgIn" autocomplete="off" placeholder="Type a name, or pick from Navigator"></div>'
-    +'<div style="margin:10px 0 4px;font-size:11px;font-weight:700;letter-spacing:.4px;color:#8791a5">NAVIGATOR PROPERTIES \u2014 TYPE ABOVE TO FILTER</div>'
-    +'<div id="navList" style="max-height:200px;overflow:auto;border:1px solid #e0e5ee;border-radius:8px">'+rows+'</div>'
+  const rows=props.map(p=>'<div class="uaopt" data-raprop="'+esc(p.name)+'" data-rapid="'+esc(p.id==null?'':String(p.id))+'" style="padding:9px 12px;cursor:pointer">'+esc(p.name)+'<span class="uasub">Related Affordable</span></div>').join('');
+  modal('<div class="dlg-t">New property</div><div class="dlg-field"><label>Property name</label><input id="dlgIn" autocomplete="off" placeholder="Type a name, or pick a Related Affordable property"></div>'
+    +'<div style="margin:10px 0 4px;font-size:11px;font-weight:700;letter-spacing:.4px;color:#8791a5">RELATED AFFORDABLE PROPERTIES \u2014 TYPE ABOVE TO FILTER</div>'
+    +'<div id="srcList" style="max-height:200px;overflow:auto;border:1px solid #e0e5ee;border-radius:8px">'+rows+'</div>'
     +'<div class="dlg-row"><button class="btn" id="dlgCancel">Cancel</button><span class="dlg-sp"></span><button class="btn p" id="dlgOk">Create</button></div>');
-  const inp=el('dlgIn'),list=el('navList');let pickedId='';
+  const inp=el('dlgIn'),list=el('srcList');let pickedId='';
   const filter=()=>{const q=(inp.value||'').trim().toLowerCase();let vis=0;
     const score=n=>{const s=n.toLowerCase();if(!q)return 0;if(s.startsWith(q))return 0;if(s.split(/\s+/).some(w=>w.startsWith(q)))return 1;if(s.indexOf(q)>=0)return 2;return 3;};
-    const rows=[...list.querySelectorAll('[data-navprop]')];
-    rows.forEach(r=>{r._sc=score(r.getAttribute('data-navprop'));const on=r._sc<3;r.style.display=on?'':'none';if(on)vis++;});
-    rows.slice().sort((x,y)=>x._sc-y._sc||x.getAttribute('data-navprop').localeCompare(y.getAttribute('data-navprop'))).forEach(r=>list.appendChild(r));
+    const rows=[...list.querySelectorAll('[data-raprop]')];
+    rows.forEach(r=>{r._sc=score(r.getAttribute('data-raprop'));const on=r._sc<3;r.style.display=on?'':'none';if(on)vis++;});
+    rows.slice().sort((x,y)=>x._sc-y._sc||x.getAttribute('data-raprop').localeCompare(y.getAttribute('data-raprop'))).forEach(r=>list.appendChild(r));
     list.style.display=vis?'':'none';};
   inp.addEventListener('input',()=>{pickedId='';filter();});inp.focus();
-  list.querySelectorAll('[data-navprop]').forEach(r=>r.onclick=()=>{inp.value=r.getAttribute('data-navprop');pickedId=r.getAttribute('data-navpid')||'';filter();inp.focus();});
+  list.querySelectorAll('[data-raprop]').forEach(r=>r.onclick=()=>{inp.value=r.getAttribute('data-raprop');pickedId=r.getAttribute('data-rapid')||'';filter();inp.focus();});
   inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();el('dlgOk').click();}else if(e.key==='Escape')closeModal();});
   el('dlgCancel').onclick=closeModal;
-  el('dlgOk').onclick=()=>{const v=(el('dlgIn').value||'').trim();closeModal();const r=mpdb.createProperty(v);
-    /* pickedId = Navigator property id (spec \u00a72) \u2014 persisting it needs the
-       navigator_property_id column; unused until the integration lands. */
-    void pickedId;openLauncher(r.pid);};
+  el('dlgOk').onclick=()=>{const v=(el('dlgIn').value||'').trim();closeModal();
+    /* pickedId = the picked RA master-registry id. The Supabase adapter ignores
+       the 2nd arg today; the RA port's createProperty(name, raMasterId) uses it
+       for the read-only prefill. */
+    const r=mpdb.createProperty(v,pickedId);openLauncher(r.pid);};
 }
 
 /* ---- LAUNCHER: property summary + program picker --------------------- */
@@ -676,18 +677,18 @@ function makeRender(dataUrl,cb){try{const img=new Image();img.onload=()=>{
 
 /* ---- FORM: open the RCS form for the active property ----------------- */
 function nonrevHasData(i){return ['use','br','ba','rent'].some(s=>{const v=get('nonrev.'+i+'.'+s);return v!==''&&v!=null;});}
-function lihtcHasData(i){return ['br','ba','avg_rent'].some(s=>{const v=get('lihtc.'+i+'.'+s);return v!==''&&v!=null;});}
-function handleZeroUnitCommit(keys){const zk=keys.find(k=>/^(units|nonrev|lihtc)\.\d+\.num_units$/.test(k));
+function ns8HasData(i){return ['br','ba','avg_rent'].some(s=>{const v=get('ns8.'+i+'.'+s);return v!==''&&v!=null;});}
+function handleZeroUnitCommit(keys){const zk=keys.find(k=>/^(units|nonrev|ns8)\.\d+\.num_units$/.test(k));
   if(!zk||numf(get(zk))>0)return false;
-  const m=zk.match(/^(units|nonrev|lihtc)\.(\d+)\./);const fam=m[1],i=+m[2];
+  const m=zk.match(/^(units|nonrev|ns8)\.(\d+)\./);const fam=m[1],i=+m[2];
   if(fam==='units'&&i===UNITS[0]){setStatus('Cannot commit zero units to the database — the first unit type needs a unit count.');return true;}
   const label=fam==='units'?'unit type':(fam==='nonrev'?'non-revenue unit':'non-Section 8 unit type');
   dialogConfirm('Delete this '+label+' with no unit count?','This row has no unit count. Go back and enter one, or accept — accepting removes this '+label+' and its data from the database. This cannot be undone after saving.','Delete & save',true,async()=>{try{
     Object.keys(form).forEach(k=>{if(k.indexOf(fam+'.'+i+'.')===0)delete form[k];});
     if(fam==='units')UNITS=UNITS.filter(x=>x!==i);
     else if(fam==='nonrev'){NONREV=NONREV.filter(x=>x!==i);if(!NONREV.length){form=store.editForm(form,'nonrev.enabled','');form=await store.saveField(form,'nonrev.enabled');}}
-    else{LIHTC=LIHTC.filter(x=>x!==i);if(!LIHTC.length){form=store.editForm(form,'lihtc.enabled','');form=await store.saveField(form,'lihtc.enabled');}}
-    if(mpdb&&activePid)await mpdb.pruneUnitRows(activePid,UNITS,NONREV,LIHTC);
+    else{NS8=NS8.filter(x=>x!==i);if(!NS8.length){form=store.editForm(form,'ns8.enabled','');form=await store.saveField(form,'ns8.enabled');}}
+    if(mpdb&&activePid)await mpdb.pruneUnitRows(activePid,UNITS,NONREV,NS8);
     await refreshSnap();renderBody();setStatus('Zero-unit '+label+' deleted and saved.');
   }catch(e){saveFailed(e);renderBody();}});
   return true;}
@@ -700,12 +701,12 @@ async function saveNow(afterSave,fixFirst){clearUncheckedWriteins(['e1','e2','e3
     else{form=store.editForm(form,fk,'');firstFix='left blank';}}
   countlessUnits().filter(i=>!(fixFirst&&i===first)).forEach(i=>Object.keys(form).forEach(k=>{if(k.indexOf('units.'+i+'.')===0)delete form[k];}));
   NONREV.filter(i=>numf(get('nonrev.'+i+'.num_units'))<=0).forEach(i=>Object.keys(form).forEach(k=>{if(k.indexOf('nonrev.'+i+'.')===0)delete form[k];}));
-  if(get('lihtc.enabled')!=='1'){Object.keys(form).forEach(k=>{if(/^lihtc\.\d+\./.test(k))delete form[k];});LIHTC=[];} // section off: its hidden rows go
-  LIHTC.filter(i=>numf(get('lihtc.'+i+'.num_units'))<=0).forEach(i=>Object.keys(form).forEach(k=>{if(k.indexOf('lihtc.'+i+'.')===0)delete form[k];}));
+  if(get('ns8.enabled')!=='1'){Object.keys(form).forEach(k=>{if(/^ns8\.\d+\./.test(k))delete form[k];});NS8=[];} // section off: its hidden rows go
+  NS8.filter(i=>numf(get('ns8.'+i+'.num_units'))<=0).forEach(i=>Object.keys(form).forEach(k=>{if(k.indexOf('ns8.'+i+'.')===0)delete form[k];}));
   if(!Object.keys(form).some(k=>/^nonrev\.\d+\./.test(k))&&get('nonrev.enabled')==='1')form=store.editForm(form,'nonrev.enabled','');
-  if(!Object.keys(form).some(k=>/^lihtc\.\d+\./.test(k))&&get('lihtc.enabled')==='1')form=store.editForm(form,'lihtc.enabled','');
+  if(!Object.keys(form).some(k=>/^ns8\.\d+\./.test(k))&&get('ns8.enabled')==='1')form=store.editForm(form,'ns8.enabled','');
   deriveUnits();
-  try{form=await store.saveToDb(form);if(mpdb&&activePid)await mpdb.pruneUnitRows(activePid,UNITS,NONREV,LIHTC);}
+  try{form=await store.saveToDb(form);if(mpdb&&activePid)await mpdb.pruneUnitRows(activePid,UNITS,NONREV,NS8);}
   catch(e){saveFailed(e);return;}
   await refreshSnap();deriveUnits();if(firstFix==='left blank'&&form[fk])form[fk].source='new';if(afterSave)afterSave();
   if(firstFix)setStatus('Saved — but zero units cannot be committed: the first unit type\u2019s count was '+firstFix+'.');}
@@ -714,7 +715,7 @@ function requestSave(afterSave){
   const firstZero=numf(get(fk))<=0&&(unitHasData(first)||String(get(fk)==null?'':get(fk)).trim()!=='');
   const mu=countlessUnits().filter(unitHasData).filter(i=>i!==first);
   const mn=NONREV.filter(i=>numf(get('nonrev.'+i+'.num_units'))<=0).filter(nonrevHasData);
-  const ml=get('lihtc.enabled')==='1'?LIHTC.filter(i=>numf(get('lihtc.'+i+'.num_units'))<=0).filter(lihtcHasData):[];
+  const ml=get('ns8.enabled')==='1'?NS8.filter(i=>numf(get('ns8.'+i+'.num_units'))<=0).filter(ns8HasData):[];
   const total=mu.length+mn.length+ml.length;
   if(total){const parts=[];if(mu.length)parts.push(mu.length+' revenue');if(mn.length)parts.push(mn.length+' non-revenue');if(ml.length)parts.push(ml.length+' non-Section 8');
     dialogConfirm('Delete '+total+' unit type'+(total>1?'s':'')+' with no unit count?','Saving will remove '+parts.join(', ')+' row'+(total>1?'s that have':' that has')+' entered data but no unit count. This cannot be undone after saving.','Save anyway',true,()=>saveNow(afterSave,firstZero));}
