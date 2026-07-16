@@ -10,7 +10,9 @@
 
 \- Address of property: Navigator > RCS
 
-\- FHA / Section 8 # (are these different? I think section 8 number is input by HUD.): RS > Navigator > RCS
+\- FHA #: RS
+
+\- Section 8 #: RCS
 
 \- Name of entity: RS > Navigator
 
@@ -89,6 +91,10 @@
 13. Introduce a "revert to parsed data" for all relevant sections (e.g., unit types).
 14. Non-revenue unit rent should auto-parse from the proposed rent of its matching revenue-producing unit type in the RCS report, once an RCS report is present — same auto-fill/override behavior as every other parsed field.
 15. Add a way to sort by PM in the menu. Later, add a PM log-in page that opens only a certain PM's properties.
+16. Include additional fuel-type checkboxes for section 7.
+17. Build out more comprehensive entity type selection and entity member inclusion. The entity chosen in section 2 should provide custom dropdowns corresponding with the naming conventions of that respective entity type. Additionally, the user must be able to include additional members to section G (refer to Lansing Mansion and Beacon Hill).
+18. Include a dropdown menu for CA company name within the form and contacts menu. The form's company dropdown options must reflect the companies included in the CA contact list, while the company dropdown options in the CA contact list must reflect the companies of previously added contacts. Alternatively, we can have a CA company directory and both the CA contact list and the form can pull their dropdown options from there.
+19. Distinguish between the FHA # and Section 8 #. Ensure that the FHA # is parsed from the current RS, while the Section 8 # is parsed from the RCS report. Ensure that the FHA # attaches to the propsed rent schedule while the Section 8 # applies to the cover letters.
 
 \------------------------------------------------------------------------------------------------------------------------------
 
