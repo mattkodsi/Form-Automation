@@ -65,9 +65,9 @@ Every flat key has exactly one home; every write carries the open cycle's id.
   cycles, pulls happen only via explicit button click, landing with provenance labels.
 
 ### The dominant cycle (computed, never manually selected)
-1. Latest **effective date** wins.
-2. Tie → a **rent-setting** combination (RCS or OCAF, with or without UAF) beats UAF-only.
-3. Still tied → most recently created.
+1. Latest **year** (of the effective date) wins.
+2. Tie → **program hierarchy**: RCS+UAF > RCS > OCAF+UAF > OCAF > UAF-only.
+3. Still tied → later full effective date, then most recently created.
 
 The dominant cycle: (a) renders elevated at the top of the property page, with all other
 cycles listed below it sorted by effective date; (b) is the only cycle whose durable
