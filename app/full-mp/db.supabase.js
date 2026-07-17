@@ -212,13 +212,19 @@ function makeSupabaseDb(client) {
      checklist, and assets stay per-cycle / property-level respectively. */
   const isTemplateKey = k => !isPerCycleKey(k) && !/^(units|ns8|nonrev|partb|check|assets)\./.test(k) && k !== 'ns8.enabled' && k !== 'nonrev.enabled';
   const cyUuid = () => (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16); });
-  const cyRentSetting = c => /rcs|ocaf/.test(c.programs || '');
+  /* cycle hierarchy: year first, then program completeness
+     (RCS+UAF > RCS > OCAF+UAF > OCAF > UAF), then full date, then newest */
+  const CY_RANK = { 'rcs,uaf': 5, 'rcs': 4, 'ocaf,uaf': 3, 'ocaf': 2, 'uaf': 1 };
+  const cyRank = c => CY_RANK[(c.programs || '').split(',').filter(Boolean).sort().join(',')] || 0;
+  const cyYear = c => { const y = String(c.effective_date || '').slice(0, 4); return /^\d{4}$/.test(y) ? y : ((String(c.label || '').match(/\d{4}/) || [''])[0]); };
+  const cyCompare = (a, b) => cyYear(b).localeCompare(cyYear(a))
+    || (cyRank(b) - cyRank(a))
+    || String(b.effective_date || '').localeCompare(String(a.effective_date || ''))
+    || String(b.created_at || '').localeCompare(String(a.created_at || ''));
   const cyclesOf = pid => Object.values(D.cycles || {}).filter(c => c.property_id === pid);
   function dominantCycleId(pid) {
     const cs = cyclesOf(pid); if (!cs.length) return null;
-    cs.sort((a, b) => String(b.effective_date || '').localeCompare(String(a.effective_date || ''))
-      || ((cyRentSetting(b) ? 1 : 0) - (cyRentSetting(a) ? 1 : 0))
-      || String(b.created_at || '').localeCompare(String(a.created_at || '')));
+    cs.sort(cyCompare);
     return cs[0].id;
   }
   const cyISO = v => { v = String(v || '').trim(); if (/^\d{4}-\d{2}-\d{2}/.test(v)) return v.slice(0, 10); const m = v.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/); return m ? (m[3] + '-' + ('0' + m[1]).slice(-2) + '-' + ('0' + m[2]).slice(-2)) : ''; };
@@ -352,7 +358,7 @@ function makeSupabaseDb(client) {
       listCycles(pid) {
         const dom = dominantCycleId(pid);
         return cyclesOf(pid).map(c => ({ id: c.id, programs: (c.programs || '').split(',').filter(Boolean), label: c.label, effective_date: c.effective_date, generated: c.generated || {}, dominant: c.id === dom, created_at: c.created_at, updated_at: c.updated_at }))
-          .sort((a, b) => ((b.dominant ? 1 : 0) - (a.dominant ? 1 : 0)) || String(b.effective_date || '').localeCompare(String(a.effective_date || '')));
+          .sort((a, b) => ((b.dominant ? 1 : 0) - (a.dominant ? 1 : 0)) || cyCompare(D.cycles[a.id], D.cycles[b.id]));
       },
       dominantCycleId,
       cycleAnalysis(cid) { const c = D.cycles[cid]; const f = {}; if (c) for (const k in c.cells) f[k] = { value: c.cells[k].value }; return computeAnalysis(f); },
