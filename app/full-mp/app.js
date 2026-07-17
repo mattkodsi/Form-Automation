@@ -42,8 +42,8 @@ SEED['partb.writein.u1.fuel']=['',D];
 CHECKLIST_FLAT.forEach((it,i)=>{const off=/scope of repair/i.test(it)||/scope of work/i.test(it);SEED['check.'+i]=[off?'':'1',D];});
 const ALL_KEYS=Object.keys(SEED).map(k=>({key:k}));
 
-let mpdb=null, activePid=null, activeCid=null;
-const bridge={getDb:async()=>mpdb?(activeCid?mpdb.getFlatCycle(activeCid):mpdb.getFlat(activePid)):{},saveDb:async(m)=>activeCid?mpdb.saveFlatCycle(activeCid,m):mpdb.saveFlat(activePid,m),clearDb:async()=>{}};
+let mpdb=null, activePid=null, activeCid=null, _cyFresh=null;
+const bridge={getDb:async()=>mpdb?(activeCid?mpdb.getFlatCycle(activeCid):mpdb.getFlat(activePid)):{},saveDb:async(m)=>{_cyFresh=null;return activeCid?mpdb.saveFlatCycle(activeCid,m):mpdb.saveFlat(activePid,m);},clearDb:async()=>{}};
 const store=makeStore(bridge,ALL_KEYS);
 let form=store.emptyForm(); let UNITS=[0]; let NONREV=[]; let NS8=[]; let _undoStack=[]; let _undoNR=[]; let _undoLI=[]; let _pending=null,_refocusSel=null,_pendingSnap=null; let _rcsUpload=null;
 
@@ -639,12 +639,11 @@ function cyclesHtml(){
   return btn+cs.map(c=>{
     const a=mpdb.cycleAnalysis(c.id);
     const gen=c.generated&&c.generated.at;
-    const line=(a.total_units&&a.proposed_gpr)?((a.pass?'PASS':'OVER')+' \u00b7 '+sPct(a.pct)+' \u00b7 '+money(a.proposed_gpr)+'/mo'):(a.total_units?'rents not entered yet':'no unit data yet');
     return '<div class="cycard'+(c.dominant?' dom':'')+'">'
       +'<div class="cy-h">'+progChips(c.programs)+'<b class="cy-t">'+esc(c.label||'(no year)')+(c.effective_date?' \u00b7 effective '+esc(fmtDate(c.effective_date)):'')+'</b>'
       +(c.dominant?'<span class="cy-dom">current \u00b7 sets the property record</span>':'')
       +'<span class="cy-st'+(gen?' ok':'')+'">'+(gen?'Package generated':'Draft')+'</span></div>'
-      +'<div class="cy-line">'+line+'</div>'
+      +rcsAffPane(a)
       +'<div class="cy-act"><button class="btn sm" data-cyopen="'+c.id+'">Open</button><button class="txtbtn del" data-cydel="'+c.id+'">Delete</button></div></div>';
   }).join('');
 }
@@ -687,11 +686,11 @@ function newCycleDialog(){
     const eff=fmtDateInput((el('cyEff').value||'').trim());
     const label=(eff.match(/(\d{4})/)||[])[1]||String(new Date().getFullYear());
     closeModal();
-    try{const r=await mpdb.createCycle(activePid,{programs,label,effective_date:eff});renderLauncher();openCycleForm(r.cid);}catch(e){saveFailedModal(e);}
+    try{const r=await mpdb.createCycle(activePid,{programs,label,effective_date:eff});renderLauncher();await openCycleForm(r.cid);_cyFresh=r.cid;}catch(e){saveFailedModal(e);}
   };
 }
 async function openCycleForm(cid){
-  activeCid=cid;
+  activeCid=cid;_cyFresh=null;
   const cy=mpdb.listCycles(activePid).find(c=>c.id===cid);
   activeProgram=cy?cy.programs.map(x=>PROG_NAMES[x]||x).join(' + '):'RCS';
   _undoStack=[];_undoNR=[];_undoLI=[];_rcsUpload=null;
@@ -798,15 +797,39 @@ function requestSave(afterSave){
 // applied as source 'new' (grey/unsaved) only when the property has never saved a checklist.
 function applyChecklistDefaults(){if(Object.keys(DBSNAP).some(k=>/^check\.\d+$/.test(k)))return;for(let i=0;i<17;i++)form=store.editForm(form,'check.'+i,(i===2||i===4)?'':'1');}
 async function openForm(program){activeProgram=program||'RCS';_undoStack=[];_undoNR=[];_undoLI=[];_rcsUpload=null;await mpdb.setActive(activePid);await refreshSnap();form=await store.fillForm();fixSavedToggles();applyChecklistDefaults();deriveUnits();renderFormHeader();renderBody();show('Form');window.scrollTo(0,0);ensureHudSafmr({});}
-function renderFormHeader(){if(el('hdrProp'))el('hdrProp').textContent=(get('property.name')||'(unnamed property)');if(el('hdrProgram'))el('hdrProgram').textContent=activeProgram+' Package';}
+function renderFormHeader(){
+  if(el('hdrProp'))el('hdrProp').textContent=(get('property.name')||'(unnamed property)');
+  if(el('hdrProgram'))el('hdrProgram').textContent=activeProgram+' Package';
+  const cy=activeCid&&mpdb?mpdb.listCycles(activePid).find(c=>c.id===activeCid):null;
+  const wrap=document.querySelector('.progs');
+  if(wrap&&cy){
+    const on=p=>cy.programs.indexOf(p)>=0;
+    wrap.innerHTML=['rcs','ocaf','uaf'].map(p=>'<span class="prog '+(on(p)?'on':'off')+'"'+(p==='uaf'?' id="pillUaf" style="cursor:pointer" title="'+(on('uaf')?'Remove the UAF from this cycle':'Add a UAF to this cycle')+'"':'')+'>'+PROG_NAMES[p]+'</span>').join('')+'<span class="prog off">BBRA</span>';
+    const pu=el('pillUaf');if(pu)pu.onclick=toggleCycleUaf;
+  }
+}
+async function toggleCycleUaf(){
+  if(!activeCid)return;
+  const cy=mpdb.listCycles(activePid).find(c=>c.id===activeCid);if(!cy)return;
+  const has=cy.programs.indexOf('uaf')>=0;
+  const programs=has?cy.programs.filter(p=>p!=='uaf'):cy.programs.concat(['uaf']);
+  try{await mpdb.setCyclePrograms(activeCid,programs);}catch(e){saveFailedModal(e);return;}
+  activeProgram=programs.map(x=>PROG_NAMES[x]||x).join(' + ');
+  renderFormHeader();setStatus(has?'UAF removed from this cycle.':'UAF added to this cycle.');
+}
 
 /* ---- EXIT: save or discard, then back to the menu -------------------- */
 function isDirty(){const keys=new Set([...Object.keys(form),...Object.keys(DBSNAP)]);for(const k of keys){const fv=form[k]?(form[k].value==null?'':String(form[k].value)):'';const sv=DBSNAP[k]?(DBSNAP[k].value==null?'':String(DBSNAP[k].value)):'';if(fv!==sv)return true;}return false;}
-function requestExit(){if(isDirty())openExit();else openLauncher(activePid);}
+function requestExit(){if(isDirty())openExit();else exitForm();}
+async function exitForm(){
+  // a cycle created this session and never saved is deleted on the way out
+  if(activeCid&&_cyFresh===activeCid){const cid=activeCid;_cyFresh=null;try{await mpdb.deleteCycle(cid);}catch(e){}}
+  openLauncher(activePid);
+}
 function openExit(){const nm=get('property.name')||'this property';
   modal('<div class="dlg-t">Save changes before leaving?</div><div class="dlg-b">You have unsaved edits to <b>'+esc(nm)+'</b>. Save them to the database so they pre-fill your next submission, or discard them and keep the last saved record.</div><div class="dlg-row"><button class="btn" id="dlgKeep">Keep editing</button><span class="dlg-sp"></span><button class="btn danger" id="dlgDiscard">Discard changes</button><button class="btn p" id="dlgSave">Save &amp; exit</button></div>');
   el('dlgKeep').onclick=closeModal;
-  el('dlgDiscard').onclick=async()=>{form=await store.fillForm();await refreshSnap();fixSavedToggles();deriveUnits();closeModal();openLauncher(activePid);setStatus('');};
+  el('dlgDiscard').onclick=async()=>{form=await store.fillForm();await refreshSnap();fixSavedToggles();deriveUnits();closeModal();await exitForm();setStatus('');};
   el('dlgSave').onclick=()=>requestSave(()=>{closeModal();openLauncher(activePid);});
 }
 

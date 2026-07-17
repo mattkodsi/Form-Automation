@@ -378,6 +378,7 @@ function makeSupabaseDb(client) {
         }
         return Promise.all(jobs);
       },
+      setCyclePrograms(cid, programs) { const c = D.cycles[cid]; if (!c) return Promise.resolve(); c.programs = (programs || []).join(','); c.updated_at = now(); return enqueue('cy' + cid, () => pushCycle(cid)); },
       setCycleGenerated(cid, docs) { const c = D.cycles[cid]; if (!c) return Promise.resolve(); c.generated = { at: now(), docs: docs || [] }; c.updated_at = now(); return enqueue('cy' + cid, () => pushCycle(cid)); },
       computeAnalysis, computeSalutation,
     };
