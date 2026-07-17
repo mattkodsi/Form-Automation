@@ -815,7 +815,7 @@ function makeSupabaseDb(client) {
       client.from('pm_contact').select('*'),
       client.from('app_contact').select('*'),
     ]);
-    if (pr.error) throw pr.error;
+    for (const q of [pr, ur, nr, li, ct, dr]) if (q && q.error) throw q.error;
     D = { props: {}, contacts: [], dir: [], activePid: null };
     (pr.data || []).forEach(r => {
       const sa = String(r.updated_at || '').slice(0, 10);
