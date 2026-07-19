@@ -268,6 +268,11 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;borde
 .ocpull .sub{color:#8791a5;font-size:12px}
 .ocds{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start;margin-bottom:2px}
 .ocds .field{min-width:180px;flex:0 1 220px}
+.rateswitch{position:relative;display:flex;width:230px;background:#eef1f7;border:1px solid #dfe5ee;border-radius:9px;padding:3px}
+.rateswitch .rs-thumb{position:absolute;top:3px;bottom:3px;left:3px;width:calc(50% - 3px);background:#1e3a5f;border-radius:7px;transition:transform .2s ease}
+.rateswitch.fl .rs-thumb{transform:translateX(100%)}
+.rs-opt{position:relative;flex:1;border:none;background:transparent;font:inherit;font-size:12.5px;font-weight:600;color:#5a6478;padding:6px 0;border-radius:7px;cursor:pointer;transition:color .18s ease;white-space:nowrap}
+.rs-opt.on{color:#fff}
 .ocwork{border:1px solid #e0e5ee;border-radius:10px;padding:6px 14px;margin:8px 0 4px;background:#fbfcfe}
 .ocline{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px dashed #e7ebf3;font-size:13px}
 .ocline:last-child{border-bottom:none}
