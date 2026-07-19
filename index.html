@@ -268,6 +268,11 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;borde
 .ocpull .sub{color:#8791a5;font-size:12px}
 .ocds{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start;margin-bottom:2px}
 .ocds .field{min-width:180px;flex:0 1 220px}
+.rateswitch{position:relative;display:flex;width:230px;background:#eef1f7;border:1px solid #dfe5ee;border-radius:9px;padding:3px}
+.rateswitch .rs-thumb{position:absolute;top:3px;bottom:3px;left:3px;width:calc(50% - 3px);background:#1e3a5f;border-radius:7px;transition:transform .2s ease}
+.rateswitch.fl .rs-thumb{transform:translateX(100%)}
+.rs-opt{position:relative;flex:1;border:none;background:transparent;font:inherit;font-size:12.5px;font-weight:600;color:#5a6478;padding:6px 0;border-radius:7px;cursor:pointer;transition:color .18s ease;white-space:nowrap}
+.rs-opt.on{color:#fff}
 .ocwork{border:1px solid #e0e5ee;border-radius:10px;padding:6px 14px;margin:8px 0 4px;background:#fbfcfe}
 .ocline{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px dashed #e7ebf3;font-size:13px}
 .ocline:last-child{border-bottom:none}
@@ -1681,7 +1686,7 @@ function renderOcaf(){const C=ocafCalc();
     +'<button class="urev hudbtn" id="pullOcaf" title="Pull the latest published OCAF notice from the Federal Register">⤓ Federal Register</button>'
     +'<span class="sub">'+(fy?('FY'+esc(fy)+(st?' · '+esc(st):'')+(pd?' · published '+esc(fmtDateLong(pd)):'')):'latest published notice; enter the factor manually if the current year’s is not yet available')+'</span></div>';
   const ds='<div class="pbgrp">Owner-certified inputs</div><div class="ocds">'
-    +selectCell({k:'ocaf.rate_type',label:'Debt rate type',opts:['Fixed rate','Floating rate']})
+    +('<div class="field"><div class="flabel">Debt rate type</div><div class="rateswitch'+(fl?' fl':'')+'" id="rateSwitch"><div class="rs-thumb"></div><button type="button" class="rs-opt'+(fl?'':' on')+'" data-rt="Fixed rate">Fixed rate</button><button type="button" class="rs-opt'+(fl?' on':'')+'" data-rt="Floating rate">Floating rate</button></div>'+ovNote('ocaf.rate_type')+'</div>')
     +(fl?('<div class="field"><div class="flabel">Trailing-12 debt service</div>'+moneyBox('ocaf.ds_t12')+'</div><div class="field"><div class="flabel">Forward-12 debt service</div>'+moneyBox('ocaf.ds_f12')+'</div>')
         :('<div class="field"><div class="flabel">Annual debt service (P&amp;I + MIP)</div>'+moneyBox('ocaf.ds_annual')+'</div>'))
     +'<div class="field"><div class="flabel">Non-expiring S8 potential (line G)</div>'+moneyBox('ocaf.g')+'</div></div>'
@@ -1962,6 +1967,14 @@ function wireBody(){
   document.querySelectorAll('[data-dirid]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();const fk=o.getAttribute('data-dirfor');const P=DIR_PICK[fk];const ct=dirList(P.kind).find(x=>x.id===o.getAttribute('data-dirid'));_pendingSnap=snapOf(P.keys);if(ct)P.apply(ct);_pending=P.keys.slice();_refocusSel='[data-box="'+fk+'"] .pocname-in';renderBody();}));
   document.querySelectorAll('[data-deffopt]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();_pendingSnap=snapOf(['rent_schedule.date_eff_source']);form=store.editForm(form,'rent_schedule.date_eff_source',o.getAttribute('data-deffopt'));_pending=['rent_schedule.date_eff_source'];_refocusSel='[data-box="rent_schedule.date_eff_source"] .uatrigger';renderBody();scheduleHudRefresh();}));
   document.querySelectorAll('[data-ocfopt]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();_pendingSnap=snapOf(['ocaf.factor_src']);form=store.editForm(form,'ocaf.factor_src',o.getAttribute('data-ocfopt'));_pending=['ocaf.factor_src'];_refocusSel='[data-box="ocaf.factor_src"] .uatrigger';renderBody();}));
+  const _rsw=el('rateSwitch');
+  if(_rsw)_rsw.querySelectorAll('.rs-opt').forEach(b=>b.onclick=()=>{
+    const v=b.getAttribute('data-rt');if(v===(get('ocaf.rate_type')||'Fixed rate'))return;
+    _rsw.classList.toggle('fl',/floating/i.test(v));
+    _rsw.querySelectorAll('.rs-opt').forEach(x=>x.classList.toggle('on',x===b));
+    form=store.editForm(form,'ocaf.rate_type',v);
+    setTimeout(()=>{renderBody();refreshOcafLines();},210); // let the thumb finish sliding before the inputs swap
+  });
   const _po=el('pullOcaf');if(_po)_po.onclick=pullOcafFactor;
   const _pu=el('pullUaf');if(_pu)_pu.onclick=pullUafFactors;
   const _oa=el('ocafApply');if(_oa)_oa.onclick=ocafApplyRents;

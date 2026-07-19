@@ -450,7 +450,7 @@ function renderOcaf(){const C=ocafCalc();
     +'<button class="urev hudbtn" id="pullOcaf" title="Pull the latest published OCAF notice from the Federal Register">⤓ Federal Register</button>'
     +'<span class="sub">'+(fy?('FY'+esc(fy)+(st?' · '+esc(st):'')+(pd?' · published '+esc(fmtDateLong(pd)):'')):'latest published notice; enter the factor manually if the current year’s is not yet available')+'</span></div>';
   const ds='<div class="pbgrp">Owner-certified inputs</div><div class="ocds">'
-    +selectCell({k:'ocaf.rate_type',label:'Debt rate type',opts:['Fixed rate','Floating rate']})
+    +('<div class="field"><div class="flabel">Debt rate type</div><div class="rateswitch'+(fl?' fl':'')+'" id="rateSwitch"><div class="rs-thumb"></div><button type="button" class="rs-opt'+(fl?'':' on')+'" data-rt="Fixed rate">Fixed rate</button><button type="button" class="rs-opt'+(fl?' on':'')+'" data-rt="Floating rate">Floating rate</button></div>'+ovNote('ocaf.rate_type')+'</div>')
     +(fl?('<div class="field"><div class="flabel">Trailing-12 debt service</div>'+moneyBox('ocaf.ds_t12')+'</div><div class="field"><div class="flabel">Forward-12 debt service</div>'+moneyBox('ocaf.ds_f12')+'</div>')
         :('<div class="field"><div class="flabel">Annual debt service (P&amp;I + MIP)</div>'+moneyBox('ocaf.ds_annual')+'</div>'))
     +'<div class="field"><div class="flabel">Non-expiring S8 potential (line G)</div>'+moneyBox('ocaf.g')+'</div></div>'
@@ -731,6 +731,14 @@ function wireBody(){
   document.querySelectorAll('[data-dirid]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();const fk=o.getAttribute('data-dirfor');const P=DIR_PICK[fk];const ct=dirList(P.kind).find(x=>x.id===o.getAttribute('data-dirid'));_pendingSnap=snapOf(P.keys);if(ct)P.apply(ct);_pending=P.keys.slice();_refocusSel='[data-box="'+fk+'"] .pocname-in';renderBody();}));
   document.querySelectorAll('[data-deffopt]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();_pendingSnap=snapOf(['rent_schedule.date_eff_source']);form=store.editForm(form,'rent_schedule.date_eff_source',o.getAttribute('data-deffopt'));_pending=['rent_schedule.date_eff_source'];_refocusSel='[data-box="rent_schedule.date_eff_source"] .uatrigger';renderBody();scheduleHudRefresh();}));
   document.querySelectorAll('[data-ocfopt]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();_pendingSnap=snapOf(['ocaf.factor_src']);form=store.editForm(form,'ocaf.factor_src',o.getAttribute('data-ocfopt'));_pending=['ocaf.factor_src'];_refocusSel='[data-box="ocaf.factor_src"] .uatrigger';renderBody();}));
+  const _rsw=el('rateSwitch');
+  if(_rsw)_rsw.querySelectorAll('.rs-opt').forEach(b=>b.onclick=()=>{
+    const v=b.getAttribute('data-rt');if(v===(get('ocaf.rate_type')||'Fixed rate'))return;
+    _rsw.classList.toggle('fl',/floating/i.test(v));
+    _rsw.querySelectorAll('.rs-opt').forEach(x=>x.classList.toggle('on',x===b));
+    form=store.editForm(form,'ocaf.rate_type',v);
+    setTimeout(()=>{renderBody();refreshOcafLines();},210); // let the thumb finish sliding before the inputs swap
+  });
   const _po=el('pullOcaf');if(_po)_po.onclick=pullOcafFactor;
   const _pu=el('pullUaf');if(_pu)_pu.onclick=pullUafFactors;
   const _oa=el('ocafApply');if(_oa)_oa.onclick=ocafApplyRents;
