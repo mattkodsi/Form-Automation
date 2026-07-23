@@ -3,7 +3,7 @@ const STATES='AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA 
 const BR_OPTS=['Studio','1BR','2BR','3BR','4BR','5BR']; const BA_OPTS=['1BA','1.5BA','2BA','2.5BA','3BA'];
 const ENTITY_TYPES=['Individual','Corporation','General Partnership','Limited Partnership','Joint Tenancy/Tenants in Common','Trust','Other (specify)'];
 const FIELD_SECTIONS=[
-  {n:2,title:'Property',fields:[{k:'property.name',label:'Property name',col:0},{k:'property.addr',label:'Address',col:0,type:'addr'},{k:'property.fha',label:'FHA / Section 8 #',col:0},{k:'owner.entity_name',label:'Ownership entity',col:1},{k:'owner.entity_type',label:'Entity type',col:1,type:'select',opts:ENTITY_TYPES}]},
+  {n:2,title:'Property',fields:[{k:'property.name',label:'Property name',col:0},{k:'property.addr',label:'Address',col:0,type:'addr'},{type:'pair',col:0,items:[{k:'property.fha',label:'FHA #'},{k:'property.s8',label:'Section 8 #'}]},{k:'owner.entity_name',label:'Ownership entity',col:1},{k:'owner.entity_type',label:'Entity type',col:1,type:'select',opts:ENTITY_TYPES}]},
   {n:3,title:'Point of contact & signatory',fields:[{k:'poc.name',label:'Point of contact',col:0},{k:'poc.email',label:'Email',col:0},{k:'poc.phone',label:'Phone',col:0,type:'phone'},{k:'owner.gp',label:'General Partner',col:1},{k:'sig.name',label:'Signatory',col:1},{k:'sig.title',label:'Signatory title',col:1}]},
   {n:4,title:'Contract administrator',fields:[{k:'ca.name',label:'Name',col:0,prefix:'ca.prefix'},{k:'ca.position',label:'Position',col:0},{k:'ca.org',label:'CA organization',col:1},{k:'ca.addr',label:'CA address',col:1,type:'caaddr'}]},
   {n:5,title:'Appraiser',fields:[{k:'appr.name',label:'Appraiser name',col:0},{k:'appr.firm',label:'Appraisal company',col:0},{k:'appr.addr',label:'Appraiser address',col:0,type:'appraddr'},{k:'appr.email',label:'Email',col:1},{k:'appr.phone',label:'Phone',col:1,type:'phone'}]},
@@ -21,7 +21,7 @@ const SECTION_TITLES={1:'Source documents',2:'Property',3:'Point of contact & si
 const UAF_UTILS=[['oil','Oil'],['gas','Natural Gas'],['electric','Electric'],['water','Water / Sewer / Trash']];
 const D='database',T='this-cycle',O='overridden';
 const SEED={ // key manifest only — the VALUES are never read (ALL_KEYS below feeds the store), so no sample data ships in the public bundle
-  'property.name':['',D],'property.addr_street':['',D],'property.addr_city':['',D],'property.addr_state':['',D],'property.addr_zip':['',D],'property.fha':['',D],
+  'property.name':['',D],'property.addr_street':['',D],'property.addr_city':['',D],'property.addr_state':['',D],'property.addr_zip':['',D],'property.fha':['',D],'property.s8':['',D],
   'owner.entity_name':['',D],'owner.entity_type':['',D],
   'poc.name':['',D],'poc.email':['',D],'poc.phone':['',D],
   'owner.gp':['',D],'sig.name':['',D],'sig.title':['',D],
@@ -183,7 +183,8 @@ function srcPick(k,rows){
 /* Per-cell source rows in precedence order (spec \u00a73). val:null renders dim. */
 const SRCPICK_ROWS={
  'property.name':()=>[{tag:'Related Affordable',val:raVal('property.name')},{tag:'RCS report',val:null}],
- 'property.fha':()=>[{tag:'Executed RS',val:null},{tag:'Related Affordable',val:raVal('property.fha')},{tag:'RCS report',val:null}],
+ 'property.fha':()=>[{tag:'Executed RS',val:null},{tag:'Related Affordable',val:raVal('property.fha')}],
+ 'property.s8':()=>[{tag:'Executed RS',val:null},{tag:'RCS report',val:null}],
  'owner.entity_name':()=>[{tag:'Executed RS',val:null},{tag:'Related Affordable',val:raVal('owner.entity_name')}],
  'owner.gp':()=>[{tag:'Executed RS',val:null}],
  'sig.title':()=>[{tag:'Executed RS',val:null}],
@@ -207,7 +208,7 @@ const DIR_SRCROW={'appr.name':'RCS report','sig.name':'Executed RS'};
 function moneySrcTag(k){if(/^units\.\d+\.current$/.test(k))return 'Executed RS';if(/^units\.\d+\.proposed$/.test(k))return 'RCS report';if(/^nonrev\.\d+\.rent$/.test(k))return 'Executed RS';return null;}
 function dimPick(tag){return '<div class="uadrop pocpick"><div class="uatrigger" tabindex="0" title="Source"><span class="cvx">&#9662;</span></div><div class="uamenu"><div class="uaopt srcdim">\u2014<span class="uasub">'+esc(tag)+' \u00b7 not available</span></div></div></div>';}
 /* ================== end external-source dropdowns ================== */
-function fieldCell(f){if(f.type==='addr')return addrCell();if(f.type==='caaddr')return caAddrCell();if(f.type==='appraddr')return apprAddrCell();if(f.type==='mgmtaddr')return mgmtCell();if(f.type==='select')return selectCell(f);if(f.k==='poc.name')return pocCell();if(DIR_PICK[f.k])return dirCell(f);
+function fieldCell(f){if(f.type==='pair')return '<div class="fpair">'+f.items.map(fieldCell).join('')+'</div>';if(f.type==='addr')return addrCell();if(f.type==='caaddr')return caAddrCell();if(f.type==='appraddr')return apprAddrCell();if(f.type==='mgmtaddr')return mgmtCell();if(f.type==='select')return selectCell(f);if(f.k==='poc.name')return pocCell();if(DIR_PICK[f.k])return dirCell(f);
   const s=form[f.k]||{value:'',source:'new'};
   const st=f.prefix?baseSrc([f.prefix,f.k]):s.source;const c=CLR[st]||CLR.new;
   const pre=f.prefix?csDrop(f.prefix,['Ms.','Mr.','Dr.','Mx.'],'—','csnarrow',true,partHot(f.prefix)?tintStyle(f.prefix):''):'';
@@ -410,7 +411,7 @@ function renderSources(){
 
 function sectionKeys(n){if(n===10)return ['ocaf.g','ocaf.rate_type','ocaf.ds_annual','ocaf.ds_t12','ocaf.ds_f12','ocaf.factor_pub','ocaf.factor_custom','ocaf.factor_src'];
   if(n===11)return ['uaf.f_oil','uaf.f_gas','uaf.f_electric','uaf.f_water'].concat(UNITS.flatMap(i=>UAF_UTILS.map(u=>'units.'+i+'.uac_'+u[0])));
-  if(n===6)return UNITS.flatMap(i=>['units.'+i+'.br','units.'+i+'.ba','units.'+i+'.num_units','units.'+i+'.current','units.'+i+'.proposed','units.'+i+'.ua_source','units.'+i+'.safmr_source']);const fs=FIELD_SECTIONS.find(s=>s.n===n);return fs?fs.fields.flatMap(f=>f.type==='addr'?ADDR:(f.type==='caaddr'?CA_ADDR:(f.type==='appraddr'?APPR_ADDR:(f.type==='mgmtaddr'?MGMT_ADDR:(f.prefix?[f.prefix,f.k]:[f.k]))))):[];}
+  if(n===6)return UNITS.flatMap(i=>['units.'+i+'.br','units.'+i+'.ba','units.'+i+'.num_units','units.'+i+'.current','units.'+i+'.proposed','units.'+i+'.ua_source','units.'+i+'.safmr_source']);const fs=FIELD_SECTIONS.find(s=>s.n===n);return fs?fs.fields.flatMap(f=>f.type==='pair'?f.items.map(x=>x.k):f.type==='addr'?ADDR:(f.type==='caaddr'?CA_ADDR:(f.type==='appraddr'?APPR_ADDR:(f.type==='mgmtaddr'?MGMT_ADDR:(f.prefix?[f.prefix,f.k]:[f.k]))))):[];}
 function sectionStatus(n){if(n===1)return _rcsUpload?'ok':((hasProg('rcs')||hasProg('ocaf'))?'warn':'ok');
   if(n===10){if(sectionKeys(10).some(k=>srcOf(k)==='overridden'))return'warn';const C=ocafCalc();return(C.F>0&&C.R>0)?'ok':'warn';}
   if(n===11){if(sectionKeys(11).some(k=>srcOf(k)==='overridden'))return'warn';const A=uafAnalysis();if(A.mismatch.length)return'warn';const hasF=UAF_UTILS.some(u=>numf(get('uaf.f_'+u[0]))>0);return(hasF&&A.any)?'ok':'warn';}const over=sectionKeys(n).some(k=>srcOf(k)==='overridden');if(n===6&&(UNITS.some(uaUnresolved)||UNITS.some(typeUnresolved)||UNITS.some(numUnresolved)||UNITS.some(i=>srcOf('units.'+i+'.ua_source')==='overridden')||(hasProg('rcs')&&(UNITS.some(safmrUnresolved)||UNITS.some(i=>srcOf('units.'+i+'.safmr_source')==='overridden')||UNITS.some(i=>{const r=safmrResolvedOf(i),p=numf(get('units.'+i+'.proposed'));return r>0&&p>0&&p>=r;})))||rsCapacity().msgs.length>0))return'warn';return over?'warn':'ok';}
@@ -606,7 +607,7 @@ function holdAnchor(fn){let a=document.activeElement;if(!(a&&a!==document.body&&
 function renderCommand(){holdAnchor(_renderCommand);}
 function _renderCommand(){const a=analysis();const pCur=a.ceil>0?clamp(a.cg/a.ceil*100):0,pPro=a.ceil>0?clamp(a.pg/a.ceil*100):0;
   const conf=UNITS.filter(uaConflict).length,unres=UNITS.filter(uaUnresolved).length;
-  const nmOk=(get('property.name')||'').trim()!=='',fhaOk=(get('property.fha')||'').trim()!=='',sigOk=(get('sig.name')||'').trim()!=='';
+  const nmOk=(get('property.name')||'').trim()!=='',fhaOk=(get('property.fha')||'').trim()!=='',s8Ok=(get('property.s8')||'').trim()!=='',sigOk=(get('sig.name')||'').trim()!=='';
   const ua=conf===0?['ok',hasProg('rcs')?'exec & RCS agree':'per executed RS']:(unres===0?['ok','UA conflicts resolved per unit type']:['warn',unres+' of '+conf+' unit type'+(conf>1?'s':'')+' need'+(unres===1?'s':'')+' a UA source']);
   const uaStrip=()=>{const U=uafAnalysis();let dMo=0,types=0;UNITS.forEach(i=>{const r=uafRow(i);if(r.curSum>0&&r.newSum>0){types++;dMo+=numf(get('units.'+i+'.num_units'))*(r.newSum-r.curSum);}});
     return `<div class="lift"><b>UTILITY ALLOWANCE CHANGE</b><div class="liftnums"><span><b class="teal">${types}</b><i>unit type${types===1?'':'s'}</i></span><span><b>${sMoney(dMo)}</b><i>UA /mo across units</i></span><span><b style="color:${U.dec.length?'#b45309':'#166534'}">${U.dec.length}</b><i>decrease${U.dec.length===1?'':'s'}</i></span></div></div>`;};
@@ -631,7 +632,7 @@ function _renderCommand(){const a=analysis();const pCur=a.ceil>0?clamp(a.cg/a.ce
   el('cc').innerHTML=`
    ${card1}
    <div class="ccard"><div class="cck">RECORD CHECKS</div><div class="chkgrid">
-     ${chk(nmOk?'ok':'warn','Property name',nmOk?esc(get('property.name')):'missing — Section 2')}${chk(fhaOk?'ok':'warn','FHA / Section 8 #',fhaOk?esc(get('property.fha')):'missing — Section 2')}${chk(sigOk?'ok':'warn','Signatory (Part H)',sigOk?(esc(get('sig.name'))+(get('sig.title')?' · '+esc(get('sig.title')):'')):'missing — Section 3')}
+     ${chk(nmOk?'ok':'warn','Property name',nmOk?esc(get('property.name')):'missing — Section 2')}${chk(s8Ok?'ok':'warn','Section 8 #',s8Ok?esc(get('property.s8')):'missing — Section 2')}${chk(fhaOk?'ok':'info','FHA #',fhaOk?esc(get('property.fha')):'none on file — fills page 1 of the rent schedule')}${chk(sigOk?'ok':'warn','Signatory (Part H)',sigOk?(esc(get('sig.name'))+(get('sig.title')?' · '+esc(get('sig.title')):'')):'missing — Section 3')}
      ${chk(ua[0],'Utility allowance',ua[1])}${hasProg('rcs')?chk(a.safmrMissing?'warn':(a.safmrOver?'warn':(a.safmrConflict?'info':'ok')),'SAFMR (150% ceiling)',a.safmrMissing?'enter or pull SAFMR per unit type':(a.safmrOver?(a.safmrOver+' type'+(a.safmrOver>1?'s':'')+' over 150% SAFMR'):(a.safmrConflict?'HUD vs RCS differ — using HUD':'per unit type · HUD'))):''}${(()=>{const c=rsCapacity();return c.msgs.length?chk('warn','Rent schedule capacity',esc(c.flags.join(' · '))):'';})()}</div></div>
    ${pkgCard()}`;}
 function pkgCard(){
@@ -673,7 +674,7 @@ function renderAttention(){/* the section rail carries the attention list; the o
 
 function renderBar(){const a=analysis();const conf=UNITS.filter(uaConflict).length,unres=UNITS.filter(uaUnresolved).length;const uaOk=conf===0||unres===0;
  const bc=(st,l)=>{const ic=st==='warn'?'⚠':(st==='info'?'ⓘ':'✓');const c=st==='warn'?'#b45309':(st==='info'?'#2563eb':'#166534');return `<span class="bchip"><b style="color:${c}">${ic}</b> ${l}</span>`;};
- const chks=`${bc((get('property.name')||'').trim()?'ok':'warn','Name')}${bc((get('property.fha')||'').trim()?'ok':'warn','FHA')}${bc((get('sig.name')||'').trim()?'ok':'warn','Signatory')}${bc(uaOk?'ok':'warn','UA')}`;
+ const chks=`${bc((get('property.name')||'').trim()?'ok':'warn','Name')}${bc((get('property.s8')||'').trim()?'ok':'warn','Section 8 #')}${bc((get('sig.name')||'').trim()?'ok':'warn','Signatory')}${bc(uaOk?'ok':'warn','UA')}`;
  if(!hasProg('rcs')){
    const C=ocafCalc();let dMo=0;UNITS.forEach(i=>{const n=numf(get('units.'+i+'.num_units')),cur=numf(get('units.'+i+'.current'));if(n&&cur&&C.R>0)dMo+=n*(Math.round(cur*C.R)-cur);});
    const U=uafAnalysis();let uaMo=0;UNITS.forEach(i=>{const r=uafRow(i);if(r.curSum>0&&r.newSum>0)uaMo+=numf(get('units.'+i+'.num_units'))*(r.newSum-r.curSum);});

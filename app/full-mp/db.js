@@ -35,7 +35,8 @@ const CROSSWALK = {
   'property.addr_city': ['property.address_city', 'property.address_city'],
   'property.addr_state': ['property.address_state', 'property.address_state'],
   'property.addr_zip': ['property.address_zip', 'property.address_zip'],
-  'property.fha': ['property.fha_section8_no', 'property.fha_section8_no'],
+  'property.fha': ['property.fha_no', 'property.fha_no'],
+  'property.s8': ['property.fha_section8_no', 'property.fha_section8_no'],
   'owner.entity_name': ['owner.entity_name', 'property.entity_name'],
   'owner.entity_type': ['owner.entity_type', 'property.entity_type'],
   'owner.gp': ['owner.general_partner', 'property.general_partner'],
@@ -131,7 +132,7 @@ function gatesSeedFlat() {
   const f = {
     'property.name': 'Gates Manor Apartments',
     'property.addr_street': '1135 Wilmette Ave', 'property.addr_city': 'Wilmette',
-    'property.addr_state': 'IL', 'property.addr_zip': '60091', 'property.fha': 'IL06H121063',
+    'property.addr_state': 'IL', 'property.addr_zip': '60091', 'property.s8': 'IL06H121063',
     'owner.entity_name': 'Gates Manor Preservation, L.P.', 'owner.entity_type': 'Limited Partnership',
     'poc.name': 'Claire Beatty', 'poc.email': 'cbeatty@related.com', 'poc.phone': '(929) 618-8405',
     'owner.gp': 'Related (GP)', 'sig.name': 'David Pearson', 'sig.title': 'Vice President',
@@ -247,7 +248,7 @@ async function makeDb(adapter, opts) {
   }
 
   /* ---- property registry ------------------------------------------------ */
-  const REQUIRED_DURABLE = ['property.name', 'property.fha', 'property.addr_street', 'property.addr_city', 'property.addr_state', 'property.addr_zip', 'owner.entity_name', 'sig.name', 'ca.org', 'ca.name'];
+  const REQUIRED_DURABLE = ['property.name', 'property.s8', 'property.addr_street', 'property.addr_city', 'property.addr_state', 'property.addr_zip', 'owner.entity_name', 'sig.name', 'ca.org', 'ca.name'];
   const dv = (p, k) => (p.durable[k] && p.durable[k].value !== '' ? p.durable[k].value : '');
   const completenessOf = p => REQUIRED_DURABLE.filter(k => dv(p, k) !== '').length / REQUIRED_DURABLE.length;
   function unitCountOf(p) {
@@ -259,7 +260,7 @@ async function makeDb(adapter, opts) {
     return Object.values(D.props).map(p => {
       const uc = unitCountOf(p);
       return {
-        id: p.id, name: dv(p, 'property.name') || '(unnamed property)', fha: dv(p, 'property.fha') || '—',
+        id: p.id, name: dv(p, 'property.name') || '(unnamed property)', fha: dv(p, 'property.s8') || dv(p, 'property.fha') || '—',
         city_state: (dv(p, 'property.addr_city') || '') + (dv(p, 'property.addr_state') ? ', ' + dv(p, 'property.addr_state') : ''),
         entity: dv(p, 'owner.entity_name') || '', alias: dv(p, 'tenant.property_alias') || '', unit_types: uc.types, total_units: uc.units,
         completeness: completenessOf(p), created_at: p.created_at, updated_at: p.updated_at || p.created_at,

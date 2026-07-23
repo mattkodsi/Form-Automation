@@ -80,7 +80,7 @@ function makeCosmosDb() {
   }
 
   /* ---- registry helpers (mirror db.supabase.js) --------------------------- */
-  const REQUIRED_DURABLE = ['property.name', 'property.fha', 'property.addr_street', 'property.addr_city', 'property.addr_state', 'property.addr_zip', 'owner.entity_name', 'sig.name', 'ca.org', 'ca.name'];
+  const REQUIRED_DURABLE = ['property.name', 'property.s8', 'property.addr_street', 'property.addr_city', 'property.addr_state', 'property.addr_zip', 'owner.entity_name', 'sig.name', 'ca.org', 'ca.name'];
   const dv = (p, k) => (p.durable[k] && p.durable[k].value !== '' ? p.durable[k].value : '');
   const completenessOf = p => REQUIRED_DURABLE.filter(k => dv(p, k) !== '').length / REQUIRED_DURABLE.length;
   function unitCountOf(p) {
@@ -113,7 +113,7 @@ function makeCosmosDb() {
       durable: strip(p.durable), percycle: strip(p.percycle),
       // denormalized gallery summary (kept on the doc so future list-only
       // endpoints never need the full cell map)
-      name: dv(p, 'property.name') || '', fha: dv(p, 'property.fha') || '',
+      name: dv(p, 'property.name') || '', fha: dv(p, 'property.s8') || dv(p, 'property.fha') || '',
       city_state: (dv(p, 'property.addr_city') || '') + (dv(p, 'property.addr_state') ? ', ' + dv(p, 'property.addr_state') : ''),
       entity: dv(p, 'owner.entity_name') || '', alias: dv(p, 'tenant.property_alias') || '',
       unit_types: uc.types, total_units: uc.units,
@@ -161,7 +161,7 @@ function makeCosmosDb() {
         return Object.values(D.props).map(p => {
           const uc = unitCountOf(p);
           return {
-            id: p.id, name: dv(p, 'property.name') || '(unnamed property)', fha: dv(p, 'property.fha') || '—',
+            id: p.id, name: dv(p, 'property.name') || '(unnamed property)', fha: dv(p, 'property.s8') || dv(p, 'property.fha') || '—',
             city_state: (dv(p, 'property.addr_city') || '') + (dv(p, 'property.addr_state') ? ', ' + dv(p, 'property.addr_state') : ''),
             entity: dv(p, 'owner.entity_name') || '', alias: dv(p, 'tenant.property_alias') || '', unit_types: uc.types, total_units: uc.units,
             completeness: completenessOf(p), created_at: p.created_at, updated_at: p.updated_at || p.created_at,
