@@ -324,7 +324,7 @@ function unitCard(i,pos){const trash=UNITS.length>1?`<button class="trash" data-
   const metric=(_c>0&&_p>0)?`<span class="ucmetric" data-metric="${i}" style="color:${_d>=0?'#166534':'#b91c1c'}">${sMoney(_d)} / unit · ${sPct(_pc)}</span>`:`<span class="ucmetric" data-metric="${i}"></span>`;
   const notes=[typeNote(i),numNote(i),uaNoteCell(i),hasProg('rcs')?safmrNote(i):''].filter(Boolean).join('');
   const sub=((_c>0&&_p>0)||notes)?`<div class="urnotes"><div class="urnmetric">${metric}</div><div class="urnsub">${notes}</div></div>`:'';
-  return `<div class="urow"><div class="ucells">${unitTypeCell(i)}${unitCountCell(i)}${moneyBox('units.'+i+'.current')}${hasProg('rcs')?moneyBox('units.'+i+'.proposed'):''}${uaBox(i)}${hasProg('rcs')?safmrBox(i):''}<div class="urx">${trash}</div></div>${sub}</div>`;}
+  return `<div class="urow"><div class="ucells">${unitTypeCell(i)}${unitCountCell(i)}${moneyBox('units.'+i+'.current')}${moneyBox('units.'+i+'.proposed')}${uaBox(i)}${hasProg('rcs')?safmrBox(i):''}<div class="urx">${trash}</div></div>${sub}</div>`;}
 function renderRents(){
   const cards=UNITS.map((i,pos)=>unitCard(i,pos)).join('');
   const nrOn=get('nonrev.enabled')==='1'||NONREV.length>0;
@@ -341,7 +341,7 @@ function renderRents(){
     lh+=`<div class="addrow" id="addNs8">+ Add non-Section 8 unit type</div>`;
   }
   lh+=undoBits('LI');
-  const rgHead=`<div class="rgh"><span>Unit type</span><span>Units</span><span>Current rent</span>${hasProg('rcs')?'<span>Proposed rent</span>':''}<span>Utility allowance</span>${hasProg('rcs')?(function(){const st=pullBtnState('safmr');return '<span class="safmrhead">150% SAFMR<button class="urev hudbtn'+st.cls+'" id="pullSafmr"'+st.dis+' title="'+esc(st.why||'Re-pull 150% ceilings from HUD for this property’s ZIP')+'">⤓ HUD</button></span>';})():''}<span></span></div>`;
+  const rgHead=`<div class="rgh"><span>Unit type</span><span>Units</span><span>Current rent</span><span>Proposed rent</span><span>Utility allowance</span>${hasProg('rcs')?(function(){const st=pullBtnState('safmr');return '<span class="safmrhead">150% SAFMR<button class="urev hudbtn'+st.cls+'" id="pullSafmr"'+st.dis+' title="'+esc(st.why||'Re-pull 150% ceilings from HUD for this property’s ZIP')+'">⤓ HUD</button></span>';})():''}<span></span></div>`;
   return card(6,sectionPill(6),`<div class="reseff">${dateEffCell()}</div>${capNote()}<div class="ucards${hasProg('rcs')?'':' noprop'}">${UNITS.length?rgHead:''}${cards}</div><div class="addrow" id="addUnit">+ Add unit type</div>${_undoStack.length?(' <span class="addrow ghostlink" id="undoUnit">↩ Undo delete'+(_undoStack.length>1?(' ('+_undoStack.length+')'):'')+'</span><button class="undocommit" id="undoCommit" title="Keep deletions — dismiss undo">✓</button>'):''}<div class="partd">${lh}</div><div class="partd">${pd}</div>`);}
 
 const SAFMR_BR_KEY={'Studio':'efficiency','1BR':'br1','2BR':'br2','3BR':'br3','4BR':'br4'};
