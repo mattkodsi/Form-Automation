@@ -238,7 +238,7 @@ function compAddrCell(keys,box,label){const a=baseSrc(keys);const c=CLR[a]||CLR.
      <input type="text" data-k="${keys[0]}" value="${esc(get(keys[0]))}" placeholder="Street" style="flex:2.2${ti(keys[0])}"><span class="adiv"></span>
      <input type="text" data-k="${keys[1]}" value="${esc(get(keys[1]))}" placeholder="City" style="flex:1.3${ti(keys[1])}"><span class="adiv"></span>
      ${csDrop(keys[2],STATES,'ST','csnarrow',false,partHot(keys[2])?tintStyle(keys[2]):'')}<span class="adiv"></span>
-     <input type="text" data-k="${keys[3]}" value="${esc(get(keys[3]))}" placeholder="ZIP" style="width:64px${ti(keys[3])}">${SRCGROUP[box]?srcGroupPick(box):''}</div>
+     <input type="text" data-k="${keys[3]}" value="${esc(get(keys[3]))}" placeholder="ZIP" style="width:${(box==='property.addr'||box==='appr.addr')?'47px':'64px'}${ti(keys[3])}">${SRCGROUP[box]?srcGroupPick(box):''}</div>
    ${ovNoteAddr(box)}</div>`;}
 function mgmtCell(){const src=get('tenant.mgmt_source')||'property';const propHas=ADDR.some(k=>get(k)!=='');
   if(src==='custom'){const a=baseSrc(MGMT_ADDR);const c=CLR[a]||CLR.new;const ti=k=>partHot(k)?(';'+tintStyle(k)):'';
