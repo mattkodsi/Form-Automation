@@ -96,7 +96,7 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;borde
 .mgempty{background:#fff;border:1px dashed #cbd5e1;border-radius:11px;padding:26px;text-align:center;color:#6b7280}
 .ucards{display:flex;flex-direction:column}
 .rgh,.ucells{display:grid;grid-template-columns:2fr .7fr 1fr 1fr .95fr 1.25fr 30px;gap:8px 14px;align-items:center}
-.ucards.noprop .rgh,.ucards.noprop .ucells{grid-template-columns:2fr .7fr 1.1fr 1.1fr 30px}
+.ucards.noprop .rgh,.ucards.noprop .ucells,.ucards.noprop .urnotes{grid-template-columns:2fr .7fr 1fr 1fr .95fr 30px} .ucards.noprop .urnsub{grid-column:5/7}
 .rgh{padding:0 2px 6px;margin-bottom:2px;border-bottom:1px solid #e6ebf3}
 .rgh span{font-size:10px;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
 .urow{padding:9px 2px;border-bottom:1px solid #f0f2f7}
@@ -1569,7 +1569,7 @@ function unitCard(i,pos){const trash=UNITS.length>1?`<button class="trash" data-
   const metric=(_c>0&&_p>0)?`<span class="ucmetric" data-metric="${i}" style="color:${_d>=0?'#166534':'#b91c1c'}">${sMoney(_d)} / unit · ${sPct(_pc)}</span>`:`<span class="ucmetric" data-metric="${i}"></span>`;
   const notes=[typeNote(i),numNote(i),uaNoteCell(i),hasProg('rcs')?safmrNote(i):''].filter(Boolean).join('');
   const sub=((_c>0&&_p>0)||notes)?`<div class="urnotes"><div class="urnmetric">${metric}</div><div class="urnsub">${notes}</div></div>`:'';
-  return `<div class="urow"><div class="ucells">${unitTypeCell(i)}${unitCountCell(i)}${moneyBox('units.'+i+'.current')}${hasProg('rcs')?moneyBox('units.'+i+'.proposed'):''}${uaBox(i)}${hasProg('rcs')?safmrBox(i):''}<div class="urx">${trash}</div></div>${sub}</div>`;}
+  return `<div class="urow"><div class="ucells">${unitTypeCell(i)}${unitCountCell(i)}${moneyBox('units.'+i+'.current')}${moneyBox('units.'+i+'.proposed')}${uaBox(i)}${hasProg('rcs')?safmrBox(i):''}<div class="urx">${trash}</div></div>${sub}</div>`;}
 function renderRents(){
   const cards=UNITS.map((i,pos)=>unitCard(i,pos)).join('');
   const nrOn=get('nonrev.enabled')==='1'||NONREV.length>0;
@@ -1586,7 +1586,7 @@ function renderRents(){
     lh+=`<div class="addrow" id="addNs8">+ Add non-Section 8 unit type</div>`;
   }
   lh+=undoBits('LI');
-  const rgHead=`<div class="rgh"><span>Unit type</span><span>Units</span><span>Current rent</span>${hasProg('rcs')?'<span>Proposed rent</span>':''}<span>Utility allowance</span>${hasProg('rcs')?(function(){const st=pullBtnState('safmr');return '<span class="safmrhead">150% SAFMR<button class="urev hudbtn'+st.cls+'" id="pullSafmr"'+st.dis+' title="'+esc(st.why||'Re-pull 150% ceilings from HUD for this property’s ZIP')+'">⤓ HUD</button></span>';})():''}<span></span></div>`;
+  const rgHead=`<div class="rgh"><span>Unit type</span><span>Units</span><span>Current rent</span><span>Proposed rent</span><span>Utility allowance</span>${hasProg('rcs')?(function(){const st=pullBtnState('safmr');return '<span class="safmrhead">150% SAFMR<button class="urev hudbtn'+st.cls+'" id="pullSafmr"'+st.dis+' title="'+esc(st.why||'Re-pull 150% ceilings from HUD for this property’s ZIP')+'">⤓ HUD</button></span>';})():''}<span></span></div>`;
   return card(6,sectionPill(6),`<div class="reseff">${dateEffCell()}</div>${capNote()}<div class="ucards${hasProg('rcs')?'':' noprop'}">${UNITS.length?rgHead:''}${cards}</div><div class="addrow" id="addUnit">+ Add unit type</div>${_undoStack.length?(' <span class="addrow ghostlink" id="undoUnit">↩ Undo delete'+(_undoStack.length>1?(' ('+_undoStack.length+')'):'')+'</span><button class="undocommit" id="undoCommit" title="Keep deletions — dismiss undo">✓</button>'):''}<div class="partd">${lh}</div><div class="partd">${pd}</div>`);}
 
 const SAFMR_BR_KEY={'Studio':'efficiency','1BR':'br1','2BR':'br2','3BR':'br3','4BR':'br4'};
