@@ -23,7 +23,7 @@ function makeSupabaseDb(client) {
 
   /* ---- flat-key <-> column maps ------------------------------------------ */
   const PSCALAR = {
-    'property.name': 'name', 'property.fha': 'fha_section8_no',
+    'property.name': 'name', 'property.fha': 'fha_no', 'property.s8': 'fha_section8_no',
     'property.addr_street': 'address_street', 'property.addr_city': 'address_city', 'property.addr_state': 'address_state', 'property.addr_zip': 'address_zip',
     'owner.entity_name': 'entity_name', 'owner.entity_type': 'entity_type', 'owner.gp': 'general_partner',
     'poc.name': 'owner_poc_name', 'poc.email': 'owner_poc_email', 'poc.phone': 'owner_poc_phone',
@@ -193,7 +193,7 @@ function makeSupabaseDb(client) {
   }
 
   /* ---- registry helpers (mirror db.js) ----------------------------------- */
-  const REQUIRED_DURABLE = ['property.name', 'property.fha', 'property.addr_street', 'property.addr_city', 'property.addr_state', 'property.addr_zip', 'owner.entity_name', 'sig.name', 'ca.org', 'ca.name'];
+  const REQUIRED_DURABLE = ['property.name', 'property.s8', 'property.addr_street', 'property.addr_city', 'property.addr_state', 'property.addr_zip', 'owner.entity_name', 'sig.name', 'ca.org', 'ca.name'];
   const dv = (p, k) => (p.durable[k] && p.durable[k].value !== '' ? p.durable[k].value : '');
   const completenessOf = p => REQUIRED_DURABLE.filter(k => dv(p, k) !== '').length / REQUIRED_DURABLE.length;
   function unitCountOfPid(pid) {
@@ -275,7 +275,7 @@ function makeSupabaseDb(client) {
         return Object.values(D.props).map(p => {
           const uc = unitCountOfPid(p.id);
           return {
-            id: p.id, name: dv(p, 'property.name') || '(unnamed property)', fha: dv(p, 'property.fha') || '—',
+            id: p.id, name: dv(p, 'property.name') || '(unnamed property)', fha: dv(p, 'property.s8') || dv(p, 'property.fha') || '—',
             city_state: (dv(p, 'property.addr_city') || '') + (dv(p, 'property.addr_state') ? ', ' + dv(p, 'property.addr_state') : ''),
             entity: dv(p, 'owner.entity_name') || '', alias: dv(p, 'tenant.property_alias') || '', unit_types: uc.types, total_units: uc.units,
             completeness: completenessOf(p), created_at: p.created_at, updated_at: p.updated_at || p.created_at,

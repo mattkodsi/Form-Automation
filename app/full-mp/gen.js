@@ -17,7 +17,7 @@
       date:monthY(g('cycle.submission_date')||new Date().toISOString().slice(0,10)),
       notice_date:monthY(g('tenant.date_of_notice')||new Date().toISOString().slice(0,10)),
       sign_date:monthY(g('checklist.sign_date')||new Date().toISOString().slice(0,10)),
-      property_name:g('property.name'), tenant_alias:g('tenant.property_alias'), section8:g('property.fha'), entity:g('owner.entity_name'),
+      property_name:g('property.name'), tenant_alias:g('tenant.property_alias'), section8:g('property.s8'), entity:g('owner.entity_name'),
       ca_name:g('ca.name'), ca_salutation:salutationName(g('ca.name'),g('ca.prefix')), ca_position:g('ca.position'), ca_company:g('ca.org'),
       ca_address:g('ca.addr_street'), ca_csz:(g('ca.addr_city')+', '+g('ca.addr_state')+' '+g('ca.addr_zip')).replace(/^,\s*/,'').trim(),
       pm_name:g('poc.name'), pm_phone:g('poc.phone'), pm_email:g('poc.email'),
