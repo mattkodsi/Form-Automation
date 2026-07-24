@@ -187,7 +187,7 @@ const SRCPICK_ROWS={
  'property.s8':()=>[{tag:'Executed RS',val:null},{tag:'RCS report',val:null}],
  'owner.entity_type_other':()=>[{tag:'Executed RS',val:rsVal('owner.entity_type_other')}],
  'owner.entity_name':()=>[{tag:'Executed RS',val:rsVal('owner.entity_name')},{tag:'Related Affordable',val:raVal('owner.entity_name')}],
- 'sig.title':()=>[{tag:'Executed RS',val:null}],
+ 'sig.title':()=>[{tag:'Executed RS',val:rsVal('sig.title')}],
  'appr.firm':()=>[{tag:'RCS report',val:null}],
  'appr.email':()=>[{tag:'RCS report',val:null}],
  'appr.phone':()=>[{tag:'RCS report',val:null}],
@@ -208,9 +208,19 @@ const DIR_SRCROW={'appr.name':'RCS report','sig.name':'Executed RS'};
 function moneySrcTag(k){if(/^units\.\d+\.current$/.test(k))return 'Executed RS';if(/^units\.\d+\.proposed$/.test(k))return 'RCS report';if(/^nonrev\.\d+\.rent$/.test(k))return 'Executed RS';return null;}
 function dimPick(tag){return '<div class="uadrop pocpick"><div class="uatrigger" tabindex="0" title="Source"><span class="cvx">&#9662;</span></div><div class="uamenu"><div class="uaopt srcdim">\u2014<span class="uasub">'+esc(tag)+' \u00b7 not available</span></div></div></div>';}
 /* ================== end external-source dropdowns ================== */
+function refreshPrincipalOpts(){ // the list is built at render time; keep it current while typing
+  const box=document.querySelector('[data-box="sig.principal"]');const menu=box&&box.querySelector('.uamenu');if(!menu)return;
+  const first=menu.firstElementChild;
+  const head=(first&&/Executed RS/.test(first.textContent))?first.outerHTML:'';
+  menu.innerHTML=head+sigPrincipalOpts().map(o=>'<div class="uaopt" data-csopt="'+esc(o)+'" data-cskey="sig.principal">'+esc(o)+'</div>').join('');
+  menu.querySelectorAll('[data-csopt]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();
+    const ck=o.getAttribute('data-cskey');_pendingSnap=snapOf([ck]);form=store.editForm(form,ck,o.getAttribute('data-csopt'));
+    _pending=[ck];_refocusSel='[data-trigfor="'+ck+'"]';renderBody();}));}
 function sigPrincipalOpts(){const o=[];PRINCIPALS.forEach(i=>{const t=(get('principals.'+i+'.title')||'').trim(),n=(get('principals.'+i+'.name')||'').trim();const v=t||n;if(v&&o.indexOf(v)<0)o.push(v);});return o;}
 function sigTitleCell(f){const c=cellColors('sig.title');const pk='sig.principal';const pc=cellColors(pk);
-  const dim='<div class="uaopt srcdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>';
+  const _rp=rsVal('sig.principal');
+  const dim=_rp!=null?('<div class="uaopt" data-cskey="'+pk+'" data-csopt="'+esc(_rp)+'">'+esc(_rp)+'<span class="uasub">Executed RS</span></div>')
+    :'<div class="uaopt srcdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>';
   let dd=csDrop(pk,sigPrincipalOpts(),'Select\u2026','',true);
   dd=dd.replace('<div class="uamenu">','<div class="uamenu">'+dim);
   return `<div class="fpair sigpair"><div class="field"><div class="flabel">${f.label}</div><div class="fbox" data-box="sig.title" style="background:${c[1]};border-left-color:${c[0]}"><input type="text" data-k="sig.title" value="${esc(get('sig.title'))}" autocomplete="off">${srcPick('sig.title',SRCPICK_ROWS['sig.title']())}</div>${ovNote('sig.title')}</div><div class="ofthe">of the</div><div class="field"><div class="flabel">Principal</div><div class="fbox seldrop" data-box="${pk}" style="background:${pc[1]};border-left-color:${pc[0]}">${dd}</div>${ovNote(pk)}</div></div>`;}
@@ -429,6 +439,34 @@ function srcDocLabel(){
    fills) -> read values by the same field ids fillRentSchedule writes.
    Tier 2 (next phase): signature-flattened text copies -> positional text.
    Tier 3: scans -> no digital text; the app says so instead of guessing. */
+const rsFuelOf=v=>{v=String(v||'').trim().toUpperCase();return /^[EFG]$/.test(v)?v:'';};
+function rsPartB(V){ // ids are gen.js's Part B map, read back the way it writes
+  const out={};
+  [99,100,101,102,103,104,105].forEach((id,k)=>{if(V(id))out['partb.equipment.'+k]='1';});
+  [116,118,120,122,124].forEach((id,k)=>{if(V(id))out['partb.utilities.'+k]='1';});
+  [117,119,121,123,125].forEach((id,k)=>{const f=rsFuelOf(V(id));if(f)out['partb.fuel.'+k]=f;});
+  [129,130,131,132,141,142].forEach((id,k)=>{if(V(id))out['partb.services.'+k]='1';});
+  [[106,107],[108,109],[110,111],[112,113],[114,115]].forEach((p,ix)=>{const t=V(p[1]);
+    if(t){out['partb.writein.e'+(ix+1)]=t;if(V(p[0]))out['partb.writein.e'+(ix+1)+'.on']='1';}});
+  [[133,134],[135,136],[137,138],[139,140],[143,144],[145,146]].forEach((p,ix)=>{const t=V(p[1]);
+    if(t){out['partb.writein.s'+(ix+1)]=t;if(V(p[0]))out['partb.writein.s'+(ix+1)+'.on']='1';}});
+  const u1=V(127);if(u1){out['partb.writein.u1']=u1;if(V(126))out['partb.writein.u1.on']='1';
+    const uf=rsFuelOf(V(1125));if(uf)out['partb.writein.u1.fuel']=uf;}
+  return out;}
+function rsSigOf(str){ // "David Pearson, Vice President of General Partner"
+  const m=String(str||'').trim().match(/^(.+?),\s*(.+?)\s+of\s+(?:the\s+)?(.+)$/);
+  return m?{name:m[1].trim(),title:m[2].trim(),principal:m[3].trim()}:null;}
+function rsSigInto(outp,partH){
+  let sig=rsSigOf(partH);
+  // Part H is often left blank and the signatory written into a Part G row instead;
+  // such a row names a person and carries no title of its own.
+  if(!sig)for(let i=0;i<outp.principals.length;i++){const p=outp.principals[i];
+    if(!p.title){const c=rsSigOf(p.name);if(c){sig=c;break;}}}
+  if(!sig)return;
+  // whichever half of the form carried it, the signatory is not also a principal
+  const same=(a,b)=>String(a||'').trim().toLowerCase()===String(b||'').trim().toLowerCase();
+  outp.principals=outp.principals.filter(p=>{if(p.title)return true;const c=rsSigOf(p.name);return !(c&&same(c.name,sig.name));});
+  outp.scalars['sig.name']=sig.name;outp.scalars['sig.title']=sig.title;outp.scalars['sig.principal']=sig.principal;}
 function rsPrin(i,f){try{const p=_rsUpload&&_rsUpload.parsed&&_rsUpload.parsed.principals;const r=p&&p[i];const v=r&&r[f];return (v==null||v==='')?null:String(v);}catch(e){return null;}}
 function rsUnit(i,f){try{const u=_rsUpload&&_rsUpload.parsed&&_rsUpload.parsed.units;const r=u&&u[i];const v=r&&r[f];return (v==null||v===''||v===0)?null:String(v);}catch(e){return null;}}
 function rsUnitBr(i){const t=rsUnit(i,'type');if(t==null)return null;const bb=rsParseUnitType(t);return bb.br||null;}
@@ -454,6 +492,8 @@ function rsReadFields(pdfForm){
   if(CB('204')){outp.scalars['owner.entity_type']='Other (specify)';if(V(205))outp.scalars['owner.entity_type_other']=V(205);}
   [206,208,210,212,214,216,218,220,222,224,226].forEach(id=>{const nm=V(id),tt=V(id+1);if(nm||tt)outp.principals.push({name:nm,title:tt});});
   const R=rsRows(V);outp.units=R.units;outp.ns8=R.ns8;
+  rsSigInto(outp,V(228));
+  outp.partb=rsPartB(n=>{const t=V(n);return t||(CB(n)?'1':'');});
   return outp;}
 /* ---- Tier 2: positioned text for copies that no longer carry form fields ----
    Interprets the page content streams (q/Q + cm stack, Tm/Td/TD/T*, Tj/TJ/quote)
@@ -598,6 +638,8 @@ async function rsReadTextTier(pages){ // flattened copy -> same parsed shape as 
   if(V(204)){outp.scalars['owner.entity_type']='Other (specify)';if(V(205))outp.scalars['owner.entity_type_other']=V(205);}
   [206,208,210,212,214,216,218,220,222,224,226].forEach(id=>{const nm=V(id),tt=V(id+1);if(nm||tt)outp.principals.push({name:nm,title:tt});});
   const R=rsRows(V);outp.units=R.units;outp.ns8=R.ns8;
+  rsSigInto(outp,V(228));
+  outp.partb=rsPartB(V);
   // quality gate: the rows must reconcile against the schedule's own printed total
   const tot=rsNum(V(95));const all=outp.units.concat(outp.ns8);
   const sum=all.reduce((a,u)=>a+(u.count&&u.rent?u.count*u.rent:0),0);
@@ -622,6 +664,8 @@ function rsFillFromParsed(){const P=_rsUpload&&_rsUpload.parsed;if(!P)return;
   if(P.scalars['rs_date']){const nx=rsYearOn(P.scalars['rs_date']);
     if(nx){form=store.editForm(form,'rent_schedule.date_eff_rs',nx);mark('rent_schedule.date_eff_rs');
       if(!get('rent_schedule.date_eff_custom')){form=store.editForm(form,'rent_schedule.date_eff_source','rs');mark('rent_schedule.date_eff_source');}}}
+  setk('sig.name',P.scalars['sig.name']);setk('sig.title',P.scalars['sig.title']);setk('sig.principal',P.scalars['sig.principal']);
+  if(P.partb)Object.keys(P.partb).forEach(k=>setk(k,P.partb[k]));
   P.principals.forEach((p,ix)=>{setk('principals.'+ix+'.name',p.name);setk('principals.'+ix+'.title',p.title);});
   P.units.forEach((u,ix)=>{const bb=rsParseUnitType(u.type);setk('units.'+ix+'.br',bb.br);setk('units.'+ix+'.ba',bb.ba);
     setk('units.'+ix+'.num_units',u.count);setk('units.'+ix+'.current',u.rent);
@@ -960,7 +1004,7 @@ function wireBody(){
   document.querySelectorAll('input[data-k]').forEach(inp=>{const k=inp.getAttribute('data-k'),wion=inp.getAttribute('data-wion');
     inp.addEventListener('input',()=>{let v=inp.value;if(inp.getAttribute('data-phone')){v=fmtPhone(v);inp.value=v;}else if(inp.getAttribute('data-money')){v=cleanNum(v);inp.value=fmtMoney(v);}else if(inp.getAttribute('data-date')){v=fmtDateInput(v);inp.value=v;}form=store.editForm(form,k,v);if(k==='property.name'&&el('hdrProp'))el('hdrProp').textContent=(v||'(unnamed property)');if(k==='property.addr_zip')scheduleHudRefresh();
       if(wion){const on=v.length>0;form=store.editForm(form,wion,on?'1':'');const cbEl=inp.closest('.cb');if(cbEl){cbEl.classList.remove('empty','unchecked','checked');cbEl.classList.add(!v?'empty':(on?'checked':'unchecked'));const bx=cbEl.querySelector('.box');if(bx){bx.textContent=on?'✓':'';bx.style.color=provColor(wion);}}}else if(inp.getAttribute('data-util')){if(v===''){form=store.editForm(form,k+'.on','');form=store.editForm(form,k+'.fuel','');}const cbEl=inp.closest('.cb');const stillOn=v!==''&&get(k+'.on')==='1';if(cbEl){cbEl.classList.remove('empty','unchecked','checked');cbEl.classList.add(!v?'empty':(stillOn?'checked':'unchecked'));const bx=cbEl.querySelector('.box');if(bx){bx.textContent=stillOn?'✓':'';bx.style.color=provColor(k+'.on');}const f3=cbEl.querySelector('[data-fuel3]');if(f3){const fk=k+'.fuel',fv=get(fk),fhas=fv!==''&&fv!=null,fc=CLR[fhas?srcOf(fk):'new']||CLR.new;f3.textContent=fhas?fv:'-';f3.style.color=fc[0];f3.style.borderColor=fc[0];f3.style.background=fc[1];}}}
-      paintCell(k);refreshFlags();if(/^units\.|^nonrev\./.test(k)){renderCommand();renderBar();const mm=k.match(/^units\.(\d+)\.(current|proposed)$/);if(mm){const ui=mm[1],me=document.querySelector('[data-metric="'+ui+'"]');if(me){const cc=numf(get('units.'+ui+'.current')),pp=numf(get('units.'+ui+'.proposed'));if(cc>0&&pp>0){me.textContent=sMoney(pp-cc)+' / unit · '+sPct(Math.round((pp-cc)/cc*100));me.style.color=(pp-cc)>=0?'#166534':'#b91c1c';}else me.textContent='';}}}refreshOcafLines(k);refreshUafLines(k);if(/^property\.addr_|^rent_schedule\.date_eff/.test(k)){scheduleHudRefresh();scheduleFactorRefresh();}setStatus('Editing — on-file changes show Overridden until you Update or Revert.');});inp.addEventListener('keydown',async e=>{if(e.key!=='Enter'&&e.key!=='Escape')return;const _keys=fieldKeys(k);if(_pending&&_pending.length&&_pending.indexOf(k)>=0){e.preventDefault();e.stopPropagation();if(e.key==='Escape')revertPending();else commitPending();return;}if(e.key==='Escape'){if(keysCanRevert(_keys)){e.preventDefault();e.stopPropagation();_keys.forEach(kk=>store.revertForm(form,kk));refreshIfPrereq(_keys);_refocusSel='[data-k="'+k+'"]';renderBody();setStatus('Reverted your change to the on-file value.');}else if(srcOf(k)==='new'&&(inp.value||'')!==''){e.preventDefault();e.stopPropagation();const _clr=groupOf(k)?[k]:_keys;_clr.forEach(kk=>store.editForm(form,kk,''));_refocusSel='[data-k="'+k+'"]';renderBody();setStatus('Cleared your unsaved entry.');}return;}e.preventDefault();if(_keys.length===1&&/^principals\.\d+\./.test(_keys[0])){const pi=+_keys[0].match(/^principals\.(\d+)\./)[1];if(!principalHasData(pi)){if(PRINCIPALS.length>1){Object.keys(form).forEach(kk=>{if(kk.indexOf('principals.'+pi+'.')===0)delete form[kk];});PRINCIPALS=PRINCIPALS.filter(x=>x!==pi);renderBody();setStatus('Empty principal row removed.');}return;}}if(handleZeroUnitCommit(_keys))return;if(k==='poc.phone'){const _d=(inp.value||'').replace(/[^0-9]/g,'');if(_d.length!==0&&_d.length!==10){setStatus('Enter a complete 10-digit phone before saving.');return;}}if(!keysCanSave(_keys))return;_keys.forEach(kk=>{if(kk.indexOf('partb.writein.')===0&&kk.indexOf('.',14)<0&&kk.slice(14)!=='u1')clearUncheckedWriteins([kk.slice(14)]);});const _sk=[];_keys.forEach(kk=>coupledKeys(kk).forEach(x=>{if(_sk.indexOf(x)<0)_sk.push(x);}));if(groupOf(k)==='tenant.mgmt'&&_sk.indexOf('tenant.mgmt_source')<0)_sk.push('tenant.mgmt_source');try{form=await store.saveFields(form,_sk);}catch(e){saveFailed(e);return;}await refreshSnap();_refocusSel='[data-k="'+k+'"]';renderBody();setStatus('Saved this field to the database.');});if(wion)inp.addEventListener('focus',()=>{if(inp.value&&get(wion)!=='1'){form=store.editForm(form,wion,'1');const cb=inp.closest('.cb');if(cb){cb.classList.remove('unchecked','empty');cb.classList.add('checked');const bx=cb.querySelector('.box');if(bx)bx.textContent='✓';}}});});
+      paintCell(k);refreshFlags();if(/^principals\.\d+\.(name|title)$/.test(k))refreshPrincipalOpts();if(/^units\.|^nonrev\./.test(k)){renderCommand();renderBar();const mm=k.match(/^units\.(\d+)\.(current|proposed)$/);if(mm){const ui=mm[1],me=document.querySelector('[data-metric="'+ui+'"]');if(me){const cc=numf(get('units.'+ui+'.current')),pp=numf(get('units.'+ui+'.proposed'));if(cc>0&&pp>0){me.textContent=sMoney(pp-cc)+' / unit · '+sPct(Math.round((pp-cc)/cc*100));me.style.color=(pp-cc)>=0?'#166534':'#b91c1c';}else me.textContent='';}}}refreshOcafLines(k);refreshUafLines(k);if(/^property\.addr_|^rent_schedule\.date_eff/.test(k)){scheduleHudRefresh();scheduleFactorRefresh();}setStatus('Editing — on-file changes show Overridden until you Update or Revert.');});inp.addEventListener('keydown',async e=>{if(e.key!=='Enter'&&e.key!=='Escape')return;const _keys=fieldKeys(k);if(_pending&&_pending.length&&_pending.indexOf(k)>=0){e.preventDefault();e.stopPropagation();if(e.key==='Escape')revertPending();else commitPending();return;}if(e.key==='Escape'){if(keysCanRevert(_keys)){e.preventDefault();e.stopPropagation();_keys.forEach(kk=>store.revertForm(form,kk));refreshIfPrereq(_keys);_refocusSel='[data-k="'+k+'"]';renderBody();setStatus('Reverted your change to the on-file value.');}else if(srcOf(k)==='new'&&(inp.value||'')!==''){e.preventDefault();e.stopPropagation();const _clr=groupOf(k)?[k]:_keys;_clr.forEach(kk=>store.editForm(form,kk,''));_refocusSel='[data-k="'+k+'"]';renderBody();setStatus('Cleared your unsaved entry.');}return;}e.preventDefault();if(_keys.length===1&&/^principals\.\d+\./.test(_keys[0])){const pi=+_keys[0].match(/^principals\.(\d+)\./)[1];if(!principalHasData(pi)){if(PRINCIPALS.length>1){Object.keys(form).forEach(kk=>{if(kk.indexOf('principals.'+pi+'.')===0)delete form[kk];});PRINCIPALS=PRINCIPALS.filter(x=>x!==pi);renderBody();setStatus('Empty principal row removed.');}return;}}if(handleZeroUnitCommit(_keys))return;if(k==='poc.phone'){const _d=(inp.value||'').replace(/[^0-9]/g,'');if(_d.length!==0&&_d.length!==10){setStatus('Enter a complete 10-digit phone before saving.');return;}}if(!keysCanSave(_keys))return;_keys.forEach(kk=>{if(kk.indexOf('partb.writein.')===0&&kk.indexOf('.',14)<0&&kk.slice(14)!=='u1')clearUncheckedWriteins([kk.slice(14)]);});const _sk=[];_keys.forEach(kk=>coupledKeys(kk).forEach(x=>{if(_sk.indexOf(x)<0)_sk.push(x);}));if(groupOf(k)==='tenant.mgmt'&&_sk.indexOf('tenant.mgmt_source')<0)_sk.push('tenant.mgmt_source');try{form=await store.saveFields(form,_sk);}catch(e){saveFailed(e);return;}await refreshSnap();_refocusSel='[data-k="'+k+'"]';renderBody();setStatus('Saved this field to the database.');});if(wion)inp.addEventListener('focus',()=>{if(inp.value&&get(wion)!=='1'){form=store.editForm(form,wion,'1');const cb=inp.closest('.cb');if(cb){cb.classList.remove('unchecked','empty');cb.classList.add('checked');const bx=cb.querySelector('.box');if(bx)bx.textContent='✓';}}});});
   document.querySelectorAll('select[data-k]').forEach(sel=>{const k=sel.getAttribute('data-k');sel.addEventListener('change',()=>{form=store.editForm(form,k,sel.value);paintCell(k);renderRail();renderAttention();});});
   document.querySelectorAll('input[data-cb]').forEach(c=>{const k=c.getAttribute('data-cb');c.addEventListener('change',()=>{_pendingSnap=snapOf([k]);form=store.editForm(form,k,c.checked?'1':'');_pending=[k];_refocusSel='[data-cb="'+k+'"]';renderBody();});});
   document.querySelectorAll('[data-fuel]').forEach(fl=>fl.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();const k=fl.getAttribute('data-fuel');const cur=(form[k]&&form[k].value)||'';const nx=cur===''?'E':(cur==='E'?'F':(cur==='F'?'G':''));_pendingSnap=snapOf([k]);form=store.editForm(form,k,nx);_pending=[k];renderBody();}));
