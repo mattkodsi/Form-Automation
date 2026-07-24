@@ -1223,7 +1223,7 @@ function newCycleDialog(){
   el('dlgOk').onclick=async()=>{
     const programs=[];if(rcs.checked)programs.push('rcs');if(ocaf.checked)programs.push('ocaf');if(uaf.checked)programs.push('uaf');
     if(!programs.length){err.textContent='Pick at least one program.';return;}
-    const eff=fmtDateInput((el('cyEff').value||'').trim());
+    const eff=fmtDateInput((el('cyEff').value||'').trim())||effPh;   // left blank, the package takes the date shown in grey: a year on from the last one
     const label=(eff.match(/(\d{4})/)||[])[1]||String(new Date().getFullYear());
     closeModal();
     try{const r=await mpdb.createCycle(activePid,{programs,label,effective_date:eff});renderLauncher();await openCycleForm(r.cid);_cyFresh=r.cid;}catch(e){saveFailedModal(e);}
