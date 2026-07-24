@@ -95,7 +95,7 @@ function deriveUnits(){const u=new Set([0]),nr=new Set(),lh=new Set(),pr=new Set
 function defUaSrc(i){const e=numf(get('units.'+i+'.ua_exec')),r=numf(get('units.'+i+'.ua_rcs'));return e>0?'exec':(r>0?'rcs':'custom');}
 function defSafmrSrc(i){const h=numf(get('units.'+i+'.safmr_hud')),r=numf(get('units.'+i+'.safmr_rcs'));return h>0?'hud':(r>0?'rcs':'custom');}
 function uaResolvedOf(i){const src=get('units.'+i+'.ua_source')||defUaSrc(i);if(src==='rcs')return numf(get('units.'+i+'.ua_rcs'));if(src==='custom')return numf(get('units.'+i+'.ua_custom'));return numf(get('units.'+i+'.ua_exec'));}
-function uaConflict(i){return numf(get('units.'+i+'.ua_exec'))!==numf(get('units.'+i+'.ua_rcs'));}
+function uaConflict(i){const e=numf(get('units.'+i+'.ua_exec')),r=numf(get('units.'+i+'.ua_rcs'));return e>0&&r>0&&e!==r;}   // two sources disagreeing — an absent RCS figure is not a disagreement
 function uaReviewedOf(i){return get('units.'+i+'.ua_reviewed')==='1';}
 function uaUnresolved(i){return uaConflict(i)&&!uaReviewedOf(i);}
 function safmrResolvedOf(i){const src=get('units.'+i+'.safmr_source')||defSafmrSrc(i);const sh=numf(get('units.'+i+'.safmr_hud')),sr=numf(get('units.'+i+'.safmr_rcs')),sc=numf(get('units.'+i+'.safmr_custom'));return src==='custom'?sc:(src==='rcs'?(sr||sh):(sh||sr));}
