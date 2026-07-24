@@ -244,7 +244,7 @@ function selectCell(f){const c=cellColors(f.k);let dd=csDrop(f.k,f.opts,f.ph||'S
     const other=`<div class="field"><div class="flabel">Specify entity type</div><div class="fbox" data-box="${ok}" style="background:${oc[1]};border-left-color:${oc[0]}"><input type="text" data-k="${ok}" value="${esc(get(ok))}" placeholder="e.g. Limited Liability Company" autocomplete="off">${srcPick(ok,SRCPICK_ROWS[ok]())}</div>${ovNote(ok)}</div>`;
     return '<div class="fpair etpair">'+sel+other+'</div>';}
   return sel;}
-function compAddrCell(keys,box,label){const a=baseSrc(keys);const c=CLR[a]||CLR.new;const ti=k=>partHot(k)?(';'+tintStyle(k)):'';
+function compAddrCell(keys,box,label){const c=groupColors(keys);const ti=k=>partHot(k)?(';'+tintStyle(k)):'';
   return `<div class="field"><div class="flabel">${label}</div><div class="fbox addr" data-box="${box}" style="background:${c[1]};border-left-color:${c[0]}">
      <input type="text" data-k="${keys[0]}" value="${esc(get(keys[0]))}" placeholder="Street" style="flex:2.2${ti(keys[0])}"><span class="adiv"></span>
      <input type="text" data-k="${keys[1]}" value="${esc(get(keys[1]))}" placeholder="City" style="flex:1.3${ti(keys[1])}"><span class="adiv"></span>
@@ -988,9 +988,12 @@ function aggSrc(keys){if(keys.some(k=>srcOf(k)==='overridden'))return'overridden
 function groupOf(k){for(const b in ADDR_GROUPS){if(ADDR_GROUPS[b].indexOf(k)>=0)return b;}return null;}
 function partHot(k){const s=srcOf(k);return s==='overridden'||(s==='new'&&get(k)!==''&&get(k)!=null);}
 function baseSrc(keys){const cold=keys.filter(k=>!partHot(k));return aggSrc(cold.length?cold:keys);}
+function groupColors(keys){const a=baseSrc(keys);const c=CLR[a]||CLR.new;   // cellColors, for a group of cells
+  if(a==='new'&&keys.some(k=>form[k]&&form[k].db_value===''))return [CLR.database[0],c[1],c[2]]; // cleared on purpose, and saved that way
+  return c;}
 function tintStyle(k){const c=CLR[srcOf(k)]||CLR.new;return 'background:linear-gradient('+c[0]+','+c[0]+') no-repeat left 4px center/3px 60%,'+c[1]+';border-radius:6px';} // inset bar, not an inset shadow: shadows bend around the pill radius into a "(" crescent
 function applyTint(inp,k){if(partHot(k)){const pc=CLR[srcOf(k)]||CLR.new;inp.style.background='linear-gradient('+pc[0]+','+pc[0]+') no-repeat left 4px center/3px 60%,'+pc[1];inp.style.borderRadius='6px';}else{inp.style.background='transparent';}inp.style.boxShadow='none';} // live-paint twin of tintStyle — keep the two in lockstep
-function paintGroup(b){const keys=ADDR_GROUPS[b];const a=baseSrc(keys);const c=CLR[a]||CLR.new;const box=document.querySelector('[data-box="'+b+'"]');
+function paintGroup(b){const keys=ADDR_GROUPS[b];const c=groupColors(keys);const box=document.querySelector('[data-box="'+b+'"]');
   if(box){box.style.background=c[1];box.style.borderLeftColor=c[0];
     keys.forEach(k=>{const inp=box.querySelector('input[data-k="'+k+'"]');if(inp)applyTint(inp,k);});}
   const ov=document.querySelector('[data-ov="'+b+'"]');if(ov){const m=modeOf(keys);ov.setAttribute('data-mode',m);ov.style.display=m?'flex':'none';}}
