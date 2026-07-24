@@ -119,7 +119,7 @@ function dateEffCell(){const rs=get('rent_schedule.date_eff_rs');const src=get('
   const lab=(src==='custom')?('<input class="uac-in dateeff-in" data-date="1" data-k="rent_schedule.date_eff_custom" value="'+esc(custom)+'" placeholder="mm/dd/yyyy" autocomplete="off">'):(rs?('<input class="uac-in srcedit" data-srcedit="dateeff" data-date="1" value="'+esc(fmtDate(rs))+'"><span class="srctag">· from RS</span>'):('<span class="ualab">'+esc(rsLab)+'</span>'));
   let state,c;if(src==='custom'){state=srcOf('rent_schedule.date_eff_custom');c=CLR[state]||CLR.new;}else{state=rs?'this-cycle':'new';c=CLR[state];}
   const boxKey=(src==='custom')?'rent_schedule.date_eff_custom':'rent_schedule.date_eff_source';
-  const menu='<div class="uamenu">'+srcOptRow('data-deffopt="rs"',rs?esc(fmtDate(rs)):'','Executed RS')+'<div class="uaopt" data-deffopt="custom">Custom…</div></div>';
+  const menu='<div class="uamenu">'+srcOptRow('data-deffopt="rs"',rs?esc(fmtDate(rs)):'','A year after the executed RS')+'<div class="uaopt" data-deffopt="custom">Custom…</div></div>';
   return `<div class="field"><div class="flabel">Date rents will be effective</div><div class="fbox uacell" data-box="${boxKey}" style="background:${c[1]};border-left-color:${c[0]}"><div class="uadrop" style="flex:1;min-width:0"><div class="uatrigger" tabindex="0">${lab}<span class="cvx">▾</span></div>${menu}</div>${src==='custom'?ovIcons('rent_schedule.date_eff_custom'):''}</div></div>`;}
 function pocSelectContact(ct){form=store.editForm(form,'poc.name',ct.name||'');form=store.editForm(form,'poc.email',ct.email||'');form=store.editForm(form,'poc.phone',fmtPhone(ct.phone||''));}
 function pocNote(){const m=modeOf('poc.name');return `<div class="ovnote" data-ov="poc.name" data-mode="${m}" style="display:${m?'flex':'none'}"><span class="om-over">changed from stored record</span><span class="om-new">new — not saved yet</span><button class="revert" data-rev="poc.name,poc.email,poc.phone">↺ revert</button><button class="save1" data-save1="poc.name,poc.email,poc.phone">✓ save this field</button></div>`;}
@@ -269,7 +269,7 @@ function brbaBox(brK,baK){const st=baseSrc([brK,baK]);const c=CLR[st]||CLR.new;
   return `<div class="rbox brba" data-box="${brK}" style="background:${c[1]};border-left-color:${c[0]}">${csDrop(brK,BR_OPTS,'BR','',true,partHot(brK)?tintStyle(brK):'')}${ovIcons(brK)}<span class="slash">/</span>${csDrop(baK,BA_OPTS,'BA','',true,partHot(baK)?tintStyle(baK):'')}${ovIcons(baK)}</div>`;}
 function uaBox(i){const src=get('units.'+i+'.ua_source')||defUaSrc(i),exec=get('units.'+i+'.ua_exec'),rcs=get('units.'+i+'.ua_rcs'),custom=get('units.'+i+'.ua_custom');
   const hasAny=numf(exec)>0||numf(rcs)>0||numf(custom)>0;
-  const lab=src==='rcs'?('$<input class="uac-in srcedit" data-srcedit="ua" data-si="'+i+'" data-money="1" value="'+esc(fmtMoney(rcs))+'"><span class="srctag">· RCS report</span>'):(src==='custom'?('$<input class="uac-in" data-money="1" data-k="units.'+i+'.ua_custom" value="'+esc(fmtMoney(custom))+'" placeholder="0">'):('$<input class="uac-in srcedit" data-srcedit="ua" data-si="'+i+'" data-money="1" value="'+esc(fmtMoney(exec))+'"><span class="srctag">· Executed RS</span>'));
+  const lab=src==='rcs'?('$<input class="uac-in srcedit" data-srcedit="ua" data-si="'+i+'" data-money="1" value="'+esc(fmtMoney(rcs))+'"><span class="srctag">· RCS</span>'):(src==='custom'?('$<input class="uac-in" data-money="1" data-k="units.'+i+'.ua_custom" value="'+esc(fmtMoney(custom))+'" placeholder="0">'):('$<input class="uac-in srcedit" data-srcedit="ua" data-si="'+i+'" data-money="1" value="'+esc(fmtMoney(exec))+'"><span class="srctag">· RS</span>'));
   let state,c;if(src==='custom'){state=srcOf('units.'+i+'.ua_custom');c=CLR[state]||CLR.new;}else{state=hasAny?'this-cycle':'new';const overSrc=srcOf('units.'+i+'.ua_source')==='overridden';if(uaUnresolved(i)||overSrc)state='overridden';c=CLR[state];}const boxKeyUA=src==='custom'?('units.'+i+'.ua_custom'):('units.'+i+'.ua_source');
   const menu='<div class="uamenu">'+srcOptRow('data-uaopt="exec" data-uai="'+i+'"',(exec!==''&&exec!=null)?('$'+fmtMoney(exec)):'','Executed RS')+((hasProg('rcs')||numf(rcs)>0)?srcOptRow('data-uaopt="rcs" data-uai="'+i+'"',(rcs!==''&&rcs!=null)?('$'+fmtMoney(rcs)):'','RCS report'):'')+'<div class="uaopt" data-uaopt="custom" data-uai="'+i+'">Custom…</div></div>';
   return '<div class="rbox uacell" data-box="'+boxKeyUA+'" style="background:'+c[1]+';border-left-color:'+c[0]+'"><div class="uadrop"><div class="uatrigger" tabindex="0"><span class="ualab">'+lab+'</span><span class="cvx">▾</span></div>'+menu+'</div>'+(src==='custom'?ovIcons('units.'+i+'.ua_custom'):ovIcons('units.'+i+'.ua_source'))+'</div>';}
@@ -425,6 +425,7 @@ function srcDocLabel(){
 function rsVal(k){try{const p=_rsUpload&&_rsUpload.parsed;const v=p&&p.scalars?p.scalars[k]:null;return (v==null||v==='')?null:String(v);}catch(e){return null;}}
 function rsNum(v){v=String(v==null?'':v).replace(/[^0-9.\-]/g,'');const n=parseFloat(v);return isFinite(n)?n:'';}
 function rsDateISO(v){v=String(v||'').trim();let m=v.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);if(m)return m[3]+'-'+('0'+m[1]).slice(-2)+'-'+('0'+m[2]).slice(-2);m=v.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m)return v.slice(0,10);const MN={january:1,february:2,march:3,april:4,may:5,june:6,july:7,august:8,september:9,october:10,november:11,december:12};m=v.toLowerCase().match(/([a-z]+)\s+(\d{1,2}),?\s+(\d{4})/);if(m&&MN[m[1]])return m[3]+'-'+('0'+MN[m[1]]).slice(-2)+'-'+('0'+m[2]).slice(-2);return '';}
+function rsYearOn(iso){const m=String(iso||'').match(/^(\d{4})-(\d{2})-(\d{2})/);return m?((+m[1])+1)+'-'+m[2]+'-'+m[3]:'';}   // the uploaded schedule is the one in force; this package renews it
 function rsParseUnitType(t){t=String(t||'');let br='',ba='';if(/studio|efficiency/i.test(t))br='Studio';else{const m=t.match(/(\d+)\s*(?:br\b|bed)/i);if(m&&BR_OPTS.indexOf(m[1]+'BR')>=0)br=m[1]+'BR';}const b=t.match(/(\d+(?:\.\d+)?)\s*(?:ba\b|bath)/i);if(b&&BA_OPTS.indexOf(b[1]+'BA')>=0)ba=b[1]+'BA';return {br:br,ba:ba};}
 function rsReadFields(pdfForm){
   const V=n=>{try{const v=pdfForm.getTextField(String(n)).getText();return v==null?'':String(v).trim();}catch(e){return '';}};
@@ -603,7 +604,9 @@ function rsFillFromParsed(){const P=_rsUpload&&_rsUpload.parsed;if(!P)return;
   setk('owner.entity_name',P.scalars['owner.entity_name']);
   setk('owner.entity_type',P.scalars['owner.entity_type']);
   setk('owner.entity_type_other',P.scalars['owner.entity_type_other']);
-  if(P.scalars['rs_date']){form=store.editForm(form,'rent_schedule.date_eff_rs',P.scalars['rs_date']);form=store.editForm(form,'rent_schedule.date_eff_source','rs');}
+  if(P.scalars['rs_date']){const nx=rsYearOn(P.scalars['rs_date']);
+    if(nx){form=store.editForm(form,'rent_schedule.date_eff_rs',nx);
+      if(!get('rent_schedule.date_eff_custom'))form=store.editForm(form,'rent_schedule.date_eff_source','rs');}}
   P.principals.forEach((p,ix)=>{setk('principals.'+ix+'.name',p.name);setk('principals.'+ix+'.title',p.title);});
   P.units.forEach((u,ix)=>{const bb=rsParseUnitType(u.type);setk('units.'+ix+'.br',bb.br);setk('units.'+ix+'.ba',bb.ba);
     setk('units.'+ix+'.num_units',u.count);setk('units.'+ix+'.current',u.rent);
