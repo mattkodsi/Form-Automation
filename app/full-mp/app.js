@@ -107,7 +107,9 @@ function analysis(){let cg=0,pg=0,tot=0,sc=0,sp=0,nd=0,ceil=0,safmrMissing=false
     cg+=(cur+ua)*n;pg+=(pro+ua)*n;tot+=n;if(safmr>0){ceil+=safmr*n;if(pro>0&&pro>=safmr)safmrOver++;}else if(n>0)safmrMissing=true;if(safmrConflictOf(i))safmrConflict=true;
     if(cur>0&&pro>0){sc+=cur*n;sp+=pro*n;nd+=n;}});
   const perUnit=nd?(sp-sc)/nd:0;const pct=sc?Math.round((sp-sc)/sc*100):0;
-  return{cg,pg,ceil,headroom:ceil-pg,pass:(ceil>0&&pg<ceil),perUnit,dMo:pg-cg,dYr:(pg-cg)*12,pct,tot,safmrMissing,safmrConflict,safmrOver};}
+  const safmrHave=UNITS.filter(i=>safmrResolvedOf(i)>0).length;   // a ceiling needs both a SAFMR and a unit count
+  const countsMissing=tot<=0&&UNITS.length>0;
+  return{cg,pg,ceil,headroom:ceil-pg,pass:(ceil>0&&pg<ceil),perUnit,dMo:pg-cg,dYr:(pg-cg)*12,pct,tot,safmrMissing,safmrConflict,safmrOver,safmrHave,countsMissing};}
 
 function ovBtns(k){return `<button class="revert" data-rev="${k}">↺ revert</button><button class="save1" data-save1="${k}">✓ save this field</button>`;}
 function ovNote(kk){const keys=Array.isArray(kk)?kk:[kk];const j=keys.join(',');const m=modeOf(keys);return `<div class="ovnote" data-ov="${j}" data-mode="${m}" style="display:${m?'flex':'none'}"><span class="om-over">changed from stored record</span><span class="om-new">new — not saved yet</span>${ovBtns(j)}</div>`;}
@@ -263,7 +265,8 @@ function mgmtCell(){const src=get('tenant.mgmt_source')||'property';const propHa
   const pretty=propHas?(get('property.addr_street')+', '+get('property.addr_city')+' '+get('property.addr_state')+' '+get('property.addr_zip')).replace(/\s+/g,' ').replace(/^,\s*/,'').trim():'';
   const inner=propHas?('<span class="mgmtprop">'+esc(pretty)+'</span><span class="srctag">· property</span>'):('<span class="mgmtph">Set the property address in Section 2, or pick a different address</span>');
   const menu='<div class="uamenu"><div class="uaopt" data-mgmt="property">Use property address</div><div class="uaopt" data-mgmt="custom">Different address…</div></div>';
-  const ovSrc=srcOf('tenant.mgmt_source')==='overridden';const c=ovSrc?CLR.overridden:CLR[propHas?'database':'new'];
+  // mirroring the property address: report that address's record, since that is what prints
+  const ovSrc=srcOf('tenant.mgmt_source')==='overridden';const c=ovSrc?CLR.overridden:groupColors(ADDR);
   return '<div class="field"><div class="flabel">Management address</div><div class="fbox mgmtcell" data-box="tenant.mgmt_address" style="background:'+c[1]+';border-left-color:'+c[0]+'"><div class="uadrop"><div class="uatrigger" tabindex="0"><span class="ualab">'+inner+'</span><span class="cvx">▾</span></div>'+menu+'</div>'+(ovSrc?ovIcons('tenant.mgmt_source'):'')+'</div></div>';}
 function renderFieldSection(sec){const cols=[[],[]];sec.fields.forEach(f=>cols[f.col].push(fieldCell(f)));return card(sec.n,sectionPill(sec.n),`<div class="cols"><div>${cols[0].join('')}</div><div>${cols[1].join('')}</div></div>`);}
 function principalHasData(i){return ['name','title'].some(s=>{const v=get('principals.'+i+'.'+s);return v!==''&&v!=null;});}
@@ -381,6 +384,15 @@ function hudCeil(rents,br){let base=0;const bk=SAFMR_BR_KEY[br];
   else{const m=String(br).match(/^(\d+)BR/);const n=m?+m[1]:0;if(n>4)base=numf(rents.br4)*(1+0.15*(n-4));} // HUD rule: >4BR = 4BR FMR +15% per extra bedroom
   return base>0?String(Math.round(base*1.5)):'';}
 function hudZipMissing(){const p=hudParams();return p.zip.length!==5&&!(p.street&&p.city&&p.state);}
+function hudBlockers(){ // everything a SAFMR pull needs, not just the first thing missing
+  const out=[];
+  if(hudZipMissing())out.push('the property ZIP in '+secRef(2));
+  if(!dateEffResolved())out.push('the date rents will be effective in '+secRef(6));
+  const nb=UNITS.filter(i=>!get('units.'+i+'.br')).length;
+  if(nb)out.push('the bedroom size on '+nb+' unit type'+(nb>1?'s':'')+' in '+secRef(6));
+  return out;}
+function hudBlockerText(){const b=hudBlockers();if(!b.length)return '';
+  return 'add '+(b.length===1?b[0]:(b.slice(0,-1).join(', ')+' and '+b[b.length-1]));}
 function hudParams(){const zip=String(get('property.addr_zip')||'').replace(/\D/g,'').slice(0,5);
   const de=dateEffResolved();const _ym=String(de||'').match(/\d{4}/);const year=_ym?parseInt(_ym[0],10):(new Date()).getFullYear();
   return{zip,year,street:get('property.addr_street'),city:get('property.addr_city'),state:get('property.addr_state')};}
@@ -904,12 +916,12 @@ function _renderCommand(){const a=analysis();const pCur=a.ceil>0?clamp(a.cg/a.ce
     return `<div class="lift"><b>UTILITY ALLOWANCE CHANGE</b><div class="liftnums"><span><b class="teal">${types}</b><i>unit type${types===1?'':'s'}</i></span><span><b>${sMoney(dMo)}</b><i>UA /mo across units</i></span><span><b style="color:${U.dec.length?'#b45309':'#166534'}">${U.dec.length}</b><i>decrease${U.dec.length===1?'':'s'}</i></span></div></div>`;};
   let card1;
   if(hasProg('rcs')){
-    card1=`<div class="ccard afford"><div class="cck">AFFORDABILITY PROOF</div><div class="cctitle">${a.ceil>0?('Proposed rents '+(a.pass?'clear':'exceed')+' the 150% SAFMR ceiling'):'Enter or pull a SAFMR to run the 150% test'}</div><div class="ccsub">Monthly gross rent potential (rent + UA)</div>
+    card1=`<div class="ccard afford"><div class="cck">AFFORDABILITY PROOF</div><div class="cctitle">${a.ceil>0?('Proposed rents '+(a.pass?'clear':'exceed')+' the 150% SAFMR ceiling'):(a.countsMissing&&a.safmrHave?'Add the unit counts to run the 150% test':'Enter or pull a SAFMR to run the 150% test')}</div><div class="ccsub">Monthly gross rent potential (rent + UA)</div>
      <div class="afrow"><div class="afbar">
         <div class="gauge"><div class="seg dark" style="width:${pCur}%"></div><div class="seg light" style="left:${pCur}%;width:${Math.max(0,pPro-pCur)}%"></div><div class="oend"></div></div>
-        <div class="glabels"><div class="gl l"><b style="color:#2f7d57">${money(a.cg)}</b><i>current</i></div><div class="gl c"><b style="color:#47a377">${money(a.pg)}</b><i>proposed</i></div><div class="gl r"><b>${a.ceil>0?money(a.ceil):'—'}</b><i>150% ceiling · HUD SAFMR</i>${a.safmrConflict?`<i class="amber">⚠ RCS differs on ≥1 type</i>`:(a.safmrMissing?`<i class="amber">⚠ SAFMR needed</i>`:'')}</div></div>
+        <div class="glabels"><div class="gl l"><b style="color:#2f7d57">${money(a.cg)}</b><i>current</i></div><div class="gl c"><b style="color:#47a377">${money(a.pg)}</b><i>proposed</i></div><div class="gl r"><b>${a.ceil>0?money(a.ceil):'—'}</b><i>150% ceiling · HUD SAFMR</i>${a.safmrConflict?`<i class="amber">⚠ RCS differs on ≥1 type</i>`:(a.safmrMissing?`<i class="amber">⚠ SAFMR needed</i>`:(a.countsMissing&&a.safmrHave?`<i class="amber">⚠ unit counts needed</i>`:''))}</div></div>
        </div>
-       ${a.ceil>0?`<div class="passbox" style="background:${a.pass?'#dcfce7':'#fee2e2'};color:${a.pass?'#166534':'#b91c1c'};border-color:${a.pass?'#86efac':'#fca5a5'}">${a.pass?'✓ PASS':'✗ OVER'}<small>${money(Math.abs(a.headroom))} ${a.pass?'headroom':'over'}</small></div>`:`<div class="passbox" style="background:#f1f4f9;color:#64748b;border-color:#d7deea">SAFMR needed<small>${hudZipMissing()?'add the property ZIP in '+secRef(2)+' to pull from HUD':'enter or pull from HUD'}</small></div>`}</div>
+       ${a.ceil>0?`<div class="passbox" style="background:${a.pass?'#dcfce7':'#fee2e2'};color:${a.pass?'#166534':'#b91c1c'};border-color:${a.pass?'#86efac':'#fca5a5'}">${a.pass?'✓ PASS':'✗ OVER'}<small>${money(Math.abs(a.headroom))} ${a.pass?'headroom':'over'}</small></div>`:`<div class="passbox" style="background:#f1f4f9;color:#64748b;border-color:#d7deea">${a.countsMissing&&a.safmrHave?'Unit counts needed':'SAFMR needed'}<small>${a.countsMissing&&a.safmrHave?('add the number of units in '+secRef(6)):(hudBlockerText()?(hudBlockerText()+' to pull from HUD'):'enter or pull from HUD')}</small></div>`}</div>
      <div class="lift"><b>RCS LIFT vs current rent roll</b><div class="liftnums"><span><b class="teal">${sPct(a.pct)}</b><i>increase</i></span><span><b>${sMoney(a.perUnit)}</b><i>per unit</i></span><span><b>${sMoney(a.dMo)}</b><i>/mo</i></span><span><b>${sK(a.dYr)}</b><i>annualized</i></span></div></div>
    </div>`;
   } else {
@@ -924,7 +936,7 @@ function _renderCommand(){const a=analysis();const pCur=a.ceil>0?clamp(a.cg/a.ce
    ${card1}
    <div class="ccard"><div class="cck">RECORD CHECKS</div><div class="chkgrid">
      ${chk(nmOk?'ok':'warn','Property name',nmOk?esc(get('property.name')):'missing — Section 2')}${chk(s8Ok?'ok':'warn','Section 8 #',s8Ok?esc(get('property.s8')):'missing — Section 2')}${chk(fhaOk?'ok':'info','FHA #',fhaOk?esc(get('property.fha')):'none on file — fills page 1 of the rent schedule')}${chk(sigOk?'ok':'warn','Signatory (Part H)',sigOk?(esc(get('sig.name'))+(get('sig.title')?' · '+esc(get('sig.title'))+(get('sig.principal')?' of the '+esc(get('sig.principal')):''):'')):'missing — Section 3')}
-     ${chk(ua[0],'Utility allowance',ua[1])}${hasProg('rcs')?chk(a.safmrMissing?'warn':(a.safmrOver?'warn':(a.safmrConflict?'info':'ok')),'SAFMR (150% ceiling)',a.safmrMissing?'enter or pull SAFMR per unit type':(a.safmrOver?(a.safmrOver+' type'+(a.safmrOver>1?'s':'')+' over 150% SAFMR'):(a.safmrConflict?'HUD vs RCS differ — using HUD':(UNITS.every(i=>(get('units.'+i+'.safmr_source')||defSafmrSrc(i))==='hud')?'per unit type · HUD':'per unit type')))):''}${(()=>{const c=rsCapacity();return c.msgs.length?chk('warn','Rent schedule capacity',esc(c.flags.join(' · '))):'';})()}</div></div>
+     ${chk(ua[0],'Utility allowance',ua[1])}${hasProg('rcs')?chk((a.safmrMissing||a.ceil<=0)?'warn':(a.safmrOver?'warn':(a.safmrConflict?'info':'ok')),'SAFMR (150% ceiling)',a.safmrMissing?'enter or pull SAFMR per unit type':(a.ceil<=0?(a.countsMissing&&a.safmrHave?'no ceiling yet — unit counts needed':'no ceiling yet'):(a.safmrOver?(a.safmrOver+' type'+(a.safmrOver>1?'s':'')+' over 150% SAFMR'):(a.safmrConflict?'HUD vs RCS differ — using HUD':(UNITS.every(i=>(get('units.'+i+'.safmr_source')||defSafmrSrc(i))==='hud')?'per unit type · HUD':'per unit type'))))):''}${(()=>{const c=rsCapacity();return c.msgs.length?chk('warn','Rent schedule capacity',esc(c.flags.join(' · '))):'';})()}</div></div>
    ${pkgCard()}`;}
 function pkgCard(){
   if(hasProg('rcs'))return `<div class="ccard"><div class="cck">THIS PACKAGE</div><div class="cctitle" style="font-size:15px">${_rcsUpload?'RCS report uploaded':'RCS report needed'}</div><div class="ccsub">${_rcsUpload?esc(_rcsUpload.name)+' — goes in as document 04':'Upload the completed RCS report in '+secRef(1)+' — it becomes document 04 of the package.'}</div>
@@ -949,7 +961,7 @@ function overrideCount(){const grouped=new Set();for(const b in ADDR_GROUPS)ADDR
   for(let i=0;i<5;i++){if(srcOf('partb.utilities.'+i)==='overridden'||srcOf('partb.fuel.'+i)==='overridden')c++;}
   wiBases.forEach(b=>{if(srcOf('partb.writein.'+b)==='overridden'||srcOf('partb.writein.'+b+'.on')==='overridden'||srcOf('partb.writein.'+b+'.fuel')==='overridden')c++;});
   return c;}
-function attnFlags(){const f=[];const u=UNITS.filter(uaUnresolved).length;if(u)f.push(u+' UA conflict'+(u>1?'s':'')+' to resolve');const sf=hasProg('rcs')?UNITS.filter(safmrUnresolved).length:0;if(sf)f.push(sf+' SAFMR conflict'+(sf>1?'s':'')+' to resolve');const tc=UNITS.filter(i=>typeUnresolved(i)||numUnresolved(i)).length;if(tc)f.push(tc+' unit type/count conflict'+(tc>1?'s':'')+' to resolve');const A=analysis();if(hasProg('rcs')){if(A.safmrMissing)f.push(hudZipMissing()?('The property ZIP is needed to pull SAFMRs ('+secRef(2)+')'):'SAFMR needed for the 150% test');if(A.safmrOver)f.push(A.safmrOver+' unit type'+(A.safmrOver>1?'s':'')+' over 150% SAFMR');}rsCapacity().flags.forEach(x=>f.push(x));const ov=overrideCount();if(ov)f.push(ov+' unsaved override'+(ov>1?'s':''));if(srcOf('nonrev.enabled')==='overridden')f.push('Non-revenue units turned '+(get('nonrev.enabled')==='1'?'on':'off')+' \u2014 saves with your next \u201cUpdate database\u201d');if(srcOf('ns8.enabled')==='overridden')f.push('Non-Section 8 units turned '+(get('ns8.enabled')==='1'?'on':'off')+' \u2014 saves with your next \u201cUpdate database\u201d');if(!_rcsUpload&&(hasProg('rcs')||hasProg('ocaf')))f.push((hasProg('rcs')?'The completed RCS report isn’t uploaded':'The CA’s auto-OCAF package isn’t uploaded')+' ('+secRef(1)+')');
+function attnFlags(){const f=[];const u=UNITS.filter(uaUnresolved).length;if(u)f.push(u+' UA conflict'+(u>1?'s':'')+' to resolve');const sf=hasProg('rcs')?UNITS.filter(safmrUnresolved).length:0;if(sf)f.push(sf+' SAFMR conflict'+(sf>1?'s':'')+' to resolve');const tc=UNITS.filter(i=>typeUnresolved(i)||numUnresolved(i)).length;if(tc)f.push(tc+' unit type/count conflict'+(tc>1?'s':'')+' to resolve');const A=analysis();if(hasProg('rcs')){if(A.safmrMissing)f.push(hudBlockerText()?('To pull SAFMRs, '+hudBlockerText()):'SAFMR needed for the 150% test');if(!A.safmrMissing&&A.countsMissing&&A.safmrHave)f.push('Unit counts are needed for the 150% test ('+secRef(6)+')');if(A.safmrOver)f.push(A.safmrOver+' unit type'+(A.safmrOver>1?'s':'')+' over 150% SAFMR');}rsCapacity().flags.forEach(x=>f.push(x));const ov=overrideCount();if(ov)f.push(ov+' unsaved override'+(ov>1?'s':''));if(srcOf('nonrev.enabled')==='overridden')f.push('Non-revenue units turned '+(get('nonrev.enabled')==='1'?'on':'off')+' \u2014 saves with your next \u201cUpdate database\u201d');if(srcOf('ns8.enabled')==='overridden')f.push('Non-Section 8 units turned '+(get('ns8.enabled')==='1'?'on':'off')+' \u2014 saves with your next \u201cUpdate database\u201d');if(!_rcsUpload&&(hasProg('rcs')||hasProg('ocaf')))f.push((hasProg('rcs')?'The completed RCS report isn’t uploaded':'The CA’s auto-OCAF package isn’t uploaded')+' ('+secRef(1)+')');
   if(hasProg('ocaf')){if(!(ocafFactorResolved()>0))f.push('OCAF factor needed — pull or enter it ('+secRef(10)+')');if(!(ocafK()>0))f.push('Annual debt service needed for the OCAF worksheet ('+secRef(10)+')');}
   if(hasProg('uaf')){const UA=uafAnalysis();const hasF=UAF_UTILS.some(u=>numf(get('uaf.f_'+u[0]))>0);
     if(!hasF)f.push('UAF factors needed — pull or enter them ('+secRef(11)+')');
