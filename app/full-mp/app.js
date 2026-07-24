@@ -51,7 +51,7 @@ const ALL_KEYS=Object.keys(SEED).map(k=>({key:k}));
 let mpdb=null, activePid=null, activeCid=null, _cyFresh=null;
 const bridge={getDb:async()=>mpdb?(activeCid?mpdb.getFlatCycle(activeCid):mpdb.getFlat(activePid)):{},saveDb:async(m)=>{_cyFresh=null;return activeCid?mpdb.saveFlatCycle(activeCid,m):mpdb.saveFlat(activePid,m);},clearDb:async()=>{}};
 const store=makeStore(bridge,ALL_KEYS);
-let form=store.emptyForm(); let UNITS=[0]; let NONREV=[]; let NS8=[]; let PRINCIPALS=[0]; let _undoStack=[]; let _undoNR=[]; let _undoLI=[]; let _undoPR=[]; let _pending=null,_refocusSel=null,_pendingSnap=null; let _rcsUpload=null;
+let form=store.emptyForm(); let UNITS=[0]; let NONREV=[]; let NS8=[]; let PRINCIPALS=[0]; let _undoStack=[]; let _undoNR=[]; let _undoLI=[]; let _undoPR=[]; let _pending=null,_refocusSel=null,_pendingSnap=null; let _rcsUpload=null; let _rsUpload=null;
 
 const CLR={database:['#2563eb','#e8f0fe','On file'],'this-cycle':['#0f766e','#e9f5f2','API / this package'],overridden:['#b45309','#fbf1e6','Overridden'],'auto-calculated':['#2563eb','#e8f0fe','Auto-calc'],'new':['#64748b','#f6f7f9','New']};
 const TODAY=new Date().toISOString().slice(0,10);
@@ -183,10 +183,10 @@ function srcPick(k,rows){
 /* Per-cell source rows in precedence order (spec \u00a73). val:null renders dim. */
 const SRCPICK_ROWS={
  'property.name':()=>[{tag:'Related Affordable',val:raVal('property.name')},{tag:'RCS report',val:null}],
- 'property.fha':()=>[{tag:'Executed RS',val:null},{tag:'Related Affordable',val:raVal('property.fha')}],
+ 'property.fha':()=>[{tag:'Executed RS',val:rsVal('property.fha')},{tag:'Related Affordable',val:raVal('property.fha')}],
  'property.s8':()=>[{tag:'Executed RS',val:null},{tag:'RCS report',val:null}],
- 'owner.entity_type_other':()=>[{tag:'Executed RS',val:null}],
- 'owner.entity_name':()=>[{tag:'Executed RS',val:null},{tag:'Related Affordable',val:raVal('owner.entity_name')}],
+ 'owner.entity_type_other':()=>[{tag:'Executed RS',val:rsVal('owner.entity_type_other')}],
+ 'owner.entity_name':()=>[{tag:'Executed RS',val:rsVal('owner.entity_name')},{tag:'Related Affordable',val:raVal('owner.entity_name')}],
  'sig.title':()=>[{tag:'Executed RS',val:null}],
  'appr.firm':()=>[{tag:'RCS report',val:null}],
  'appr.email':()=>[{tag:'RCS report',val:null}],
@@ -224,7 +224,8 @@ function caAddrCell(){return compAddrCell(CA_ADDR,'ca.addr','CA address');}
 function apprAddrCell(){return compAddrCell(APPR_ADDR,'appr.addr','Appraiser address');}
 function selectCell(f){const c=CLR[srcOf(f.k)]||CLR.new;let dd=csDrop(f.k,f.opts,f.ph||'Select…');
   if(f.k==='owner.entity_type'){const nv=raVal('owner.entity_type');
-    const navRows='<div class="uaopt srcdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>'
+    const _rsET=rsVal('owner.entity_type');
+    const navRows=(_rsET?'<div class="uaopt" data-cskey="owner.entity_type" data-csopt="'+esc(_rsET)+'">'+esc(_rsET)+'<span class="uasub">Executed RS</span></div>':'<div class="uaopt srcdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>')
       +(nv?'<div class="uaopt" data-cskey="owner.entity_type" data-csopt="'+esc(nv)+'">'+esc(nv)+'<span class="uasub">Related Affordable</span></div>'
           :'<div class="uaopt srcdim">\u2014<span class="uasub">Related Affordable \u00b7 not available</span></div>');
     dd=dd.replace('<div class="uamenu">','<div class="uamenu">'+navRows);}
@@ -415,13 +416,66 @@ function srcDocLabel(){
   if(hasProg('rcs'))return{title:'Completed RCS report',sub:'Upload the appraiser’s completed Rent Comparability Study (PDF). It is included in the submission package as document 04. Uploads are kept for this session only.',need:true};
   if(hasProg('ocaf'))return{title:'CA’s auto-OCAF package',sub:'Upload the auto-OCAF letter and Exhibit A received from the contract administrator, for reference against the worksheet below. Uploads are kept for this session only.',need:true};
   return{title:'CA’s UAF certification / UA sheet',sub:'Some contract administrators provide a pre-filled certification or utility allowance worksheet. Upload it here for reference.',need:false};}
+/* ============ Executed-RS parsing (HUD-92458 is a template form) ============
+   Tier 1: the PDF still carries its AcroForm fields (our drafts, PM-completed
+   fills) -> read values by the same field ids fillRentSchedule writes.
+   Tier 2 (next phase): signature-flattened text copies -> positional text.
+   Tier 3: scans -> no digital text; the app says so instead of guessing. */
+function rsVal(k){try{const p=_rsUpload&&_rsUpload.parsed;const v=p&&p.scalars?p.scalars[k]:null;return (v==null||v==='')?null:String(v);}catch(e){return null;}}
+function rsNum(v){v=String(v==null?'':v).replace(/[^0-9.\-]/g,'');const n=parseFloat(v);return isFinite(n)?n:'';}
+function rsDateISO(v){v=String(v||'').trim();let m=v.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);if(m)return m[3]+'-'+('0'+m[1]).slice(-2)+'-'+('0'+m[2]).slice(-2);m=v.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m)return v.slice(0,10);const MN={january:1,february:2,march:3,april:4,may:5,june:6,july:7,august:8,september:9,october:10,november:11,december:12};m=v.toLowerCase().match(/([a-z]+)\s+(\d{1,2}),?\s+(\d{4})/);if(m&&MN[m[1]])return m[3]+'-'+('0'+MN[m[1]]).slice(-2)+'-'+('0'+m[2]).slice(-2);return '';}
+function rsParseUnitType(t){t=String(t||'');let br='',ba='';if(/studio/i.test(t))br='Studio';else{const m=t.match(/(\d+)\s*BR/i);if(m&&BR_OPTS.indexOf(m[1]+'BR')>=0)br=m[1]+'BR';}const b=t.match(/(\d+(?:\.\d+)?)\s*BA/i);if(b&&BA_OPTS.indexOf(b[1]+'BA')>=0)ba=b[1]+'BA';return {br:br,ba:ba};}
+function rsReadFields(pdfForm){
+  const V=n=>{try{const v=pdfForm.getTextField(String(n)).getText();return v==null?'':String(v).trim();}catch(e){return '';}};
+  const CB=n=>{try{return pdfForm.getCheckBox(String(n)).isChecked();}catch(e){return false;}};
+  const outp={scalars:{},units:[],principals:[]};
+  if(V(1))outp.scalars['property.name']=V(1);
+  if(V(2))outp.scalars['property.fha']=V(2);
+  const dt=rsDateISO(V(3));if(dt)outp.scalars['rs_date']=dt;
+  if(V(197))outp.scalars['owner.entity_name']=V(197);
+  const ET={'198':'Individual','199':'Corporation','200':'General Partnership','201':'Limited Partnership','202':'Joint Tenancy/Tenants in Common','203':'Trust'};
+  Object.keys(ET).forEach(n=>{if(CB(n))outp.scalars['owner.entity_type']=ET[n];});
+  if(CB('204')){outp.scalars['owner.entity_type']='Other (specify)';if(V(205))outp.scalars['owner.entity_type_other']=V(205);}
+  [206,208,210,212,214,216,218,220,222,224,226].forEach(id=>{const nm=V(id),tt=V(id+1);if(nm||tt)outp.principals.push({name:nm,title:tt});});
+  for(let r=0;r<11;r++){const b=7+r*8;const t=V(b);const n=rsNum(V(b+1)),cr=rsNum(V(b+2)),ua=rsNum(V(b+4));
+    if((t||n||cr)&&cr!==''&&cr>0)outp.units.push({type:t,count:n,rent:cr,ua:ua});}
+  return outp;}
+async function rsDetectText(bytes){ // any real text runs in the page streams?
+  try{const raw=new TextDecoder('latin1').decode(bytes);const re=/stream\r?\n/g;let m,hits=0;
+    while((m=re.exec(raw))){const st=m.index+m[0].length;const en=raw.indexOf('endstream',st);if(en<0)continue;
+      let seg=bytes.slice(st,en);let e=seg.length;while(e>0&&(seg[e-1]===10||seg[e-1]===13||seg[e-1]===32))e--;seg=seg.slice(0,e);
+      try{const ds=new DecompressionStream('deflate');const w=ds.writable.getWriter();const pr=new Response(ds.readable).arrayBuffer();await w.write(seg);await w.close();
+        const txt=new TextDecoder('latin1').decode(await pr).slice(0,20000);const asc=(txt.match(/[\x20-\x7e\r\n]/g)||[]).length;if(txt.length&&asc/txt.length>0.85&&txt.indexOf('BT')>=0)hits+=(txt.match(/[\)\]>]\s*T[jJ]/g)||[]).length;if(hits>15)return true;}catch(er){}}
+    return hits>15;}catch(e){return false;}}
+async function parseRsPdf(bytes){
+  const doc=await window.PDFLib.PDFDocument.load(bytes,{ignoreEncryption:true,parseSpeed:Infinity});
+  let n=0,pf=null;try{pf=doc.getForm();n=pf.getFields().length;}catch(e){}
+  if(n>10)return {kind:'fields',parsed:rsReadFields(pf)};
+  return {kind:(await rsDetectText(bytes))?'text':'scan',parsed:null};}
+function rsFillFromParsed(){const P=_rsUpload&&_rsUpload.parsed;if(!P)return;
+  const setk=(k,v)=>{if(v!=null&&v!=='')form=store.editForm(form,k,String(v));};
+  setk('property.fha',P.scalars['property.fha']);
+  setk('owner.entity_name',P.scalars['owner.entity_name']);
+  setk('owner.entity_type',P.scalars['owner.entity_type']);
+  setk('owner.entity_type_other',P.scalars['owner.entity_type_other']);
+  if(P.scalars['rs_date']){form=store.editForm(form,'rent_schedule.date_eff_rs',P.scalars['rs_date']);form=store.editForm(form,'rent_schedule.date_eff_source','rs');}
+  P.principals.forEach((p,ix)=>{setk('principals.'+ix+'.name',p.name);setk('principals.'+ix+'.title',p.title);});
+  P.units.forEach((u,ix)=>{const bb=rsParseUnitType(u.type);setk('units.'+ix+'.br',bb.br);setk('units.'+ix+'.ba',bb.ba);
+    setk('units.'+ix+'.num_units',u.count);setk('units.'+ix+'.current',u.rent);
+    if(u.ua!==''&&u.ua>0){setk('units.'+ix+'.ua_exec',u.ua);if(!get('units.'+ix+'.ua_source'))form=store.editForm(form,'units.'+ix+'.ua_source','exec');}});
+  deriveUnits();renderBody();scheduleHudRefresh();scheduleFactorRefresh();
+  setStatus('Form filled from the executed rent schedule \u2014 review the highlighted values, then \u201cUpdate database\u201d.');}
 function renderSources(){
   const up=_rcsUpload;const sl=srcDocLabel();
   const rcs=up
     ?`<div class="srcrow"><span class="ok">✓</span><div><b>${esc(up.name)}</b> <span class="parsed">uploaded · this session</span><div class="sub">Automatic parsing is not yet available — review each section below.</div></div><button class="btn sm" id="upRcs">Replace</button></div>`
     :`<div class="srcrow${sl.need?'':' dim'}"><span class="mut">○</span><div><b>${esc(sl.title)}</b> <span class="${sl.need?'missing':'parsed'}">${sl.need?'not uploaded':'optional'}</span><div class="sub">${esc(sl.sub)}</div></div><button class="btn sm" id="upRcs">Upload PDF</button></div>`;
-  const rs=`<div class="srcrow dim"><span class="mut">○</span><div><b>Prior executed rent schedule</b> <span class="missing">not uploaded</span><div class="sub">Used by document parsing, which is not yet available.</div></div><button class="btn sm" disabled title="Parsing is a work in progress">Upload PDF</button></div>`;
-  const foot=`<div class="srcfoot"><button class="btn teal" disabled title="Work in progress">↻ Parse documents</button><span class="sub">Document parsing is in development — enter values directly in the sections below.</span></div><input type="file" id="rcsFile" accept="application/pdf,.pdf" style="display:none">`;
+  const ru=_rsUpload;let rs;
+  if(!ru)rs=`<div class="srcrow"><span class="mut">○</span><div><b>Current executed rent schedule</b> <span class="missing">not uploaded</span><div class="sub">When the PDF still carries its form fields, uploading reads the unit mix, current rents, utility allowances, entity, and principals directly from the schedule.</div></div><button class="btn sm" id="upRs">Upload PDF</button></div>`;
+  else if(ru.kind==='fields'){const p=ru.parsed;rs=`<div class="srcrow"><span class="ok">✓</span><div><b>${esc(ru.name)}</b> <span class="parsed">parsed · ${p.units.length} unit type${p.units.length===1?'':'s'}${p.principals.length?(' · '+p.principals.length+' principal'+(p.principals.length===1?'':'s')):''}</span><div class="sub">Filling the form writes only where the schedule has a value; existing entries it changes show as overridden until you save or revert.</div></div><button class="btn sm teal" id="rsApply">Fill form from RS</button> <button class="btn sm" id="upRs">Replace</button></div>`;}
+  else if(ru.kind==='text')rs=`<div class="srcrow"><span class="mut">△</span><div><b>${esc(ru.name)}</b> <span class="missing">no form fields — text copy</span><div class="sub">This copy doesn’t carry editable form fields (typical of signed or scanned-with-text copies). Reading its printed text is the next parsing phase — enter the values in the sections below for now.</div></div><button class="btn sm" id="upRs">Replace</button></div>`;
+  else rs=`<div class="srcrow"><span class="mut">△</span><div><b>${esc(ru.name)}</b> <span class="missing">scanned copy</span><div class="sub">This copy is a scan with no digital text to read. Upload a digitally completed copy, or enter the values in the sections below.</div></div><button class="btn sm" id="upRs">Replace</button></div>`;
+  const foot=`<input type="file" id="rcsFile" accept="application/pdf,.pdf" style="display:none"><input type="file" id="rsFile" accept="application/pdf,.pdf" style="display:none">`;
   return card(1,sectionPill(1),rcs+rs+foot);}
 
 function sectionKeys(n){if(n===10)return ['ocaf.g','ocaf.rate_type','ocaf.ds_annual','ocaf.ds_t12','ocaf.ds_f12','ocaf.factor_pub','ocaf.factor_custom','ocaf.factor_src'];
@@ -812,6 +866,15 @@ function wireBody(){
     f.arrayBuffer().then(buf=>{const b=new Uint8Array(buf);
       if(!(b.length>4&&b[0]===0x25&&b[1]===0x50&&b[2]===0x44&&b[3]===0x46)){setStatus('That file isn\u2019t a PDF \u2014 upload the completed RCS report as a PDF.');rf.value='';return;}
       _rcsUpload={name:f.name,bytes:b};rf.value='';renderBody();setStatus('RCS report uploaded \u2014 it goes in as document 04 when you generate the package.');});};
+  const upS=el('upRs');if(upS)upS.onclick=()=>{const f=el('rsFile');if(f)f.click();};
+  const sf=el('rsFile');if(sf)sf.onchange=()=>{const f=sf.files&&sf.files[0];if(!f)return;
+    f.arrayBuffer().then(async buf=>{const b=new Uint8Array(buf);
+      if(!(b.length>4&&b[0]===0x25&&b[1]===0x50&&b[2]===0x44&&b[3]===0x46)){setStatus('That file isn\u2019t a PDF \u2014 upload the executed rent schedule as a PDF.');sf.value='';return;}
+      setStatus('Reading the rent schedule\u2026');
+      let r;try{r=await parseRsPdf(b);}catch(e){r={kind:'scan',parsed:null};}
+      _rsUpload={name:f.name,bytes:b,kind:r.kind,parsed:r.parsed};sf.value='';renderBody();
+      setStatus(r.kind==='fields'?'Rent schedule parsed \u2014 use \u201cFill form from RS\u201d in '+secRef(1)+'.':(r.kind==='text'?'This copy is signature-flattened \u2014 its text parsing is the next build phase.':'This copy is a scan \u2014 there is no digital text to read.'));});};
+  const ra=el('rsApply');if(ra)ra.onclick=()=>rsFillFromParsed();
   const uu=el('undoUnit');if(uu)uu.onclick=()=>{if(!_undoStack.length)return;const e=_undoStack.pop();Object.keys(e.snap).forEach(k=>{form[k]=e.snap[k];});if(UNITS.indexOf(e.i)<0)UNITS.push(e.i);UNITS.sort((a,b)=>a-b);renderBody();setStatus('Unit type restored.');};
   const uc=el('undoCommit');if(uc)uc.onclick=()=>{_undoStack=[];renderBody();setStatus('Deletions kept.');};
   const up=el('undoPrin');if(up)up.onclick=()=>{if(!_undoPR.length)return;const e=_undoPR.pop();Object.keys(e.snap).forEach(k=>{form[k]=e.snap[k];});if(PRINCIPALS.indexOf(e.i)<0)PRINCIPALS.push(e.i);PRINCIPALS.sort((a,b)=>a-b);renderBody();setStatus('Principal restored.');};
@@ -1009,7 +1072,7 @@ async function openCycleForm(cid){
   activeCid=cid;_cyFresh=null;
   const cy=mpdb.listCycles(activePid).find(c=>c.id===cid);
   activeProgram=cy?cy.programs.map(x=>PROG_NAMES[x]||x).join(' + '):'RCS';
-  _undoStack=[];_undoNR=[];_undoLI=[];_undoPR=[];_rcsUpload=null;
+  _undoStack=[];_undoNR=[];_undoLI=[];_undoPR=[];_rcsUpload=null;_rsUpload=null;
   await mpdb.setActive(activePid);await refreshSnap();form=await store.fillForm();
   fixSavedToggles();applyChecklistDefaults();deriveUnits();renderFormHeader();renderBody();
   show('Form');window.scrollTo(0,0);
@@ -1116,7 +1179,7 @@ function requestSave(afterSave){
 // New-property checklist default: all §8 boxes on except Scope of repair(2) & Scope of work(4),
 // applied as source 'new' (grey/unsaved) only when the property has never saved a checklist.
 function applyChecklistDefaults(){if(Object.keys(DBSNAP).some(k=>/^check\.\d+$/.test(k)))return;for(let i=0;i<17;i++)form=store.editForm(form,'check.'+i,(i===2||i===4)?'':'1');}
-async function openForm(program){activeProgram=program||'RCS';_undoStack=[];_undoNR=[];_undoLI=[];_undoPR=[];_rcsUpload=null;await mpdb.setActive(activePid);await refreshSnap();form=await store.fillForm();fixSavedToggles();applyChecklistDefaults();deriveUnits();renderFormHeader();renderBody();show('Form');window.scrollTo(0,0);ensureHudSafmr({});}
+async function openForm(program){activeProgram=program||'RCS';_undoStack=[];_undoNR=[];_undoLI=[];_undoPR=[];_rcsUpload=null;_rsUpload=null;await mpdb.setActive(activePid);await refreshSnap();form=await store.fillForm();fixSavedToggles();applyChecklistDefaults();deriveUnits();renderFormHeader();renderBody();show('Form');window.scrollTo(0,0);ensureHudSafmr({});}
 function renderFormHeader(){
   if(el('hdrProp'))el('hdrProp').textContent=(get('property.name')||'(unnamed property)');
   if(el('hdrProgram'))el('hdrProgram').textContent=activeProgram+' Package';
