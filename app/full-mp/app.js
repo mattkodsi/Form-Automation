@@ -51,7 +51,7 @@ const ALL_KEYS=Object.keys(SEED).map(k=>({key:k}));
 let mpdb=null, activePid=null, activeCid=null, _cyFresh=null;
 const bridge={getDb:async()=>mpdb?(activeCid?mpdb.getFlatCycle(activeCid):mpdb.getFlat(activePid)):{},saveDb:async(m)=>{_cyFresh=null;return activeCid?mpdb.saveFlatCycle(activeCid,m):mpdb.saveFlat(activePid,m);},clearDb:async()=>{}};
 const store=makeStore(bridge,ALL_KEYS);
-let form=store.emptyForm(); let UNITS=[0]; let NONREV=[]; let NS8=[]; let PRINCIPALS=[0]; let _undoStack=[]; let _undoNR=[]; let _undoLI=[]; let _undoPR=[]; let _pending=null,_refocusSel=null,_pendingSnap=null; let _rcsUpload=null; let _rsUpload=null;
+let form=store.emptyForm(); let UNITS=[0]; let NONREV=[]; let NS8=[]; let PRINCIPALS=[0]; let _undoStack=[]; let _undoNR=[]; let _undoLI=[]; let _undoPR=[]; let _pending=null,_refocusSel=null,_pendingSnap=null; let _rcsUpload=null; let _rsUpload=null; let _rsArm=false; let _dlgEnter=null;
 
 const CLR={database:['#2563eb','#e8f0fe','On file'],'this-cycle':['#0f766e','#e9f5f2','API / this package'],overridden:['#b45309','#fbf1e6','Overridden'],'auto-calculated':['#2563eb','#e8f0fe','Auto-calc'],'new':['#64748b','#f6f7f9','New']};
 const TODAY=new Date().toISOString().slice(0,10);
@@ -621,7 +621,7 @@ function renderSources(){
   const ru=_rsUpload;let rs;
   if(!ru)rs=`<div class="srcrow"><span class="mut">○</span><div><b>Current executed rent schedule</b> <span class="missing">not uploaded</span><div class="sub">Uploading reads the unit mix, current rents, utility allowances, entity, and principals from the schedule — from its form fields where the copy still has them, and otherwise from its printed text.</div></div><button class="btn sm" id="upRs">Upload PDF</button></div>`;
   else if(ru.kind==='fields'){const p=ru.parsed;const nl=(p.ns8||[]).length;rs=`<div class="srcrow"><span class="ok">✓</span><div><b>${esc(ru.name)}</b> <span class="parsed">parsed${ru.via==='text'?' from the printed text':''} · ${p.units.length} unit type${p.units.length===1?'':'s'}${nl?(' · '+nl+' non-Section 8 row'+(nl===1?'':'s')):''}${p.principals.length?(' · '+p.principals.length+' principal'+(p.principals.length===1?'':'s')):''}</span><div class="sub">${ru.via==='text'?'This copy no longer carries form fields, so the values were read from its printed text and checked against the schedule’s own unit totals. ':''}Filling the form writes only where the schedule has a value; existing entries it changes show as overridden until you save or revert.</div></div><button class="btn sm teal" id="rsApply">Fill form from RS</button> <button class="btn sm" id="upRs">Replace</button></div>`;}
-  else if(ru.kind==='text')rs=`<div class="srcrow"><span class="mut">△</span><div><b>${esc(ru.name)}</b> <span class="missing">no form fields — text copy</span><div class="sub">This copy carries no editable form fields, and its printed text could not be matched to the rent schedule’s layout closely enough to fill the form reliably. Enter the values in the sections below.</div></div><button class="btn sm" id="upRs">Replace</button></div>`;
+  else if(ru.kind==='text')rs=`<div class="srcrow"><span class="mut">△</span><div><b>${esc(ru.name)}</b> <span class="missing">no form fields — text copy</span><div class="sub">Its printed text could not be matched to the schedule’s layout, so enter the values in the sections below.</div></div><button class="btn sm" id="upRs">Replace</button></div>`;
   else rs=`<div class="srcrow"><span class="mut">△</span><div><b>${esc(ru.name)}</b> <span class="missing">scanned copy</span><div class="sub">This copy is a scan with no digital text to read. Upload a digitally completed copy, or enter the values in the sections below.</div></div><button class="btn sm" id="upRs">Replace</button></div>`;
   const foot=`<input type="file" id="rcsFile" accept="application/pdf,.pdf" style="display:none"><input type="file" id="rsFile" accept="application/pdf,.pdf" style="display:none">`;
   return card(1,sectionPill(1),rcs+rs+foot);}
@@ -1028,8 +1028,8 @@ function wireBody(){
       if(!(b.length>4&&b[0]===0x25&&b[1]===0x50&&b[2]===0x44&&b[3]===0x46)){setStatus('That file isn\u2019t a PDF \u2014 upload the executed rent schedule as a PDF.');sf.value='';return;}
       setStatus('Reading the rent schedule\u2026');
       let r;try{r=await parseRsPdf(b);}catch(e){r={kind:'scan',parsed:null};}
-      _rsUpload={name:f.name,bytes:b,kind:r.kind,parsed:r.parsed};sf.value='';renderBody();
-      setStatus(r.kind==='fields'?'Rent schedule parsed \u2014 use \u201cFill form from RS\u201d in '+secRef(1)+'.':(r.kind==='text'?'This copy is signature-flattened \u2014 its text parsing is the next build phase.':'This copy is a scan \u2014 there is no digital text to read.'));});};
+      _rsUpload={name:f.name,bytes:b,kind:r.kind,via:r.via,parsed:r.parsed};sf.value='';_rsArm=(r.kind==='fields'&&!!r.parsed);renderBody();
+      setStatus(r.kind==='fields'?'Rent schedule parsed \u2014 press Enter to fill the form, or use \u201cFill form from RS\u201d in '+secRef(1)+'.':(r.kind==='text'?'This copy carries no form fields, and its printed text could not be placed on the schedule\u2019s layout \u2014 enter the values by hand.':'This copy is a scan \u2014 there is no digital text to read.'));});};
   const ra=el('rsApply');if(ra)ra.onclick=()=>rsFillFromParsed();
   const uu=el('undoUnit');if(uu)uu.onclick=()=>{if(!_undoStack.length)return;const e=_undoStack.pop();Object.keys(e.snap).forEach(k=>{form[k]=e.snap[k];});if(UNITS.indexOf(e.i)<0)UNITS.push(e.i);UNITS.sort((a,b)=>a-b);renderBody();setStatus('Unit type restored.');};
   const uc=el('undoCommit');if(uc)uc.onclick=()=>{_undoStack=[];renderBody();setStatus('Deletions kept.');};
@@ -1050,9 +1050,12 @@ function wireBody(){
    The RCS form itself (everything above) is unchanged. */
 
 document.addEventListener('click',e=>{document.querySelectorAll('.uadrop.open').forEach(x=>x.classList.remove('open'));if(_pending&&!(e.target&&e.target.closest&&e.target.closest('.uaopt,[data-cb],.cb,[data-fuel],[data-fuel3],[data-wibox],[data-mgmt],[data-csopt],.uatrigger'))){_pending=null;_pendingSnap=null;}});
-document.addEventListener('keydown',e=>{const vis=v=>{const x=el('view'+v);return x&&x.style&&x.style.display!=='none';};if(e.key==='Tab'){_pending=null;_pendingSnap=null;return;}if(e.key==='Enter'){const ae=document.activeElement;const inText=!!ae&&/^(INPUT|TEXTAREA)$/.test(ae.tagName)&&ae.type!=='checkbox';if(!inText&&_pending&&_pending.length){e.preventDefault();commitPending();}return;}if(e.key!=='Escape')return;if(el('scrim')&&el('scrim').classList&&el('scrim').classList.contains('open')){closeModal();_pending=null;_pendingSnap=null;return;}const openD=document.querySelector('.uadrop.open');if(openD){e.preventDefault();openD.classList.remove('open');return;}if(vis('Form')){if(_pending&&_pending.length){e.preventDefault();revertPending();return;}const ae=document.activeElement;const cell=(ae&&ae.closest)?ae.closest('[data-box],.cb,.wi'):null;if(cell){let _sel=null;if(ae.getAttribute){if(ae.getAttribute('data-k'))_sel='[data-k="'+ae.getAttribute('data-k')+'"]';else if(ae.getAttribute('data-cb'))_sel='[data-cb="'+ae.getAttribute('data-cb')+'"]';else if(ae.classList&&ae.classList.contains('uatrigger'))_sel='[data-box="'+(cell.getAttribute('data-box')||'')+'"] .uatrigger';}_refocusSel=_sel;if(revertCellIfOver(cell)){e.preventDefault();return;}_refocusSel=null;}requestExit();return;}if(vis('Launcher')||vis('Contacts')){openMenu();}});
+document.addEventListener('keydown',e=>{const vis=v=>{const x=el('view'+v);return x&&x.style&&x.style.display!=='none';};if(e.key==='Tab'){_pending=null;_pendingSnap=null;_rsArm=false;return;}if(e.key==='Enter'){const ae=document.activeElement;const inText=!!ae&&/^(INPUT|TEXTAREA)$/.test(ae.tagName)&&ae.type!=='checkbox';
+    if(_dlgEnter&&el('scrim')&&el('scrim').classList.contains('open')){e.preventDefault();_dlgEnter();return;}
+    if(_rsArm&&!inText){const ra=el('rsApply');if(ra){e.preventDefault();_rsArm=false;ra.click();return;}}
+    if(!inText&&_pending&&_pending.length){e.preventDefault();commitPending();}return;}if(e.key!=='Escape')return;if(el('scrim')&&el('scrim').classList&&el('scrim').classList.contains('open')){closeModal();_pending=null;_pendingSnap=null;return;}const openD=document.querySelector('.uadrop.open');if(openD){e.preventDefault();openD.classList.remove('open');return;}if(vis('Form')){if(_pending&&_pending.length){e.preventDefault();revertPending();return;}const ae=document.activeElement;const cell=(ae&&ae.closest)?ae.closest('[data-box],.cb,.wi'):null;if(cell){let _sel=null;if(ae.getAttribute){if(ae.getAttribute('data-k'))_sel='[data-k="'+ae.getAttribute('data-k')+'"]';else if(ae.getAttribute('data-cb'))_sel='[data-cb="'+ae.getAttribute('data-cb')+'"]';else if(ae.classList&&ae.classList.contains('uatrigger'))_sel='[data-box="'+(cell.getAttribute('data-box')||'')+'"] .uatrigger';}_refocusSel=_sel;if(revertCellIfOver(cell)){e.preventDefault();return;}_refocusSel=null;}requestExit();return;}if(vis('Launcher')||vis('Contacts')){openMenu();}});
 let _mouseFocus=false,_lastClickSel=null,_lastClickNode=null,_lastClickAt=0;
-document.addEventListener('mousedown',e=>{_mouseFocus=true;setTimeout(()=>{_mouseFocus=false;},60);
+document.addEventListener('mousedown',e=>{_mouseFocus=true;_rsArm=false;setTimeout(()=>{_mouseFocus=false;},60);
   const t=e.target;_lastClickSel=null;_lastClickNode=(t&&t.getBoundingClientRect)?t:null;_lastClickAt=Date.now();
   if(!t||!t.closest)return;
   // a click's anchor: the cell it hit; else the checkbox its label wraps; else the section card; else the footer
@@ -1076,8 +1079,8 @@ function relTime(iso){if(!iso)return '—';const s=String(iso);if(s.indexOf('T')
 function updTitle(iso){if(!iso)return '';const s=String(iso);const base='Updated '+niceDate(s);if(s.indexOf('T')<0)return base;const t=new Date(s);return isNaN(t)?base:base+' at '+t.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});}
 
 /* ---- generic modal (used for exit, new/rename, delete) --------------- */
-function modal(html){el('dialog').innerHTML=html;el('scrim').classList.add('open');}
-function closeModal(){el('scrim').classList.remove('open');}
+function modal(html){_dlgEnter=null;el('dialog').innerHTML=html;el('scrim').classList.add('open');}
+function closeModal(){_dlgEnter=null;el('scrim').classList.remove('open');}
 function dialogInput(title,label,value,okLabel,onOk){
   modal('<div class="dlg-t">'+esc(title)+'</div><div class="dlg-field"><label>'+esc(label)+'</label><input id="dlgIn" value="'+esc(value||'')+'" autocomplete="off"></div><div class="dlg-row"><button class="btn" id="dlgCancel">Cancel</button><span class="dlg-sp"></span><button class="btn p" id="dlgOk">'+esc(okLabel||'Save')+'</button></div>');
   const inp=el('dlgIn');if(inp&&inp.focus){inp.focus();if(inp.select)inp.select();inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();el('dlgOk').click();}else if(e.key==='Escape')closeModal();});}
@@ -1217,6 +1220,7 @@ function newCycleDialog(){
     +'<div class="dlg-row"><button class="btn" id="dlgCancel">Cancel</button><span class="dlg-sp"></span><button class="btn p" id="dlgOk">Create</button></div>');
   const rcs=el('cyRCS'),ocaf=el('cyOCAF'),uaf=el('cyUAF'),err=el('cyErr');
   const ce=el('cyEff');if(ce)ce.addEventListener('input',()=>{ce.value=fmtDateInput(ce.value);});
+  _dlgEnter=()=>{const ok=el('dlgOk');if(ok)ok.click();};
   rcs.onchange=()=>{if(rcs.checked)ocaf.checked=false;};   // RCS and OCAF never share a year
   ocaf.onchange=()=>{if(ocaf.checked)rcs.checked=false;};
   el('dlgCancel').onclick=closeModal;
