@@ -1510,7 +1510,7 @@ function boxColor(k){return CLR[srcOf(k)]||CLR.new;}
 function moneyBox(k){const c=boxColor(k);const _mt=moneySrcTag(k);return `<div class="rbox money" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><span class="cur">$</span><input type="text" data-money="1" data-k="${k}" value="${esc(fmtMoney(get(k)))}">${_mt?dimPick(_mt):''}${ovIcons(k)}</div>`;}
 function numBox(k,ph){const c=boxColor(k);return `<div class="rbox" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><input type="text" data-k="${k}" value="${esc(get(k))}" placeholder="${esc(ph||'')}">${ovIcons(k)}</div>`;}
 function brbaBox(brK,baK){const st=baseSrc([brK,baK]);const c=CLR[st]||CLR.new;
-  return `<div class="rbox brba" data-box="${brK}" style="background:${c[1]};border-left-color:${c[0]}">${csDrop(brK,BR_OPTS,'BR','',true,partHot(brK)?tintStyle(brK):'')}<span class="slash">/</span>${csDrop(baK,BA_OPTS,'BA','',true,partHot(baK)?tintStyle(baK):'')}${ovIcons([brK,baK])}</div>`;}
+  return `<div class="rbox brba" data-box="${brK}" style="background:${c[1]};border-left-color:${c[0]}">${csDrop(brK,BR_OPTS,'BR','',true,partHot(brK)?tintStyle(brK):'')}${ovIcons(brK)}<span class="slash">/</span>${csDrop(baK,BA_OPTS,'BA','',true,partHot(baK)?tintStyle(baK):'')}${ovIcons(baK)}</div>`;}
 function uaBox(i){const src=get('units.'+i+'.ua_source')||defUaSrc(i),exec=get('units.'+i+'.ua_exec'),rcs=get('units.'+i+'.ua_rcs'),custom=get('units.'+i+'.ua_custom');
   const hasAny=numf(exec)>0||numf(rcs)>0||numf(custom)>0;
   const lab=src==='rcs'?('$<input class="uac-in srcedit" data-srcedit="ua" data-si="'+i+'" data-money="1" value="'+esc(fmtMoney(rcs))+'"><span class="srctag">· RCS report</span>'):(src==='custom'?('$<input class="uac-in" data-money="1" data-k="units.'+i+'.ua_custom" value="'+esc(fmtMoney(custom))+'" placeholder="0">'):('$<input class="uac-in srcedit" data-srcedit="ua" data-si="'+i+'" data-money="1" value="'+esc(fmtMoney(exec))+'"><span class="srctag">· Executed RS</span>'));
@@ -1528,7 +1528,7 @@ function numConflict(i){const nR=get('units.'+i+'.num_rcs');return (nR!==''&&nR!
 function numReviewedOf(i){return get('units.'+i+'.num_reviewed')==='1';}
 function numUnresolved(i){return numConflict(i)&&!numReviewedOf(i);}
 function unitTypeCell(i){const brK='units.'+i+'.br',baK='units.'+i+'.ba';const conf=typeUnresolved(i);const st=conf?'overridden':baseSrc([brK,baK]);const c=CLR[st]||CLR.new;
-  return `<div class="rbox brba" data-box="${brK}" style="background:${c[1]};border-left-color:${c[0]}">${csDrop(brK,BR_OPTS,'BR','',true,(!conf&&partHot(brK))?tintStyle(brK):'')}<span class="slash">/</span>${csDrop(baK,BA_OPTS,'BA','',true,(!conf&&partHot(baK))?tintStyle(baK):'')}${ovIcons([brK,baK])}</div>`;}
+  return `<div class="rbox brba" data-box="${brK}" style="background:${c[1]};border-left-color:${c[0]}">${csDrop(brK,BR_OPTS,'BR','',true,(!conf&&partHot(brK))?tintStyle(brK):'')}${ovIcons(brK)}<span class="slash">/</span>${csDrop(baK,BA_OPTS,'BA','',true,(!conf&&partHot(baK))?tintStyle(baK):'')}${ovIcons(baK)}</div>`;}
 function unitCountCell(i){const k='units.'+i+'.num_units';const st=numUnresolved(i)?'overridden':srcOf(k);const c=CLR[st]||CLR.new;return `<div class="rbox" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><input type="text" data-k="${k}" value="${esc(get(k))}">${ovIcons(k)}</div>`;}
 function typeNote(i){if(!typeConflict(i))return '';const br=get('units.'+i+'.br'),ba=get('units.'+i+'.ba'),brR=get('units.'+i+'.br_rcs')||br,baR=get('units.'+i+'.ba_rcs')||ba;
   if(typeUnresolved(i))return '<div class="ucnote warn">⚠ RS '+br+'/'+ba+' · RCS '+brR+'/'+baR+' <span class="pick"><button class="urev" data-typ="rs" data-ci="'+i+'">keep RS</button><button class="urev sv" data-typ="rcs" data-ci="'+i+'">use RCS</button></span></div>';
@@ -2094,7 +2094,15 @@ function wireBody(){
   const addn=el('addNonrev');if(addn)addn.onclick=()=>{_undoNR=[];NONREV.push(NONREV.length?Math.max.apply(null,NONREV)+1:0);renderBody();setStatus('');};
   document.querySelectorAll('[data-delprin]').forEach(b=>b.addEventListener('click',()=>{const i=+b.getAttribute('data-delprin');const hadData=principalHasData(i);const snap={};Object.keys(form).forEach(k=>{if(k.indexOf('principals.'+i+'.')===0){snap[k]=form[k];delete form[k];}});PRINCIPALS=PRINCIPALS.filter(x=>x!==i);if(!PRINCIPALS.length)PRINCIPALS=[0];if(hadData){_undoPR.push({i,snap});renderBody();setStatus('Principal deleted \u2014 undo available below.');}else{renderBody();setStatus('Empty principal row removed.');}}));
   const pa=el('prinAdd');if(pa)pa.onclick=()=>{_undoPR=[];PRINCIPALS.push((PRINCIPALS.length?Math.max.apply(null,PRINCIPALS):-1)+1);renderBody();setStatus('');};
-  const nt=el('nonrevToggle');if(nt)nt.onchange=()=>{if(!nt.checked&&NONREV.length){nt.checked=true;setStatus('Delete the non-revenue rows first to turn this section off.');return;}form=store.editForm(form,'nonrev.enabled',nt.checked?'1':'');if(nt.checked&&!NONREV.length){_undoNR=[];NONREV=[0];}renderBody();setStatus('');};
+  const nt=el('nonrevToggle');if(nt)nt.onchange=()=>{
+    if(!nt.checked&&NONREV.some(i=>nonrevHasData(i)||numf(get('nonrev.'+i+'.num_units'))>0)){
+      nt.checked=true;
+      dialogConfirm('Turn off non-revenue units?','The section still holds '+NONREV.length+' row'+(NONREV.length>1?'s':'')+' with values. Turned off, the rows are left out of every generated document, and your next \u201cUpdate database\u201d removes them for good \u2014 re-check the box before saving to bring them back.','Turn off',true,()=>{form=store.editForm(form,'nonrev.enabled','');renderBody();setStatus('Non-revenue units off \u2014 the hidden rows are removed on your next Update database.');});
+      return;}
+    if(!nt.checked){NONREV.forEach(i=>Object.keys(form).forEach(k=>{if(k.indexOf('nonrev.'+i+'.')===0)delete form[k];}));NONREV=[];}
+    form=store.editForm(form,'nonrev.enabled',nt.checked?'1':'');
+    if(nt.checked&&!NONREV.length){_undoNR=[];NONREV=[0];}
+    renderBody();setStatus('');};
   const lt=el('ns8Toggle');if(lt)lt.onchange=()=>{
     if(!lt.checked&&NS8.some(i=>numf(get('ns8.'+i+'.num_units'))>0)){lt.checked=true;setStatus('Delete the non-Section 8 rows first to turn this section off.');return;}
     if(!lt.checked&&NS8.some(ns8HasData)){
@@ -2408,6 +2416,7 @@ async function saveNow(afterSave,fixFirst){clearUncheckedWriteins(['e1','e2','e3
   NONREV.filter(i=>numf(get('nonrev.'+i+'.num_units'))<=0).forEach(i=>Object.keys(form).forEach(k=>{if(k.indexOf('nonrev.'+i+'.')===0)delete form[k];}));
   PRINCIPALS.filter(i=>!principalHasData(i)).forEach(i=>Object.keys(form).forEach(k=>{if(k.indexOf('principals.'+i+'.')===0)delete form[k];}));
   if(get('ns8.enabled')!=='1'){Object.keys(form).forEach(k=>{if(/^ns8\.\d+\./.test(k))delete form[k];});NS8=[];} // section off: its hidden rows go
+  if(get('nonrev.enabled')!=='1'){Object.keys(form).forEach(k=>{if(/^nonrev\.\d+\./.test(k))delete form[k];});NONREV=[];}
   NS8.filter(i=>numf(get('ns8.'+i+'.num_units'))<=0).forEach(i=>Object.keys(form).forEach(k=>{if(k.indexOf('ns8.'+i+'.')===0)delete form[k];}));
   if(!Object.keys(form).some(k=>/^nonrev\.\d+\./.test(k))&&get('nonrev.enabled')==='1')form=store.editForm(form,'nonrev.enabled','');
   if(!Object.keys(form).some(k=>/^ns8\.\d+\./.test(k))&&get('ns8.enabled')==='1')form=store.editForm(form,'ns8.enabled','');
