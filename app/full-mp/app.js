@@ -182,7 +182,7 @@ function srcPick(k,rows){
 }
 /* Per-cell source rows in precedence order (spec \u00a73). val:null renders dim. */
 const SRCPICK_ROWS={
- 'property.name':()=>[{tag:'Related Affordable',val:raVal('property.name')},{tag:'RCS report',val:null}],
+ 'property.name':()=>[{tag:'Executed RS',val:rsVal('property.name')},{tag:'Related Affordable',val:raVal('property.name')},{tag:'RCS report',val:null}],
  'property.fha':()=>[{tag:'Executed RS',val:rsVal('property.fha')},{tag:'Related Affordable',val:raVal('property.fha')}],
  'property.s8':()=>[{tag:'Executed RS',val:null},{tag:'RCS report',val:null}],
  'owner.entity_type_other':()=>[{tag:'Executed RS',val:rsVal('owner.entity_type_other')}],
@@ -258,15 +258,19 @@ function renderFieldSection(sec){const cols=[[],[]];sec.fields.forEach(f=>cols[f
 function principalHasData(i){return ['name','title'].some(s=>{const v=get('principals.'+i+'.'+s);return v!==''&&v!=null;});}
 function renderPrincipals(){
   const rows=PRINCIPALS.map(i=>{const nk='principals.'+i+'.name',tk='principals.'+i+'.title';const nc=cellColors(nk),tc=cellColors(tk);
-    return `<div class="prinrow"><div class="field"><div class="fbox" data-box="${nk}" style="background:${nc[1]};border-left-color:${nc[0]}"><input type="text" data-k="${nk}" value="${esc(get(nk))}" autocomplete="off"></div>${ovNote(nk)}</div><div class="field"><div class="fbox" data-box="${tk}" style="background:${tc[1]};border-left-color:${tc[0]}"><input type="text" data-k="${tk}" value="${esc(get(tk))}" autocomplete="off"></div>${ovNote(tk)}</div><div class="urx">${PRINCIPALS.length>1?`<button class="trash" data-delprin="${i}" title="Delete">\u2715</button>`:''}</div></div>`;}).join('');
+    return `<div class="prinrow"><div class="field"><div class="fbox" data-box="${nk}" style="background:${nc[1]};border-left-color:${nc[0]}"><input type="text" data-k="${nk}" value="${esc(get(nk))}" autocomplete="off">${srcPick(nk,[{tag:'Executed RS',val:rsPrin(i,'name')}])}</div>${ovNote(nk)}</div><div class="field"><div class="fbox" data-box="${tk}" style="background:${tc[1]};border-left-color:${tc[0]}"><input type="text" data-k="${tk}" value="${esc(get(tk))}" autocomplete="off">${srcPick(tk,[{tag:'Executed RS',val:rsPrin(i,'title')}])}</div>${ovNote(tk)}</div><div class="urx">${PRINCIPALS.length>1?`<button class="trash" data-delprin="${i}" title="Delete">\u2715</button>`:''}</div></div>`;}).join('');
   return card(12,sectionPill(12),`<div class="pbnote">The principals comprising the ownership entity, as they appear in Part G of the rent schedule. The signatory title in ${secRef(3)} selects its principal from this list.</div><div class="prinhead"><span>Principal name</span><span>Title</span><span></span></div>${rows}<div class="addrow" id="prinAdd">+ Add principal</div>${_undoPR.length?(' <span class="addrow ghostlink" id="undoPrin">\u21a9 Undo delete'+(_undoPR.length>1?(' ('+_undoPR.length+')'):'')+'</span><button class="undocommit" id="undoPrinC" title="Keep deletions \u2014 dismiss undo">\u2713</button>'):''}`);}
 
 function cellColors(k){const src=srcOf(k);const c=CLR[src]||CLR.new;if(src==='new'){const cell=form[k];if(cell&&cell.db_value==='')return [CLR.database[0],c[1],c[2]];}return c;}
 function boxColor(k){return cellColors(k);}
-function moneyBox(k){const c=boxColor(k);const _mt=moneySrcTag(k);return `<div class="rbox money" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><span class="cur">$</span><input type="text" data-money="1" data-k="${k}" value="${esc(fmtMoney(get(k)))}">${_mt?dimPick(_mt):''}${ovIcons(k)}</div>`;}
+function moneyBox(k){const c=boxColor(k);const _mt=moneySrcTag(k);const _m=k.match(/^units\.(\d+)\.current$/);const _rv=_m?rsUnit(+_m[1],'rent'):null;
+  const pick=_mt?(_rv!=null?srcPick(k,[{tag:_mt,val:_rv}]):dimPick(_mt)):'';
+  return `<div class="rbox money" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><span class="cur">$</span><input type="text" data-money="1" data-k="${k}" value="${esc(fmtMoney(get(k)))}">${pick}${ovIcons(k)}</div>`;}
 function numBox(k,ph){const c=boxColor(k);return `<div class="rbox" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><input type="text" data-k="${k}" value="${esc(get(k))}" placeholder="${esc(ph||'')}">${ovIcons(k)}</div>`;}
 function brbaBox(brK,baK){const st=baseSrc([brK,baK]);const c=CLR[st]||CLR.new;
-  return `<div class="rbox brba" data-box="${brK}" style="background:${c[1]};border-left-color:${c[0]}">${csDrop(brK,BR_OPTS,'BR','',true,partHot(brK)?tintStyle(brK):'')}${ovIcons(brK)}<span class="slash">/</span>${csDrop(baK,BA_OPTS,'BA','',true,partHot(baK)?tintStyle(baK):'')}${ovIcons(baK)}</div>`;}
+  const withRs=(k,opts,ph)=>{const d=csDrop(k,opts,ph,'',true,partHot(k)?tintStyle(k):'');const row=rsCsRow(k);
+    return row?d.replace('<div class="uamenu">','<div class="uamenu">'+row):d;};
+  return `<div class="rbox brba" data-box="${brK}" style="background:${c[1]};border-left-color:${c[0]}">${withRs(brK,BR_OPTS,'BR')}${ovIcons(brK)}<span class="slash">/</span>${withRs(baK,BA_OPTS,'BA')}${ovIcons(baK)}</div>`;}
 function uaBox(i){const src=get('units.'+i+'.ua_source')||defUaSrc(i),exec=get('units.'+i+'.ua_exec'),rcs=get('units.'+i+'.ua_rcs'),custom=get('units.'+i+'.ua_custom');
   const hasAny=numf(exec)>0||numf(rcs)>0||numf(custom)>0;
   const lab=src==='rcs'?('$<input class="uac-in srcedit" data-srcedit="ua" data-si="'+i+'" data-money="1" value="'+esc(fmtMoney(rcs))+'"><span class="srctag">· RCS</span>'):(src==='custom'?('$<input class="uac-in" data-money="1" data-k="units.'+i+'.ua_custom" value="'+esc(fmtMoney(custom))+'" placeholder="0">'):('$<input class="uac-in srcedit" data-srcedit="ua" data-si="'+i+'" data-money="1" value="'+esc(fmtMoney(exec))+'"><span class="srctag">· RS</span>'));
@@ -284,8 +288,11 @@ function numConflict(i){const nR=get('units.'+i+'.num_rcs');return (nR!==''&&nR!
 function numReviewedOf(i){return get('units.'+i+'.num_reviewed')==='1';}
 function numUnresolved(i){return numConflict(i)&&!numReviewedOf(i);}
 function unitTypeCell(i){const brK='units.'+i+'.br',baK='units.'+i+'.ba';const conf=typeUnresolved(i);const st=conf?'overridden':baseSrc([brK,baK]);const c=CLR[st]||CLR.new;
-  return `<div class="rbox brba" data-box="${brK}" style="background:${c[1]};border-left-color:${c[0]}">${csDrop(brK,BR_OPTS,'BR','',true,(!conf&&partHot(brK))?tintStyle(brK):'')}${ovIcons(brK)}<span class="slash">/</span>${csDrop(baK,BA_OPTS,'BA','',true,(!conf&&partHot(baK))?tintStyle(baK):'')}${ovIcons(baK)}</div>`;}
-function unitCountCell(i){const k='units.'+i+'.num_units';const st=numUnresolved(i)?'overridden':srcOf(k);const c=CLR[st]||CLR.new;return `<div class="rbox" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><input type="text" data-k="${k}" value="${esc(get(k))}">${ovIcons(k)}</div>`;}
+  const withRs=(k,opts,ph)=>{const d=csDrop(k,opts,ph,'',true,(!conf&&partHot(k))?tintStyle(k):'');const row=rsCsRow(k);
+    return row?d.replace('<div class="uamenu">','<div class="uamenu">'+row):d;};
+  return `<div class="rbox brba" data-box="${brK}" style="background:${c[1]};border-left-color:${c[0]}">${withRs(brK,BR_OPTS,'BR')}${ovIcons(brK)}<span class="slash">/</span>${withRs(baK,BA_OPTS,'BA')}${ovIcons(baK)}</div>`;}
+function unitCountCell(i){const k='units.'+i+'.num_units';const st=numUnresolved(i)?'overridden':srcOf(k);const c=CLR[st]||CLR.new;const rv=rsUnit(i,'count');
+  return `<div class="rbox" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><input type="text" data-k="${k}" value="${esc(get(k))}">${rv!=null?srcPick(k,[{tag:'Executed RS',val:rv}]):''}${ovIcons(k)}</div>`;}
 function typeNote(i){if(!typeConflict(i))return '';const br=get('units.'+i+'.br'),ba=get('units.'+i+'.ba'),brR=get('units.'+i+'.br_rcs')||br,baR=get('units.'+i+'.ba_rcs')||ba;
   if(typeUnresolved(i))return '<div class="ucnote warn">⚠ RS '+br+'/'+ba+' · RCS '+brR+'/'+baR+' <span class="pick"><button class="urev" data-typ="rs" data-ci="'+i+'">keep RS</button><button class="urev sv" data-typ="rcs" data-ci="'+i+'">use RCS</button></span></div>';
   return '<div class="ucnote ok">✓ RS · '+br+'/'+ba+'</div>';}
@@ -400,7 +407,7 @@ function writein(id,hasFuel){const val=get('partb.writein.'+id);const on=get('pa
   const attr=hasFuel?` data-util="1"`:` data-wion="partb.writein.${id}.on"`;
   return `<span class="cb wi ${state}${hasFuel?' util':''}"><span class="box wibox" data-wibox="partb.writein.${id}" style="${boxStyle('partb.writein.'+id+'.on')}">${on?'✓':''}</span><input type="text" class="witext" data-k="partb.writein.${id}"${attr} placeholder="write-in…" value="${esc(val)}">${f}${ovIcons(ks)}</span>`;}
 function renderPartB(){const eq=PARTB.equipment,sv=PARTB.services;
-  return card(7,sectionPill(7),`<div class="pbnote">Pre-printed items are checked directly; dashed slots accept write-ins. This section fills automatically once rent schedule parsing is available.</div>
+  return card(7,sectionPill(7),`<div class="pbnote">Pre-printed items are checked directly; dashed slots accept write-ins.</div>
   <div class="pbgrp">Equipment / furnishings</div><div class="cols3"><div>${cbx('partb.equipment.0',eq[0])}${cbx('partb.equipment.1',eq[1])}${cbx('partb.equipment.2',eq[2])}${cbx('partb.equipment.3',eq[3])}</div>
     <div>${cbx('partb.equipment.4',eq[4])}${cbx('partb.equipment.5',eq[5])}${cbx('partb.equipment.6',eq[6])}${writein('e1')}</div>
     <div>${writein('e2')}${writein('e3')}${writein('e4')}${writein('e5')}</div></div>
@@ -422,6 +429,13 @@ function srcDocLabel(){
    fills) -> read values by the same field ids fillRentSchedule writes.
    Tier 2 (next phase): signature-flattened text copies -> positional text.
    Tier 3: scans -> no digital text; the app says so instead of guessing. */
+function rsPrin(i,f){try{const p=_rsUpload&&_rsUpload.parsed&&_rsUpload.parsed.principals;const r=p&&p[i];const v=r&&r[f];return (v==null||v==='')?null:String(v);}catch(e){return null;}}
+function rsUnit(i,f){try{const u=_rsUpload&&_rsUpload.parsed&&_rsUpload.parsed.units;const r=u&&u[i];const v=r&&r[f];return (v==null||v===''||v===0)?null:String(v);}catch(e){return null;}}
+function rsUnitBr(i){const t=rsUnit(i,'type');if(t==null)return null;const bb=rsParseUnitType(t);return bb.br||null;}
+function rsBrBa(k){const m=String(k||'').match(/^units\.(\d+)\.(br|ba)$/);if(!m)return null;
+  const t=rsUnit(+m[1],'type');if(t==null)return null;const bb=rsParseUnitType(t);const v=m[2]==='br'?bb.br:bb.ba;return v||null;}
+function rsCsRow(k){const v=rsBrBa(k);   // the schedule's own unit type, offered like any other source
+  return v?('<div class="uaopt" data-cskey="'+k+'" data-csopt="'+esc(v)+'">'+esc(v)+'<span class="uasub">Executed RS</span></div>'):'';}
 function rsVal(k){try{const p=_rsUpload&&_rsUpload.parsed;const v=p&&p.scalars?p.scalars[k]:null;return (v==null||v==='')?null:String(v);}catch(e){return null;}}
 function rsNum(v){v=String(v==null?'':v).replace(/[^0-9.\-]/g,'');const n=parseFloat(v);return isFinite(n)?n:'';}
 function rsDateISO(v){v=String(v||'').trim();let m=v.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);if(m)return m[3]+'-'+('0'+m[1]).slice(-2)+'-'+('0'+m[2]).slice(-2);m=v.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m)return v.slice(0,10);const MN={january:1,february:2,march:3,april:4,may:5,june:6,july:7,august:8,september:9,october:10,november:11,december:12};m=v.toLowerCase().match(/([a-z]+)\s+(\d{1,2}),?\s+(\d{4})/);if(m&&MN[m[1]])return m[3]+'-'+('0'+MN[m[1]]).slice(-2)+'-'+('0'+m[2]).slice(-2);return '';}
@@ -599,19 +613,20 @@ async function parseRsPdf(bytes){
   let tp=null;try{tp=await rsReadTextTier(pages);}catch(e){}
   return tp?{kind:'fields',parsed:tp,via:'text'}:{kind:'text',parsed:null};}
 function rsFillFromParsed(){const P=_rsUpload&&_rsUpload.parsed;if(!P)return;
-  const setk=(k,v)=>{if(v!=null&&v!=='')form=store.editForm(form,k,String(v));};
+  const mark=k=>{if(form[k]&&form[k].source==='new')form[k].source='this-cycle';};   // came from the schedule, not typed
+  const setk=(k,v)=>{if(v!=null&&v!==''){form=store.editForm(form,k,String(v));mark(k);}};
   setk('property.fha',P.scalars['property.fha']);
   setk('owner.entity_name',P.scalars['owner.entity_name']);
   setk('owner.entity_type',P.scalars['owner.entity_type']);
   setk('owner.entity_type_other',P.scalars['owner.entity_type_other']);
   if(P.scalars['rs_date']){const nx=rsYearOn(P.scalars['rs_date']);
-    if(nx){form=store.editForm(form,'rent_schedule.date_eff_rs',nx);
-      if(!get('rent_schedule.date_eff_custom'))form=store.editForm(form,'rent_schedule.date_eff_source','rs');}}
+    if(nx){form=store.editForm(form,'rent_schedule.date_eff_rs',nx);mark('rent_schedule.date_eff_rs');
+      if(!get('rent_schedule.date_eff_custom')){form=store.editForm(form,'rent_schedule.date_eff_source','rs');mark('rent_schedule.date_eff_source');}}}
   P.principals.forEach((p,ix)=>{setk('principals.'+ix+'.name',p.name);setk('principals.'+ix+'.title',p.title);});
   P.units.forEach((u,ix)=>{const bb=rsParseUnitType(u.type);setk('units.'+ix+'.br',bb.br);setk('units.'+ix+'.ba',bb.ba);
     setk('units.'+ix+'.num_units',u.count);setk('units.'+ix+'.current',u.rent);
-    if(u.ua!==''&&u.ua>0){setk('units.'+ix+'.ua_exec',u.ua);if(!get('units.'+ix+'.ua_source'))form=store.editForm(form,'units.'+ix+'.ua_source','exec');}});
-  if(P.ns8&&P.ns8.length){form=store.editForm(form,'ns8.enabled','1');
+    if(u.ua!==''&&u.ua>0){setk('units.'+ix+'.ua_exec',u.ua);if(!get('units.'+ix+'.ua_source')){form=store.editForm(form,'units.'+ix+'.ua_source','exec');mark('units.'+ix+'.ua_source');}}});
+  if(P.ns8&&P.ns8.length){form=store.editForm(form,'ns8.enabled','1');mark('ns8.enabled');
     P.ns8.forEach((u,ix)=>{const bb=rsParseUnitType(u.type);setk('ns8.'+ix+'.br',bb.br);setk('ns8.'+ix+'.ba',bb.ba);
       setk('ns8.'+ix+'.num_units',u.count);setk('ns8.'+ix+'.avg_rent',u.rent);});}
   deriveUnits();renderBody();scheduleHudRefresh();scheduleFactorRefresh();
