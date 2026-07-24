@@ -1693,11 +1693,92 @@ async function rsDetectText(bytes){ // any real text runs in the page streams?
       try{const ds=new DecompressionStream('deflate');const w=ds.writable.getWriter();const pr=new Response(ds.readable).arrayBuffer();await w.write(seg);await w.close();
         const txt=new TextDecoder('latin1').decode(await pr).slice(0,20000);const asc=(txt.match(/[\x20-\x7e\r\n]/g)||[]).length;if(txt.length&&asc/txt.length>0.85&&txt.indexOf('BT')>=0)hits+=(txt.match(/[\)\]>]\s*T[jJ]/g)||[]).length;if(hits>15)return true;}catch(er){}}
     return hits>15;}catch(e){return false;}}
+/* ---- Tier 2: positioned text extraction for flattened copies ----
+   Interprets content streams (q/Q + cm stack, Tm/Td/TD/T*, Tj/TJ/quote),
+   yielding text runs with page coordinates; runs are then mapped onto the
+   template's known field rectangles. Literal + 1-byte hex strings cover the
+   DocuSign class; 2-byte CID copies need ToUnicode work (next increment). */
+async function rsInflate(seg){let e=seg.length;while(e>0&&(seg[e-1]===10||seg[e-1]===13||seg[e-1]===32))e--;seg=seg.slice(0,e);
+  const ds=new DecompressionStream('deflate');const w=ds.writable.getWriter();const pr=new Response(ds.readable).arrayBuffer();await w.write(seg);await w.close();return new TextDecoder('latin1').decode(await pr);}
+function rsRuns(txt){ // one content stream -> [{str,x,y}]
+  const runs=[];let cm=[1,0,0,1,0,0],stack=[],tm=null,tlm=null,TL=0;
+  const mul=(a,b)=>[a[0]*b[0]+a[1]*b[2],a[0]*b[1]+a[1]*b[3],a[2]*b[0]+a[3]*b[2],a[2]*b[1]+a[3]*b[3],a[4]*b[0]+a[5]*b[2]+b[4],a[4]*b[1]+a[5]*b[3]+b[5]];
+  const emit=str=>{if(!str)return;const m=mul(tm||[1,0,0,1,0,0],cm);runs.push({str:str,x:m[4],y:m[5]});};
+  const deLit=b=>b.replace(/\\([nrtbf()\\]|[0-7]{1,3})/g,(mm,g)=>{if(g==='n')return'\n';if(g==='r')return'\r';if(g==='t')return'\t';if(g==='b')return'\b';if(g==='f')return'\f';if(/^[0-7]+$/.test(g))return String.fromCharCode(parseInt(g,8));return g;});
+  const deHex=h=>{h=h.replace(/\s+/g,'');let o='';if(h.length>=4&&/^00/.test(h)){for(let i=0;i+3<h.length;i+=4)o+=String.fromCharCode(parseInt(h.substr(i,4),16));}else{for(let i=0;i+1<h.length;i+=2)o+=String.fromCharCode(parseInt(h.substr(i,2),16));}return o;};
+  const re=/\((?:[^()\\]|\\.)*\)|<[0-9A-Fa-f\s]*>|\[(?:[^\[\]\\()]|\((?:[^()\\]|\\.)*\))*\]\s*TJ|[-.0-9]+|[A-Za-z'*"]+/g;
+  let m,nums=[],lastStr=null;
+  while((m=re.exec(txt))){const t=m[0];
+    if(t[0]==='('){lastStr=deLit(t.slice(1,-1));continue;}
+    if(t[0]==='<'){lastStr=deHex(t.slice(1,-1));continue;}
+    if(t[0]==='['){const parts=[];const ri=/\((?:[^()\\]|\\.)*\)|<[0-9A-Fa-f\s]*>/g;let mm;while((mm=ri.exec(t))){parts.push(mm[0][0]==='('?deLit(mm[0].slice(1,-1)):deHex(mm[0].slice(1,-1)));}emit(parts.join(''));nums=[];lastStr=null;continue;}
+    if(/^[-.0-9]+$/.test(t)){nums.push(parseFloat(t));continue;}
+    switch(t){
+      case 'q':stack.push(cm.slice());break;
+      case 'Q':cm=stack.pop()||[1,0,0,1,0,0];break;
+      case 'cm':if(nums.length>=6)cm=mul(nums.slice(-6),cm);break;
+      case 'BT':tm=[1,0,0,1,0,0];tlm=tm.slice();break;
+      case 'ET':tm=null;break;
+      case 'Tm':if(nums.length>=6){tlm=nums.slice(-6);tm=tlm.slice();}break;
+      case 'Td':if(nums.length>=2){tlm=mul([1,0,0,1,nums[nums.length-2],nums[nums.length-1]],tlm||[1,0,0,1,0,0]);tm=tlm.slice();}break;
+      case 'TD':if(nums.length>=2){TL=-nums[nums.length-1];tlm=mul([1,0,0,1,nums[nums.length-2],nums[nums.length-1]],tlm||[1,0,0,1,0,0]);tm=tlm.slice();}break;
+      case 'T*':tlm=mul([1,0,0,1,0,-TL],tlm||[1,0,0,1,0,0]);tm=tlm.slice();break;
+      case 'TL':if(nums.length)TL=nums[nums.length-1];break;
+      case 'Tj':emit(lastStr);lastStr=null;break;
+      case "'":tlm=mul([1,0,0,1,0,-TL],tlm||[1,0,0,1,0,0]);tm=tlm.slice();emit(lastStr);lastStr=null;break;
+    }
+    nums=[];}
+  return runs;}
+async function rsTextPages(bytes){ // BT-bearing ASCII streams in document order = page candidates
+  const raw=new TextDecoder('latin1').decode(bytes);const re=/stream\r?\n/g;let m;const pages=[];
+  while((m=re.exec(raw))){const st=m.index+m[0].length;const en=raw.indexOf('endstream',st);if(en<0)continue;
+    let txt=null;try{txt=await rsInflate(bytes.slice(st,en));}catch(e){txt=raw.slice(st,en);}
+    try{const probe=txt.slice(0,20000);const asc=(probe.match(/[\x20-\x7e\r\n]/g)||[]).length;
+      if(probe.length&&asc/probe.length>0.85&&txt.indexOf('BT')>=0)pages.push(rsRuns(txt));}catch(e){}}
+  return pages;}
+let _rsRectCache=null;
+async function rsFieldRects(){ // field id -> {pg,x,y,w,h} from our own template
+  if(_rsRectCache)return _rsRectCache;
+  const b64=window.RCSTemplates&&window.RCSTemplates.rentSchedule;if(!b64)return {};
+  const bin=atob(b64);const tb=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)tb[i]=bin.charCodeAt(i);
+  const doc=await window.PDFLib.PDFDocument.load(tb,{parseSpeed:Infinity});const pf=doc.getForm();const pgs=doc.getPages();
+  const map={};pf.getFields().forEach(f=>{try{const w=f.acroField.getWidgets()[0];const r=w.getRectangle();let pg=-1;pgs.forEach((p,i)=>{if(p.ref===w.P())pg=i;});map[f.getName()]={pg:pg,x:r.x,y:r.y,w:r.width,h:r.height};}catch(e){}});
+  _rsRectCache=map;return map;}
+async function rsReadTextTier(bytes){ // flattened copy -> same parsed shape as tier 1, or null
+  const rects=await rsFieldRects();const pages=await rsTextPages(bytes);if(!pages.length)return null;
+  // page association: the page holding "Part G" style entity text is template page 1; rows page is 0
+  const joined=pages.map(rs=>rs.map(r=>r.str).join(' '));
+  let pg0=-1,pg1=-1;
+  joined.forEach((tx,i)=>{if(pg0<0&&/Contract Rent|Utility|Number of.{0,3}Units/i.test(tx))pg0=i;if(pg1<0&&/Mortgagor Entity|Owner Certification|Part G/i.test(tx))pg1=i;});
+  if(pg0<0&&pages.length)pg0=0;if(pg1<0&&pages.length>1)pg1=pages.length-1;
+  const hit=(pgIx,tplPg)=>{const out={};if(pgIx<0)return out;
+    for(const id in rects){const rc=rects[id];if(rc.pg!==tplPg)continue;
+      const inside=pages[pgIx].filter(r=>r.x>=rc.x-2&&r.x<=rc.x+rc.w+2&&r.y>=rc.y-3&&r.y<=rc.y+rc.h+5).sort((a,b)=>a.x-b.x);
+      const v=inside.map(r=>r.str).join('').trim();if(v)out[id]=v;}
+    return out;};
+  const F=Object.assign(hit(pg0,0),hit(pg1,1));
+  const V=n=>String(F[String(n)]||'').trim();
+  const outp={scalars:{},units:[],principals:[]};
+  if(V(1))outp.scalars['property.name']=V(1);
+  if(V(2))outp.scalars['property.fha']=V(2);
+  const dt=rsDateISO(V(3));if(dt)outp.scalars['rs_date']=dt;
+  if(V(197))outp.scalars['owner.entity_name']=V(197);
+  if(V(205))outp.scalars['owner.entity_type_other']=V(205);
+  [206,208,210,212,214,216,218,220,222,224,226].forEach(id=>{const nm=V(id),tt=V(id+1);if(nm||tt)outp.principals.push({name:nm,title:tt});});
+  for(let r=0;r<11;r++){const b=7+r*8;const t=V(b);const n=rsNum(V(b+1)),cr=rsNum(V(b+2)),ua=rsNum(V(b+4));
+    if((t||n||cr)&&cr!==''&&cr>0)outp.units.push({type:t,count:n,rent:cr,ua:ua});}
+  // quality gate: totals cross-check when present, else demand real substance
+  const tot=rsNum(V(95));const sum=outp.units.reduce((a,u)=>a+(u.count&&u.rent?u.count*u.rent:0),0);
+  const ok=outp.units.length>0&&(tot===''||Math.abs(sum-tot)<=Math.max(2,outp.units.length));
+  return ok?outp:null;}
 async function parseRsPdf(bytes){
   const doc=await window.PDFLib.PDFDocument.load(bytes,{ignoreEncryption:true,parseSpeed:Infinity});
   let n=0,pf=null;try{pf=doc.getForm();n=pf.getFields().length;}catch(e){}
   if(n>10)return {kind:'fields',parsed:rsReadFields(pf)};
-  return {kind:(await rsDetectText(bytes))?'text':'scan',parsed:null};}
+  if(await rsDetectText(bytes)){let tp=null;try{tp=await rsReadTextTier(bytes);}catch(e){}
+    if(tp)return {kind:'fields',parsed:tp};
+    return {kind:'text',parsed:null};}
+  return {kind:'scan',parsed:null};}
 function rsFillFromParsed(){const P=_rsUpload&&_rsUpload.parsed;if(!P)return;
   const setk=(k,v)=>{if(v!=null&&v!=='')form=store.editForm(form,k,String(v));};
   setk('property.fha',P.scalars['property.fha']);
