@@ -117,7 +117,7 @@ function dateEffResolved(){const src=get('rent_schedule.date_eff_source')||(get(
 function dateEffCell(){const rs=get('rent_schedule.date_eff_rs');const src=get('rent_schedule.date_eff_source')||(rs?'rs':'custom');const custom=get('rent_schedule.date_eff_custom')||get('rent_schedule.date_rents_effective');
   const rsLab=rs?(fmtDate(rs)+' · from RS'):'— · no RS date parsed';
   const lab=(src==='custom')?('<input class="uac-in dateeff-in" data-date="1" data-k="rent_schedule.date_eff_custom" value="'+esc(custom)+'" placeholder="mm/dd/yyyy" autocomplete="off">'):(rs?('<input class="uac-in srcedit" data-srcedit="dateeff" data-date="1" value="'+esc(fmtDate(rs))+'"><span class="srctag">· from RS</span>'):('<span class="ualab">'+esc(rsLab)+'</span>'));
-  let state,c;if(src==='custom'){state=srcOf('rent_schedule.date_eff_custom');c=CLR[state]||CLR.new;}else{state=rs?'this-cycle':'new';c=CLR[state];}
+  let state,c;if(src==='custom'){c=cellColors('rent_schedule.date_eff_custom');}else{state=rs?'this-cycle':'new';c=provColors(state,'rent_schedule.date_eff_source');}
   const boxKey=(src==='custom')?'rent_schedule.date_eff_custom':'rent_schedule.date_eff_source';
   const menu='<div class="uamenu">'+srcOptRow('data-deffopt="rs"',rs?esc(fmtDate(rs)):'','A year after the executed RS')+'<div class="uaopt" data-deffopt="custom">Custom…</div></div>';
   return `<div class="field"><div class="flabel">Date rents will be effective</div><div class="fbox uacell" data-box="${boxKey}" style="background:${c[1]};border-left-color:${c[0]}"><div class="uadrop" style="flex:1;min-width:0"><div class="uatrigger" tabindex="0">${lab}<span class="cvx">▾</span></div>${menu}</div>${src==='custom'?ovIcons('rent_schedule.date_eff_custom'):''}</div></div>`;}
@@ -150,7 +150,7 @@ function dirFill(pairs){pairs.forEach(p=>{form=store.editForm(form,p[0],p[1]||''
 function dirList(kind){return (mpdb&&mpdb.listDir)?mpdb.listDir(kind):[];}
 function dirNote(fk){const P=DIR_PICK[fk];const m=modeOf(P.modeKeys);const j=P.keys.join(',');return `<div class="ovnote" data-ov="${P.modeKeys.join(',')}" data-mode="${m}" style="display:${m?'flex':'none'}"><span class="om-over">changed from stored record</span><span class="om-new">new \u2014 not saved yet</span><button class="revert" data-rev="${j}">\u21ba revert</button><button class="save1" data-save1="${j}">\u2713 save this field</button></div>`;}
 function dirCell(f){const k=f.k;const P=DIR_PICK[k];const list=dirList(P.kind);const cur=get(k);
-  const st=f.prefix?baseSrc([f.prefix,f.k]):srcOf(k);const c=CLR[st]||CLR.new;const nameTint=(f.prefix&&partHot(k))?tintStyle(k):'';
+  const c=f.prefix?groupColors([f.prefix,f.k]):cellColors(k);const nameTint=(f.prefix&&partHot(k))?tintStyle(k):'';
   const pre=f.prefix?csDrop(f.prefix,['Ms.','Mr.','Dr.','Mx.'],'\u2014','csnarrow',true,partHot(f.prefix)?tintStyle(f.prefix):''):'';
   const srcRow=DIR_SRCROW[k]?('<div class="uaopt srcdim">\u2014<span class="uasub">'+esc(DIR_SRCROW[k])+' \u00b7 not available</span></div>'):'';
   const menu='<div class="uamenu">'+srcRow+list.map(ct=>{const s=P.sub(ct);return '<div class="uaopt" data-dirid="'+esc(ct.id)+'" data-dirfor="'+k+'">'+esc(ct.name)+(s?'<span class="uasub">'+esc(s)+'</span>':'')+'</div>';}).join('')+'</div>';
@@ -253,7 +253,7 @@ function compAddrCell(keys,box,label){const c=groupColors(keys);
      <input type="text" data-k="${keys[3]}" value="${esc(get(keys[3]))}" placeholder="ZIP" style="width:${(box==='property.addr'||box==='appr.addr')?'47px':'64px'}${ti(keys[3])}">${SRCGROUP[box]?srcGroupPick(box):''}</div>
    ${ovNoteAddr(box)}</div>`;}
 function mgmtCell(){const src=get('tenant.mgmt_source')||'property';const propHas=ADDR.some(k=>get(k)!=='');
-  if(src==='custom'){const a=baseSrc(MGMT_ADDR);const c=CLR[a]||CLR.new;const ti=k=>partHot(k)?(';'+tintStyle(k)):'';
+  if(src==='custom'){const c=groupColors(MGMT_ADDR);const ti=k=>partHot(k)?(';'+tintStyle(k)):'';
     return `<div class="field"><div class="flabel">Management address <span class="mgmtswitch" data-mgmt="property">↺ use property address</span></div><div class="fbox addr" data-box="tenant.mgmt" style="background:${c[1]};border-left-color:${c[0]}">
        <input type="text" data-k="tenant.mgmt_street" value="${esc(get('tenant.mgmt_street'))}" placeholder="Street" style="flex:2.2${ti('tenant.mgmt_street')}"><span class="adiv"></span>
        <input type="text" data-k="tenant.mgmt_city" value="${esc(get('tenant.mgmt_city'))}" placeholder="City" style="flex:1.3${ti('tenant.mgmt_city')}"><span class="adiv"></span>
@@ -272,20 +272,29 @@ function renderPrincipals(){
     return `<div class="prinrow"><div class="field"><div class="fbox" data-box="${nk}" style="background:${nc[1]};border-left-color:${nc[0]}"><input type="text" data-k="${nk}" value="${esc(get(nk))}" autocomplete="off">${srcPick(nk,[{tag:'Executed RS',val:rsPrin(i,'name')}])}</div>${ovNote(nk)}</div><div class="field"><div class="fbox" data-box="${tk}" style="background:${tc[1]};border-left-color:${tc[0]}"><input type="text" data-k="${tk}" value="${esc(get(tk))}" autocomplete="off">${srcPick(tk,[{tag:'Executed RS',val:rsPrin(i,'title')}])}</div>${ovNote(tk)}</div><div class="urx">${PRINCIPALS.length>1?`<button class="trash" data-delprin="${i}" title="Delete">\u2715</button>`:''}</div></div>`;}).join('');
   return card(12,sectionPill(12),`<div class="pbnote">The principals comprising the ownership entity, as they appear in Part G of the rent schedule. The signatory title in ${secRef(3)} selects its principal from this list.</div><div class="prinhead"><span>Principal name</span><span>Title</span><span></span></div>${rows}<div class="addrow" id="prinAdd">+ Add principal</div>${_undoPR.length?(' <span class="addrow ghostlink" id="undoPrin">\u21a9 Undo delete'+(_undoPR.length>1?(' ('+_undoPR.length+')'):'')+'</span><button class="undocommit" id="undoPrinC" title="Keep deletions \u2014 dismiss undo">\u2713</button>'):''}`);}
 
-function cellColors(k){const src=srcOf(k);const c=CLR[src]||CLR.new;if(src==='new'){const cell=form[k];if(cell&&cell.db_value==='')return [CLR.database[0],c[1],c[2]];}return c;}
+/* Provenance has two axes and one implementation. The EDGE reports the record:
+   blue once a cell has been saved, teal when filled from a source this package,
+   amber when changed since the save, grey when nothing was ever recorded. The
+   BODY reports the content: tinted when the cell holds a value, grey when empty.
+   Every painter — text cell, address group, checkbox, chip — comes through here,
+   because the rule kept breaking when each path carried its own copy of it. */
+function provColors(state,key){const c=CLR[state]||CLR.new;
+  if(state==='new'&&key&&form[key]&&form[key].db_value==='')return [CLR.database[0],c[1],c[2]]; // saved, and saved empty
+  return c;}
+function cellColors(k){return provColors(srcOf(k),k);}
 function boxColor(k){return cellColors(k);}
 function moneyBox(k){const c=boxColor(k);const _mt=moneySrcTag(k);const _m=k.match(/^units\.(\d+)\.current$/);const _rv=_m?rsUnit(+_m[1],'rent'):null;
   const pick=_mt?(_rv!=null?srcPick(k,[{tag:_mt,val:_rv}]):dimPick(_mt)):'';
   return `<div class="rbox money" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><span class="cur">$</span><input type="text" data-money="1" data-k="${k}" value="${esc(fmtMoney(get(k)))}">${pick}${ovIcons(k)}</div>`;}
 function numBox(k,ph){const c=boxColor(k);return `<div class="rbox" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><input type="text" data-k="${k}" value="${esc(get(k))}" placeholder="${esc(ph||'')}">${ovIcons(k)}</div>`;}
-function brbaBox(brK,baK){const st=baseSrc([brK,baK]);const c=CLR[st]||CLR.new;
+function brbaBox(brK,baK){const c=groupColors([brK,baK]);
   const withRs=(k,opts,ph)=>{const d=csDrop(k,opts,ph,'',true,partHot(k)?tintStyle(k):'');const row=rsCsRow(k);
     return row?d.replace('<div class="uamenu">','<div class="uamenu">'+row):d;};
   return `<div class="rbox brba" data-box="${brK}" style="background:${c[1]};border-left-color:${c[0]}">${withRs(brK,BR_OPTS,'BR')}${ovIcons(brK)}<span class="slash">/</span>${withRs(baK,BA_OPTS,'BA')}${ovIcons(baK)}</div>`;}
 function uaBox(i){const src=get('units.'+i+'.ua_source')||defUaSrc(i),exec=get('units.'+i+'.ua_exec'),rcs=get('units.'+i+'.ua_rcs'),custom=get('units.'+i+'.ua_custom');
   const hasAny=numf(exec)>0||numf(rcs)>0||numf(custom)>0;
   const lab=src==='rcs'?('$<input class="uac-in srcedit" data-srcedit="ua" data-si="'+i+'" data-money="1" value="'+esc(fmtMoney(rcs))+'"><span class="srctag">· RCS</span>'):(src==='custom'?('$<input class="uac-in" data-money="1" data-k="units.'+i+'.ua_custom" value="'+esc(fmtMoney(custom))+'" placeholder="0">'):('$<input class="uac-in srcedit" data-srcedit="ua" data-si="'+i+'" data-money="1" value="'+esc(fmtMoney(exec))+'"><span class="srctag">· RS</span>'));
-  let state,c;if(src==='custom'){state=srcOf('units.'+i+'.ua_custom');c=CLR[state]||CLR.new;}else{state=hasAny?'this-cycle':'new';const overSrc=srcOf('units.'+i+'.ua_source')==='overridden';if(uaUnresolved(i)||overSrc)state='overridden';c=CLR[state];}const boxKeyUA=src==='custom'?('units.'+i+'.ua_custom'):('units.'+i+'.ua_source');
+  let state,c;if(src==='custom'){c=cellColors('units.'+i+'.ua_custom');}else{state=hasAny?'this-cycle':'new';const overSrc=srcOf('units.'+i+'.ua_source')==='overridden';if(uaUnresolved(i)||overSrc)state='overridden';c=provColors(state,'units.'+i+'.ua_source');}const boxKeyUA=src==='custom'?('units.'+i+'.ua_custom'):('units.'+i+'.ua_source');
   const menu='<div class="uamenu">'+srcOptRow('data-uaopt="exec" data-uai="'+i+'"',(exec!==''&&exec!=null)?('$'+fmtMoney(exec)):'','Executed RS')+((hasProg('rcs')||numf(rcs)>0)?srcOptRow('data-uaopt="rcs" data-uai="'+i+'"',(rcs!==''&&rcs!=null)?('$'+fmtMoney(rcs)):'','RCS report'):'')+'<div class="uaopt" data-uaopt="custom" data-uai="'+i+'">Custom…</div></div>';
   return '<div class="rbox uacell" data-box="'+boxKeyUA+'" style="background:'+c[1]+';border-left-color:'+c[0]+'"><div class="uadrop"><div class="uatrigger" tabindex="0"><span class="ualab">'+lab+'</span><span class="cvx">▾</span></div>'+menu+'</div>'+(src==='custom'?ovIcons('units.'+i+'.ua_custom'):ovIcons('units.'+i+'.ua_source'))+'</div>';}
 function uaNoteCell(i){const conf=uaConflict(i),overSrc=srcOf('units.'+i+'.ua_source')==='overridden';if(!conf&&!overSrc)return '';const ex=get('units.'+i+'.ua_exec'),rc=get('units.'+i+'.ua_rcs');
@@ -298,11 +307,11 @@ function typeUnresolved(i){return typeConflict(i)&&!typeReviewedOf(i);}
 function numConflict(i){const nR=get('units.'+i+'.num_rcs');return (nR!==''&&nR!=null)&&numf(nR)!==numf(get('units.'+i+'.num_units'));}
 function numReviewedOf(i){return get('units.'+i+'.num_reviewed')==='1';}
 function numUnresolved(i){return numConflict(i)&&!numReviewedOf(i);}
-function unitTypeCell(i){const brK='units.'+i+'.br',baK='units.'+i+'.ba';const conf=typeUnresolved(i);const st=conf?'overridden':baseSrc([brK,baK]);const c=CLR[st]||CLR.new;
+function unitTypeCell(i){const brK='units.'+i+'.br',baK='units.'+i+'.ba';const conf=typeUnresolved(i);const c=conf?CLR.overridden:groupColors([brK,baK]);
   const withRs=(k,opts,ph)=>{const d=csDrop(k,opts,ph,'',true,(!conf&&partHot(k))?tintStyle(k):'');const row=rsCsRow(k);
     return row?d.replace('<div class="uamenu">','<div class="uamenu">'+row):d;};
   return `<div class="rbox brba" data-box="${brK}" style="background:${c[1]};border-left-color:${c[0]}">${withRs(brK,BR_OPTS,'BR')}${ovIcons(brK)}<span class="slash">/</span>${withRs(baK,BA_OPTS,'BA')}${ovIcons(baK)}</div>`;}
-function unitCountCell(i){const k='units.'+i+'.num_units';const st=numUnresolved(i)?'overridden':srcOf(k);const c=CLR[st]||CLR.new;const rv=rsUnit(i,'count');
+function unitCountCell(i){const k='units.'+i+'.num_units';const c=numUnresolved(i)?CLR.overridden:cellColors(k);const rv=rsUnit(i,'count');
   return `<div class="rbox" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><input type="text" data-k="${k}" value="${esc(get(k))}">${rv!=null?srcPick(k,[{tag:'Executed RS',val:rv}]):''}${ovIcons(k)}</div>`;}
 function typeNote(i){if(!typeConflict(i))return '';const br=get('units.'+i+'.br'),ba=get('units.'+i+'.ba'),brR=get('units.'+i+'.br_rcs')||br,baR=get('units.'+i+'.ba_rcs')||ba;
   if(typeUnresolved(i))return '<div class="ucnote warn">⚠ RS '+br+'/'+ba+' · RCS '+brR+'/'+baR+' <span class="pick"><button class="urev" data-typ="rs" data-ci="'+i+'">keep RS</button><button class="urev sv" data-typ="rcs" data-ci="'+i+'">use RCS</button></span></div>';
@@ -313,7 +322,7 @@ function numNote(i){if(!numConflict(i))return '';const n=get('units.'+i+'.num_un
 function safmrBox(i){const src=get('units.'+i+'.safmr_source')||defSafmrSrc(i),hud=get('units.'+i+'.safmr_hud'),rcs=get('units.'+i+'.safmr_rcs'),custom=get('units.'+i+'.safmr_custom');
   const hasAny=numf(hud)>0||numf(rcs)>0||numf(custom)>0;
   const lab=src==='rcs'?('$<input class="uac-in srcedit" data-srcedit="safmr" data-si="'+i+'" data-money="1" value="'+esc(fmtMoney(rcs))+'"><span class="srctag">· RCS</span>'):(src==='custom'?('$<input class="uac-in" data-money="1" data-k="units.'+i+'.safmr_custom" value="'+esc(fmtMoney(custom))+'" placeholder="0">'):('$<input class="uac-in srcedit" data-srcedit="safmr" data-si="'+i+'" data-money="1" value="'+esc(fmtMoney(hud))+'"><span class="srctag">· HUD</span>'));
-  let state,c;if(src==='custom'){state=srcOf('units.'+i+'.safmr_custom');c=CLR[state]||CLR.new;}else{state=hasAny?'this-cycle':'new';const overSrc=srcOf('units.'+i+'.safmr_source')==='overridden';if(safmrUnresolved(i)||overSrc)state='overridden';c=CLR[state];}const boxKeySA=src==='custom'?('units.'+i+'.safmr_custom'):('units.'+i+'.safmr_source');
+  let state,c;if(src==='custom'){c=cellColors('units.'+i+'.safmr_custom');}else{state=hasAny?'this-cycle':'new';const overSrc=srcOf('units.'+i+'.safmr_source')==='overridden';if(safmrUnresolved(i)||overSrc)state='overridden';c=provColors(state,'units.'+i+'.safmr_source');}const boxKeySA=src==='custom'?('units.'+i+'.safmr_custom'):('units.'+i+'.safmr_source');
   const menu='<div class="uamenu">'+srcOptRow('data-safmropt="hud" data-safmri="'+i+'"',(hud!==''&&hud!=null)?('$'+fmtMoney(hud)):'','HUD API')+((hasProg('rcs')||numf(rcs)>0)?srcOptRow('data-safmropt="rcs" data-safmri="'+i+'"',(rcs!==''&&rcs!=null)?('$'+fmtMoney(rcs)):'','RCS report'):'')+'<div class="uaopt" data-safmropt="custom" data-safmri="'+i+'">Custom…</div></div>';
   return '<div class="rbox uacell" data-box="'+boxKeySA+'" style="background:'+c[1]+';border-left-color:'+c[0]+'"><div class="uadrop"><div class="uatrigger" tabindex="0"><span class="ualab">'+lab+'</span><span class="cvx">▾</span></div>'+menu+'</div>'+(src==='custom'?ovIcons('units.'+i+'.safmr_custom'):ovIcons('units.'+i+'.safmr_source'))+'</div>';}
 function safmrNote(i){const res=safmrResolvedOf(i),hud=numf(get('units.'+i+'.safmr_hud')),rcs=numf(get('units.'+i+'.safmr_rcs'));
@@ -408,9 +417,9 @@ async function ensureHudSafmr(opts){opts=opts||{};const manual=!!opts.manual;
 }
 
 function undoBits(fam){const st=fam==='LI'?_undoLI:_undoNR;if(!st.length)return '';const id=fam==='LI'?'undoNs8':'undoNonrev';return ' <span class="addrow ghostlink" id="'+id+'">↩ Undo delete'+(st.length>1?(' ('+st.length+')'):'')+'</span><button class="undocommit" id="'+id+'C" title="Keep deletions — dismiss undo">✓</button>';}
-function provColor(k){return (CLR[srcOf(k)]||CLR.new)[0];}
-function boxStyle(k){const c=CLR[srcOf(k)]||CLR.new;return 'color:'+c[0]+';border-color:'+c[0]+';background:'+c[1];}
-function fuelChip(k,three){const v=get(k);const has=v!==''&&v!=null;const c=CLR[has?srcOf(k):'new']||CLR.new;const cls=three?'fuel3':'fuel';return '<span class="'+cls+(has?'':' empty')+'" data-fuel'+(three?'3':'')+'="'+k+'" style="color:'+c[0]+';border-color:'+c[0]+';background:'+c[1]+'">'+(has?esc(v):'-')+'</span>';}
+function provColor(k){return cellColors(k)[0];}
+function boxStyle(k){const c=cellColors(k);return 'color:'+c[0]+';border-color:'+c[0]+';background:'+c[1];}
+function fuelChip(k,three){const v=get(k);const has=v!==''&&v!=null;const c=cellColors(k);const cls=three?'fuel3':'fuel';return '<span class="'+cls+(has?'':' empty')+'" data-fuel'+(three?'3':'')+'="'+k+'" style="color:'+c[0]+';border-color:'+c[0]+';background:'+c[1]+'">'+(has?esc(v):'-')+'</span>';}
 function cbx(k,label){const on=get(k)==='1';return `<label class="cb"><input type="checkbox" data-cb="${k}" ${on?'checked':''}><span class="box" style="${boxStyle(k)}">${on?'✓':''}</span><span class="cbt">${esc(label)}</span>${ovIcons(k)}</label>`;}
 function pbUtil(i,label){const on=get('partb.utilities.'+i)==='1';return `<div class="cb utrow"><label class="cbmain"><input type="checkbox" data-cb="partb.utilities.${i}" ${on?'checked':''}><span class="box" style="${boxStyle('partb.utilities.'+i)}">${on?'✓':''}</span><span class="cbt ut">${label}</span></label>${fuelChip('partb.fuel.'+i,false)}${ovIcons(['partb.utilities.'+i,'partb.fuel.'+i])}</div>`;}
 function writein(id,hasFuel){const val=get('partb.writein.'+id);const on=get('partb.writein.'+id+'.on')==='1';const state=!val?'empty':(on?'checked':'unchecked');
@@ -742,7 +751,7 @@ function ocafFactorCell(){const pub=get('ocaf.factor_pub'),fy=get('ocaf.factor_f
   const lab=(src==='custom')
     ?('<input class="uac-in" data-k="ocaf.factor_custom" value="'+esc(custom)+'" placeholder="4.9" style="width:78px"><span class="srctag">% · custom</span>')
     :(pub?('<span class="ualab">'+esc(pub)+'%<span class="srctag" style="margin-left:6px">· FY'+esc(fy)+' Federal Register</span></span>'):('<span class="ualab" style="color:#8791a5">— pull or enter the factor</span>'));
-  let state,c;if(src==='custom'){state=srcOf('ocaf.factor_custom');c=CLR[state]||CLR.new;}else{state=pub?'this-cycle':'new';c=CLR[state];}
+  let state,c;if(src==='custom'){c=cellColors('ocaf.factor_custom');}else{state=pub?'this-cycle':'new';c=provColors(state,'ocaf.factor_source');}
   const boxKey=(src==='custom')?'ocaf.factor_custom':'ocaf.factor_src';
   const menu='<div class="uamenu">'+srcOptRow('data-ocfopt="fr"',pub?esc(pub+'% · FY'+fy):'','Federal Register')+'<div class="uaopt" data-ocfopt="custom">Custom…</div></div>';
   return '<div class="rbox uacell" data-box="'+boxKey+'" style="background:'+c[1]+';border-left-color:'+c[0]+';max-width:330px;flex:0 1 auto"><div class="uadrop" style="flex:1;min-width:0"><div class="uatrigger" tabindex="0">'+lab+'<span class="cvx">▾</span></div>'+menu+'</div>'+(src==='custom'?ovIcons('ocaf.factor_custom'):'')+'</div>';}
@@ -989,19 +998,18 @@ function aggSrc(keys){if(keys.some(k=>srcOf(k)==='overridden'))return'overridden
 function groupOf(k){for(const b in ADDR_GROUPS){if(ADDR_GROUPS[b].indexOf(k)>=0)return b;}return null;}
 function partHot(k){const s=srcOf(k);return s==='overridden'||(s==='new'&&get(k)!==''&&get(k)!=null);}
 function baseSrc(keys){const cold=keys.filter(k=>!partHot(k));return aggSrc(cold.length?cold:keys);}
-function groupColors(keys){const a=baseSrc(keys);const c=CLR[a]||CLR.new;   // cellColors, for a group of cells
-  if(a==='new'&&keys.some(k=>form[k]&&form[k].db_value===''))return [CLR.database[0],c[1],c[2]]; // cleared on purpose, and saved that way
-  return c;}
+function groupColors(keys){const a=baseSrc(keys);   // provColors over a group of cells
+  return provColors(a,keys.filter(k=>form[k]&&form[k].db_value==='')[0]);}
 function partEmptyInGroup(k,gc){return (get(k)===''||get(k)==null)&&!partHot(k)&&gc&&gc[1]!==CLR.new[1];}
-function tintStyle(k){const c=CLR[srcOf(k)]||CLR.new;return 'background:linear-gradient('+c[0]+','+c[0]+') no-repeat left 4px center/3px 60%,'+c[1]+';border-radius:6px';} // inset bar, not an inset shadow: shadows bend around the pill radius into a "(" crescent
-function applyTint(inp,k,gc){if(partHot(k)){const pc=CLR[srcOf(k)]||CLR.new;inp.style.background='linear-gradient('+pc[0]+','+pc[0]+') no-repeat left 4px center/3px 60%,'+pc[1];inp.style.borderRadius='6px';}
+function tintStyle(k){const c=cellColors(k);return 'background:linear-gradient('+c[0]+','+c[0]+') no-repeat left 4px center/3px 60%,'+c[1]+';border-radius:6px';} // inset bar, not an inset shadow: shadows bend around the pill radius into a "(" crescent
+function applyTint(inp,k,gc){if(partHot(k)){const pc=cellColors(k);inp.style.background='linear-gradient('+pc[0]+','+pc[0]+') no-repeat left 4px center/3px 60%,'+pc[1];inp.style.borderRadius='6px';}
   else if(partEmptyInGroup(k,gc)){inp.style.background=CLR.new[1];inp.style.borderRadius='6px';}
   else{inp.style.background='transparent';}inp.style.boxShadow='none';} // live-paint twin of tintStyle — keep the two in lockstep
 function paintGroup(b){const keys=ADDR_GROUPS[b];const c=groupColors(keys);const box=document.querySelector('[data-box="'+b+'"]');
   if(box){box.style.background=c[1];box.style.borderLeftColor=c[0];
     keys.forEach(k=>{const inp=box.querySelector('input[data-k="'+k+'"]');if(inp)applyTint(inp,k,c);});}
   const ov=document.querySelector('[data-ov="'+b+'"]');if(ov){const m=modeOf(keys);ov.setAttribute('data-mode',m);ov.style.display=m?'flex':'none';}}
-function paintCaName(){const keys=['ca.prefix','ca.name'];const a=baseSrc(keys);const c=CLR[a]||CLR.new;const box=document.querySelector('[data-box="ca.name"]');
+function paintCaName(){const keys=['ca.prefix','ca.name'];const c=groupColors(keys);const box=document.querySelector('[data-box="ca.name"]');
   if(box){box.style.background=c[1];box.style.borderLeftColor=c[0];const inp=box.querySelector('input[data-k="ca.name"]');
     if(inp)applyTint(inp,'ca.name');}
   const ov=document.querySelector('.ovnote[data-ov="ca.prefix,ca.name"]');if(ov){const m=modeOf(keys);ov.setAttribute('data-mode',m);ov.style.display=m?'flex':'none';}}
