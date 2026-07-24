@@ -413,8 +413,11 @@ function makeSupabaseDb(client) {
           for (const k in src) { if (cyNoCarry(k)) continue; const v = src[k].value; if (v == null || v === '') continue; cells[k] = { value: String(v), saved_at: today() }; }
           for (const k in p.durable) { if (!isTemplateKey(k)) continue; cells[k] = { value: p.durable[k].value, saved_at: today() }; } // property record stays authoritative for identity
         }
-        const effIn = String(o.effective_date || '').trim(); // the picked date lands in the form, not just on the card — both creation paths
-        if (effIn && !(cells['rent_schedule.date_eff_rs'] && cells['rent_schedule.date_eff_rs'].value) && !(cells['rent_schedule.date_eff_custom'] && cells['rent_schedule.date_eff_custom'].value)) { cells['rent_schedule.date_eff_source'] = { value: 'custom', saved_at: today() }; cells['rent_schedule.date_eff_custom'] = { value: effIn, saved_at: today() }; }
+        // The date picked when the package is created is a statement about this
+        // package, so it lands in the form and outranks any date inherited from the
+        // property record or the package it was built from.
+        const effIn = String(o.effective_date || '').trim();
+        if (effIn) { cells['rent_schedule.date_eff_source'] = { value: 'custom', saved_at: today() }; cells['rent_schedule.date_eff_custom'] = { value: effIn, saved_at: today() }; }
         D.cycles[cid] = { id: cid, property_id: pid, programs: (o.programs || ['rcs']).join(','), label: o.label || '', effective_date: cyISO(o.effective_date) || '', cells, generated: {}, created_at: now(), updated_at: now() };
         if (o.full) cySyncEff(D.cycles[cid]);
         return enqueue('cy' + cid, () => pushCycle(cid)).then(() => ({ cid }));
