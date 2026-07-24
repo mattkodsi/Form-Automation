@@ -1049,12 +1049,14 @@ function bootstrapFirstCycle(p){
     .catch(e=>saveFailedModal(e));
 }
 function newCycleDialog(){
+  let effPh='';try{const _cys=(mpdb.listCycles(activePid)||[]).filter(c=>c.effective_date);
+    if(_cys.length){const d=String(_cys.map(c=>String(c.effective_date)).sort().pop());const m=d.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m)effPh=m[2]+'/'+m[3]+'/'+((+m[1])+1);}}catch(e){}
   modal('<div class="dlg-t">Start new package</div>'
     +'<div class="dlg-field"><label>This package completes</label>'
     +'<div class="cypick"><label class="cyopt"><input type="checkbox" id="cyRCS"> RCS \u2014 5-year market reset</label>'
     +'<label class="cyopt"><input type="checkbox" id="cyOCAF"> OCAF \u2014 annual factor adjustment</label>'
     +'<label class="cyopt"><input type="checkbox" id="cyUAF"> UAF \u2014 utility allowance factor</label></div></div>'
-    +'<div class="dlg-field"><label>Rents effective (mm/dd/yyyy)</label><input id="cyEff" autocomplete="off" placeholder="10/01/2026"></div>'
+    +'<div class="dlg-field"><label>Rents effective (mm/dd/yyyy)</label><input id="cyEff" autocomplete="off" placeholder="'+esc(effPh)+'"></div>'
     +'<div class="autherr" id="cyErr"></div>'
     +'<div class="dlg-row"><button class="btn" id="dlgCancel">Cancel</button><span class="dlg-sp"></span><button class="btn p" id="dlgOk">Create</button></div>');
   const rcs=el('cyRCS'),ocaf=el('cyOCAF'),uaf=el('cyUAF'),err=el('cyErr');
