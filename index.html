@@ -1631,6 +1631,10 @@ function hudCeil(rents,br){let base=0;const bk=SAFMR_BR_KEY[br];
   if(bk)base=numf(rents[bk]);
   else{const m=String(br).match(/^(\d+)BR/);const n=m?+m[1]:0;if(n>4)base=numf(rents.br4)*(1+0.15*(n-4));} // HUD rule: >4BR = 4BR FMR +15% per extra bedroom
   return base>0?String(Math.round(base*1.5)):'';}
+function andJoin(arr){ // Oxford comma: "a, b, and c" — not "a, b and c"
+  if(arr.length<=1)return arr[0]||'';
+  if(arr.length===2)return arr[0]+' and '+arr[1];
+  return arr.slice(0,-1).join(', ')+', and '+arr[arr.length-1];}
 function hudZipMissing(){const p=hudParams();return p.zip.length!==5&&!(p.street&&p.city&&p.state);}
 function hudBlockers(){ // everything a SAFMR pull needs, not just the first thing missing
   const out=[];
@@ -1640,12 +1644,12 @@ function hudBlockers(){ // everything a SAFMR pull needs, not just the first thi
   if(nb)out.push('the bedroom size on '+nb+' unit type'+(nb>1?'s':'')+' in '+secRef(6));
   return out;}
 function hudBlockerText(){const b=hudBlockers();if(!b.length)return '';
-  return 'add '+(b.length===1?b[0]:(b.slice(0,-1).join(', ')+' and '+b[b.length-1]));}
+  return 'add '+andJoin(b);}
 function hudBlockerShort(){ // the card has room for the names, not the sentence
   const b=[];if(hudZipMissing())b.push('ZIP');
   if(!dateEffResolved())b.push('effective date');
   if(UNITS.some(i=>!get('units.'+i+'.br')))b.push('bedroom size');
-  return b.length?('add the '+(b.length===1?b[0]:(b.slice(0,-1).join(', ')+' and '+b[b.length-1]))):'';}
+  return b.length?('add the '+andJoin(b)):'';}
 function hudParams(){const zip=String(get('property.addr_zip')||'').replace(/\D/g,'').slice(0,5);
   const de=dateEffResolved();const _ym=String(de||'').match(/\d{4}/);const year=_ym?parseInt(_ym[0],10):(new Date()).getFullYear();
   return{zip,year,street:get('property.addr_street'),city:get('property.addr_city'),state:get('property.addr_state')};}
