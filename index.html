@@ -1670,11 +1670,11 @@ function srcDocLabel(){
 function rsVal(k){try{const p=_rsUpload&&_rsUpload.parsed;const v=p&&p.scalars?p.scalars[k]:null;return (v==null||v==='')?null:String(v);}catch(e){return null;}}
 function rsNum(v){v=String(v==null?'':v).replace(/[^0-9.\-]/g,'');const n=parseFloat(v);return isFinite(n)?n:'';}
 function rsDateISO(v){v=String(v||'').trim();let m=v.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);if(m)return m[3]+'-'+('0'+m[1]).slice(-2)+'-'+('0'+m[2]).slice(-2);m=v.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m)return v.slice(0,10);const MN={january:1,february:2,march:3,april:4,may:5,june:6,july:7,august:8,september:9,october:10,november:11,december:12};m=v.toLowerCase().match(/([a-z]+)\s+(\d{1,2}),?\s+(\d{4})/);if(m&&MN[m[1]])return m[3]+'-'+('0'+MN[m[1]]).slice(-2)+'-'+('0'+m[2]).slice(-2);return '';}
-function rsParseUnitType(t){t=String(t||'');let br='',ba='';if(/studio/i.test(t))br='Studio';else{const m=t.match(/(\d+)\s*BR/i);if(m&&BR_OPTS.indexOf(m[1]+'BR')>=0)br=m[1]+'BR';}const b=t.match(/(\d+(?:\.\d+)?)\s*BA/i);if(b&&BA_OPTS.indexOf(b[1]+'BA')>=0)ba=b[1]+'BA';return {br:br,ba:ba};}
+function rsParseUnitType(t){t=String(t||'');let br='',ba='';if(/studio|efficiency/i.test(t))br='Studio';else{const m=t.match(/(\d+)\s*(?:br\b|bed)/i);if(m&&BR_OPTS.indexOf(m[1]+'BR')>=0)br=m[1]+'BR';}const b=t.match(/(\d+(?:\.\d+)?)\s*(?:ba\b|bath)/i);if(b&&BA_OPTS.indexOf(b[1]+'BA')>=0)ba=b[1]+'BA';return {br:br,ba:ba};}
 function rsReadFields(pdfForm){
   const V=n=>{try{const v=pdfForm.getTextField(String(n)).getText();return v==null?'':String(v).trim();}catch(e){return '';}};
   const CB=n=>{try{return pdfForm.getCheckBox(String(n)).isChecked();}catch(e){return false;}};
-  const outp={scalars:{},units:[],principals:[]};
+  const outp={scalars:{},units:[],ns8:[],principals:[]};
   if(V(1))outp.scalars['property.name']=V(1);
   if(V(2))outp.scalars['property.fha']=V(2);
   const dt=rsDateISO(V(3));if(dt)outp.scalars['rs_date']=dt;
@@ -1683,59 +1683,98 @@ function rsReadFields(pdfForm){
   Object.keys(ET).forEach(n=>{if(CB(n))outp.scalars['owner.entity_type']=ET[n];});
   if(CB('204')){outp.scalars['owner.entity_type']='Other (specify)';if(V(205))outp.scalars['owner.entity_type_other']=V(205);}
   [206,208,210,212,214,216,218,220,222,224,226].forEach(id=>{const nm=V(id),tt=V(id+1);if(nm||tt)outp.principals.push({name:nm,title:tt});});
-  for(let r=0;r<11;r++){const b=7+r*8;const t=V(b);const n=rsNum(V(b+1)),cr=rsNum(V(b+2)),ua=rsNum(V(b+4));
-    if((t||n||cr)&&cr!==''&&cr>0)outp.units.push({type:t,count:n,rent:cr,ua:ua});}
+  const R=rsRows(V);outp.units=R.units;outp.ns8=R.ns8;
   return outp;}
-async function rsDetectText(bytes){ // any real text runs in the page streams?
-  try{const raw=new TextDecoder('latin1').decode(bytes);const re=/stream\r?\n/g;let m,hits=0;
-    while((m=re.exec(raw))){const st=m.index+m[0].length;const en=raw.indexOf('endstream',st);if(en<0)continue;
-      let seg=bytes.slice(st,en);let e=seg.length;while(e>0&&(seg[e-1]===10||seg[e-1]===13||seg[e-1]===32))e--;seg=seg.slice(0,e);
-      try{const ds=new DecompressionStream('deflate');const w=ds.writable.getWriter();const pr=new Response(ds.readable).arrayBuffer();await w.write(seg);await w.close();
-        const txt=new TextDecoder('latin1').decode(await pr).slice(0,20000);const asc=(txt.match(/[\x20-\x7e\r\n]/g)||[]).length;if(txt.length&&asc/txt.length>0.85&&txt.indexOf('BT')>=0)hits+=(txt.match(/[\)\]>]\s*T[jJ]/g)||[]).length;if(hits>15)return true;}catch(er){}}
-    return hits>15;}catch(e){return false;}}
-/* ---- Tier 2: positioned text extraction for flattened copies ----
-   Interprets content streams (q/Q + cm stack, Tm/Td/TD/T*, Tj/TJ/quote),
-   yielding text runs with page coordinates; runs are then mapped onto the
-   template's known field rectangles. Literal + 1-byte hex strings cover the
-   DocuSign class; 2-byte CID copies need ToUnicode work (next increment). */
+/* ---- Tier 2: positioned text for copies that no longer carry form fields ----
+   Interprets the page content streams (q/Q + cm stack, Tm/Td/TD/T*, Tj/TJ/quote)
+   and follows every `Do` into its form XObject — where a signature-flattened copy
+   keeps the values it used to hold in fields. Runs come out in page coordinates
+   and are matched against the template's own field rectangles. Hex strings decode
+   through the font's ToUnicode map when it has one, covering CID-encoded copies. */
 async function rsInflate(seg){let e=seg.length;while(e>0&&(seg[e-1]===10||seg[e-1]===13||seg[e-1]===32))e--;seg=seg.slice(0,e);
   const ds=new DecompressionStream('deflate');const w=ds.writable.getWriter();const pr=new Response(ds.readable).arrayBuffer();await w.write(seg);await w.close();return new TextDecoder('latin1').decode(await pr);}
-function rsRuns(txt){ // one content stream -> [{str,x,y}]
-  const runs=[];let cm=[1,0,0,1,0,0],stack=[],tm=null,tlm=null,TL=0;
-  const mul=(a,b)=>[a[0]*b[0]+a[1]*b[2],a[0]*b[1]+a[1]*b[3],a[2]*b[0]+a[3]*b[2],a[2]*b[1]+a[3]*b[3],a[4]*b[0]+a[5]*b[2]+b[4],a[4]*b[1]+a[5]*b[3]+b[5]];
-  const emit=str=>{if(!str)return;const m=mul(tm||[1,0,0,1,0,0],cm);runs.push({str:str,x:m[4],y:m[5]});};
+function rsMul(a,b){return [a[0]*b[0]+a[1]*b[2],a[0]*b[1]+a[1]*b[3],a[2]*b[0]+a[3]*b[2],a[2]*b[1]+a[3]*b[3],a[4]*b[0]+a[5]*b[2]+b[4],a[4]*b[1]+a[5]*b[3]+b[5]];}
+async function rsStreamText(s){const P=window.PDFLib;if(!s||!s.dict)return '';
+  let f=s.dict.get(P.PDFName.of('Filter'));f=f?String(f):'';
+  const raw=s.contents||(s.getContents&&s.getContents());if(!raw)return '';
+  if(/Flate/.test(f)){try{return await rsInflate(raw);}catch(e){return '';}}
+  return f?'':new TextDecoder('latin1').decode(raw);}
+function rsToUni(txt){const map={};let m; // ToUnicode CMap -> {charCodeHex: character}
+  const bc=/beginbfchar([\s\S]*?)endbfchar/g;
+  while((m=bc.exec(txt))){const pr=/<([0-9A-Fa-f]+)>\s*<([0-9A-Fa-f]+)>/g;let p;
+    while((p=pr.exec(m[1])))map[p[1].toLowerCase()]=String.fromCharCode(parseInt(p[2].slice(0,4),16));}
+  const br=/beginbfrange([\s\S]*?)endbfrange/g;
+  while((m=br.exec(txt))){const rr=/<([0-9A-Fa-f]+)>\s*<([0-9A-Fa-f]+)>\s*<([0-9A-Fa-f]+)>/g;let p;
+    while((p=rr.exec(m[1]))){const a=parseInt(p[1],16),b=parseInt(p[2],16),c=parseInt(p[3].slice(0,4),16);
+      for(let i=a;i<=b&&i-a<512;i++)map[i.toString(16).padStart(p[1].length,'0').toLowerCase()]=String.fromCharCode(c+i-a);}}
+  return map;}
+async function rsFontMaps(res){const P=window.PDFLib,out={};if(!res)return out;
+  let fd=null;try{fd=res.lookup(P.PDFName.of('Font'));}catch(e){}
+  if(!fd||!fd.keys)return out;
+  for(const k of fd.keys()){let f=null;try{f=fd.lookup(k);}catch(e){}
+    if(!f||!f.get)continue;
+    const ent={uni:null,bytes:/Type0/.test(String(f.get(P.PDFName.of('Subtype'))||''))?2:1};
+    try{const tu=f.lookup(P.PDFName.of('ToUnicode'));if(tu&&tu.dict)ent.uni=rsToUni(await rsStreamText(tu));}catch(e){}
+    out[k.asString().replace(/^\//,'')]=ent;}
+  return out;}
+async function rsRuns(txt,ctx){ // content stream -> ctx.runs [{s,x,y,d}] in page space
+  const P=window.PDFLib;
+  let cm=ctx.ctm.slice(),stack=[],tm=null,tlm=null,TL=0,font=null;
+  const fonts=await rsFontMaps(ctx.res);
+  const emit=str=>{if(!str)return;const m=rsMul(tm||[1,0,0,1,0,0],cm);ctx.runs.push({s:str,x:+m[4].toFixed(2),y:+m[5].toFixed(2),d:ctx.depth});};
   const deLit=b=>b.replace(/\\([nrtbf()\\]|[0-7]{1,3})/g,(mm,g)=>{if(g==='n')return'\n';if(g==='r')return'\r';if(g==='t')return'\t';if(g==='b')return'\b';if(g==='f')return'\f';if(/^[0-7]+$/.test(g))return String.fromCharCode(parseInt(g,8));return g;});
-  const deHex=h=>{h=h.replace(/\s+/g,'');let o='';if(h.length>=4&&/^00/.test(h)){for(let i=0;i+3<h.length;i+=4)o+=String.fromCharCode(parseInt(h.substr(i,4),16));}else{for(let i=0;i+1<h.length;i+=2)o+=String.fromCharCode(parseInt(h.substr(i,2),16));}return o;};
-  const re=/\((?:[^()\\]|\\.)*\)|<[0-9A-Fa-f\s]*>|\[(?:[^\[\]\\()]|\((?:[^()\\]|\\.)*\))*\]\s*TJ|[-.0-9]+|[A-Za-z'*"]+/g;
-  let m,nums=[],lastStr=null;
+  const deHex=h=>{h=h.replace(/\s+/g,'').toLowerCase();const fi=font&&fonts[font]?fonts[font]:null;
+    const step=(fi?fi.bytes===2:(h.length>=4&&/^00/.test(h)))?4:2;let o='';
+    for(let i=0;i+step-1<h.length;i+=step){const cd=h.substr(i,step);
+      o+=(fi&&fi.uni&&fi.uni[cd]!=null)?fi.uni[cd]:String.fromCharCode(parseInt(cd,16));}
+    return o;};
+  const re=/\((?:[^()\\]|\\.)*\)|<[0-9A-Fa-f\s]*>|\[(?:[^\[\]\\()]|\((?:[^()\\]|\\.)*\))*\]\s*TJ|\/[^\s\/\[\]<>(){}]+|[-.0-9]+|[A-Za-z'*"]+/g;
+  let m,nums=[],lastStr=null,lastName=null;
   while((m=re.exec(txt))){const t=m[0];
     if(t[0]==='('){lastStr=deLit(t.slice(1,-1));continue;}
     if(t[0]==='<'){lastStr=deHex(t.slice(1,-1));continue;}
-    if(t[0]==='['){const parts=[];const ri=/\((?:[^()\\]|\\.)*\)|<[0-9A-Fa-f\s]*>/g;let mm;while((mm=ri.exec(t))){parts.push(mm[0][0]==='('?deLit(mm[0].slice(1,-1)):deHex(mm[0].slice(1,-1)));}emit(parts.join(''));nums=[];lastStr=null;continue;}
+    if(t[0]==='/'){lastName=t.slice(1);continue;}
+    if(t[0]==='['){const parts=[];const ri=/\((?:[^()\\]|\\.)*\)|<[0-9A-Fa-f\s]*>/g;let mm;
+      while((mm=ri.exec(t)))parts.push(mm[0][0]==='('?deLit(mm[0].slice(1,-1)):deHex(mm[0].slice(1,-1)));
+      emit(parts.join(''));nums=[];lastStr=null;continue;}
     if(/^[-.0-9]+$/.test(t)){nums.push(parseFloat(t));continue;}
     switch(t){
       case 'q':stack.push(cm.slice());break;
-      case 'Q':cm=stack.pop()||[1,0,0,1,0,0];break;
-      case 'cm':if(nums.length>=6)cm=mul(nums.slice(-6),cm);break;
+      case 'Q':cm=stack.pop()||ctx.ctm.slice();break;
+      case 'cm':if(nums.length>=6)cm=rsMul(nums.slice(-6),cm);break;
+      case 'Tf':font=lastName;break;
       case 'BT':tm=[1,0,0,1,0,0];tlm=tm.slice();break;
       case 'ET':tm=null;break;
       case 'Tm':if(nums.length>=6){tlm=nums.slice(-6);tm=tlm.slice();}break;
-      case 'Td':if(nums.length>=2){tlm=mul([1,0,0,1,nums[nums.length-2],nums[nums.length-1]],tlm||[1,0,0,1,0,0]);tm=tlm.slice();}break;
-      case 'TD':if(nums.length>=2){TL=-nums[nums.length-1];tlm=mul([1,0,0,1,nums[nums.length-2],nums[nums.length-1]],tlm||[1,0,0,1,0,0]);tm=tlm.slice();}break;
-      case 'T*':tlm=mul([1,0,0,1,0,-TL],tlm||[1,0,0,1,0,0]);tm=tlm.slice();break;
+      case 'Td':if(nums.length>=2){tlm=rsMul([1,0,0,1,nums[nums.length-2],nums[nums.length-1]],tlm||[1,0,0,1,0,0]);tm=tlm.slice();}break;
+      case 'TD':if(nums.length>=2){TL=-nums[nums.length-1];tlm=rsMul([1,0,0,1,nums[nums.length-2],nums[nums.length-1]],tlm||[1,0,0,1,0,0]);tm=tlm.slice();}break;
+      case 'T*':tlm=rsMul([1,0,0,1,0,-TL],tlm||[1,0,0,1,0,0]);tm=tlm.slice();break;
       case 'TL':if(nums.length)TL=nums[nums.length-1];break;
       case 'Tj':emit(lastStr);lastStr=null;break;
-      case "'":tlm=mul([1,0,0,1,0,-TL],tlm||[1,0,0,1,0,0]);tm=tlm.slice();emit(lastStr);lastStr=null;break;
+      case "'":tlm=rsMul([1,0,0,1,0,-TL],tlm||[1,0,0,1,0,0]);tm=tlm.slice();emit(lastStr);lastStr=null;break;
+      case 'Do':{ // a flattened field's value lives in the form XObject drawn here
+        if(!lastName||ctx.depth>=8||!ctx.res)break;
+        let xo=null;try{xo=ctx.res.lookup(P.PDFName.of('XObject'));}catch(e){}
+        if(!xo)break;let sub=null;try{sub=xo.lookup(P.PDFName.of(lastName));}catch(e){}
+        if(!sub||!sub.dict||String(sub.dict.get(P.PDFName.of('Subtype'))||'')!=='/Form')break;
+        if(ctx.seen.has(sub))break;ctx.seen.add(sub);
+        let mtx=[1,0,0,1,0,0];try{const mv=sub.dict.lookup(P.PDFName.of('Matrix'));if(mv&&mv.size&&mv.size()===6)mtx=[0,1,2,3,4,5].map(i=>mv.lookup(i).asNumber());}catch(e){}
+        let r2=ctx.res;try{const rr=sub.dict.lookup(P.PDFName.of('Resources'));if(rr)r2=rr;}catch(e){}
+        await rsRuns(await rsStreamText(sub),{res:r2,ctm:rsMul(mtx,cm),depth:ctx.depth+1,runs:ctx.runs,seen:ctx.seen});
+        ctx.seen.delete(sub);break;}
     }
     nums=[];}
-  return runs;}
-async function rsTextPages(bytes){ // BT-bearing ASCII streams in document order = page candidates
-  const raw=new TextDecoder('latin1').decode(bytes);const re=/stream\r?\n/g;let m;const pages=[];
-  while((m=re.exec(raw))){const st=m.index+m[0].length;const en=raw.indexOf('endstream',st);if(en<0)continue;
-    let txt=null;try{txt=await rsInflate(bytes.slice(st,en));}catch(e){txt=raw.slice(st,en);}
-    try{const probe=txt.slice(0,20000);const asc=(probe.match(/[\x20-\x7e\r\n]/g)||[]).length;
-      if(probe.length&&asc/probe.length>0.85&&txt.indexOf('BT')>=0)pages.push(rsRuns(txt));}catch(e){}}
-  return pages;}
+  return ctx.runs;}
+async function rsTextPages(doc){const out=[]; // one run list per page, in page order
+  for(const pg of doc.getPages()){const runs=[];
+    let res=null;try{res=pg.node.Resources();}catch(e){}
+    let cs=null;try{cs=pg.node.Contents();}catch(e){}
+    let txt='';
+    if(cs&&cs.size&&cs.lookup){for(let i=0;i<cs.size();i++)txt+=(await rsStreamText(cs.lookup(i)))+'\n';}
+    else if(cs)txt=await rsStreamText(cs);
+    try{await rsRuns(txt,{res:res,ctm:[1,0,0,1,0,0],depth:0,runs:runs,seen:new Set()});}catch(e){}
+    out.push(runs);}
+  return out;}
 let _rsRectCache=null;
 async function rsFieldRects(){ // field id -> {pg,x,y,w,h} from our own template
   if(_rsRectCache)return _rsRectCache;
@@ -1744,41 +1783,65 @@ async function rsFieldRects(){ // field id -> {pg,x,y,w,h} from our own template
   const doc=await window.PDFLib.PDFDocument.load(tb,{parseSpeed:Infinity});const pf=doc.getForm();const pgs=doc.getPages();
   const map={};pf.getFields().forEach(f=>{try{const w=f.acroField.getWidgets()[0];const r=w.getRectangle();let pg=-1;pgs.forEach((p,i)=>{if(p.ref===w.P())pg=i;});map[f.getName()]={pg:pg,x:r.x,y:r.y,w:r.width,h:r.height};}catch(e){}});
   _rsRectCache=map;return map;}
-async function rsReadTextTier(bytes){ // flattened copy -> same parsed shape as tier 1, or null
-  const rects=await rsFieldRects();const pages=await rsTextPages(bytes);if(!pages.length)return null;
-  // page association: the page holding "Part G" style entity text is template page 1; rows page is 0
-  const joined=pages.map(rs=>rs.map(r=>r.str).join(' '));
+function rsMapRects(pageRuns,rects,tplPg){ // one page's runs -> {fieldId: text}
+  const out={};if(!pageRuns)return out;
+  // A flattened copy draws its values inside form XObjects (depth > 0) while the
+  // blank form's printed labels stay in the page stream. When a page carries any
+  // such content, read only that — otherwise a label sitting inside a field's box
+  // would be mistaken for an entered value.
+  const deep=pageRuns.filter(r=>r.d>0);const runs=deep.length?deep:pageRuns;
+  for(const id in rects){const rc=rects[id];if(rc.pg!==tplPg)continue;
+    const inside=runs.filter(r=>r.x>=rc.x-2&&r.x<=rc.x+rc.w+2&&r.y>=rc.y-1&&r.y<=rc.y+rc.h);
+    const v=inside.sort((a,b)=>(b.y-a.y)||(a.x-b.x)).map(r=>r.s).join('').trim();
+    if(v)out[id]=v;}
+  return out;}
+function rsRows(V){ // Part A rows, in order -> Section 8 rows and non-Section 8 rows
+  const out={units:[],ns8:[]};let ns=false;
+  for(let r=0;r<11;r++){const b=7+r*8;const t=V(b);const n=rsNum(V(b+1)),cr=rsNum(V(b+2)),ua=rsNum(V(b+4));
+    if(/non[\s-]?section\s*8/i.test(t)){ns=true;continue;} // divider: rows below it are unassisted
+    if(cr===''||cr<=0)continue;
+    if(ns)out.ns8.push({type:t,count:n,rent:cr});
+    else out.units.push({type:t,count:n,rent:cr,ua:ua});}
+  return out;}
+async function rsReadTextTier(pages){ // flattened copy -> same parsed shape as tier 1, or null
+  if(!pages||!pages.length)return null;
+  const rects=await rsFieldRects();if(!Object.keys(rects).length)return null;
+  // Each half of the schedule is used only when a page identifies itself as that
+  // half. Guessing ("page 2 must be the certification page") reads one page's text
+  // through the other's field boxes and invents entity and principal values.
+  const joined=pages.map(rs=>rs.map(r=>r.s).join(' '));
   let pg0=-1,pg1=-1;
   joined.forEach((tx,i)=>{if(pg0<0&&/Contract Rent|Utility|Number of.{0,3}Units/i.test(tx))pg0=i;if(pg1<0&&/Mortgagor Entity|Owner Certification|Part G/i.test(tx))pg1=i;});
-  if(pg0<0&&pages.length)pg0=0;if(pg1<0&&pages.length>1)pg1=pages.length-1;
-  const hit=(pgIx,tplPg)=>{const out={};if(pgIx<0)return out;
-    for(const id in rects){const rc=rects[id];if(rc.pg!==tplPg)continue;
-      const inside=pages[pgIx].filter(r=>r.x>=rc.x-2&&r.x<=rc.x+rc.w+2&&r.y>=rc.y-3&&r.y<=rc.y+rc.h+5).sort((a,b)=>a.x-b.x);
-      const v=inside.map(r=>r.str).join('').trim();if(v)out[id]=v;}
-    return out;};
-  const F=Object.assign(hit(pg0,0),hit(pg1,1));
+  if(pg0<0)return null;if(pg1===pg0)pg1=-1;
+  const F=Object.assign(rsMapRects(pages[pg0],rects,0),pg1>=0?rsMapRects(pages[pg1],rects,1):{});
   const V=n=>String(F[String(n)]||'').trim();
-  const outp={scalars:{},units:[],principals:[]};
+  const outp={scalars:{},units:[],ns8:[],principals:[]};
   if(V(1))outp.scalars['property.name']=V(1);
   if(V(2))outp.scalars['property.fha']=V(2);
-  const dt=rsDateISO(V(3));if(dt)outp.scalars['rs_date']=dt;
+  let dt=rsDateISO(V(3));
+  if(!dt&&V(4)&&V(6))dt=rsDateISO(V(4)+'/'+(V(5)||'1')+'/'+V(6));
+  if(dt)outp.scalars['rs_date']=dt;
   if(V(197))outp.scalars['owner.entity_name']=V(197);
-  if(V(205))outp.scalars['owner.entity_type_other']=V(205);
+  // a flattened checkbox keeps no value — the drawn mark inside its box is all that remains
+  const ET={'198':'Individual','199':'Corporation','200':'General Partnership','201':'Limited Partnership','202':'Joint Tenancy/Tenants in Common','203':'Trust'};
+  Object.keys(ET).forEach(n=>{if(V(n))outp.scalars['owner.entity_type']=ET[n];});
+  if(V(204)){outp.scalars['owner.entity_type']='Other (specify)';if(V(205))outp.scalars['owner.entity_type_other']=V(205);}
   [206,208,210,212,214,216,218,220,222,224,226].forEach(id=>{const nm=V(id),tt=V(id+1);if(nm||tt)outp.principals.push({name:nm,title:tt});});
-  for(let r=0;r<11;r++){const b=7+r*8;const t=V(b);const n=rsNum(V(b+1)),cr=rsNum(V(b+2)),ua=rsNum(V(b+4));
-    if((t||n||cr)&&cr!==''&&cr>0)outp.units.push({type:t,count:n,rent:cr,ua:ua});}
-  // quality gate: totals cross-check when present, else demand real substance
-  const tot=rsNum(V(95));const sum=outp.units.reduce((a,u)=>a+(u.count&&u.rent?u.count*u.rent:0),0);
-  const ok=outp.units.length>0&&(tot===''||Math.abs(sum-tot)<=Math.max(2,outp.units.length));
+  const R=rsRows(V);outp.units=R.units;outp.ns8=R.ns8;
+  // quality gate: the rows must reconcile against the schedule's own printed total
+  const tot=rsNum(V(95));const all=outp.units.concat(outp.ns8);
+  const sum=all.reduce((a,u)=>a+(u.count&&u.rent?u.count*u.rent:0),0);
+  const ok=outp.units.length>0&&(tot===''||Math.abs(sum-tot)<=Math.max(2,all.length));
   return ok?outp:null;}
 async function parseRsPdf(bytes){
   const doc=await window.PDFLib.PDFDocument.load(bytes,{ignoreEncryption:true,parseSpeed:Infinity});
   let n=0,pf=null;try{pf=doc.getForm();n=pf.getFields().length;}catch(e){}
   if(n>10)return {kind:'fields',parsed:rsReadFields(pf)};
-  if(await rsDetectText(bytes)){let tp=null;try{tp=await rsReadTextTier(bytes);}catch(e){}
-    if(tp)return {kind:'fields',parsed:tp};
-    return {kind:'text',parsed:null};}
-  return {kind:'scan',parsed:null};}
+  let pages=null;try{pages=await rsTextPages(doc);}catch(e){}
+  const runs=pages?pages.reduce((a,p)=>a+p.length,0):0;
+  if(runs<15)return {kind:'scan',parsed:null};
+  let tp=null;try{tp=await rsReadTextTier(pages);}catch(e){}
+  return tp?{kind:'fields',parsed:tp,via:'text'}:{kind:'text',parsed:null};}
 function rsFillFromParsed(){const P=_rsUpload&&_rsUpload.parsed;if(!P)return;
   const setk=(k,v)=>{if(v!=null&&v!=='')form=store.editForm(form,k,String(v));};
   setk('property.fha',P.scalars['property.fha']);
@@ -1790,6 +1853,9 @@ function rsFillFromParsed(){const P=_rsUpload&&_rsUpload.parsed;if(!P)return;
   P.units.forEach((u,ix)=>{const bb=rsParseUnitType(u.type);setk('units.'+ix+'.br',bb.br);setk('units.'+ix+'.ba',bb.ba);
     setk('units.'+ix+'.num_units',u.count);setk('units.'+ix+'.current',u.rent);
     if(u.ua!==''&&u.ua>0){setk('units.'+ix+'.ua_exec',u.ua);if(!get('units.'+ix+'.ua_source'))form=store.editForm(form,'units.'+ix+'.ua_source','exec');}});
+  if(P.ns8&&P.ns8.length){form=store.editForm(form,'ns8.enabled','1');
+    P.ns8.forEach((u,ix)=>{const bb=rsParseUnitType(u.type);setk('ns8.'+ix+'.br',bb.br);setk('ns8.'+ix+'.ba',bb.ba);
+      setk('ns8.'+ix+'.num_units',u.count);setk('ns8.'+ix+'.avg_rent',u.rent);});}
   deriveUnits();renderBody();scheduleHudRefresh();scheduleFactorRefresh();
   setStatus('Form filled from the executed rent schedule \u2014 review the highlighted values, then \u201cUpdate database\u201d.');}
 function renderSources(){
@@ -1798,9 +1864,9 @@ function renderSources(){
     ?`<div class="srcrow"><span class="ok">✓</span><div><b>${esc(up.name)}</b> <span class="parsed">uploaded · this session</span><div class="sub">Automatic parsing is not yet available — review each section below.</div></div><button class="btn sm" id="upRcs">Replace</button></div>`
     :`<div class="srcrow${sl.need?'':' dim'}"><span class="mut">○</span><div><b>${esc(sl.title)}</b> <span class="${sl.need?'missing':'parsed'}">${sl.need?'not uploaded':'optional'}</span><div class="sub">${esc(sl.sub)}</div></div><button class="btn sm" id="upRcs">Upload PDF</button></div>`;
   const ru=_rsUpload;let rs;
-  if(!ru)rs=`<div class="srcrow"><span class="mut">○</span><div><b>Current executed rent schedule</b> <span class="missing">not uploaded</span><div class="sub">When the PDF still carries its form fields, uploading reads the unit mix, current rents, utility allowances, entity, and principals directly from the schedule.</div></div><button class="btn sm" id="upRs">Upload PDF</button></div>`;
-  else if(ru.kind==='fields'){const p=ru.parsed;rs=`<div class="srcrow"><span class="ok">✓</span><div><b>${esc(ru.name)}</b> <span class="parsed">parsed · ${p.units.length} unit type${p.units.length===1?'':'s'}${p.principals.length?(' · '+p.principals.length+' principal'+(p.principals.length===1?'':'s')):''}</span><div class="sub">Filling the form writes only where the schedule has a value; existing entries it changes show as overridden until you save or revert.</div></div><button class="btn sm teal" id="rsApply">Fill form from RS</button> <button class="btn sm" id="upRs">Replace</button></div>`;}
-  else if(ru.kind==='text')rs=`<div class="srcrow"><span class="mut">△</span><div><b>${esc(ru.name)}</b> <span class="missing">no form fields — text copy</span><div class="sub">This copy doesn’t carry editable form fields (typical of signed or scanned-with-text copies). Reading its printed text is the next parsing phase — enter the values in the sections below for now.</div></div><button class="btn sm" id="upRs">Replace</button></div>`;
+  if(!ru)rs=`<div class="srcrow"><span class="mut">○</span><div><b>Current executed rent schedule</b> <span class="missing">not uploaded</span><div class="sub">Uploading reads the unit mix, current rents, utility allowances, entity, and principals from the schedule — from its form fields where the copy still has them, and otherwise from its printed text.</div></div><button class="btn sm" id="upRs">Upload PDF</button></div>`;
+  else if(ru.kind==='fields'){const p=ru.parsed;const nl=(p.ns8||[]).length;rs=`<div class="srcrow"><span class="ok">✓</span><div><b>${esc(ru.name)}</b> <span class="parsed">parsed${ru.via==='text'?' from the printed text':''} · ${p.units.length} unit type${p.units.length===1?'':'s'}${nl?(' · '+nl+' non-Section 8 row'+(nl===1?'':'s')):''}${p.principals.length?(' · '+p.principals.length+' principal'+(p.principals.length===1?'':'s')):''}</span><div class="sub">${ru.via==='text'?'This copy no longer carries form fields, so the values were read from its printed text and checked against the schedule’s own unit totals. ':''}Filling the form writes only where the schedule has a value; existing entries it changes show as overridden until you save or revert.</div></div><button class="btn sm teal" id="rsApply">Fill form from RS</button> <button class="btn sm" id="upRs">Replace</button></div>`;}
+  else if(ru.kind==='text')rs=`<div class="srcrow"><span class="mut">△</span><div><b>${esc(ru.name)}</b> <span class="missing">no form fields — text copy</span><div class="sub">This copy carries no editable form fields, and its printed text could not be matched to the rent schedule’s layout closely enough to fill the form reliably. Enter the values in the sections below.</div></div><button class="btn sm" id="upRs">Replace</button></div>`;
   else rs=`<div class="srcrow"><span class="mut">△</span><div><b>${esc(ru.name)}</b> <span class="missing">scanned copy</span><div class="sub">This copy is a scan with no digital text to read. Upload a digitally completed copy, or enter the values in the sections below.</div></div><button class="btn sm" id="upRs">Replace</button></div>`;
   const foot=`<input type="file" id="rcsFile" accept="application/pdf,.pdf" style="display:none"><input type="file" id="rsFile" accept="application/pdf,.pdf" style="display:none">`;
   return card(1,sectionPill(1),rcs+rs+foot);}
