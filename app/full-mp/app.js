@@ -247,19 +247,19 @@ function selectCell(f){const c=cellColors(f.k);let dd=csDrop(f.k,f.opts,f.ph||'S
     return '<div class="fpair etpair">'+sel+other+'</div>';}
   return sel;}
 function compAddrCell(keys,box,label){const c=groupColors(keys);
-  const ti=k=>{const t=partTint(k);return t?(';'+t):'';};
-  return `<div class="field"><div class="flabel">${label}</div><div class="fbox addr" data-box="${box}" style="background:${c[1]};border-left-color:${c[0]}">
+  const ti=k=>{const t=partTint(k,keys,c);return t?(';'+t):'';};
+  return `<div class="field"><div class="flabel">${label}</div><div class="fbox addr" data-box="${box}" style="background:${addrBody(keys,c)};border-left-color:${c[0]}">
      <input type="text" data-k="${keys[0]}" value="${esc(get(keys[0]))}" placeholder="Street" style="flex:2.2${ti(keys[0])}"><span class="adiv"></span>
      <input type="text" data-k="${keys[1]}" value="${esc(get(keys[1]))}" placeholder="City" style="flex:1.3${ti(keys[1])}"><span class="adiv"></span>
-     ${csDrop(keys[2],STATES,'ST','csnarrow',false,partTint(keys[2]))}<span class="adiv"></span>
+     ${csDrop(keys[2],STATES,'ST','csnarrow',false,partTint(keys[2],keys,c))}<span class="adiv"></span>
      <input type="text" data-k="${keys[3]}" value="${esc(get(keys[3]))}" placeholder="ZIP" style="width:${(box==='property.addr'||box==='appr.addr')?'47px':'64px'}${ti(keys[3])}">${SRCGROUP[box]?srcGroupPick(box):''}</div>
    ${ovNoteAddr(box)}</div>`;}
 function mgmtCell(){const src=get('tenant.mgmt_source')||'property';const propHas=ADDR.some(k=>get(k)!=='');
-  if(src==='custom'){const c=groupColors(MGMT_ADDR);const ti=k=>{const t=partTint(k);return t?(';'+t):'';};
-    return `<div class="field"><div class="flabel">Management address <span class="mgmtswitch" data-mgmt="property">↺ use property address</span></div><div class="fbox addr" data-box="tenant.mgmt" style="background:${c[1]};border-left-color:${c[0]}">
+  if(src==='custom'){const c=groupColors(MGMT_ADDR);const ti=k=>{const t=partTint(k,MGMT_ADDR,c);return t?(';'+t):'';};
+    return `<div class="field"><div class="flabel">Management address <span class="mgmtswitch" data-mgmt="property">↺ use property address</span></div><div class="fbox addr" data-box="tenant.mgmt" style="background:${addrBody(MGMT_ADDR,c)};border-left-color:${c[0]}">
        <input type="text" data-k="tenant.mgmt_street" value="${esc(get('tenant.mgmt_street'))}" placeholder="Street" style="flex:2.2${ti('tenant.mgmt_street')}"><span class="adiv"></span>
        <input type="text" data-k="tenant.mgmt_city" value="${esc(get('tenant.mgmt_city'))}" placeholder="City" style="flex:1.3${ti('tenant.mgmt_city')}"><span class="adiv"></span>
-       ${csDrop('tenant.mgmt_state',STATES,'ST','csnarrow',false,partTint('tenant.mgmt_state'))}<span class="adiv"></span>
+       ${csDrop('tenant.mgmt_state',STATES,'ST','csnarrow',false,partTint('tenant.mgmt_state',MGMT_ADDR,c))}<span class="adiv"></span>
        <input type="text" data-k="tenant.mgmt_zip" value="${esc(get('tenant.mgmt_zip'))}" placeholder="ZIP" style="width:64px${ti('tenant.mgmt_zip')}"></div>
      ${ovNoteAddr('tenant.mgmt')}</div>`;}
   const pretty=propHas?(get('property.addr_street')+', '+get('property.addr_city')+' '+get('property.addr_state')+' '+get('property.addr_zip')).replace(/\s+/g,' ').replace(/^,\s*/,'').trim():'';
@@ -393,6 +393,11 @@ function hudBlockers(){ // everything a SAFMR pull needs, not just the first thi
   return out;}
 function hudBlockerText(){const b=hudBlockers();if(!b.length)return '';
   return 'add '+(b.length===1?b[0]:(b.slice(0,-1).join(', ')+' and '+b[b.length-1]));}
+function hudBlockerShort(){ // the card has room for the names, not the sentence
+  const b=[];if(hudZipMissing())b.push('ZIP');
+  if(!dateEffResolved())b.push('effective date');
+  if(UNITS.some(i=>!get('units.'+i+'.br')))b.push('bedroom size');
+  return b.length?('add the '+(b.length===1?b[0]:(b.slice(0,-1).join(', ')+' and '+b[b.length-1]))):'';}
 function hudParams(){const zip=String(get('property.addr_zip')||'').replace(/\D/g,'').slice(0,5);
   const de=dateEffResolved();const _ym=String(de||'').match(/\d{4}/);const year=_ym?parseInt(_ym[0],10):(new Date()).getFullYear();
   return{zip,year,street:get('property.addr_street'),city:get('property.addr_city'),state:get('property.addr_state')};}
@@ -921,7 +926,7 @@ function _renderCommand(){const a=analysis();const pCur=a.ceil>0?clamp(a.cg/a.ce
         <div class="gauge"><div class="seg dark" style="width:${pCur}%"></div><div class="seg light" style="left:${pCur}%;width:${Math.max(0,pPro-pCur)}%"></div><div class="oend"></div></div>
         <div class="glabels"><div class="gl l"><b style="color:#2f7d57">${money(a.cg)}</b><i>current</i></div><div class="gl c"><b style="color:#47a377">${money(a.pg)}</b><i>proposed</i></div><div class="gl r"><b>${a.ceil>0?money(a.ceil):'—'}</b><i>150% ceiling · HUD SAFMR</i>${a.safmrConflict?`<i class="amber">⚠ RCS differs on ≥1 type</i>`:(a.safmrMissing?`<i class="amber">⚠ SAFMR needed</i>`:(a.countsMissing&&a.safmrHave?`<i class="amber">⚠ unit counts needed</i>`:''))}</div></div>
        </div>
-       ${a.ceil>0?`<div class="passbox" style="background:${a.pass?'#dcfce7':'#fee2e2'};color:${a.pass?'#166534':'#b91c1c'};border-color:${a.pass?'#86efac':'#fca5a5'}">${a.pass?'✓ PASS':'✗ OVER'}<small>${money(Math.abs(a.headroom))} ${a.pass?'headroom':'over'}</small></div>`:`<div class="passbox" style="background:#f1f4f9;color:#64748b;border-color:#d7deea">${a.countsMissing&&a.safmrHave?'Unit counts needed':'SAFMR needed'}<small>${a.countsMissing&&a.safmrHave?('add the number of units in '+secRef(6)):(hudBlockerText()?(hudBlockerText()+' to pull from HUD'):'enter or pull from HUD')}</small></div>`}</div>
+       ${a.ceil>0?`<div class="passbox" style="background:${a.pass?'#dcfce7':'#fee2e2'};color:${a.pass?'#166534':'#b91c1c'};border-color:${a.pass?'#86efac':'#fca5a5'}">${a.pass?'✓ PASS':'✗ OVER'}<small>${money(Math.abs(a.headroom))} ${a.pass?'headroom':'over'}</small></div>`:`<div class="passbox" style="background:#f1f4f9;color:#64748b;border-color:#d7deea">${a.countsMissing&&a.safmrHave?'Unit counts needed':'SAFMR needed'}<small>${a.countsMissing&&a.safmrHave?('add the number of units in '+secRef(6)):(hudBlockerShort()||'enter or pull from HUD')}</small></div>`}</div>
      <div class="lift"><b>RCS LIFT vs current rent roll</b><div class="liftnums"><span><b class="teal">${sPct(a.pct)}</b><i>increase</i></span><span><b>${sMoney(a.perUnit)}</b><i>per unit</i></span><span><b>${sMoney(a.dMo)}</b><i>/mo</i></span><span><b>${sK(a.dYr)}</b><i>annualized</i></span></div></div>
    </div>`;
   } else {
@@ -1012,13 +1017,24 @@ function partHot(k){const s=srcOf(k);return s==='overridden'||(s==='new'&&get(k)
 function baseSrc(keys){const cold=keys.filter(k=>!partHot(k));return aggSrc(cold.length?cold:keys);}
 function groupColors(keys){const a=baseSrc(keys);   // provColors over a group of cells
   return provColors(a,keys.filter(k=>form[k]&&form[k].db_value==='')[0]);}
-function partTint(k){return partHot(k)?tintStyle(k):'';} // one style for every part, input or dropdown
+/* An address is one box over several cells. When every part holds a value the box
+   carries the colour, which is the common case and stays clean. When only some do,
+   the box goes neutral and the colour moves onto the parts that actually hold
+   something — so an empty street never reads as "on file", and the divider gaps and
+   the group's source picker, which belong to no single part, are never tinted. */
+function addrFilled(keys){return keys.filter(k=>get(k)!==''&&get(k)!=null).length===keys.length;}
+function addrBody(keys,c){return addrFilled(keys)?c[1]:CLR.new[1];}
+function partTint(k,keys,c){ // one style for every part, input or dropdown
+  if(partHot(k))return tintStyle(k);
+  if(keys&&!addrFilled(keys)&&get(k)!==''&&get(k)!=null&&c&&c[1]!==CLR.new[1])return 'background:'+c[1]+';border-radius:6px';
+  return '';}
 function tintStyle(k){const c=cellColors(k);return 'background:linear-gradient('+c[0]+','+c[0]+') no-repeat left 4px center/3px 60%,'+c[1]+';border-radius:6px';} // inset bar, not an inset shadow: shadows bend around the pill radius into a "(" crescent
-function applyTint(inp,k){if(partHot(k)){const pc=cellColors(k);inp.style.background='linear-gradient('+pc[0]+','+pc[0]+') no-repeat left 4px center/3px 60%,'+pc[1];inp.style.borderRadius='6px';}
+function applyTint(inp,k,keys,c){const t=partTint(k,keys,c);
+  if(t){inp.style.cssText+=';'+t;}
   else{inp.style.background='transparent';}inp.style.boxShadow='none';} // live-paint twin of tintStyle — keep the two in lockstep
 function paintGroup(b){const keys=ADDR_GROUPS[b];const c=groupColors(keys);const box=document.querySelector('[data-box="'+b+'"]');
-  if(box){box.style.background=c[1];box.style.borderLeftColor=c[0];
-    keys.forEach(k=>{const inp=box.querySelector('input[data-k="'+k+'"]');if(inp)applyTint(inp,k);});}
+  if(box){box.style.background=addrBody(keys,c);box.style.borderLeftColor=c[0];
+    keys.forEach(k=>{const inp=box.querySelector('input[data-k="'+k+'"]');if(inp)applyTint(inp,k,keys,c);});}
   const ov=document.querySelector('[data-ov="'+b+'"]');if(ov){const m=modeOf(keys);ov.setAttribute('data-mode',m);ov.style.display=m?'flex':'none';}}
 function paintCaName(){const keys=['ca.prefix','ca.name'];const c=groupColors(keys);const box=document.querySelector('[data-box="ca.name"]');
   if(box){box.style.background=c[1];box.style.borderLeftColor=c[0];const inp=box.querySelector('input[data-k="ca.name"]');
