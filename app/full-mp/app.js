@@ -282,7 +282,7 @@ function renderPrincipals(){
    Every painter — text cell, address group, checkbox, chip — comes through here,
    because the rule kept breaking when each path carried its own copy of it. */
 function provColors(state,key){const c=CLR[state]||CLR.new;
-  if(state==='new'&&key&&form[key]&&form[key].db_value==='')return [CLR.database[0],c[1],c[2]]; // saved, and saved empty
+  if(state==='new'&&key&&form[key]&&form[key].value===''&&form[key].db_value==='')return [CLR.database[0],c[1],c[2]]; // saved, and STILL saved empty
   return c;}
 function cellColors(k){return provColors(srcOf(k),k);}
 function boxColor(k){return cellColors(k);}
