@@ -207,7 +207,7 @@ function srcGroupPick(box){const rows=SRCGROUP[box]().map((r,ix)=> r.apply
   return '<div class="uadrop pocpick"><div class="uatrigger" tabindex="0" title="Pull from a source"><span class="cvx">&#9662;</span></div><div class="uamenu">'+rows+'</div></div>';}
 /* Dim source rows atop the existing contact-picker menus (spec \u00a73 notes). */
 const DIR_SRCROW={'appr.name':'RCS report','sig.name':'Executed RS'};
-function moneySrcTag(k){if(/^units\.\d+\.current$/.test(k))return 'Executed RS';if(/^units\.\d+\.proposed$/.test(k))return 'RCS report';if(/^nonrev\.\d+\.rent$/.test(k))return 'Executed RS';return null;}
+function moneySrcTag(k){if(/^units\.\d+\.current$/.test(k))return 'Executed RS';if(/^units\.\d+\.proposed$/.test(k))return 'RCS report';if(/^(nonrev|ns8)\.\d+\.(rent|avg_rent)$/.test(k))return 'Executed RS';return null;}
 function dimPick(tag){return '<div class="uadrop pocpick"><div class="uatrigger" tabindex="0" title="Source"><span class="cvx">&#9662;</span></div><div class="uamenu"><div class="uaopt srcdim">\u2014<span class="uasub">'+esc(tag)+' \u00b7 not available</span></div></div></div>';}
 /* ================== end external-source dropdowns ================== */
 function refreshPrincipalOpts(){ // the list is built at render time; keep it current while typing
@@ -286,10 +286,15 @@ function provColors(state,key){const c=CLR[state]||CLR.new;
   return c;}
 function cellColors(k){return provColors(srcOf(k),k);}
 function boxColor(k){return cellColors(k);}
-function moneyBox(k){const c=boxColor(k);const _mt=moneySrcTag(k);const _m=k.match(/^units\.(\d+)\.current$/);const _rv=_m?rsUnit(+_m[1],'rent'):null;
+function moneyBox(k){const c=boxColor(k);const _mt=moneySrcTag(k);
+  const _m=k.match(/^units\.(\d+)\.current$/),_mn=k.match(/^nonrev\.(\d+)\.rent$/),_ml=k.match(/^ns8\.(\d+)\.avg_rent$/);
+  const _rv=_m?rsUnit(+_m[1],'rent'):(_mn?rsFamVal('nonrev',+_mn[1],'rent'):(_ml?rsFamVal('ns8',+_ml[1],'rent'):null));
   const pick=_mt?(_rv!=null?srcPick(k,[{tag:_mt,val:_rv}]):dimPick(_mt)):'';
   return `<div class="rbox money" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><span class="cur">$</span><input type="text" data-money="1" data-k="${k}" value="${esc(fmtMoney(get(k)))}">${pick}${ovIcons(k)}</div>`;}
-function numBox(k,ph){const c=boxColor(k);return `<div class="rbox" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><input type="text" data-k="${k}" value="${esc(get(k))}" placeholder="${esc(ph||'')}">${ovIcons(k)}</div>`;}
+function numBox(k,ph){const c=boxColor(k);
+  const _mc=k.match(/^ns8\.(\d+)\.num_units$/),_mu=k.match(/^nonrev\.(\d+)\.use$/);
+  const _rv=_mc?rsFamVal('ns8',+_mc[1],'count'):(_mu?rsFamVal('nonrev',+_mu[1],'use'):null);
+  return `<div class="rbox" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><input type="text" data-k="${k}" value="${esc(get(k))}" placeholder="${esc(ph||'')}">${_rv!=null?srcPick(k,[{tag:'Executed RS',val:_rv}]):''}${ovIcons(k)}</div>`;}
 function brbaBox(brK,baK){const c=groupColors([brK,baK]);
   const withRs=(k,opts,ph)=>{const d=csDrop(k,opts,ph,'',true,partHot(k)?tintStyle(k):'');const row=rsCsRow(k);
     return row?d.replace('<div class="uamenu">','<div class="uamenu">'+row):d;};
@@ -515,8 +520,15 @@ function rsSigInto(outp,partH){
 function rsPrin(i,f){try{const p=_rsUpload&&_rsUpload.parsed&&_rsUpload.parsed.principals;const r=p&&p[i];const v=r&&r[f];return (v==null||v==='')?null:String(v);}catch(e){return null;}}
 function rsUnit(i,f){try{const u=_rsUpload&&_rsUpload.parsed&&_rsUpload.parsed.units;const r=u&&u[i];const v=r&&r[f];return (v==null||v===''||v===0)?null:String(v);}catch(e){return null;}}
 function rsUnitBr(i){const t=rsUnit(i,'type');if(t==null)return null;const bb=rsParseUnitType(t);return bb.br||null;}
-function rsBrBa(k){const m=String(k||'').match(/^units\.(\d+)\.(br|ba)$/);if(!m)return null;
-  const t=rsUnit(+m[1],'type');if(t==null)return null;const bb=rsParseUnitType(t);const v=m[2]==='br'?bb.br:bb.ba;return v||null;}
+function rsFamRow(fam,i){try{const arr=_rsUpload&&_rsUpload.parsed&&_rsUpload.parsed[fam];return arr&&arr[i]||null;}catch(e){return null;}}
+function rsFamVal(fam,i,f){const r=rsFamRow(fam,i);const v=r&&r[f];return (v==null||v===''||v===0)?null:String(v);}
+function rsBrBa(k){let m=String(k||'').match(/^units\.(\d+)\.(br|ba)$/);
+  if(m){const t=rsUnit(+m[1],'type');if(t==null)return null;const bb=rsParseUnitType(t);return (m[2]==='br'?bb.br:bb.ba)||null;}
+  m=String(k||'').match(/^ns8\.(\d+)\.(br|ba)$/); // ns8 rows carry a combined "type" string, like Section 8 rows
+  if(m){const t=rsFamVal('ns8',+m[1],'type');if(t==null)return null;const bb=rsParseUnitType(t);return (m[2]==='br'?bb.br:bb.ba)||null;}
+  m=String(k||'').match(/^nonrev\.(\d+)\.(br|ba)$/); // Part D rows already carry br/ba split, no parsing needed
+  if(m)return rsFamVal('nonrev',+m[1],m[2]);
+  return null;}
 function rsCsRow(k){const v=rsBrBa(k);   // the schedule's own unit type, offered like any other source
   return v?('<div class="uaopt" data-cskey="'+k+'" data-csopt="'+esc(v)+'">'+esc(v)+'<span class="uasub">Executed RS</span></div>'):'';}
 function rsVal(k){try{const p=_rsUpload&&_rsUpload.parsed;const v=p&&p.scalars?p.scalars[k]:null;return (v==null||v==='')?null:String(v);}catch(e){return null;}}
@@ -743,7 +755,7 @@ function renderSources(){
     :`<div class="srcrow${sl.need?'':' dim'}"><span class="mut">○</span><div><b>${esc(sl.title)}</b> <span class="${sl.need?'missing':'parsed'}">${sl.need?'not uploaded':'optional'}</span><div class="sub">${esc(sl.sub)}</div></div><button class="btn sm" id="upRcs">Upload PDF</button></div>`;
   const ru=_rsUpload;let rs;
   if(!ru)rs=`<div class="srcrow"><span class="mut">○</span><div><b>Current executed rent schedule</b> <span class="missing">not uploaded</span><div class="sub">Reads the unit mix, rents, utility allowances, entity, and principals — from the schedule’s form fields, or from its printed text if a signed copy has none.</div></div><button class="btn sm" id="upRs">Upload PDF</button></div>`;
-  else if(ru.kind==='fields'){const p=ru.parsed;const nl=(p.ns8||[]).length;rs=`<div class="srcrow"><span class="ok">✓</span><div><b>${esc(ru.name)}</b> <span class="parsed">parsed${ru.via==='text'?' from the printed text':''} · ${p.units.length} unit type${p.units.length===1?'':'s'}${nl?(' · '+nl+' non-Section 8 row'+(nl===1?'':'s')):''}${p.principals.length?(' · '+p.principals.length+' principal'+(p.principals.length===1?'':'s')):''}</span><div class="sub">${ru.via==='text'?'Read from the printed text and checked against the schedule’s own totals. ':''}Filling writes only where the schedule has a value; anything it changes shows as overridden until you save or revert.</div></div><button class="btn sm teal" id="rsApply">Fill form from RS</button> <button class="btn sm" id="upRs">Replace</button></div>`;}
+  else if(ru.kind==='fields'){const p=ru.parsed;rs=`<div class="srcrow"><span class="ok">✓</span><div><b>${esc(ru.name)}</b> <span class="parsed">parsed</span><div class="sub">${ru.via==='text'?'Read from the printed text and checked against the schedule’s own totals. ':''}Filling writes only where the schedule has a value — save the form to keep it, or edit any field by hand to change it.</div></div><button class="btn sm teal" id="rsApply">Fill form from RS</button> <button class="btn sm" id="upRs">Replace</button></div>`;}
   else if(ru.kind==='text')rs=`<div class="srcrow"><span class="mut">△</span><div><b>${esc(ru.name)}</b> <span class="missing">no form fields — text copy</span><div class="sub">Its printed text could not be matched to the schedule’s layout — enter the values below.</div></div><button class="btn sm" id="upRs">Replace</button></div>`;
   else rs=`<div class="srcrow"><span class="mut">△</span><div><b>${esc(ru.name)}</b> <span class="missing">scanned copy</span><div class="sub">This copy is a scan with no digital text. Upload a digital copy, or enter the values below.</div></div><button class="btn sm" id="upRs">Replace</button></div>`;
   const foot=`<input type="file" id="rcsFile" accept="application/pdf,.pdf" style="display:none"><input type="file" id="rsFile" accept="application/pdf,.pdf" style="display:none">`;
