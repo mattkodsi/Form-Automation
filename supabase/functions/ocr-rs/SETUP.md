@@ -59,6 +59,16 @@ If **Free F0** is greyed out or missing, it means this subscription already has 
 free Document Intelligence resource — you only get one. Either reuse that one, or
 delete it first.
 
+If the wizard shows a **Networking** tab, choose **All networks, including the
+internet**. The other two options break it: "Selected networks" wants a list of IP
+addresses to allow, and Supabase's functions call out from shared addresses that
+aren't fixed or published, so there is nothing stable to list; "Disabled" allows
+only private endpoints inside an Azure virtual network, which Supabase is not in.
+
+"All networks" is not public access — every request still has to carry your API
+key, which lives encrypted in Supabase Vault and never reaches the browser. The
+boundary here is the key, not the network.
+
 Click **Review + create**, then **Create**. Wait about a minute.
 
 ## Step 4 — Copy your two values
