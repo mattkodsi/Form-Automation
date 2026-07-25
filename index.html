@@ -128,11 +128,13 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;borde
 .ovnote .om-new{display:none} .ovnote .om-cycle{display:none}
 .ovnote[data-mode="new"] .om-over{display:none} .ovnote[data-mode="cycle"] .om-over{display:none}
 .ovnote[data-mode="new"] .om-new{display:inline} .ovnote[data-mode="cycle"] .om-cycle{display:inline}
-/* No reserved width, and the unused revert takes no space: the tick used to sit
-   a whole column-gap away from the end of its line and read as belonging to the
-   next column's checkboxes. The input is flex:1, so it absorbs the difference
-   and the row never jumps. */
-.wi .ovic{display:inline-flex!important;justify-content:flex-start;gap:3px;margin-left:4px;flex:0 0 auto}
+/* The badge slot is a CONSTANT width, but its buttons sit at the LEFT of it.
+   Constant, because .witext is flex:1 and the dashed rule is its underline — let
+   the slot change size and every line in the column ends somewhere different
+   depending on how many buttons that row happens to show. Left-aligned, because
+   right-aligning parked the tick a whole column-gap past the end of its line,
+   close enough to the next column's checkboxes to read as one of them. */
+.wi .ovic{display:inline-flex!important;min-width:52px;justify-content:flex-start;gap:3px;margin-left:4px;flex:0 0 auto}
 .wi .ovic .miniic{visibility:hidden}
 .wi .ovic[data-mode="over"] .miniic{visibility:visible}
 .wi .ovic[data-mode="cycle"] .rv{display:none!important}
