@@ -487,15 +487,17 @@ async function ensureHudSafmr(opts){opts=opts||{};const manual=!!opts.manual;
 
 function undoBits(fam){const st=fam==='LI'?_undoLI:_undoNR;if(!st.length)return '';const id=fam==='LI'?'undoNs8':'undoNonrev';return ' <span class="addrow ghostlink" id="'+id+'">↩ Undo delete'+(st.length>1?(' ('+st.length+')'):'')+'</span><button class="undocommit" id="'+id+'C" title="Keep deletions — dismiss undo">✓</button>';}
 function provColor(k){return cellColors(k)[0];}
-function boxStyle(k){const c=cellColors(k);return 'color:'+c[0]+';border-color:'+c[0]+';background:'+c[1];}
+function boxStyle(k){const c=Array.isArray(k)?groupColors(k):cellColors(k);return 'color:'+c[0]+';border-color:'+c[0]+';background:'+c[1];}
 function fuelChip(k,three){const v=get(k);const has=v!==''&&v!=null;const c=cellColors(k);const cls=three?'fuel3':'fuel';return '<span class="'+cls+(has?'':' empty')+'" data-fuel'+(three?'3':'')+'="'+k+'" style="color:'+c[0]+';border-color:'+c[0]+';background:'+c[1]+'">'+(has?esc(v):'-')+'</span>';}
 function cbx(k,label){const on=get(k)==='1';return `<label class="cb"><input type="checkbox" data-cb="${k}" ${on?'checked':''}><span class="box" style="${boxStyle(k)}">${on?'✓':''}</span><span class="cbt">${esc(label)}</span>${ovIcons(k)}</label>`;}
 function pbUtil(i,label){const on=get('partb.utilities.'+i)==='1';return `<div class="cb utrow"><label class="cbmain"><input type="checkbox" data-cb="partb.utilities.${i}" ${on?'checked':''}><span class="box" style="${boxStyle('partb.utilities.'+i)}">${on?'✓':''}</span><span class="cbt ut">${label}</span></label>${fuelChip('partb.fuel.'+i,false)}${ovIcons(['partb.utilities.'+i,'partb.fuel.'+i])}</div>`;}
 function writein(id,hasFuel){const val=get('partb.writein.'+id);const on=get('partb.writein.'+id+'.on')==='1';const state=!val?'empty':(on?'checked':'unchecked');
-  const f=hasFuel?fuelChip('partb.writein.'+id+'.fuel',true):'';
   const ks=hasFuel?['partb.writein.'+id,'partb.writein.'+id+'.on','partb.writein.'+id+'.fuel']:['partb.writein.'+id,'partb.writein.'+id+'.on'];
+  const f=hasFuel?fuelChip('partb.writein.'+id+'.fuel',true):'';
+  // The tick carried the colour while the TEXT beside it carried the edit, so a
+  // rewritten write-in kept reading as on file. Colour the pair, as brbaBox does.
   const attr=hasFuel?` data-util="1"`:` data-wion="partb.writein.${id}.on"`;
-  return `<span class="cb wi ${state}${hasFuel?' util':''}"><span class="box wibox" data-wibox="partb.writein.${id}" style="${boxStyle('partb.writein.'+id+'.on')}">${on?'✓':''}</span><input type="text" class="witext" data-k="partb.writein.${id}"${attr} placeholder="write-in…" value="${esc(val)}">${f}${ovIcons(ks)}</span>`;}
+  return `<span class="cb wi ${state}${hasFuel?' util':''}"><span class="box wibox" data-wibox="partb.writein.${id}" style="${boxStyle(ks)}">${on?'✓':''}</span><input type="text" class="witext" data-k="partb.writein.${id}"${attr} placeholder="write-in…" value="${esc(val)}" style="${partHot('partb.writein.'+id)?tintStyle('partb.writein.'+id):''}">${f}${ovIcons(ks)}</span>`;}
 function renderPartB(){const eq=PARTB.equipment,sv=PARTB.services;
   return card(7,sectionPill(7),`<div class="pbnote">Pre-printed items are checked directly; dashed slots accept write-ins.</div>
   <div class="pbgrp">Equipment / furnishings</div><div class="cols3"><div>${cbx('partb.equipment.0',eq[0])}${cbx('partb.equipment.1',eq[1])}${cbx('partb.equipment.2',eq[2])}${cbx('partb.equipment.3',eq[3])}</div>
@@ -1285,7 +1287,27 @@ function paintCaName(){const keys=['ca.prefix','ca.name'];const c=groupColors(ke
   if(box){box.style.background=c[1];box.style.borderLeftColor=c[0];const inp=box.querySelector('input[data-k="ca.name"]');
     if(inp)applyTint(inp,'ca.name');}
   const ov=document.querySelector('.ovnote[data-ov="ca.prefix,ca.name"]');if(ov){const m=modeOf(keys);ov.setAttribute('data-mode',m);ov.style.display=m?'flex':'none';}}
-function paintCell(k){const gb=groupOf(k);if(gb)return paintGroup(gb);if(k==='ca.name'||k==='ca.prefix')return paintCaName();const s=form[k];if(!s)return;const _sr=(k==='rent_schedule.date_rents_effective'&&s.source==='database')?'this-cycle':s.source;const c=CLR[_sr]||CLR.new;const _bl=(s.source==='new'&&s.db_value==='')?CLR.database[0]:c[0];const box=document.querySelector('[data-box="'+k+'"]');if(box){box.style.background=c[1];box.style.borderLeftColor=_bl;}const ov=document.querySelector('[data-ov="'+k+'"]');if(ov){const m=modeOf(k);ov.setAttribute('data-mode',m);ov.style.display=m?'flex':'none';}document.querySelectorAll('[data-ovic]').forEach(o=>{const ks=o.getAttribute('data-ovic').split(',');if(ks.indexOf(k)>=0){const m=modeOf(ks);o.setAttribute('data-mode',m);o.style.display=m?'inline-flex':'none';}});}
+function paintCell(k){const gb=groupOf(k);if(gb)return paintGroup(gb);if(k==='ca.name'||k==='ca.prefix')return paintCaName();const s=form[k];if(!s)return;
+  /* A *_custom cell is half of a pair, and the SOURCE key is the one that knows an
+     on-file value was displaced. Painting from this key alone turned an emptied
+     override grey — disagreeing with the badge sitting in the same cell, which has
+     always read the pair. That is why the first keystroke came out orange (a full
+     re-render, through uaBox) and the second grey (a repaint, through here). */
+  const _ck=coupledKeys(k);
+  const _sr=(_ck.length>1&&_ck.some(x=>srcOf(x)==='overridden'))?'overridden'
+    :((k==='rent_schedule.date_rents_effective'&&s.source==='database')?'this-cycle':s.source);
+  const c=CLR[_sr]||CLR.new;const _bl=(_sr==='new'&&s.db_value==='')?CLR.database[0]:c[0];const box=document.querySelector('[data-box="'+k+'"]');if(box){box.style.background=c[1];box.style.borderLeftColor=_bl;}
+  // A write-in's colour lives on its tick, which is keyed data-wibox rather than
+  // data-box, so this repaint used to skip it entirely and the cell only changed
+  // colour on a full re-render.
+  const _wm=k.match(/^(partb\.writein\.[a-z0-9]+)(?:\.on|\.fuel)?$/);
+  if(_wm){const wb=document.querySelector('[data-wibox="'+_wm[1]+'"]');
+    if(wb){const wks=[_wm[1],_wm[1]+'.on'];if(form[_wm[1]+'.fuel'])wks.push(_wm[1]+'.fuel');
+      const wc=groupColors(wks);wb.style.color=wc[0];wb.style.borderColor=wc[0];wb.style.background=wc[1];}
+    // and the tint on the text itself: a group box keeps its base colour and marks
+    // the changed part, so without this a rewritten write-in showed no change at all
+    const wt=document.querySelector('input.witext[data-k="'+_wm[1]+'"]');
+    if(wt)wt.setAttribute('style',partHot(_wm[1])?tintStyle(_wm[1]):'');}const ov=document.querySelector('[data-ov="'+k+'"]');if(ov){const m=modeOf(k);ov.setAttribute('data-mode',m);ov.style.display=m?'flex':'none';}document.querySelectorAll('[data-ovic]').forEach(o=>{const ks=o.getAttribute('data-ovic').split(',');if(ks.indexOf(k)>=0){const m=modeOf(ks);o.setAttribute('data-mode',m);o.style.display=m?'inline-flex':'none';}});}
 function clearUncheckedWriteins(ids){ids.forEach(id=>{if(get('partb.writein.'+id)&&get('partb.writein.'+id+'.on')!=='1'){form=store.editForm(form,'partb.writein.'+id,'');form=store.editForm(form,'partb.writein.'+id+'.on','');}});}
 function wireArrowNav(){document.querySelectorAll('.fbox:not(.uacell),.rbox:not(.uacell)').forEach(cell=>{const items=[...cell.querySelectorAll('input[data-k],.uatrigger')];if(items.length<2)return;items.forEach((it,idx)=>{it.addEventListener('keydown',e=>{if(e.key!=='ArrowLeft'&&e.key!=='ArrowRight')return;const isInput=/^(INPUT|TEXTAREA)$/.test(it.tagName);if(isInput){const v=(it.value||'');const at0=it.selectionStart===0&&it.selectionEnd===0;const atE=it.selectionStart===v.length&&it.selectionEnd===v.length;if(e.key==='ArrowLeft'&&!at0)return;if(e.key==='ArrowRight'&&!atE)return;}else{const dd=it.closest('.uadrop');if(dd&&dd.classList.contains('open'))dd.classList.remove('open');}const ni=e.key==='ArrowRight'?items[idx+1]:items[idx-1];if(!ni)return;e.preventDefault();ni.focus({preventScroll:true});if(/^(INPUT|TEXTAREA)$/.test(ni.tagName)){try{const L=(ni.value||'').length;const pos=e.key==='ArrowRight'?0:L;ni.setSelectionRange(pos,pos);}catch(_e){}}});});});}
 function wireBody(){
