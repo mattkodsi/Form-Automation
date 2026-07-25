@@ -1721,11 +1721,12 @@ function srcDocLabel(){
    Tier 3: scans -> no digital text; the app says so instead of guessing. */
 const rsFuelOf=v=>{v=String(v||'').trim().toUpperCase();return /^[EFG]$/.test(v)?v:'';};
 function rsPartB(V){ // ids are gen.js's Part B map, read back the way it writes
-  const out={};
-  [99,100,101,102,103,104,105].forEach((id,k)=>{if(V(id))out['partb.equipment.'+k]='1';});
-  [116,118,120,122,124].forEach((id,k)=>{if(V(id))out['partb.utilities.'+k]='1';});
+  const out={};const CHK={}; // CHK marks a definite read (on or off); out omits keys never inspected
+  [99,100,101,102,103,104,105].forEach((id,k)=>{const v=!!V(id);out['partb.equipment.'+k]=v?'1':'';CHK['partb.equipment.'+k]=1;});
+  [116,118,120,122,124].forEach((id,k)=>{const v=!!V(id);out['partb.utilities.'+k]=v?'1':'';CHK['partb.utilities.'+k]=1;});
   [117,119,121,123,125].forEach((id,k)=>{const f=rsFuelOf(V(id));if(f)out['partb.fuel.'+k]=f;});
-  [129,130,131,132,141,142].forEach((id,k)=>{if(V(id))out['partb.services.'+k]='1';});
+  [129,130,131,132,141,142].forEach((id,k)=>{const v=!!V(id);out['partb.services.'+k]=v?'1':'';CHK['partb.services.'+k]=1;});
+  out._checked=CHK;
   [[106,107],[108,109],[110,111],[112,113],[114,115]].forEach((p,ix)=>{const t=V(p[1]);
     if(t){out['partb.writein.e'+(ix+1)]=t;if(V(p[0]))out['partb.writein.e'+(ix+1)+'.on']='1';}});
   [[133,134],[135,136],[137,138],[139,140],[143,144],[145,146]].forEach((p,ix)=>{const t=V(p[1]);
@@ -1945,7 +1946,10 @@ function rsFillFromParsed(){const P=_rsUpload&&_rsUpload.parsed;if(!P)return;
     if(nx){form=store.editForm(form,'rent_schedule.date_eff_rs',nx);mark('rent_schedule.date_eff_rs');
       if(!get('rent_schedule.date_eff_custom')){form=store.editForm(form,'rent_schedule.date_eff_source','rs');mark('rent_schedule.date_eff_source');}}}
   setk('sig.name',P.scalars['sig.name']);setk('sig.title',P.scalars['sig.title']);setk('sig.principal',P.scalars['sig.principal']);
-  if(P.partb)Object.keys(P.partb).forEach(k=>setk(k,P.partb[k]));
+  if(P.partb){const CHK=P.partb._checked||{};
+    Object.keys(P.partb).forEach(k=>{if(k==='_checked')return;
+      if(CHK[k]){form=store.editForm(form,k,P.partb[k]);mark(k);} // a definite on/off read: write it either way
+      else setk(k,P.partb[k]);});} // write-ins / fuel: only write what was actually found
   P.principals.forEach((p,ix)=>{setk('principals.'+ix+'.name',p.name);setk('principals.'+ix+'.title',p.title);});
   P.units.forEach((u,ix)=>{const bb=rsParseUnitType(u.type);setk('units.'+ix+'.br',bb.br);setk('units.'+ix+'.ba',bb.ba);
     setk('units.'+ix+'.num_units',u.count);setk('units.'+ix+'.current',u.rent);
