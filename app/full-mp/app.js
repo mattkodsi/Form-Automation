@@ -1409,6 +1409,15 @@ document.addEventListener('mousedown',e=>{_mouseFocus=true;_rsArm=false;setTimeo
   _lastClickSel=sel;
 },true);
 window.addEventListener('scroll',()=>{const s=window.scrollY>150;if(s!==document.body.classList.contains('scrolled'))document.body.classList.toggle('scrolled',s);});
+/* The save bar is position:sticky, so it is held against the foot of the window
+   while there is form below it and comes to rest in the flow once you reach the
+   end. There is no CSS state for "no longer stuck", so measure it: while sticky
+   is holding it, its bottom edge sits on the bottom of the window. Resting, it
+   sits above it, and the corners round. */
+function syncFooterRest(){const f=document.querySelector('#viewForm .footer');if(!f)return;
+  f.classList.toggle('rest',f.getBoundingClientRect().bottom<=window.innerHeight-1);}
+window.addEventListener('scroll',syncFooterRest,{passive:true});
+window.addEventListener('resize',syncFooterRest);
 
 let activeProgram='RCS';let sortMode='name';
 function show(v){['Auth','Menu','Launcher','Form','Contacts'].forEach(V=>{const e=el('view'+V);if(e)e.style.display=(v===V)?'':'none';});window.scrollTo(0,0);}
@@ -1738,7 +1747,7 @@ async function toggleCycleProg(p){
 /* ---- EXIT: save or discard, then back to the menu -------------------- */
 function snapForm(){FORMSNAP=snapOf(Object.keys(form));}
 function isDirty(){if(!FORMSNAP)return false;const keys=new Set([...Object.keys(form),...Object.keys(FORMSNAP)]);for(const k of keys){const fv=form[k]?(form[k].value==null?'':String(form[k].value)):'';const sv=FORMSNAP[k]?(FORMSNAP[k].value==null?'':String(FORMSNAP[k].value)):'';if(fv!==sv)return true;}return false;}
-function refreshFooter(){const t=el('unsavedTag');if(t)t.classList.toggle('on',isDirty());}
+function refreshFooter(){const t=el('unsavedTag');if(t)t.classList.toggle('on',isDirty());syncFooterRest();}
 function requestExit(){if(isDirty())openExit();else exitForm();}
 async function exitForm(){
   // a cycle created this session and never saved is deleted on the way out
