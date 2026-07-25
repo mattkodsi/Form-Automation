@@ -268,7 +268,10 @@ function mgmtCell(){const src=get('tenant.mgmt_source')||'property';const propHa
   // mirroring the property address: report that address's record, since that is what prints
   const ovSrc=srcOf('tenant.mgmt_source')==='overridden';const c=ovSrc?CLR.overridden:groupColors(ADDR);
   return '<div class="field"><div class="flabel">Management address</div><div class="fbox mgmtcell" data-box="tenant.mgmt_address" style="background:'+c[1]+';border-left-color:'+c[0]+'"><div class="uadrop"><div class="uatrigger" tabindex="0"><span class="ualab">'+inner+'</span><span class="cvx">▾</span></div>'+menu+'</div>'+(ovSrc?ovIcons('tenant.mgmt_source'):'')+'</div></div>';}
-function renderFieldSection(sec){const cols=[[],[]];sec.fields.forEach(f=>cols[f.col].push(fieldCell(f)));return card(sec.n,sectionPill(sec.n),`<div class="cols"><div>${cols[0].join('')}</div><div>${cols[1].join('')}</div></div>`);}
+function renderFieldSection(sec){const cols=[[],[]];sec.fields.forEach(f=>cols[f.col].push(fieldCell(f)));
+  const n=Math.max(cols[0].length,cols[1].length),rows=[];
+  for(let i=0;i<n;i++){rows.push(cols[0][i]||'<div></div>');rows.push(cols[1][i]||'<div></div>');}
+  return card(sec.n,sectionPill(sec.n),`<div class="cols">${rows.join('')}</div>`);}
 function principalHasData(i){return ['name','title'].some(s=>{const v=get('principals.'+i+'.'+s);return v!==''&&v!=null;});}
 function renderPrincipals(){
   const rows=PRINCIPALS.map(i=>{const nk='principals.'+i+'.name',tk='principals.'+i+'.title';const nc=cellColors(nk),tc=cellColors(tk);
@@ -723,7 +726,11 @@ async function parseRsPdf(bytes){
 function rsFillFromParsed(){const P=_rsUpload&&_rsUpload.parsed;if(!P)return;
   const mark=k=>{if(form[k]&&form[k].source==='new')form[k].source='this-cycle';};   // came from the schedule, not typed
   const setk=(k,v)=>{if(v!=null&&v!==''){form=store.editForm(form,k,String(v));mark(k);}};
-  setk('property.name',P.scalars['property.name']);
+  { const pn=P.scalars['property.name'];
+    if(pn&&pn.indexOf('/')>=0){const parts=pn.split('/').map(x=>x.trim()).filter(Boolean);
+      if(parts.length===2){setk('property.name',parts[0]);setk('tenant.property_alias',parts[1]);}
+      else setk('property.name',pn);}
+    else setk('property.name',pn); }
   setk('property.fha',P.scalars['property.fha']);
   setk('owner.entity_name',P.scalars['owner.entity_name']);
   setk('owner.entity_type',P.scalars['owner.entity_type']);
