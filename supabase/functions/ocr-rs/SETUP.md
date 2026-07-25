@@ -50,9 +50,9 @@ without touching any code (see the last section).
 | Field | What to put |
 |---|---|
 | Subscription | The only one there — likely "Azure subscription 1" |
-| Resource group | **Create new** → name it `rcs-ocr` |
+| Resource group | **Create new** → name it `package-automation` |
 | Region | Pick one near you, e.g. **East US** |
-| Name | Anything unique, e.g. `rcs-ocr-mk` |
+| Name | Must be globally unique, e.g. `package-automation-ocr` |
 | **Pricing tier** | **Free F0** ← the one that matters |
 
 If **Free F0** is greyed out or missing, it means this subscription already has a
@@ -67,7 +67,7 @@ Click **Review + create**, then **Create**. Wait about a minute.
 2. In the left menu, click **Keys and Endpoint**.
 3. Copy these two, into a scratch note for a moment:
    - **KEY 1** — a long string of letters and numbers
-   - **Endpoint** — looks like `https://rcs-ocr-mk.cognitiveservices.azure.com/`
+   - **Endpoint** — looks like `https://package-automation-ocr.cognitiveservices.azure.com/`
 
 Treat KEY 1 like a password. Don't paste it into email, chat, or a file in this repo.
 
