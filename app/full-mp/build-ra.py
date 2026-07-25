@@ -78,6 +78,28 @@ app = patch(app,
     if(!resp.ok||d.error)throw new Error(d.error||('HUD lookup failed (HTTP '+resp.status+')'));""",
     'hud: invoke → fetch /api/hud-safmr')
 
+# ── 2b. tier-3 OCR: Supabase edge function → RA Azure Function ──────────
+# Related runs Document Intelligence inside their own tenancy (container or
+# managed resource), so the scan never leaves Azure on their side. Only the
+# endpoint changes; every line of geometry in ocr.js is shared.
+ocr = read('ocr.js')
+ocr = patch(ocr,
+    """async function ocrAnalyze(u8){ // ra-seam: the OCR endpoint
+  if(!supaClient)throw new Error('not signed in');
+  const r=await supaClient.functions.invoke('ocr-rs',{body:{pdf:ocrB64(u8)}});
+  if(r.error){let m='request failed';try{m=(await r.error.context.json()).error||m;}catch(e){m=r.error.message||m;}throw new Error(m);}
+  return r.data;}""",
+    """async function ocrAnalyze(u8){ // ra-seam: the OCR endpoint
+  const resp=await fetch('/api/ocr-rs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pdf:ocrB64(u8)})});
+  let d={};try{d=await resp.json();}catch(e){}
+  if(!resp.ok||d.error)throw new Error(d.error||('OCR failed (HTTP '+resp.status+')'));
+  return d;}""",
+    'ocr: invoke → fetch /api/ocr-rs')
+ocr = patch(ocr,
+    "  if(!window.PDFLib||!supaClient)return null;",
+    "  if(!window.PDFLib)return null;",
+    'ocr: drop supabase guard')
+
 # ── 3. auth gate: Supabase email/password → RA Entra session ───────────────
 app = patch(app,
     """let supaClient=null;
@@ -144,6 +166,7 @@ parts = [
     read('db.js'),
     read('db.cosmos.js'),
     app,
+    ocr,
     read('gen.js'),
     read('xlsx.js'),
     read('templates.js'),
