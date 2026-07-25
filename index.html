@@ -69,7 +69,7 @@ body.scrolled #ccbar{transform:translateY(0);opacity:1}
 .clhead{font-size:12px;font-weight:700;color:#4c51bf;margin:10px 0 5px} .clhead:first-child{margin-top:0} .clcont{margin-top:0}
 .srcrow{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid #f0f2f7} .srcrow>div{min-width:0;max-width:640px} .srcrow .ok{color:#166534;font-weight:800} .srcrow .mut{color:#9aa4b8;font-weight:800} .srcrow.dim{opacity:.8} .missing{color:#8791a5;font-weight:700;font-size:11px} .srcrow .sub{color:#7c86a2;font-size:11px} .parsed{color:#0f766e;font-weight:700;font-size:11px} .srcrow b{font-size:13.5px} .srcrow button{margin-left:8px;flex:0 0 auto}
 .srcfoot{display:flex;align-items:center;gap:12px;margin-top:11px} .srcfoot .sub{color:#7c86a2;font-size:11.5px} .ph{margin-top:9px;font-size:11.5px;color:#98a2b3;font-style:italic;background:#f8fafc;border-radius:6px;padding:7px 9px}
-.footer{display:flex;gap:12px;align-items:center;margin-top:4px}
+.footer{display:flex;gap:12px;align-items:center;margin-top:4px;position:sticky;bottom:0;background:#eef1f7;padding:12px 10px;box-shadow:0 -6px 16px rgba(20,40,80,.08);border-radius:8px 8px 0 0;z-index:15} .footer .fsp{flex:1} .unsaved{display:none;color:#b45309;font-weight:700;font-size:12.5px;align-items:center;gap:6px} .unsaved.on{display:inline-flex}
 table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;border:1px solid #e6ebf3;border-radius:10px;overflow:hidden} th,td{text-align:left;padding:9px 13px;border-bottom:1px solid #eef1f6} th{font-size:10px;letter-spacing:.4px;color:#8791a5;text-transform:uppercase}
 @media(max-width:1050px){.cc{grid-template-columns:1fr}.layout{grid-template-columns:1fr}.rail{position:static;max-height:none}}
 .ovic{display:inline-flex;gap:3px;margin-left:6px;margin-right:5px;flex:0 0 auto;align-items:center} .cb .ovic{margin-left:4px} .miniic{border:1px solid #d8b483;background:#fbf1e6;color:#b45309;border-radius:4px;cursor:pointer;font-size:11px;line-height:1;padding:3px 5px} .miniic.sv{border-color:#9cc3a8;background:#eefaf1;color:#166534}.lcmain{display:flex;flex-direction:column;gap:3px;min-width:0} .rmetric{font-size:11.5px;color:#166534;font-weight:600}.ualab{display:inline-flex;align-items:center;gap:2px;min-width:0;overflow:hidden;white-space:nowrap;flex:1} .rbox input.uac-in,.uac-in{border:none;background:transparent;font:inherit;flex:1 1 34px;min-width:34px;width:34px;height:20px;line-height:20px;outline:none;border-bottom:1px dashed #b6bfd0;color:#1f2937;padding:0 2px} .srcedit{border-bottom-color:#c3cbd9} .mgmtcell .uadrop{flex:1;min-width:0} .mgmtcell .uatrigger{padding:0 11px} .mgmt-in{border:none;background:transparent;font:inherit;flex:1;height:20px;line-height:20px;outline:none;min-width:0} .srctag{color:#8791a5;font-size:10.5px;margin-left:6px;flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap} .mgmtprop{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.urev.sv{border-color:#9cc3a8;background:#eefaf1;color:#166534}.uadrop.cs{position:relative} .brba .uadrop.cs{flex:1;min-width:0} .uadrop.cs.csnarrow{flex:0 0 auto} .uadrop.cs .uatrigger{padding:0 10px} .uadrop.cs.csnarrow .uatrigger{padding:0 8px;gap:4px} .fbox>.uadrop.cs.csnarrow{border-right:1px solid #e0e5ee;min-width:56px} .brba .uadrop.cs .uatrigger{padding:0 8px}.uasub{display:block;font-size:11px;color:#7c86a2;white-space:nowrap;margin-top:1px;overflow:hidden;text-overflow:ellipsis}
@@ -347,7 +347,7 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;borde
          <div class="kick" style="margin-top:12px">SOURCE KEY</div>
          <div class="key"><span><i class="sw" style="background:#e8f0fe;border-left-color:#2563eb"></i>On file (database)</span><span><i class="sw" style="background:#e9f5f2;border-left-color:#0f766e"></i>Filled from a source (this package)</span><span><i class="sw" style="background:#fbf1e6;border-left-color:#b45309"></i>Overridden</span><span><i class="sw" style="background:#f6f7f9;border-left-color:#64748b"></i>New &mdash; not yet saved</span></div>
        </div>
-       <div class="main"><div id="sections"></div><div class="footer"><button class="btn p" id="bSave">Update database</button><button class="btn p" id="bGenerate">Generate package</button></div></div>
+       <div class="main"><div id="sections"></div><div class="footer"><span class="unsaved" id="unsavedTag">● Unsaved changes</span><span class="fsp"></span><button class="btn" id="bFillFooter">&#8635; Revert to saved</button><button class="btn p" id="bSave">Update database</button><button class="btn p" id="bGenerate">Generate package</button></div></div>
      </div>
    </div>
  </div>
@@ -2009,7 +2009,8 @@ function rsFillFromParsed(){const P=_rsUpload&&_rsUpload.parsed;if(!P)return;
       setk('ns8.'+ix+'.num_units',u.count);setk('ns8.'+ix+'.avg_rent',u.rent);});}
   if(P.nonrev&&P.nonrev.length){form=store.editForm(form,'nonrev.enabled','1');mark('nonrev.enabled');
     P.nonrev.forEach((u,ix)=>{setk('nonrev.'+ix+'.use',u.use);setk('nonrev.'+ix+'.br',u.br);setk('nonrev.'+ix+'.ba',u.ba);
-      if(u.rent!==''&&u.rent>0)setk('nonrev.'+ix+'.rent',u.rent);});}
+      if(u.rent!==''&&u.rent>0)setk('nonrev.'+ix+'.rent',u.rent);
+      if(get('nonrev.'+ix+'.num_units')==='')form=store.editForm(form,'nonrev.'+ix+'.num_units','1');});} // Part D has no unit-count field on the schedule itself (each row is one named space) — default to 1, left editable and unmarked since it is not literally read from the document
   deriveUnits();renderBody();scheduleHudRefresh();scheduleFactorRefresh();
   setStatus('Form filled from the executed rent schedule \u2014 review the highlighted values, then \u201cUpdate database\u201d.');}
 function renderSources(){
@@ -2305,7 +2306,7 @@ function renderBar(){const a=analysis();const conf=UNITS.filter(uaConflict).leng
  const pCur=a.ceil>0?clamp(a.cg/a.ceil*100):0,pPro=a.ceil>0?clamp(a.pg/a.ceil*100):0;
  el('ccbar').innerHTML=`<div class="bl"><div class="minigauge"><div class="seg dark" style="width:${pCur}%"></div><div class="seg light" style="left:${pCur}%;width:${Math.max(0,pPro-pCur)}%"></div><div class="oend"></div></div><div class="mn"><b style="color:#2f7d57">${money(a.cg)}</b> current · <b style="color:#47a377">${money(a.pg)}</b> proposed · <b>${a.ceil>0?money(a.ceil):'—'}</b> ceiling · <b class="teal">${sPct(a.pct)}</b> RCS boost</div><div class="bpass" style="color:${a.ceil>0?(a.pass?'#166534':'#b91c1c'):'#64748b'}">${a.ceil>0?((a.pass?'✓ PASS':'✗ OVER')+' · '+money(Math.abs(a.headroom))):'SAFMR needed'}</div></div><div class="bchks">${chks}${bc(a.safmrMissing||a.safmrOver?'warn':(a.safmrConflict?'info':'ok'),'SAFMR')}</div>`;}
 function renderBody(){const _sy=window.scrollY;const _anchorSel=(_refocusSel&&!_mouseFocus)?_refocusSel:(((Date.now()-_lastClickAt)<2000)?_lastClickSel:null);let _anchorTop=null;if(_anchorSel){try{const _ac=document.querySelector(_anchorSel);if(_ac)_anchorTop=_ac.getBoundingClientRect().top;}catch(e){}}computeSecPos();const _SR={1:renderSources,2:()=>renderFieldSection(FIELD_SECTIONS[0]),3:()=>renderFieldSection(FIELD_SECTIONS[1]),4:()=>renderFieldSection(FIELD_SECTIONS[2]),5:()=>renderFieldSection(FIELD_SECTIONS[3]),6:renderRents,7:renderPartB,8:renderChecklist,9:()=>renderFieldSection(FIELD_SECTIONS[4]),10:renderOcaf,11:renderUaf,12:renderPrincipals};el('sections').innerHTML=visibleSections().map(n=>_SR[n]()).join('');
-  wireBody();renderCommand();renderBar();renderRail();renderAttention();
+  wireBody();renderCommand();renderBar();renderRail();renderAttention();refreshFooter();
   if(_refocusSel&&!_mouseFocus){try{const _f=document.querySelector(_refocusSel);if(_f&&_f.focus){_f.focus({preventScroll:true});if(/^(INPUT|TEXTAREA)$/.test(_f.tagName)&&typeof _f.setSelectionRange==='function'){const _L=(_f.value||'').length;try{_f.setSelectionRange(_L,_L);}catch(_e){}}}}catch(e){}}_refocusSel=null;
   if(_anchorSel&&_anchorTop!=null){try{const _a2=document.querySelector(_anchorSel);if(_a2){const _nt=_a2.getBoundingClientRect().top;window.scrollTo(0,window.scrollY+(_nt-_anchorTop));}else window.scrollTo(0,_sy);}catch(e){try{window.scrollTo(0,_sy);}catch(_z){}}}else{try{window.scrollTo(0,_sy);}catch(e){}}}
 async function commitPending(){if(!_pending||!_pending.length)return;const keys=_pending;_pending=null;if(handleZeroUnitCommit(keys))return;for(const _pk of ['poc.phone','appr.phone'])if(keys.indexOf(_pk)>=0){const _d=(get(_pk)||'').replace(/\D/g,'');if(_d.length!==0&&_d.length!==10){setStatus('Enter a complete 10-digit phone before saving.');return;}}keys.forEach(k=>{const m=k.match(/^partb\.writein\.(e1|e2|e3|e4|e5|s1|s2|s3|s4|s5|s6)(\.on)?$/);if(m)clearUncheckedWriteins([m[1]]);});const _sk=[];keys.forEach(k=>{const gb=groupOf(k);(gb?ADDR_GROUPS[gb]:[k]).forEach(kk=>{if(_sk.indexOf(kk)<0)_sk.push(kk);});});try{form=await store.saveFields(form,_sk);}catch(e){saveFailed(e);return;}await refreshSnap();snapForm();_pendingSnap=null;_refocusSel=refocusSelForKey(keys[0]);renderBody();setStatus('Saved this field to the database.');}
@@ -2817,6 +2818,7 @@ async function toggleCycleProg(p){
 /* ---- EXIT: save or discard, then back to the menu -------------------- */
 function snapForm(){FORMSNAP=snapOf(Object.keys(form));}
 function isDirty(){if(!FORMSNAP)return false;const keys=new Set([...Object.keys(form),...Object.keys(FORMSNAP)]);for(const k of keys){const fv=form[k]?(form[k].value==null?'':String(form[k].value)):'';const sv=FORMSNAP[k]?(FORMSNAP[k].value==null?'':String(FORMSNAP[k].value)):'';if(fv!==sv)return true;}return false;}
+function refreshFooter(){const t=el('unsavedTag');if(t)t.classList.toggle('on',isDirty());}
 function requestExit(){if(isDirty())openExit();else exitForm();}
 async function exitForm(){
   // a cycle created this session and never saved is deleted on the way out
@@ -3110,7 +3112,9 @@ async function boot(){
   const bn=el('bNewProperty');if(bn)bn.onclick=createProperty;
   document.querySelectorAll('[data-sort]').forEach(b=>b.onclick=()=>{sortMode=b.getAttribute('data-sort');document.querySelectorAll('[data-sort]').forEach(x=>x.classList.toggle('on',x===b));renderMenu();});
   const be=el('bExit');if(be)be.onclick=requestExit;
-  const bf=el('bFill');if(bf)bf.onclick=async()=>{form=await store.fillForm();await refreshSnap();fixSavedToggles();deriveUnits();snapForm();renderBody();setStatus('Reverted to the last saved record.');};
+  const _revertToSaved=async()=>{form=await store.fillForm();await refreshSnap();fixSavedToggles();deriveUnits();snapForm();renderBody();setStatus('Reverted to the last saved record.');};
+  const bf=el('bFill');if(bf)bf.onclick=_revertToSaved;
+  const bff=el('bFillFooter');if(bff)bff.onclick=_revertToSaved;
   const bs=el('bSave');if(bs)bs.onclick=()=>requestSave(()=>{renderBody();setStatus('Saved '+relTime(new Date().toISOString())+'.');});
   const bg=el('bGenerate');if(bg)bg.onclick=genPackage;const lb=el('bLauncherBack');if(lb)lb.onclick=openMenu;
   const bc=el('bContacts');if(bc)bc.onclick=openContacts; const cb2=el('bContactsBack');if(cb2)cb2.onclick=openMenu;
