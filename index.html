@@ -128,12 +128,16 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;borde
 .ovnote .om-new{display:none} .ovnote .om-cycle{display:none}
 .ovnote[data-mode="new"] .om-over{display:none} .ovnote[data-mode="cycle"] .om-over{display:none}
 .ovnote[data-mode="new"] .om-new{display:inline} .ovnote[data-mode="cycle"] .om-cycle{display:inline}
-.wi .ovic{display:inline-flex!important;min-width:56px;justify-content:flex-end;gap:3px;margin-left:6px;flex:0 0 auto}
+/* No reserved width, and the unused revert takes no space: the tick used to sit
+   a whole column-gap away from the end of its line and read as belonging to the
+   next column's checkboxes. The input is flex:1, so it absorbs the difference
+   and the row never jumps. */
+.wi .ovic{display:inline-flex!important;justify-content:flex-start;gap:3px;margin-left:4px;flex:0 0 auto}
 .wi .ovic .miniic{visibility:hidden}
 .wi .ovic[data-mode="over"] .miniic{visibility:visible}
-.wi .ovic[data-mode="cycle"] .rv{display:inline-block!important;visibility:hidden}
+.wi .ovic[data-mode="cycle"] .rv{display:none!important}
 .wi .ovic[data-mode="cycle"] .sv{visibility:visible}
-.wi .ovic[data-mode="new"] .rv{display:inline-block!important;visibility:hidden}
+.wi .ovic[data-mode="new"] .rv{display:none!important}
 .wi .ovic[data-mode="new"] .sv{visibility:visible}
 .wi{flex-wrap:nowrap}
 .wi.util .witext{color:#1f2937!important}
@@ -221,7 +225,7 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;borde
 @keyframes pop{from{transform:translateY(7px) scale(.985);opacity:.5}to{transform:none;opacity:1}}
 .dlg-t{font-size:17px;font-weight:800;color:#1e3a5f}
 .dlg-b{font-size:13px;color:#5b6577;line-height:1.6;margin-top:9px}
-.dlg-field{margin-top:15px}.dlg-field label{font-size:11px;font-weight:700;color:#5b6577;display:block;margin-bottom:6px}
+.dlg-field{margin-top:15px} .dlg-hint{font-size:11.5px;color:#7c86a2;margin-top:5px;line-height:1.35}.dlg-field label{font-size:11px;font-weight:700;color:#5b6577;display:block;margin-bottom:6px}
 .dlg-field input{width:100%;font:inherit;font-size:14px;padding:10px 12px;border:1px solid #c7cede;border-radius:9px;outline:none}
 .dlg-field input:focus{border-color:#1e3a5f;box-shadow:0 0 0 3px rgba(30,58,95,.10)}
 .dlg-field select{width:100%;font:inherit;font-size:14px;padding:10px 9px;border:1px solid #c7cede;border-radius:9px;outline:none;background:#fff;color:#1f2937}
@@ -2682,10 +2686,14 @@ function updTitle(iso){if(!iso)return '';const s=String(iso);const base='Updated
 /* ---- generic modal (used for exit, new/rename, delete) --------------- */
 function modal(html){_dlgEnter=null;el('dialog').innerHTML=html;el('scrim').classList.add('open');}
 function closeModal(){_dlgEnter=null;el('scrim').classList.remove('open');}
-function dialogInput(title,label,value,okLabel,onOk){
-  modal('<div class="dlg-t">'+esc(title)+'</div><div class="dlg-field"><label>'+esc(label)+'</label><input id="dlgIn" value="'+esc(value||'')+'" autocomplete="off"></div><div class="dlg-row"><button class="btn" id="dlgCancel">Cancel</button><span class="dlg-sp"></span><button class="btn p" id="dlgOk">'+esc(okLabel||'Save')+'</button></div>');
-  const inp=el('dlgIn');if(inp&&inp.focus){inp.focus();if(inp.select)inp.select();inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();el('dlgOk').click();}else if(e.key==='Escape')closeModal();});}
-  el('dlgCancel').onclick=closeModal;el('dlgOk').onclick=()=>{const v=(el('dlgIn').value||'').trim();closeModal();onOk(v);};
+function dialogInput(title,label,value,okLabel,onOk,extra){ // extra:{label,value,hint} adds a second field; onOk gets (value, extraValue)
+  modal('<div class="dlg-t">'+esc(title)+'</div><div class="dlg-field"><label>'+esc(label)+'</label><input id="dlgIn" value="'+esc(value||'')+'" autocomplete="off"></div>'
+    +(extra?'<div class="dlg-field"><label>'+esc(extra.label)+'</label><input id="dlgIn2" value="'+esc(extra.value||'')+'" autocomplete="off">'+(extra.hint?'<div class="dlg-hint">'+esc(extra.hint)+'</div>':'')+'</div>':'')
+    +'<div class="dlg-row"><button class="btn" id="dlgCancel">Cancel</button><span class="dlg-sp"></span><button class="btn p" id="dlgOk">'+esc(okLabel||'Save')+'</button></div>');
+  const go=e=>{if(e.key==='Enter'){e.preventDefault();el('dlgOk').click();}else if(e.key==='Escape')closeModal();};
+  const inp=el('dlgIn');if(inp&&inp.focus){inp.focus();if(inp.select)inp.select();inp.addEventListener('keydown',go);}
+  const in2=el('dlgIn2');if(in2)in2.addEventListener('keydown',go);
+  el('dlgCancel').onclick=closeModal;el('dlgOk').onclick=()=>{const v=(el('dlgIn').value||'').trim();const v2=in2?(in2.value||'').trim():undefined;closeModal();onOk(v,v2);};
 }
 function dialogConfirm(title,body,okLabel,danger,onOk){
   modal('<div class="dlg-t">'+esc(title)+'</div><div class="dlg-b">'+body+'</div><div class="dlg-row"><button class="btn" id="dlgCancel">Cancel</button><span class="dlg-sp"></span><button class="btn '+(danger?'danger':'p')+'" id="dlgOk">'+esc(okLabel||'OK')+'</button></div>');
@@ -2867,7 +2875,15 @@ function renderLauncher(){
     +'<div class="lsec"><div class="lsec-t">Packages</div>'+cyclesHtml()+'<div class="progrow" style="margin-top:10px">'+soon('BBRA','Budget-Based Rent Adjustment')+'</div></div>';
   wireCycles();
   bootstrapFirstCycle(p);
-  el('pRename').onclick=()=>dialogInput('Rename property','Property name',p.name,'Save',async nm=>{if(!nm)return;try{await mpdb.renameProperty(activePid,nm);renderLauncher();}catch(e){saveFailedModal(e);}});
+  el('pRename').onclick=async()=>{
+    // The tenant-facing name lives with the property, not the package, so it is
+    // editable from here rather than only inside a form.
+    let alias='';try{const fl=await mpdb.getFlat(activePid);alias=(fl&&fl['tenant.property_alias']&&fl['tenant.property_alias'].value)||'';}catch(e){}
+    dialogInput('Rename property','Property name',p.name,'Save',async (nm,al)=>{if(!nm)return;
+      try{await mpdb.renameProperty(activePid,nm);
+        if(al!==undefined&&al!==alias)await mpdb.saveFlat(activePid,{'tenant.property_alias':{value:al,source:'database'}});
+        renderLauncher();}catch(e){saveFailedModal(e);}},
+      {label:'Also known to tenants as',value:alias,hint:'Optional \u2014 used on the tenant notice when residents know the property by another name.'});};
   el('pDelete').onclick=()=>dialogConfirm('Delete property','This permanently removes <b>'+esc(p.name)+'</b> and its stored record.','Delete',true,async()=>{try{await mpdb.deleteProperty(activePid);openMenu();}catch(e){saveFailedModal(e);}});
   wireLetterhead();
 }
