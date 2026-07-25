@@ -56,6 +56,27 @@ select vault.update_secret(
   'NEW_KEY_HERE');
 ```
 
+**After any rotation, redeploy the function** (step 3). `ocr-rs` caches the endpoint
+and key in module scope after its first Vault lookup, so a warm isolate will keep
+using the old key until it is replaced.
+
+## Switching to Related's Azure account later
+
+Start on your own Azure subscription — nothing in the code names a tenant, so this
+is not a decision you are locked into.
+
+- **This app:** create the DI resource in Related's subscription, run the two
+  `vault.update_secret` calls above with the new endpoint and key, redeploy `ocr-rs`.
+  No code change and no rebuild of `index.html`.
+- **Kinley's Azure port:** independent of all of the above. His build patches the
+  call to `/api/ocr-rs` on Related's App Service (`RA-PORT.md`, anchor 3b), so he
+  supplies his own Document Intelligence resource inside Related's tenancy and never
+  touches this Vault or this key.
+
+One caveat while you are on a personal subscription: real owner and tenant documents
+transit *your* Azure account. That is fine for the example schedules in
+`Reference & Research/`; move to Related's resource before running live properties.
+
 ## 3. Deploy the function
 
 ```bash
