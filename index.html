@@ -1784,11 +1784,17 @@ function rsPartB(V,definite){ // ids are gen.js's Part B map, read back the way 
   [117,119,121,123,125].forEach((id,k)=>{const f=rsFuelOf(V(id));if(f)out['partb.fuel.'+k]=f;});
   [129,130,131,132,141,142].forEach((id,k)=>{const v=!!V(id);out['partb.services.'+k]=v?'1':'';CHK['partb.services.'+k]=1;});
   out._checked=definite?CHK:{};
+  /* A write-in only exists because somebody wrote it on the form, so when the tick
+     beside it cannot be read — tiers 2 and 3 see a drawing, not a glyph — take the
+     writing as evidence the item is included. Leaving the box clear is not the safe
+     option here: saving CLEARS the text of any write-in whose box is not ticked
+     (clearUncheckedWriteins), so a half-read write-in silently loses what it read. */
+  const wiOn=(cb,t)=>V(cb)?'1':(!definite&&t?'1':'');
   [[106,107],[108,109],[110,111],[112,113],[114,115]].forEach((p,ix)=>{const t=V(p[1]);
-    if(t){out['partb.writein.e'+(ix+1)]=t;if(V(p[0]))out['partb.writein.e'+(ix+1)+'.on']='1';}});
+    if(t){out['partb.writein.e'+(ix+1)]=t;const o=wiOn(p[0],t);if(o)out['partb.writein.e'+(ix+1)+'.on']=o;}});
   [[133,134],[135,136],[137,138],[139,140],[143,144],[145,146]].forEach((p,ix)=>{const t=V(p[1]);
-    if(t){out['partb.writein.s'+(ix+1)]=t;if(V(p[0]))out['partb.writein.s'+(ix+1)+'.on']='1';}});
-  const u1=V(127);if(u1){out['partb.writein.u1']=u1;if(V(126))out['partb.writein.u1.on']='1';
+    if(t){out['partb.writein.s'+(ix+1)]=t;const o=wiOn(p[0],t);if(o)out['partb.writein.s'+(ix+1)+'.on']=o;}});
+  const u1=V(127);if(u1){out['partb.writein.u1']=u1;const o1=wiOn(126,u1);if(o1)out['partb.writein.u1.on']=o1;
     const uf=rsFuelOf(V(1125));if(uf)out['partb.writein.u1.fuel']=uf;}
   return out;}
 function rsSigOf(str,known){ // "David Pearson, Vice President of General Partner"
