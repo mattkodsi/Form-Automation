@@ -227,7 +227,10 @@
       const i=row[1];
       if(row[0]==='s8'){ const br=g('units.'+i+'.br'),ba=g('units.'+i+'.ba'),n=nmv(g('units.'+i+'.num_units')),pro=nmv(g('units.'+i+'.proposed'));
         const us=g('units.'+i+'.ua_source')||'exec'; const ua=us==='rcs'?nmv(g('units.'+i+'.ua_rcs')):(us==='custom'?nmv(g('units.'+i+'.ua_custom')):nmv(g('units.'+i+'.ua_exec')));
-        T(base, utype(br,ba)); T(base+1,n||''); T(base+2,money(pro)); T(base+3,money(n*pro)); T(base+4,ua||''); T(base+5,money(pro+ua)); }
+        // A proposed rent nobody has set yet is blank, not 0 — on a HUD form a
+        // printed 0 reads as a real figure. An entered 0 still prints.
+        const praw=g('units.'+i+'.proposed'), hasP=praw!==''&&praw!=null;
+        T(base, utype(br,ba)); T(base+1,n||''); T(base+2,hasP?money(pro):''); T(base+3,hasP?money(n*pro):''); T(base+4,ua||''); T(base+5,hasP?money(pro+ua):''); }
       else if(row[0]==='li'){ const n=nmv(g('ns8.'+i+'.num_units')),ar=g('ns8.'+i+'.avg_rent');
         T(base, utype(g('ns8.'+i+'.br'),g('ns8.'+i+'.ba'))); if(n)T(base+1,n);
         if(ar!==''&&ar!=null){ const rv=nmv(ar); T(base+2,money(rv)); T(base+3,money(n*rv)); T(base+5,money(rv)); } }
@@ -240,7 +243,8 @@
     s8A.forEach(i=>{ const n=nmv(g('units.'+i+'.num_units')); tu+=n; tc+=n*nmv(g('units.'+i+'.proposed')); });
     liA.forEach(i=>{ const n=nmv(g('ns8.'+i+'.num_units')); tu+=n; tc+=n*nmv(g('ns8.'+i+'.avg_rent')); });
     nrA.forEach(i=>{ tu+=nmv(g('nonrev.'+i+'.num_units'))||1; });
-    T('94a',tu||''); T('95',money(tc)); T('96',money(tc*12));
+    const anyP=s8A.some(i=>{const v=g('units.'+i+'.proposed');return v!==''&&v!=null;})||liA.some(i=>{const v=g('ns8.'+i+'.avg_rent');return v!==''&&v!=null;});
+    T('94a',tu||''); T('95',anyP?money(tc):''); T('96',anyP?money(tc*12):'');
     // Full-width banner: remove that row's fields (so no viewer redraws a "0"
     // over it), white out the row band, and print the centered bold label.
     if(bannerRow!=null){ try{
