@@ -212,18 +212,23 @@ function dimPick(tag){return '<div class="uadrop pocpick"><div class="uatrigger"
 /* ================== end external-source dropdowns ================== */
 function refreshPrincipalOpts(){ // the list is built at render time; keep it current while typing
   const box=document.querySelector('[data-box="sig.principal"]');const menu=box&&box.querySelector('.uamenu');if(!menu)return;
-  const first=menu.firstElementChild;
-  const head=(first&&/Executed RS/.test(first.textContent))?first.outerHTML:'';
-  menu.innerHTML=head+sigPrincipalOpts().map(o=>'<div class="uaopt" data-csopt="'+esc(o)+'" data-cskey="sig.principal">'+esc(o)+'</div>').join('');
+  const _opts=sigPrincipalOpts();const _rp=rsVal('sig.principal');
+  const _dupe=_rp!=null&&_opts.some(o=>o.trim().toLowerCase()===_rp.trim().toLowerCase());
+  const head=(_rp!=null&&!_dupe)?('<div class="uaopt" data-cskey="sig.principal" data-csopt="'+esc(_rp)+'">'+esc(_rp)+'<span class="uasub">Executed RS</span></div>'):'';
+  menu.innerHTML=head+_opts.map(o=>'<div class="uaopt" data-csopt="'+esc(o)+'" data-cskey="sig.principal">'+esc(o)+'</div>').join('');
   menu.querySelectorAll('[data-csopt]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();
     const ck=o.getAttribute('data-cskey');_pendingSnap=snapOf([ck]);form=store.editForm(form,ck,o.getAttribute('data-csopt'));
     _pending=[ck];_refocusSel='[data-trigfor="'+ck+'"]';renderBody();}));}
 function sigPrincipalOpts(){const o=[];PRINCIPALS.forEach(i=>{const t=(get('principals.'+i+'.title')||'').trim(),n=(get('principals.'+i+'.name')||'').trim();const v=t||n;if(v&&o.indexOf(v)<0)o.push(v);});return o;}
 function sigTitleCell(f){const c=cellColors('sig.title');const pk='sig.principal';const pc=cellColors(pk);
-  const _rp=rsVal('sig.principal');
-  const dim=_rp!=null?('<div class="uaopt" data-cskey="'+pk+'" data-csopt="'+esc(_rp)+'">'+esc(_rp)+'<span class="uasub">Executed RS</span></div>')
-    :'<div class="uaopt srcdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>';
-  let dd=csDrop(pk,sigPrincipalOpts(),'Select\u2026','',true);
+  const _rp=rsVal('sig.principal');const _opts=sigPrincipalOpts();
+  // the schedule's own principal is already one of the list options once Part G
+  // has been parsed — showing it a second time as its own "Executed RS" row just
+  // duplicates the same value under a different label.
+  const _dupe=_rp!=null&&_opts.some(o=>o.trim().toLowerCase()===_rp.trim().toLowerCase());
+  const dim=(_rp!=null&&!_dupe)?('<div class="uaopt" data-cskey="'+pk+'" data-csopt="'+esc(_rp)+'">'+esc(_rp)+'<span class="uasub">Executed RS</span></div>')
+    :(_dupe?'':'<div class="uaopt srcdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>');
+  let dd=csDrop(pk,_opts,'Select\u2026','',true);
   dd=dd.replace('<div class="uamenu">','<div class="uamenu">'+dim);
   return `<div class="fpair sigpair"><div class="field"><div class="flabel">${f.label}</div><div class="fbox" data-box="sig.title" style="background:${c[1]};border-left-color:${c[0]}"><input type="text" data-k="sig.title" value="${esc(get('sig.title'))}" autocomplete="off">${srcPick('sig.title',SRCPICK_ROWS['sig.title']())}</div>${ovNote('sig.title')}</div><div class="ofthe">of the</div><div class="field"><div class="flabel">Principal</div><div class="fbox seldrop" data-box="${pk}" style="background:${pc[1]};border-left-color:${pc[0]}">${dd}</div>${ovNote(pk)}</div></div>`;}
 function fieldCell(f){if(f.type==='sigtitle')return sigTitleCell(f);if(f.type==='pair')return '<div class="fpair">'+f.items.map(fieldCell).join('')+'</div>';if(f.type==='addr')return addrCell();if(f.type==='caaddr')return caAddrCell();if(f.type==='appraddr')return apprAddrCell();if(f.type==='mgmtaddr')return mgmtCell();if(f.type==='select')return selectCell(f);if(f.k==='poc.name')return pocCell();if(DIR_PICK[f.k])return dirCell(f);
