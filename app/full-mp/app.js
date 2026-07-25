@@ -51,7 +51,7 @@ const ALL_KEYS=Object.keys(SEED).map(k=>({key:k}));
 let mpdb=null, activePid=null, activeCid=null, _cyFresh=null;
 const bridge={getDb:async()=>mpdb?(activeCid?mpdb.getFlatCycle(activeCid):mpdb.getFlat(activePid)):{},saveDb:async(m)=>{_cyFresh=null;return activeCid?mpdb.saveFlatCycle(activeCid,m):mpdb.saveFlat(activePid,m);},clearDb:async()=>{}};
 const store=makeStore(bridge,ALL_KEYS);
-let form=store.emptyForm(); let UNITS=[0]; let NONREV=[]; let NS8=[]; let PRINCIPALS=[0]; let _undoStack=[]; let _undoNR=[]; let _undoLI=[]; let _undoPR=[]; let _pending=null,_refocusSel=null,_pendingSnap=null; let _rcsUpload=null; let _rsUpload=null; let _rsArm=false;let _rsBusy=false; let _dlgEnter=null;
+let form=store.emptyForm(); let UNITS=[0]; let NONREV=[]; let NS8=[]; let PRINCIPALS=[0]; let _undoStack=[]; let _undoNR=[]; let _undoLI=[]; let _undoPR=[]; let _pending=null,_refocusSel=null,_pendingSnap=null; let _rcsUpload=null; let _rsUpload=null; let _rsArm=false;let _rsBusy=null;   // while set, the upload row shows what is being read let _dlgEnter=null;
 
 const CLR={database:['#2563eb','#e8f0fe','On file'],'this-cycle':['#0f766e','#e9f5f2','API / this package'],overridden:['#b45309','#fbf1e6','Overridden'],'auto-calculated':['#2563eb','#e8f0fe','Auto-calc'],'new':['#64748b','#f6f7f9','New']};
 const TODAY=new Date().toISOString().slice(0,10);
@@ -508,13 +508,17 @@ function srcDocLabel(){
    Tier 2 (next phase): signature-flattened text copies -> positional text.
    Tier 3: scans -> no digital text; the app says so instead of guessing. */
 const rsFuelOf=v=>{v=String(v||'').trim().toUpperCase();return /^[EFG]$/.test(v)?v:'';};
-function rsPartB(V){ // ids are gen.js's Part B map, read back the way it writes
-  const out={};const CHK={}; // CHK marks a definite read (on or off); out omits keys never inspected
+function rsPartB(V,definite){ // ids are gen.js's Part B map, read back the way it writes
+  // CHK marks a DEFINITE read (on or off). Only tier 1 may claim one: a form field
+  // literally says checked or unchecked. Reading position, an absent tick means only
+  // that nothing was found there — on this Beacon Hill copy the ticks are not text at
+  // all — so tiers 2 and 3 may switch a box ON but must never report one as off.
+  const out={};const CHK={};
   [99,100,101,102,103,104,105].forEach((id,k)=>{const v=!!V(id);out['partb.equipment.'+k]=v?'1':'';CHK['partb.equipment.'+k]=1;});
   [116,118,120,122,124].forEach((id,k)=>{const v=!!V(id);out['partb.utilities.'+k]=v?'1':'';CHK['partb.utilities.'+k]=1;});
   [117,119,121,123,125].forEach((id,k)=>{const f=rsFuelOf(V(id));if(f)out['partb.fuel.'+k]=f;});
   [129,130,131,132,141,142].forEach((id,k)=>{const v=!!V(id);out['partb.services.'+k]=v?'1':'';CHK['partb.services.'+k]=1;});
-  out._checked=CHK;
+  out._checked=definite?CHK:{};
   [[106,107],[108,109],[110,111],[112,113],[114,115]].forEach((p,ix)=>{const t=V(p[1]);
     if(t){out['partb.writein.e'+(ix+1)]=t;if(V(p[0]))out['partb.writein.e'+(ix+1)+'.on']='1';}});
   [[133,134],[135,136],[137,138],[139,140],[143,144],[145,146]].forEach((p,ix)=>{const t=V(p[1]);
@@ -580,7 +584,7 @@ function rsReadFields(pdfForm){
   const R=rsRows(V);outp.units=R.units;outp.ns8=R.ns8;
   outp.nonrev=rsPartD(V);
   rsSigInto(outp,V(228));
-  outp.partb=rsPartB(n=>{const t=V(n);return t||(CB(n)?'1':'');});
+  outp.partb=rsPartB(n=>{const t=V(n);return t||(CB(n)?'1':'');},true); // tier 1 reads real field states
   return outp;}
 /* ---- Tier 2: positioned text for copies that no longer carry form fields ----
    Interprets the page content streams (q/Q + cm stack, Tm/Td/TD/T*, Tj/TJ/quote)
@@ -737,7 +741,7 @@ function rsAssembleFields(V){
   const R=rsRows(V);outp.units=R.units;outp.ns8=R.ns8;
   outp.nonrev=rsPartD(V);
   rsSigInto(outp,V(228));
-  outp.partb=rsPartB(V);
+  outp.partb=rsPartB(V,false);
   // quality gate: the rows must reconcile against the schedule's own printed total
   const tot=rsNum(V(95));const all=outp.units.concat(outp.ns8);
   const sum=all.reduce((a,u)=>a+(u.count&&u.rent?u.count*u.rent:0),0);
@@ -783,13 +787,58 @@ function rsS8FromFields(pdfForm){
     const v=String(t||'').replace(/\s+/g,'').toUpperCase();
     if(RS_S8.test(v)&&hit.indexOf(v)<0)hit.push(v);});}catch(e){}
   return hit.length===1?hit[0]:'';}
+let _rsTplRuns=null;
+async function rsTplRuns(){ // the blank template's own printed text, read once
+  if(_rsTplRuns)return _rsTplRuns;
+  const b64=window.RCSTemplates&&window.RCSTemplates.rentSchedule;if(!b64)return null;
+  const bin=atob(b64);const tb=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)tb[i]=bin.charCodeAt(i);
+  const doc=await window.PDFLib.PDFDocument.load(tb,{parseSpeed:Infinity});
+  _rsTplRuns=await rsTextPages(doc);return _rsTplRuns;}
+function rsDropTplLabels(runs,tplRuns){
+  /* The form's own printed text is not an entered value. Depth alone cannot tell
+     them apart here: this copy draws everything at depth 0, so "Heating ________"
+     — printed 2pt right of its checkbox and pulled in by the mapper's slop — read
+     as a ticked box, while the real ticks, being drawings rather than text, read
+     as nothing. A copy prints its labels where the blank form prints them (median
+     offset measured at 0.0pt over 84 matches), so identical text in the same spot
+     is the form talking. */
+  if(!runs)return [];
+  return runs.filter(r=>{
+    const t=String(r.s).trim();if(!t)return false;
+    if(/^[_\-–—.]+$/.test(t))return false;   // a rule to write on, not writing
+    if(!tplRuns)return true;
+    for(let i=0;i<tplRuns.length;i++){const L=tplRuns[i];
+      if(Math.abs(r.y-L.y)>4||Math.abs(r.x-L.x)>4)continue;
+      if(String(L.s).trim()===t)return false;}
+    return true;});}
 async function rsReadTextTier(pages,bytes,onStep){ // flattened copy -> same parsed shape as tier 1, or null
   if(!pages||!pages.length)return null;
   const rects=await rsFieldRects();if(!Object.keys(rects).length)return null;
   const {pg0,pg1}=rsClassifyPages(pages.map(rs=>rs.map(r=>r.s).join(' ')));
   if(pg0<0)return null;
-  const F=Object.assign(rsMapRects(pages[pg0],rects,0),pg1>=0?rsMapRects(pages[pg1],rects,1):{});
+  const tplr=await rsTplRuns();
+  const clean=(rs,tp)=>rsDropTplLabels(rs,tplr&&tplr[tp]);
+  const F=Object.assign(rsMapRects(clean(pages[pg0],0),rects,0),pg1>=0?rsMapRects(clean(pages[pg1],1),rects,1):{});
   let s8=rsS8FromPages(pages);
+  // Ticks are often drawings rather than glyphs — this copy's Part B boxes hold no
+  // text whatsoever — so a page that reads perfectly well can still be blind to
+  // every checkbox on it. When not one is found, ask Azure for that page's
+  // selection marks and take ONLY the boxes from it; the values stay with the
+  // text layer, which reads them better than OCR does.
+  if(bytes&&typeof ocrHalf==='function'&&typeof OCR_CHECKBOX!=='undefined'
+     &&!OCR_CHECKBOX.some(id=>rects[String(id)]&&rects[String(id)].pg===0&&F[String(id)])){
+    let ticks=null;try{ticks=await ocrHalf(bytes,0,[],onStep);}catch(e){}
+    if(ticks){
+      OCR_CHECKBOX.forEach(id=>{const k=String(id);
+        if(rects[k]&&rects[k].pg===0&&ticks.F[k])F[k]=ticks.F[k];});
+      // The page has been read anyway, so take anything else it found that the
+      // text layer left blank — on a copy whose values are drawn rather than
+      // typed, that is the difference between a filled box and an empty one.
+      // It only ever FILLS: where the text layer has a value that value stands,
+      // because it is the document's own characters, while OCR is a reading of
+      // them and can turn 1027 into 1O27. A recognised guess must not be allowed
+      // to overwrite the thing it was guessing at.
+      Object.keys(ticks.F).forEach(k=>{if(rects[k]&&rects[k].pg===0&&!F[k])F[k]=ticks.F[k];});}}
   // A copy can be text on one page and pictures on the next — a rent roll that
   // reads fine over a certification page rendered as dozens of little images.
   // Rather than drop the entity, principals, signatory and HAP number, send just
@@ -856,7 +905,8 @@ function renderSources(){
     ?`<div class="srcrow"><span class="ok">✓</span><div><b>${esc(up.name)}</b> <span class="parsed">uploaded · this session</span><div class="sub">Automatic parsing is not yet available — review each section below.</div></div><button class="btn sm" id="upRcs">Replace</button></div>`
     :`<div class="srcrow${sl.need?'':' dim'}"><span class="mut">○</span><div><b>${esc(sl.title)}</b> <span class="${sl.need?'missing':'parsed'}">${sl.need?'not uploaded':'optional'}</span><div class="sub">${esc(sl.sub)}</div></div><button class="btn sm" id="upRcs">Upload PDF</button></div>`;
   const ru=_rsUpload;let rs;
-  if(!ru)rs=`<div class="srcrow"><span class="mut">○</span><div><b>Current executed rent schedule</b> <span class="missing">not uploaded</span><div class="sub">Reads the unit mix, rents, utility allowances, entity, and principals — from the schedule’s form fields, or from its printed text if a signed copy has none.</div></div><button class="btn sm" id="upRs">Upload PDF</button></div>`;
+  if(_rsBusy)rs=`<div class="srcrow"><span class="spin" aria-hidden="true"></span><div><b>${esc(_rsBusy.name||'Rent schedule')}</b> <span class="parsed">${esc(_rsBusy.note||'reading\u2026')}</span><div class="sub">${esc(_rsBusy.sub||'Reading the schedule\u2019s form fields and printed text.')}</div></div></div>`;
+  else if(!ru)rs=`<div class="srcrow"><span class="mut">○</span><div><b>Current executed rent schedule</b> <span class="missing">not uploaded</span><div class="sub">Reads the unit mix, rents, utility allowances, entity, and principals — from the schedule’s form fields, or from its printed text if a signed copy has none.</div></div><button class="btn sm" id="upRs">Upload PDF</button></div>`;
   else if(ru.kind==='fields'){const p=ru.parsed;rs=`<div class="srcrow"><span class="ok">✓</span><div><b>${esc(ru.name)}</b> <span class="parsed">parsed</span><div class="sub">${ru.via==='text'?'Read from the printed text and checked against the schedule’s own totals. ':(ru.via==='ocr'?'Read by OCR from a scanned copy and checked against the schedule’s own totals — read every value against the paper before you save. Ticked boxes can be added but never cleared from a scan. ':'')}Filling writes only where the schedule has a value — save the form to keep it, or edit any field by hand to change it.</div></div><button class="btn sm teal" id="rsApply">Fill form from RS</button> <button class="btn sm" id="upRs">Replace</button></div>`;}
   else if(ru.kind==='text')rs=`<div class="srcrow"><span class="mut">△</span><div><b>${esc(ru.name)}</b> <span class="missing">no form fields — text copy</span><div class="sub">Its printed text could not be matched to the schedule’s layout — enter the values below.</div></div><button class="btn sm" id="upRs">Replace</button></div>`;
   else rs=`<div class="srcrow"><span class="mut">△</span><div><b>${esc(ru.name)}</b> <span class="missing">scanned copy</span><div class="sub">This copy is a scan, and reading it as an image did not produce values that match the schedule’s own totals. Upload a digital copy, or enter the values below.</div></div><button class="btn sm" id="upRs">Replace</button></div>`;
@@ -1310,11 +1360,16 @@ function wireBody(){
     f.arrayBuffer().then(async buf=>{const b=new Uint8Array(buf);
       if(!(b.length>4&&b[0]===0x25&&b[1]===0x50&&b[2]===0x44&&b[3]===0x46)){setStatus('That file isn\u2019t a PDF \u2014 upload the executed rent schedule as a PDF.');sf.value='';return;}
       setStatus('Reading the rent schedule\u2026');
-      // Tiers 1 and 2 are instant; tier 3 goes out to be OCR'd a page at a time,
-      // so say what is happening rather than leave the form looking hung.
-      const step=(i,n)=>setStatus('No digital text in this copy \u2014 reading it as a scanned image (page '+i+' of '+n+'). This takes a few moments\u2026');
-      _rsBusy=true;
-      let r;try{r=await parseRsPdf(b,step);}catch(e){r={kind:'scan',parsed:null};}finally{_rsBusy=false;}
+      // Tiers 1 and 2 are instant, so the row would flick past; OCR takes seconds
+      // per page, and without a visible row the upload line just sat there
+      // unchanged until the whole thing finished. The row now says what is
+      // happening and re-renders on every step.
+      const busy=(note,sub)=>{_rsBusy={name:f.name,note:note,sub:sub};renderBody();};
+      const step=(i,n)=>{busy('reading page '+i+' of '+n+'\u2026',
+        'No digital text on this page \u2014 sending it to be read as an image. This takes a few moments.');
+        setStatus('Reading the rent schedule as a scanned image (page '+i+' of '+n+')\u2026');};
+      busy('reading\u2026','Checking the schedule\u2019s form fields and printed text.');
+      let r;try{r=await parseRsPdf(b,step);}catch(e){r={kind:'scan',parsed:null};}finally{_rsBusy=null;}
       _rsUpload={name:f.name,bytes:b,kind:r.kind,via:r.via,parsed:r.parsed};sf.value='';_rsArm=(r.kind==='fields'&&!!r.parsed);renderBody();
       setStatus(r.kind==='fields'?((r.via==='ocr'?'Scanned rent schedule read by OCR \u2014 check the values against the paper. ':'Rent schedule parsed \u2014 ')+'press Enter to fill the form, or use \u201cFill form from RS\u201d in '+secRef(1)+'.'):(r.kind==='text'?'This copy carries no form fields, and its printed text could not be placed on the schedule\u2019s layout \u2014 enter the values by hand.':'This copy is a scan \u2014 there is no digital text to read.'));});};
   const ra=el('rsApply');if(ra)ra.onclick=()=>rsFillFromParsed();
