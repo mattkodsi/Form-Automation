@@ -187,6 +187,52 @@ async function ocrAnalyze(u8){ // ra-seam: the OCR endpoint
   if(r.error){let m='request failed';try{m=(await r.error.context.json()).error||m;}catch(e){m=r.error.message||m;}throw new Error(m);}
   return r.data;}
 
+function ocrPageMap(pg,tplPg,tpl,rects){ // one OCR'd page -> {F,s8} against a template page
+  if(!pg||!tpl[tplPg])return null;
+  const ws=ocrWords(pg,tpl[tplPg]);
+  const f=ocrRegister(ws,tpl[tplPg].anchors);if(!f)return null;
+  // read Part I before labels are dropped: finding its number depends on first
+  // finding the printed label that names it
+  const s8=rsFindS8(ws.map(w=>({s:w.s,x:ocrX(f,w.x0,w.y0),y:ocrY(f,w.x0,w.y0)})));
+  const F=ocrMap(ocrDropLabels(ws,tpl[tplPg].labels,f),rects,tplPg,f);
+  OCR_CHECKBOX.forEach(id=>{delete F[String(id)];});
+  // Only a tick Azure reports as SELECTED may turn a box on. An unselected one is
+  // left absent rather than written as off, so a scan can add to what is on file
+  // but never quietly clear it.
+  ocrMarks(pg,tpl[tplPg]).forEach(m=>{if(!m.on)return;
+    const cx=ocrX(f,m.x,m.y),cy=ocrY(f,m.x,m.y);
+    // exactly one box per tick — the nearest. Setting every box the mark falls
+    // within let a single tick, nudged by a degree of skew, switch on a
+    // neighbouring utility that the schedule leaves off.
+    let best=null,bd=1e9;
+    OCR_CHECKBOX.forEach(id=>{const r=rects[String(id)];if(!r||r.pg!==tplPg)return;
+      if(cx<r.x-OCR_PADX||cx>r.x+r.w+OCR_PADX||cy<r.y-OCR_PADY||cy>r.y+r.h+OCR_PADY)return;
+      const d=Math.hypot(cx-(r.x+r.w/2),cy-(r.y+r.h/2));if(d<bd){bd=d;best=id;}});
+    if(best!==null)F[String(best)]='X';});
+  return {F:F,s8:s8};}
+
+/* A document need not be all text or all picture. Real copies come back with the
+   rent roll as text and the certification page rendered as dozens of little
+   images — the text tier then reads Part A and silently drops the entity,
+   principals, signatory and HAP number. So when the text tier cannot find one
+   half of the form, that half alone is sent to be OCR'd. `skip` holds the pages
+   the text layer already read, so they are not paid for twice. */
+async function ocrHalf(bytes,tplPg,skip,onStep){
+  if(!window.PDFLib||!supaClient)return null;
+  const tpl=await ocrTemplate();if(!tpl||!tpl[tplPg])return null;
+  const rects=await rsFieldRects();if(!Object.keys(rects).length)return null;
+  let pages;try{pages=await ocrSplitPages(bytes,OCR_MAXPAGES);}catch(e){return null;}
+  const re=tplPg===1?RS_PG1:RS_PG0;
+  for(let i=0;i<pages.length;i++){
+    if(skip&&skip.indexOf(i)>=0)continue;
+    if(onStep)onStep(i+1,pages.length);
+    let pg=null;try{pg=await ocrAnalyze(pages[i]);}catch(e){return null;}
+    if(!pg||!pg.words||!pg.words.length)continue;
+    if(!re.test(pg.words.map(w=>w.s).join(' ')))continue;   // never guess the half
+    const got=ocrPageMap(pg,tplPg,tpl,rects);
+    if(got)return got;}
+  return null;}
+
 async function ocrParseRs(bytes,onStep){ // scan -> the tier-1 parsed shape, or null
   if(!window.PDFLib||!supaClient)return null;
   const tpl=await ocrTemplate();if(!tpl)return null;
@@ -203,28 +249,12 @@ async function ocrParseRs(bytes,onStep){ // scan -> the tier-1 parsed shape, or 
     got.push(pg);txt.push(pg.words.map(w=>w.s).join(' '));
     const c=rsClassifyPages(txt);pg0=c.pg0;pg1=c.pg1;}
   if(pg0<0)return null;
-  const half=(di,tplPg)=>{if(di<0||!tpl[tplPg])return null;
-    const ws=ocrWords(got[di],tpl[tplPg]);
-    const f=ocrRegister(ws,tpl[tplPg].anchors);if(!f)return null;
-    const F=ocrMap(ocrDropLabels(ws,tpl[tplPg].labels,f),rects,tplPg,f);
-    OCR_CHECKBOX.forEach(id=>{delete F[String(id)];});
-    // Only a tick Azure reports as SELECTED may turn a box on. An unselected one
-    // is left absent rather than written as off, so a scan can add to what is on
-    // file but never quietly clear it.
-    ocrMarks(got[di],tpl[tplPg]).forEach(m=>{if(!m.on)return;
-      const cx=ocrX(f,m.x,m.y),cy=ocrY(f,m.x,m.y);
-      // exactly one box per tick — the nearest. Setting every box the mark falls
-      // within let a single tick, nudged by a degree of skew, switch on a
-      // neighbouring utility that the schedule leaves off.
-      let best=null,bd=1e9;
-      OCR_CHECKBOX.forEach(id=>{const r=rects[String(id)];if(!r||r.pg!==tplPg)return;
-        if(cx<r.x-OCR_PADX||cx>r.x+r.w+OCR_PADX||cy<r.y-OCR_PADY||cy>r.y+r.h+OCR_PADY)return;
-        const d=Math.hypot(cx-(r.x+r.w/2),cy-(r.y+r.h/2));if(d<bd){bd=d;best=id;}});
-      if(best!==null)F[String(best)]='X';});
-    return F;};
-  const A=half(pg0,0);if(!A)return null;   // Part A is the half we cannot do without
-  const F=Object.assign({},A,half(pg1,1)||{});
+  const A=ocrPageMap(got[pg0],0,tpl,rects);if(!A)return null;  // Part A is the half we cannot do without
+  const B=pg1>=0?ocrPageMap(got[pg1],1,tpl,rects):null;
+  const s8=(A&&A.s8)||(B&&B.s8)||'';
+  const F=Object.assign({},A.F,B?B.F:{});
   const outp=rsAssembleFields(n=>String(F[String(n)]||'').trim());
+  if(outp&&s8)outp.scalars['property.s8']=s8;
   if(outp&&outp.partb)outp.partb._checked={};
   // A tick inside a box is a drawn glyph, not a word, so OCR returns nothing for
   // it either way — which is not the same as reading it as unchecked. Clearing

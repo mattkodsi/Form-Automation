@@ -29,9 +29,9 @@ def read(name):
     with open(os.path.join(D, name), encoding='utf-8') as f:
         return f.read()
 
-def patch(src, old, new, label):
+def patch(src, old, new, label, times=1):
     n = src.count(old)
-    assert n == 1, f'PATCH FAILED ({label}): expected 1 match, found {n}'
+    assert n == times, f'PATCH FAILED ({label}): expected {times} match(es), found {n}'
     return src.replace(old, new)
 
 app = read('app.js')
@@ -95,10 +95,11 @@ ocr = patch(ocr,
   if(!resp.ok||d.error)throw new Error(d.error||('OCR failed (HTTP '+resp.status+')'));
   return d;}""",
     'ocr: invoke → fetch /api/ocr-rs')
+# both ocrParseRs and ocrHalf gate on a signed-in Supabase client
 ocr = patch(ocr,
     "  if(!window.PDFLib||!supaClient)return null;",
     "  if(!window.PDFLib)return null;",
-    'ocr: drop supabase guard')
+    'ocr: drop supabase guard', times=2)
 
 # ── 3. auth gate: Supabase email/password → RA Entra session ───────────────
 app = patch(app,
