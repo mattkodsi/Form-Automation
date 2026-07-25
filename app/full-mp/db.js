@@ -23,7 +23,8 @@ function isPerCycleKey(k) {
     || /^cycle\./.test(k)
     || (/^ocaf\./.test(k) && k !== 'ocaf.rate_type' && k !== 'ocaf.ds_annual') // debt-service defaults live on the template
     || /^uaf\./.test(k)
-    || k === 'checklist.sign_date' || k === 'tenant.date_of_notice' || k === 'rent_schedule.date_rents_effective';
+    || k === 'checklist.sign_date' || k === 'tenant.date_of_notice' || k === 'rent_schedule.date_rents_effective'
+    || k === 'rent_schedule.date_eff_rs' || k === 'rent_schedule.date_eff_source' || k === 'rent_schedule.date_eff_custom';
 }
 
 /* ---- crosswalk: UI flat key -> v7 dictionary key + home (for extraction) -

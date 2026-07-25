@@ -228,7 +228,7 @@ function sigTitleCell(f){const c=cellColors('sig.title');const pk='sig.principal
   return `<div class="fpair sigpair"><div class="field"><div class="flabel">${f.label}</div><div class="fbox" data-box="sig.title" style="background:${c[1]};border-left-color:${c[0]}"><input type="text" data-k="sig.title" value="${esc(get('sig.title'))}" autocomplete="off">${srcPick('sig.title',SRCPICK_ROWS['sig.title']())}</div>${ovNote('sig.title')}</div><div class="ofthe">of the</div><div class="field"><div class="flabel">Principal</div><div class="fbox seldrop" data-box="${pk}" style="background:${pc[1]};border-left-color:${pc[0]}">${dd}</div>${ovNote(pk)}</div></div>`;}
 function fieldCell(f){if(f.type==='sigtitle')return sigTitleCell(f);if(f.type==='pair')return '<div class="fpair">'+f.items.map(fieldCell).join('')+'</div>';if(f.type==='addr')return addrCell();if(f.type==='caaddr')return caAddrCell();if(f.type==='appraddr')return apprAddrCell();if(f.type==='mgmtaddr')return mgmtCell();if(f.type==='select')return selectCell(f);if(f.k==='poc.name')return pocCell();if(DIR_PICK[f.k])return dirCell(f);
   const s=form[f.k]||{value:'',source:'new'};
-  const c=f.prefix?(CLR[baseSrc([f.prefix,f.k])]||CLR.new):cellColors(f.k);
+  const c=f.prefix?groupColors([f.prefix,f.k]):cellColors(f.k);
   const pre=f.prefix?csDrop(f.prefix,['Ms.','Mr.','Dr.','Mx.'],'—','csnarrow',true,partHot(f.prefix)?tintStyle(f.prefix):''):'';
   return `<div class="field"><div class="flabel">${f.label}</div><div class="fbox" data-box="${f.k}" style="background:${c[1]};border-left-color:${c[0]}">${pre}<input type="text" data-k="${f.k}" style="${f.prefix&&partHot(f.k)?tintStyle(f.k):''}"${f.type==='phone'?' data-phone="1" inputmode="tel" maxlength="14"':''} value="${esc(s.value)}" autocomplete="off">${SRCPICK_ROWS[f.k]?srcPick(f.k,SRCPICK_ROWS[f.k]()):''}</div>${ovNote(f.prefix?[f.prefix,f.k]:f.k)}</div>`;}
 function addrCell(){return compAddrCell(ADDR,'property.addr','Address');}
@@ -362,14 +362,16 @@ function renderRents(){
   const nrOn=get('nonrev.enabled')==='1'||NONREV.length>0;
   let pd=`<div class="pdhead"><label class="ns8flag"><input type="checkbox" id="nonrevToggle"${nrOn?' checked':''}><span>This property has non-revenue units (Part D)</span></label>${nrOn?' <span class="sub">manager’s unit, model, etc. — excluded from rent totals</span>':''}</div>`;
   if(nrOn){
-    if(NONREV.length)pd+=`<div class="rgh"><span style="grid-column:1">Unit type</span><span style="grid-column:2">Units</span><span style="grid-column:3">Contract rent</span><span style="grid-column:4/6">Use</span></div>`+NONREV.map(i=>`<div class="pdrow"><div style="grid-column:1">${brbaBox('nonrev.'+i+'.br','nonrev.'+i+'.ba')}</div><div style="grid-column:2">${numBox('nonrev.'+i+'.num_units','')}</div><div style="grid-column:3">${moneyBox('nonrev.'+i+'.rent')}</div><div style="grid-column:4/6">${numBox('nonrev.'+i+'.use',"e.g. Manager’s unit")}</div><div class="urx" style="grid-column:7"><button class="trash" data-delnonrev="${i}" title="Delete">✕</button></div></div>`).join('');
+    if(NONREV.length){const _np=hasProg('rcs')?'':' noprop',_xc=hasProg('rcs')?7:6;
+    pd+=`<div class="rgh${_np}"><span style="grid-column:1">Unit type</span><span style="grid-column:2">Units</span><span style="grid-column:3">Contract rent</span><span style="grid-column:4/6">Use</span></div>`+NONREV.map(i=>`<div class="pdrow${_np}"><div style="grid-column:1">${brbaBox('nonrev.'+i+'.br','nonrev.'+i+'.ba')}</div><div style="grid-column:2">${numBox('nonrev.'+i+'.num_units','')}</div><div style="grid-column:3">${moneyBox('nonrev.'+i+'.rent')}</div><div style="grid-column:4/6">${numBox('nonrev.'+i+'.use',"e.g. Manager’s unit")}</div><div class="urx" style="grid-column:${_xc}"><button class="trash" data-delnonrev="${i}" title="Delete">✕</button></div></div>`).join('');}
     pd+=`<div class="addrow" id="addNonrev">+ Add non-revenue unit</div>`;
   }
   pd+=undoBits('NR');
   const lhOn=get('ns8.enabled')==='1';
   let lh=`<div class="pdhead"><label class="ns8flag"><input type="checkbox" id="ns8Toggle"${lhOn?' checked':''}><span>This property has non-Section 8 revenue producing units</span></label>${lhOn?' <span class="sub">entered as unit type and average rent, as shown on the rent schedule</span>':''}</div>`;
   if(lhOn){
-    if(NS8.length)lh+=`<div class="rgh"><span style="grid-column:1">Unit type</span><span style="grid-column:2">Units</span><span style="grid-column:3">Average unit rent</span></div>`+NS8.map(i=>`<div class="pdrow"><div style="grid-column:1">${brbaBox('ns8.'+i+'.br','ns8.'+i+'.ba')}</div><div style="grid-column:2">${numBox('ns8.'+i+'.num_units','')}</div><div style="grid-column:3">${moneyBox('ns8.'+i+'.avg_rent')}</div><div class="urx" style="grid-column:7"><button class="trash" data-delns8="${i}" title="Delete">✕</button></div></div>`).join('');
+    if(NS8.length){const _np2=hasProg('rcs')?'':' noprop',_xc2=hasProg('rcs')?7:6;
+    lh+=`<div class="rgh${_np2}"><span style="grid-column:1">Unit type</span><span style="grid-column:2">Units</span><span style="grid-column:3">Average unit rent</span></div>`+NS8.map(i=>`<div class="pdrow${_np2}"><div style="grid-column:1">${brbaBox('ns8.'+i+'.br','ns8.'+i+'.ba')}</div><div style="grid-column:2">${numBox('ns8.'+i+'.num_units','')}</div><div style="grid-column:3">${moneyBox('ns8.'+i+'.avg_rent')}</div><div class="urx" style="grid-column:${_xc2}"><button class="trash" data-delns8="${i}" title="Delete">✕</button></div></div>`).join('');}
     lh+=`<div class="addrow" id="addNs8">+ Add non-Section 8 unit type</div>`;
   }
   lh+=undoBits('LI');
@@ -486,15 +488,25 @@ function rsPartB(V){ // ids are gen.js's Part B map, read back the way it writes
   const u1=V(127);if(u1){out['partb.writein.u1']=u1;if(V(126))out['partb.writein.u1.on']='1';
     const uf=rsFuelOf(V(1125));if(uf)out['partb.writein.u1.fuel']=uf;}
   return out;}
-function rsSigOf(str){ // "Alex Morgan, Vice President of General Partner"
-  const m=String(str||'').trim().match(/^(.+?),\s*(.+?)\s+of\s+(?:the\s+)?(.+)$/);
+function rsSigOf(str,known){ // "Alex Morgan, Vice President of General Partner"
+  str=String(str||'').trim();
+  // a title itself can contain "of" ("Director of Operations"); when we already
+  // know the real principal names (Part G), prefer the split whose tail matches
+  // one of them over always taking the first " of ".
+  if(known&&known.length){const re=/\s+of\s+(?:the\s+)?/gi;let m;
+    while((m=re.exec(str))){const head=str.slice(0,m.index),tail=str.slice(m.index+m[0].length);
+      const c=head.match(/^(.+?),\s*(.+)$/);if(!c)continue;
+      if(known.some(k=>String(k||'').trim().toLowerCase()===tail.trim().toLowerCase()))
+        return{name:c[1].trim(),title:c[2].trim(),principal:tail.trim()};}}
+  const m=str.match(/^(.+?),\s*(.+?)\s+of\s+(?:the\s+)?(.+)$/);
   return m?{name:m[1].trim(),title:m[2].trim(),principal:m[3].trim()}:null;}
 function rsSigInto(outp,partH){
-  let sig=rsSigOf(partH);
+  const known=outp.principals.map(p=>p.name).concat(outp.principals.map(p=>p.title)).filter(Boolean);
+  let sig=rsSigOf(partH,known);
   // Part H is often left blank and the signatory written into a Part G row instead;
   // such a row names a person and carries no title of its own.
   if(!sig)for(let i=0;i<outp.principals.length;i++){const p=outp.principals[i];
-    if(!p.title){const c=rsSigOf(p.name);if(c){sig=c;break;}}}
+    if(!p.title){const c=rsSigOf(p.name,known);if(c){sig=c;break;}}}
   if(!sig)return;
   // whichever half of the form carried it, the signatory is not also a principal
   const same=(a,b)=>String(a||'').trim().toLowerCase()===String(b||'').trim().toLowerCase();
@@ -518,13 +530,14 @@ function rsReadFields(pdfForm){
   const outp={scalars:{},units:[],ns8:[],principals:[]};
   if(V(1))outp.scalars['property.name']=V(1);
   if(V(2))outp.scalars['property.fha']=V(2);
-  const dt=rsDateISO(V(3));if(dt)outp.scalars['rs_date']=dt;
+  let dt=rsDateISO(V(3));if(!dt&&V(4)&&V(6))dt=rsDateISO(V(4)+'/'+(V(5)||'1')+'/'+V(6));if(dt)outp.scalars['rs_date']=dt;
   if(V(197))outp.scalars['owner.entity_name']=V(197);
   const ET={'198':'Individual','199':'Corporation','200':'General Partnership','201':'Limited Partnership','202':'Joint Tenancy/Tenants in Common','203':'Trust'};
   Object.keys(ET).forEach(n=>{if(CB(n))outp.scalars['owner.entity_type']=ET[n];});
   if(CB('204')){outp.scalars['owner.entity_type']='Other (specify)';if(V(205))outp.scalars['owner.entity_type_other']=V(205);}
   [206,208,210,212,214,216,218,220,222,224,226].forEach(id=>{const nm=V(id),tt=V(id+1);if(nm||tt)outp.principals.push({name:nm,title:tt});});
   const R=rsRows(V);outp.units=R.units;outp.ns8=R.ns8;
+  outp.nonrev=rsPartD(V);
   rsSigInto(outp,V(228));
   outp.partb=rsPartB(n=>{const t=V(n);return t||(CB(n)?'1':'');});
   return outp;}
@@ -638,6 +651,13 @@ function rsMapRects(pageRuns,rects,tplPg){ // one page's runs -> {fieldId: text}
     const v=inside.sort((a,b)=>(b.y-a.y)||(a.x-b.x)).map(r=>r.s).join('').trim();
     if(v)out[id]=v;}
   return out;}
+function rsPartD(V){ // Part D non-revenue-producing space: gen.js's dUse/dType/dRent ids
+  const dUse=[159,162,165,168,171],dType=[160,163,166,169,172],dRent=[161,164,167,170,173];
+  const out=[];
+  for(let r=0;r<5;r++){const use=V(dUse[r]),ty=V(dType[r]),rent=V(dRent[r]);
+    if(!(use||ty||rent))continue;const bb=rsParseUnitType(ty);
+    out.push({use:use,br:bb.br,ba:bb.ba,rent:rsNum(rent)});}
+  return out;}
 function rsRows(V){ // Part A rows, in order -> Section 8 rows and non-Section 8 rows
   const out={units:[],ns8:[]};let ns=false;
   for(let r=0;r<11;r++){const b=7+r*8;const t=V(b);const n=rsNum(V(b+1)),cr=rsNum(V(b+2)),ua=rsNum(V(b+4));
@@ -671,6 +691,7 @@ async function rsReadTextTier(pages){ // flattened copy -> same parsed shape as 
   if(V(204)){outp.scalars['owner.entity_type']='Other (specify)';if(V(205))outp.scalars['owner.entity_type_other']=V(205);}
   [206,208,210,212,214,216,218,220,222,224,226].forEach(id=>{const nm=V(id),tt=V(id+1);if(nm||tt)outp.principals.push({name:nm,title:tt});});
   const R=rsRows(V);outp.units=R.units;outp.ns8=R.ns8;
+  outp.nonrev=rsPartD(V);
   rsSigInto(outp,V(228));
   outp.partb=rsPartB(V);
   // quality gate: the rows must reconcile against the schedule's own printed total
@@ -690,6 +711,7 @@ async function parseRsPdf(bytes){
 function rsFillFromParsed(){const P=_rsUpload&&_rsUpload.parsed;if(!P)return;
   const mark=k=>{if(form[k]&&form[k].source==='new')form[k].source='this-cycle';};   // came from the schedule, not typed
   const setk=(k,v)=>{if(v!=null&&v!==''){form=store.editForm(form,k,String(v));mark(k);}};
+  setk('property.name',P.scalars['property.name']);
   setk('property.fha',P.scalars['property.fha']);
   setk('owner.entity_name',P.scalars['owner.entity_name']);
   setk('owner.entity_type',P.scalars['owner.entity_type']);
@@ -709,6 +731,9 @@ function rsFillFromParsed(){const P=_rsUpload&&_rsUpload.parsed;if(!P)return;
   if(P.ns8&&P.ns8.length){form=store.editForm(form,'ns8.enabled','1');mark('ns8.enabled');
     P.ns8.forEach((u,ix)=>{const bb=rsParseUnitType(u.type);setk('ns8.'+ix+'.br',bb.br);setk('ns8.'+ix+'.ba',bb.ba);
       setk('ns8.'+ix+'.num_units',u.count);setk('ns8.'+ix+'.avg_rent',u.rent);});}
+  if(P.nonrev&&P.nonrev.length){form=store.editForm(form,'nonrev.enabled','1');mark('nonrev.enabled');
+    P.nonrev.forEach((u,ix)=>{setk('nonrev.'+ix+'.use',u.use);setk('nonrev.'+ix+'.br',u.br);setk('nonrev.'+ix+'.ba',u.ba);
+      if(u.rent!==''&&u.rent>0)setk('nonrev.'+ix+'.rent',u.rent);});}
   deriveUnits();renderBody();scheduleHudRefresh();scheduleFactorRefresh();
   setStatus('Form filled from the executed rent schedule \u2014 review the highlighted values, then \u201cUpdate database\u201d.');}
 function renderSources(){
@@ -1084,9 +1109,9 @@ function wireBody(){
   document.querySelectorAll('[data-num]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();const i=b.getAttribute('data-ci'),w=b.getAttribute('data-num');if(w==='rcs'){const nR=get('units.'+i+'.num_rcs');if(nR)form=store.editForm(form,'units.'+i+'.num_units',nR);}form=store.editForm(form,'units.'+i+'.num_reviewed','1');renderBody();setStatus('Units resolved — using '+(w==='rcs'?'RCS':'RS')+'.');}));
   document.querySelectorAll('.uac-in,.mgmt-in').forEach(inp=>{inp.addEventListener('mousedown',e=>e.stopPropagation());inp.addEventListener('click',e=>e.stopPropagation());});
   document.querySelectorAll('.srcedit').forEach(inp=>{inp.addEventListener('input',()=>{const fam=inp.getAttribute('data-srcedit'),i=inp.getAttribute('data-si');let key,val;if(fam==='dateeff'){val=fmtDateInput(inp.value);form=store.editForm(form,'rent_schedule.date_eff_source','custom');form=store.editForm(form,'rent_schedule.date_eff_custom',val);key='rent_schedule.date_eff_custom';scheduleHudRefresh();}else{val=cleanNum(inp.value);form=store.editForm(form,'units.'+i+'.'+fam+'_source','custom');form=store.editForm(form,'units.'+i+'.'+fam+'_custom',val);key='units.'+i+'.'+fam+'_custom';}renderBody();const ni=document.querySelector('[data-k="'+key+'"]');if(ni){ni.focus({preventScroll:true});try{const L=(ni.value||'').length;ni.setSelectionRange(L,L);}catch(e){}}});});
-  document.querySelectorAll('[data-srck]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();const k=o.getAttribute('data-srck');_pendingSnap=snapOf([k]);form=store.editForm(form,k,o.getAttribute('data-srcv'));if(form[k])form[k].source='this-cycle';_pending=[k];_refocusSel='[data-k="'+k+'"]';renderBody();setStatus('Pulled from '+(o.getAttribute('data-srctag')||'source')+'.');}));
-  document.querySelectorAll('[data-srcgrp]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();const box=o.getAttribute('data-srcgrp');const r=SRCGROUP[box]()[+o.getAttribute('data-srcgix')];if(!r||!r.apply)return;const keys=Object.keys(r.apply);_pendingSnap=snapOf(keys);keys.forEach(k=>{form=store.editForm(form,k,r.apply[k]);if(form[k])form[k].source='this-cycle';});_pending=keys.slice();_refocusSel='[data-box="'+box+'"] input';renderBody();setStatus('Address pulled from '+r.tag+'.');}));
-  document.querySelectorAll('[data-pocra]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();const nm=raVal('poc.name');if(!nm)return;const saved=(mpdb?mpdb.listContacts():[]).find(x=>((x.name||'').trim().toLowerCase()===nm.trim().toLowerCase()));const c={name:nm,email:raVal('poc.email')||(saved&&saved.email)||'',phone:raVal('poc.phone')||(saved&&saved.phone)||''};_pendingSnap=snapOf(['poc.name','poc.email','poc.phone']);pocSelectContact(c);['poc.name','poc.email','poc.phone'].forEach(k=>{if(form[k])form[k].source='this-cycle';});_pending=['poc.name','poc.email','poc.phone'];_refocusSel='[data-box="poc.name"] .pocname-in';renderBody();setStatus('POC pulled from Related Affordable.');}));
+  document.querySelectorAll('[data-srck]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();const k=o.getAttribute('data-srck');_pendingSnap=snapOf([k]);form=store.editForm(form,k,o.getAttribute('data-srcv'));_pending=[k];_refocusSel='[data-k="'+k+'"]';renderBody();setStatus('Pulled from '+(o.getAttribute('data-srctag')||'source')+'.');}));
+  document.querySelectorAll('[data-srcgrp]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();const box=o.getAttribute('data-srcgrp');const r=SRCGROUP[box]()[+o.getAttribute('data-srcgix')];if(!r||!r.apply)return;const keys=Object.keys(r.apply);_pendingSnap=snapOf(keys);keys.forEach(k=>{form=store.editForm(form,k,r.apply[k]);});_pending=keys.slice();_refocusSel='[data-box="'+box+'"] input';renderBody();setStatus('Address pulled from '+r.tag+'.');}));
+  document.querySelectorAll('[data-pocra]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();const nm=raVal('poc.name');if(!nm)return;const saved=(mpdb?mpdb.listContacts():[]).find(x=>((x.name||'').trim().toLowerCase()===nm.trim().toLowerCase()));const c={name:nm,email:raVal('poc.email')||(saved&&saved.email)||'',phone:raVal('poc.phone')||(saved&&saved.phone)||''};_pendingSnap=snapOf(['poc.name','poc.email','poc.phone']);pocSelectContact(c);_pending=['poc.name','poc.email','poc.phone'];_refocusSel='[data-box="poc.name"] .pocname-in';renderBody();setStatus('POC pulled from Related Affordable.');}));
   document.querySelectorAll('[data-pocopt]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();const ct=mpdb.listContacts().find(x=>x.id===o.getAttribute('data-pocopt'));_pendingSnap=snapOf(['poc.name','poc.email','poc.phone']);if(ct)pocSelectContact(ct);_pending=['poc.name','poc.email','poc.phone'];_refocusSel='[data-box="poc.name"] .pocname-in';renderBody();}));
   document.querySelectorAll('[data-dirid]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();const fk=o.getAttribute('data-dirfor');const P=DIR_PICK[fk];const ct=dirList(P.kind).find(x=>x.id===o.getAttribute('data-dirid'));_pendingSnap=snapOf(P.keys);if(ct)P.apply(ct);_pending=P.keys.slice();_refocusSel='[data-box="'+fk+'"] .pocname-in';renderBody();}));
   document.querySelectorAll('[data-deffopt]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();_pendingSnap=snapOf(['rent_schedule.date_eff_source']);form=store.editForm(form,'rent_schedule.date_eff_source',o.getAttribute('data-deffopt'));_pending=['rent_schedule.date_eff_source'];_refocusSel='[data-box="rent_schedule.date_eff_source"] .uatrigger';renderBody();scheduleHudRefresh();scheduleFactorRefresh();}));
