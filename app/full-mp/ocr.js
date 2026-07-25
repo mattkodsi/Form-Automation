@@ -255,9 +255,4 @@ async function ocrParseRs(bytes,onStep){ // scan -> the tier-1 parsed shape, or 
   const F=Object.assign({},A.F,B?B.F:{});
   const outp=rsAssembleFields(n=>String(F[String(n)]||'').trim());
   if(outp&&s8)outp.scalars['property.s8']=s8;
-  if(outp&&outp.partb)outp.partb._checked={};
-  // A tick inside a box is a drawn glyph, not a word, so OCR returns nothing for
-  // it either way — which is not the same as reading it as unchecked. Clearing
-  // the definite-read map leaves the checkboxes alone instead of letting a scan
-  // quietly clear every Part B item the property already has on file.
-  return outp;}
+  return outp;}   // rsPartB is told not to claim definite reads for a positional tier
