@@ -739,23 +739,78 @@ function rsAssembleFields(V){
   const sum=all.reduce((a,u)=>a+(u.count&&u.rent?u.count*u.rent:0),0);
   const ok=outp.units.length>0&&(tot===''||Math.abs(sum-tot)<=Math.max(2,all.length));
   return ok?outp:null;}
-async function rsReadTextTier(pages){ // flattened copy -> same parsed shape as tier 1, or null
+/* Part I's HAP contract number IS the property's Section 8 number, and the
+   template carries NO field for it — the contract administrator writes it on the
+   line under the printed label. So it is found by that label instead of by a box:
+   locate "HAP Contract Number", then read the band directly beneath it, stopping
+   short of the "Date" column that shares the row. Works off any positioned text,
+   so tiers 1, 2 and 3 all use it. */
+// two letters then alphanumerics, and it MUST carry a digit: without that last
+// requirement the label's own word "CONTRACT" parses as a contract number
+const RS_S8=/^[A-Z]{2}(?=[0-9A-Z]*[0-9])[0-9A-Z]{5,12}$/;
+function rsLines(runs,tol){ // positioned runs -> one entry per printed line
+  const rs=runs.slice().sort((a,b)=>b.y-a.y||a.x-b.x),out=[];
+  rs.forEach(r=>{const L=out[out.length-1];
+    if(L&&Math.abs(L.y-r.y)<=tol){L.t+=' '+String(r.s);L.x=Math.min(L.x,r.x);}
+    else out.push({y:r.y,x:r.x,t:String(r.s)});});
+  return out;}
+function rsFindS8(runs){
+  if(!runs||!runs.length)return '';
+  // the label arrives as one run from a PDF and as three words from OCR, so match
+  // it on the joined line rather than on any single run
+  const lab=rsLines(runs,3).find(L=>/HAP\s*Contract\s*Number/i.test(L.t));
+  if(!lab)return '';
+  const band=runs.filter(r=>r.y>lab.y-20&&r.y<lab.y-0.5&&r.x>=lab.x-8&&r.x<lab.x+460);
+  for(const L of rsLines(band,3)){
+    const whole=L.t.replace(/\s+/g,'').toUpperCase();   // a number split across runs
+    if(RS_S8.test(whole))return whole;
+    for(const tok of L.t.toUpperCase().split(/\s+/))if(RS_S8.test(tok))return tok;}
+  return '';}
+function rsS8FromPages(pages){ // the label names itself, so no page guessing needed
+  for(const rs of (pages||[])){const v=rsFindS8(rs);if(v)return v;}return '';}
+function rsS8FromFields(pdfForm){
+  // Real schedules often DO carry a field for Part I even though our blank
+  // template has none, so its value is invisible to a read by template field id.
+  // Fall back to the document's own fields — accepted only when exactly one holds
+  // something contract-number shaped, so nothing else can be mistaken for it.
+  const hit=[];
+  try{(pdfForm.getFields()||[]).forEach(f=>{let t='';
+    try{t=f.getText?f.getText():'';}catch(e){}
+    const v=String(t||'').replace(/\s+/g,'').toUpperCase();
+    if(RS_S8.test(v)&&hit.indexOf(v)<0)hit.push(v);});}catch(e){}
+  return hit.length===1?hit[0]:'';}
+async function rsReadTextTier(pages,bytes,onStep){ // flattened copy -> same parsed shape as tier 1, or null
   if(!pages||!pages.length)return null;
   const rects=await rsFieldRects();if(!Object.keys(rects).length)return null;
   const {pg0,pg1}=rsClassifyPages(pages.map(rs=>rs.map(r=>r.s).join(' ')));
   if(pg0<0)return null;
   const F=Object.assign(rsMapRects(pages[pg0],rects,0),pg1>=0?rsMapRects(pages[pg1],rects,1):{});
-  return rsAssembleFields(n=>String(F[String(n)]||'').trim());}
+  let s8=rsS8FromPages(pages);
+  // A copy can be text on one page and pictures on the next — a rent roll that
+  // reads fine over a certification page rendered as dozens of little images.
+  // Rather than drop the entity, principals, signatory and HAP number, send just
+  // that half to be OCR'd; the pages already read as text are not sent again.
+  if(pg1<0&&bytes&&typeof ocrHalf==='function'){
+    const skip=[];pages.forEach((rs,i)=>{if(rs.length>=15)skip.push(i);});
+    let add=null;try{add=await ocrHalf(bytes,1,skip,onStep);}catch(e){}
+    if(add){Object.assign(F,add.F);if(!s8&&add.s8)s8=add.s8;}}
+  const outp=rsAssembleFields(n=>String(F[String(n)]||'').trim());
+  if(outp&&s8)outp.scalars['property.s8']=s8;
+  return outp;}
 async function parseRsPdf(bytes,onStep){
   const doc=await window.PDFLib.PDFDocument.load(bytes,{ignoreEncryption:true,parseSpeed:Infinity});
   let n=0,pf=null;try{pf=doc.getForm();n=pf.getFields().length;}catch(e){}
-  if(n>10)return {kind:'fields',parsed:rsReadFields(pf)};
+  if(n>10){const pf1=rsReadFields(pf);
+    // Part I has no field on any revision of this form, so even a fully-fielded
+    // copy only carries its HAP contract number as printed text.
+    if(!pf1.scalars['property.s8']){try{const tp=await rsTextPages(doc);const v=rsS8FromPages(tp)||rsS8FromFields(pf);if(v)pf1.scalars['property.s8']=v;}catch(e){}}
+    return {kind:'fields',parsed:pf1};}
   let pages=null;try{pages=await rsTextPages(doc);}catch(e){}
   const runs=pages?pages.reduce((a,p)=>a+p.length,0):0;
   if(runs<15){ // nothing to read on the page itself: tier 3 sends it out to be OCR'd
     let oc=null;try{oc=await ocrParseRs(bytes,onStep);}catch(e){}
     return oc?{kind:'fields',parsed:oc,via:'ocr'}:{kind:'scan',parsed:null};}
-  let tp=null;try{tp=await rsReadTextTier(pages);}catch(e){}
+  let tp=null;try{tp=await rsReadTextTier(pages,bytes,onStep);}catch(e){}
   return tp?{kind:'fields',parsed:tp,via:'text'}:{kind:'text',parsed:null};}
 function rsFillFromParsed(){const P=_rsUpload&&_rsUpload.parsed;if(!P)return;
   const mark=k=>{markCycle(k);if(form[k])form[k].fromParse=true;};   // came from the schedule, not typed — tags an override as "parsed", not just "changed", in its note text
@@ -766,6 +821,7 @@ function rsFillFromParsed(){const P=_rsUpload&&_rsUpload.parsed;if(!P)return;
       else setk('property.name',pn);}
     else setk('property.name',pn); }
   setk('property.fha',P.scalars['property.fha']);
+  setk('property.s8',P.scalars['property.s8']);
   setk('owner.entity_name',P.scalars['owner.entity_name']);
   setk('owner.entity_type',P.scalars['owner.entity_type']);
   setk('owner.entity_type_other',P.scalars['owner.entity_type_other']);
