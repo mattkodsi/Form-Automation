@@ -247,7 +247,7 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;borde
 
 .mtopright{color:#cdd9ea}.mtopright:hover{color:#fff}
 .subtle{color:#9aa4b8;font-weight:400;font-size:10px;text-transform:none;letter-spacing:0}
-.reseff{max-width:300px;margin-bottom:16px}
+.reseff{max-width:240px;margin-bottom:16px}
 .cycard{background:#fff;border:1px solid #e6ebf3;border-radius:10px;padding:12px 14px;margin-bottom:9px;text-align:left;cursor:pointer}
 .cycard:hover{border-color:#c7cede;box-shadow:0 2px 8px rgba(20,40,80,.08)}
 .cycard.dom{border-color:#2563eb;box-shadow:0 1px 6px rgba(37,99,235,.12)}
@@ -455,7 +455,8 @@ function isPerCycleKey(k) {
     || /^cycle\./.test(k)
     || (/^ocaf\./.test(k) && k !== 'ocaf.rate_type' && k !== 'ocaf.ds_annual') // debt-service defaults live on the template
     || /^uaf\./.test(k)
-    || k === 'checklist.sign_date' || k === 'tenant.date_of_notice' || k === 'rent_schedule.date_rents_effective';
+    || k === 'checklist.sign_date' || k === 'tenant.date_of_notice' || k === 'rent_schedule.date_rents_effective'
+    || k === 'rent_schedule.date_eff_rs' || k === 'rent_schedule.date_eff_source' || k === 'rent_schedule.date_eff_custom';
 }
 
 /* ---- crosswalk: UI flat key -> v7 dictionary key + home (for extraction) -
@@ -1530,7 +1531,7 @@ function renderPrincipals(){
    Every painter — text cell, address group, checkbox, chip — comes through here,
    because the rule kept breaking when each path carried its own copy of it. */
 function provColors(state,key){const c=CLR[state]||CLR.new;
-  if(state==='new'&&key&&form[key]&&form[key].db_value==='')return [CLR.database[0],c[1],c[2]]; // saved, and saved empty
+  if(state==='new'&&key&&form[key]&&form[key].value===''&&form[key].db_value==='')return [CLR.database[0],c[1],c[2]]; // saved, and STILL saved empty
   return c;}
 function cellColors(k){return provColors(srcOf(k),k);}
 function boxColor(k){return cellColors(k);}
