@@ -43,7 +43,7 @@ shell = read('shell.head.html')
 shell = patch(shell,
     """   <div class="authwrap"><div class="authcard">
      <h2 class="authtitle">Sign in</h2>
-     <div class="authsub">Sign in to reach your RCS properties.</div>
+     <div class="authsub">Sign in to reach your properties.</div>
      <div class="dlg-field"><label>Email</label><input id="authEmail" type="email" autocomplete="username"></div>
      <div class="dlg-field"><label>Password</label><input id="authPassword" type="password" autocomplete="current-password"></div>
      <div class="autherr" id="authErr"></div>
