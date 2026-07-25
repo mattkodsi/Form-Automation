@@ -323,10 +323,12 @@ function moneyBox(k){const c=boxColor(k);const _mt=moneySrcTag(k);
 function numBox(k,ph){const c=boxColor(k);
   const _mc=k.match(/^ns8\.(\d+)\.num_units$/),_mu=k.match(/^nonrev\.(\d+)\.use$/);
   const _rv=_mc?rsFamVal('ns8',+_mc[1],'count'):(_mu?rsFamVal('nonrev',+_mu[1],'use'):null);
-  return `<div class="rbox" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><input type="text" data-k="${k}" value="${esc(get(k))}" placeholder="${esc(ph||'')}">${_rv!=null?srcPick(k,[{tag:'Executed RS',val:_rv}]):''}${ovIcons(k)}</div>`;}
+  const _rsCell=!!(_mc||_mu);   // non-Section-8 counts and Part D uses come off the schedule too
+  return `<div class="rbox" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><input type="text" data-k="${k}" value="${esc(get(k))}" placeholder="${esc(ph||'')}">${_rv!=null?srcPick(k,[{tag:'Executed RS',val:_rv}]):(_rsCell?dimPick('Executed RS'):'')}${ovIcons(k)}</div>`;}
 function brbaBox(brK,baK){const c=groupColors([brK,baK]);
-  const withRs=(k,opts,ph)=>{const d=csDrop(k,opts,ph,'',true,partHot(k)?tintStyle(k):'');const row=rsCsRow(k);
-    return row?d.replace('<div class="uamenu">','<div class="uamenu">'+row):d;};
+  const withRs=(k,opts,ph)=>{const d=csDrop(k,opts,ph,'',true,partHot(k)?tintStyle(k):'');
+    const row=rsCsRow(k)||'<div class="uaopt srcdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>';
+    return d.replace('<div class="uamenu">','<div class="uamenu">'+row);};
   return `<div class="rbox brba" data-box="${brK}" style="background:${c[1]};border-left-color:${c[0]}">${withRs(brK,BR_OPTS,'BR')}${ovIcons(brK)}<span class="slash">/</span>${withRs(baK,BA_OPTS,'BA')}${ovIcons(baK)}</div>`;}
 function uaBox(i){const src=get('units.'+i+'.ua_source')||defUaSrc(i),exec=get('units.'+i+'.ua_exec'),rcs=get('units.'+i+'.ua_rcs'),custom=get('units.'+i+'.ua_custom');
   const hasAny=numf(exec)>0||numf(rcs)>0||numf(custom)>0;
@@ -355,7 +357,11 @@ function unitTypeCell(i){const brK='units.'+i+'.br',baK='units.'+i+'.ba';const c
     return row?d.replace('<div class="uamenu">','<div class="uamenu">'+row):d;};
   return `<div class="rbox brba" data-box="${brK}" style="background:${c[1]};border-left-color:${c[0]}">${withRs(brK,BR_OPTS,'BR')}${ovIcons(brK)}<span class="slash">/</span>${withRs(baK,BA_OPTS,'BA')}${ovIcons(baK)}</div>`;}
 function unitCountCell(i){const k='units.'+i+'.num_units';const c=numUnresolved(i)?CLR.overridden:cellColors(k);const rv=rsUnit(i,'count');
-  return `<div class="rbox" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><input type="text" data-k="${k}" value="${esc(get(k))}">${rv!=null?srcPick(k,[{tag:'Executed RS',val:rv}]):''}${ovIcons(k)}</div>`;}
+  // The schedule is where this number comes from, so the cell says so whether or
+  // not one is loaded right now — dimmed when there is nothing to pull, exactly as
+  // the rent beside it does. Rendering nothing left the column looking as though
+  // it had no source at all the moment the upload went out of session.
+  return `<div class="rbox" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><input type="text" data-k="${k}" value="${esc(get(k))}">${rv!=null?srcPick(k,[{tag:'Executed RS',val:rv}]):dimPick('Executed RS')}${ovIcons(k)}</div>`;}
 function typeNote(i){if(!typeConflict(i))return '';const br=get('units.'+i+'.br'),ba=get('units.'+i+'.ba'),brR=get('units.'+i+'.br_rcs')||br,baR=get('units.'+i+'.ba_rcs')||ba;
   if(typeUnresolved(i))return '<div class="ucnote warn">⚠ RS '+br+'/'+ba+' · RCS '+brR+'/'+baR+' <span class="pick"><button class="urev" data-typ="rs" data-ci="'+i+'">keep RS</button><button class="urev sv" data-typ="rcs" data-ci="'+i+'">use RCS</button></span></div>';
   return '<div class="ucnote ok">✓ RS · '+br+'/'+ba+'</div>';}
