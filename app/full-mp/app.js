@@ -126,8 +126,18 @@ function dateEffCell(){const rs=get('rent_schedule.date_eff_rs');const src=get('
   const boxKey=(src==='custom')?'rent_schedule.date_eff_custom':'rent_schedule.date_eff_source';
   const menu='<div class="uamenu">'+srcOptRow('data-deffopt="rs"',rs?esc(fmtDate(rs)):'','A year after the executed RS')+'<div class="uaopt" data-deffopt="custom">Custom…</div></div>';
   return `<div class="field"><div class="flabel">Date rents will be effective</div><div class="fbox uacell" data-box="${boxKey}" style="background:${c[1]};border-left-color:${c[0]}"><div class="uadrop" style="flex:1;min-width:0"><div class="uatrigger" tabindex="0">${lab}<span class="cvx">▾</span></div>${menu}</div>${src==='custom'?ovIcons('rent_schedule.date_eff_custom'):''}</div></div>`;}
-function pocSelectContact(ct){form=store.editForm(form,'poc.name',ct.name||'');form=store.editForm(form,'poc.email',ct.email||'');form=store.editForm(form,'poc.phone',fmtPhone(ct.phone||''));}
-function pocNote(){const m=modeOf('poc.name');return `<div class="ovnote" data-ov="poc.name" data-mode="${m}" style="display:${m?'flex':'none'}"><span class="om-over">${overText(['poc.name'])}</span><span class="om-new">new — not saved yet</span><span class="om-cycle">parsed — not saved yet</span><button class="revert" data-rev="poc.name,poc.email,poc.phone">↺ revert</button><button class="save1" data-save1="poc.name,poc.email,poc.phone">✓ save this field</button></div>`;}
+const POC_PICK_KEYS=['poc.name','poc.email','poc.phone'];
+function pocSelectContact(ct){form=store.editForm(form,'poc.name',ct.name||'');form=store.editForm(form,'poc.email',ct.email||'');form=store.editForm(form,'poc.phone',fmtPhone(ct.phone||''));
+  POC_PICK_KEYS.forEach(k=>{if(form[k])form[k].fromPick=true;});}
+// The name cell's save/revert buttons bundle the whole contact group ONLY while
+// the pick is still intact (the name key itself still carries fromPick — a plain
+// edit through store.editForm drops it by default, see core.js). Once the user
+// hand-types over the name (or it was never picked), this narrows to just the
+// name's own scope — matching what the Enter key already saves for that field —
+// so saving the name never silently commits/discards an unrelated in-progress
+// edit to email or phone.
+function pocSaveKeys(){return (form['poc.name']&&form['poc.name'].fromPick)?POC_PICK_KEYS.filter(k=>form[k]&&form[k].fromPick):['poc.name'];}
+function pocNote(){const m=modeOf('poc.name');const j=pocSaveKeys().join(',');return `<div class="ovnote" data-ov="poc.name" data-mode="${m}" style="display:${m?'flex':'none'}"><span class="om-over">${overText(['poc.name'])}</span><span class="om-new">new — not saved yet</span><span class="om-cycle">parsed — not saved yet</span><button class="revert" data-rev="${j}">↺ revert</button><button class="save1" data-save1="${j}">✓ save this field</button></div>`;}
 function pocCell(){const k='poc.name';const contacts=(mpdb?mpdb.listContacts():[]);const cur=get(k);const c=cellColors(k);
   const nvp=raVal('poc.name');
   const navRow=(nvp?'<div class="uaopt" data-pocra="1">'+esc(nvp)+'<span class="uasub">Related Affordable</span></div>':'<div class="uaopt srcdim">\u2014<span class="uasub">Related Affordable \u00b7 not available</span></div>')+'<div class="uaopt srcdim">\u2014<span class="uasub">RCS report \u00b7 not available</span></div>';
@@ -151,9 +161,10 @@ const DIR_PICK={
   apply:ct=>dirFill([['sig.name',ct.name],['sig.title',ct.title]]),
   sub:ct=>ct.title||''},
 };
-function dirFill(pairs){pairs.forEach(p=>{form=store.editForm(form,p[0],p[1]||'');});}
+function dirFill(pairs){pairs.forEach(p=>{form=store.editForm(form,p[0],p[1]||'');if(form[p[0]])form[p[0]].fromPick=true;});}
 function dirList(kind){return (mpdb&&mpdb.listDir)?mpdb.listDir(kind):[];}
-function dirNote(fk){const P=DIR_PICK[fk];const m=modeOf(P.modeKeys);const j=P.keys.join(',');return `<div class="ovnote" data-ov="${P.modeKeys.join(',')}" data-mode="${m}" style="display:${m?'flex':'none'}"><span class="om-over">${overText(P.modeKeys)}</span><span class="om-new">new \u2014 not saved yet</span><span class="om-cycle">parsed \u2014 not saved yet</span><button class="revert" data-rev="${j}">\u21ba revert</button><button class="save1" data-save1="${j}">\u2713 save this field</button></div>`;}
+function dirSaveKeys(fk){const P=DIR_PICK[fk];return (form[fk]&&form[fk].fromPick)?P.keys.filter(k=>form[k]&&form[k].fromPick):fieldKeys(fk);}
+function dirNote(fk){const P=DIR_PICK[fk];const m=modeOf(P.modeKeys);const j=dirSaveKeys(fk).join(',');return `<div class="ovnote" data-ov="${P.modeKeys.join(',')}" data-mode="${m}" style="display:${m?'flex':'none'}"><span class="om-over">${overText(P.modeKeys)}</span><span class="om-new">new \u2014 not saved yet</span><span class="om-cycle">parsed \u2014 not saved yet</span><button class="revert" data-rev="${j}">\u21ba revert</button><button class="save1" data-save1="${j}">\u2713 save this field</button></div>`;}
 function dirCell(f){const k=f.k;const P=DIR_PICK[k];const list=dirList(P.kind);const cur=get(k);
   const c=f.prefix?groupColors([f.prefix,f.k]):cellColors(k);const nameTint=(f.prefix&&partHot(k))?tintStyle(k):'';
   const pre=f.prefix?csDrop(f.prefix,['Ms.','Mr.','Dr.','Mx.'],'\u2014','csnarrow',true,partHot(f.prefix)?tintStyle(f.prefix):''):'';
