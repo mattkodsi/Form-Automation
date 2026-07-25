@@ -17,12 +17,16 @@ function makeStore(adapter, FIELDS) {
         else f[key]={value:r.value,source:'database',saved_at:r.saved_at,prior_value:null,prior_source:null,db_value:r.value}; }
       return f; },
     editForm(form,key,v){ if(!form[key]) form[key]=blank(); const cur=form[key], onFile=cur.db_value;
-      if(onFile!=null && onFile!==''){ if(v===onFile) form[key]={...cur,value:v,source:'database',prior_value:null,prior_source:null};
-        else form[key]={...cur,value:v,source:'overridden',prior_value:onFile,prior_source:'database'}; }
-      else form[key]={...cur,value:v,source:'new',prior_value:null,prior_source:null}; return form; }, // entering into a blank field is new data, never an override
+      // Explicit shape, not a {...cur} spread: any ad-hoc flag a caller stamped onto
+      // the cell (e.g. app.js's fromParse) does NOT survive a plain edit by default —
+      // only the caller re-stamping it right after this call keeps it alive. That's
+      // what lets a manual retype correctly drop a stale "parsed" annotation.
+      if(onFile!=null && onFile!==''){ if(v===onFile) form[key]={value:v,source:'database',saved_at:cur.saved_at,prior_value:null,prior_source:null,db_value:cur.db_value};
+        else form[key]={value:v,source:'overridden',saved_at:cur.saved_at,prior_value:onFile,prior_source:'database',db_value:cur.db_value}; }
+      else form[key]={value:v,source:'new',saved_at:cur.saved_at,prior_value:null,prior_source:null,db_value:cur.db_value}; return form; }, // entering into a blank field is new data, never an override
     revertForm(form,key){ const cur=form[key]; if(!cur||cur.source!=='overridden') return false;
       const v=cur.prior_value; // reverting to a saved blank shows as empty/new, not "on file"
-      form[key]={...cur,value:v,source:(v==null||v==='')?'new':(cur.prior_source||'database'),prior_value:null,prior_source:null}; return true; },
+      form[key]={value:v,source:(v==null||v==='')?'new':(cur.prior_source||'database'),saved_at:cur.saved_at,prior_value:null,prior_source:null,db_value:cur.db_value}; return true; },
     async saveField(form,key){ const db=await adapter.getDb(); const v=form[key].value; db[key]={value:(v==null?'':v),source:'database',saved_at:today()}; await adapter.saveDb(db); form[key]={value:db[key].value,source:db[key].value===''?'new':'database',saved_at:db[key].saved_at,prior_value:null,prior_source:null,db_value:db[key].value}; return form; },
     /* Batch form of saveField: one adapter round-trip (=> one backend push)
        for a group of keys saved together (contact fills, address groups). */
