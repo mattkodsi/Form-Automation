@@ -95,14 +95,14 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;borde
 .cycbox .addrow{margin-top:9px}
 .mgempty{background:#fff;border:1px dashed #cbd5e1;border-radius:11px;padding:26px;text-align:center;color:#6b7280}
 .ucards{display:flex;flex-direction:column}
-.rgh,.ucells,.pdrow{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,.7fr) minmax(0,1fr) minmax(0,1fr) minmax(0,.95fr) minmax(0,1.25fr) 30px;gap:8px 14px;align-items:center}
+.rgh,.ucells,.pdrow{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,.7fr) minmax(0,1fr) minmax(0,1fr) minmax(0,.95fr) minmax(0,1.05fr) 30px;gap:8px 14px;align-items:center}
 .ucards.noprop .rgh,.ucards.noprop .ucells,.ucards.noprop .urnotes{grid-template-columns:minmax(0,2fr) minmax(0,.7fr) minmax(0,1fr) minmax(0,1fr) minmax(0,.95fr) 30px} .ucards.noprop .urnsub{grid-column:5/7} .rgh.noprop,.pdrow.noprop{grid-template-columns:minmax(0,2fr) minmax(0,.7fr) minmax(0,1fr) minmax(0,1fr) minmax(0,.95fr) 30px}
 .rgh{padding:0 2px 6px;margin-bottom:2px;border-bottom:1px solid #e6ebf3}
 .rgh span{font-size:10px;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
 .urow{padding:9px 2px;border-bottom:1px solid #f0f2f7}
 .urow:last-child{border-bottom:none}
 .urx{display:flex;align-items:center;justify-content:center}
-.urnotes{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,.7fr) minmax(0,1fr) minmax(0,1fr) minmax(0,.95fr) minmax(0,1.25fr) 30px;gap:4px 14px;align-items:start;margin-top:6px}
+.urnotes{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,.7fr) minmax(0,1fr) minmax(0,1fr) minmax(0,.95fr) minmax(0,1.05fr) 30px;gap:4px 14px;align-items:start;margin-top:6px}
 .urnsub{grid-column:6 / 8;display:flex;flex-wrap:wrap;align-items:center;gap:3px 12px;min-width:0}
 .urnmetric{grid-column:4;min-width:0;white-space:nowrap}
 .cb input[type=checkbox]:focus + .box{outline:2px solid #4c51bf;outline-offset:1px}
@@ -121,10 +121,10 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;borde
 .fuel.empty,.fuel3.empty{color:#9aa4b8;border-color:#dbe0ea;background:#f3f5f9;font-weight:600}
 @media(max-width:1180px){.ucgrid{grid-template-columns:1fr 1fr 1fr}}
 .ovic[data-mode="new"] .rv{display:none}
-.ovnote[data-mode="new"] .revert{display:none}
-.ovnote .om-new{display:none}
+.ovnote[data-mode="new"] .revert{display:none} .ovnote[data-mode="cycle"] .revert{display:none}
+.ovnote .om-new{display:none} .ovnote .om-cycle{display:none}
 .ovnote[data-mode="new"] .om-over{display:none}
-.ovnote[data-mode="new"] .om-new{display:inline}
+.ovnote[data-mode="new"] .om-new{display:inline} .ovnote[data-mode="cycle"] .om-cycle{display:inline}
 .wi .ovic{display:inline-flex!important;min-width:56px;justify-content:flex-end;gap:3px;margin-left:6px;flex:0 0 auto}
 .wi .ovic .miniic{visibility:hidden}
 .wi .ovic[data-mode="over"] .miniic{visibility:visible}
@@ -308,7 +308,7 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;borde
    <div class="mtop"><div class="brand"><span class="mark"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M4 11 12 4l8 7" stroke="#1e3a5f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 10v9h12v-9" stroke="#1e3a5f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><div class="bname">Section 8 Rent Adjustments</div><div class="btag">Related Affordable</div></div></div></div>
    <div class="authwrap"><div class="authcard">
      <h2 class="authtitle">Sign in</h2>
-     <div class="authsub">Sign in to reach your properties.</div>
+     <div class="authsub">Sign in to view your properties.</div>
      <div class="dlg-field"><label>Email</label><input id="authEmail" type="email" autocomplete="username"></div>
      <div class="dlg-field"><label>Password</label><input id="authPassword" type="password" autocomplete="current-password"></div>
      <div class="autherr" id="authErr"></div>
@@ -347,7 +347,7 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;borde
          <div class="kick" style="margin-top:12px">SOURCE KEY</div>
          <div class="key"><span><i class="sw" style="background:#e8f0fe;border-left-color:#2563eb"></i>On file (database)</span><span><i class="sw" style="background:#e9f5f2;border-left-color:#0f766e"></i>Filled from a source (this package) — not yet saved</span><span><i class="sw" style="background:#fbf1e6;border-left-color:#b45309"></i>Overridden</span><span><i class="sw" style="background:#f6f7f9;border-left-color:#64748b"></i>New &mdash; not yet saved</span></div>
        </div>
-       <div class="main"><div id="sections"></div><div class="footer"><span class="unsaved" id="unsavedTag">● Unsaved changes</span><span class="fsp"></span><button class="btn" id="bFillFooter">&#8635; Revert to saved</button><button class="btn p" id="bSave">Update database</button><button class="btn p" id="bGenerate">Generate package</button></div></div>
+       <div class="main"><div id="sections"></div><div class="footer"><span class="unsaved" id="unsavedTag">● Unsaved changes</span><span class="fsp"></span><button class="btn" id="bFillFooter">&#8635; Revert to saved</button><button class="btn p" id="bSave">Update property profile</button><button class="btn p" id="bGenerate">Generate package</button></div></div>
      </div>
    </div>
  </div>
@@ -1325,8 +1325,9 @@ function saveFailed(e){setStatus('\u26a0 Save failed \u2014 this change is NOT i
 function saveFailedModal(e){dialogConfirm('Save failed','The change did not reach the database \u2014 check your connection and try again.<div class="sub" style="margin-top:7px;color:#8791a5">'+esc((e&&e.message)||e)+'</div>','OK',false,function(){});}
 let DBSNAP={};let FORMSNAP=null; // isDirty compares against THIS, a snapshot taken after boot-time defaults (e.g. the owner's checklist) are applied — not the raw db read, so auto-applied defaults never masquerade as unsaved edits
 async function refreshSnap(){DBSNAP=await bridge.getDb();}
-function modeOf(kk){const keys=Array.isArray(kk)?kk:[kk];if(keys.some(k=>srcOf(k)==='overridden'))return 'over';if(keys.some(k=>srcOf(k)==='new'&&get(k)!==''&&get(k)!=null))return 'new';return '';}
-function ovIcons(kk){const keys=Array.isArray(kk)?kk:[kk];const j=keys.join(',');const m=modeOf(keys);return `<span class="ovic" data-ovic="${j}" data-mode="${m}" style="display:${m?'inline-flex':'none'}"><button class="miniic rv" data-rev="${j}" title="Revert to on-file">↺</button><button class="miniic sv" data-save1="${j}" title="Save this field to the database">✓</button></span>`;}
+function modeOf(kk){const keys=Array.isArray(kk)?kk:[kk];if(keys.some(k=>srcOf(k)==='overridden'))return 'over';if(keys.some(k=>srcOf(k)==='new'&&get(k)!==''&&get(k)!=null))return 'new';if(keys.some(k=>srcOf(k)==='this-cycle'))return 'cycle';return '';}
+function ovIcons(kk){const keys=Array.isArray(kk)?kk:[kk];const j=keys.join(',');let m=modeOf(keys);if(m==='cycle')m=''; // the compact inline badge has no spare room — cycle gets the roomy ovNote instead, never this
+  return `<span class="ovic" data-ovic="${j}" data-mode="${m}" style="display:${m?'inline-flex':'none'}"><button class="miniic rv" data-rev="${j}" title="Revert to on-file">↺</button><button class="miniic sv" data-save1="${j}" title="Save this field to the database">✓</button></span>`;}
 
 /* ---- program-driven sections: a cycle's program picks its form ---------- */
 function cycleProgs(){if(activeCid&&mpdb){const cy=mpdb.listCycles(activePid).find(c=>c.id===activeCid);if(cy&&cy.programs.length)return cy.programs;}return ['rcs'];}
@@ -1362,8 +1363,8 @@ function analysis(){let cg=0,pg=0,tot=0,sc=0,sp=0,nd=0,ceil=0,safmrMissing=false
   return{cg,pg,ceil,headroom:ceil-pg,pass:(ceil>0&&pg<ceil),perUnit,dMo:pg-cg,dYr:(pg-cg)*12,pct,tot,safmrMissing,safmrConflict,safmrOver,safmrHave,countsMissing};}
 
 function ovBtns(k){return `<button class="revert" data-rev="${k}">↺ revert</button><button class="save1" data-save1="${k}">✓ save this field</button>`;}
-function ovNote(kk){const keys=Array.isArray(kk)?kk:[kk];const j=keys.join(',');const m=modeOf(keys);return `<div class="ovnote" data-ov="${j}" data-mode="${m}" style="display:${m?'flex':'none'}"><span class="om-over">changed from stored record</span><span class="om-new">new — not saved yet</span>${ovBtns(j)}</div>`;}
-function ovNoteAddr(box){const keys=ADDR_GROUPS[box];const m=modeOf(keys);return `<div class="ovnote" data-ov="${box}" data-mode="${m}" style="display:${m?'flex':'none'}"><span class="om-over">changed from stored record</span><span class="om-new">new — not saved yet</span><button class="revert" data-revaddr="${box}">↺ revert</button><button class="save1" data-save1addr="${box}">✓ save this field</button></div>`;}
+function ovNote(kk){const keys=Array.isArray(kk)?kk:[kk];const j=keys.join(',');const m=modeOf(keys);return `<div class="ovnote" data-ov="${j}" data-mode="${m}" style="display:${m?'flex':'none'}"><span class="om-over">changed from stored record</span><span class="om-new">new — not saved yet</span><span class="om-cycle">filled from a source — not saved yet</span>${ovBtns(j)}</div>`;}
+function ovNoteAddr(box){const keys=ADDR_GROUPS[box];const m=modeOf(keys);return `<div class="ovnote" data-ov="${box}" data-mode="${m}" style="display:${m?'flex':'none'}"><span class="om-over">changed from stored record</span><span class="om-new">new — not saved yet</span><span class="om-cycle">filled from a source — not saved yet</span><button class="revert" data-revaddr="${box}">↺ revert</button><button class="save1" data-save1addr="${box}">✓ save this field</button></div>`;}
 function csDrop(key,options,ph,cls,clearable,tint){const cur=get(key);const has=cur!==''&&cur!=null;const lab=has?cur:(ph||'—');const menu=options.map(o=>'<div class="uaopt" data-csopt="'+esc(o)+'" data-cskey="'+key+'">'+esc(o)+'</div>').join('');const clr=(clearable&&has)?'<span class="csclear" data-csclear="'+key+'" title="Clear">✕</span>':'';return '<div class="uadrop cs '+(cls||'')+(clearable?' clearable':'')+'"><div class="uatrigger" tabindex="0" data-trigfor="'+key+'"'+(tint?' style="'+tint+'"':'')+'><span class="ualab">'+esc(lab)+'</span>'+clr+'<span class="cvx">▾</span></div><div class="uamenu">'+menu+'</div></div>';}
 function dateEffResolved(){const src=get('rent_schedule.date_eff_source')||(get('rent_schedule.date_eff_rs')?'rs':'custom');return src==='custom'?(get('rent_schedule.date_eff_custom')||get('rent_schedule.date_rents_effective')):get('rent_schedule.date_eff_rs');}
 function dateEffCell(){const rs=get('rent_schedule.date_eff_rs');const src=get('rent_schedule.date_eff_source')||(rs?'rs':'custom');const custom=get('rent_schedule.date_eff_custom')||get('rent_schedule.date_rents_effective');
@@ -1374,7 +1375,7 @@ function dateEffCell(){const rs=get('rent_schedule.date_eff_rs');const src=get('
   const menu='<div class="uamenu">'+srcOptRow('data-deffopt="rs"',rs?esc(fmtDate(rs)):'','A year after the executed RS')+'<div class="uaopt" data-deffopt="custom">Custom…</div></div>';
   return `<div class="field"><div class="flabel">Date rents will be effective</div><div class="fbox uacell" data-box="${boxKey}" style="background:${c[1]};border-left-color:${c[0]}"><div class="uadrop" style="flex:1;min-width:0"><div class="uatrigger" tabindex="0">${lab}<span class="cvx">▾</span></div>${menu}</div>${src==='custom'?ovIcons('rent_schedule.date_eff_custom'):''}</div></div>`;}
 function pocSelectContact(ct){form=store.editForm(form,'poc.name',ct.name||'');form=store.editForm(form,'poc.email',ct.email||'');form=store.editForm(form,'poc.phone',fmtPhone(ct.phone||''));}
-function pocNote(){const m=modeOf('poc.name');return `<div class="ovnote" data-ov="poc.name" data-mode="${m}" style="display:${m?'flex':'none'}"><span class="om-over">changed from stored record</span><span class="om-new">new — not saved yet</span><button class="revert" data-rev="poc.name,poc.email,poc.phone">↺ revert</button><button class="save1" data-save1="poc.name,poc.email,poc.phone">✓ save this field</button></div>`;}
+function pocNote(){const m=modeOf('poc.name');return `<div class="ovnote" data-ov="poc.name" data-mode="${m}" style="display:${m?'flex':'none'}"><span class="om-over">changed from stored record</span><span class="om-new">new — not saved yet</span><span class="om-cycle">filled from a source — not saved yet</span><button class="revert" data-rev="poc.name,poc.email,poc.phone">↺ revert</button><button class="save1" data-save1="poc.name,poc.email,poc.phone">✓ save this field</button></div>`;}
 function pocCell(){const k='poc.name';const contacts=(mpdb?mpdb.listContacts():[]);const cur=get(k);const c=cellColors(k);
   const nvp=raVal('poc.name');
   const navRow=(nvp?'<div class="uaopt" data-pocra="1">'+esc(nvp)+'<span class="uasub">Related Affordable</span></div>':'<div class="uaopt srcdim">\u2014<span class="uasub">Related Affordable \u00b7 not available</span></div>')+'<div class="uaopt srcdim">\u2014<span class="uasub">RCS report \u00b7 not available</span></div>';
@@ -1400,7 +1401,7 @@ const DIR_PICK={
 };
 function dirFill(pairs){pairs.forEach(p=>{form=store.editForm(form,p[0],p[1]||'');});}
 function dirList(kind){return (mpdb&&mpdb.listDir)?mpdb.listDir(kind):[];}
-function dirNote(fk){const P=DIR_PICK[fk];const m=modeOf(P.modeKeys);const j=P.keys.join(',');return `<div class="ovnote" data-ov="${P.modeKeys.join(',')}" data-mode="${m}" style="display:${m?'flex':'none'}"><span class="om-over">changed from stored record</span><span class="om-new">new \u2014 not saved yet</span><button class="revert" data-rev="${j}">\u21ba revert</button><button class="save1" data-save1="${j}">\u2713 save this field</button></div>`;}
+function dirNote(fk){const P=DIR_PICK[fk];const m=modeOf(P.modeKeys);const j=P.keys.join(',');return `<div class="ovnote" data-ov="${P.modeKeys.join(',')}" data-mode="${m}" style="display:${m?'flex':'none'}"><span class="om-over">changed from stored record</span><span class="om-new">new \u2014 not saved yet</span><span class="om-cycle">filled from a source \u2014 not saved yet</span><button class="revert" data-rev="${j}">\u21ba revert</button><button class="save1" data-save1="${j}">\u2713 save this field</button></div>`;}
 function dirCell(f){const k=f.k;const P=DIR_PICK[k];const list=dirList(P.kind);const cur=get(k);
   const c=f.prefix?groupColors([f.prefix,f.k]):cellColors(k);const nameTint=(f.prefix&&partHot(k))?tintStyle(k):'';
   const pre=f.prefix?csDrop(f.prefix,['Ms.','Mr.','Dr.','Mx.'],'\u2014','csnarrow',true,partHot(f.prefix)?tintStyle(f.prefix):''):'';
@@ -1681,7 +1682,7 @@ function renderKeepFocus(){const ae=document.activeElement;const k=ae&&ae.getAtt
   if(k){const ni=document.querySelector('[data-k="'+k+'"]');if(ni){ni.focus({preventScroll:true});try{const L=pos==null?(ni.value||'').length:pos;ni.setSelectionRange(L,L);}catch(e){}}}}
 function hudStatus(n){const d=_hud.data;if(!d)return;
   const srcNote=d.zip_rents?('ZIP '+d.zip):(d.smallarea?'metro-wide — ZIP not in HUD’s SAFMR table':'area FMR — not a Small Area FMR zone');
-  setStatus('HUD FY'+d.year+' · '+d.area_name+' · '+srcNote+(n?(' — filled the 150% ceiling for '+n+' unit type'+(n===1?'':'s')+'. Review, then “Update database”.'):' — SAFMR ceilings are up to date.'));}
+  setStatus('HUD FY'+d.year+' · '+d.area_name+' · '+srcNote+(n?(' — filled the 150% ceiling for '+n+' unit type'+(n===1?'':'s')+'. Review, then “Update property profile”.'):' — SAFMR ceilings are up to date.'));}
 async function ensureHudSafmr(opts){opts=opts||{};const manual=!!opts.manual;
   if(!hasProg('rcs'))return; // the 150% SAFMR threshold is an RCS instrument
   if(!supaClient){if(manual)setStatus('HUD SAFMR pull needs the hosted backend — sign in first.');return;}
@@ -2013,7 +2014,7 @@ function rsFillFromParsed(){const P=_rsUpload&&_rsUpload.parsed;if(!P)return;
       if(u.rent!==''&&u.rent>0)setk('nonrev.'+ix+'.rent',u.rent);
       if(get('nonrev.'+ix+'.num_units')==='')form=store.editForm(form,'nonrev.'+ix+'.num_units','1');});} // Part D has no unit-count field on the schedule itself (each row is one named space) — default to 1, left editable and unmarked since it is not literally read from the document
   deriveUnits();renderBody();scheduleHudRefresh();scheduleFactorRefresh();
-  setStatus('Form filled from the executed rent schedule \u2014 review the highlighted values, then \u201cUpdate database\u201d.');}
+  setStatus('Form filled from the executed rent schedule \u2014 review the highlighted values, then \u201cUpdate property profile\u201d.');}
 function renderSources(){
   const up=_rcsUpload;const sl=srcDocLabel();
   const rcs=up
@@ -2139,13 +2140,13 @@ async function pullOcafFactor(opts){opts=opts||{};const auto=!!opts.auto;
     if(auto&&String(d.fy)!==String(effYear())){setStatus('The FY'+effYear()+' OCAF isn’t published yet — latest is FY'+d.fy+'. Pull it manually, or enter a custom factor.');return;}
     form=store.editForm(form,'ocaf.factor_pub',String(v));form=store.editForm(form,'ocaf.factor_fy',String(d.fy||''));form=store.editForm(form,'ocaf.factor_pubdate',String(d.publication_date||''));form=store.editForm(form,'ocaf.factor_state',usedNat?'US':stt);form=store.editForm(form,'ocaf.factor_src','fr');['ocaf.factor_pub','ocaf.factor_fy','ocaf.factor_pubdate','ocaf.factor_state','ocaf.factor_src'].forEach(markCycle);
     renderBody();
-    setStatus('FY'+d.fy+' OCAF '+(usedNat?'(national average — set the property state in '+secRef(2)+' for the state factor)':('for '+stt))+': '+v+'% — published '+fmtDateLong(d.publication_date)+'. Review, then “Update database”.');
+    setStatus('FY'+d.fy+' OCAF '+(usedNat?'(national average — set the property state in '+secRef(2)+' for the state factor)':('for '+stt))+': '+v+'% — published '+fmtDateLong(d.publication_date)+'. Review, then “Update property profile”.');
   }catch(e){if(!auto)setStatus('OCAF pull failed: '+(e&&e.message?e.message:e));}
   finally{const b=el('pullOcaf');if(b)b.disabled=false;}}
 async function ocafApplyRents(){const C=ocafCalc();
   if(!(C.R>0)){setStatus('Enter the OCAF factor and debt service first — the increase factor (R) drives the new rents.');return;}
   let n=0;UNITS.forEach(i=>{const cur=numf(get('units.'+i+'.current'));if(cur>0){const nv=String(Math.round(cur*C.R));if(get('units.'+i+'.proposed')!==nv){form=store.editForm(form,'units.'+i+'.proposed',nv);n++;}}});
-  if(n){renderBody();setStatus('Filled proposed rents for '+n+' unit type'+(n===1?'':'s')+' at ×'+C.R.toFixed(3)+' — review, then “Update database”.');}
+  if(n){renderBody();setStatus('Filled proposed rents for '+n+' unit type'+(n===1?'':'s')+' at ×'+C.R.toFixed(3)+' — review, then “Update property profile”.');}
   else setStatus('Proposed rents already match the OCAF calculation.');}
 
 /* ================== UAF (Section 11) — per-utility, always ==================
@@ -2212,12 +2213,12 @@ async function pullUafFactors(opts){opts=opts||{};const auto=!!opts.auto;
     form=store.editForm(form,'uaf.factor_pubdate',(lm&&!isNaN(lm))?lm.toISOString().slice(0,10):'');
     ['uaf.f_oil','uaf.f_gas','uaf.f_electric','uaf.f_water','uaf.factor_fy','uaf.factor_state','uaf.factor_pubdate'].forEach(markCycle);
     renderBody();
-    setStatus('FY'+d.fy+' UAFs '+(usedNat?'(U.S. — set the property state in '+secRef(2)+' for the state factors)':('for '+stt))+': oil '+r4(rec.oil)+' · gas '+r4(rec.gas)+' · electric '+r4(rec.electric)+' · water/sewer/trash '+r4(rec.water)+'. Review, then “Update database”.');
+    setStatus('FY'+d.fy+' UAFs '+(usedNat?'(U.S. — set the property state in '+secRef(2)+' for the state factors)':('for '+stt))+': oil '+r4(rec.oil)+' · gas '+r4(rec.gas)+' · electric '+r4(rec.electric)+' · water/sewer/trash '+r4(rec.water)+'. Review, then “Update property profile”.');
   }catch(e){if(!auto)setStatus('UAF pull failed: '+(e&&e.message?e.message:e));}
   finally{const b=el('pullUaf');if(b)b.disabled=false;}}
 async function uafApplyUas(){let n=0;
   UNITS.forEach(i=>{const r=uafRow(i);if(r.curSum>0&&r.newSum>0){form=store.editForm(form,'units.'+i+'.ua_custom',String(r.newSum));form=store.editForm(form,'units.'+i+'.ua_source','custom');form=store.editForm(form,'units.'+i+'.ua_reviewed','1');n++;}});
-  if(n){renderBody();setStatus('Set the new UA for '+n+' unit type'+(n===1?'':'s')+' (as the custom UA source in '+secRef(6)+') — review, then “Update database”.');}
+  if(n){renderBody();setStatus('Set the new UA for '+n+' unit type'+(n===1?'':'s')+' (as the custom UA source in '+secRef(6)+') — review, then “Update property profile”.');}
   else setStatus('Enter UA components and factors first.');}
 
 /* Keep the interaction point visually still: content above the form (the
@@ -2259,14 +2260,14 @@ function _renderCommand(){const a=analysis();const pCur=a.ceil>0?clamp(a.cg/a.ce
 function pkgCard(){
   if(hasProg('rcs'))return `<div class="ccard"><div class="cck">THIS PACKAGE</div><div class="cctitle" style="font-size:15px">${_rcsUpload?'RCS report uploaded':'RCS report needed'}</div><div class="ccsub">${_rcsUpload?esc(_rcsUpload.name)+' — goes in as document 04':'Upload the completed RCS report in '+secRef(1)+' — it becomes document 04 of the package.'}</div>
      <div class="ccsub" style="margin-top:7px;color:#33405c"><b>The 6-document package</b></div><div class="drafts">${[['Cover letter (CA)',1],['Owner cover letter',1],['Owner’s checklist',1],['RCS report (uploaded PDF)',_rcsUpload?1:0],['Draft rent schedule',1],['Tenant notice',1]].map(d=>'<span>'+(d[1]?'✓ ':'○ ')+d[0]+'</span>').join('')}</div>
-     <div class="wb">Documents are generated from the form exactly as shown. Save with “Update database” before generating.</div></div>`;
+     <div class="wb">Documents are generated from the form exactly as shown. Save with “Update property profile” before generating.</div></div>`;
   const docs=[];
   if(hasProg('ocaf'))docs.push('9625 worksheet (Q = P)','Corrected auto-OCAF letter — election box 1','Revised Exhibit A','Debt-service evidence');
   if(hasProg('uaf')){docs.push('UAF certification / breakdown');if(uafAnalysis().dec.length)docs.push('30-day tenant notice (UA decrease)','Tenant-comment certification');}
   docs.push('Revised rent schedule'+(hasProg('ocaf')&&hasProg('uaf')?' — one, merged OCAF + UAF':''));
   return `<div class="ccard"><div class="cck">THIS PACKAGE</div><div class="cctitle" style="font-size:15px">${esc(cycleProgs().map(x=>PROG_NAMES[x]||x).join(' + '))} package</div><div class="ccsub">${_rcsUpload?esc(_rcsUpload.name)+' uploaded — the package’s source document':esc(srcDocLabel().title)+(srcDocLabel().need?' goes in '+secRef(1):' — optional, '+secRef(1))}</div>
      <div class="ccsub" style="margin-top:7px;color:#33405c"><b>This package includes</b></div><div class="drafts">${docs.map(d=>'<span>○ '+d+'</span>').join('')}</div>
-     <div class="wb">Documents are generated from the form exactly as shown. Save with “Update database” before generating.</div></div>`;}
+     <div class="wb">Documents are generated from the form exactly as shown. Save with “Update property profile” before generating.</div></div>`;}
 function chk(st,name,note){const ic=st==='warn'?'⚠':(st==='info'?'ⓘ':'✓');const cl=st==='warn'?'warn':(st==='info'?'info':'ok');return `<div class="chk"><span class="${cl}">${ic}</span><div><b>${name}</b><div class="sub">${note}</div></div></div>`;}
 
 function isStateKey(k){return /\.(ua_reviewed|safmr_reviewed|type_reviewed|num_reviewed|ua_custom|safmr_custom)$/.test(k)||k==='tenant.mgmt_source'||k==='poc.mode'||/^poc\.custom_/.test(k)||k==='rent_schedule.date_eff_source'||k==='rent_schedule.date_eff_custom'||k==='ocaf.factor_src';}
@@ -2279,7 +2280,7 @@ function overrideCount(){const grouped=new Set();for(const b in ADDR_GROUPS)ADDR
   for(let i=0;i<5;i++){if(srcOf('partb.utilities.'+i)==='overridden'||srcOf('partb.fuel.'+i)==='overridden')c++;}
   wiBases.forEach(b=>{if(srcOf('partb.writein.'+b)==='overridden'||srcOf('partb.writein.'+b+'.on')==='overridden'||srcOf('partb.writein.'+b+'.fuel')==='overridden')c++;});
   return c;}
-function attnFlags(){const f=[];const u=UNITS.filter(uaUnresolved).length;if(u)f.push(u+' UA conflict'+(u>1?'s':'')+' to resolve');const sf=hasProg('rcs')?UNITS.filter(safmrUnresolved).length:0;if(sf)f.push(sf+' SAFMR conflict'+(sf>1?'s':'')+' to resolve');const tc=UNITS.filter(i=>typeUnresolved(i)||numUnresolved(i)).length;if(tc)f.push(tc+' unit type/count conflict'+(tc>1?'s':'')+' to resolve');const A=analysis();if(hasProg('rcs')){if(A.safmrMissing)f.push(hudBlockerText()?('To pull SAFMRs, '+hudBlockerText()):'SAFMR needed for the 150% test');if(!A.safmrMissing&&A.countsMissing&&A.safmrHave)f.push('Unit counts are needed for the 150% test ('+secRef(6)+')');if(A.safmrOver)f.push(A.safmrOver+' unit type'+(A.safmrOver>1?'s':'')+' over 150% SAFMR');}rsCapacity().flags.forEach(x=>f.push(x));const ov=overrideCount();if(ov)f.push(ov+' unsaved override'+(ov>1?'s':''));if(srcOf('nonrev.enabled')==='overridden')f.push('Non-revenue units turned '+(get('nonrev.enabled')==='1'?'on':'off')+' \u2014 saves with your next \u201cUpdate database\u201d');if(srcOf('ns8.enabled')==='overridden')f.push('Non-Section 8 units turned '+(get('ns8.enabled')==='1'?'on':'off')+' \u2014 saves with your next \u201cUpdate database\u201d');if(!_rcsUpload&&(hasProg('rcs')||hasProg('ocaf')))f.push((hasProg('rcs')?'The completed RCS report isn’t uploaded':'The CA’s auto-OCAF package isn’t uploaded')+' ('+secRef(1)+')');
+function attnFlags(){const f=[];const u=UNITS.filter(uaUnresolved).length;if(u)f.push(u+' UA conflict'+(u>1?'s':'')+' to resolve');const sf=hasProg('rcs')?UNITS.filter(safmrUnresolved).length:0;if(sf)f.push(sf+' SAFMR conflict'+(sf>1?'s':'')+' to resolve');const tc=UNITS.filter(i=>typeUnresolved(i)||numUnresolved(i)).length;if(tc)f.push(tc+' unit type/count conflict'+(tc>1?'s':'')+' to resolve');const A=analysis();if(hasProg('rcs')){if(A.safmrMissing)f.push(hudBlockerText()?('To pull SAFMRs, '+hudBlockerText()):'SAFMR needed for the 150% test');if(!A.safmrMissing&&A.countsMissing&&A.safmrHave)f.push('Unit counts are needed for the 150% test ('+secRef(6)+')');if(A.safmrOver)f.push(A.safmrOver+' unit type'+(A.safmrOver>1?'s':'')+' over 150% SAFMR');}rsCapacity().flags.forEach(x=>f.push(x));const ov=overrideCount();if(ov)f.push(ov+' unsaved override'+(ov>1?'s':''));if(srcOf('nonrev.enabled')==='overridden')f.push('Non-revenue units turned '+(get('nonrev.enabled')==='1'?'on':'off')+' \u2014 saves with your next \u201cUpdate property profile\u201d');if(srcOf('ns8.enabled')==='overridden')f.push('Non-Section 8 units turned '+(get('ns8.enabled')==='1'?'on':'off')+' \u2014 saves with your next \u201cUpdate property profile\u201d');if(!_rcsUpload&&(hasProg('rcs')||hasProg('ocaf')))f.push((hasProg('rcs')?'The completed RCS report isn’t uploaded':'The CA’s auto-OCAF package isn’t uploaded')+' ('+secRef(1)+')');
   if(hasProg('ocaf')){if(!(ocafFactorResolved()>0))f.push('OCAF factor needed — pull or enter it ('+secRef(10)+')');if(!(ocafK()>0))f.push('Annual debt service needed for the OCAF worksheet ('+secRef(10)+')');}
   if(hasProg('uaf')){const UA=uafAnalysis();const hasF=UAF_UTILS.some(u=>numf(get('uaf.f_'+u[0]))>0);
     if(!hasF)f.push('UAF factors needed — pull or enter them ('+secRef(11)+')');
@@ -2438,7 +2439,7 @@ function wireBody(){
   const nt=el('nonrevToggle');if(nt)nt.onchange=()=>{
     if(!nt.checked&&NONREV.some(i=>nonrevHasData(i)||numf(get('nonrev.'+i+'.num_units'))>0)){
       nt.checked=true;
-      dialogConfirm('Turn off non-revenue units?','The section still holds '+NONREV.length+' row'+(NONREV.length>1?'s':'')+' with values. Turned off, the rows are left out of every generated document, and your next \u201cUpdate database\u201d removes them for good \u2014 re-check the box before saving to bring them back.','Turn off',true,()=>{form=store.editForm(form,'nonrev.enabled','');renderBody();setStatus('Non-revenue units off \u2014 the hidden rows are removed on your next Update database.');});
+      dialogConfirm('Turn off non-revenue units?','The section still holds '+NONREV.length+' row'+(NONREV.length>1?'s':'')+' with values. Turned off, the rows are left out of every generated document, and your next \u201cUpdate property profile\u201d removes them for good \u2014 re-check the box before saving to bring them back.','Turn off',true,()=>{form=store.editForm(form,'nonrev.enabled','');renderBody();setStatus('Non-revenue units off \u2014 the hidden rows are removed on your next Update property profile.');});
       return;}
     if(!nt.checked){NONREV.forEach(i=>Object.keys(form).forEach(k=>{if(k.indexOf('nonrev.'+i+'.')===0)delete form[k];}));NONREV=[];}
     form=store.editForm(form,'nonrev.enabled',nt.checked?'1':'');
@@ -2448,7 +2449,7 @@ function wireBody(){
     if(!lt.checked&&NS8.some(i=>numf(get('ns8.'+i+'.num_units'))>0)){lt.checked=true;setStatus('Delete the non-Section 8 rows first to turn this section off.');return;}
     if(!lt.checked&&NS8.some(ns8HasData)){
       lt.checked=true;
-      dialogConfirm('Turn off non-Section 8 units?','The section still holds '+NS8.length+' row'+(NS8.length>1?'s':'')+' with values. Turned off, the rows are left out of every generated document, and your next \u201cUpdate database\u201d removes them for good \u2014 re-check the box before saving to bring them back.','Turn off',true,()=>{form=store.editForm(form,'ns8.enabled','');renderBody();setStatus('Non-Section 8 units off \u2014 the hidden rows are removed on your next Update database.');});
+      dialogConfirm('Turn off non-Section 8 units?','The section still holds '+NS8.length+' row'+(NS8.length>1?'s':'')+' with values. Turned off, the rows are left out of every generated document, and your next \u201cUpdate property profile\u201d removes them for good \u2014 re-check the box before saving to bring them back.','Turn off',true,()=>{form=store.editForm(form,'ns8.enabled','');renderBody();setStatus('Non-Section 8 units off \u2014 the hidden rows are removed on your next Update property profile.');});
       return;}
     form=store.editForm(form,'ns8.enabled',lt.checked?'1':'');
     if(lt.checked&&!NS8.length){_undoLI=[];form=store.editForm(form,'ns8.0.br','');NS8=[0];}
@@ -3057,7 +3058,7 @@ async function __genOcafUafRun(){
     const combined=await combinePdfs(docs.map(d=>d.bytes));
     const warns=[];
     if(hasProg('ocaf')&&!_rcsUpload)warns.push('The CA’s auto-OCAF package isn’t uploaded — add it in '+secRef(1)+' for the file.');
-    if(needsDerivedRents(C))warns.push('Proposed rents were derived from the worksheet (×'+C.R.toFixed(3)+') — use “Apply as proposed rents” + “Update database” to save them.');
+    if(needsDerivedRents(C))warns.push('Proposed rents were derived from the worksheet (×'+C.R.toFixed(3)+') — use “Apply as proposed rents” + “Update property profile” to save them.');
     if(hasProg('uaf')&&A.mismatch.length)warns.push(A.mismatch.length+' unit type'+(A.mismatch.length>1?'s':'')+': UA components don’t total the current UA.');
     showOcafUafModal(N,tag,docs,combined,warns);
     try{ if(activeCid&&mpdb)await mpdb.setCycleGenerated(activeCid,docs.map(d=>d.label)); }catch(e){}
