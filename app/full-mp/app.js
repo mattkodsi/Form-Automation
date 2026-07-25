@@ -71,11 +71,12 @@ const clamp=n=>Math.max(0,Math.min(100,n));
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const setStatus=t=>{el('status').textContent=t||'';};
 const srcOf=k=>form[k]?form[k].source:'new';
+const markCycle=k=>{if(form[k]&&form[k].source==='new')form[k].source='this-cycle';};
 function saveFailed(e){setStatus('\u26a0 Save failed \u2014 this change is NOT in the database yet. Check your connection and try again. ('+((e&&e.message)||e)+')');}
 function saveFailedModal(e){dialogConfirm('Save failed','The change did not reach the database \u2014 check your connection and try again.<div class="sub" style="margin-top:7px;color:#8791a5">'+esc((e&&e.message)||e)+'</div>','OK',false,function(){});}
 let DBSNAP={};let FORMSNAP=null; // isDirty compares against THIS, a snapshot taken after boot-time defaults (e.g. the owner's checklist) are applied — not the raw db read, so auto-applied defaults never masquerade as unsaved edits
 async function refreshSnap(){DBSNAP=await bridge.getDb();}
-function modeOf(kk){const keys=Array.isArray(kk)?kk:[kk];if(keys.some(k=>srcOf(k)==='overridden'))return 'over';if(keys.some(k=>srcOf(k)==='new'&&get(k)!==''&&get(k)!=null))return 'new';if(keys.some(k=>srcOf(k)==='this-cycle'))return 'cycle';return '';}
+function modeOf(kk){const keys=Array.isArray(kk)?kk:[kk];if(keys.some(k=>srcOf(k)==='overridden'))return 'over';if(keys.some(k=>srcOf(k)==='new'&&get(k)!==''&&get(k)!=null))return 'new';return '';}
 function ovIcons(kk){const keys=Array.isArray(kk)?kk:[kk];const j=keys.join(',');const m=modeOf(keys);return `<span class="ovic" data-ovic="${j}" data-mode="${m}" style="display:${m?'inline-flex':'none'}"><button class="miniic rv" data-rev="${j}" title="Revert to on-file">↺</button><button class="miniic sv" data-save1="${j}" title="Save this field to the database">✓</button></span>`;}
 
 /* ---- program-driven sections: a cycle's program picks its form ---------- */
@@ -112,8 +113,8 @@ function analysis(){let cg=0,pg=0,tot=0,sc=0,sp=0,nd=0,ceil=0,safmrMissing=false
   return{cg,pg,ceil,headroom:ceil-pg,pass:(ceil>0&&pg<ceil),perUnit,dMo:pg-cg,dYr:(pg-cg)*12,pct,tot,safmrMissing,safmrConflict,safmrOver,safmrHave,countsMissing};}
 
 function ovBtns(k){return `<button class="revert" data-rev="${k}">↺ revert</button><button class="save1" data-save1="${k}">✓ save this field</button>`;}
-function ovNote(kk){const keys=Array.isArray(kk)?kk:[kk];const j=keys.join(',');const m=modeOf(keys);return `<div class="ovnote" data-ov="${j}" data-mode="${m}" style="display:${m?'flex':'none'}"><span class="om-over">changed from stored record</span><span class="om-new">new — not saved yet</span><span class="om-cycle">filled from a source — not saved yet</span>${ovBtns(j)}</div>`;}
-function ovNoteAddr(box){const keys=ADDR_GROUPS[box];const m=modeOf(keys);return `<div class="ovnote" data-ov="${box}" data-mode="${m}" style="display:${m?'flex':'none'}"><span class="om-over">changed from stored record</span><span class="om-new">new — not saved yet</span><span class="om-cycle">filled from a source — not saved yet</span><button class="revert" data-revaddr="${box}">↺ revert</button><button class="save1" data-save1addr="${box}">✓ save this field</button></div>`;}
+function ovNote(kk){const keys=Array.isArray(kk)?kk:[kk];const j=keys.join(',');const m=modeOf(keys);return `<div class="ovnote" data-ov="${j}" data-mode="${m}" style="display:${m?'flex':'none'}"><span class="om-over">changed from stored record</span><span class="om-new">new — not saved yet</span>${ovBtns(j)}</div>`;}
+function ovNoteAddr(box){const keys=ADDR_GROUPS[box];const m=modeOf(keys);return `<div class="ovnote" data-ov="${box}" data-mode="${m}" style="display:${m?'flex':'none'}"><span class="om-over">changed from stored record</span><span class="om-new">new — not saved yet</span><button class="revert" data-revaddr="${box}">↺ revert</button><button class="save1" data-save1addr="${box}">✓ save this field</button></div>`;}
 function csDrop(key,options,ph,cls,clearable,tint){const cur=get(key);const has=cur!==''&&cur!=null;const lab=has?cur:(ph||'—');const menu=options.map(o=>'<div class="uaopt" data-csopt="'+esc(o)+'" data-cskey="'+key+'">'+esc(o)+'</div>').join('');const clr=(clearable&&has)?'<span class="csclear" data-csclear="'+key+'" title="Clear">✕</span>':'';return '<div class="uadrop cs '+(cls||'')+(clearable?' clearable':'')+'"><div class="uatrigger" tabindex="0" data-trigfor="'+key+'"'+(tint?' style="'+tint+'"':'')+'><span class="ualab">'+esc(lab)+'</span>'+clr+'<span class="cvx">▾</span></div><div class="uamenu">'+menu+'</div></div>';}
 function dateEffResolved(){const src=get('rent_schedule.date_eff_source')||(get('rent_schedule.date_eff_rs')?'rs':'custom');return src==='custom'?(get('rent_schedule.date_eff_custom')||get('rent_schedule.date_rents_effective')):get('rent_schedule.date_eff_rs');}
 function dateEffCell(){const rs=get('rent_schedule.date_eff_rs');const src=get('rent_schedule.date_eff_source')||(rs?'rs':'custom');const custom=get('rent_schedule.date_eff_custom')||get('rent_schedule.date_rents_effective');
@@ -124,7 +125,7 @@ function dateEffCell(){const rs=get('rent_schedule.date_eff_rs');const src=get('
   const menu='<div class="uamenu">'+srcOptRow('data-deffopt="rs"',rs?esc(fmtDate(rs)):'','A year after the executed RS')+'<div class="uaopt" data-deffopt="custom">Custom…</div></div>';
   return `<div class="field"><div class="flabel">Date rents will be effective</div><div class="fbox uacell" data-box="${boxKey}" style="background:${c[1]};border-left-color:${c[0]}"><div class="uadrop" style="flex:1;min-width:0"><div class="uatrigger" tabindex="0">${lab}<span class="cvx">▾</span></div>${menu}</div>${src==='custom'?ovIcons('rent_schedule.date_eff_custom'):''}</div></div>`;}
 function pocSelectContact(ct){form=store.editForm(form,'poc.name',ct.name||'');form=store.editForm(form,'poc.email',ct.email||'');form=store.editForm(form,'poc.phone',fmtPhone(ct.phone||''));}
-function pocNote(){const m=modeOf('poc.name');return `<div class="ovnote" data-ov="poc.name" data-mode="${m}" style="display:${m?'flex':'none'}"><span class="om-over">changed from stored record</span><span class="om-new">new — not saved yet</span><span class="om-cycle">filled from a source — not saved yet</span><button class="revert" data-rev="poc.name,poc.email,poc.phone">↺ revert</button><button class="save1" data-save1="poc.name,poc.email,poc.phone">✓ save this field</button></div>`;}
+function pocNote(){const m=modeOf('poc.name');return `<div class="ovnote" data-ov="poc.name" data-mode="${m}" style="display:${m?'flex':'none'}"><span class="om-over">changed from stored record</span><span class="om-new">new — not saved yet</span><button class="revert" data-rev="poc.name,poc.email,poc.phone">↺ revert</button><button class="save1" data-save1="poc.name,poc.email,poc.phone">✓ save this field</button></div>`;}
 function pocCell(){const k='poc.name';const contacts=(mpdb?mpdb.listContacts():[]);const cur=get(k);const c=cellColors(k);
   const nvp=raVal('poc.name');
   const navRow=(nvp?'<div class="uaopt" data-pocra="1">'+esc(nvp)+'<span class="uasub">Related Affordable</span></div>':'<div class="uaopt srcdim">\u2014<span class="uasub">Related Affordable \u00b7 not available</span></div>')+'<div class="uaopt srcdim">\u2014<span class="uasub">RCS report \u00b7 not available</span></div>';
@@ -150,7 +151,7 @@ const DIR_PICK={
 };
 function dirFill(pairs){pairs.forEach(p=>{form=store.editForm(form,p[0],p[1]||'');});}
 function dirList(kind){return (mpdb&&mpdb.listDir)?mpdb.listDir(kind):[];}
-function dirNote(fk){const P=DIR_PICK[fk];const m=modeOf(P.modeKeys);const j=P.keys.join(',');return `<div class="ovnote" data-ov="${P.modeKeys.join(',')}" data-mode="${m}" style="display:${m?'flex':'none'}"><span class="om-over">changed from stored record</span><span class="om-new">new \u2014 not saved yet</span><span class="om-cycle">filled from a source \u2014 not saved yet</span><button class="revert" data-rev="${j}">\u21ba revert</button><button class="save1" data-save1="${j}">\u2713 save this field</button></div>`;}
+function dirNote(fk){const P=DIR_PICK[fk];const m=modeOf(P.modeKeys);const j=P.keys.join(',');return `<div class="ovnote" data-ov="${P.modeKeys.join(',')}" data-mode="${m}" style="display:${m?'flex':'none'}"><span class="om-over">changed from stored record</span><span class="om-new">new \u2014 not saved yet</span><button class="revert" data-rev="${j}">\u21ba revert</button><button class="save1" data-save1="${j}">\u2713 save this field</button></div>`;}
 function dirCell(f){const k=f.k;const P=DIR_PICK[k];const list=dirList(P.kind);const cur=get(k);
   const c=f.prefix?groupColors([f.prefix,f.k]):cellColors(k);const nameTint=(f.prefix&&partHot(k))?tintStyle(k):'';
   const pre=f.prefix?csDrop(f.prefix,['Ms.','Mr.','Dr.','Mx.'],'\u2014','csnarrow',true,partHot(f.prefix)?tintStyle(f.prefix):''):'';
@@ -425,7 +426,7 @@ function hudParams(){const zip=String(get('property.addr_zip')||'').replace(/\D/
   return{zip,year,street:get('property.addr_street'),city:get('property.addr_city'),state:get('property.addr_state')};}
 function applyHudSafmr(){if(!_hud.data)return 0;const rents=_hud.data.zip_rents||_hud.data.area_rents;if(!rents)return 0;
   let changed=0;UNITS.forEach(i=>{const br=get('units.'+i+'.br');if(!br)return;const v=hudCeil(rents,br);
-    if(v&&get('units.'+i+'.safmr_hud')!==v){form=store.editForm(form,'units.'+i+'.safmr_hud',v);changed++;}});
+    if(v&&get('units.'+i+'.safmr_hud')!==v){form=store.editForm(form,'units.'+i+'.safmr_hud',v);markCycle('units.'+i+'.safmr_hud');changed++;}});
   return changed;}
 function renderKeepFocus(){const ae=document.activeElement;const k=ae&&ae.getAttribute?ae.getAttribute('data-k'):null;const pos=(k&&ae.selectionStart!=null)?ae.selectionStart:null;renderBody();
   if(k){const ni=document.querySelector('[data-k="'+k+'"]');if(ni){ni.focus({preventScroll:true});try{const L=pos==null?(ni.value||'').length:pos;ni.setSelectionRange(L,L);}catch(e){}}}}
@@ -732,7 +733,7 @@ async function parseRsPdf(bytes){
   let tp=null;try{tp=await rsReadTextTier(pages);}catch(e){}
   return tp?{kind:'fields',parsed:tp,via:'text'}:{kind:'text',parsed:null};}
 function rsFillFromParsed(){const P=_rsUpload&&_rsUpload.parsed;if(!P)return;
-  const mark=k=>{if(form[k]&&form[k].source==='new')form[k].source='this-cycle';};   // came from the schedule, not typed
+  const mark=markCycle;   // came from the schedule, not typed
   const setk=(k,v)=>{if(v!=null&&v!==''){form=store.editForm(form,k,String(v));mark(k);}};
   { const pn=P.scalars['property.name'];
     if(pn&&pn.indexOf('/')>=0){const parts=pn.split('/').map(x=>x.trim()).filter(Boolean);
@@ -887,7 +888,7 @@ async function pullOcafFactor(opts){opts=opts||{};const auto=!!opts.auto;
     if(v==null&&d.national!=null){v=d.national;usedNat=true;}
     if(v==null)throw new Error('No factor for state '+(stt||'(none)')+' in the FY'+d.fy+' notice.');
     if(auto&&String(d.fy)!==String(effYear())){setStatus('The FY'+effYear()+' OCAF isn’t published yet — latest is FY'+d.fy+'. Pull it manually, or enter a custom factor.');return;}
-    form=store.editForm(form,'ocaf.factor_pub',String(v));form=store.editForm(form,'ocaf.factor_fy',String(d.fy||''));form=store.editForm(form,'ocaf.factor_pubdate',String(d.publication_date||''));form=store.editForm(form,'ocaf.factor_state',usedNat?'US':stt);form=store.editForm(form,'ocaf.factor_src','fr');
+    form=store.editForm(form,'ocaf.factor_pub',String(v));form=store.editForm(form,'ocaf.factor_fy',String(d.fy||''));form=store.editForm(form,'ocaf.factor_pubdate',String(d.publication_date||''));form=store.editForm(form,'ocaf.factor_state',usedNat?'US':stt);form=store.editForm(form,'ocaf.factor_src','fr');['ocaf.factor_pub','ocaf.factor_fy','ocaf.factor_pubdate','ocaf.factor_state','ocaf.factor_src'].forEach(markCycle);
     renderBody();
     setStatus('FY'+d.fy+' OCAF '+(usedNat?'(national average — set the property state in '+secRef(2)+' for the state factor)':('for '+stt))+': '+v+'% — published '+fmtDateLong(d.publication_date)+'. Review, then “Update database”.');
   }catch(e){if(!auto)setStatus('OCAF pull failed: '+(e&&e.message?e.message:e));}
@@ -960,6 +961,7 @@ async function pullUafFactors(opts){opts=opts||{};const auto=!!opts.auto;
     form=store.editForm(form,'uaf.factor_fy',String(d.fy||''));form=store.editForm(form,'uaf.factor_state',usedNat?'US':stt);
     const lm=d.last_modified?new Date(d.last_modified):null;
     form=store.editForm(form,'uaf.factor_pubdate',(lm&&!isNaN(lm))?lm.toISOString().slice(0,10):'');
+    ['uaf.f_oil','uaf.f_gas','uaf.f_electric','uaf.f_water','uaf.factor_fy','uaf.factor_state','uaf.factor_pubdate'].forEach(markCycle);
     renderBody();
     setStatus('FY'+d.fy+' UAFs '+(usedNat?'(U.S. — set the property state in '+secRef(2)+' for the state factors)':('for '+stt))+': oil '+r4(rec.oil)+' · gas '+r4(rec.gas)+' · electric '+r4(rec.electric)+' · water/sewer/trash '+r4(rec.water)+'. Review, then “Update database”.');
   }catch(e){if(!auto)setStatus('UAF pull failed: '+(e&&e.message?e.message:e));}
