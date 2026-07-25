@@ -38,6 +38,15 @@ next handoff.
 1. shell: the `#viewAuth` sign-in card markup (replaced with the RA access panel)
 2. `mpdb=await makeSupabaseDb(supaClient);` (adapter swap + `window.RASource` injection)
 3. the `supaClient.functions.invoke('hud-safmr'…)` block + its no-client guard
+3b. **`ocr.js`** (new, tier-3 scanned rent schedules): the `ocrAnalyze` body — kept
+   as one self-contained function marked `// ra-seam: the OCR endpoint` — plus the
+   `if(!window.PDFLib||!supaClient)` guard in `ocrParseRs`. Patched to
+   `fetch('/api/ocr-rs')`. **Related's side runs Document Intelligence inside its own
+   tenancy** (container or managed resource), so a scanned schedule never leaves
+   Azure; only the endpoint differs, and every line of the geometry is shared. The
+   Azure side must return `{width,height,unit,angle,words:[{s,poly}],marks:[{on,poly}]}`
+   for ONE page — see `supabase/functions/ocr-rs/index.ts` for the exact shape and why
+   it is one page per call (the F0 tier silently drops all but the first two pages).
 4. the `showAuthScreen` function body, the `bSignOut` handler, and the
    `DOMContentLoaded` boot block
 (the create dialog needs NO patch anymore — `createProperty(name, pickedId)`

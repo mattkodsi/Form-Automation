@@ -51,7 +51,7 @@ const ALL_KEYS=Object.keys(SEED).map(k=>({key:k}));
 let mpdb=null, activePid=null, activeCid=null, _cyFresh=null;
 const bridge={getDb:async()=>mpdb?(activeCid?mpdb.getFlatCycle(activeCid):mpdb.getFlat(activePid)):{},saveDb:async(m)=>{_cyFresh=null;return activeCid?mpdb.saveFlatCycle(activeCid,m):mpdb.saveFlat(activePid,m);},clearDb:async()=>{}};
 const store=makeStore(bridge,ALL_KEYS);
-let form=store.emptyForm(); let UNITS=[0]; let NONREV=[]; let NS8=[]; let PRINCIPALS=[0]; let _undoStack=[]; let _undoNR=[]; let _undoLI=[]; let _undoPR=[]; let _pending=null,_refocusSel=null,_pendingSnap=null; let _rcsUpload=null; let _rsUpload=null; let _rsArm=false; let _dlgEnter=null;
+let form=store.emptyForm(); let UNITS=[0]; let NONREV=[]; let NS8=[]; let PRINCIPALS=[0]; let _undoStack=[]; let _undoNR=[]; let _undoLI=[]; let _undoPR=[]; let _pending=null,_refocusSel=null,_pendingSnap=null; let _rcsUpload=null; let _rsUpload=null; let _rsArm=false;let _rsBusy=false; let _dlgEnter=null;
 
 const CLR={database:['#2563eb','#e8f0fe','On file'],'this-cycle':['#0f766e','#e9f5f2','API / this package'],overridden:['#b45309','#fbf1e6','Overridden'],'auto-calculated':['#2563eb','#e8f0fe','Auto-calc'],'new':['#64748b','#f6f7f9','New']};
 const TODAY=new Date().toISOString().slice(0,10);
@@ -703,18 +703,21 @@ function rsRows(V){ // Part A rows, in order -> Section 8 rows and non-Section 8
     if(ns)out.ns8.push({type:t,count:n,rent:cr});
     else out.units.push({type:t,count:n,rent:cr,ua:ua});}
   return out;}
-async function rsReadTextTier(pages){ // flattened copy -> same parsed shape as tier 1, or null
-  if(!pages||!pages.length)return null;
-  const rects=await rsFieldRects();if(!Object.keys(rects).length)return null;
-  // Each half of the schedule is used only when a page identifies itself as that
-  // half. Guessing ("page 2 must be the certification page") reads one page's text
-  // through the other's field boxes and invents entity and principal values.
-  const joined=pages.map(rs=>rs.map(r=>r.s).join(' '));
+/* Each half of the schedule is used only when a page identifies itself as that
+   half. Guessing ("page 2 must be the certification page") reads one page's text
+   through the other's field boxes and invents entity and principal values. Tier 3
+   classifies OCR'd pages by the same two tests. */
+const RS_PG0=/Contract Rent|Utility|Number of.{0,3}Units/i, RS_PG1=/Mortgagor Entity|Owner Certification|Part G/i;
+function rsClassifyPages(joined){ // page texts -> which one is Part A, which is Part G
   let pg0=-1,pg1=-1;
-  joined.forEach((tx,i)=>{if(pg0<0&&/Contract Rent|Utility|Number of.{0,3}Units/i.test(tx))pg0=i;if(pg1<0&&/Mortgagor Entity|Owner Certification|Part G/i.test(tx))pg1=i;});
-  if(pg0<0)return null;if(pg1===pg0)pg1=-1;
-  const F=Object.assign(rsMapRects(pages[pg0],rects,0),pg1>=0?rsMapRects(pages[pg1],rects,1):{});
-  const V=n=>String(F[String(n)]||'').trim();
+  joined.forEach((tx,i)=>{if(pg0<0&&RS_PG0.test(tx))pg0=i;if(pg1<0&&RS_PG1.test(tx))pg1=i;});
+  if(pg1===pg0)pg1=-1;
+  return {pg0:pg0,pg1:pg1};}
+/* Field-id accessor in, the tier-1 parsed shape out — or null when the rows don't
+   reconcile against the schedule's own printed total. Shared by tier 2 (positional
+   text) and tier 3 (OCR): that gate is the only thing standing between a misread
+   number and a silently wrong form, so both tiers must run the very same one. */
+function rsAssembleFields(V){
   const outp={scalars:{},units:[],ns8:[],principals:[]};
   if(V(1))outp.scalars['property.name']=V(1);
   if(V(2))outp.scalars['property.fha']=V(2);
@@ -736,13 +739,22 @@ async function rsReadTextTier(pages){ // flattened copy -> same parsed shape as 
   const sum=all.reduce((a,u)=>a+(u.count&&u.rent?u.count*u.rent:0),0);
   const ok=outp.units.length>0&&(tot===''||Math.abs(sum-tot)<=Math.max(2,all.length));
   return ok?outp:null;}
-async function parseRsPdf(bytes){
+async function rsReadTextTier(pages){ // flattened copy -> same parsed shape as tier 1, or null
+  if(!pages||!pages.length)return null;
+  const rects=await rsFieldRects();if(!Object.keys(rects).length)return null;
+  const {pg0,pg1}=rsClassifyPages(pages.map(rs=>rs.map(r=>r.s).join(' ')));
+  if(pg0<0)return null;
+  const F=Object.assign(rsMapRects(pages[pg0],rects,0),pg1>=0?rsMapRects(pages[pg1],rects,1):{});
+  return rsAssembleFields(n=>String(F[String(n)]||'').trim());}
+async function parseRsPdf(bytes,onStep){
   const doc=await window.PDFLib.PDFDocument.load(bytes,{ignoreEncryption:true,parseSpeed:Infinity});
   let n=0,pf=null;try{pf=doc.getForm();n=pf.getFields().length;}catch(e){}
   if(n>10)return {kind:'fields',parsed:rsReadFields(pf)};
   let pages=null;try{pages=await rsTextPages(doc);}catch(e){}
   const runs=pages?pages.reduce((a,p)=>a+p.length,0):0;
-  if(runs<15)return {kind:'scan',parsed:null};
+  if(runs<15){ // nothing to read on the page itself: tier 3 sends it out to be OCR'd
+    let oc=null;try{oc=await ocrParseRs(bytes,onStep);}catch(e){}
+    return oc?{kind:'fields',parsed:oc,via:'ocr'}:{kind:'scan',parsed:null};}
   let tp=null;try{tp=await rsReadTextTier(pages);}catch(e){}
   return tp?{kind:'fields',parsed:tp,via:'text'}:{kind:'text',parsed:null};}
 function rsFillFromParsed(){const P=_rsUpload&&_rsUpload.parsed;if(!P)return;
@@ -785,9 +797,9 @@ function renderSources(){
     :`<div class="srcrow${sl.need?'':' dim'}"><span class="mut">○</span><div><b>${esc(sl.title)}</b> <span class="${sl.need?'missing':'parsed'}">${sl.need?'not uploaded':'optional'}</span><div class="sub">${esc(sl.sub)}</div></div><button class="btn sm" id="upRcs">Upload PDF</button></div>`;
   const ru=_rsUpload;let rs;
   if(!ru)rs=`<div class="srcrow"><span class="mut">○</span><div><b>Current executed rent schedule</b> <span class="missing">not uploaded</span><div class="sub">Reads the unit mix, rents, utility allowances, entity, and principals — from the schedule’s form fields, or from its printed text if a signed copy has none.</div></div><button class="btn sm" id="upRs">Upload PDF</button></div>`;
-  else if(ru.kind==='fields'){const p=ru.parsed;rs=`<div class="srcrow"><span class="ok">✓</span><div><b>${esc(ru.name)}</b> <span class="parsed">parsed</span><div class="sub">${ru.via==='text'?'Read from the printed text and checked against the schedule’s own totals. ':''}Filling writes only where the schedule has a value — save the form to keep it, or edit any field by hand to change it.</div></div><button class="btn sm teal" id="rsApply">Fill form from RS</button> <button class="btn sm" id="upRs">Replace</button></div>`;}
+  else if(ru.kind==='fields'){const p=ru.parsed;rs=`<div class="srcrow"><span class="ok">✓</span><div><b>${esc(ru.name)}</b> <span class="parsed">parsed</span><div class="sub">${ru.via==='text'?'Read from the printed text and checked against the schedule’s own totals. ':(ru.via==='ocr'?'Read by OCR from a scanned copy and checked against the schedule’s own totals — read every value against the paper before you save. Ticked boxes can be added but never cleared from a scan. ':'')}Filling writes only where the schedule has a value — save the form to keep it, or edit any field by hand to change it.</div></div><button class="btn sm teal" id="rsApply">Fill form from RS</button> <button class="btn sm" id="upRs">Replace</button></div>`;}
   else if(ru.kind==='text')rs=`<div class="srcrow"><span class="mut">△</span><div><b>${esc(ru.name)}</b> <span class="missing">no form fields — text copy</span><div class="sub">Its printed text could not be matched to the schedule’s layout — enter the values below.</div></div><button class="btn sm" id="upRs">Replace</button></div>`;
-  else rs=`<div class="srcrow"><span class="mut">△</span><div><b>${esc(ru.name)}</b> <span class="missing">scanned copy</span><div class="sub">This copy is a scan with no digital text. Upload a digital copy, or enter the values below.</div></div><button class="btn sm" id="upRs">Replace</button></div>`;
+  else rs=`<div class="srcrow"><span class="mut">△</span><div><b>${esc(ru.name)}</b> <span class="missing">scanned copy</span><div class="sub">This copy is a scan, and reading it as an image did not produce values that match the schedule’s own totals. Upload a digital copy, or enter the values below.</div></div><button class="btn sm" id="upRs">Replace</button></div>`;
   const foot=`<input type="file" id="rcsFile" accept="application/pdf,.pdf" style="display:none"><input type="file" id="rsFile" accept="application/pdf,.pdf" style="display:none">`;
   return card(1,sectionPill(1),rcs+rs+foot);}
 
@@ -1226,12 +1238,17 @@ function wireBody(){
       _rcsUpload={name:f.name,bytes:b};rf.value='';renderBody();setStatus('RCS report uploaded \u2014 it goes in as document 04 when you generate the package.');});};
   const upS=el('upRs');if(upS)upS.onclick=()=>{const f=el('rsFile');if(f)f.click();};
   const sf=el('rsFile');if(sf)sf.onchange=()=>{const f=sf.files&&sf.files[0];if(!f)return;
+    if(_rsBusy){setStatus('Still reading the last rent schedule \u2014 one moment.');sf.value='';return;} // OCR takes seconds; a second upload mid-flight would race the first
     f.arrayBuffer().then(async buf=>{const b=new Uint8Array(buf);
       if(!(b.length>4&&b[0]===0x25&&b[1]===0x50&&b[2]===0x44&&b[3]===0x46)){setStatus('That file isn\u2019t a PDF \u2014 upload the executed rent schedule as a PDF.');sf.value='';return;}
       setStatus('Reading the rent schedule\u2026');
-      let r;try{r=await parseRsPdf(b);}catch(e){r={kind:'scan',parsed:null};}
+      // Tiers 1 and 2 are instant; tier 3 goes out to be OCR'd a page at a time,
+      // so say what is happening rather than leave the form looking hung.
+      const step=(i,n)=>setStatus('No digital text in this copy \u2014 reading it as a scanned image (page '+i+' of '+n+'). This takes a few moments\u2026');
+      _rsBusy=true;
+      let r;try{r=await parseRsPdf(b,step);}catch(e){r={kind:'scan',parsed:null};}finally{_rsBusy=false;}
       _rsUpload={name:f.name,bytes:b,kind:r.kind,via:r.via,parsed:r.parsed};sf.value='';_rsArm=(r.kind==='fields'&&!!r.parsed);renderBody();
-      setStatus(r.kind==='fields'?'Rent schedule parsed \u2014 press Enter to fill the form, or use \u201cFill form from RS\u201d in '+secRef(1)+'.':(r.kind==='text'?'This copy carries no form fields, and its printed text could not be placed on the schedule\u2019s layout \u2014 enter the values by hand.':'This copy is a scan \u2014 there is no digital text to read.'));});};
+      setStatus(r.kind==='fields'?((r.via==='ocr'?'Scanned rent schedule read by OCR \u2014 check the values against the paper. ':'Rent schedule parsed \u2014 ')+'press Enter to fill the form, or use \u201cFill form from RS\u201d in '+secRef(1)+'.'):(r.kind==='text'?'This copy carries no form fields, and its printed text could not be placed on the schedule\u2019s layout \u2014 enter the values by hand.':'This copy is a scan \u2014 there is no digital text to read.'));});};
   const ra=el('rsApply');if(ra)ra.onclick=()=>rsFillFromParsed();
   const uu=el('undoUnit');if(uu)uu.onclick=()=>{if(!_undoStack.length)return;const e=_undoStack.pop();Object.keys(e.snap).forEach(k=>{form[k]=e.snap[k];});if(UNITS.indexOf(e.i)<0)UNITS.push(e.i);UNITS.sort((a,b)=>a-b);renderBody();setStatus('Unit type restored.');};
   const uc=el('undoCommit');if(uc)uc.onclick=()=>{_undoStack=[];renderBody();setStatus('Deletions kept.');};
