@@ -77,7 +77,11 @@ function saveFailedModal(e){dialogConfirm('Save failed','The change did not reac
 let DBSNAP={};let FORMSNAP=null; // isDirty compares against THIS, a snapshot taken after boot-time defaults (e.g. the owner's checklist) are applied — not the raw db read, so auto-applied defaults never masquerade as unsaved edits
 async function refreshSnap(){DBSNAP=await bridge.getDb();}
 function modeOf(kk){const keys=Array.isArray(kk)?kk:[kk];if(keys.some(k=>srcOf(k)==='overridden'))return 'over';if(keys.some(k=>srcOf(k)==='new'&&get(k)!==''&&get(k)!=null))return 'new';if(keys.some(k=>srcOf(k)==='this-cycle'))return 'cycle';return '';}
-function ovIcons(kk){const keys=Array.isArray(kk)?kk:[kk];const j=keys.join(',');let m=modeOf(keys);if(m==='cycle')m=''; // the compact inline badge has no spare room — cycle gets the roomy ovNote instead, never this
+function ovIcons(kk){const keys=Array.isArray(kk)?kk:[kk];const j=keys.join(',');const m=modeOf(keys);
+  // A parsed value is exactly as unsaved as a typed one, so it gets the same badge.
+  // It costs no more room either: cycle, like new, has nothing to revert TO, so the
+  // CSS hides the revert arrow and only the tick shows. (An earlier attempt left
+  // that rule out, so both buttons rendered and overflowed the tighter cells.)
   return `<span class="ovic" data-ovic="${j}" data-mode="${m}" style="display:${m?'inline-flex':'none'}"><button class="miniic rv" data-rev="${j}" title="Revert to on-file">↺</button><button class="miniic sv" data-save1="${j}" title="Save this field to the database">✓</button></span>`;}
 
 /* ---- program-driven sections: a cycle's program picks its form ---------- */
@@ -1160,7 +1164,7 @@ function snapOf(keys){const s={};keys.forEach(k=>{s[k]=form[k]?Object.assign({},
 function fieldKeys(k){if(k==='ca.name')return ['ca.prefix','ca.name'];const gb=groupOf(k);if(gb)return ADDR_GROUPS[gb].slice();if(k.indexOf('partb.writein.')===0&&k.indexOf('.',14)<0){const ks=[k,k+'.on'];if(k.slice(14)==='u1'||(k+'.fuel') in form)ks.push(k+'.fuel');return ks;}return [k];}
 function coupledKeys(k){if(k.indexOf('units.')===0){if(k.slice(-10)==='.ua_custom')return [k,k.slice(0,-10)+'.ua_source'];if(k.slice(-13)==='.safmr_custom')return [k,k.slice(0,-13)+'.safmr_source'];}if(k==='rent_schedule.date_eff_custom')return [k,'rent_schedule.date_eff_source'];if(k==='ocaf.factor_custom')return [k,'ocaf.factor_src'];return [k];}
 function keysCanRevert(keys){return keys.some(k=>srcOf(k)==='overridden');}
-function keysNewDirty(keys){return !keysCanRevert(keys)&&keys.some(k=>srcOf(k)==='new'&&String(get(k)==null?'':get(k)).trim()!=='');}
+function keysNewDirty(keys){return !keysCanRevert(keys)&&keys.some(k=>(srcOf(k)==='new'||srcOf(k)==='this-cycle')&&String(get(k)==null?'':get(k)).trim()!=='');} // a parsed cell is unsaved too, so Enter and the tick must both reach it
 function keysCanSave(keys){return keysCanRevert(keys)||keysNewDirty(keys);}
 function refocusSelForKey(k){if(/^(check\.\d+|partb\.(equipment|utilities|services)\.\d+)$/.test(k))return '[data-cb="'+k+'"]';const w=k.match(/^(partb\.writein\.[a-z0-9]+)\.on$/);if(w)return '[data-wibox="'+w[1]+'"]';const gb=groupOf(k);if(gb)return '[data-box="'+gb+'"] input,[data-box="'+gb+'"] .uatrigger';return '[data-trigfor="'+k+'"],[data-box="'+k+'"] .uatrigger,[data-k="'+k+'"]';}
 function revertPending(){if(!_pending||!_pending.length)return false;const keys=_pending;const snap=_pendingSnap;_pending=null;_pendingSnap=null;let any=false;if(snap){Object.keys(snap).forEach(k=>{const b=snap[k];const nv=form[k]?form[k].value:undefined;const bv=b?b.value:undefined;if(b)form[k]=b;else delete form[k];if(bv!==nv)any=true;});}else{keys.forEach(k=>{const gb=groupOf(k);if(gb){ADDR_GROUPS[gb].forEach(kk=>{if(store.revertForm(form,kk))any=true;});}else{if(store.revertForm(form,k))any=true;}});}if(any){refreshIfPrereq(keys);_refocusSel=refocusSelForKey(keys[0]);renderBody();}setStatus('Reverted your last change.');return true;}
