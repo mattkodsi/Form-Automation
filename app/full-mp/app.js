@@ -1423,10 +1423,14 @@ function updTitle(iso){if(!iso)return '';const s=String(iso);const base='Updated
 /* ---- generic modal (used for exit, new/rename, delete) --------------- */
 function modal(html){_dlgEnter=null;el('dialog').innerHTML=html;el('scrim').classList.add('open');}
 function closeModal(){_dlgEnter=null;el('scrim').classList.remove('open');}
-function dialogInput(title,label,value,okLabel,onOk){
-  modal('<div class="dlg-t">'+esc(title)+'</div><div class="dlg-field"><label>'+esc(label)+'</label><input id="dlgIn" value="'+esc(value||'')+'" autocomplete="off"></div><div class="dlg-row"><button class="btn" id="dlgCancel">Cancel</button><span class="dlg-sp"></span><button class="btn p" id="dlgOk">'+esc(okLabel||'Save')+'</button></div>');
-  const inp=el('dlgIn');if(inp&&inp.focus){inp.focus();if(inp.select)inp.select();inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();el('dlgOk').click();}else if(e.key==='Escape')closeModal();});}
-  el('dlgCancel').onclick=closeModal;el('dlgOk').onclick=()=>{const v=(el('dlgIn').value||'').trim();closeModal();onOk(v);};
+function dialogInput(title,label,value,okLabel,onOk,extra){ // extra:{label,value,hint} adds a second field; onOk gets (value, extraValue)
+  modal('<div class="dlg-t">'+esc(title)+'</div><div class="dlg-field"><label>'+esc(label)+'</label><input id="dlgIn" value="'+esc(value||'')+'" autocomplete="off"></div>'
+    +(extra?'<div class="dlg-field"><label>'+esc(extra.label)+'</label><input id="dlgIn2" value="'+esc(extra.value||'')+'" autocomplete="off">'+(extra.hint?'<div class="dlg-hint">'+esc(extra.hint)+'</div>':'')+'</div>':'')
+    +'<div class="dlg-row"><button class="btn" id="dlgCancel">Cancel</button><span class="dlg-sp"></span><button class="btn p" id="dlgOk">'+esc(okLabel||'Save')+'</button></div>');
+  const go=e=>{if(e.key==='Enter'){e.preventDefault();el('dlgOk').click();}else if(e.key==='Escape')closeModal();};
+  const inp=el('dlgIn');if(inp&&inp.focus){inp.focus();if(inp.select)inp.select();inp.addEventListener('keydown',go);}
+  const in2=el('dlgIn2');if(in2)in2.addEventListener('keydown',go);
+  el('dlgCancel').onclick=closeModal;el('dlgOk').onclick=()=>{const v=(el('dlgIn').value||'').trim();const v2=in2?(in2.value||'').trim():undefined;closeModal();onOk(v,v2);};
 }
 function dialogConfirm(title,body,okLabel,danger,onOk){
   modal('<div class="dlg-t">'+esc(title)+'</div><div class="dlg-b">'+body+'</div><div class="dlg-row"><button class="btn" id="dlgCancel">Cancel</button><span class="dlg-sp"></span><button class="btn '+(danger?'danger':'p')+'" id="dlgOk">'+esc(okLabel||'OK')+'</button></div>');
@@ -1608,7 +1612,15 @@ function renderLauncher(){
     +'<div class="lsec"><div class="lsec-t">Packages</div>'+cyclesHtml()+'<div class="progrow" style="margin-top:10px">'+soon('BBRA','Budget-Based Rent Adjustment')+'</div></div>';
   wireCycles();
   bootstrapFirstCycle(p);
-  el('pRename').onclick=()=>dialogInput('Rename property','Property name',p.name,'Save',async nm=>{if(!nm)return;try{await mpdb.renameProperty(activePid,nm);renderLauncher();}catch(e){saveFailedModal(e);}});
+  el('pRename').onclick=async()=>{
+    // The tenant-facing name lives with the property, not the package, so it is
+    // editable from here rather than only inside a form.
+    let alias='';try{const fl=await mpdb.getFlat(activePid);alias=(fl&&fl['tenant.property_alias']&&fl['tenant.property_alias'].value)||'';}catch(e){}
+    dialogInput('Rename property','Property name',p.name,'Save',async (nm,al)=>{if(!nm)return;
+      try{await mpdb.renameProperty(activePid,nm);
+        if(al!==undefined&&al!==alias)await mpdb.saveFlat(activePid,{'tenant.property_alias':{value:al,source:'database'}});
+        renderLauncher();}catch(e){saveFailedModal(e);}},
+      {label:'Also known to tenants as',value:alias,hint:'Optional \u2014 used on the tenant notice when residents know the property by another name.'});};
   el('pDelete').onclick=()=>dialogConfirm('Delete property','This permanently removes <b>'+esc(p.name)+'</b> and its stored record.','Delete',true,async()=>{try{await mpdb.deleteProperty(activePid);openMenu();}catch(e){saveFailedModal(e);}});
   wireLetterhead();
 }

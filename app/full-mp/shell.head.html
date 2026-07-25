@@ -128,12 +128,16 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;borde
 .ovnote .om-new{display:none} .ovnote .om-cycle{display:none}
 .ovnote[data-mode="new"] .om-over{display:none} .ovnote[data-mode="cycle"] .om-over{display:none}
 .ovnote[data-mode="new"] .om-new{display:inline} .ovnote[data-mode="cycle"] .om-cycle{display:inline}
-.wi .ovic{display:inline-flex!important;min-width:56px;justify-content:flex-end;gap:3px;margin-left:6px;flex:0 0 auto}
+/* No reserved width, and the unused revert takes no space: the tick used to sit
+   a whole column-gap away from the end of its line and read as belonging to the
+   next column's checkboxes. The input is flex:1, so it absorbs the difference
+   and the row never jumps. */
+.wi .ovic{display:inline-flex!important;justify-content:flex-start;gap:3px;margin-left:4px;flex:0 0 auto}
 .wi .ovic .miniic{visibility:hidden}
 .wi .ovic[data-mode="over"] .miniic{visibility:visible}
-.wi .ovic[data-mode="cycle"] .rv{display:inline-block!important;visibility:hidden}
+.wi .ovic[data-mode="cycle"] .rv{display:none!important}
 .wi .ovic[data-mode="cycle"] .sv{visibility:visible}
-.wi .ovic[data-mode="new"] .rv{display:inline-block!important;visibility:hidden}
+.wi .ovic[data-mode="new"] .rv{display:none!important}
 .wi .ovic[data-mode="new"] .sv{visibility:visible}
 .wi{flex-wrap:nowrap}
 .wi.util .witext{color:#1f2937!important}
@@ -221,7 +225,7 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;borde
 @keyframes pop{from{transform:translateY(7px) scale(.985);opacity:.5}to{transform:none;opacity:1}}
 .dlg-t{font-size:17px;font-weight:800;color:#1e3a5f}
 .dlg-b{font-size:13px;color:#5b6577;line-height:1.6;margin-top:9px}
-.dlg-field{margin-top:15px}.dlg-field label{font-size:11px;font-weight:700;color:#5b6577;display:block;margin-bottom:6px}
+.dlg-field{margin-top:15px} .dlg-hint{font-size:11.5px;color:#7c86a2;margin-top:5px;line-height:1.35}.dlg-field label{font-size:11px;font-weight:700;color:#5b6577;display:block;margin-bottom:6px}
 .dlg-field input{width:100%;font:inherit;font-size:14px;padding:10px 12px;border:1px solid #c7cede;border-radius:9px;outline:none}
 .dlg-field input:focus{border-color:#1e3a5f;box-shadow:0 0 0 3px rgba(30,58,95,.10)}
 .dlg-field select{width:100%;font:inherit;font-size:14px;padding:10px 9px;border:1px solid #c7cede;border-radius:9px;outline:none;background:#fff;color:#1f2937}
