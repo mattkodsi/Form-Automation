@@ -1903,7 +1903,7 @@ function docWarns(id){const w=[];
     const onProp=src==='property';
     const street=String((onProp?get('property.addr_street'):get('tenant.mgmt_street'))||'').trim();
     if(!street)w.push({key:onProp?'property.addr_street':'tenant.mgmt_street',
-      label:'no address to inspect materials',sec:onProp?2:9});}
+      label:'management street address',sec:onProp?2:9});}
   return w;}
 function docMissing(id){const r=DOC_REQS[id]||[];
   const m=r.filter(x=>String(get(x[0])==null?'':get(x[0])).trim()==='').map(x=>({key:x[0],label:x[1],sec:x[2]}));
@@ -1945,20 +1945,30 @@ function showPackageModal(nm,docs,combined,missingRcs,missingLh,capMsgs,blocked,
   const blkBy={};(blocked||[]).forEach(b=>{blkBy[b.label]=b;});
   const nReady=ORDER.filter(o=>byLabel[o[0]]).length, nGap=ORDER.length-nReady;
 
+  /* One kind of amber, one place. A caveat is not a different colour of problem,
+     it is a different sentence: NEEDS blocks the document, OMITS means it was
+     written without something. The letterhead belongs here as well — it only
+     ever affected the tenant notice — so nothing document-specific is left
+     stranded at the foot of the dialog in a second shade. */
+  const extraWarn={};
+  if(missingLh)extraWarn['Tenant notice']=[{label:'letterhead',sec:0}];
   const lnk=(x,cls)=>'<button class="'+cls+'" data-goto="'+x.sec+'" data-gotok="'+esc(x.key||'')+'" title="Go to Section '+x.sec+'">'+esc(x.label)+'</button>';
   const rows=ORDER.map(o=>{const lab=o[0],hit=byLabel[lab];
-    const w=((warnOf||{})[lab])||((blkBy[lab]||{}).warns)||[];
-    const caveat=w.length?'<span class="gcav">⚠ '+w.map(x=>lnk(x,'gcavl')).join('<span class="gsep">·</span>')+'</span>':'';
-    if(hit)return '<button class="gdoc gdoc-on" data-dldoc="'+hit.i+'">'
-      +'<span class="gtick">✓</span><span class="gdoc-n">'+esc(lab)+'</span>'
-      +caveat+'<span class="gdoc-a">Download</span></button>';
+    const w=[].concat(((warnOf||{})[lab])||((blkBy[lab]||{}).warns)||[],extraWarn[lab]||[]);
+    const omits=w.length?'<div class="gline"><span class="glbl">omits</span>'
+      +w.map(x=>x.sec?lnk(x,'gneed'):'<span class="gneed gneed-flat">'+esc(x.label)+'</span>').join('<span class="gsep">·</span>')+'</div>':'';
+    if(hit)return '<div class="gdoc gdoc-on"><span class="gtick">✓</span>'
+      +'<span class="gdoc-n">'+esc(lab)+'</span>'
+      +'<span class="gdoc-need">'+omits+'</span>'
+      +'<button class="gdoc-a" data-dldoc="'+hit.i+'">Download</button></div>';
     const b=blkBy[lab];
-    const needs=b?(b.missing||[]).map(x=>lnk(x,'gneed')).join('<span class="gsep">·</span>')
-      :'<button class="gneed" data-goto="1" title="Go to Section 1">upload it in Section 1</button>';
+    const needs='<div class="gline"><span class="glbl">needs</span>'
+      +(b?(b.missing||[]).map(x=>lnk(x,'gneed')).join('<span class="gsep">·</span>')
+         :'<button class="gneed" data-goto="1" title="Go to Section 1">the RCS report, uploaded in Section 1</button>')+'</div>';
     return '<div class="gdoc gdoc-off"><span class="gtick gtick-off">–</span>'
-      +'<span class="gdoc-n">'+esc(lab)+'</span><span class="gdoc-need">'+needs+caveat+'</span></div>';}).join('');
+      +'<span class="gdoc-n">'+esc(lab)+'</span><span class="gdoc-need">'+needs+omits+'</span></div>';}).join('');
 
-  const notes=[].concat(missingLh?['No letterhead — the tenant notice used a generated header.']:[],(capMsgs||[]));
+  const notes=[].concat(capMsgs||[]);
   const noteHtml=notes.length?'<div class="gnotes">'+notes.map(m=>'<div class="gnote">⚠ '+esc(m)+'</div>').join('')+'</div>':'';
   const folderIcon='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>';
   // stacked sheets: one file holding all of them
