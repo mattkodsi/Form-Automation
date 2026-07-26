@@ -457,11 +457,14 @@ function renderRents(){
     lh+=`<div class="addrow" id="addNs8">+ Add non-Section 8 unit type</div>`;
   }
   lh+=undoBits('LI');
-  const rgHead=`<div class="rgh"><span>Unit type <em class="hsub">br / ba \u00b7 designation</em></span><span>Units</span><span>Current rent</span><span>Proposed rent</span><span>Utility allowance</span>${hasProg('rcs')?(function(){const st=pullBtnState('safmr');return '<span class="safmrhead">150% SAFMR<button class="urev hudbtn'+st.cls+'" id="pullSafmr"'+st.dis+' title="'+esc(st.why||'Re-pull 150% ceilings from HUD for this property’s ZIP')+'">⤓ HUD</button></span>';})():''}<span></span></div>`;
-  /* One key for the whole section rather than four words of explanation per row.
-     HUD prints only the letter, so the letter is what the chip shows. */
-  const desigKey=UNITS.length?`<div class="dkey"><b>Designation</b>${DESIG.filter(d=>d[0]).map(d=>'<span><i>'+d[0]+'</i>'+d[1]+'</span>').join('')}<em>set it on the unit type \u2014 it prints after the bedroom size on the rent schedule</em></div>`:'';
-  return card(6,sectionPill(6),`<div class="reseff">${dateEffCell()}</div>${capNote()}${desigKey}<div class="ucards${hasProg('rcs')?'':' noprop'}">${UNITS.length?rgHead:''}${cards}</div><div class="addrow" id="addUnit">+ Add unit type</div>${_undoStack.length?(' <span class="addrow ghostlink" id="undoUnit">↩ Undo delete'+(_undoStack.length>1?(' ('+_undoStack.length+')'):'')+'</span><button class="undocommit" id="undoCommit" title="Keep deletions — dismiss undo">✓</button>'):''}<div class="partd">${lh}</div><div class="partd">${pd}</div>`);}
+  /* The key used to sit above the grid as its own row and was the busiest thing
+     in the section for four letters. Part B's fuel chips carry no legend either —
+     a coded chip explains itself where it is used. The codes live on the column
+     header's tooltip, each chip names its own designation, and clicking one says
+     it in the status line. */
+  const desigTip='Designation \u2014 '+DESIG.filter(d=>d[0]).map(d=>d[0]+' '+d[1]).join(', ')+'. It prints after the bedroom size on the rent schedule.';
+  const rgHead=`<div class="rgh"><span title="${esc(desigTip)}">Unit type <em class="hsub">br / ba \u00b7 designation</em></span><span>Units</span><span>Current rent</span><span>Proposed rent</span><span>Utility allowance</span>${hasProg('rcs')?(function(){const st=pullBtnState('safmr');return '<span class="safmrhead">150% SAFMR<button class="urev hudbtn'+st.cls+'" id="pullSafmr"'+st.dis+' title="'+esc(st.why||'Re-pull 150% ceilings from HUD for this property’s ZIP')+'">⤓ HUD</button></span>';})():''}<span></span></div>`;
+  return card(6,sectionPill(6),`<div class="reseff">${dateEffCell()}</div>${capNote()}<div class="ucards${hasProg('rcs')?'':' noprop'}">${UNITS.length?rgHead:''}${cards}</div><div class="addrow" id="addUnit">+ Add unit type</div>${_undoStack.length?(' <span class="addrow ghostlink" id="undoUnit">↩ Undo delete'+(_undoStack.length>1?(' ('+_undoStack.length+')'):'')+'</span><button class="undocommit" id="undoCommit" title="Keep deletions — dismiss undo">✓</button>'):''}<div class="partd">${lh}</div><div class="partd">${pd}</div>`);}
 
 const SAFMR_BR_KEY={'Studio':'efficiency','1BR':'br1','2BR':'br2','3BR':'br3','4BR':'br4'};
 let _hud={key:'',data:null,inflight:null};let _hudTimer=null;
@@ -540,7 +543,14 @@ function boxStyle(k){const c=Array.isArray(k)?groupColors(k):cellColors(k);retur
 /* Same click-to-cycle affordance as the fuel chip, and it lives INSIDE the unit
    type cell rather than taking a column of its own — that cell is already the
    widest in the grid and the designation belongs to the type, not beside it. */
-function desigChip(i){const k='units.'+i+'.desig';const v=get(k);const has=v!==''&&v!=null;const c=cellColors(k);
+/* "No designation" is a real answer, not an empty field. core.js keeps a saved
+   blank grey so an empty TEXT box can never claim to hold data — but a chip is
+   not a text box, and once you have saved the row it is on file like everything
+   else. Match what is stored and it reads blue. */
+function desigColors(k){const c=form[k];
+  if(c&&c.db_value!=null&&String(c.value==null?'':c.value)===String(c.db_value))return provColors('database',k);
+  return cellColors(k);}
+function desigChip(i){const k='units.'+i+'.desig';const v=get(k);const has=v!==''&&v!=null;const c=desigColors(k);
   const t=has?(desigName(v)+' \u2014 click to change'):'No designation \u2014 click for Family, Elderly, Disabled or Near-elderly';
   return '<button class="desig'+(has?'':' empty')+'" data-desig="'+i+'" title="'+esc(t)+'" style="color:'+c[0]+';border-color:'+c[0]+';background:'+c[1]+'">'+(has?esc(v):'\u2013')+'</button>';}
 function fuelChip(k,three){const v=get(k);const has=v!==''&&v!=null;const c=cellColors(k);const cls=three?'fuel3':'fuel';return '<span class="'+cls+(has?'':' empty')+'" data-fuel'+(three?'3':'')+'="'+k+'" style="color:'+c[0]+';border-color:'+c[0]+';background:'+c[1]+'">'+(has?esc(v):'-')+'</span>';}
