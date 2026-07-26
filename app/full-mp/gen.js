@@ -138,7 +138,12 @@
     const money=n=>'$'+Math.round(Number(n)||0).toLocaleString('en-US'); const nm=v=>parseFloat(String(v||'').replace(/[^0-9.\-]/g,''))||0;
     const ftype=br=>String(br||'').replace(/(\d+)\s*BR/i,'$1 BR');
     const idx=[...new Set(Object.keys(rec).map(k=>(k.match(/^units\.(\d+)\./)||[])[1]).filter(x=>x!=null))].sort((a,b)=>a-b);
-    const rows=idx.map(i=>{const n=nm(rec['units.'+i+'.num_units']),c=nm(rec['units.'+i+'.current']),p=nm(rec['units.'+i+'.proposed']); return [ftype(rec['units.'+i+'.br']), String(n||''), money(c), money(p)];}).filter(r=>r[0].trim()||r[1]);
+    // A rent nobody has entered prints blank. This notice is served on residents
+    // under 24 CFR 245; "$0" states a requested rent that was never requested.
+    const has=v=>v!==''&&v!=null;
+    const rows=idx.map(i=>{const n=nm(rec['units.'+i+'.num_units']);
+      const cR=rec['units.'+i+'.current'],pR=rec['units.'+i+'.proposed'];
+      return [ftype(rec['units.'+i+'.br']), String(n||''), has(cR)?money(nm(cR)):'', has(pR)?money(nm(pR)):''];}).filter(r=>r[0].trim()||r[1]);
     const navy=rgb(0.118,0.227,0.373), white=rgb(1,1,1), line=rgb(0.72,0.75,0.80);
     st.ensure(rh*(rows.length+1)+10);
     const row=(vals,hd,y)=>{let x=x0; vals.forEach((v,ci)=>{ st.page.drawRectangle({x,y:y-rh,width:cw[ci],height:rh,borderColor:line,borderWidth:0.6, color: hd?navy:undefined}); const f=hd?B:R,col=hd?white:st.ink,ss=10.5,w=f.widthOfTextAtSize(String(v),ss); st.page.drawText(String(v),{x:x+(cw[ci]-w)/2,y:y-rh+7,size:ss,font:f,color:col}); x+=cw[ci]; }); };
@@ -220,29 +225,51 @@
     if(plan.length>11)plan=mkPlan(false,true);
     if(plan.length>11)plan=mkPlan(false,false);
     if(plan.length>11)plan=plan.slice(0,11);
-    let bannerRow=null;
+    /* The blank template ships with '0' already sitting in three columns of all
+       eleven Part A rows (the row extension, gross rent, and the trailing column).
+       We only ever write the rows we have, so every unused row kept its zeros and
+       the filing went out showing 0 units at $0 down the page. Clear the grid
+       first: only what we actually put there should appear. */
+    for(let r=0;r<11;r++) for(let k=0;k<8;k++){ try{ form.getTextField(String(7+r*8+k)).setText(''); }catch(e){} }
+    /* Same for the totals the app has no figures for. Market rent potential is a
+       real HUD number and we do not collect the market rents it sums, so it must
+       print blank rather than the template's $0 — a stated zero is a claim. */
+    ['97','98','195','1156'].forEach(id=>{ try{ form.getTextField(id).setText(''); }catch(e){} });
+    let bannerRow=null;let ptU=0,ptC=0;   // totals of the rows actually printed
     plan.forEach((row,r)=>{ const base=7+r*8;
       if(row[0]==='banner'){ bannerRow=r; return; }
       if(row[0]==='blank') return;
       const i=row[1];
       if(row[0]==='s8'){ const br=g('units.'+i+'.br'),ba=g('units.'+i+'.ba'),n=nmv(g('units.'+i+'.num_units')),pro=nmv(g('units.'+i+'.proposed'));
-        const us=g('units.'+i+'.ua_source')||'exec'; const ua=us==='rcs'?nmv(g('units.'+i+'.ua_rcs')):(us==='custom'?nmv(g('units.'+i+'.ua_custom')):nmv(g('units.'+i+'.ua_exec')));
+        // Mirror the form's own fallback (app.js defUaSrc): with no source chosen
+        // it shows the executed-RS figure, else the RCS one, else the custom one.
+        // Defaulting flatly to 'exec' printed a BLANK allowance whenever the UA had
+        // come from the RCS report — and gross rent is what the 150% test turns on.
+        const _ue=nmv(g('units.'+i+'.ua_exec')),_ur=nmv(g('units.'+i+'.ua_rcs'));
+        const us=g('units.'+i+'.ua_source')||(_ue>0?'exec':(_ur>0?'rcs':'custom'));
+        const ua=us==='rcs'?_ur:(us==='custom'?nmv(g('units.'+i+'.ua_custom')):_ue);
         // A proposed rent nobody has set yet is blank, not 0 — on a HUD form a
         // printed 0 reads as a real figure. An entered 0 still prints.
         const praw=g('units.'+i+'.proposed'), hasP=praw!==''&&praw!=null;
-        T(base, utype(br,ba)); T(base+1,n||''); T(base+2,hasP?money(pro):''); T(base+3,hasP?money(n*pro):''); T(base+4,ua||''); T(base+5,hasP?money(pro+ua):''); }
+        // Col.4 extends the rent AS PRINTED. Multiplying the unrounded figure made
+        // Col.2 x Col.3 disagree with Col.4 on the face of the filing — and our own
+        // reconciliation gate then rejected a schedule we had generated ourselves.
+        const proR=Math.round(pro);
+        T(base, utype(br,ba)); T(base+1,n||''); T(base+2,hasP?money(proR):''); T(base+3,hasP?money(n*proR):''); T(base+4,ua||''); T(base+5,hasP?money(proR+ua):'');
+        if(hasP){ptU+=n;ptC+=n*proR;} else ptU+=n; }
       else if(row[0]==='li'){ const n=nmv(g('ns8.'+i+'.num_units')),ar=g('ns8.'+i+'.avg_rent');
-        T(base, utype(g('ns8.'+i+'.br'),g('ns8.'+i+'.ba'))); if(n)T(base+1,n);
-        if(ar!==''&&ar!=null){ const rv=nmv(ar); T(base+2,money(rv)); T(base+3,money(n*rv)); T(base+5,money(rv)); } }
-      else { const nn=nmv(g('nonrev.'+i+'.num_units'))||1; T(base, g('nonrev.'+i+'.use')||utype(g('nonrev.'+i+'.br'),g('nonrev.'+i+'.ba'))); T(base+1,nn); }
+        T(base, utype(g('ns8.'+i+'.br'),g('ns8.'+i+'.ba'))); if(n)T(base+1,n); ptU+=n;
+        if(ar!==''&&ar!=null){ const rv=Math.round(nmv(ar)); T(base+2,money(rv)); T(base+3,money(n*rv)); T(base+5,money(rv)); ptC+=n*rv; } }
+      else { const nn=nmv(g('nonrev.'+i+'.num_units'))||1; T(base, g('nonrev.'+i+'.use')||utype(g('nonrev.'+i+'.br'),g('nonrev.'+i+'.ba'))); T(base+1,nn); ptU+=nn; }
     });
     // Totals count every unit — non-S8 rents add into the contract rent
     // potential like S8 rows, and non-rev units count even when trimmed
     // from Part A for space.
-    let tu=0,tc=0;
-    s8A.forEach(i=>{ const n=nmv(g('units.'+i+'.num_units')); tu+=n; tc+=n*nmv(g('units.'+i+'.proposed')); });
-    liA.forEach(i=>{ const n=nmv(g('ns8.'+i+'.num_units')); tu+=n; tc+=n*nmv(g('ns8.'+i+'.avg_rent')); });
-    nrA.forEach(i=>{ tu+=nmv(g('nonrev.'+i+'.num_units'))||1; });
+    /* Foot what is on the page. These summed the FULL arrays while the rows were
+       trimmed to the eleven the form has, so an overflowing schedule printed a
+       total that did not equal its own column — on a form whose Col.4 heading is
+       literally "(Add Col. 4)". */
+    const tu=ptU, tc=ptC;
     const anyP=s8A.some(i=>{const v=g('units.'+i+'.proposed');return v!==''&&v!=null;})||liA.some(i=>{const v=g('ns8.'+i+'.avg_rent');return v!==''&&v!=null;});
     T('94a',tu||''); T('95',anyP?money(tc):''); T('96',anyP?money(tc*12):'');
     // Full-width banner: remove that row's fields (so no viewer redraws a "0"
