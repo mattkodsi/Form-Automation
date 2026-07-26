@@ -84,7 +84,7 @@ async function refreshSnap(){DBSNAP=await bridge.getDb();}
    even though revert has somewhere to go back to. After one "Update property
    profile" every untouched key is saved empty, which made this the normal case,
    not an edge one: a utility allowance typed over its Executed-RS value showed
-   grey with a save button and no way back. Deviation from a saved value is an
+   gray with a save button and no way back. Deviation from a saved value is an
    override, whether or not that saved value was blank. */
 function offFile(k){const c=form[k];return !!(c&&c.db_value!=null&&String(c.value==null?'':c.value)!==String(c.db_value));}
 function modeOf(kk){const keys=Array.isArray(kk)?kk:[kk];if(keys.some(k=>srcOf(k)==='overridden')||keys.some(offFile))return 'over';if(keys.some(k=>srcOf(k)==='new'&&get(k)!==''&&get(k)!=null))return 'new';if(keys.some(k=>srcOf(k)==='this-cycle'))return 'cycle';return '';}
@@ -317,8 +317,8 @@ function renderPrincipals(){
 
 /* Provenance has two axes and one implementation. The EDGE reports the record:
    blue once a cell has been saved, teal when filled from a source this package,
-   amber when changed since the save, grey when nothing was ever recorded. The
-   BODY reports the content: tinted when the cell holds a value, grey when empty.
+   amber when changed since the save, gray when nothing was ever recorded. The
+   BODY reports the content: tinted when the cell holds a value, gray when empty.
    Every painter — text cell, address group, checkbox, chip — comes through here,
    because the rule kept breaking when each path carried its own copy of it. */
 function provColors(state,key){const c=CLR[state]||CLR.new;
@@ -346,7 +346,7 @@ function uaBox(i){const src=get('units.'+i+'.ua_source')||defUaSrc(i),exec=get('
   const lab=src==='rcs'?('$<input class="uac-in srcedit" data-srcedit="ua" data-si="'+i+'" data-money="1" value="'+esc(fmtMoney(rcs))+'"><span class="srctag">· RCS</span>'):(src==='custom'?('$<input class="uac-in" data-money="1" data-k="units.'+i+'.ua_custom" value="'+esc(fmtMoney(custom))+'" placeholder="0">'):('$<input class="uac-in srcedit" data-srcedit="ua" data-si="'+i+'" data-money="1" value="'+esc(fmtMoney(exec))+'"><span class="srctag">· RS</span>'));
 /* Typing here does not edit the cell you can see: it switches the source to
    custom and writes a *_custom key that has never been saved. Judged on that key
-   alone the edit looks like first-time entry — grey, no revert — and Escape then
+   alone the edit looks like first-time entry — gray, no revert — and Escape then
    "clears" it, leaving a custom source with no value and a blank cell. The source
    key is the one that knows an on-file value was displaced, so the badge carries
    both: coupledKeys already saves and reverts them together. */
@@ -505,8 +505,8 @@ function pbUtil(i,label){const on=get('partb.utilities.'+i)==='1';return `<div c
 function writein(id,hasFuel){const val=get('partb.writein.'+id);const on=get('partb.writein.'+id+'.on')==='1';const state=!val?'empty':(on?'checked':'unchecked');
   const ks=hasFuel?['partb.writein.'+id,'partb.writein.'+id+'.on','partb.writein.'+id+'.fuel']:['partb.writein.'+id,'partb.writein.'+id+'.on'];
   const f=hasFuel?fuelChip('partb.writein.'+id+'.fuel',true):'';
-  // The tick carried the colour while the TEXT beside it carried the edit, so a
-  // rewritten write-in kept reading as on file. Colour the pair, as brbaBox does.
+  // The tick carried the color while the TEXT beside it carried the edit, so a
+  // rewritten write-in kept reading as on file. Color the pair, as brbaBox does.
   const attr=hasFuel?` data-util="1"`:` data-wion="partb.writein.${id}.on"`;
   return `<span class="cb wi ${state}${hasFuel?' util':''}"><span class="box wibox" data-wibox="partb.writein.${id}" style="${boxStyle(ks)}">${on?'✓':''}</span><input type="text" class="witext" data-k="partb.writein.${id}"${attr} placeholder="write-in…" value="${esc(val)}" style="${partHot('partb.writein.'+id)?tintStyle('partb.writein.'+id):''}">${f}${ovIcons(ks)}</span>`;}
 function renderPartB(){const eq=PARTB.equipment,sv=PARTB.services;
@@ -871,7 +871,7 @@ async function rsReadTextTier(pages,bytes,onStep){ // flattened copy -> same par
       // typed, that is the difference between a filled box and an empty one.
       // It only ever FILLS: where the text layer has a value that value stands,
       // because it is the document's own characters, while OCR is a reading of
-      // them and can turn 1027 into 1O27. A recognised guess must not be allowed
+      // them and can turn 1027 into 1O27. A recognized guess must not be allowed
       // to overwrite the thing it was guessing at.
       Object.keys(ticks.F).forEach(k=>{if(rects[k]&&rects[k].pg===0&&!F[k])F[k]=ticks.F[k];});}}
   // A copy can be text on one page and pictures on the next — a rent roll that
@@ -976,7 +976,7 @@ function card(n,pill,body){return `<div class="card"><div class="chead"><span cl
    P = L + O, and line Q TAKES P (the RCS cap is not applied — manager's rule,
    confirmed in the wild: CA-filled worksheets show Q = P, "RCS Expires: N/A").
    R = Q ÷ F rounded to 3 decimals, applied per unit type, rounded to dollars. */
-/* Pull-button lifecycle: grey = the pull is impossible right now (missing
+/* Pull-button lifecycle: gray = the pull is impossible right now (missing
    inputs; the reason is shown), normal = ready, green = pulled and current. */
 function apiPrereq(api){
   if(api==='safmr'){const p=hudParams();return (p.zip.length===5||(p.street&&p.city&&p.state))?{ok:true}:{ok:false,why:'Needs the property ZIP or full address ('+secRef(2)+')'};}
@@ -1281,8 +1281,8 @@ function baseSrc(keys){const cold=keys.filter(k=>!partHot(k));return aggSrc(cold
 function groupColors(keys){const a=baseSrc(keys);   // provColors over a group of cells
   return provColors(a,keys.filter(k=>form[k]&&form[k].db_value==='')[0]);}
 /* An address is one box over several cells. When every part holds a value the box
-   carries the colour, which is the common case and stays clean. When only some do,
-   the box goes neutral and the colour moves onto the parts that actually hold
+   carries the color, which is the common case and stays clean. When only some do,
+   the box goes neutral and the color moves onto the parts that actually hold
    something — so an empty street never reads as "on file", and the divider gaps and
    the group's source picker, which belong to no single part, are never tinted. */
 function addrFilled(keys){return keys.every(k=>get(k)!==''&&get(k)!=null&&!partHot(k));}
@@ -1326,12 +1326,12 @@ function paintCaName(){const keys=['ca.prefix','ca.name'];const c=groupColors(ke
 function paintCell(k){const gb=groupOf(k);if(gb)return paintGroup(gb);if(k==='ca.name'||k==='ca.prefix')return paintCaName();const s=form[k];if(!s)return;
   /* A *_custom cell is half of a pair, and the SOURCE key is the one that knows an
      on-file value was displaced. Painting from this key alone turned an emptied
-     override grey — disagreeing with the badge sitting in the same cell, which has
+     override gray — disagreeing with the badge sitting in the same cell, which has
      always read the pair. That is why the first keystroke came out orange (a full
-     re-render, through uaBox) and the second grey (a repaint, through here). */
+     re-render, through uaBox) and the second gray (a repaint, through here). */
   const _ck=coupledKeys(k);
   // modeOf, not srcOf: a source key saved BLANK reads as "new" even once it has
-  // been changed, so testing for 'overridden' left an emptied override grey while
+  // been changed, so testing for 'overridden' left an emptied override gray while
   // the badge beside it correctly said otherwise.
   const _sr=(_ck.length>1&&modeOf(_ck)==='over')?'overridden'
     :(offFile(k)&&s.source!=='overridden')?'overridden'
@@ -1339,14 +1339,14 @@ function paintCell(k){const gb=groupOf(k);if(gb)return paintGroup(gb);if(k==='ca
   // The blue "on file" edge belongs to a cell saved empty and STILL empty. Without
   // the value test it painted blue over whatever was being typed into it.
   const c=CLR[_sr]||CLR.new;const _bl=(_sr==='new'&&s.db_value===''&&String(s.value==null?'':s.value)==='')?CLR.database[0]:c[0];const box=document.querySelector('[data-box="'+k+'"]');if(box){box.style.background=c[1];box.style.borderLeftColor=_bl;}
-  // A write-in's colour lives on its tick, which is keyed data-wibox rather than
+  // A write-in's color lives on its tick, which is keyed data-wibox rather than
   // data-box, so this repaint used to skip it entirely and the cell only changed
-  // colour on a full re-render.
+  // color on a full re-render.
   const _wm=k.match(/^(partb\.writein\.[a-z0-9]+)(?:\.on|\.fuel)?$/);
   if(_wm){const wb=document.querySelector('[data-wibox="'+_wm[1]+'"]');
     if(wb){const wks=[_wm[1],_wm[1]+'.on'];if(form[_wm[1]+'.fuel'])wks.push(_wm[1]+'.fuel');
       const wc=groupColors(wks);wb.style.color=wc[0];wb.style.borderColor=wc[0];wb.style.background=wc[1];}
-    // and the tint on the text itself: a group box keeps its base colour and marks
+    // and the tint on the text itself: a group box keeps its base color and marks
     // the changed part, so without this a rewritten write-in showed no change at all
     const wt=document.querySelector('input.witext[data-k="'+_wm[1]+'"]');
     if(wt)wt.setAttribute('style',partHot(_wm[1])?tintStyle(_wm[1]):'');}const ov=document.querySelector('[data-ov="'+k+'"]');if(ov){const m=modeOf(k);ov.setAttribute('data-mode',m);ov.style.display=m?'flex':'none';}document.querySelectorAll('[data-ovic]').forEach(o=>{const ks=o.getAttribute('data-ovic').split(',');if(ks.indexOf(k)>=0){const m=modeOf(ks);o.setAttribute('data-mode',m);o.style.display=m?'inline-flex':'none';}});}
@@ -1680,7 +1680,7 @@ function newCycleDialog(){
   el('dlgOk').onclick=async()=>{
     const programs=[];if(rcs.checked)programs.push('rcs');if(ocaf.checked)programs.push('ocaf');if(uaf.checked)programs.push('uaf');
     if(!programs.length){err.textContent='Pick at least one program.';return;}
-    const eff=fmtDateInput((el('cyEff').value||'').trim())||effPh;   // left blank, the package takes the date shown in grey: a year on from the last one
+    const eff=fmtDateInput((el('cyEff').value||'').trim())||effPh;   // left blank, the package takes the date shown in gray: a year on from the last one
     const label=(eff.match(/(\d{4})/)||[])[1]||String(new Date().getFullYear());
     closeModal();
     try{const r=await mpdb.createCycle(activePid,{programs,label,effective_date:eff});renderLauncher();await openCycleForm(r.cid);_cyFresh=r.cid;}catch(e){saveFailedModal(e);}
@@ -1805,7 +1805,7 @@ function requestSave(afterSave){
     dialogConfirm('Delete '+total+' unit type'+(total>1?'s':'')+' with no unit count?','Saving will remove '+parts.join(', ')+' row'+(total>1?'s that have':' that has')+' entered data but no unit count. This cannot be undone after saving.','Save anyway',true,()=>saveNow(afterSave,firstZero));}
   else saveNow(afterSave,firstZero);}
 // New-property checklist default: all §8 boxes on except Scope of repair(2) & Scope of work(4),
-// applied as source 'new' (grey/unsaved) only when the property has never saved a checklist.
+// applied as source 'new' (gray/unsaved) only when the property has never saved a checklist.
 function applyChecklistDefaults(){if(Object.keys(DBSNAP).some(k=>/^check\.\d+$/.test(k)))return;for(let i=0;i<17;i++)form=store.editForm(form,'check.'+i,(i===2||i===4)?'':'1');}
 async function openForm(program){activeProgram=program||'RCS';_undoStack=[];_undoNR=[];_undoLI=[];_undoPR=[];_rcsUpload=null;_rsUpload=null;await mpdb.setActive(activePid);await refreshSnap();form=await store.fillForm();fixSavedToggles();applyChecklistDefaults();deriveUnits();snapForm();renderFormHeader();renderBody();show('Form');window.scrollTo(0,0);ensureHudSafmr({});}
 function renderFormHeader(){
@@ -1882,25 +1882,36 @@ async function combinePdfs(list){const {PDFDocument}=window.PDFLib;const out=awa
    are NOT listed: those degrade cleanly. */
 const DOC_REQS={
   cover:[['property.name','property name'],['property.s8','Section 8 number'],
-         ['ca.name','CA contact name'],['ca.org','CA organisation'],['poc.name','point of contact']],
+         ['ca.name','CA contact name'],['ca.org','CA organization'],['poc.name','point of contact']],
   owner:[['property.name','property name'],['property.s8','Section 8 number'],
-         ['ca.name','CA contact name'],['ca.org','CA organisation'],
+         ['ca.name','CA contact name'],['ca.org','CA organization'],
          ['owner.entity_name','ownership entity'],['appr.firm','appraisal firm']],
   checklist:[['sig.name','signatory name'],['sig.title','signatory title']],
   schedule:[['property.name','property name']],
-  notice:[['ca.org','CA organisation'],['tenant.sender_name','tenant-notice sender name']],
+  notice:[['ca.org','CA organization'],['tenant.sender_name','tenant-notice sender name']],
 };
 function docMissing(id){const r=DOC_REQS[id]||[];
   const m=r.filter(x=>String(get(x[0])==null?'':get(x[0])).trim()==='').map(x=>x[1]);
   if(id==='schedule'&&!UNITS.some(i=>numf(get('units.'+i+'.num_units'))>0))m.push('at least one unit type with a count');
   return m;}
 function showPackageModal(nm,docs,combined,missingRcs,missingLh,capMsgs,blocked){
-  const rows=docs.map((d,i)=>'<button class="btn sm gdoc" data-dldoc="'+i+'"><span class="gdoc-n">'+esc(d.label)+'</span><span class="gdoc-a">Download</span></button>').join('')
-    +((blocked||[]).map(b=>'<div class="gdoc gdoc-off"><span class="gdoc-n">'+esc(b.label)+'</span><span class="gdoc-need">needs '+esc(b.missing.join(', '))+'</span></div>').join(''));
-  const miss=(missingRcs?'<div class="sub" style="color:#b45309;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">\u26a0 RCS report (doc 04) missing \u2014 upload it in Section 1.</div>':'')
-    +(missingLh?'<div class="sub" style="color:#b45309;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">\u26a0 No letterhead \u2014 the tenant notice used a generated header.</div>':'')
-    +((capMsgs||[]).map(m=>'<div class="sub" style="color:#b45309;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="'+esc(m)+'">\u26a0 '+esc(m)+'</div>').join(''));
-  const nBlocked=(blocked||[]).length;
+  /* All six documents are listed every time, in package order. Dropping the ones
+     that could not be made and explaining them in a footnote left the list a
+     different length each run, and put the reason a long way from the row it was
+     about. A missing RCS report reads like any other gap now. */
+  const ORDER=['Cover letter (CA)','Owner cover letter',"Owner's checklist",'RCS report','Draft rent schedule','Tenant notice'];
+  const byLabel={};docs.forEach((d,i)=>{byLabel[d.label]={doc:d,i:i};});
+  const blkBy={};(blocked||[]).forEach(b=>{blkBy[b.label]=b;});
+  const rows=ORDER.map(lab=>{
+    const hit=byLabel[lab];
+    if(hit)return '<button class="btn sm gdoc" data-dldoc="'+hit.i+'"><span class="gdoc-n">'+esc(lab)+'</span><span class="gdoc-a">Download</span></button>';
+    const b=blkBy[lab];
+    const why=b?('needs '+b.missing.join(', ')):(lab==='RCS report'?'not uploaded \u2014 add it in '+secRef(1):'not available');
+    return '<div class="gdoc gdoc-off"><span class="gdoc-n">'+esc(lab)+'</span><span class="gdoc-need">'+esc(why)+'</span></div>';
+  }).join('');
+  const notes=[].concat(missingLh?['No letterhead \u2014 the tenant notice used a generated header.']:[],(capMsgs||[]));
+  const miss=notes.length?'<div class="gnotes">'+notes.map(m=>'<div class="gnote">\u26a0 '+esc(m)+'</div>').join('')+'</div>':'';
+  const nBlocked=ORDER.filter(l=>!byLabel[l]).length;
   modal('<div class="dlg-t">Package generated</div><div class="dlg-b">'+esc(nm)+' \u00b7 '+docs.length+' document'+(docs.length===1?'':'s')
     +(nBlocked?' \u00b7 <b style="color:#b45309">'+nBlocked+' not generated</b>':'')
     +'</div><div class="gdocs"><button class="btn p" id="dlCombined">Combined package (PDF)</button>'+rows+miss+'<button class="btn excel" id="dlXlsx">Rent Analysis workbook (Excel)</button><button class="btn p" id="dlFolder" style="margin-top:11px;display:inline-flex;align-items:center;justify-content:center;gap:8px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> Download the RCS Package folder</button></div><div class="dlg-row"><span class="dlg-sp"></span><button class="btn" id="dlgCancel">Close</button></div>','pkg');
@@ -2148,7 +2159,7 @@ async function __genPackageRun(){
     await add('cover','Cover letter (CA)','01. '+N+' - Cover Letter',()=>window.RCSGen.coverLetter(rec,logo));
     await add('owner','Owner cover letter','02. '+N+' - RCS Owner Cover Letter',()=>window.RCSGen.ownerLetter(rec));
     if(T.checklist)await add('checklist',"Owner's checklist","03. "+N+" - RCS Owner's Checklist",()=>window.RCSGen.fillChecklist(b64ToBytes(T.checklist),rec));
-    if(_rcsUpload)docs.push({label:'RCS report (uploaded)',file:'04. '+N+' - RCS Report',bytes:_rcsUpload.bytes});
+    if(_rcsUpload)docs.push({label:'RCS report',file:'04. '+N+' - RCS Report',bytes:_rcsUpload.bytes});
     if(T.rentSchedule)await add('schedule','Draft rent schedule','05. '+N+' - Draft Rent Schedule',()=>window.RCSGen.fillRentSchedule(b64ToBytes(T.rentSchedule),rec));
     await add('notice','Tenant notice','06. '+N+' - RCS Tenant Notice',()=>window.RCSGen.tenantNotice(rec,lh,logo));
     const combined=await combinePdfs(docs.map(d=>d.bytes));

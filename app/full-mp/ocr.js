@@ -45,7 +45,7 @@ async function ocrTemplate(){ // blank template -> per page {w,h,anchors}
       if(!OCR_TOKEN.test(t))return;const k=t.toLowerCase();
       if(!c.has(k))c.set(k,[]);c.get(k).push(r);});
     const anchors={};c.forEach((v,k)=>{if(v.length===1)anchors[k]={x:v[0].x,y:v[0].y};});
-    // every run, kept whole, so a scanned word can be recognised as the form's
+    // every run, kept whole, so a scanned word can be recognized as the form's
     // own printed label rather than something the PM typed (see ocrDropLabels)
     const labels=(runs[i]||[]).map(r=>({x:r.x,y:r.y,t:String(r.s).toLowerCase().split(/\s+/).filter(Boolean)}));
     return {w:sz.width,h:sz.height,anchors:anchors,labels:labels};});
@@ -86,7 +86,7 @@ function ocrFit(pairs){ // least squares similarity: tpl = scale*rotate(doc) + s
   if(!(den>0))return null;
   // Rotation is carried, not assumed away: a sheet lands askew on the glass as
   // often as not, and a degree over a letter page is several points at the edges
-  // — enough to walk a value into its neighbour's box.
+  // — enough to walk a value into its neighbor's box.
   const c=nc/den, s=ns/den;
   const f={c:c,s:s,tx:mtx-(c*mdx-s*mdy),ty:mty-(s*mdx+c*mdy),a:Math.hypot(c,s),n:n};
   const rs=pairs.map(p=>Math.hypot(ocrX(f,p.dx,p.dy)-p.tx,ocrY(f,p.dx,p.dy)-p.ty)).sort((x,y)=>x-y);
@@ -144,7 +144,7 @@ function ocrMap(words,rects,tplPg,f){ // registered words -> {fieldId: text}
     const mx=(w.x0+w.x1)/2, my=(w.y0+w.y1)/2;
     const cx=ocrX(f,mx,my), cy=ocrY(f,mx,my);
     // Part A's rows are 9pt boxes on a 12pt pitch, so a plain "inside?" test with
-    // enough slop for OCR jitter would let every row swallow its neighbour. Give
+    // enough slop for OCR jitter would let every row swallow its neighbor. Give
     // each word to the ONE box whose middle it sits nearest instead.
     let best=null,bd=1e9;
     rs.forEach(o=>{const r=o.r;
@@ -203,7 +203,7 @@ function ocrPageMap(pg,tplPg,tpl,rects){ // one OCR'd page -> {F,s8} against a t
     const cx=ocrX(f,m.x,m.y),cy=ocrY(f,m.x,m.y);
     // exactly one box per tick — the nearest. Setting every box the mark falls
     // within let a single tick, nudged by a degree of skew, switch on a
-    // neighbouring utility that the schedule leaves off.
+    // neighboring utility that the schedule leaves off.
     let best=null,bd=1e9;
     OCR_CHECKBOX.forEach(id=>{const r=rects[String(id)];if(!r||r.pg!==tplPg)return;
       if(cx<r.x-OCR_PADX||cx>r.x+r.w+OCR_PADX||cy<r.y-OCR_PADY||cy>r.y+r.h+OCR_PADY)return;

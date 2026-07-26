@@ -101,7 +101,7 @@ as $$
 declare e text; k text;
 begin
   if current_setting('request.jwt.claims', true)::jsonb ->> 'role' is distinct from 'service_role' then
-    raise exception 'not authorised';
+    raise exception 'not authorized';
   end if;
   select decrypted_secret into e from vault.decrypted_secrets where name = 'azure_di_endpoint';
   select decrypted_secret into k from vault.decrypted_secrets where name = 'azure_di_key';

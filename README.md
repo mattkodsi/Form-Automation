@@ -29,7 +29,7 @@ Everything downloads individually, as one combined PDF, or as a zipped
 - **Multi-property gallery** with completeness rings, search, and per-property
   letterhead management.
 - **Provenance-tracked form**: every cell knows whether its value is on-file
-  (blue), pulled this cycle (teal), a new unsaved entry (grey), or an override
+  (blue), pulled this cycle (teal), a new unsaved entry (gray), or an override
   of the stored record (orange) — with per-field save and revert.
 - **150% SAFMR test**: unit-weighted gross-rent-potential gauge against the
   ceiling, with a one-click **HUD SAFMR pull** by ZIP (FY-aware, >4BR
