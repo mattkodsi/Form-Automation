@@ -1900,7 +1900,9 @@ function gotoSection(n){const vs=visibleSections();const i=vs.indexOf(n);
   const cards=document.querySelectorAll('#sections .card');const c=cards[i>=0?i:0];
   if(!c)return;
   c.classList.remove('collapsed');
-  try{c.scrollIntoView({behavior:'smooth',block:'start'});}catch(e){c.scrollIntoView();}
+  // centre it: 'start' put the heading under the sticky command bar, so the
+  // field you were sent to fix sat just off the top of the screen
+  try{c.scrollIntoView({behavior:'smooth',block:'center'});}catch(e){c.scrollIntoView();}
   const inp=c.querySelector('input:not([type=hidden]),textarea');
   if(inp)setTimeout(()=>{try{inp.focus({preventScroll:true});}catch(e){}},340);}
 function showPackageModal(nm,docs,combined,missingRcs,missingLh,capMsgs,blocked){
@@ -1929,17 +1931,22 @@ function showPackageModal(nm,docs,combined,missingRcs,missingLh,capMsgs,blocked)
   const notes=[].concat(missingLh?['No letterhead — the tenant notice used a generated header.']:[],(capMsgs||[]));
   const noteHtml=notes.length?'<div class="gnotes">'+notes.map(m=>'<div class="gnote">⚠ '+esc(m)+'</div>').join('')+'</div>':'';
   const folderIcon='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>';
+  // stacked sheets: one file holding all of them
+  const pdfIcon='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto"><path d="M8 3h7l5 5v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M15 3v5h5"/><path d="M4 7v12a2 2 0 0 0 2 2h10" opacity=".45"/></svg>';
+  // a sheet with a grid: the workbook
+  const xlIcon='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>';
 
   modal('<div class="dlg-t">Package generated</div>'
     +'<div class="dlg-b">'+esc(nm)+' · '+(nGap?nReady+' of '+ORDER.length+' ready · <b style="color:#b45309">'+nGap+' need'+(nGap===1?'s':'')+' more information</b>':'all '+ORDER.length+' documents ready')+'</div>'
     +'<div class="gdocs">'+rows+'</div>'
-    +(nReady?('<div class="glinks"><button class="glink" id="dlCombined">Combined PDF</button><span class="gdot">·</span>'
-      +'<button class="glink" id="dlXlsx">Rent Analysis (Excel)</button></div>'):'')
     +noteHtml
-    /* The folder goes last. It is the thing you leave with, so it reads as the
-       conclusion of the list rather than an instruction issued before it. */
+    /* Everything you can leave with, at the end. The folder is the whole package
+       as separate named files; the two beneath it are the single-file forms of
+       it — one merged PDF and the workbook — so they sit together as a pair. */
     +(nReady?('<button class="gprim" id="dlFolder">'+folderIcon+'<span><span class="gprim-t">Download the RCS Package folder</span>'
-      +'<span class="gprim-s">'+nReady+' document'+(nReady===1?'':'s')+', named and in order</span></span></button>'):'')
+      +'<span class="gprim-s">'+nReady+' document'+(nReady===1?'':'s')+', named and in order</span></span></button>'
+      +'<div class="gpair"><button class="btn gsub" id="dlCombined">'+pdfIcon+'RCS Package PDF</button>'
+      +'<button class="btn gsub gsub-x" id="dlXlsx">'+xlIcon+'Rent Analysis</button></div>'):'')
     +'<div class="dlg-row"><span class="dlg-sp"></span><button class="btn" id="dlgCancel">Close</button></div>','pkg');
   el('dlgCancel').onclick=closeModal;
   const cbn=el('dlCombined');if(cbn)cbn.onclick=()=>dlPdf(combined,nm+' - RCS Package.pdf');
