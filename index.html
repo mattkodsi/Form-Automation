@@ -67,7 +67,7 @@ body.scrolled #ccbar{transform:translateY(0);opacity:1}
 /* needs / omits: same amber, told apart by the word rather than a second hue */
 .gline{display:flex;align-items:baseline;justify-content:flex-end;flex-wrap:wrap;gap:0 2px;line-height:1.7}
 .gline+.gline{margin-top:1px}
-.draft-off{color:#9aa4b5}
+.draft-off{color:#9aa4b5} .dtick{display:inline-block;width:13px;font-style:normal}
 .liftnote{font-size:11px;color:#64748b;margin-top:4px;line-height:1.45}
 .glbl{font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#a3adbe;margin-right:9px}
 .gneed-flat{text-decoration:none;cursor:default}
@@ -1792,13 +1792,18 @@ function applyHudSafmr(){if(!_hud.data)return 0;const rents=_hud.data.zip_rents|
 function renderKeepFocus(){const ae=document.activeElement;const k=ae&&ae.getAttribute?ae.getAttribute('data-k'):null;const pos=(k&&ae.selectionStart!=null)?ae.selectionStart:null;renderBody();
   if(k){const ni=document.querySelector('[data-k="'+k+'"]');if(ni){ni.focus({preventScroll:true});try{const L=pos==null?(ni.value||'').length:pos;ni.setSelectionRange(L,L);}catch(e){}}}}
 function hudStatus(n){const d=_hud.data;if(!d)return;
-  const srcNote=d.zip_rents?('ZIP '+d.zip):(d.smallarea?'metro-wide — ZIP not in HUD’s SAFMR table':'area FMR — not a Small Area FMR zone');
+  /* Say where the figure came from, not how HUD's program works. "area-wide FMR"
+     already tells you it is not your own ZIP's rent; the clause explaining that
+     Hillsdale County is not a Small Area FMR zone was answering a question nobody
+     asked, on the one line that has to read at a glance. And nothing filled needs
+     no announcement — silence already says the ceilings did not move. */
+  const srcNote=d.zip_rents?('ZIP '+d.zip):(d.smallarea?'area-wide FMR · ZIP not listed':'area-wide FMR');
   // Say the year only when HUD told us one — the FMR endpoint returns it only
   // when a year was asked for, and "HUD FYundefined" was reaching the screen.
   // And call them 150% ceilings, not SAFMR ceilings: outside a Small Area zone
   // the ceiling comes from the area FMR, so "not a SAFMR zone — SAFMR ceilings
   // are up to date" was contradicting itself in the same breath.
-  setStatus((d.year?('HUD FY'+d.year+' · '):'HUD FMR · ')+d.area_name+' · '+srcNote+(n?(' — filled the 150% ceiling for '+n+' unit type'+(n===1?'':'s')+'. Review, then “Update property profile”.'):' — the 150% ceilings are up to date.'));}
+  setStatus((d.year?('HUD FY'+d.year+' · '):'HUD FMR · ')+d.area_name+' · '+srcNote+(n?(' — filled the 150% ceiling for '+n+' unit type'+(n===1?'':'s')+'. Review, then “Update property profile”.'):''));}
 async function ensureHudSafmr(opts){opts=opts||{};const manual=!!opts.manual;
   if(!hasProg('rcs'))return; // the 150% SAFMR threshold is an RCS instrument
   if(!supaClient){if(manual)setStatus('HUD SAFMR pull needs the hosted backend — sign in first.');return;}
@@ -2535,7 +2540,10 @@ function pkgCard(){
                ['RCS report (uploaded PDF)','rcs'],['Draft rent schedule','schedule'],['Tenant notice','notice']];
       return L.map(d=>{const miss=d[1]==='rcs'?(_rcsUpload?[]:[{label:'no study uploaded yet'}]):docMissing(d[1]);
         const ok=!miss.length;
-        return '<span'+(ok?'':' class="draft-off" title="Needs '+esc(miss.map(x=>x.label).join(', '))+'"')+'>'+(ok?'✓ ':'○ ')+d[0]+'</span>';}).join('');
+        /* One signal per state, not two: a tick marks ready, grey marks not. A
+           hollow circle on a greyed row said the same thing twice. The tick slot
+           is still reserved when empty so both columns stay aligned. */
+        return '<span'+(ok?'':' class="draft-off" title="Needs '+esc(miss.map(x=>x.label).join(', '))+'"')+'><i class="dtick">'+(ok?'✓':'')+'</i>'+d[0]+'</span>';}).join('');
     })()}</div>
      <div class="wb">Documents are generated from the form exactly as shown. Save with “Update property profile” before generating.</div></div>`;
   const docs=[];
@@ -3351,7 +3359,7 @@ function showPackageModal(nm,docs,combined,missingRcs,missingLh,capMsgs,blocked,
   const nReady=ORDER.filter(o=>byLabel[o[0]]).length, nGap=ORDER.length-nReady;
 
   /* One kind of amber, one place. A caveat is not a different colour of problem,
-     it is a different sentence: NEEDS blocks the document, OMITS means it was
+     it is a different sentence: REQUIRED blocks the document, SUGGESTED means it was
      written without something. The letterhead belongs here as well — it only
      ever affected the tenant notice — so nothing document-specific is left
      stranded at the foot of the dialog in a second shade. */
@@ -3360,14 +3368,14 @@ function showPackageModal(nm,docs,combined,missingRcs,missingLh,capMsgs,blocked,
   const lnk=(x,cls)=>'<button class="'+cls+'" data-goto="'+x.sec+'" data-gotok="'+esc(x.key||'')+'" title="Go to Section '+x.sec+'">'+esc(x.label)+'</button>';
   const rows=ORDER.map(o=>{const lab=o[0],hit=byLabel[lab];
     const w=[].concat(((warnOf||{})[lab])||((blkBy[lab]||{}).warns)||[],extraWarn[lab]||[]);
-    const omits=w.length?'<div class="gline"><span class="glbl">omits</span>'
+    const omits=w.length?'<div class="gline"><span class="glbl">suggested</span>'
       +w.map(x=>x.sec?lnk(x,'gneed'):'<span class="gneed gneed-flat">'+esc(x.label)+'</span>').join('<span class="gsep">·</span>')+'</div>':'';
     if(hit)return '<div class="gdoc gdoc-on"><span class="gtick">✓</span>'
       +'<span class="gdoc-n">'+esc(lab)+'</span>'
       +'<span class="gdoc-need">'+omits+'</span>'
       +'<button class="gdoc-a" data-dldoc="'+hit.i+'">Download</button></div>';
     const b=blkBy[lab];
-    const needs='<div class="gline"><span class="glbl">needs</span>'
+    const needs='<div class="gline"><span class="glbl">required</span>'
       +(b?(b.missing||[]).map(x=>lnk(x,'gneed')).join('<span class="gsep">·</span>')
          :'<button class="gneed" data-goto="1" title="Go to Section 1">the RCS report, uploaded in Section 1</button>')+'</div>';
     return '<div class="gdoc gdoc-off"><span class="gtick gtick-off">–</span>'
