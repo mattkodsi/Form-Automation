@@ -1904,56 +1904,49 @@ function gotoSection(n){const vs=visibleSections();const i=vs.indexOf(n);
   const inp=c.querySelector('input:not([type=hidden]),textarea');
   if(inp)setTimeout(()=>{try{inp.focus({preventScroll:true});}catch(e){}},340);}
 function showPackageModal(nm,docs,combined,missingRcs,missingLh,capMsgs,blocked){
-  /* Lead with the thing you came for, and with the work that is left — not with
-     an inventory. Six uniform rows are noise when everything worked, and when
-     something is missing the useful question is not "which document is short"
-     but "what do I go and type". So the gaps are pooled across documents,
-     de-duplicated, and listed once each with the section that fixes them; the
-     per-document breakdown stays available behind a disclosure for anyone who
-     wants one file. */
-  const ORDER=[['cover','Cover letter (CA)'],['owner','Owner cover letter'],['checklist',"Owner's checklist"],
-               ['rcs','RCS report'],['schedule','Draft rent schedule'],['notice','Tenant notice']];
+  /* All six documents stay on the surface: which ones exist and which do not is
+     the whole point of the dialog, and folding it away meant the only way to
+     learn it was to go looking. What each one is short of sits on its own row,
+     and the field names themselves are the links — naming the thing you must go
+     and type is clearer than a separate "Section 4" button beside it, and one
+     field blocking three documents shows up as three mentions, which is true. */
+  const ORDER=[['Cover letter (CA)'],['Owner cover letter'],["Owner's checklist"],
+               ['RCS report'],['Draft rent schedule'],['Tenant notice']];
   const byLabel={};docs.forEach((d,i)=>{byLabel[d.label]={doc:d,i:i};});
   const blkBy={};(blocked||[]).forEach(b=>{blkBy[b.label]=b;});
-  const nReady=ORDER.filter(o=>byLabel[o[1]]).length, nGap=ORDER.length-nReady;
+  const nReady=ORDER.filter(o=>byLabel[o[0]]).length, nGap=ORDER.length-nReady;
 
-  // every gap once, in the order you would walk the form
-  const seen={},fixes=[];
-  ORDER.forEach(o=>{const b=blkBy[o[1]];if(!b)return;
-    (b.missing||[]).forEach(x=>{if(seen[x.key])return;seen[x.key]=1;fixes.push(x);});});
-  if(!byLabel['RCS report']&&!blkBy['RCS report'])fixes.push({key:'rcs',label:'the RCS report',sec:1});
-  fixes.sort((a,b)=>a.sec-b.sec);
-
-  const fixList=fixes.length?'<div class="gsec">To finish the other '+nGap+'</div>'
-    +'<div class="gfix">'+fixes.map(f=>'<div class="gfix-r"><span class="gfix-l">'+esc(f.label)
-      +'</span><button class="gfix-s" data-goto="'+f.sec+'">Section '+f.sec+'</button></div>').join('')+'</div>':'';
-
-  const detail=ORDER.map(o=>{const hit=byLabel[o[1]];
-    if(hit)return '<button class="gdoc gdoc-on" data-dldoc="'+hit.i+'"><span class="gdoc-n">'+esc(o[1])+'</span><span class="gdoc-a">Download</span></button>';
-    const b=blkBy[o[1]];
-    const why=b?((b.missing||[]).map(x=>x.label).join(', ')):'not uploaded';
-    return '<div class="gdoc gdoc-off"><span class="gdoc-n">'+esc(o[1])+'</span><span class="gdoc-need">'+esc(why)+'</span></div>';}).join('');
+  const rows=ORDER.map(o=>{const lab=o[0],hit=byLabel[lab];
+    if(hit)return '<button class="gdoc gdoc-on" data-dldoc="'+hit.i+'">'
+      +'<span class="gtick">✓</span><span class="gdoc-n">'+esc(lab)+'</span>'
+      +'<span class="gdoc-a">Download</span></button>';
+    const b=blkBy[lab];
+    const needs=b?(b.missing||[]).map(x=>'<button class="gneed" data-goto="'+x.sec+'" title="Go to Section '+x.sec+'">'+esc(x.label)+'</button>').join('<span class="gsep">·</span>')
+      :'<button class="gneed" data-goto="1" title="Go to Section 1">upload it in Section 1</button>';
+    return '<div class="gdoc gdoc-off"><span class="gtick gtick-off">–</span>'
+      +'<span class="gdoc-n">'+esc(lab)+'</span><span class="gdoc-need">'+needs+'</span></div>';}).join('');
 
   const notes=[].concat(missingLh?['No letterhead — the tenant notice used a generated header.']:[],(capMsgs||[]));
   const noteHtml=notes.length?'<div class="gnotes">'+notes.map(m=>'<div class="gnote">⚠ '+esc(m)+'</div>').join('')+'</div>':'';
   const folderIcon='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>';
 
   modal('<div class="dlg-t">Package generated</div>'
-    +'<div class="dlg-b">'+esc(nm)+' · '+(nGap?nReady+' of '+ORDER.length+' documents ready':'all '+ORDER.length+' documents ready')+'</div>'
-    +(nReady?('<button class="gprim" id="dlFolder">'+folderIcon+'<span><span class="gprim-t">Download the RCS Package folder</span>'
-      +'<span class="gprim-s">'+nReady+' document'+(nReady===1?'':'s')+', named and in order</span></span></button>'
-      +'<div class="glinks"><button class="glink" id="dlCombined">Combined PDF</button><span class="gdot">·</span>'
+    +'<div class="dlg-b">'+esc(nm)+' · '+(nGap?nReady+' of '+ORDER.length+' ready · <b style="color:#b45309">'+nGap+' need'+(nGap===1?'s':'')+' more information</b>':'all '+ORDER.length+' documents ready')+'</div>'
+    +'<div class="gdocs">'+rows+'</div>'
+    +(nReady?('<div class="glinks"><button class="glink" id="dlCombined">Combined PDF</button><span class="gdot">·</span>'
       +'<button class="glink" id="dlXlsx">Rent Analysis (Excel)</button></div>'):'')
-    +fixList
-    +'<details class="gdisc"><summary>All '+ORDER.length+' documents</summary><div class="gdocs">'+detail+'</div></details>'
     +noteHtml
+    /* The folder goes last. It is the thing you leave with, so it reads as the
+       conclusion of the list rather than an instruction issued before it. */
+    +(nReady?('<button class="gprim" id="dlFolder">'+folderIcon+'<span><span class="gprim-t">Download the RCS Package folder</span>'
+      +'<span class="gprim-s">'+nReady+' document'+(nReady===1?'':'s')+', named and in order</span></span></button>'):'')
     +'<div class="dlg-row"><span class="dlg-sp"></span><button class="btn" id="dlgCancel">Close</button></div>','pkg');
   el('dlgCancel').onclick=closeModal;
   const cbn=el('dlCombined');if(cbn)cbn.onclick=()=>dlPdf(combined,nm+' - RCS Package.pdf');
   const xb=el('dlXlsx');if(xb)xb.onclick=()=>genRentAnalysis();
   const fb=el('dlFolder');if(fb)fb.onclick=()=>dlPackageFolder(nm,docs,combined);
   document.querySelectorAll('[data-dldoc]').forEach(b=>b.onclick=()=>{const d=docs[+b.getAttribute('data-dldoc')];dlPdf(d.bytes,d.file+'.pdf');});
-  document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>{closeModal();gotoSection(+b.getAttribute('data-goto'));});
+  document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=e=>{e.preventDefault();e.stopPropagation();closeModal();gotoSection(+b.getAttribute('data-goto'));});
 }
 
 async function dlPackageFolder(nm,docs,combined){
