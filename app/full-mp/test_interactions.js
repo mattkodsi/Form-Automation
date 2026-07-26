@@ -15,6 +15,7 @@ const eq=(label,got,want)=>{n++;const p=JSON.stringify(got)===JSON.stringify(wan
 const T=(label,v)=>eq(label,!!v,true);
 (async()=>{
   await global.__ready();
+  await app.__localDb();                     // no Supabase in the test env — see __localDb
   const pid=app.__firstPid();
   await app.__openForm(pid);
 
@@ -41,8 +42,12 @@ const T=(label,v)=>eq(label,!!v,true);
   for(const k of app.fieldKeys('partb.writein.e1')) await app.__saveField(k);
   eq('label saved empty',   app.getVal('partb.writein.e1'), '');
   eq('.on saved empty',     app.getVal('partb.writein.e1.on'), '');
-  eq('label now database',  app.srcOf('partb.writein.e1'), 'database');
-  eq('.on now database',    app.srcOf('partb.writein.e1.on'), 'database');
+  /* A cell saved EMPTY is on file but must not paint blue "on file" — an empty
+     blue cell reads as data. core.js keeps source 'new' for a saved blank and
+     records db_value '' so the clear persists; app.js's offFile() answers the
+     on-file question for the exit prompt. saved_at is the proof it was written. */
+  eq('label saved-empty stays new',  app.srcOf('partb.writein.e1'), 'new');
+  eq('.on saved-empty stays new',    app.srcOf('partb.writein.e1.on'), 'new');
   T('group now clean (no save pending)', !app.keysCanSave(app.fieldKeys('partb.writein.e1')));
 
   console.log('\n─ new write-in: typed value is "new-dirty" (Enter saves, Esc clears), not revertable ─');
