@@ -225,7 +225,10 @@ const addrLine=(street,city,state,zip)=>{
     const _dei=_toISO(_de);
     T(1,g('property.name')); T(2,g('property.fha')); T(3,dfmt(_dei));
     { const rp=String(_dei).slice(0,10).split('-'); if(rp.length===3){ T(4,rp[1]); T(5,rp[2]); T(6,rp[0]); } }
-    const utype=(br,ba)=>{const b=String(br||'').replace(/(\d+)\s*BR/i,'$1 BR').replace(/^\s*\/?\s*$/,'').trim();const a=String(ba||'').replace(/(\d+(?:\.\d+)?)\s*BA/i,'$1 BA').trim();return (b&&a)?(b+' / '+a):(b||a);};
+    /* The designation rides on the end of Column 1, the way the executed copies
+       write it ("1 BR E"). Without it a property whose elderly and family rows
+       carry different rents generated two rows that read identically. */
+    const utype=(br,ba,dg)=>{const b=String(br||'').replace(/(\d+)\s*BR/i,'$1 BR').replace(/^\s*\/?\s*$/,'').trim();const a=String(ba||'').replace(/(\d+(?:\.\d+)?)\s*BA/i,'$1 BA').trim();const t=(b&&a)?(b+' / '+a):(b||a);const d=String(dg||'').trim();return t&&d?(t+' '+d):t;};
     // Part A layout: Section 8 rev rows, then a full-width "Non- Section 8
     // Rents" banner + the non-Section-8 rows, then a blank spacer row + the
     // non-revenue rows. Over 11 rows: drop the spacer first, then the
@@ -271,7 +274,7 @@ const addrLine=(street,city,state,zip)=>{
         // Col.2 x Col.3 disagree with Col.4 on the face of the filing — and our own
         // reconciliation gate then rejected a schedule we had generated ourselves.
         const proR=Math.round(pro);
-        T(base, utype(br,ba)); T(base+1,n||''); T(base+2,hasP?money(proR):''); T(base+3,hasP?money(n*proR):''); T(base+4,ua||''); T(base+5,hasP?money(proR+ua):'');
+        T(base, utype(br,ba,g('units.'+i+'.desig'))); T(base+1,n||''); T(base+2,hasP?money(proR):''); T(base+3,hasP?money(n*proR):''); T(base+4,ua||''); T(base+5,hasP?money(proR+ua):'');
         if(hasP){ptU+=n;ptC+=n*proR;} else ptU+=n; }
       else if(row[0]==='li'){ const n=nmv(g('ns8.'+i+'.num_units')),ar=g('ns8.'+i+'.avg_rent');
         T(base, utype(g('ns8.'+i+'.br'),g('ns8.'+i+'.ba'))); if(n)T(base+1,n); ptU+=n;
@@ -354,7 +357,7 @@ const addrLine=(street,city,state,zip)=>{
   const m0=n=>'$'+Math.round(Number(n)||0).toLocaleString('en-US');
   const m2=n=>'$'+(Number(n)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
   const idxOf=(rec,pre)=>[...new Set(Object.keys(rec).map(k=>(k.match(new RegExp('^'+pre+'\\.(\\d+)\\.'))||[])[1]).filter(x=>x!=null))].sort((a,b)=>a-b);
-  const utype2=(br,ba)=>{const b=String(br||'').replace(/(\d+)\s*BR/i,'$1 BR').trim();const a=String(ba||'').replace(/(\d+(?:\.\d+)?)\s*BA/i,'$1 BA').trim();return (b&&a)?(b+' / '+a):(b||a||'—');};
+  const utype2=(br,ba,dg)=>{const b=String(br||'').replace(/(\d+)\s*BR/i,'$1 BR').trim();const a=String(ba||'').replace(/(\d+(?:\.\d+)?)\s*BA/i,'$1 BA').trim();const t=(b&&a)?(b+' / '+a):(b||a||'—');const d=String(dg||'').trim();return d?(t+' '+d):t;};
   const effOf=rec=>{const g=k=>rec[k]!=null?String(rec[k]):'';const de=(g('rent_schedule.date_eff_source')==='custom'?(g('rent_schedule.date_eff_custom')||g('rent_schedule.date_eff_rs')||g('rent_schedule.date_rents_effective')):(g('rent_schedule.date_eff_rs')||g('rent_schedule.date_eff_custom')||g('rent_schedule.date_rents_effective')));
     const s=String(de||'').trim();let m=s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);if(m)return monthY(m[3]+'-'+('0'+m[1]).slice(-2)+'-'+('0'+m[2]).slice(-2));return monthY(s);};
   const UAF_UTILS_G=[['oil','Oil'],['gas','Natural Gas'],['electric','Electric'],['water','Water / Sewer / Trash']];

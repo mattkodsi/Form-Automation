@@ -1,6 +1,17 @@
 /* app.js — the whole RCS package form (Rich Review v4), on the keyed-cell store. */
 const STATES='AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY'.split(' ');
 const BR_OPTS=['Studio','1BR','2BR','3BR','4BR','5BR']; const BA_OPTS=['1BA','1.5BA','2BA','2.5BA','3BA'];
+/* The "E" and "F" a schedule prints after the bedroom count are the unit's
+   DESIGNATION. HUD defines nothing here — the 92458 only tells you to show
+   "other features that cause rents to vary" — but 4350.3 is explicit about the
+   underlying idea: units in a project may be "designated for specific family
+   types, such as those who are elderly or disabled", and it calls the reserved
+   quantity a set-aside. So the row-level label is the designation; the count is
+   the set-aside. Family is the unrestricted default and prints nothing unless a
+   property actually splits its rows, which is the only time the distinction
+   changes a rent or an allowance. */
+const DESIG=[['',''],['F','Family'],['E','Elderly'],['D','Disabled'],['NE','Near-elderly']];
+const desigName=v=>{const r=DESIG.find(x=>x[0]===String(v||''));return r?r[1]:'';};
 const ENTITY_TYPES=['Individual','Corporation','General Partnership','Limited Partnership','Joint Tenancy/Tenants in Common','Trust','Other (specify)'];
 const FIELD_SECTIONS=[
   {n:2,title:'Property',fields:[{k:'property.name',label:'Property name',col:0},{k:'tenant.property_alias',label:'Also known to tenants as',col:0},{k:'property.addr',label:'Address',col:0,type:'addr'},{k:'owner.entity_name',label:'Ownership entity',col:1},{k:'owner.entity_type',label:'Entity type',col:1,type:'select',opts:ENTITY_TYPES},{type:'pair',col:1,items:[{k:'property.s8',label:'Section 8 #'},{k:'property.fha',label:'FHA #'}]}]},
@@ -28,7 +39,7 @@ const SEED={ // key manifest only — the VALUES are never read (ALL_KEYS below 
   'ca.org':['',D],'ca.prefix':['',D],'ca.name':['',D],'ca.position':['',D],
   'ca.addr_street':['',D],'ca.addr_city':['',D],'ca.addr_state':['',D],'ca.addr_zip':['',D],
   'appr.firm':['',T],'appr.name':['',T],'appr.email':['',T],'appr.phone':['',T],'appr.addr_street':['',T],'appr.addr_city':['',T],'appr.addr_state':['',T],'appr.addr_zip':['',T],
-  'units.0.br':['',D],'units.0.ba':['',D],'units.0.num_units':['',D],'units.0.current':['',T],'units.0.proposed':['',T],
+  'units.0.br':['',D],'units.0.ba':['',D],'units.0.desig':['',D],'units.0.num_units':['',D],'units.0.current':['',T],'units.0.proposed':['',T],
   'units.0.ua_exec':['',T],'units.0.ua_rcs':['',T],'units.0.ua_source':['',T],'units.0.ua_reviewed':['',T],'units.0.ua_custom':['',T],
   'units.0.safmr_rcs':['',T],'units.0.safmr_hud':['',T],'units.0.safmr_source':['',T],'units.0.safmr_reviewed':['',T],
   'rent_schedule.date_eff_rs':['',T],'rent_schedule.date_eff_source':['',T],'rent_schedule.date_eff_custom':['',T],'rent_schedule.date_rents_effective':['',T],
@@ -372,7 +383,7 @@ function numUnresolved(i){return numConflict(i)&&!numReviewedOf(i);}
 function unitTypeCell(i){const brK='units.'+i+'.br',baK='units.'+i+'.ba';const conf=typeUnresolved(i);const c=conf?CLR.overridden:groupColors([brK,baK]);
   const withRs=(k,opts,ph)=>{const d=csDrop(k,opts,ph,'',true,(!conf&&partHot(k))?tintStyle(k):'');const row=rsCsRow(k);
     return row?d.replace('<div class="uamenu">','<div class="uamenu">'+row):d;};
-  return `<div class="rbox brba" data-box="${brK}" style="background:${c[1]};border-left-color:${c[0]}">${withRs(brK,BR_OPTS,'BR')}${ovIcons(brK)}<span class="slash">/</span>${withRs(baK,BA_OPTS,'BA')}${ovIcons(baK)}</div>`;}
+  return `<div class="rbox brba" data-box="${brK}" style="background:${c[1]};border-left-color:${c[0]}">${withRs(brK,BR_OPTS,'BR')}${ovIcons(brK)}<span class="slash">/</span>${withRs(baK,BA_OPTS,'BA')}${ovIcons(baK)}${desigChip(i)}</div>`;}
 function unitCountCell(i){const k='units.'+i+'.num_units';const c=numUnresolved(i)?CLR.overridden:cellColors(k);const rv=rsUnit(i,'count');
   // The schedule is where this number comes from, so the cell says so whether or
   // not one is loaded right now — dimmed when there is nothing to pull, exactly as
@@ -515,6 +526,11 @@ async function ensureHudSafmr(opts){opts=opts||{};const manual=!!opts.manual;
 function undoBits(fam){const st=fam==='LI'?_undoLI:_undoNR;if(!st.length)return '';const id=fam==='LI'?'undoNs8':'undoNonrev';return ' <span class="addrow ghostlink" id="'+id+'">↩ Undo delete'+(st.length>1?(' ('+st.length+')'):'')+'</span><button class="undocommit" id="'+id+'C" title="Keep deletions — dismiss undo">✓</button>';}
 function provColor(k){return cellColors(k)[0];}
 function boxStyle(k){const c=Array.isArray(k)?groupColors(k):cellColors(k);return 'color:'+c[0]+';border-color:'+c[0]+';background:'+c[1];}
+/* Same click-to-cycle affordance as the fuel chip, and it lives INSIDE the unit
+   type cell rather than taking a column of its own — that cell is already the
+   widest in the grid and the designation belongs to the type, not beside it. */
+function desigChip(i){const k='units.'+i+'.desig';const v=get(k);const has=v!==''&&v!=null;const c=cellColors(k);
+  return '<button class="desig'+(has?'':' empty')+'" data-desig="'+i+'" title="'+esc(has?desigName(v)+' \u2014 click to change':'No designation \u2014 click to set Family, Elderly, Disabled or Near-elderly')+'" style="color:'+c[0]+';border-color:'+c[0]+';background:'+c[1]+'">'+(has?esc(v):'+')+'</button>';}
 function fuelChip(k,three){const v=get(k);const has=v!==''&&v!=null;const c=cellColors(k);const cls=three?'fuel3':'fuel';return '<span class="'+cls+(has?'':' empty')+'" data-fuel'+(three?'3':'')+'="'+k+'" style="color:'+c[0]+';border-color:'+c[0]+';background:'+c[1]+'">'+(has?esc(v):'-')+'</span>';}
 function cbx(k,label){const on=get(k)==='1';return `<label class="cb"><input type="checkbox" data-cb="${k}" ${on?'checked':''}><span class="box" style="${boxStyle(k)}">${on?'✓':''}</span><span class="cbt">${esc(label)}</span>${ovIcons(k)}</label>`;}
 function pbUtil(i,label){const on=get('partb.utilities.'+i)==='1';return `<div class="cb utrow"><label class="cbmain"><input type="checkbox" data-cb="partb.utilities.${i}" ${on?'checked':''}><span class="box" style="${boxStyle('partb.utilities.'+i)}">${on?'✓':''}</span><span class="cbt ut">${label}</span></label>${fuelChip('partb.fuel.'+i,false)}${ovIcons(['partb.utilities.'+i,'partb.fuel.'+i])}</div>`;}
@@ -600,6 +616,7 @@ function rsSigInto(outp,partH){
 function rsPrin(i,f){try{const p=_rsUpload&&_rsUpload.parsed&&_rsUpload.parsed.principals;const r=p&&p[i];const v=r&&r[f];return (v==null||v==='')?null:String(v);}catch(e){return null;}}
 function rsUnit(i,f){try{const u=_rsUpload&&_rsUpload.parsed&&_rsUpload.parsed.units;const r=u&&u[i];const v=r&&r[f];return (v==null||v===''||v===0)?null:String(v);}catch(e){return null;}}
 function rsUnitBr(i){const t=rsUnit(i,'type');if(t==null)return null;const bb=rsParseUnitType(t);return bb.br||null;}
+function rsUnitDesig(i){const t=rsUnit(i,'type');if(t==null)return null;return rsParseUnitType(t).desig||null;}
 function rsFamRow(fam,i){try{const arr=_rsUpload&&_rsUpload.parsed&&_rsUpload.parsed[fam];return arr&&arr[i]||null;}catch(e){return null;}}
 function rsFamVal(fam,i,f){const r=rsFamRow(fam,i);const v=r&&r[f];return (v==null||v===''||v===0)?null:String(v);}
 function rsBrBa(k){let m=String(k||'').match(/^units\.(\d+)\.(br|ba)$/);
@@ -615,7 +632,18 @@ function rsVal(k){try{const p=_rsUpload&&_rsUpload.parsed;const v=p&&p.scalars?p
 function rsNum(v){v=String(v==null?'':v).replace(/[^0-9.\-]/g,'');const n=parseFloat(v);return isFinite(n)?n:'';}
 function rsDateISO(v){v=String(v||'').trim();let m=v.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);if(m)return m[3]+'-'+('0'+m[1]).slice(-2)+'-'+('0'+m[2]).slice(-2);m=v.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m)return v.slice(0,10);const MN={january:1,february:2,march:3,april:4,may:5,june:6,july:7,august:8,september:9,october:10,november:11,december:12};m=v.toLowerCase().match(/([a-z]+)\s+(\d{1,2}),?\s+(\d{4})/);if(m&&MN[m[1]])return m[3]+'-'+('0'+MN[m[1]]).slice(-2)+'-'+('0'+m[2]).slice(-2);return '';}
 function rsYearOn(iso){const m=String(iso||'').match(/^(\d{4})-(\d{2})-(\d{2})/);return m?((+m[1])+1)+'-'+m[2]+'-'+m[3]:'';}   // the uploaded schedule is the one in force; this package renews it
-function rsParseUnitType(t){t=String(t||'');let br='',ba='';if(/studio|efficiency/i.test(t))br='Studio';else{const m=t.match(/(\d+)\s*(?:br\b|bed)/i);if(m&&BR_OPTS.indexOf(m[1]+'BR')>=0)br=m[1]+'BR';else{const bare=t.trim().match(/^(\d+)$/);if(bare&&BR_OPTS.indexOf(bare[1]+'BR')>=0)br=bare[1]+'BR';}}const b=t.match(/(\d+(?:\.\d+)?)\s*(?:ba\b|bath)/i);if(b&&BA_OPTS.indexOf(b[1]+'BA')>=0)ba=b[1]+'BA';return {br:br,ba:ba};} // Part D's Type column is sometimes just the bedroom count with no BR/bath suffix
+function rsParseUnitType(t){t=String(t||'');let br='',ba='';if(/studio|efficiency/i.test(t))br='Studio';else{const m=t.match(/(\d+)\s*(?:br\b|bed)/i);if(m&&BR_OPTS.indexOf(m[1]+'BR')>=0)br=m[1]+'BR';else{const bare=t.trim().match(/^(\d+)$/);if(bare&&BR_OPTS.indexOf(bare[1]+'BR')>=0)br=bare[1]+'BR';}}const b=t.match(/(\d+(?:\.\d+)?)\s*(?:ba\b|bath)/i);if(b&&BA_OPTS.indexOf(b[1]+'BA')>=0)ba=b[1]+'BA';
+  /* Both spellings appear across the real corpus: "1 BR E" / "1 BR F" at Beacon
+     Hill, "1 Bedroom, Elderly" / "1 Bedroom, Family" at Willow Woods. A bare
+     letter counts only at the very end of the string, so an F inside a word can
+     never designate a row. */
+  let desig='';
+  if(/near[-\s]?elderly/i.test(t))desig='NE';
+  else if(/elderly/i.test(t))desig='E';
+  else if(/family/i.test(t))desig='F';
+  else if(/disabled|handicapped/i.test(t))desig='D';
+  else{const d=t.match(/[\s,\/-](NE|[EFD])\s*$/i);if(d)desig=d[1].toUpperCase();}
+  return {br:br,ba:ba,desig:desig};} // Part D's Type column is sometimes just the bedroom count with no BR/bath suffix
 function rsReadFields(pdfForm){
   const V=n=>{try{const v=pdfForm.getTextField(String(n)).getText();return v==null?'':String(v).trim();}catch(e){return '';}};
   const CB=n=>{try{return pdfForm.getCheckBox(String(n)).isChecked();}catch(e){return false;}};
@@ -938,7 +966,7 @@ function rsFillFromParsed(){const P=_rsUpload&&_rsUpload.parsed;if(!P)return;
       if(CHK[k]){form=store.editForm(form,k,P.partb[k]);mark(k);} // a definite on/off read: write it either way
       else setk(k,P.partb[k]);});} // write-ins / fuel: only write what was actually found
   P.principals.forEach((p,ix)=>{setk('principals.'+ix+'.name',p.name);setk('principals.'+ix+'.title',p.title);});
-  P.units.forEach((u,ix)=>{const bb=rsParseUnitType(u.type);setk('units.'+ix+'.br',bb.br);setk('units.'+ix+'.ba',bb.ba);
+  P.units.forEach((u,ix)=>{const bb=rsParseUnitType(u.type);setk('units.'+ix+'.br',bb.br);setk('units.'+ix+'.ba',bb.ba);setk('units.'+ix+'.desig',bb.desig);
     setk('units.'+ix+'.num_units',u.count);setk('units.'+ix+'.current',u.rent);
     if(u.ua!==''&&u.ua>0){setk('units.'+ix+'.ua_exec',u.ua);if(!get('units.'+ix+'.ua_source')){form=store.editForm(form,'units.'+ix+'.ua_source','exec');mark('units.'+ix+'.ua_source');}}});
   if(P.ns8&&P.ns8.length){form=store.editForm(form,'ns8.enabled','1');mark('ns8.enabled');
@@ -1467,6 +1495,11 @@ function wireBody(){
       if(revertKeys(_rk)){e.preventDefault();e.stopPropagation();refreshIfPrereq(_rk);_refocusSel='[data-k="'+k+'"]';renderBody();setStatus(String(get(k)==null?'':get(k)).trim()!==''?'Reverted your change to the on-file value.':'Cleared your unsaved entry.');}else if(srcOf(k)==='new'&&(inp.value||'')!==''){e.preventDefault();e.stopPropagation();const _clr=groupOf(k)?[k]:_keys;_clr.forEach(kk=>store.editForm(form,kk,''));_refocusSel='[data-k="'+k+'"]';renderBody();setStatus('Cleared your unsaved entry.');}return;}e.preventDefault();if(_keys.length===1&&/^principals\.\d+\./.test(_keys[0])){const pi=+_keys[0].match(/^principals\.(\d+)\./)[1];if(!principalHasData(pi)){if(PRINCIPALS.length>1){Object.keys(form).forEach(kk=>{if(kk.indexOf('principals.'+pi+'.')===0)delete form[kk];});PRINCIPALS=PRINCIPALS.filter(x=>x!==pi);renderBody();setStatus('Empty principal row removed.');}return;}}if(handleZeroUnitCommit(_keys))return;if(k==='poc.phone'){const _d=(inp.value||'').replace(/[^0-9]/g,'');if(_d.length!==0&&_d.length!==10){setStatus('Enter a complete 10-digit phone before saving.');return;}}if(!keysCanSave(_keys))return;_keys.forEach(kk=>{if(kk.indexOf('partb.writein.')===0&&kk.indexOf('.',14)<0&&kk.slice(14)!=='u1')clearUncheckedWriteins([kk.slice(14)]);});const _sk=[];_keys.forEach(kk=>coupledKeys(kk).forEach(x=>{if(_sk.indexOf(x)<0)_sk.push(x);}));if(groupOf(k)==='tenant.mgmt'&&_sk.indexOf('tenant.mgmt_source')<0)_sk.push('tenant.mgmt_source');try{form=await store.saveFields(form,_sk);}catch(e){saveFailed(e);return;}await refreshSnap();snapForm(_sk);_refocusSel='[data-k="'+k+'"]';renderBody();setStatus('Saved this field to the database.');});if(wion)inp.addEventListener('focus',()=>{if(inp.value&&get(wion)!=='1'){form=store.editForm(form,wion,'1');const cb=inp.closest('.cb');if(cb){cb.classList.remove('unchecked','empty');cb.classList.add('checked');const bx=cb.querySelector('.box');if(bx)bx.textContent='✓';}}});});
   document.querySelectorAll('select[data-k]').forEach(sel=>{const k=sel.getAttribute('data-k');sel.addEventListener('change',()=>{form=store.editForm(form,k,sel.value);paintCell(k);renderRail();renderAttention();});});
   document.querySelectorAll('input[data-cb]').forEach(c=>{const k=c.getAttribute('data-cb');c.addEventListener('change',()=>{_pendingSnap=snapOf([k]);form=store.editForm(form,k,c.checked?'1':'');_pending=[k];_refocusSel='[data-cb="'+k+'"]';renderBody();});});
+  document.querySelectorAll('[data-desig]').forEach(dg=>dg.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();
+    const k='units.'+dg.getAttribute('data-desig')+'.desig';const cur=(form[k]&&form[k].value)||'';
+    const at=DESIG.findIndex(x=>x[0]===cur);const nx=DESIG[(at<0?0:at+1)%DESIG.length][0];
+    _pendingSnap=snapOf([k]);form=store.editForm(form,k,nx);_pending=[k];renderBody();
+    setStatus(nx?('Unit designated '+desigName(nx)+' \u2014 it prints after the bedroom size in Column 1 of the rent schedule.'):'Designation cleared.');}));
   document.querySelectorAll('[data-fuel]').forEach(fl=>fl.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();const k=fl.getAttribute('data-fuel');const cur=(form[k]&&form[k].value)||'';const nx=cur===''?'E':(cur==='E'?'F':(cur==='F'?'G':''));_pendingSnap=snapOf([k]);form=store.editForm(form,k,nx);_pending=[k];renderBody();}));
   document.querySelectorAll('[data-fuel3]').forEach(fl=>fl.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();const k=fl.getAttribute('data-fuel3');const base=k.slice(0,k.lastIndexOf('.fuel'));if(!get(base))return;const cur=(form[k]&&form[k].value)||'';const nx=cur===''?'E':(cur==='E'?'F':(cur==='F'?'G':''));_pendingSnap=snapOf([k]);form=store.editForm(form,k,nx);_pending=[k];renderBody();}));
   document.querySelectorAll('[data-wibox]').forEach(bx=>bx.addEventListener('click',e=>{e.preventDefault();const base=bx.getAttribute('data-wibox');if(!get(base))return;const on=get(base+'.on')==='1';_pendingSnap=snapOf([base+'.on']);form=store.editForm(form,base+'.on',on?'':'1');_pending=[base+'.on'];_refocusSel='[data-wibox="'+base+'"]';renderBody();}));
@@ -1583,7 +1616,7 @@ function wireBody(){
    ONE current record per property; leaving the form asks to save or discard.
    The RCS form itself (everything above) is unchanged. */
 
-document.addEventListener('click',e=>{document.querySelectorAll('.uadrop.open').forEach(x=>x.classList.remove('open'));if(_pending&&!(e.target&&e.target.closest&&e.target.closest('.uaopt,[data-cb],.cb,[data-fuel],[data-fuel3],[data-wibox],[data-mgmt],[data-csopt],.uatrigger'))){_pending=null;_pendingSnap=null;}});
+document.addEventListener('click',e=>{document.querySelectorAll('.uadrop.open').forEach(x=>x.classList.remove('open'));if(_pending&&!(e.target&&e.target.closest&&e.target.closest('.uaopt,[data-cb],.cb,[data-fuel],[data-fuel3],[data-desig],[data-wibox],[data-mgmt],[data-csopt],.uatrigger'))){_pending=null;_pendingSnap=null;}});
 document.addEventListener('keydown',e=>{const vis=v=>{const x=el('view'+v);return x&&x.style&&x.style.display!=='none';};if(e.key==='Tab'){_pending=null;_pendingSnap=null;_rsArm=false;return;}if(e.key==='Enter'){const ae=document.activeElement;const inText=!!ae&&/^(INPUT|TEXTAREA)$/.test(ae.tagName)&&ae.type!=='checkbox';
     if(_dlgEnter&&el('scrim')&&el('scrim').classList.contains('open')){e.preventDefault();_dlgEnter();return;}
     if(_rsArm&&!inText){const ra=el('rsApply');if(ra){e.preventDefault();_rsArm=false;ra.click();return;}}
@@ -1593,7 +1626,7 @@ document.addEventListener('mousedown',e=>{_mouseFocus=true;_rsArm=false;setTimeo
   const t=e.target;_lastClickSel=null;_lastClickNode=(t&&t.getBoundingClientRect)?t:null;_lastClickAt=Date.now();
   if(!t||!t.closest)return;
   // a click's anchor: the cell it hit; else the checkbox its label wraps; else the section card; else the footer
-  const attrSel=()=>{const A=['data-cb','data-wibox','data-fuel','data-fuel3','data-box'];for(let i=0;i<A.length;i++){const n=t.closest('['+A[i]+']');if(n)return '['+A[i]+'="'+n.getAttribute(A[i])+'"]';}return null;};
+  const attrSel=()=>{const A=['data-cb','data-wibox','data-fuel','data-fuel3','data-desig','data-box'];for(let i=0;i<A.length;i++){const n=t.closest('['+A[i]+']');if(n)return '['+A[i]+'="'+n.getAttribute(A[i])+'"]';}return null;};
   let sel=attrSel();
   if(!sel){const lb=t.closest('.cb,.wi,.utrow');const inner=lb&&lb.querySelector('[data-cb],[data-wibox]');if(inner)sel=inner.hasAttribute('data-cb')?('[data-cb="'+inner.getAttribute('data-cb')+'"]'):('[data-wibox="'+inner.getAttribute('data-wibox')+'"]');}
   if(!sel){const cd=t.closest('#sections .card');if(cd){const all=[].slice.call(document.querySelectorAll('#sections .card'));const i=all.indexOf(cd);if(i>=0)sel='#sections .card:nth-child('+(i+1)+')';}}
