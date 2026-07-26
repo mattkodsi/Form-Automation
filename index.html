@@ -63,6 +63,9 @@ button.gdoc-on:hover{border-color:#b9c6da}
 .gneed{background:none;border:none;padding:0;font:inherit;font-size:13px;color:#b45309;cursor:pointer;text-decoration:underline;text-decoration-color:#e6c9a3;text-underline-offset:2px}
 .gneed:hover{text-decoration-color:#b45309}
 .gsep{color:#d8c3a8;margin:0 6px}
+@keyframes gotopulse{0%{box-shadow:0 0 0 0 rgba(180,83,9,.42)}100%{box-shadow:0 0 0 9px rgba(180,83,9,0)}}
+.gotohl{animation:gotopulse 1.15s ease-out 1;border-radius:9px}
+@media (prefers-reduced-motion:reduce){.gotohl{animation:none;outline:2px solid rgba(180,83,9,.5);outline-offset:2px}}
 
 .gdoc{display:flex;align-items:center;gap:14px;width:100%;min-height:46px;padding:10px 15px;border-radius:9px;text-align:left;font-size:13px;box-sizing:border-box}
 button.gdoc{justify-content:space-between}
@@ -3191,17 +3194,29 @@ function docMissing(id){const r=DOC_REQS[id]||[];
   const m=r.filter(x=>String(get(x[0])==null?'':get(x[0])).trim()==='').map(x=>({key:x[0],label:x[1],sec:x[2]}));
   if(id==='schedule'&&!UNITS.some(i=>numf(get('units.'+i+'.num_units'))>0))m.push({key:'units',label:'at least one unit type with a count',sec:6});
   return m;}
-/* Jump to the section that fixes a gap. The cards render in visibleSections()
-   order, so the section number maps to its position in the list. */
-function gotoSection(n){const vs=visibleSections();const i=vs.indexOf(n);
-  const cards=document.querySelectorAll('#sections .card');const c=cards[i>=0?i:0];
-  if(!c)return;
-  c.classList.remove('collapsed');
-  // centre it: 'start' put the heading under the sticky command bar, so the
-  // field you were sent to fix sat just off the top of the screen
-  try{c.scrollIntoView({behavior:'smooth',block:'center'});}catch(e){c.scrollIntoView();}
-  const inp=c.querySelector('input:not([type=hidden]),textarea');
-  if(inp)setTimeout(()=>{try{inp.focus({preventScroll:true});}catch(e){}},340);}
+/* Go to the cell that fixes a gap — the one whose name was clicked, not just the
+   section holding it. Landing on a section and focusing whatever input came
+   first meant "CA organization" could put the cursor in the CA contact name.
+
+   It rests a third of the way down rather than centred: you are about to work
+   DOWNWARD through the section, so the space below the field is the useful
+   space, and a third also clears the sticky command bar without wasting the top
+   of the screen. scrollIntoView cannot express that, so the offset is computed. */
+const GOTO_FRACTION=1/3;
+function gotoSection(n,key){
+  const vs=visibleSections();const i=vs.indexOf(n);
+  const cards=document.querySelectorAll('#sections .card');const card=cards[i>=0?i:0];
+  if(!card)return;
+  card.classList.remove('collapsed');
+  let target=null;
+  if(key){try{target=card.querySelector('[data-k="'+CSS.escape(key)+'"]')||document.querySelector('[data-k="'+CSS.escape(key)+'"]');}catch(e){}}
+  const box=target?(target.closest('[data-box]')||target):card;
+  const top=box.getBoundingClientRect().top+window.scrollY;
+  window.scrollTo({top:Math.max(0,top-window.innerHeight*GOTO_FRACTION),behavior:'smooth'});
+  // a moment of emphasis, so it is obvious which cell you were sent to
+  box.classList.add('gotohl');setTimeout(()=>box.classList.remove('gotohl'),1500);
+  if(target)setTimeout(()=>{try{target.focus({preventScroll:true});}catch(e){}},420);
+}
 function showPackageModal(nm,docs,combined,missingRcs,missingLh,capMsgs,blocked){
   /* All six documents stay on the surface: which ones exist and which do not is
      the whole point of the dialog, and folding it away meant the only way to
@@ -3220,7 +3235,7 @@ function showPackageModal(nm,docs,combined,missingRcs,missingLh,capMsgs,blocked)
       +'<span class="gtick">✓</span><span class="gdoc-n">'+esc(lab)+'</span>'
       +'<span class="gdoc-a">Download</span></button>';
     const b=blkBy[lab];
-    const needs=b?(b.missing||[]).map(x=>'<button class="gneed" data-goto="'+x.sec+'" title="Go to Section '+x.sec+'">'+esc(x.label)+'</button>').join('<span class="gsep">·</span>')
+    const needs=b?(b.missing||[]).map(x=>'<button class="gneed" data-goto="'+x.sec+'" data-gotok="'+esc(x.key||'')+'" title="Go to Section '+x.sec+'">'+esc(x.label)+'</button>').join('<span class="gsep">·</span>')
       :'<button class="gneed" data-goto="1" title="Go to Section 1">upload it in Section 1</button>';
     return '<div class="gdoc gdoc-off"><span class="gtick gtick-off">–</span>'
       +'<span class="gdoc-n">'+esc(lab)+'</span><span class="gdoc-need">'+needs+'</span></div>';}).join('');
@@ -3250,7 +3265,7 @@ function showPackageModal(nm,docs,combined,missingRcs,missingLh,capMsgs,blocked)
   const xb=el('dlXlsx');if(xb)xb.onclick=()=>genRentAnalysis();
   const fb=el('dlFolder');if(fb)fb.onclick=()=>dlPackageFolder(nm,docs,combined);
   document.querySelectorAll('[data-dldoc]').forEach(b=>b.onclick=()=>{const d=docs[+b.getAttribute('data-dldoc')];dlPdf(d.bytes,d.file+'.pdf');});
-  document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=e=>{e.preventDefault();e.stopPropagation();closeModal();gotoSection(+b.getAttribute('data-goto'));});
+  document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=e=>{e.preventDefault();e.stopPropagation();closeModal();gotoSection(+b.getAttribute('data-goto'),b.getAttribute('data-gotok')||'');});
 }
 
 async function dlPackageFolder(nm,docs,combined){

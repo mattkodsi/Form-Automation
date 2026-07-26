@@ -63,6 +63,9 @@ button.gdoc-on:hover{border-color:#b9c6da}
 .gneed{background:none;border:none;padding:0;font:inherit;font-size:13px;color:#b45309;cursor:pointer;text-decoration:underline;text-decoration-color:#e6c9a3;text-underline-offset:2px}
 .gneed:hover{text-decoration-color:#b45309}
 .gsep{color:#d8c3a8;margin:0 6px}
+@keyframes gotopulse{0%{box-shadow:0 0 0 0 rgba(180,83,9,.42)}100%{box-shadow:0 0 0 9px rgba(180,83,9,0)}}
+.gotohl{animation:gotopulse 1.15s ease-out 1;border-radius:9px}
+@media (prefers-reduced-motion:reduce){.gotohl{animation:none;outline:2px solid rgba(180,83,9,.5);outline-offset:2px}}
 
 .gdoc{display:flex;align-items:center;gap:14px;width:100%;min-height:46px;padding:10px 15px;border-radius:9px;text-align:left;font-size:13px;box-sizing:border-box}
 button.gdoc{justify-content:space-between}
