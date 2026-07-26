@@ -1890,6 +1890,21 @@ const DOC_REQS={
   schedule:[['property.name','property name',2]],
   notice:[['ca.org','CA organization',4],['tenant.sender_name','tenant-notice sender name',9]],
 };
+/* Blockers stop a document being written; caveats do not, but they change what
+   it says. The management street is the clearest case: the notice generates
+   without it and simply never tells a tenant where to inspect the materials. It
+   used to be announced at the foot of the dialog, and only once the notice
+   ACTUALLY generated — so a notice blocked on two other fields hid it entirely,
+   and you would meet it on the next run instead. Caveats now sit on the row they
+   concern, whether or not that row generated. */
+function docWarns(id){const w=[];
+  if(id==='notice'){
+    const src=get('tenant.mgmt_source')||'property';
+    const onProp=src==='property';
+    const street=String((onProp?get('property.addr_street'):get('tenant.mgmt_street'))||'').trim();
+    if(!street)w.push({key:onProp?'property.addr_street':'tenant.mgmt_street',
+      label:'no address to inspect materials',sec:onProp?2:9});}
+  return w;}
 function docMissing(id){const r=DOC_REQS[id]||[];
   const m=r.filter(x=>String(get(x[0])==null?'':get(x[0])).trim()==='').map(x=>({key:x[0],label:x[1],sec:x[2]}));
   if(id==='schedule'&&!UNITS.some(i=>numf(get('units.'+i+'.num_units'))>0))m.push({key:'units',label:'at least one unit type with a count',sec:6});
@@ -1917,7 +1932,7 @@ function gotoSection(n,key){
   box.classList.add('gotohl');setTimeout(()=>box.classList.remove('gotohl'),1500);
   if(target)setTimeout(()=>{try{target.focus({preventScroll:true});}catch(e){}},420);
 }
-function showPackageModal(nm,docs,combined,missingRcs,missingLh,capMsgs,blocked){
+function showPackageModal(nm,docs,combined,missingRcs,missingLh,capMsgs,blocked,warnOf){
   /* All six documents stay on the surface: which ones exist and which do not is
      the whole point of the dialog, and folding it away meant the only way to
      learn it was to go looking. What each one is short of sits on its own row,
@@ -1930,23 +1945,20 @@ function showPackageModal(nm,docs,combined,missingRcs,missingLh,capMsgs,blocked)
   const blkBy={};(blocked||[]).forEach(b=>{blkBy[b.label]=b;});
   const nReady=ORDER.filter(o=>byLabel[o[0]]).length, nGap=ORDER.length-nReady;
 
+  const lnk=(x,cls)=>'<button class="'+cls+'" data-goto="'+x.sec+'" data-gotok="'+esc(x.key||'')+'" title="Go to Section '+x.sec+'">'+esc(x.label)+'</button>';
   const rows=ORDER.map(o=>{const lab=o[0],hit=byLabel[lab];
+    const w=((warnOf||{})[lab])||((blkBy[lab]||{}).warns)||[];
+    const caveat=w.length?'<span class="gcav">⚠ '+w.map(x=>lnk(x,'gcavl')).join('<span class="gsep">·</span>')+'</span>':'';
     if(hit)return '<button class="gdoc gdoc-on" data-dldoc="'+hit.i+'">'
       +'<span class="gtick">✓</span><span class="gdoc-n">'+esc(lab)+'</span>'
-      +'<span class="gdoc-a">Download</span></button>';
+      +caveat+'<span class="gdoc-a">Download</span></button>';
     const b=blkBy[lab];
-    const needs=b?(b.missing||[]).map(x=>'<button class="gneed" data-goto="'+x.sec+'" data-gotok="'+esc(x.key||'')+'" title="Go to Section '+x.sec+'">'+esc(x.label)+'</button>').join('<span class="gsep">·</span>')
+    const needs=b?(b.missing||[]).map(x=>lnk(x,'gneed')).join('<span class="gsep">·</span>')
       :'<button class="gneed" data-goto="1" title="Go to Section 1">upload it in Section 1</button>';
     return '<div class="gdoc gdoc-off"><span class="gtick gtick-off">–</span>'
-      +'<span class="gdoc-n">'+esc(lab)+'</span><span class="gdoc-need">'+needs+'</span></div>';}).join('');
+      +'<span class="gdoc-n">'+esc(lab)+'</span><span class="gdoc-need">'+needs+caveat+'</span></div>';}).join('');
 
-  /* A notice that never says where to inspect the materials is a real gap, but
-     not one worth refusing to generate over — so it is said out loud here. */
-  const mSrc=get('tenant.mgmt_source')||'property';
-  const mgmtStreet=String((mSrc==='property'?get('property.addr_street'):get('tenant.mgmt_street'))||'').trim();
-  const placeless=byLabel['Tenant notice']&&!mgmtStreet
-    ?['The tenant notice does not name a place to inspect the materials — add the management street address.']:[];
-  const notes=[].concat(missingLh?['No letterhead — the tenant notice used a generated header.']:[],placeless,(capMsgs||[]));
+  const notes=[].concat(missingLh?['No letterhead — the tenant notice used a generated header.']:[],(capMsgs||[]));
   const noteHtml=notes.length?'<div class="gnotes">'+notes.map(m=>'<div class="gnote">⚠ '+esc(m)+'</div>').join('')+'</div>':'';
   const folderIcon='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>';
   // stacked sheets: one file holding all of them
@@ -2206,8 +2218,10 @@ async function __genPackageRun(){
       if(lh&&lh.png){const dr=await measureLetterheadDrop(L.data);if(dr)lh.drop=dr;}
       if(lh&&lh.pdf){const dr=await measurePdfLetterheadDrop(lh.pdf);if(dr)lh.drop=dr;} }catch(e){}
     const N=get('property.name')||'Property'; const docs=[],blocked=[];
-    const add=async(id,label,file,make)=>{const m=docMissing(id);
-      if(m.length){blocked.push({label:label,missing:m});return;}
+    const warnOf={};
+    const add=async(id,label,file,make)=>{const m=docMissing(id),w=docWarns(id);
+      if(w.length)warnOf[label]=w;
+      if(m.length){blocked.push({label:label,missing:m,warns:w});return;}
       docs.push({label:label,file:file,bytes:await make()});};
     await add('cover','Cover letter (CA)','01. '+N+' - Cover Letter',()=>window.RCSGen.coverLetter(rec,logo));
     await add('owner','Owner cover letter','02. '+N+' - RCS Owner Cover Letter',()=>window.RCSGen.ownerLetter(rec));
@@ -2217,7 +2231,7 @@ async function __genPackageRun(){
     await add('notice','Tenant notice','06. '+N+' - RCS Tenant Notice',()=>window.RCSGen.tenantNotice(rec,lh,logo));
     const combined=await combinePdfs(docs.map(d=>d.bytes));
     let _lhOk=false;try{const L2=(mpdb&&activePid)?mpdb.getLetterhead(activePid):null;_lhOk=!!(L2&&L2.data);}catch(e){}
-    showPackageModal(get('property.name')||'Property',docs,combined,!_rcsUpload,!_lhOk,rsCapacity().msgs,blocked);
+    showPackageModal(get('property.name')||'Property',docs,combined,!_rcsUpload,!_lhOk,rsCapacity().msgs,blocked,warnOf);
     try{ if(activeCid&&mpdb)await mpdb.setCycleGenerated(activeCid,docs.map(d=>d.label)); }catch(e){}
     setStatus('Package generated \u2014 '+docs.length+' document'+(docs.length===1?'':'s')+(blocked.length?', '+blocked.length+' still missing information.':'.')+(_rcsUpload?'':' The RCS report (document 04) is missing \u2014 upload it in Section 1 to include it.'));
   }catch(e){ setStatus('Generation failed: '+((e&&e.message)||e)); }
