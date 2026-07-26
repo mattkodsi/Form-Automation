@@ -34,7 +34,12 @@ const addrLine=(street,city,state,zip)=>{
       appr_name:g('appr.name'), appr_firm:g('appr.firm'), appr_phone:g('appr.phone'), appr_email:g('appr.email'),
       appr_addr:g('appr.addr_street'), appr_csz:addrLine('',g('appr.addr_city'),g('appr.addr_state'),g('appr.addr_zip')),
       mgmt_addr:m('street'), mgmt_city:m('city'), mgmt_state:m('state'), mgmt_zip:m('zip'),
-      mgmt_line:addrLine(m('street'),m('city'),m('state'),m('zip')),
+      /* No street, no address. This line tells a tenant where to GO and inspect
+         the materials, and "at the Management Office, Boston, MA" — or worse,
+         ", 02101" — is not somewhere you can go. A street alone is enough, since
+         the office is usually on the property; a city or ZIP alone is noise on a
+         notice served under 24 CFR 245. */
+      mgmt_line:String(m('street')||'').trim()?addrLine(m('street'),m('city'),m('state'),m('zip')):'',
       sender_name:g('tenant.sender_name'), sender_title:g('tenant.sender_title'),
       sig_name:g('sig.name'), sig_title:sigTitle(g('sig.title'),g('sig.principal')),
     };

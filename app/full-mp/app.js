@@ -1940,7 +1940,13 @@ function showPackageModal(nm,docs,combined,missingRcs,missingLh,capMsgs,blocked)
     return '<div class="gdoc gdoc-off"><span class="gtick gtick-off">–</span>'
       +'<span class="gdoc-n">'+esc(lab)+'</span><span class="gdoc-need">'+needs+'</span></div>';}).join('');
 
-  const notes=[].concat(missingLh?['No letterhead — the tenant notice used a generated header.']:[],(capMsgs||[]));
+  /* A notice that never says where to inspect the materials is a real gap, but
+     not one worth refusing to generate over — so it is said out loud here. */
+  const mSrc=get('tenant.mgmt_source')||'property';
+  const mgmtStreet=String((mSrc==='property'?get('property.addr_street'):get('tenant.mgmt_street'))||'').trim();
+  const placeless=byLabel['Tenant notice']&&!mgmtStreet
+    ?['The tenant notice does not name a place to inspect the materials — add the management street address.']:[];
+  const notes=[].concat(missingLh?['No letterhead — the tenant notice used a generated header.']:[],placeless,(capMsgs||[]));
   const noteHtml=notes.length?'<div class="gnotes">'+notes.map(m=>'<div class="gnote">⚠ '+esc(m)+'</div>').join('')+'</div>':'';
   const folderIcon='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>';
   // stacked sheets: one file holding all of them
