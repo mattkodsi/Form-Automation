@@ -3240,7 +3240,13 @@ function showPackageModal(nm,docs,combined,missingRcs,missingLh,capMsgs,blocked)
     return '<div class="gdoc gdoc-off"><span class="gtick gtick-off">–</span>'
       +'<span class="gdoc-n">'+esc(lab)+'</span><span class="gdoc-need">'+needs+'</span></div>';}).join('');
 
-  const notes=[].concat(missingLh?['No letterhead — the tenant notice used a generated header.']:[],(capMsgs||[]));
+  /* A notice that never says where to inspect the materials is a real gap, but
+     not one worth refusing to generate over — so it is said out loud here. */
+  const mSrc=get('tenant.mgmt_source')||'property';
+  const mgmtStreet=String((mSrc==='property'?get('property.addr_street'):get('tenant.mgmt_street'))||'').trim();
+  const placeless=byLabel['Tenant notice']&&!mgmtStreet
+    ?['The tenant notice does not name a place to inspect the materials — add the management street address.']:[];
+  const notes=[].concat(missingLh?['No letterhead — the tenant notice used a generated header.']:[],placeless,(capMsgs||[]));
   const noteHtml=notes.length?'<div class="gnotes">'+notes.map(m=>'<div class="gnote">⚠ '+esc(m)+'</div>').join('')+'</div>':'';
   const folderIcon='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>';
   // stacked sheets: one file holding all of them
@@ -3883,7 +3889,12 @@ const addrLine=(street,city,state,zip)=>{
       appr_name:g('appr.name'), appr_firm:g('appr.firm'), appr_phone:g('appr.phone'), appr_email:g('appr.email'),
       appr_addr:g('appr.addr_street'), appr_csz:addrLine('',g('appr.addr_city'),g('appr.addr_state'),g('appr.addr_zip')),
       mgmt_addr:m('street'), mgmt_city:m('city'), mgmt_state:m('state'), mgmt_zip:m('zip'),
-      mgmt_line:addrLine(m('street'),m('city'),m('state'),m('zip')),
+      /* No street, no address. This line tells a tenant where to GO and inspect
+         the materials, and "at the Management Office, Boston, MA" — or worse,
+         ", 02101" — is not somewhere you can go. A street alone is enough, since
+         the office is usually on the property; a city or ZIP alone is noise on a
+         notice served under 24 CFR 245. */
+      mgmt_line:String(m('street')||'').trim()?addrLine(m('street'),m('city'),m('state'),m('zip')):'',
       sender_name:g('tenant.sender_name'), sender_title:g('tenant.sender_title'),
       sig_name:g('sig.name'), sig_title:sigTitle(g('sig.title'),g('sig.principal')),
     };
