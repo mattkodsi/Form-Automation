@@ -104,7 +104,12 @@ function safmrResolvedFrom(val, i) {
 function computeAnalysis(form) {
   const val = k => (form[k] ? form[k].value : '');
   const units = unitIndices(form);
-  let cg = 0, pg = 0, tot = 0, sc = 0, sp = 0, nd = 0, ceil = 0, safmrMissing = false, safmrOver = 0;
+  // cgC/pgC mirror cg/pg but only over the types that carry BOTH a current and a
+  // proposed rent — the same comparable set sc/sp/nd use. The monthly and annual
+  // deltas must come from that set: taken over every type, an unpriced type
+  // contributes its current rent as pure loss, which is how a property with no
+  // proposed rents yet reported "+0% increase" beside "-$2.6M annualized".
+  let cg = 0, pg = 0, tot = 0, sc = 0, sp = 0, nd = 0, cgC = 0, pgC = 0, ceilC = 0, tTot = 0, tPr = 0, ceil = 0, safmrMissing = false, safmrOver = 0;
   units.forEach(i => {
     const n = num(val('units.' + i + '.num_units')), cur = num(val('units.' + i + '.current')), pro = num(val('units.' + i + '.proposed'));
     const ue = num(val('units.' + i + '.ua_exec')), ur = num(val('units.' + i + '.ua_rcs'));
@@ -113,11 +118,14 @@ function computeAnalysis(form) {
     const safmr = safmrResolvedFrom(val, i);
     cg += (cur + ua) * n; pg += (pro + ua) * n; tot += n;
     if (safmr > 0) { ceil += safmr * n; if (pro > 0 && pro >= safmr) safmrOver++; } else if (n > 0) safmrMissing = true; // safmr = the 150% SAFMR ceiling per unit, entered/parsed directly (future HUD API pull must x1.5 its base value); per-type over when net proposed >= it
-    if (cur > 0 && pro > 0) { sc += cur * n; sp += pro * n; nd += n; }
+    if (n > 0) tTot++;
+    if (cur > 0 && pro > 0) { sc += cur * n; sp += pro * n; nd += n; cgC += (cur + ua) * n; pgC += (pro + ua) * n; if (safmr > 0) ceilC += safmr * n; if (n > 0) tPr++; }
   });
   return {
     current_gpr: cg, proposed_gpr: pg, ceiling: ceil, headroom: ceil - pg, pass: (ceil > 0 && pg < ceil), safmr_missing: safmrMissing, safmr_over: safmrOver,
     total_units: tot, pct: sc ? Math.round((sp - sc) / sc * 100) : 0, per_unit: nd ? (sp - sc) / nd : 0,
+    priced: nd, delta_mo: pgC - cgC, delta_yr: (pgC - cgC) * 12,
+    cg_priced: cgC, pg_priced: pgC, ceil_priced: ceilC, types_total: tTot, types_priced: tPr,
   };
 }
 
