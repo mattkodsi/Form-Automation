@@ -41,7 +41,7 @@ body.scrolled #ccbar{transform:translateY(0);opacity:1}
 .card.collapsed .chead{border-bottom:none} .card.collapsed .cbody{display:none}
 .cnum{width:24px;height:24px;border-radius:50%;background:#1e3a5f;color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;font-weight:600}
 .ctitle{font-size:15px;font-weight:700} .chev{margin-left:8px;color:#aab3c2;transition:transform .15s} .card.collapsed .chev{transform:rotate(-90deg)}
-.pill{margin-left:auto;font-size:11.5px;font-weight:700;padding:4px 12px;border-radius:20px} .pill.ok{background:#dcfce7;color:#166534} .pill.warn{background:#fdf0df;color:#b45309} .pill.neutral{background:#e7f3f1;color:#0f766e}
+.pill{margin-left:auto;font-size:11.5px;font-weight:700;padding:4px 12px;border-radius:20px} .pill.ok{background:#dcfce7;color:#166534} .pill.warn{background:#fdf0df;color:#b45309} .pill.neutral{background:#e7f3f1;color:#0f766e} .pill.empty{background:#eef1f6;color:#64748b}
 .cbody{padding:16px} .cols{display:grid;grid-template-columns:calc(50% - 23px) 1fr;gap:13px 12px}
 .field{margin-bottom:6px} .fpair{display:flex;gap:10px} .fpair>.field{flex:1 1 0;min-width:0} .etpair>.field:first-child{flex:0 1 38%} .sigpair>.field{flex:1 1 0} .sigpair .ofthe{flex:0 0 auto;align-self:flex-start;padding:28px 1px 0;font-size:12px;font-weight:600;color:#5b6577} .prinrow{display:flex;gap:12px;align-items:flex-start;margin-bottom:6px} .prinrow .field{flex:1 1 0;min-width:0;margin-bottom:0} .prinrow .urx{flex:0 0 22px;padding-top:8px} .prinhead{display:flex;gap:12px;font-size:11px;color:#5b6577;font-weight:600;margin:8px 0 4px} .prinhead span{flex:1 1 0} .prinhead span:last-child{flex:0 0 22px} .flabel{font-size:11px;color:#5b6577;margin-bottom:4px;font-weight:600}
 .fbox{display:flex;align-items:center;border:1px solid #e6ebf3;border-left:4px solid #64748b;border-radius:8px;background:#f6f7f9;overflow:visible;min-height:38px}
@@ -1341,7 +1341,15 @@ function saveFailed(e){setStatus('\u26a0 Save failed \u2014 this change is NOT i
 function saveFailedModal(e){dialogConfirm('Save failed','The change did not reach the database \u2014 check your connection and try again.<div class="sub" style="margin-top:7px;color:#8791a5">'+esc((e&&e.message)||e)+'</div>','OK',false,function(){});}
 let DBSNAP={};let FORMSNAP=null; // isDirty compares against THIS, a snapshot taken after boot-time defaults (e.g. the owner's checklist) are applied — not the raw db read, so auto-applied defaults never masquerade as unsaved edits
 async function refreshSnap(){DBSNAP=await bridge.getDb();}
-function modeOf(kk){const keys=Array.isArray(kk)?kk:[kk];if(keys.some(k=>srcOf(k)==='overridden'))return 'over';if(keys.some(k=>srcOf(k)==='new'&&get(k)!==''&&get(k)!=null))return 'new';if(keys.some(k=>srcOf(k)==='this-cycle'))return 'cycle';return '';}
+/* A cell saved EMPTY is still on file. core.js can only call that "new", because
+   db_value:'' is all it has to go on — so changing it looked like first-time entry
+   even though revert has somewhere to go back to. After one "Update property
+   profile" every untouched key is saved empty, which made this the normal case,
+   not an edge one: a utility allowance typed over its Executed-RS value showed
+   grey with a save button and no way back. Deviation from a saved value is an
+   override, whether or not that saved value was blank. */
+function offFile(k){const c=form[k];return !!(c&&c.db_value!=null&&String(c.value==null?'':c.value)!==String(c.db_value));}
+function modeOf(kk){const keys=Array.isArray(kk)?kk:[kk];if(keys.some(k=>srcOf(k)==='overridden')||keys.some(offFile))return 'over';if(keys.some(k=>srcOf(k)==='new'&&get(k)!==''&&get(k)!=null))return 'new';if(keys.some(k=>srcOf(k)==='this-cycle'))return 'cycle';return '';}
 function ovIcons(kk){const keys=Array.isArray(kk)?kk:[kk];const j=keys.join(',');const m=modeOf(keys);
   // A parsed value is exactly as unsaved as a typed one, so it gets the same badge.
   // It costs no more room either: cycle, like new, has nothing to revert TO, so the
@@ -1391,7 +1399,7 @@ function dateEffResolved(){const src=get('rent_schedule.date_eff_source')||(get(
 function dateEffCell(){const rs=get('rent_schedule.date_eff_rs');const src=get('rent_schedule.date_eff_source')||(rs?'rs':'custom');const custom=get('rent_schedule.date_eff_custom')||get('rent_schedule.date_rents_effective');
   const rsLab=rs?(fmtDate(rs)+' · from RS'):'— · no RS date parsed';
   const lab=(src==='custom')?('<input class="uac-in dateeff-in" data-date="1" data-k="rent_schedule.date_eff_custom" value="'+esc(custom)+'" placeholder="mm/dd/yyyy" autocomplete="off">'):(rs?('<input class="uac-in srcedit" data-srcedit="dateeff" data-date="1" value="'+esc(fmtDate(rs))+'"><span class="srctag">· from RS</span>'):('<span class="ualab">'+esc(rsLab)+'</span>'));
-  let state,c;if(src==='custom'){c=srcOf('rent_schedule.date_eff_source')==='overridden'?provColors('overridden','rent_schedule.date_eff_source'):cellColors('rent_schedule.date_eff_custom');}else{state=rs?srcOf('rent_schedule.date_eff_rs'):'new';c=provColors(state,'rent_schedule.date_eff_source');}
+  let state,c;if(src==='custom'){c=modeOf(['rent_schedule.date_eff_custom','rent_schedule.date_eff_source'])==='over'?provColors('overridden','rent_schedule.date_eff_source'):cellColors('rent_schedule.date_eff_custom');}else{state=rs?srcOf('rent_schedule.date_eff_rs'):'new';c=provColors(state,'rent_schedule.date_eff_source');}
   const boxKey=(src==='custom')?'rent_schedule.date_eff_custom':'rent_schedule.date_eff_source';
   const menu='<div class="uamenu">'+srcOptRow('data-deffopt="rs"',rs?esc(fmtDate(rs)):'','A year after the executed RS')+'<div class="uaopt" data-deffopt="custom">Custom…</div></div>';
   return `<div class="field"><div class="flabel">Date rents will be effective</div><div class="fbox uacell" data-box="${boxKey}" style="background:${c[1]};border-left-color:${c[0]}"><div class="uadrop" style="flex:1;min-width:0"><div class="uatrigger" tabindex="0">${lab}<span class="cvx">▾</span></div>${menu}</div>${src==='custom'?ovIcons(['rent_schedule.date_eff_custom','rent_schedule.date_eff_source']):''}</div></div>`;}
@@ -1578,7 +1586,7 @@ function renderPrincipals(){
 function provColors(state,key){const c=CLR[state]||CLR.new;
   if(state==='new'&&key&&form[key]&&form[key].value===''&&form[key].db_value==='')return [CLR.database[0],c[1],c[2]]; // saved, and STILL saved empty
   return c;}
-function cellColors(k){return provColors(srcOf(k),k);}
+function cellColors(k){return (srcOf(k)!=='overridden'&&offFile(k))?provColors('overridden',k):provColors(srcOf(k),k);}
 function boxColor(k){return cellColors(k);}
 function moneyBox(k){const c=boxColor(k);const _mt=moneySrcTag(k);
   const _m=k.match(/^units\.(\d+)\.current$/),_mn=k.match(/^nonrev\.(\d+)\.rent$/),_ml=k.match(/^ns8\.(\d+)\.avg_rent$/);
@@ -1604,7 +1612,7 @@ function uaBox(i){const src=get('units.'+i+'.ua_source')||defUaSrc(i),exec=get('
    "clears" it, leaving a custom source with no value and a blank cell. The source
    key is the one that knows an on-file value was displaced, so the badge carries
    both: coupledKeys already saves and reverts them together. */
-  let state,c;if(src==='custom'){c=srcOf('units.'+i+'.ua_source')==='overridden'?provColors('overridden','units.'+i+'.ua_source'):cellColors('units.'+i+'.ua_custom');}else{state=hasAny?srcOf(src==='rcs'?('units.'+i+'.ua_rcs'):('units.'+i+'.ua_exec')):'new';const overSrc=srcOf('units.'+i+'.ua_source')==='overridden';if(uaUnresolved(i)||overSrc)state='overridden';c=provColors(state,'units.'+i+'.ua_source');}const boxKeyUA=src==='custom'?('units.'+i+'.ua_custom'):('units.'+i+'.ua_source');
+  let state,c;if(src==='custom'){c=modeOf(['units.'+i+'.ua_custom','units.'+i+'.ua_source'])==='over'?provColors('overridden','units.'+i+'.ua_source'):cellColors('units.'+i+'.ua_custom');}else{state=hasAny?srcOf(src==='rcs'?('units.'+i+'.ua_rcs'):('units.'+i+'.ua_exec')):'new';const overSrc=srcOf('units.'+i+'.ua_source')==='overridden';if(uaUnresolved(i)||overSrc)state='overridden';c=provColors(state,'units.'+i+'.ua_source');}const boxKeyUA=src==='custom'?('units.'+i+'.ua_custom'):('units.'+i+'.ua_source');
   const menu='<div class="uamenu">'+srcOptRow('data-uaopt="exec" data-uai="'+i+'"',(exec!==''&&exec!=null)?('$'+fmtMoney(exec)):'','Executed RS')+((hasProg('rcs')||numf(rcs)>0)?srcOptRow('data-uaopt="rcs" data-uai="'+i+'"',(rcs!==''&&rcs!=null)?('$'+fmtMoney(rcs)):'','RCS report'):'')+'<div class="uaopt" data-uaopt="custom" data-uai="'+i+'">Custom…</div></div>';
   return '<div class="rbox uacell" data-box="'+boxKeyUA+'" style="background:'+c[1]+';border-left-color:'+c[0]+'"><div class="uadrop"><div class="uatrigger" tabindex="0"><span class="ualab">'+lab+'</span><span class="cvx">▾</span></div>'+menu+'</div>'+(src==='custom'?ovIcons(['units.'+i+'.ua_custom','units.'+i+'.ua_source']):ovIcons('units.'+i+'.ua_source'))+'</div>';}
 function uaNoteCell(i){const conf=uaConflict(i),overSrc=srcOf('units.'+i+'.ua_source')==='overridden';if(!conf&&!overSrc)return '';const ex=get('units.'+i+'.ua_exec'),rc=get('units.'+i+'.ua_rcs');
@@ -1636,7 +1644,7 @@ function numNote(i){if(!numConflict(i))return '';const n=get('units.'+i+'.num_un
 function safmrBox(i){const src=get('units.'+i+'.safmr_source')||defSafmrSrc(i),hud=get('units.'+i+'.safmr_hud'),rcs=get('units.'+i+'.safmr_rcs'),custom=get('units.'+i+'.safmr_custom');
   const hasAny=numf(hud)>0||numf(rcs)>0||numf(custom)>0;
   const lab=src==='rcs'?('$<input class="uac-in srcedit" data-srcedit="safmr" data-si="'+i+'" data-money="1" value="'+esc(fmtMoney(rcs))+'"><span class="srctag">· RCS</span>'):(src==='custom'?('$<input class="uac-in" data-money="1" data-k="units.'+i+'.safmr_custom" value="'+esc(fmtMoney(custom))+'" placeholder="0">'):('$<input class="uac-in srcedit" data-srcedit="safmr" data-si="'+i+'" data-money="1" value="'+esc(fmtMoney(hud))+'"><span class="srctag">· HUD</span>'));
-  let state,c;if(src==='custom'){c=srcOf('units.'+i+'.safmr_source')==='overridden'?provColors('overridden','units.'+i+'.safmr_source'):cellColors('units.'+i+'.safmr_custom');}else{state=hasAny?srcOf(src==='rcs'?('units.'+i+'.safmr_rcs'):('units.'+i+'.safmr_hud')):'new';const overSrc=srcOf('units.'+i+'.safmr_source')==='overridden';if(safmrUnresolved(i)||overSrc)state='overridden';c=provColors(state,'units.'+i+'.safmr_source');}const boxKeySA=src==='custom'?('units.'+i+'.safmr_custom'):('units.'+i+'.safmr_source');
+  let state,c;if(src==='custom'){c=modeOf(['units.'+i+'.safmr_custom','units.'+i+'.safmr_source'])==='over'?provColors('overridden','units.'+i+'.safmr_source'):cellColors('units.'+i+'.safmr_custom');}else{state=hasAny?srcOf(src==='rcs'?('units.'+i+'.safmr_rcs'):('units.'+i+'.safmr_hud')):'new';const overSrc=srcOf('units.'+i+'.safmr_source')==='overridden';if(safmrUnresolved(i)||overSrc)state='overridden';c=provColors(state,'units.'+i+'.safmr_source');}const boxKeySA=src==='custom'?('units.'+i+'.safmr_custom'):('units.'+i+'.safmr_source');
   const menu='<div class="uamenu">'+srcOptRow('data-safmropt="hud" data-safmri="'+i+'"',(hud!==''&&hud!=null)?('$'+fmtMoney(hud)):'','HUD API')+((hasProg('rcs')||numf(rcs)>0)?srcOptRow('data-safmropt="rcs" data-safmri="'+i+'"',(rcs!==''&&rcs!=null)?('$'+fmtMoney(rcs)):'','RCS report'):'')+'<div class="uaopt" data-safmropt="custom" data-safmri="'+i+'">Custom…</div></div>';
   return '<div class="rbox uacell" data-box="'+boxKeySA+'" style="background:'+c[1]+';border-left-color:'+c[0]+'"><div class="uadrop"><div class="uatrigger" tabindex="0"><span class="ualab">'+lab+'</span><span class="cvx">▾</span></div>'+menu+'</div>'+(src==='custom'?ovIcons(['units.'+i+'.safmr_custom','units.'+i+'.safmr_source']):ovIcons('units.'+i+'.safmr_source'))+'</div>';}
 function safmrNote(i){const res=safmrResolvedOf(i),hud=numf(get('units.'+i+'.safmr_hud')),rcs=numf(get('units.'+i+'.safmr_rcs'));
@@ -2202,10 +2210,20 @@ function sectionKeys(n){if(n===10)return ['ocaf.g','ocaf.rate_type','ocaf.ds_ann
   if(n===11)return ['uaf.f_oil','uaf.f_gas','uaf.f_electric','uaf.f_water'].concat(UNITS.flatMap(i=>UAF_UTILS.map(u=>'units.'+i+'.uac_'+u[0])));
   if(n===12)return PRINCIPALS.flatMap(i=>['principals.'+i+'.name','principals.'+i+'.title']);
   if(n===6)return UNITS.flatMap(i=>['units.'+i+'.br','units.'+i+'.ba','units.'+i+'.num_units','units.'+i+'.current','units.'+i+'.proposed','units.'+i+'.ua_source','units.'+i+'.safmr_source']);const fs=FIELD_SECTIONS.find(s=>s.n===n);return fs?fs.fields.flatMap(f=>f.type==='sigtitle'?['sig.title','sig.principal']:f.type==='pair'?f.items.map(x=>x.k):f.type==='addr'?ADDR:(f.type==='caaddr'?CA_ADDR:(f.type==='appraddr'?APPR_ADDR:(f.type==='mgmtaddr'?MGMT_ADDR:(f.prefix?[f.prefix,f.k]:[f.k]))))):[];}
-function sectionStatus(n){if(n===1)return _rcsUpload?'ok':((hasProg('rcs')||hasProg('ocaf'))?'warn':'ok');
+/* A section nobody has filled in is not "confirmed". The status only ever asked
+   whether something was overridden or in conflict, so a brand-new property showed
+   ten green "confirmed" chips over an entirely empty form — on a compliance tool
+   that invites signing off work that was never done. Emptiness now reads as its
+   own state, ahead of every other test. */
+function sectionEmpty(n){const ks=sectionKeys(n);if(!ks.length)return false;
+  return !ks.some(k=>{const v=get(k);return v!=null&&String(v).trim()!=='';});}
+function sectionStatus(n){if(n!==1&&sectionEmpty(n))return 'empty';
+  if(n===1)return _rcsUpload?'ok':((hasProg('rcs')||hasProg('ocaf'))?'warn':'ok');
   if(n===10){if(sectionKeys(10).some(k=>srcOf(k)==='overridden'))return'warn';const C=ocafCalc();return(C.F>0&&C.R>0)?'ok':'warn';}
   if(n===11){if(sectionKeys(11).some(k=>srcOf(k)==='overridden'))return'warn';const A=uafAnalysis();if(A.mismatch.length)return'warn';const hasF=UAF_UTILS.some(u=>numf(get('uaf.f_'+u[0]))>0);return(hasF&&A.any)?'ok':'warn';}const over=sectionKeys(n).some(k=>srcOf(k)==='overridden');if(n===6&&(UNITS.some(uaUnresolved)||UNITS.some(typeUnresolved)||UNITS.some(numUnresolved)||UNITS.some(i=>srcOf('units.'+i+'.ua_source')==='overridden')||(hasProg('rcs')&&(UNITS.some(safmrUnresolved)||UNITS.some(i=>srcOf('units.'+i+'.safmr_source')==='overridden')||UNITS.some(i=>{const r=safmrResolvedOf(i),p=numf(get('units.'+i+'.proposed'));return r>0&&p>0&&p>=r;})))||rsCapacity().msgs.length>0))return'warn';return over?'warn':'ok';}
-function sectionPill(n){return sectionStatus(n)==='warn'?'<span class="pill warn" data-pill="'+n+'">review</span>':'<span class="pill ok" data-pill="'+n+'">confirmed</span>';}
+function sectionPill(n){const st=sectionStatus(n);
+  if(st==='empty')return '<span class="pill empty" data-pill="'+n+'">not started</span>';
+  return st==='warn'?'<span class="pill warn" data-pill="'+n+'">review</span>':'<span class="pill ok" data-pill="'+n+'">confirmed</span>';}
 function card(n,pill,body){return `<div class="card"><div class="chead"><span class="cnum">${_secPos[n]||n}</span><span class="ctitle">${SECTION_TITLES[n]}</span>${pill}<span class="chev">▾</span></div><div class="cbody">${body}</div></div>`;}
 
 
@@ -2491,7 +2509,7 @@ function renderBody(){const _sy=window.scrollY;const _anchorSel=(_refocusSel&&!_
   wireBody();renderCommand();renderBar();renderRail();renderAttention();refreshFooter();
   if(_refocusSel&&!_mouseFocus){try{const _f=document.querySelector(_refocusSel);if(_f&&_f.focus){_f.focus({preventScroll:true});if(/^(INPUT|TEXTAREA)$/.test(_f.tagName)&&typeof _f.setSelectionRange==='function'){const _L=(_f.value||'').length;try{_f.setSelectionRange(_L,_L);}catch(_e){}}}}catch(e){}}_refocusSel=null;
   if(_anchorSel&&_anchorTop!=null){try{const _a2=document.querySelector(_anchorSel);if(_a2){const _nt=_a2.getBoundingClientRect().top;window.scrollTo(0,window.scrollY+(_nt-_anchorTop));}else window.scrollTo(0,_sy);}catch(e){try{window.scrollTo(0,_sy);}catch(_z){}}}else{try{window.scrollTo(0,_sy);}catch(e){}}}
-async function commitPending(){if(!_pending||!_pending.length)return;const keys=_pending;_pending=null;if(handleZeroUnitCommit(keys))return;for(const _pk of ['poc.phone','appr.phone'])if(keys.indexOf(_pk)>=0){const _d=(get(_pk)||'').replace(/\D/g,'');if(_d.length!==0&&_d.length!==10){setStatus('Enter a complete 10-digit phone before saving.');return;}}keys.forEach(k=>{const m=k.match(/^partb\.writein\.(e1|e2|e3|e4|e5|s1|s2|s3|s4|s5|s6)(\.on)?$/);if(m)clearUncheckedWriteins([m[1]]);});const _sk=[];keys.forEach(k=>{const gb=groupOf(k);(gb?ADDR_GROUPS[gb]:[k]).forEach(kk=>{if(_sk.indexOf(kk)<0)_sk.push(kk);});});try{form=await store.saveFields(form,_sk);}catch(e){saveFailed(e);return;}await refreshSnap();snapForm();_pendingSnap=null;_refocusSel=refocusSelForKey(keys[0]);renderBody();setStatus('Saved this field to the database.');}
+async function commitPending(){if(!_pending||!_pending.length)return;const keys=_pending;_pending=null;if(handleZeroUnitCommit(keys))return;for(const _pk of ['poc.phone','appr.phone'])if(keys.indexOf(_pk)>=0){const _d=(get(_pk)||'').replace(/\D/g,'');if(_d.length!==0&&_d.length!==10){setStatus('Enter a complete 10-digit phone before saving.');return;}}keys.forEach(k=>{const m=k.match(/^partb\.writein\.(e1|e2|e3|e4|e5|s1|s2|s3|s4|s5|s6)(\.on)?$/);if(m)clearUncheckedWriteins([m[1]]);});const _sk=[];keys.forEach(k=>{const gb=groupOf(k);(gb?ADDR_GROUPS[gb]:[k]).forEach(kk=>{if(_sk.indexOf(kk)<0)_sk.push(kk);});});try{form=await store.saveFields(form,_sk);}catch(e){saveFailed(e);return;}await refreshSnap();snapForm(_sk);_pendingSnap=null;_refocusSel=refocusSelForKey(keys[0]);renderBody();setStatus('Saved this field to the database.');}
 function revertCellIfOver(cell){if(!cell)return false;const inIc=cell.querySelector('.ovic[data-mode="over"] [data-rev]');if(inIc){inIc.click();return true;}const box=cell.getAttribute('data-box');if(box){const note=document.querySelector('.ovnote[data-ov="'+box+'"][data-mode="over"]');if(note){const b=note.querySelector('[data-rev],[data-revaddr]');if(b){b.click();return true;}}}return false;}
 function isToggleKey(k){return /^(check\.\d+|partb\.(equipment|utilities|services)\.\d+|partb\.fuel\.\d+|partb\.writein\.[a-z0-9]+\.(on|fuel))$/.test(k);}
 function fixSavedToggles(){Object.keys(DBSNAP||{}).forEach(k=>{if(isToggleKey(k)){const dv=(DBSNAP[k]&&DBSNAP[k].value!=null)?DBSNAP[k].value:'';form[k]={value:dv,source:'database',saved_at:(DBSNAP[k]&&DBSNAP[k].saved_at)||null,prior_value:null,prior_source:null,db_value:dv};}});}
@@ -2599,7 +2617,14 @@ function wireBody(){
          Escape (reaching the document handler, which does read the pair) put the
          saved value back. */
       const _rk=[];_keys.forEach(kk=>coupledKeys(kk).forEach(x=>{if(_rk.indexOf(x)<0)_rk.push(x);}));
-      if(keysCanRevert(_rk)){e.preventDefault();e.stopPropagation();revertKeys(_rk);refreshIfPrereq(_rk);_refocusSel='[data-k="'+k+'"]';renderBody();setStatus('Reverted your change to the on-file value.');}else if(srcOf(k)==='new'&&(inp.value||'')!==''){e.preventDefault();e.stopPropagation();const _clr=groupOf(k)?[k]:_keys;_clr.forEach(kk=>store.editForm(form,kk,''));_refocusSel='[data-k="'+k+'"]';renderBody();setStatus('Cleared your unsaved entry.');}return;}e.preventDefault();if(_keys.length===1&&/^principals\.\d+\./.test(_keys[0])){const pi=+_keys[0].match(/^principals\.(\d+)\./)[1];if(!principalHasData(pi)){if(PRINCIPALS.length>1){Object.keys(form).forEach(kk=>{if(kk.indexOf('principals.'+pi+'.')===0)delete form[kk];});PRINCIPALS=PRINCIPALS.filter(x=>x!==pi);renderBody();setStatus('Empty principal row removed.');}return;}}if(handleZeroUnitCommit(_keys))return;if(k==='poc.phone'){const _d=(inp.value||'').replace(/[^0-9]/g,'');if(_d.length!==0&&_d.length!==10){setStatus('Enter a complete 10-digit phone before saving.');return;}}if(!keysCanSave(_keys))return;_keys.forEach(kk=>{if(kk.indexOf('partb.writein.')===0&&kk.indexOf('.',14)<0&&kk.slice(14)!=='u1')clearUncheckedWriteins([kk.slice(14)]);});const _sk=[];_keys.forEach(kk=>coupledKeys(kk).forEach(x=>{if(_sk.indexOf(x)<0)_sk.push(x);}));if(groupOf(k)==='tenant.mgmt'&&_sk.indexOf('tenant.mgmt_source')<0)_sk.push('tenant.mgmt_source');try{form=await store.saveFields(form,_sk);}catch(e){saveFailed(e);return;}await refreshSnap();snapForm();_refocusSel='[data-k="'+k+'"]';renderBody();setStatus('Saved this field to the database.');});if(wion)inp.addEventListener('focus',()=>{if(inp.value&&get(wion)!=='1'){form=store.editForm(form,wion,'1');const cb=inp.closest('.cb');if(cb){cb.classList.remove('unchecked','empty');cb.classList.add('checked');const bx=cb.querySelector('.box');if(bx)bx.textContent='✓';}}});});
+      /* Restore the whole set, not just the parts that count as overrides. Gating
+         on keysCanRevert meant that when the _source partner had been saved blank
+         — which after one "Update property profile" is every untouched key — the
+         edit fell through to "clear your unsaved entry", which wiped the custom
+         value and left the source on Custom. The cell showed empty, and the
+         allowance it had been displaying resolved to 0 for the 150% test and for
+         every generated document. */
+      if(revertKeys(_rk)){e.preventDefault();e.stopPropagation();refreshIfPrereq(_rk);_refocusSel='[data-k="'+k+'"]';renderBody();setStatus(String(get(k)==null?'':get(k)).trim()!==''?'Reverted your change to the on-file value.':'Cleared your unsaved entry.');}else if(srcOf(k)==='new'&&(inp.value||'')!==''){e.preventDefault();e.stopPropagation();const _clr=groupOf(k)?[k]:_keys;_clr.forEach(kk=>store.editForm(form,kk,''));_refocusSel='[data-k="'+k+'"]';renderBody();setStatus('Cleared your unsaved entry.');}return;}e.preventDefault();if(_keys.length===1&&/^principals\.\d+\./.test(_keys[0])){const pi=+_keys[0].match(/^principals\.(\d+)\./)[1];if(!principalHasData(pi)){if(PRINCIPALS.length>1){Object.keys(form).forEach(kk=>{if(kk.indexOf('principals.'+pi+'.')===0)delete form[kk];});PRINCIPALS=PRINCIPALS.filter(x=>x!==pi);renderBody();setStatus('Empty principal row removed.');}return;}}if(handleZeroUnitCommit(_keys))return;if(k==='poc.phone'){const _d=(inp.value||'').replace(/[^0-9]/g,'');if(_d.length!==0&&_d.length!==10){setStatus('Enter a complete 10-digit phone before saving.');return;}}if(!keysCanSave(_keys))return;_keys.forEach(kk=>{if(kk.indexOf('partb.writein.')===0&&kk.indexOf('.',14)<0&&kk.slice(14)!=='u1')clearUncheckedWriteins([kk.slice(14)]);});const _sk=[];_keys.forEach(kk=>coupledKeys(kk).forEach(x=>{if(_sk.indexOf(x)<0)_sk.push(x);}));if(groupOf(k)==='tenant.mgmt'&&_sk.indexOf('tenant.mgmt_source')<0)_sk.push('tenant.mgmt_source');try{form=await store.saveFields(form,_sk);}catch(e){saveFailed(e);return;}await refreshSnap();snapForm(_sk);_refocusSel='[data-k="'+k+'"]';renderBody();setStatus('Saved this field to the database.');});if(wion)inp.addEventListener('focus',()=>{if(inp.value&&get(wion)!=='1'){form=store.editForm(form,wion,'1');const cb=inp.closest('.cb');if(cb){cb.classList.remove('unchecked','empty');cb.classList.add('checked');const bx=cb.querySelector('.box');if(bx)bx.textContent='✓';}}});});
   document.querySelectorAll('select[data-k]').forEach(sel=>{const k=sel.getAttribute('data-k');sel.addEventListener('change',()=>{form=store.editForm(form,k,sel.value);paintCell(k);renderRail();renderAttention();});});
   document.querySelectorAll('input[data-cb]').forEach(c=>{const k=c.getAttribute('data-cb');c.addEventListener('change',()=>{_pendingSnap=snapOf([k]);form=store.editForm(form,k,c.checked?'1':'');_pending=[k];_refocusSel='[data-cb="'+k+'"]';renderBody();});});
   document.querySelectorAll('[data-fuel]').forEach(fl=>fl.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();const k=fl.getAttribute('data-fuel');const cur=(form[k]&&form[k].value)||'';const nx=cur===''?'E':(cur==='E'?'F':(cur==='F'?'G':''));_pendingSnap=snapOf([k]);form=store.editForm(form,k,nx);_pending=[k];renderBody();}));
@@ -2607,8 +2632,8 @@ function wireBody(){
   document.querySelectorAll('[data-wibox]').forEach(bx=>bx.addEventListener('click',e=>{e.preventDefault();const base=bx.getAttribute('data-wibox');if(!get(base))return;const on=get(base+'.on')==='1';_pendingSnap=snapOf([base+'.on']);form=store.editForm(form,base+'.on',on?'':'1');_pending=[base+'.on'];_refocusSel='[data-wibox="'+base+'"]';renderBody();}));
   document.querySelectorAll('button[data-rev]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();const _ks=b.getAttribute('data-rev').split(',');const _rv=[];_ks.forEach(k=>coupledKeys(k).forEach(x=>{if(_rv.indexOf(x)<0)_rv.push(x);}));revertKeys(_rv);refreshIfPrereq(_ks);renderBody();setStatus('Reverted to the on-file value.');}));
   document.querySelectorAll('button[data-revaddr]').forEach(b=>b.addEventListener('click',()=>{const _box=b.getAttribute('data-revaddr');const g=ADDR_GROUPS[_box]||ADDR;g.forEach(k=>store.revertForm(form,k));if(_box==='tenant.mgmt')store.revertForm(form,'tenant.mgmt_source');refreshIfPrereq(g);renderBody();setStatus('Address reverted.');}));
-  document.querySelectorAll('button[data-save1]').forEach(b=>b.addEventListener('click',async e=>{e.preventDefault();e.stopPropagation();const keys=[];b.getAttribute('data-save1').split(',').forEach(_k=>coupledKeys(_k).forEach(x=>{if(keys.indexOf(x)<0)keys.push(x);}));if(handleZeroUnitCommit(keys))return;for(const _pk of ['poc.phone','appr.phone'])if(keys.indexOf(_pk)>=0){const _d=(get(_pk)||'').replace(/\D/g,'');if(_d.length!==0&&_d.length!==10){setStatus('Enter a complete 10-digit phone before saving.');return;}}keys.forEach(k=>{const m=k.match(/^partb\.writein\.(e1|e2|e3|e4|e5|s1|s2|s3|s4|s5|s6)(\.on)?$/);if(m)clearUncheckedWriteins([m[1]]);});try{form=await store.saveFields(form,keys);}catch(e){saveFailed(e);return;}await refreshSnap();snapForm();renderBody();setStatus('Saved just that field to the database.');}));
-  document.querySelectorAll('button[data-save1addr]').forEach(b=>b.addEventListener('click',async()=>{const _box=b.getAttribute('data-save1addr');const ks=(ADDR_GROUPS[_box]||ADDR).slice();if(_box==='tenant.mgmt')ks.push('tenant.mgmt_source');try{form=await store.saveFields(form,ks);}catch(e){saveFailed(e);return;}await refreshSnap();snapForm();renderBody();setStatus('Saved the address to the database.');}));
+  document.querySelectorAll('button[data-save1]').forEach(b=>b.addEventListener('click',async e=>{e.preventDefault();e.stopPropagation();const keys=[];b.getAttribute('data-save1').split(',').forEach(_k=>coupledKeys(_k).forEach(x=>{if(keys.indexOf(x)<0)keys.push(x);}));if(handleZeroUnitCommit(keys))return;for(const _pk of ['poc.phone','appr.phone'])if(keys.indexOf(_pk)>=0){const _d=(get(_pk)||'').replace(/\D/g,'');if(_d.length!==0&&_d.length!==10){setStatus('Enter a complete 10-digit phone before saving.');return;}}keys.forEach(k=>{const m=k.match(/^partb\.writein\.(e1|e2|e3|e4|e5|s1|s2|s3|s4|s5|s6)(\.on)?$/);if(m)clearUncheckedWriteins([m[1]]);});try{form=await store.saveFields(form,keys);}catch(e){saveFailed(e);return;}await refreshSnap();snapForm(keys);renderBody();setStatus('Saved just that field to the database.');}));
+  document.querySelectorAll('button[data-save1addr]').forEach(b=>b.addEventListener('click',async()=>{const _box=b.getAttribute('data-save1addr');const ks=(ADDR_GROUPS[_box]||ADDR).slice();if(_box==='tenant.mgmt')ks.push('tenant.mgmt_source');try{form=await store.saveFields(form,ks);}catch(e){saveFailed(e);return;}await refreshSnap();snapForm(ks);renderBody();setStatus('Saved the address to the database.');}));
   document.querySelectorAll('.uatrigger').forEach(t=>{const d=t.closest('.uadrop');if(!d)return;
     const tog=()=>{const open=d.classList.contains('open');document.querySelectorAll('.uadrop.open').forEach(x=>x.classList.remove('open'));if(!open)d.classList.add('open');};
     const openIt=()=>{document.querySelectorAll('.uadrop.open').forEach(x=>x.classList.remove('open'));d.classList.add('open');};
@@ -2998,7 +3023,7 @@ function handleZeroUnitCommit(keys){const zk=keys.find(k=>/^(units|nonrev|ns8)\.
     else if(fam==='nonrev'){NONREV=NONREV.filter(x=>x!==i);if(!NONREV.length){form=store.editForm(form,'nonrev.enabled','');form=await store.saveField(form,'nonrev.enabled');}}
     else{NS8=NS8.filter(x=>x!==i);if(!NS8.length){form=store.editForm(form,'ns8.enabled','');form=await store.saveField(form,'ns8.enabled');}}
     if(mpdb)await(activeCid?mpdb.pruneCycleCells(activeCid,UNITS,NONREV,NS8,PRINCIPALS):mpdb.pruneUnitRows(activePid,UNITS,NONREV,NS8,PRINCIPALS));
-    await refreshSnap();snapForm();renderBody();setStatus('Zero-unit '+label+' deleted and saved.');
+    await refreshSnap();renderBody();setStatus('Zero-unit '+label+' deleted and saved.');
   }catch(e){saveFailed(e);renderBody();}});
   return true;}
 function unitHasData(i){return ['br','ba','current','proposed','ua_exec','ua_rcs','ua_custom','safmr_hud','safmr_rcs','safmr_custom'].some(s=>{const v=get('units.'+i+'.'+s);return v!==''&&v!=null;});}
@@ -3070,7 +3095,12 @@ async function toggleCycleProg(p){
 }
 
 /* ---- EXIT: save or discard, then back to the menu -------------------- */
-function snapForm(){FORMSNAP=snapOf(Object.keys(form));}
+/* Re-baseline only what was actually written. Called bare, this snapshot took
+   EVERY key at its current in-memory value — so saving one field with Enter also
+   declared every other pending edit "already saved". isDirty() went quiet, the
+   unsaved-changes tag went out, and leaving discarded that work without asking. */
+function snapForm(keys){if(!FORMSNAP||!keys||!keys.length){FORMSNAP=snapOf(Object.keys(form));return;}
+  const s=snapOf(keys);Object.keys(s).forEach(k=>{FORMSNAP[k]=s[k];});}
 function isDirty(){if(!FORMSNAP)return false;const keys=new Set([...Object.keys(form),...Object.keys(FORMSNAP)]);for(const k of keys){const fv=form[k]?(form[k].value==null?'':String(form[k].value)):'';const sv=FORMSNAP[k]?(FORMSNAP[k].value==null?'':String(FORMSNAP[k].value)):'';if(fv!==sv)return true;}return false;}
 function refreshFooter(){const t=el('unsavedTag');if(t)t.classList.toggle('on',isDirty());syncFooterRest();}
 function requestExit(){if(isDirty())openExit();else exitForm();}
@@ -3824,7 +3854,12 @@ async function ocrParseRs(bytes,onStep){ // scan -> the tier-1 parsed shape, or 
     const money=n=>'$'+Math.round(Number(n)||0).toLocaleString('en-US'); const nm=v=>parseFloat(String(v||'').replace(/[^0-9.\-]/g,''))||0;
     const ftype=br=>String(br||'').replace(/(\d+)\s*BR/i,'$1 BR');
     const idx=[...new Set(Object.keys(rec).map(k=>(k.match(/^units\.(\d+)\./)||[])[1]).filter(x=>x!=null))].sort((a,b)=>a-b);
-    const rows=idx.map(i=>{const n=nm(rec['units.'+i+'.num_units']),c=nm(rec['units.'+i+'.current']),p=nm(rec['units.'+i+'.proposed']); return [ftype(rec['units.'+i+'.br']), String(n||''), money(c), money(p)];}).filter(r=>r[0].trim()||r[1]);
+    // A rent nobody has entered prints blank. This notice is served on residents
+    // under 24 CFR 245; "$0" states a requested rent that was never requested.
+    const has=v=>v!==''&&v!=null;
+    const rows=idx.map(i=>{const n=nm(rec['units.'+i+'.num_units']);
+      const cR=rec['units.'+i+'.current'],pR=rec['units.'+i+'.proposed'];
+      return [ftype(rec['units.'+i+'.br']), String(n||''), has(cR)?money(nm(cR)):'', has(pR)?money(nm(pR)):''];}).filter(r=>r[0].trim()||r[1]);
     const navy=rgb(0.118,0.227,0.373), white=rgb(1,1,1), line=rgb(0.72,0.75,0.80);
     st.ensure(rh*(rows.length+1)+10);
     const row=(vals,hd,y)=>{let x=x0; vals.forEach((v,ci)=>{ st.page.drawRectangle({x,y:y-rh,width:cw[ci],height:rh,borderColor:line,borderWidth:0.6, color: hd?navy:undefined}); const f=hd?B:R,col=hd?white:st.ink,ss=10.5,w=f.widthOfTextAtSize(String(v),ss); st.page.drawText(String(v),{x:x+(cw[ci]-w)/2,y:y-rh+7,size:ss,font:f,color:col}); x+=cw[ci]; }); };
@@ -3906,29 +3941,51 @@ async function ocrParseRs(bytes,onStep){ // scan -> the tier-1 parsed shape, or 
     if(plan.length>11)plan=mkPlan(false,true);
     if(plan.length>11)plan=mkPlan(false,false);
     if(plan.length>11)plan=plan.slice(0,11);
-    let bannerRow=null;
+    /* The blank template ships with '0' already sitting in three columns of all
+       eleven Part A rows (the row extension, gross rent, and the trailing column).
+       We only ever write the rows we have, so every unused row kept its zeros and
+       the filing went out showing 0 units at $0 down the page. Clear the grid
+       first: only what we actually put there should appear. */
+    for(let r=0;r<11;r++) for(let k=0;k<8;k++){ try{ form.getTextField(String(7+r*8+k)).setText(''); }catch(e){} }
+    /* Same for the totals the app has no figures for. Market rent potential is a
+       real HUD number and we do not collect the market rents it sums, so it must
+       print blank rather than the template's $0 — a stated zero is a claim. */
+    ['97','98','195','1156'].forEach(id=>{ try{ form.getTextField(id).setText(''); }catch(e){} });
+    let bannerRow=null;let ptU=0,ptC=0;   // totals of the rows actually printed
     plan.forEach((row,r)=>{ const base=7+r*8;
       if(row[0]==='banner'){ bannerRow=r; return; }
       if(row[0]==='blank') return;
       const i=row[1];
       if(row[0]==='s8'){ const br=g('units.'+i+'.br'),ba=g('units.'+i+'.ba'),n=nmv(g('units.'+i+'.num_units')),pro=nmv(g('units.'+i+'.proposed'));
-        const us=g('units.'+i+'.ua_source')||'exec'; const ua=us==='rcs'?nmv(g('units.'+i+'.ua_rcs')):(us==='custom'?nmv(g('units.'+i+'.ua_custom')):nmv(g('units.'+i+'.ua_exec')));
+        // Mirror the form's own fallback (app.js defUaSrc): with no source chosen
+        // it shows the executed-RS figure, else the RCS one, else the custom one.
+        // Defaulting flatly to 'exec' printed a BLANK allowance whenever the UA had
+        // come from the RCS report — and gross rent is what the 150% test turns on.
+        const _ue=nmv(g('units.'+i+'.ua_exec')),_ur=nmv(g('units.'+i+'.ua_rcs'));
+        const us=g('units.'+i+'.ua_source')||(_ue>0?'exec':(_ur>0?'rcs':'custom'));
+        const ua=us==='rcs'?_ur:(us==='custom'?nmv(g('units.'+i+'.ua_custom')):_ue);
         // A proposed rent nobody has set yet is blank, not 0 — on a HUD form a
         // printed 0 reads as a real figure. An entered 0 still prints.
         const praw=g('units.'+i+'.proposed'), hasP=praw!==''&&praw!=null;
-        T(base, utype(br,ba)); T(base+1,n||''); T(base+2,hasP?money(pro):''); T(base+3,hasP?money(n*pro):''); T(base+4,ua||''); T(base+5,hasP?money(pro+ua):''); }
+        // Col.4 extends the rent AS PRINTED. Multiplying the unrounded figure made
+        // Col.2 x Col.3 disagree with Col.4 on the face of the filing — and our own
+        // reconciliation gate then rejected a schedule we had generated ourselves.
+        const proR=Math.round(pro);
+        T(base, utype(br,ba)); T(base+1,n||''); T(base+2,hasP?money(proR):''); T(base+3,hasP?money(n*proR):''); T(base+4,ua||''); T(base+5,hasP?money(proR+ua):'');
+        if(hasP){ptU+=n;ptC+=n*proR;} else ptU+=n; }
       else if(row[0]==='li'){ const n=nmv(g('ns8.'+i+'.num_units')),ar=g('ns8.'+i+'.avg_rent');
-        T(base, utype(g('ns8.'+i+'.br'),g('ns8.'+i+'.ba'))); if(n)T(base+1,n);
-        if(ar!==''&&ar!=null){ const rv=nmv(ar); T(base+2,money(rv)); T(base+3,money(n*rv)); T(base+5,money(rv)); } }
-      else { const nn=nmv(g('nonrev.'+i+'.num_units'))||1; T(base, g('nonrev.'+i+'.use')||utype(g('nonrev.'+i+'.br'),g('nonrev.'+i+'.ba'))); T(base+1,nn); }
+        T(base, utype(g('ns8.'+i+'.br'),g('ns8.'+i+'.ba'))); if(n)T(base+1,n); ptU+=n;
+        if(ar!==''&&ar!=null){ const rv=Math.round(nmv(ar)); T(base+2,money(rv)); T(base+3,money(n*rv)); T(base+5,money(rv)); ptC+=n*rv; } }
+      else { const nn=nmv(g('nonrev.'+i+'.num_units'))||1; T(base, g('nonrev.'+i+'.use')||utype(g('nonrev.'+i+'.br'),g('nonrev.'+i+'.ba'))); T(base+1,nn); ptU+=nn; }
     });
     // Totals count every unit — non-S8 rents add into the contract rent
     // potential like S8 rows, and non-rev units count even when trimmed
     // from Part A for space.
-    let tu=0,tc=0;
-    s8A.forEach(i=>{ const n=nmv(g('units.'+i+'.num_units')); tu+=n; tc+=n*nmv(g('units.'+i+'.proposed')); });
-    liA.forEach(i=>{ const n=nmv(g('ns8.'+i+'.num_units')); tu+=n; tc+=n*nmv(g('ns8.'+i+'.avg_rent')); });
-    nrA.forEach(i=>{ tu+=nmv(g('nonrev.'+i+'.num_units'))||1; });
+    /* Foot what is on the page. These summed the FULL arrays while the rows were
+       trimmed to the eleven the form has, so an overflowing schedule printed a
+       total that did not equal its own column — on a form whose Col.4 heading is
+       literally "(Add Col. 4)". */
+    const tu=ptU, tc=ptC;
     const anyP=s8A.some(i=>{const v=g('units.'+i+'.proposed');return v!==''&&v!=null;})||liA.some(i=>{const v=g('ns8.'+i+'.avg_rent');return v!==''&&v!=null;});
     T('94a',tu||''); T('95',anyP?money(tc):''); T('96',anyP?money(tc*12):'');
     // Full-width banner: remove that row's fields (so no viewer redraws a "0"
