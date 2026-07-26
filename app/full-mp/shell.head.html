@@ -46,6 +46,32 @@ body.scrolled #ccbar{transform:translateY(0);opacity:1}
 .gdocs{display:flex;flex-direction:column;gap:7px;margin-top:16px}
 .gnotes{display:flex;flex-direction:column;gap:5px;margin-top:12px}
 .gnote{font-size:13px;line-height:1.5;color:#b45309}
+/* package dialog: one primary action, quiet peers, the remaining work as a
+   to-do list, and the per-document breakdown folded away until asked for */
+.gsec{font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#8791a5;margin:20px 0 9px}
+.gprim{display:flex;align-items:center;gap:13px;width:100%;margin-top:16px;padding:15px 17px;border-radius:11px;background:#1e3a5f;color:#fff;border:none;cursor:pointer;text-align:left;font:inherit}
+.gprim:hover{background:#24466f}
+.gprim-t{display:block;font-size:14.5px;font-weight:750;line-height:1.25}
+.gprim-s{display:block;font-size:12px;line-height:1.35;margin-top:2px;color:rgba(255,255,255,.72)}
+.glinks{display:flex;align-items:center;gap:10px;margin:10px 2px 0}
+.glink{background:none;border:none;padding:0;font:inherit;font-size:13px;font-weight:650;color:#2f5f8f;cursor:pointer}
+.glink:hover{text-decoration:underline}
+.gdot{color:#c3cbd9}
+.gfix{display:flex;flex-direction:column}
+.gfix-r{display:flex;align-items:center;gap:12px;padding:8px 2px;border-bottom:1px solid #f0f2f7;font-size:13px}
+.gfix-r:last-child{border-bottom:none}
+.gfix-l{flex:1;color:#1f2937}
+.gfix-s{background:none;border:none;padding:0;font:inherit;font-size:12.5px;font-weight:700;color:#2f5f8f;cursor:pointer;flex:0 0 auto}
+.gfix-s:hover{text-decoration:underline}
+.gdisc{margin-top:18px}
+.gdisc>summary{font-size:12.5px;font-weight:700;color:#6b7688;cursor:pointer;list-style:none;padding:4px 0}
+.gdisc>summary::-webkit-details-marker{display:none}
+.gdisc>summary:before{content:'\25b8 ';color:#9aa4b5}
+.gdisc[open]>summary:before{content:'\25be '}
+.gdisc .gdocs{margin-top:8px}
+button.gdoc-on{background:#fff;border:1px solid #dbe2ee;cursor:pointer;font:inherit;font-size:13px}
+button.gdoc-on:hover{border-color:#b9c6da}
+
 .gdoc{display:flex;align-items:center;gap:14px;width:100%;min-height:46px;padding:10px 15px;border-radius:9px;text-align:left;font-size:13px;box-sizing:border-box}
 button.gdoc{justify-content:space-between}
 .gdoc-n{font-weight:650;flex:0 0 auto;white-space:nowrap}

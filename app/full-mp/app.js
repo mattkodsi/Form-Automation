@@ -1881,46 +1881,81 @@ async function combinePdfs(list){const {PDFDocument}=window.PDFLib;const out=awa
    generated broken. Optional details (a half-entered address, a missing phone)
    are NOT listed: those degrade cleanly. */
 const DOC_REQS={
-  cover:[['property.name','property name'],['property.s8','Section 8 number'],
-         ['ca.name','CA contact name'],['ca.org','CA organization'],['poc.name','point of contact']],
-  owner:[['property.name','property name'],['property.s8','Section 8 number'],
-         ['ca.name','CA contact name'],['ca.org','CA organization'],
-         ['owner.entity_name','ownership entity'],['appr.firm','appraisal firm']],
-  checklist:[['sig.name','signatory name'],['sig.title','signatory title']],
-  schedule:[['property.name','property name']],
-  notice:[['ca.org','CA organization'],['tenant.sender_name','tenant-notice sender name']],
+  cover:[['property.name','property name',2],['property.s8','Section 8 number',2],
+         ['ca.name','CA contact name',4],['ca.org','CA organization',4],['poc.name','point of contact',3]],
+  owner:[['property.name','property name',2],['property.s8','Section 8 number',2],
+         ['ca.name','CA contact name',4],['ca.org','CA organization',4],
+         ['owner.entity_name','ownership entity',2],['appr.firm','appraisal firm',5]],
+  checklist:[['sig.name','signatory name',3],['sig.title','signatory title',3]],
+  schedule:[['property.name','property name',2]],
+  notice:[['ca.org','CA organization',4],['tenant.sender_name','tenant-notice sender name',9]],
 };
 function docMissing(id){const r=DOC_REQS[id]||[];
-  const m=r.filter(x=>String(get(x[0])==null?'':get(x[0])).trim()==='').map(x=>x[1]);
-  if(id==='schedule'&&!UNITS.some(i=>numf(get('units.'+i+'.num_units'))>0))m.push('at least one unit type with a count');
+  const m=r.filter(x=>String(get(x[0])==null?'':get(x[0])).trim()==='').map(x=>({key:x[0],label:x[1],sec:x[2]}));
+  if(id==='schedule'&&!UNITS.some(i=>numf(get('units.'+i+'.num_units'))>0))m.push({key:'units',label:'at least one unit type with a count',sec:6});
   return m;}
+/* Jump to the section that fixes a gap. The cards render in visibleSections()
+   order, so the section number maps to its position in the list. */
+function gotoSection(n){const vs=visibleSections();const i=vs.indexOf(n);
+  const cards=document.querySelectorAll('#sections .card');const c=cards[i>=0?i:0];
+  if(!c)return;
+  c.classList.remove('collapsed');
+  try{c.scrollIntoView({behavior:'smooth',block:'start'});}catch(e){c.scrollIntoView();}
+  const inp=c.querySelector('input:not([type=hidden]),textarea');
+  if(inp)setTimeout(()=>{try{inp.focus({preventScroll:true});}catch(e){}},340);}
 function showPackageModal(nm,docs,combined,missingRcs,missingLh,capMsgs,blocked){
-  /* All six documents are listed every time, in package order. Dropping the ones
-     that could not be made and explaining them in a footnote left the list a
-     different length each run, and put the reason a long way from the row it was
-     about. A missing RCS report reads like any other gap now. */
-  const ORDER=['Cover letter (CA)','Owner cover letter',"Owner's checklist",'RCS report','Draft rent schedule','Tenant notice'];
+  /* Lead with the thing you came for, and with the work that is left — not with
+     an inventory. Six uniform rows are noise when everything worked, and when
+     something is missing the useful question is not "which document is short"
+     but "what do I go and type". So the gaps are pooled across documents,
+     de-duplicated, and listed once each with the section that fixes them; the
+     per-document breakdown stays available behind a disclosure for anyone who
+     wants one file. */
+  const ORDER=[['cover','Cover letter (CA)'],['owner','Owner cover letter'],['checklist',"Owner's checklist"],
+               ['rcs','RCS report'],['schedule','Draft rent schedule'],['notice','Tenant notice']];
   const byLabel={};docs.forEach((d,i)=>{byLabel[d.label]={doc:d,i:i};});
   const blkBy={};(blocked||[]).forEach(b=>{blkBy[b.label]=b;});
-  const rows=ORDER.map(lab=>{
-    const hit=byLabel[lab];
-    if(hit)return '<button class="btn sm gdoc" data-dldoc="'+hit.i+'"><span class="gdoc-n">'+esc(lab)+'</span><span class="gdoc-a">Download</span></button>';
-    const b=blkBy[lab];
-    const why=b?('needs '+b.missing.join(', ')):(lab==='RCS report'?'not uploaded \u2014 add it in '+secRef(1):'not available');
-    return '<div class="gdoc gdoc-off"><span class="gdoc-n">'+esc(lab)+'</span><span class="gdoc-need">'+esc(why)+'</span></div>';
-  }).join('');
-  const notes=[].concat(missingLh?['No letterhead \u2014 the tenant notice used a generated header.']:[],(capMsgs||[]));
-  const miss=notes.length?'<div class="gnotes">'+notes.map(m=>'<div class="gnote">\u26a0 '+esc(m)+'</div>').join('')+'</div>':'';
-  const nBlocked=ORDER.filter(l=>!byLabel[l]).length;
-  modal('<div class="dlg-t">Package generated</div><div class="dlg-b">'+esc(nm)+' \u00b7 '+docs.length+' document'+(docs.length===1?'':'s')
-    +(nBlocked?' \u00b7 <b style="color:#b45309">'+nBlocked+' not generated</b>':'')
-    +'</div><div class="gdocs"><button class="btn p" id="dlCombined">Combined package (PDF)</button>'+rows+miss+'<button class="btn excel" id="dlXlsx">Rent Analysis workbook (Excel)</button><button class="btn p" id="dlFolder" style="margin-top:11px;display:inline-flex;align-items:center;justify-content:center;gap:8px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> Download the RCS Package folder</button></div><div class="dlg-row"><span class="dlg-sp"></span><button class="btn" id="dlgCancel">Close</button></div>','pkg');
+  const nReady=ORDER.filter(o=>byLabel[o[1]]).length, nGap=ORDER.length-nReady;
+
+  // every gap once, in the order you would walk the form
+  const seen={},fixes=[];
+  ORDER.forEach(o=>{const b=blkBy[o[1]];if(!b)return;
+    (b.missing||[]).forEach(x=>{if(seen[x.key])return;seen[x.key]=1;fixes.push(x);});});
+  if(!byLabel['RCS report']&&!blkBy['RCS report'])fixes.push({key:'rcs',label:'the RCS report',sec:1});
+  fixes.sort((a,b)=>a.sec-b.sec);
+
+  const fixList=fixes.length?'<div class="gsec">To finish the other '+nGap+'</div>'
+    +'<div class="gfix">'+fixes.map(f=>'<div class="gfix-r"><span class="gfix-l">'+esc(f.label)
+      +'</span><button class="gfix-s" data-goto="'+f.sec+'">Section '+f.sec+'</button></div>').join('')+'</div>':'';
+
+  const detail=ORDER.map(o=>{const hit=byLabel[o[1]];
+    if(hit)return '<button class="gdoc gdoc-on" data-dldoc="'+hit.i+'"><span class="gdoc-n">'+esc(o[1])+'</span><span class="gdoc-a">Download</span></button>';
+    const b=blkBy[o[1]];
+    const why=b?((b.missing||[]).map(x=>x.label).join(', ')):'not uploaded';
+    return '<div class="gdoc gdoc-off"><span class="gdoc-n">'+esc(o[1])+'</span><span class="gdoc-need">'+esc(why)+'</span></div>';}).join('');
+
+  const notes=[].concat(missingLh?['No letterhead — the tenant notice used a generated header.']:[],(capMsgs||[]));
+  const noteHtml=notes.length?'<div class="gnotes">'+notes.map(m=>'<div class="gnote">⚠ '+esc(m)+'</div>').join('')+'</div>':'';
+  const folderIcon='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>';
+
+  modal('<div class="dlg-t">Package generated</div>'
+    +'<div class="dlg-b">'+esc(nm)+' · '+(nGap?nReady+' of '+ORDER.length+' documents ready':'all '+ORDER.length+' documents ready')+'</div>'
+    +(nReady?('<button class="gprim" id="dlFolder">'+folderIcon+'<span><span class="gprim-t">Download the RCS Package folder</span>'
+      +'<span class="gprim-s">'+nReady+' document'+(nReady===1?'':'s')+', named and in order</span></span></button>'
+      +'<div class="glinks"><button class="glink" id="dlCombined">Combined PDF</button><span class="gdot">·</span>'
+      +'<button class="glink" id="dlXlsx">Rent Analysis (Excel)</button></div>'):'')
+    +fixList
+    +'<details class="gdisc"><summary>All '+ORDER.length+' documents</summary><div class="gdocs">'+detail+'</div></details>'
+    +noteHtml
+    +'<div class="dlg-row"><span class="dlg-sp"></span><button class="btn" id="dlgCancel">Close</button></div>','pkg');
   el('dlgCancel').onclick=closeModal;
   const cbn=el('dlCombined');if(cbn)cbn.onclick=()=>dlPdf(combined,nm+' - RCS Package.pdf');
   const xb=el('dlXlsx');if(xb)xb.onclick=()=>genRentAnalysis();
   const fb=el('dlFolder');if(fb)fb.onclick=()=>dlPackageFolder(nm,docs,combined);
   document.querySelectorAll('[data-dldoc]').forEach(b=>b.onclick=()=>{const d=docs[+b.getAttribute('data-dldoc')];dlPdf(d.bytes,d.file+'.pdf');});
+  document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>{closeModal();gotoSection(+b.getAttribute('data-goto'));});
 }
+
 async function dlPackageFolder(nm,docs,combined){
   if(!(window.RCSXlsx&&window.RCSXlsx.makeZip)){setStatus('Packager still loading \u2014 try again in a moment.');return;}
   try{setStatus('Packing the RCS Package folder\u2026');
