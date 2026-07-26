@@ -1528,7 +1528,7 @@ function relTime(iso){if(!iso)return '—';const s=String(iso);if(s.indexOf('T')
 function updTitle(iso){if(!iso)return '';const s=String(iso);const base='Updated '+niceDate(s);if(s.indexOf('T')<0)return base;const t=new Date(s);return isNaN(t)?base:base+' at '+t.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});}
 
 /* ---- generic modal (used for exit, new/rename, delete) --------------- */
-function modal(html){_dlgEnter=null;el('dialog').innerHTML=html;el('scrim').classList.add('open');}
+function modal(html,cls){_dlgEnter=null;const d=el('dialog');d.className='dialog'+(cls?' '+cls:'');d.innerHTML=html;el('scrim').classList.add('open');}
 function closeModal(){_dlgEnter=null;el('scrim').classList.remove('open');}
 function dialogInput(title,label,value,okLabel,onOk,extra){ // extra:{label,value,hint} adds a second field; onOk gets (value, extraValue)
   modal('<div class="dlg-t">'+esc(title)+'</div><div class="dlg-field"><label>'+esc(label)+'</label><input id="dlgIn" value="'+esc(value||'')+'" autocomplete="off"></div>'
@@ -1874,12 +1874,36 @@ function dlPdf(bytes,name){dlFile(bytes,name,'application/pdf');}
 function formRec(){const rec={};for(const k in form)rec[k]=form[k].value;return rec;}
 function dataUrlToBytes(u){try{const i=String(u||'').indexOf(',');if(i<0)return null;return b64ToBytes(u.slice(i+1));}catch(e){return null;}}
 async function combinePdfs(list){const {PDFDocument}=window.PDFLib;const out=await PDFDocument.create();for(const b of list){if(!b)continue;const src=await PDFDocument.load(b,{ignoreEncryption:true,parseSpeed:Infinity});const pages=await out.copyPages(src,src.getPageIndices());pages.forEach(p=>out.addPage(p));}return await out.save({objectsPerTick:Infinity});}
-function showPackageModal(nm,docs,combined,missingRcs,missingLh,capMsgs){
-  const rows=docs.map((d,i)=>'<button class="btn sm" data-dldoc="'+i+'" style="justify-content:flex-start">'+esc(d.label)+'</button>').join('');
+/* What each document cannot be written without. Generating regardless produced
+   real sentences like "submitting to in support of our request", "Dear ,", and a
+   bare "7." — a package that looks finished and is not. Anything short of its
+   requirements is offered as blocked, naming exactly what it needs, rather than
+   generated broken. Optional details (a half-entered address, a missing phone)
+   are NOT listed: those degrade cleanly. */
+const DOC_REQS={
+  cover:[['property.name','property name'],['property.s8','Section 8 number'],
+         ['ca.name','CA contact name'],['ca.org','CA organisation'],['poc.name','point of contact']],
+  owner:[['property.name','property name'],['property.s8','Section 8 number'],
+         ['ca.name','CA contact name'],['ca.org','CA organisation'],
+         ['owner.entity_name','ownership entity'],['appr.firm','appraisal firm']],
+  checklist:[['sig.name','signatory name'],['sig.title','signatory title']],
+  schedule:[['property.name','property name']],
+  notice:[['ca.org','CA organisation'],['tenant.sender_name','tenant-notice sender name']],
+};
+function docMissing(id){const r=DOC_REQS[id]||[];
+  const m=r.filter(x=>String(get(x[0])==null?'':get(x[0])).trim()==='').map(x=>x[1]);
+  if(id==='schedule'&&!UNITS.some(i=>numf(get('units.'+i+'.num_units'))>0))m.push('at least one unit type with a count');
+  return m;}
+function showPackageModal(nm,docs,combined,missingRcs,missingLh,capMsgs,blocked){
+  const rows=docs.map((d,i)=>'<button class="btn sm gdoc" data-dldoc="'+i+'"><span class="gdoc-n">'+esc(d.label)+'</span><span class="gdoc-a">Download</span></button>').join('')
+    +((blocked||[]).map(b=>'<div class="gdoc gdoc-off"><span class="gdoc-n">'+esc(b.label)+'</span><span class="gdoc-need">needs '+esc(b.missing.join(', '))+'</span></div>').join(''));
   const miss=(missingRcs?'<div class="sub" style="color:#b45309;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">\u26a0 RCS report (doc 04) missing \u2014 upload it in Section 1.</div>':'')
     +(missingLh?'<div class="sub" style="color:#b45309;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">\u26a0 No letterhead \u2014 the tenant notice used a generated header.</div>':'')
     +((capMsgs||[]).map(m=>'<div class="sub" style="color:#b45309;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="'+esc(m)+'">\u26a0 '+esc(m)+'</div>').join(''));
-  modal('<div class="dlg-t">Package generated</div><div class="dlg-b">'+esc(nm)+' - '+docs.length+' documents. Download the combined file, or any individual document.</div><div style="display:flex;flex-direction:column;gap:7px;margin-top:14px"><button class="btn p" id="dlCombined">Combined package (PDF)</button>'+rows+miss+'<button class="btn excel" id="dlXlsx">Rent Analysis workbook (Excel) \u2014 download it on its own</button><button class="btn p" id="dlFolder" style="margin-top:11px;display:inline-flex;align-items:center;justify-content:center;gap:8px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> Download the RCS Package folder</button></div><div class="dlg-row"><span class="dlg-sp"></span><button class="btn" id="dlgCancel">Close</button></div>');
+  const nBlocked=(blocked||[]).length;
+  modal('<div class="dlg-t">Package generated</div><div class="dlg-b">'+esc(nm)+' \u00b7 '+docs.length+' document'+(docs.length===1?'':'s')
+    +(nBlocked?' \u00b7 <b style="color:#b45309">'+nBlocked+' not generated</b>':'')
+    +'</div><div class="gdocs"><button class="btn p" id="dlCombined">Combined package (PDF)</button>'+rows+miss+'<button class="btn excel" id="dlXlsx">Rent Analysis workbook (Excel)</button><button class="btn p" id="dlFolder" style="margin-top:11px;display:inline-flex;align-items:center;justify-content:center;gap:8px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> Download the RCS Package folder</button></div><div class="dlg-row"><span class="dlg-sp"></span><button class="btn" id="dlgCancel">Close</button></div>','pkg');
   el('dlgCancel').onclick=closeModal;
   const cbn=el('dlCombined');if(cbn)cbn.onclick=()=>dlPdf(combined,nm+' - RCS Package.pdf');
   const xb=el('dlXlsx');if(xb)xb.onclick=()=>genRentAnalysis();
@@ -2117,18 +2141,21 @@ async function __genPackageRun(){
       if(L&&L.data){const by=dataUrlToBytes(L.data);if(by)lh=(String(L.data).indexOf('data:application/pdf')===0)?{pdf:by}:{png:by};}
       if(lh&&lh.png){const dr=await measureLetterheadDrop(L.data);if(dr)lh.drop=dr;}
       if(lh&&lh.pdf){const dr=await measurePdfLetterheadDrop(lh.pdf);if(dr)lh.drop=dr;} }catch(e){}
-    const N=get('property.name')||'Property'; const docs=[];
-    docs.push({label:'Cover letter (CA)',file:'01. '+N+' - Cover Letter',bytes:await window.RCSGen.coverLetter(rec,logo)});
-    docs.push({label:'Owner cover letter',file:'02. '+N+' - RCS Owner Cover Letter',bytes:await window.RCSGen.ownerLetter(rec)});
-    if(T.checklist)docs.push({label:"Owner's checklist",file:"03. "+N+" - RCS Owner's Checklist",bytes:await window.RCSGen.fillChecklist(b64ToBytes(T.checklist),rec)});
+    const N=get('property.name')||'Property'; const docs=[],blocked=[];
+    const add=async(id,label,file,make)=>{const m=docMissing(id);
+      if(m.length){blocked.push({label:label,missing:m});return;}
+      docs.push({label:label,file:file,bytes:await make()});};
+    await add('cover','Cover letter (CA)','01. '+N+' - Cover Letter',()=>window.RCSGen.coverLetter(rec,logo));
+    await add('owner','Owner cover letter','02. '+N+' - RCS Owner Cover Letter',()=>window.RCSGen.ownerLetter(rec));
+    if(T.checklist)await add('checklist',"Owner's checklist","03. "+N+" - RCS Owner's Checklist",()=>window.RCSGen.fillChecklist(b64ToBytes(T.checklist),rec));
     if(_rcsUpload)docs.push({label:'RCS report (uploaded)',file:'04. '+N+' - RCS Report',bytes:_rcsUpload.bytes});
-    if(T.rentSchedule)docs.push({label:'Draft rent schedule',file:'05. '+N+' - Draft Rent Schedule',bytes:await window.RCSGen.fillRentSchedule(b64ToBytes(T.rentSchedule),rec)});
-    docs.push({label:'Tenant notice',file:'06. '+N+' - RCS Tenant Notice',bytes:await window.RCSGen.tenantNotice(rec,lh,logo)});
+    if(T.rentSchedule)await add('schedule','Draft rent schedule','05. '+N+' - Draft Rent Schedule',()=>window.RCSGen.fillRentSchedule(b64ToBytes(T.rentSchedule),rec));
+    await add('notice','Tenant notice','06. '+N+' - RCS Tenant Notice',()=>window.RCSGen.tenantNotice(rec,lh,logo));
     const combined=await combinePdfs(docs.map(d=>d.bytes));
     let _lhOk=false;try{const L2=(mpdb&&activePid)?mpdb.getLetterhead(activePid):null;_lhOk=!!(L2&&L2.data);}catch(e){}
-    showPackageModal(get('property.name')||'Property',docs,combined,!_rcsUpload,!_lhOk,rsCapacity().msgs);
+    showPackageModal(get('property.name')||'Property',docs,combined,!_rcsUpload,!_lhOk,rsCapacity().msgs,blocked);
     try{ if(activeCid&&mpdb)await mpdb.setCycleGenerated(activeCid,docs.map(d=>d.label)); }catch(e){}
-    setStatus('Package generated - '+docs.length+' documents.'+(_rcsUpload?'':' The RCS report (document 04) is missing \u2014 upload it in Section 1 to include it.'));
+    setStatus('Package generated \u2014 '+docs.length+' document'+(docs.length===1?'':'s')+(blocked.length?', '+blocked.length+' still missing information.':'.')+(_rcsUpload?'':' The RCS report (document 04) is missing \u2014 upload it in Section 1 to include it.'));
   }catch(e){ setStatus('Generation failed: '+((e&&e.message)||e)); }
 }
 /* ---- boot ------------------------------------------------------------- */
