@@ -64,7 +64,7 @@ const money=n=>'$'+Math.round(n).toLocaleString('en-US');
 const money2=n=>'$'+(+n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
 function sMoney(n){n=Math.round(n);return(n<0?'-$':'+$')+Math.abs(n).toLocaleString('en-US');}
 function sPct(n){n=Math.round(n);return(n<0?'-':'+')+Math.abs(n)+'%';}
-function sK(n){return(n<0?'-$':'+$')+Math.abs(Math.round(n/1000))+'K';}
+function sK(n){const a=Math.abs(n),sg=(n<0?'-$':'+$');return a>=1e6?sg+(a/1e6).toFixed(1)+'M':sg+Math.round(a/1000)+'K';}
 function fmtDate(d){if(!d)return '';const p=String(d).split('-');return p.length===3?p[1]+'/'+p[2]+'/'+p[0]:d;}
 function fmtPhone(x){const d=String(x).replace(/\D/g,'').slice(0,10);if(!d)return '';if(d.length<4)return '('+d;if(d.length<7)return '('+d.slice(0,3)+') '+d.slice(3);return '('+d.slice(0,3)+') '+d.slice(3,6)+'-'+d.slice(6);}
 function cleanNum(x){return String(x==null?'':x).replace(/[^0-9]/g,'');}
@@ -119,14 +119,15 @@ function safmrResolvedOf(i){const src=get('units.'+i+'.safmr_source')||defSafmrS
 function safmrConflictOf(i){const sh=numf(get('units.'+i+'.safmr_hud')),sr=numf(get('units.'+i+'.safmr_rcs'));return sh>0&&sr>0&&sh!==sr;}
 function safmrReviewedOf(i){return get('units.'+i+'.safmr_reviewed')==='1';}
 function safmrUnresolved(i){return safmrConflictOf(i)&&!safmrReviewedOf(i);}
-function analysis(){let cg=0,pg=0,tot=0,sc=0,sp=0,nd=0,ceil=0,safmrMissing=false,safmrConflict=false,safmrOver=0;
+function analysis(){let cg=0,pg=0,tot=0,sc=0,sp=0,nd=0,cgC=0,pgC=0,ceilC=0,tTot=0,tPr=0,ceil=0,safmrMissing=false,safmrConflict=false,safmrOver=0;
   UNITS.forEach(i=>{const n=numf(get('units.'+i+'.num_units')),cur=numf(get('units.'+i+'.current')),pro=numf(get('units.'+i+'.proposed')),ua=uaResolvedOf(i);const safmr=safmrResolvedOf(i);
     cg+=(cur+ua)*n;pg+=(pro+ua)*n;tot+=n;if(safmr>0){ceil+=safmr*n;if(pro>0&&pro>=safmr)safmrOver++;}else if(n>0)safmrMissing=true;if(safmrConflictOf(i))safmrConflict=true;
-    if(cur>0&&pro>0){sc+=cur*n;sp+=pro*n;nd+=n;}});
+    if(n>0)tTot++;
+    if(cur>0&&pro>0){sc+=cur*n;sp+=pro*n;nd+=n;cgC+=(cur+ua)*n;pgC+=(pro+ua)*n;if(safmr>0)ceilC+=safmr*n;tPr++;}});   // comparable rows only — see computeAnalysis in db.js
   const perUnit=nd?(sp-sc)/nd:0;const pct=sc?Math.round((sp-sc)/sc*100):0;
   const safmrHave=UNITS.filter(i=>safmrResolvedOf(i)>0).length;   // a ceiling needs both a SAFMR and a unit count
   const countsMissing=tot<=0&&UNITS.length>0;
-  return{cg,pg,ceil,headroom:ceil-pg,pass:(ceil>0&&pg<ceil),perUnit,dMo:pg-cg,dYr:(pg-cg)*12,pct,tot,safmrMissing,safmrConflict,safmrOver,safmrHave,countsMissing};}
+  return{cg,pg,ceil,headroom:ceil-pg,pass:(ceil>0&&pg<ceil),perUnit,dMo:pgC-cgC,dYr:(pgC-cgC)*12,priced:nd,cgC,pgC,ceilC,tTot,tPr,pct,tot,safmrMissing,safmrConflict,safmrOver,safmrHave,countsMissing};}
 
 function ovBtns(k){return `<button class="revert" data-rev="${k}">↺ revert</button><button class="save1" data-save1="${k}">✓ save this field</button>`;}
 function overText(keys){return keys.some(k=>form[k]&&form[k].fromParse)?'parsed — changed from stored record':'changed from stored record';}
@@ -472,7 +473,12 @@ function renderKeepFocus(){const ae=document.activeElement;const k=ae&&ae.getAtt
   if(k){const ni=document.querySelector('[data-k="'+k+'"]');if(ni){ni.focus({preventScroll:true});try{const L=pos==null?(ni.value||'').length:pos;ni.setSelectionRange(L,L);}catch(e){}}}}
 function hudStatus(n){const d=_hud.data;if(!d)return;
   const srcNote=d.zip_rents?('ZIP '+d.zip):(d.smallarea?'metro-wide — ZIP not in HUD’s SAFMR table':'area FMR — not a Small Area FMR zone');
-  setStatus('HUD FY'+d.year+' · '+d.area_name+' · '+srcNote+(n?(' — filled the 150% ceiling for '+n+' unit type'+(n===1?'':'s')+'. Review, then “Update property profile”.'):' — SAFMR ceilings are up to date.'));}
+  // Say the year only when HUD told us one — the FMR endpoint returns it only
+  // when a year was asked for, and "HUD FYundefined" was reaching the screen.
+  // And call them 150% ceilings, not SAFMR ceilings: outside a Small Area zone
+  // the ceiling comes from the area FMR, so "not a SAFMR zone — SAFMR ceilings
+  // are up to date" was contradicting itself in the same breath.
+  setStatus((d.year?('HUD FY'+d.year+' · '):'HUD FMR · ')+d.area_name+' · '+srcNote+(n?(' — filled the 150% ceiling for '+n+' unit type'+(n===1?'':'s')+'. Review, then “Update property profile”.'):' — the 150% ceilings are up to date.'));}
 async function ensureHudSafmr(opts){opts=opts||{};const manual=!!opts.manual;
   if(!hasProg('rcs'))return; // the 150% SAFMR threshold is an RCS instrument
   if(!supaClient){if(manual)setStatus('HUD SAFMR pull needs the hosted backend — sign in first.');return;}
@@ -1158,20 +1164,32 @@ function holdAnchor(fn){let a=document.activeElement;if(!(a&&a!==document.body&&
 function renderCommand(){holdAnchor(_renderCommand);}
 function _renderCommand(){const a=analysis();const pCur=a.ceil>0?clamp(a.cg/a.ceil*100):0,pPro=a.ceil>0?clamp(a.pg/a.ceil*100):0;
   const conf=UNITS.filter(uaConflict).length,unres=UNITS.filter(uaUnresolved).length;
-  const nmOk=(get('property.name')||'').trim()!=='',fhaOk=(get('property.fha')||'').trim()!=='',s8Ok=(get('property.s8')||'').trim()!=='',sigOk=(get('sig.name')||'').trim()!=='';
+  const nmOk=hasReal('property.name'),fhaOk=hasReal('property.fha'),s8Ok=hasReal('property.s8'),sigOk=hasReal('sig.name');
   const uaHave=UNITS.some(i=>numf(get('units.'+i+'.ua_exec'))>0||numf(get('units.'+i+'.ua_rcs'))>0||numf(get('units.'+i+'.ua_custom'))>0);
   const ua=!uaHave?['warn','not entered — '+secRef(6)]:(conf===0?['ok',(hasProg('rcs')&&UNITS.some(i=>numf(get('units.'+i+'.ua_exec'))>0&&numf(get('units.'+i+'.ua_rcs'))>0))?'exec & RCS agree':'as entered']:(unres===0?['ok','UA conflicts resolved per unit type']:['warn',unres+' of '+conf+' unit type'+(conf>1?'s':'')+' need'+(unres===1?'s':'')+' a UA source']));
   const uaStrip=()=>{const U=uafAnalysis();let dMo=0,types=0;UNITS.forEach(i=>{const r=uafRow(i);if(r.curSum>0&&r.newSum>0){types++;dMo+=numf(get('units.'+i+'.num_units'))*(r.newSum-r.curSum);}});
     return `<div class="lift"><b>UTILITY ALLOWANCE CHANGE</b><div class="liftnums"><span><b class="teal">${types}</b><i>unit type${types===1?'':'s'}</i></span><span><b>${sMoney(dMo)}</b><i>UA /mo across units</i></span><span><b style="color:${U.dec.length?'#b45309':'#166534'}">${U.dec.length}</b><i>decrease${U.dec.length===1?'':'s'}</i></span></div></div>`;};
   let card1;
   if(hasProg('rcs')){
-    card1=`<div class="ccard afford"><div class="cck">AFFORDABILITY PROOF</div><div class="cctitle">${a.ceil>0?('Proposed rents '+(a.pass?'clear':'exceed')+' the 150% SAFMR ceiling'):(a.countsMissing&&a.safmrHave?'Add the unit counts to run the 150% test':'Enter or pull a SAFMR to run the 150% test')}</div><div class="ccsub">Monthly gross rent potential (rent + UA)</div>
+    /* With no proposed rent on any type, a.pg is nothing but utility allowance, so
+       the ceiling test "passes" by default and the gauge draws a proposed bar out of
+       thin air. Say the test hasn't run yet instead of awarding it a green PASS. */
+    const priced=a.priced>0;
+    /* Price only some of the unit types and the test must cover only those. Run
+       over the whole property and the unpriced types bring a ceiling nothing is
+       weighed against, which inflates the headroom — one type priced out of two
+       reported $131,720 of room that did not exist. */
+    const partial=priced&&a.tPr<a.tTot;
+    const CG=partial?a.cgC:a.cg,PG=partial?a.pgC:a.pg,CEIL=partial?a.ceilC:a.ceil;
+    const PASS=CEIL>0&&PG<CEIL,HEAD=CEIL-PG;
+    const gCur=CEIL>0?clamp(CG/CEIL*100):0,gPro=CEIL>0?clamp(PG/CEIL*100):0;
+    card1=`<div class="ccard afford"><div class="cck">AFFORDABILITY PROOF</div><div class="cctitle">${a.ceil>0?(priced?('Proposed rents '+(PASS?'clear':'exceed')+' the 150% SAFMR ceiling'+(partial?' for the '+a.tPr+' of '+a.tTot+' unit types priced so far':'')):'Enter the proposed rents to run the 150% test'):(a.countsMissing&&a.safmrHave?'Add the unit counts to run the 150% test':'Enter or pull a SAFMR to run the 150% test')}</div><div class="ccsub">Monthly gross rent potential (rent + UA)</div>
      <div class="afrow"><div class="afbar">
-        <div class="gauge">${gaugeSegs(pCur,pPro)}<div class="oend"></div></div>
-        <div class="glabels"><div class="gl l"><b style="color:#2f7d57">${money(a.cg)}</b><i>current</i></div><div class="gl c"><b style="color:#47a377">${money(a.pg)}</b><i>proposed</i></div><div class="gl r"><b>${a.ceil>0?money(a.ceil):'—'}</b><i>150% ceiling · HUD SAFMR</i>${a.safmrConflict?`<i class="amber">⚠ RCS differs on ≥1 type</i>`:(a.safmrMissing?`<i class="amber">⚠ SAFMR needed</i>`:(a.countsMissing&&a.safmrHave?`<i class="amber">⚠ unit counts needed</i>`:''))}</div></div>
+        <div class="gauge">${gaugeSegs(priced?gCur:pCur,priced?gPro:0)}<div class="oend"></div></div>
+        <div class="glabels"><div class="gl l"><b style="color:#2f7d57">${money(priced?CG:a.cg)}</b><i>current</i></div><div class="gl c"><b style="color:${priced?'#47a377':'#94a3b8'}">${priced?money(PG):'—'}</b><i>proposed</i></div><div class="gl r"><b>${(priced?CEIL:a.ceil)>0?money(priced?CEIL:a.ceil):'—'}</b><i>150% ceiling · HUD SAFMR</i>${partial?`<i class="amber">⚠ ${a.tTot-a.tPr} unit type${a.tTot-a.tPr===1?'':'s'} not priced yet</i>`:''}${a.safmrConflict?`<i class="amber">⚠ RCS differs on ≥1 type</i>`:(a.safmrMissing?`<i class="amber">⚠ SAFMR needed</i>`:(a.countsMissing&&a.safmrHave?`<i class="amber">⚠ unit counts needed</i>`:''))}</div></div>
        </div>
-       ${a.ceil>0?`<div class="passbox" style="background:${a.pass?'#dcfce7':'#fee2e2'};color:${a.pass?'#166534':'#b91c1c'};border-color:${a.pass?'#86efac':'#fca5a5'}">${a.pass?'✓ PASS':'✗ OVER'}<small>${money(Math.abs(a.headroom))} ${a.pass?'headroom':'over'}</small></div>`:`<div class="passbox" style="background:#f1f4f9;color:#64748b;border-color:#d7deea">${a.countsMissing&&a.safmrHave?'Unit counts needed':'SAFMR needed'}<small>${a.countsMissing&&a.safmrHave?('add the number of units in '+secRef(6)):(hudBlockerShort()||'enter or pull from HUD')}</small></div>`}</div>
-     <div class="lift"><b>RCS LIFT vs current rent roll</b><div class="liftnums"><span><b class="teal">${sPct(a.pct)}</b><i>increase</i></span><span><b>${sMoney(a.perUnit)}</b><i>per unit</i></span><span><b>${sMoney(a.dMo)}</b><i>/mo</i></span><span><b>${sK(a.dYr)}</b><i>annualized</i></span></div></div>
+       ${(a.ceil>0&&priced)?`<div class="passbox" style="background:${PASS?'#dcfce7':'#fee2e2'};color:${PASS?'#166534':'#b91c1c'};border-color:${PASS?'#86efac':'#fca5a5'}">${PASS?'✓ PASS':'✗ OVER'}<small>${money(Math.abs(HEAD))} ${PASS?'headroom':'over'}${partial?' · so far':''}</small></div>`:`<div class="passbox" style="background:#f1f4f9;color:#64748b;border-color:#d7deea">${a.ceil>0?'Proposed rents needed':(a.countsMissing&&a.safmrHave?'Unit counts needed':'SAFMR needed')}<small>${a.ceil>0?('enter them in '+secRef(6)):(a.countsMissing&&a.safmrHave?('add the number of units in '+secRef(6)):(hudBlockerShort()||'enter or pull from HUD'))}</small></div>`}</div>
+     <div class="lift"><b>RCS LIFT vs current rent roll</b>${!priced?`<div class="liftnote">The lift appears once proposed rents are entered in ${secRef(6)}.</div>`:`<div class="liftnums"><span><b class="teal">${sPct(a.pct)}</b><i>increase</i></span><span><b>${sMoney(a.perUnit)}</b><i>per unit</i></span><span><b>${sMoney(a.dMo)}</b><i>/mo</i></span><span><b>${sK(a.dYr)}</b><i>annualized</i></span></div>`}</div>
    </div>`;
   } else {
     const C=ocafCalc();let dMo=0,units=0;UNITS.forEach(i=>{const n=numf(get('units.'+i+'.num_units')),cur=numf(get('units.'+i+'.current'));if(n&&cur&&C.R>0){dMo+=n*(Math.round(cur*C.R)-cur);units+=n;}});
@@ -1184,20 +1202,35 @@ function _renderCommand(){const a=analysis();const pCur=a.ceil>0?clamp(a.cg/a.ce
   el('cc').innerHTML=`
    ${card1}
    <div class="ccard"><div class="cck">RECORD CHECKS</div><div class="chkgrid">
-     ${chk(nmOk?'ok':'warn','Property name',nmOk?esc(get('property.name')):'missing — Section 2')}${chk(s8Ok?'ok':'warn','Section 8 #',s8Ok?esc(get('property.s8')):'missing — Section 2')}${chk(fhaOk?'ok':'info','FHA #',fhaOk?esc(get('property.fha')):'none on file — fills page 1 of the rent schedule')}${chk(sigOk?'ok':'warn','Signatory (Part H)',sigOk?(esc(get('sig.name'))+(get('sig.title')?' · '+esc(get('sig.title'))+(get('sig.principal')?' of the '+esc(get('sig.principal')):''):'')):'missing — Section 3')}
+     ${chk(nmOk?'ok':'warn','Property name',nmOk?esc(get('property.name')):'missing — Section 2')}${chk(s8Ok?'ok':'warn','Section 8 #',s8Ok?esc(get('property.s8')):'missing — Section 2')}${chk(fhaOk?'ok':'info','FHA #',fhaOk?esc(get('property.fha')):((get('property.fha')||'').trim()?'the schedule says “'+esc(get('property.fha'))+'” — no number to print':'none on file — fills page 1 of the rent schedule'))}${chk(sigOk?'ok':'warn','Signatory (Part H)',sigOk?(esc(get('sig.name'))+(get('sig.title')?' · '+esc(get('sig.title'))+(get('sig.principal')?' of the '+esc(get('sig.principal')):''):'')):'missing — Section 3')}
      ${chk(ua[0],'Utility allowance',ua[1])}${hasProg('rcs')?chk((a.safmrMissing||a.ceil<=0)?'warn':(a.safmrOver?'warn':(a.safmrConflict?'info':'ok')),'SAFMR (150% ceiling)',a.safmrMissing?'enter or pull SAFMR per unit type':(a.ceil<=0?(a.countsMissing&&a.safmrHave?'no ceiling yet — unit counts needed':'no ceiling yet'):(a.safmrOver?(a.safmrOver+' type'+(a.safmrOver>1?'s':'')+' over 150% SAFMR'):(a.safmrConflict?'HUD vs RCS differ — using HUD':(UNITS.every(i=>(get('units.'+i+'.safmr_source')||defSafmrSrc(i))==='hud')?'per unit type · HUD':'per unit type'))))):''}${(()=>{const c=rsCapacity();return c.msgs.length?chk('warn','Rent schedule capacity',esc(c.flags.join(' · '))):'';})()}</div></div>
    ${pkgCard()}`;}
 function pkgCard(){
   if(hasProg('rcs'))return `<div class="ccard"><div class="cck">THIS PACKAGE</div><div class="cctitle" style="font-size:15px">${_rcsUpload?'RCS report uploaded':'RCS report needed'}</div><div class="ccsub">${_rcsUpload?esc(_rcsUpload.name)+' — goes in as document 04':'Upload the completed RCS report in '+secRef(1)+' — it becomes document 04 of the package.'}</div>
-     <div class="ccsub" style="margin-top:7px;color:#33405c"><b>The 6-document package</b></div><div class="drafts">${[['Cover letter (CA)',1],['Owner cover letter',1],['Owner’s checklist',1],['RCS report (uploaded PDF)',_rcsUpload?1:0],['Draft rent schedule',1],['Tenant notice',1]].map(d=>'<span>'+(d[1]?'✓ ':'○ ')+d[0]+'</span>').join('')}</div>
+     <div class="ccsub" style="margin-top:7px;color:#33405c"><b>The 6-document package</b></div><div class="drafts">${(function(){
+      /* Ask the same question the generate dialog asks. These ticks were hardcoded
+         to 1 for five of the six, so the card claimed five documents were ready on
+         a property that could produce two — and it was the first thing you saw. */
+      const L=[['Cover letter (CA)','cover'],['Owner cover letter','owner'],['Owner’s checklist','checklist'],
+               ['RCS report (uploaded PDF)','rcs'],['Draft rent schedule','schedule'],['Tenant notice','notice']];
+      return L.map(d=>{const miss=d[1]==='rcs'?(_rcsUpload?[]:[{label:'no study uploaded yet'}]):docMissing(d[1]);
+        const ok=!miss.length;
+        return '<span'+(ok?'':' class="draft-off" title="Needs '+esc(miss.map(x=>x.label).join(', '))+'"')+'>'+(ok?'✓ ':'○ ')+d[0]+'</span>';}).join('');
+    })()}</div>
      <div class="wb">Documents are generated from the form exactly as shown. Save with “Update property profile” before generating.</div></div>`;
   const docs=[];
   if(hasProg('ocaf'))docs.push('9625 worksheet (Q = P)','Corrected auto-OCAF letter — election box 1','Revised Exhibit A','Debt-service evidence');
   if(hasProg('uaf')){docs.push('UAF certification / breakdown');if(uafAnalysis().dec.length)docs.push('30-day tenant notice (UA decrease)','Tenant-comment certification');}
   docs.push('Revised rent schedule'+(hasProg('ocaf')&&hasProg('uaf')?' — one, merged OCAF + UAF':''));
   return `<div class="ccard"><div class="cck">THIS PACKAGE</div><div class="cctitle" style="font-size:15px">${esc(cycleProgs().map(x=>PROG_NAMES[x]||x).join(' + '))} package</div><div class="ccsub">${_rcsUpload?esc(_rcsUpload.name)+' uploaded — the package’s source document':esc(srcDocLabel().title)+(srcDocLabel().need?' goes in '+secRef(1):' — optional, '+secRef(1))}</div>
-     <div class="ccsub" style="margin-top:7px;color:#33405c"><b>This package includes</b></div><div class="drafts">${docs.map(d=>'<span>○ '+d+'</span>').join('')}</div>
+     <div class="ccsub" style="margin-top:7px;color:#33405c"><b>This package includes</b></div><div class="drafts">${docs.map(d=>'<span>· '+d+'</span>').join('')}</div>
      <div class="wb">Documents are generated from the form exactly as shown. Save with “Update property profile” before generating.</div></div>`;}
+/* A schedule that prints "N/A" for the FHA number is telling us there ISN'T one.
+   Storing that is right — it is what the document says, and it is what we print
+   back. Counting it as a filled field is not: the record checks were awarding a
+   green check to "FHA # · N/A". Presence is not the same as an answer. */
+const NA_RE=/^(n\/?a|n\.a\.?|none|null|tbd|-{1,3})$/i;
+function hasReal(k){const v=String(get(k)==null?'':get(k)).trim();return v!==''&&!NA_RE.test(v);}
 function chk(st,name,note){const ic=st==='warn'?'⚠':(st==='info'?'ⓘ':'✓');const cl=st==='warn'?'warn':(st==='info'?'info':'ok');return `<div class="chk"><span class="${cl}">${ic}</span><div><b>${name}</b><div class="sub">${note}</div></div></div>`;}
 
 function isStateKey(k){return /\.(ua_reviewed|safmr_reviewed|type_reviewed|num_reviewed|ua_custom|safmr_custom)$/.test(k)||k==='tenant.mgmt_source'||k==='poc.mode'||/^poc\.custom_/.test(k)||k==='rent_schedule.date_eff_source'||k==='rent_schedule.date_eff_custom'||k==='ocaf.factor_src';}
@@ -1234,7 +1267,7 @@ function renderAttention(){/* the section rail carries the attention list; the o
 
 function renderBar(){const a=analysis();const conf=UNITS.filter(uaConflict).length,unres=UNITS.filter(uaUnresolved).length;const uaOk=conf===0||unres===0;
  const bc=(st,l)=>{const ic=st==='warn'?'⚠':(st==='info'?'ⓘ':'✓');const c=st==='warn'?'#b45309':(st==='info'?'#2563eb':'#166534');return `<span class="bchip"><b style="color:${c}">${ic}</b> ${l}</span>`;};
- const chks=`${bc((get('property.name')||'').trim()?'ok':'warn','Name')}${bc((get('property.s8')||'').trim()?'ok':'warn','Section 8 #')}${bc((get('sig.name')||'').trim()?'ok':'warn','Signatory')}${bc(uaOk?'ok':'warn','UA')}`;
+ const chks=`${bc(hasReal('property.name')?'ok':'warn','Name')}${bc(hasReal('property.s8')?'ok':'warn','Section 8 #')}${bc(hasReal('sig.name')?'ok':'warn','Signatory')}${bc(uaOk?'ok':'warn','UA')}`;
  if(!hasProg('rcs')){
    const C=ocafCalc();let dMo=0;UNITS.forEach(i=>{const n=numf(get('units.'+i+'.num_units')),cur=numf(get('units.'+i+'.current'));if(n&&cur&&C.R>0)dMo+=n*(Math.round(cur*C.R)-cur);});
    const U=uafAnalysis();let uaMo=0;UNITS.forEach(i=>{const r=uafRow(i);if(r.curSum>0&&r.newSum>0)uaMo+=numf(get('units.'+i+'.num_units'))*(r.newSum-r.curSum);});
@@ -1246,7 +1279,11 @@ function renderBar(){const a=analysis();const conf=UNITS.filter(uaConflict).leng
    return;
  }
  const pCur=a.ceil>0?clamp(a.cg/a.ceil*100):0,pPro=a.ceil>0?clamp(a.pg/a.ceil*100):0;
- el('ccbar').innerHTML=`<div class="bl"><div class="minigauge">${gaugeSegs(pCur,pPro)}<div class="oend"></div></div><div class="mn"><b style="color:#2f7d57">${money(a.cg)}</b> current · <b style="color:#47a377">${money(a.pg)}</b> proposed · <b>${a.ceil>0?money(a.ceil):'—'}</b> ceiling · <b class="teal">${sPct(a.pct)}</b> RCS boost</div><div class="bpass" style="color:${a.ceil>0?(a.pass?'#166534':'#b91c1c'):'#64748b'}">${a.ceil>0?((a.pass?'✓ PASS':'✗ OVER')+' · '+money(Math.abs(a.headroom))):'SAFMR needed'}</div></div><div class="bchks">${chks}${bc(a.safmrMissing||a.safmrOver?'warn':(a.safmrConflict?'info':'ok'),'SAFMR')}</div>`;}
+ const priced=a.priced>0,partial=priced&&a.tPr<a.tTot;
+ const CG=partial?a.cgC:a.cg,PG=partial?a.pgC:a.pg,CEIL=partial?a.ceilC:a.ceil;
+ const PASS=CEIL>0&&PG<CEIL,HEAD=CEIL-PG;
+ const gCur=CEIL>0?clamp(CG/CEIL*100):0,gPro=CEIL>0?clamp(PG/CEIL*100):0;
+ el('ccbar').innerHTML=`<div class="bl"><div class="minigauge">${gaugeSegs(priced?gCur:pCur,priced?gPro:0)}<div class="oend"></div></div><div class="mn"><b style="color:#2f7d57">${money(priced?CG:a.cg)}</b> current · <b style="color:${priced?'#47a377':'#94a3b8'}">${priced?money(PG):'—'}</b> proposed · <b>${(priced?CEIL:a.ceil)>0?money(priced?CEIL:a.ceil):'—'}</b> ceiling${priced?' · <b class="teal">'+sPct(a.pct)+'</b> RCS boost':''}${partial?' · <b style="color:#b45309">'+(a.tTot-a.tPr)+' type'+(a.tTot-a.tPr===1?'':'s')+' unpriced</b>':''}</div><div class="bpass" style="color:${(a.ceil>0&&priced)?(PASS?'#166534':'#b91c1c'):'#64748b'}">${(a.ceil>0&&priced)?((PASS?'✓ PASS':'✗ OVER')+' · '+money(Math.abs(HEAD))):(a.ceil>0?'proposed rents needed':'SAFMR needed')}</div></div><div class="bchks">${chks}${bc(a.safmrMissing||a.safmrOver?'warn':(a.safmrConflict?'info':'ok'),'SAFMR')}</div>`;}
 function renderBody(){const _sy=window.scrollY;const _anchorSel=(_refocusSel&&!_mouseFocus)?_refocusSel:(((Date.now()-_lastClickAt)<2000)?_lastClickSel:null);let _anchorTop=null;if(_anchorSel){try{const _ac=document.querySelector(_anchorSel);if(_ac)_anchorTop=_ac.getBoundingClientRect().top;}catch(e){}}computeSecPos();const _SR={1:renderSources,2:()=>renderFieldSection(FIELD_SECTIONS[0]),3:()=>renderFieldSection(FIELD_SECTIONS[1]),4:()=>renderFieldSection(FIELD_SECTIONS[2]),5:()=>renderFieldSection(FIELD_SECTIONS[3]),6:renderRents,7:renderPartB,8:renderChecklist,9:()=>renderFieldSection(FIELD_SECTIONS[4]),10:renderOcaf,11:renderUaf,12:renderPrincipals};el('sections').innerHTML=visibleSections().map(n=>_SR[n]()).join('');
   wireBody();renderCommand();renderBar();renderRail();renderAttention();refreshFooter();
   if(_refocusSel&&!_mouseFocus){try{const _f=document.querySelector(_refocusSel);if(_f&&_f.focus){_f.focus({preventScroll:true});if(/^(INPUT|TEXTAREA)$/.test(_f.tagName)&&typeof _f.setSelectionRange==='function'){const _L=(_f.value||'').length;try{_f.setSelectionRange(_L,_L);}catch(_e){}}}}catch(e){}}_refocusSel=null;
@@ -1598,10 +1635,14 @@ function docIcon(){return '<svg width="20" height="20" viewBox="0 0 24 24" fill=
 function rcsAffPane(a){
   if(!a.total_units)return '<div class="aff-empty">Add unit types &amp; rents to see the affordability check.</div>';
   if(a.safmr_missing||!a.ceiling)return '<div class="aff-empty">Enter a 150% SAFMR to run the affordability check.</div>';
-  const pCur=clamp(a.current_gpr/a.ceiling*100),pPro=clamp(a.proposed_gpr/a.ceiling*100);const dMo=a.proposed_gpr-a.current_gpr,dYr=dMo*12;
-  return '<div class="aff"><div class="aff-top"><span class="aff-k">AFFORDABILITY CHECK</span><span class="aff-pass '+(a.pass?'ok':'over')+'">'+(a.pass?'&#10003; PASS':'&#10007; OVER')+' &middot; '+money(Math.abs(a.headroom))+(a.pass?' headroom':' over')+'</span></div>'
+  if(!a.priced)return '<div class="aff-empty">Enter the proposed rents to run the affordability check.</div>';
+  const partial=a.types_priced<a.types_total;
+  const CG=partial?a.cg_priced:a.current_gpr,PG=partial?a.pg_priced:a.proposed_gpr,CEIL=partial?a.ceil_priced:a.ceiling;
+  const PASS=CEIL>0&&PG<CEIL,HEAD=CEIL-PG;
+  const pCur=CEIL>0?clamp(CG/CEIL*100):0,pPro=CEIL>0?clamp(PG/CEIL*100):0;const dMo=a.delta_mo,dYr=a.delta_yr;
+  return '<div class="aff"><div class="aff-top"><span class="aff-k">AFFORDABILITY CHECK</span><span class="aff-pass '+(PASS?'ok':'over')+'">'+(PASS?'&#10003; PASS':'&#10007; OVER')+' &middot; '+money(Math.abs(HEAD))+(PASS?' headroom':' over')+(partial?' &middot; '+a.types_priced+' of '+a.types_total+' types priced':'')+'</span></div>'
     +'<div class="aff-body"><div class="aff-left"><div class="aff-gauge">'+gaugeSegs(pCur,pPro)+'<div class="oend"></div></div>'
-      +'<div class="aff-anchors"><span><b style="color:#2f7d57">'+money(a.current_gpr)+'</b><i>current</i></span><span><b style="color:#47a377">'+money(a.proposed_gpr)+'</b><i>proposed</i></span><span><b>'+money(a.ceiling)+'</b><i>150% ceiling</i></span></div></div>'
+      +'<div class="aff-anchors"><span><b style="color:#2f7d57">'+money(CG)+'</b><i>current</i></span><span><b style="color:#47a377">'+money(PG)+'</b><i>proposed</i></span><span><b>'+money(CEIL)+'</b><i>150% ceiling</i></span></div></div>'
     +'<div class="aff-right"><span><b class="teal">'+sPct(a.pct)+'</b><i>increase</i></span><span><b>'+sMoney(a.per_unit)+'</b><i>per unit</i></span><span><b>'+sMoney(dMo)+'</b><i>/mo</i></span><span><b>'+sK(dYr)+'</b><i>/yr</i></span></div></div></div>';}
 /* ---- CYCLES: property-page cards + create picker ----------------------
    A cycle is a complete frozen snapshot (see CYCLES-OCAF-UAF-DESIGN.md).
@@ -1906,7 +1947,7 @@ function docWarns(id){const w=[];
       label:'management street address',sec:onProp?2:9});}
   return w;}
 function docMissing(id){const r=DOC_REQS[id]||[];
-  const m=r.filter(x=>String(get(x[0])==null?'':get(x[0])).trim()==='').map(x=>({key:x[0],label:x[1],sec:x[2]}));
+  const m=r.filter(x=>!hasReal(x[0])).map(x=>({key:x[0],label:x[1],sec:x[2]}));   // "N/A" does not make a document ready
   if(id==='schedule'&&!UNITS.some(i=>numf(get('units.'+i+'.num_units'))>0))m.push({key:'units',label:'at least one unit type with a count',sec:6});
   return m;}
 /* Go to the cell that fixes a gap — the one whose name was clicked, not just the

@@ -78,11 +78,14 @@ Deno.serve(async (req: Request) => {
     const fips = countyFips + '99999';
     const y = parseInt(String(year), 10);
     const tries = [...new Set([...(y >= 2017 && y <= 2099 ? [String(y), String(y - 1)] : []), ''])];
-    let data: any = null, lastErr = '';
+    // Remember which year actually answered: HUD echoes a year back only when one
+    // was asked for, so on the bare fallback call data.year is absent and the app
+    // was printing "HUD FYundefined".
+    let data: any = null, lastErr = '', usedYear = '';
     for (const yy of tries) {
       const r = await hud('https://www.huduser.gov/hudapi/public/fmr/data/' + fips + (yy ? '?year=' + yy : ''));
       const body = await r.json().catch(() => null);
-      if (r.ok && body?.data?.basicdata) { data = body.data; break; }
+      if (r.ok && body?.data?.basicdata) { data = body.data; usedYear = yy; break; }
       lastErr = body?.error || ('HTTP ' + r.status);
     }
     if (!data) return J({ error: 'HUD FMR lookup failed: ' + lastErr }, 502);
@@ -97,7 +100,7 @@ Deno.serve(async (req: Request) => {
     const areaRow = Array.isArray(data.basicdata) ? rows.find((r: any) => !/^\d{5}$/.test(String(r.zip_code))) : data.basicdata;
 
     return J({
-      year: data.year, county: data.county_name || countyFips, area_name: data.area_name,
+      year: data.year || usedYear || null, county: data.county_name || countyFips, area_name: data.area_name,
       smallarea: String(data.smallarea_status) === '1', zip: zip5, geo_source: geoSource,
       zip_rents: pick(zipRow), area_rents: pick(areaRow),
     });
