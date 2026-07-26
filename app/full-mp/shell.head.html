@@ -69,9 +69,32 @@ body.scrolled #ccbar{transform:translateY(0);opacity:1}
 .gline+.gline{margin-top:1px}
 .draft-off{color:#9aa4b5} .dtick{display:inline-block;width:13px;font-style:normal}
 /* Reads as a sibling of the bed/bath dropdowns, not a control competing with them. */
-.desig{margin-left:6px;flex:none;min-width:22px;height:19px;padding:0 5px;border:1px solid;border-radius:5px;font:700 10px/17px inherit;letter-spacing:.3px;cursor:pointer;font-family:inherit}
-.desig.empty{opacity:.42;font-weight:600}
+/* Every property below was previously packed into one `font:` shorthand ending in
+   `inherit` — not a legal font-family there, so the browser discarded the WHOLE
+   declaration and the chip rendered as a raw native button: 13.3px default face,
+   weight 400, platform chrome, wrong height. Longhand only, plus appearance:none,
+   so nothing silently falls back to the user agent's idea of a button. */
+/* Without a floor the two dropdowns collapsed from 96px to 70px the moment the
+   save/revert pair appeared, and "2BR" ran into its own clear icon — the row
+   silently changed shape depending on whether it had been edited. */
+.rbox.brba .uadrop{min-width:84px}
+.urnov{grid-column:1/6;display:flex;min-width:0;margin-top:1px}
+.urnov .ovnote{margin:0}
+.desig{margin-left:7px;flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;
+  appearance:none;-webkit-appearance:none;box-sizing:border-box;
+  min-width:30px;height:26px;padding:0 7px;border:1px solid;border-radius:6px;
+  font-family:inherit;font-size:11px;font-weight:700;line-height:1;letter-spacing:.4px;text-align:center;cursor:pointer}
+.desig.empty{opacity:.5;font-weight:600}
 .desig:hover{opacity:1;filter:brightness(.97)}
+.desig:focus-visible{outline:2px solid #2563eb;outline-offset:1px}
+.rgh .hsub{display:block;margin-top:1px;font-size:9px;font-weight:600;font-style:normal;color:#9aa4b5;letter-spacing:.2px;text-transform:none}
+.dkey{display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px;margin:0 2px 10px;font-size:11px;color:#5b6577}
+.dkey b{font-size:9.5px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.3px}
+.dkey span{display:inline-flex;align-items:center;gap:5px}
+.dkey i{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:19px;padding:0 5px;
+  border:1px solid #c9d3e2;border-radius:5px;background:#f6f8fc;color:#33405c;
+  font-style:normal;font-size:10px;font-weight:700;letter-spacing:.3px}
+.dkey em{font-style:normal;color:#9aa4b5;font-size:10.5px}
 .liftnote{font-size:11px;color:#64748b;margin-top:4px;line-height:1.45}
 .glbl{font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#a3adbe;margin-right:9px}
 .gneed-flat{text-decoration:none;cursor:default}
