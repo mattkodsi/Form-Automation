@@ -405,7 +405,8 @@ window.SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXB
    Save writes ALL keys (incl. empty) and records db_value, so clears/unchecks
    persist and later edits register as overrides. */
 function makeStore(adapter, FIELDS) {
-  const today = () => new Date().toISOString().slice(0, 10);
+  // saved_at is stamped in New York too, so an evening save is not dated tomorrow
+  const today = () => { try { return new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date()); } catch (e) { return new Date().toISOString().slice(0, 10); } };
   const blank = () => ({ value:'', source:'new', saved_at:null, prior_value:null, prior_source:null, db_value:null });
   return {
     FIELDS,
@@ -1319,7 +1320,10 @@ const store=makeStore(bridge,ALL_KEYS);
 let form=store.emptyForm(); let UNITS=[0]; let NONREV=[]; let NS8=[]; let PRINCIPALS=[0]; let _undoStack=[]; let _undoNR=[]; let _undoLI=[]; let _undoPR=[]; let _pending=null,_refocusSel=null,_pendingSnap=null; let _rcsUpload=null; let _rsUpload=null; let _rsArm=false;let _rsBusy=null;   // while set, the upload row shows what is being read let _dlgEnter=null;
 
 const CLR={database:['#2563eb','#e8f0fe','On file'],'this-cycle':['#0f766e','#e9f5f2','API / this package'],overridden:['#b45309','#fbf1e6','Overridden'],'auto-calculated':['#2563eb','#e8f0fe','Auto-calc'],'new':['#64748b','#f6f7f9','New']};
-const TODAY=new Date().toISOString().slice(0,10);
+/* Dates are stamped in New York, not UTC. toISOString() rolls over at 7 or 8pm
+   Eastern, so a package generated in the evening was dated tomorrow — and the
+   tenant notice's date is what starts the 30-day comment clock. */
+const TODAY=(()=>{try{return new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());}catch(e){return new Date().toISOString().slice(0,10);}})();
 const el=id=>document.getElementById(id); const get=k=>form[k]?form[k].value:'';
 const numf=v=>{const n=parseFloat(String(v||'').replace(/[^0-9.\-]/g,''));return isNaN(n)?0:n;};
 const money=n=>'$'+Math.round(n).toLocaleString('en-US');
@@ -2588,9 +2592,15 @@ function paintCell(k){const gb=groupOf(k);if(gb)return paintGroup(gb);if(k==='ca
      always read the pair. That is why the first keystroke came out orange (a full
      re-render, through uaBox) and the second grey (a repaint, through here). */
   const _ck=coupledKeys(k);
-  const _sr=(_ck.length>1&&_ck.some(x=>srcOf(x)==='overridden'))?'overridden'
+  // modeOf, not srcOf: a source key saved BLANK reads as "new" even once it has
+  // been changed, so testing for 'overridden' left an emptied override grey while
+  // the badge beside it correctly said otherwise.
+  const _sr=(_ck.length>1&&modeOf(_ck)==='over')?'overridden'
+    :(offFile(k)&&s.source!=='overridden')?'overridden'
     :((k==='rent_schedule.date_rents_effective'&&s.source==='database')?'this-cycle':s.source);
-  const c=CLR[_sr]||CLR.new;const _bl=(_sr==='new'&&s.db_value==='')?CLR.database[0]:c[0];const box=document.querySelector('[data-box="'+k+'"]');if(box){box.style.background=c[1];box.style.borderLeftColor=_bl;}
+  // The blue "on file" edge belongs to a cell saved empty and STILL empty. Without
+  // the value test it painted blue over whatever was being typed into it.
+  const c=CLR[_sr]||CLR.new;const _bl=(_sr==='new'&&s.db_value===''&&String(s.value==null?'':s.value)==='')?CLR.database[0]:c[0];const box=document.querySelector('[data-box="'+k+'"]');if(box){box.style.background=c[1];box.style.borderLeftColor=_bl;}
   // A write-in's colour lives on its tick, which is keyed data-wibox rather than
   // data-box, so this repaint used to skip it entirely and the cell only changed
   // colour on a full re-render.
@@ -3724,15 +3734,19 @@ async function ocrParseRs(bytes,onStep){ // scan -> the tier-1 parsed shape, or 
   const salutationName=(name,prefix)=>{prefix=String(prefix||'').trim();return prefix?(prefix+' '+lastWord(name)):first(name);};
   const sigTitle=(t,p)=>{t=String(t||'').trim();p=String(p||'').trim();if(t&&p)return t+' of the '+p;return t||p||'';};
 
+/* Dates are stamped in New York, not UTC. toISOString() rolls over at 7 or 8pm
+   Eastern, so a package generated in the evening was dated tomorrow — and the
+   tenant notice's date is what starts the 30-day comment clock. */
+const ET_TODAY=()=>{try{return new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());}catch(e){return ET_TODAY();}};
   function resolve(rec){
     const g=k=>rec[k]!=null?String(rec[k]):'';
     const mSrc=g('tenant.mgmt_source')||'property';
     const mm={street:'property.addr_street',city:'property.addr_city',state:'property.addr_state',zip:'property.addr_zip'};
     const m=w=> mSrc==='property'?g(mm[w]):g('tenant.mgmt_'+w);
     return {
-      date:monthY(g('cycle.submission_date')||new Date().toISOString().slice(0,10)),
-      notice_date:monthY(g('tenant.date_of_notice')||new Date().toISOString().slice(0,10)),
-      sign_date:monthY(g('checklist.sign_date')||new Date().toISOString().slice(0,10)),
+      date:monthY(g('cycle.submission_date')||ET_TODAY()),
+      notice_date:monthY(g('tenant.date_of_notice')||ET_TODAY()),
+      sign_date:monthY(g('checklist.sign_date')||ET_TODAY()),
       property_name:g('property.name'), tenant_alias:g('tenant.property_alias'), section8:g('property.s8'), entity:g('owner.entity_name'),
       ca_name:g('ca.name'), ca_salutation:salutationName(g('ca.name'),g('ca.prefix')), ca_position:g('ca.position'), ca_company:g('ca.org'),
       ca_address:g('ca.addr_street'), ca_csz:(g('ca.addr_city')+', '+g('ca.addr_state')+' '+g('ca.addr_zip')).replace(/^,\s*/,'').trim(),

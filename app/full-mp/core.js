@@ -2,7 +2,8 @@
    Save writes ALL keys (incl. empty) and records db_value, so clears/unchecks
    persist and later edits register as overrides. */
 function makeStore(adapter, FIELDS) {
-  const today = () => new Date().toISOString().slice(0, 10);
+  // saved_at is stamped in New York too, so an evening save is not dated tomorrow
+  const today = () => { try { return new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date()); } catch (e) { return new Date().toISOString().slice(0, 10); } };
   const blank = () => ({ value:'', source:'new', saved_at:null, prior_value:null, prior_source:null, db_value:null });
   return {
     FIELDS,
