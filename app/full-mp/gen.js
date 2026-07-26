@@ -8,15 +8,19 @@
   const salutationName=(name,prefix)=>{prefix=String(prefix||'').trim();return prefix?(prefix+' '+lastWord(name)):first(name);};
   const sigTitle=(t,p)=>{t=String(t||'').trim();p=String(p||'').trim();if(t&&p)return t+' of the '+p;return t||p||'';};
 
+/* Dates are stamped in New York, not UTC. toISOString() rolls over at 7 or 8pm
+   Eastern, so a package generated in the evening was dated tomorrow — and the
+   tenant notice's date is what starts the 30-day comment clock. */
+const ET_TODAY=()=>{try{return new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());}catch(e){return ET_TODAY();}};
   function resolve(rec){
     const g=k=>rec[k]!=null?String(rec[k]):'';
     const mSrc=g('tenant.mgmt_source')||'property';
     const mm={street:'property.addr_street',city:'property.addr_city',state:'property.addr_state',zip:'property.addr_zip'};
     const m=w=> mSrc==='property'?g(mm[w]):g('tenant.mgmt_'+w);
     return {
-      date:monthY(g('cycle.submission_date')||new Date().toISOString().slice(0,10)),
-      notice_date:monthY(g('tenant.date_of_notice')||new Date().toISOString().slice(0,10)),
-      sign_date:monthY(g('checklist.sign_date')||new Date().toISOString().slice(0,10)),
+      date:monthY(g('cycle.submission_date')||ET_TODAY()),
+      notice_date:monthY(g('tenant.date_of_notice')||ET_TODAY()),
+      sign_date:monthY(g('checklist.sign_date')||ET_TODAY()),
       property_name:g('property.name'), tenant_alias:g('tenant.property_alias'), section8:g('property.s8'), entity:g('owner.entity_name'),
       ca_name:g('ca.name'), ca_salutation:salutationName(g('ca.name'),g('ca.prefix')), ca_position:g('ca.position'), ca_company:g('ca.org'),
       ca_address:g('ca.addr_street'), ca_csz:(g('ca.addr_city')+', '+g('ca.addr_state')+' '+g('ca.addr_zip')).replace(/^,\s*/,'').trim(),

@@ -54,7 +54,10 @@ const store=makeStore(bridge,ALL_KEYS);
 let form=store.emptyForm(); let UNITS=[0]; let NONREV=[]; let NS8=[]; let PRINCIPALS=[0]; let _undoStack=[]; let _undoNR=[]; let _undoLI=[]; let _undoPR=[]; let _pending=null,_refocusSel=null,_pendingSnap=null; let _rcsUpload=null; let _rsUpload=null; let _rsArm=false;let _rsBusy=null;   // while set, the upload row shows what is being read let _dlgEnter=null;
 
 const CLR={database:['#2563eb','#e8f0fe','On file'],'this-cycle':['#0f766e','#e9f5f2','API / this package'],overridden:['#b45309','#fbf1e6','Overridden'],'auto-calculated':['#2563eb','#e8f0fe','Auto-calc'],'new':['#64748b','#f6f7f9','New']};
-const TODAY=new Date().toISOString().slice(0,10);
+/* Dates are stamped in New York, not UTC. toISOString() rolls over at 7 or 8pm
+   Eastern, so a package generated in the evening was dated tomorrow — and the
+   tenant notice's date is what starts the 30-day comment clock. */
+const TODAY=(()=>{try{return new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());}catch(e){return new Date().toISOString().slice(0,10);}})();
 const el=id=>document.getElementById(id); const get=k=>form[k]?form[k].value:'';
 const numf=v=>{const n=parseFloat(String(v||'').replace(/[^0-9.\-]/g,''));return isNaN(n)?0:n;};
 const money=n=>'$'+Math.round(n).toLocaleString('en-US');
@@ -1323,9 +1326,15 @@ function paintCell(k){const gb=groupOf(k);if(gb)return paintGroup(gb);if(k==='ca
      always read the pair. That is why the first keystroke came out orange (a full
      re-render, through uaBox) and the second grey (a repaint, through here). */
   const _ck=coupledKeys(k);
-  const _sr=(_ck.length>1&&_ck.some(x=>srcOf(x)==='overridden'))?'overridden'
+  // modeOf, not srcOf: a source key saved BLANK reads as "new" even once it has
+  // been changed, so testing for 'overridden' left an emptied override grey while
+  // the badge beside it correctly said otherwise.
+  const _sr=(_ck.length>1&&modeOf(_ck)==='over')?'overridden'
+    :(offFile(k)&&s.source!=='overridden')?'overridden'
     :((k==='rent_schedule.date_rents_effective'&&s.source==='database')?'this-cycle':s.source);
-  const c=CLR[_sr]||CLR.new;const _bl=(_sr==='new'&&s.db_value==='')?CLR.database[0]:c[0];const box=document.querySelector('[data-box="'+k+'"]');if(box){box.style.background=c[1];box.style.borderLeftColor=_bl;}
+  // The blue "on file" edge belongs to a cell saved empty and STILL empty. Without
+  // the value test it painted blue over whatever was being typed into it.
+  const c=CLR[_sr]||CLR.new;const _bl=(_sr==='new'&&s.db_value===''&&String(s.value==null?'':s.value)==='')?CLR.database[0]:c[0];const box=document.querySelector('[data-box="'+k+'"]');if(box){box.style.background=c[1];box.style.borderLeftColor=_bl;}
   // A write-in's colour lives on its tick, which is keyed data-wibox rather than
   // data-box, so this repaint used to skip it entirely and the cell only changed
   // colour on a full re-render.
