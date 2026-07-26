@@ -737,7 +737,11 @@ function rsPartD(V){ // Part D non-revenue-producing space: gen.js's dUse/dType/
 function rsRows(V){ // Part A rows, in order -> Section 8 rows and non-Section 8 rows
   const out={units:[],ns8:[]};let ns=false;
   for(let r=0;r<11;r++){const b=7+r*8;const t=V(b);const n=rsNum(V(b+1)),cr=rsNum(V(b+2)),ua=rsNum(V(b+4));
-    if(/non[\s-]?section\s*8/i.test(t)){ns=true;continue;} // divider: rows below it are unassisted
+    // Any spacing or dash between the words: our own generator writes "Non- Section 8",
+    // which a single-character class did not match. Checked across the whole row too,
+    // since a copy may carry the marker in a column other than the first.
+    const rowTxt=[t,V(b+1),V(b+2),V(b+3),V(b+4),V(b+5)].join(' ');
+    if(/non[\s\-\u2010-\u2015]*section\s*8/i.test(rowTxt)){ns=true;continue;} // divider: rows below it are unassisted
     if(cr===''||cr<=0)continue;
     if(ns)out.ns8.push({type:t,count:n,rent:cr});
     else out.units.push({type:t,count:n,rent:cr,ua:ua});}
