@@ -42,8 +42,8 @@ const addrLine=(street,city,state,zip)=>{
 
   /* ---- letter layout engine (Times, 1in margins, justified) ---- */
   function makeLetter(doc,R,B,I){
-    const W=612,H=792,M=72,bottom=64,ink=PL().rgb(0.11,0.13,0.17),grey=PL().rgb(0.42,0.46,0.53);
-    const st={doc,page:doc.addPage([W,H]),y:H-72,W,H,M,bottom,R,B,I,ink,grey};
+    const W=612,H=792,M=72,bottom=64,ink=PL().rgb(0.11,0.13,0.17),gray=PL().rgb(0.42,0.46,0.53);
+    const st={doc,page:doc.addPage([W,H]),y:H-72,W,H,M,bottom,R,B,I,ink,gray};
     st.ensure=h=>{ if(st.y-h<bottom){ st.page=doc.addPage([W,H]); st.y=H-72; } };
     st.gap=h=>{ st.y-=h; };
     st.line=(t,o={})=>{ const f=o.font||R,s=o.size||11,x=o.x==null?M:o.x,c=o.color||ink; st.ensure(s*1.3); st.page.drawText(String(t),{x,y:st.y,size:s,font:f,color:c}); if(!o.stay) st.y-=(o.lead||s*1.32); };
@@ -186,7 +186,7 @@ const addrLine=(street,city,state,zip)=>{
         else { const ar=img.width/img.height; let h=110,w=h*ar; const maxW=612-2*72; if(w>maxW){w=maxW;h=w/ar;}
           st.page.drawImage(img,{x:(612-w)/2,y:792-42-h,width:w,height:h}); st.y=792-42-h-24; placed=true; } }catch(e){} }
       if(!placed){ if(logoBytes){ try{ const png=await doc.embedPng(logoBytes); const w=132,h=w/(png.width/png.height); st.page.drawImage(png,{x:(612-w)/2,y:st.y-h,width:w,height:h}); st.y-=h+14; }catch(e){} }
-        st.center(nm,{font:B,size:14}); const a=[t.mgmt_addr,[t.mgmt_city,t.mgmt_state].filter(Boolean).join(', ')+' '+t.mgmt_zip].filter(x=>x&&x.trim()).join(' · '); if(a.trim())st.center(a,{size:9.5,color:st.grey}); st.gap(16); }
+        st.center(nm,{font:B,size:14}); const a=[t.mgmt_addr,[t.mgmt_city,t.mgmt_state].filter(Boolean).join(', ')+' '+t.mgmt_zip].filter(x=>x&&x.trim()).join(' · '); if(a.trim())st.center(a,{size:9.5,color:st.gray}); st.gap(16); }
       st.line('Date of Notice: '+t.notice_date); st.gap(8*L.ga);
       st.para('Notice to Residents of Intention to submit a request to '+t.ca_company+' for approval of increase in maximum permissible rents.');
       st.rich([
@@ -409,7 +409,7 @@ const addrLine=(street,city,state,zip)=>{
     st.page.drawLine({start:{x:st.M,y:st.y+11},end:{x:st.M+230,y:st.y+11},thickness:0.7,color:line});
     st.line(t.sig_name||''); st.line(t.sig_title||''); st.gap(4);
     st.page.drawLine({start:{x:st.M,y:st.y+11},end:{x:st.M+120,y:st.y+11},thickness:0.7,color:line});
-    st.line('Date',{color:st.grey,size:9.5});
+    st.line('Date',{color:st.gray,size:9.5});
   }
   async function ocafWorksheet(rec){
     const { PDFDocument, StandardFonts } = PL(); const t=resolve(rec); const C=ocafCalcRec(rec);
@@ -417,7 +417,7 @@ const addrLine=(street,city,state,zip)=>{
     const R=await doc.embedFont(StandardFonts.TimesRoman),B=await doc.embedFont(StandardFonts.TimesRomanBold),I=await doc.embedFont(StandardFonts.TimesRomanItalic);
     const st=makeLetter(doc,R,B,I); st.doc=doc; st.y=792-64;
     st.center('OCAF RENT ADJUSTMENT WORKSHEET',{font:B,size:14});
-    st.center('Prepared per form HUD-9625 — Contract Renewals: Option One (Mark-Up-To-Market) / Option Two',{size:9,color:st.grey}); st.gap(10);
+    st.center('Prepared per form HUD-9625 — Contract Renewals: Option One (Mark-Up-To-Market) / Option Two',{size:9,color:st.gray}); st.gap(10);
     st.line('Project: '+t.property_name,{font:B}); st.line('Section 8 Contract Number: '+t.section8);
     st.line('Rents effective: '+effOf(rec));
     st.line('Published OCAF: '+(C.pct?(C.pct+'%'+(C.fy?' (FY'+C.fy:'')+(C.state?' · '+C.state:'')+(C.fy?')':'')+(C.pub?' — published '+monthY(C.pub):'')):'—')); st.gap(10);
@@ -442,7 +442,7 @@ const addrLine=(street,city,state,zip)=>{
     st.line('Step 3 · Adjusted contract rents (current × R, rounded to whole dollars)',{font:B,size:11}); st.gap(2);
     simpleTable(st,['Unit type','Units','Current rent','Adjusted rent'],
       C.rows.filter(r=>r.c>0).map(r=>[utype2(r.br,r.ba),String(r.n||''),m0(r.c),m0(r.pro>0?r.pro:Math.round(r.c*C.R))]),[150,60,110,110]);
-    st.para('Owner certification: I certify that the debt service and non-Section 8 rent potential figures used above are true and accurate, and that the adjusted contract rents were computed by applying the published Operating Cost Adjustment Factor in accordance with HUD requirements. WARNING: Anyone who knowingly submits a false claim or makes a false statement is subject to criminal and/or civil penalties (18 U.S.C. §§ 287, 1001; 31 U.S.C. § 3729).',{size:9,color:st.grey});
+    st.para('Owner certification: I certify that the debt service and non-Section 8 rent potential figures used above are true and accurate, and that the adjusted contract rents were computed by applying the published Operating Cost Adjustment Factor in accordance with HUD requirements. WARNING: Anyone who knowingly submits a false claim or makes a false statement is subject to criminal and/or civil penalties (18 U.S.C. §§ 287, 1001; 31 U.S.C. § 3729).',{size:9,color:st.gray});
     sigBlock(st,t);
     return await doc.save({objectsPerTick:Infinity});
   }
@@ -452,7 +452,7 @@ const addrLine=(street,city,state,zip)=>{
     const R=await doc.embedFont(StandardFonts.TimesRoman),B=await doc.embedFont(StandardFonts.TimesRomanBold),I=await doc.embedFont(StandardFonts.TimesRomanItalic);
     const st=makeLetter(doc,R,B,I); st.doc=doc; st.y=792-72;
     st.center('EXHIBIT A',{font:B,size:15}); st.gap(2);
-    st.center('Identification of Contract Units by Bedroom Size and Applicable Contract Rents',{size:10.5,color:st.grey}); st.gap(14);
+    st.center('Identification of Contract Units by Bedroom Size and Applicable Contract Rents',{size:10.5,color:st.gray}); st.gap(14);
     st.line('Project: '+t.property_name,{font:B}); st.line('Section 8 Contract Number: '+t.section8);
     st.line('Contract rents effective: '+effOf(rec),{font:B}); st.gap(12);
     simpleTable(st,['Unit type','Contract units','Current contract rent','Adjusted contract rent'],
@@ -468,11 +468,11 @@ const addrLine=(street,city,state,zip)=>{
     const R=await doc.embedFont(StandardFonts.TimesRoman),B=await doc.embedFont(StandardFonts.TimesRomanBold),I=await doc.embedFont(StandardFonts.TimesRomanItalic);
     const st=makeLetter(doc,R,B,I); st.doc=doc; st.y=792-64;
     st.center('FACTOR-BASED UTILITY ALLOWANCE ANALYSIS',{font:B,size:13.5}); st.gap(1);
-    st.center('Owner Certification and Per-Utility Breakdown',{size:10.5,color:st.grey}); st.gap(12);
+    st.center('Owner Certification and Per-Utility Breakdown',{size:10.5,color:st.gray}); st.gap(12);
     st.line('Project: '+t.property_name,{font:B}); st.line('Section 8 Contract Number: '+t.section8);
     st.line('Utility allowances effective: '+effOf(rec));
     st.line('Applied factors: FY'+(U.fy||'—')+' HUD Utility Allowance Factors'+(U.state?' — '+U.state:'')+(U.pub?' (file dated '+monthY(U.pub)+')':'')); st.gap(4);
-    if(U.factors.length){ st.line(U.factors.map(f=>f.label+' × '+f.f).join('   ·   '),{size:9.5,color:st.grey}); st.gap(8); }
+    if(U.factors.length){ st.line(U.factors.map(f=>f.label+' × '+f.f).join('   ·   '),{size:9.5,color:st.gray}); st.gap(8); }
     st.line('Per-utility computation — each utility factored separately, rounded to whole dollars, then summed:',{size:10}); st.gap(4);
     const rows=[];
     U.rows.forEach(r=>{ r.parts.filter(p=>p.cur>0).forEach((p,pi)=>rows.push([pi===0?utype2(r.br,r.ba):'',p.label,m0(p.cur),p.f>0?('× '+p.f):'—',p.raw?m2(p.raw):'—',p.rounded?m0(p.rounded):'—']));
@@ -481,7 +481,7 @@ const addrLine=(street,city,state,zip)=>{
     const anyDec=U.dec.length>0;
     st.para('The owner elects to accept the factor-based adjustment of utility allowances computed above, in lieu of submitting a utility analysis.',{size:10.5});
     if(anyDec) st.para('The adjustment decreases the utility allowance for '+U.dec.map(r=>utype2(r.br,r.ba)).join(', ')+'. The required 30-day notice to tenants under 24 CFR § 245.420 has been issued, and the owner’s certification of compliance with the tenant comment procedures accompanies this submission.',{size:10.5});
-    st.para('Owner certification: I certify that the current utility allowances and their per-utility components shown above are true and accurate. WARNING: Anyone who knowingly submits a false claim or makes a false statement is subject to criminal and/or civil penalties (18 U.S.C. §§ 287, 1001; 31 U.S.C. § 3729).',{size:9,color:st.grey});
+    st.para('Owner certification: I certify that the current utility allowances and their per-utility components shown above are true and accurate. WARNING: Anyone who knowingly submits a false claim or makes a false statement is subject to criminal and/or civil penalties (18 U.S.C. §§ 287, 1001; 31 U.S.C. § 3729).',{size:9,color:st.gray});
     sigBlock(st,t);
     return await doc.save({objectsPerTick:Infinity});
   }
@@ -491,7 +491,7 @@ const addrLine=(street,city,state,zip)=>{
     const R=await doc.embedFont(StandardFonts.TimesRoman),B=await doc.embedFont(StandardFonts.TimesRomanBold),I=await doc.embedFont(StandardFonts.TimesRomanItalic);
     const st=makeLetter(doc,R,B,I); st.doc=doc; st.y=792-72;
     st.center('ANNUAL DEBT SERVICE DETERMINATION — FLOATING RATE',{font:B,size:13}); st.gap(2);
-    st.center('Trailing-12 vs. forward-12 comparison, anchored to the rent-effective date',{size:10,color:st.grey}); st.gap(14);
+    st.center('Trailing-12 vs. forward-12 comparison, anchored to the rent-effective date',{size:10,color:st.gray}); st.gap(14);
     st.line('Project: '+t.property_name,{font:B}); st.line('Section 8 Contract Number: '+t.section8);
     st.line('Rents effective: '+effOf(rec)); st.gap(10);
     simpleTable(st,['Measure','Annual debt service'],[
@@ -521,7 +521,7 @@ const addrLine=(street,city,state,zip)=>{
         else { const ar=img.width/img.height; let h=110,w=h*ar; const maxW=612-2*72; if(w>maxW){w=maxW;h=w/ar;}
           st.page.drawImage(img,{x:(612-w)/2,y:792-42-h,width:w,height:h}); st.y=792-42-h-24; placed=true; } }catch(e){} }
       if(!placed){ if(logoBytes){ try{ const png=await doc.embedPng(logoBytes); const w=132,h=w/(png.width/png.height); st.page.drawImage(png,{x:(612-w)/2,y:st.y-h,width:w,height:h}); st.y-=h+14; }catch(e){} }
-        st.center(nm,{font:B,size:14}); const a=[t.mgmt_addr,[t.mgmt_city,t.mgmt_state].filter(Boolean).join(', ')+' '+t.mgmt_zip].filter(x=>x&&x.trim()).join(' · '); if(a.trim())st.center(a,{size:9.5,color:st.grey}); st.gap(16); }
+        st.center(nm,{font:B,size:14}); const a=[t.mgmt_addr,[t.mgmt_city,t.mgmt_state].filter(Boolean).join(', ')+' '+t.mgmt_zip].filter(x=>x&&x.trim()).join(' · '); if(a.trim())st.center(a,{size:9.5,color:st.gray}); st.gap(16); }
       st.line('Date of Notice: '+t.notice_date); st.gap(8*L.ga);
       st.para('Notice to Residents of Intention to submit a request to '+t.ca_company+' for approval of a decrease in utility allowances (24 CFR § 245.420).');
       st.rich([
@@ -555,7 +555,7 @@ const addrLine=(street,city,state,zip)=>{
     st.numItem('1.','The required notice of the proposed decrease in utility allowances was served to the tenants of the Project on '+t.notice_date+', in the manner required by 24 CFR § 245.15.');
     st.numItem('2.','The materials submitted in support of the request were made available at the management office for inspection and copying by tenants and their representatives for a period of 30 days from the date of service of the notice.');
     st.numItem('3.','All tenant comments received during the comment period, if any, were considered and are transmitted with this submission together with the owner’s evaluation of them.');
-    st.para('I, the undersigned, certify under penalty of perjury that the information provided above is true and correct. WARNING: Anyone who knowingly submits a false claim or makes a false statement is subject to criminal and/or civil penalties (18 U.S.C. §§ 287, 1001, 1010, 1012; 31 U.S.C. § 3729, 3802).',{size:9.5,color:st.grey});
+    st.para('I, the undersigned, certify under penalty of perjury that the information provided above is true and correct. WARNING: Anyone who knowingly submits a false claim or makes a false statement is subject to criminal and/or civil penalties (18 U.S.C. §§ 287, 1001, 1010, 1012; 31 U.S.C. § 3729, 3802).',{size:9.5,color:st.gray});
     sigBlock(st,t);
     return await doc.save({objectsPerTick:Infinity});
   }

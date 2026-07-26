@@ -73,7 +73,7 @@ Cluster 1-2 triage):
 ## What changed this session (clusters 4 & 5)
 All in `app/full-mp/app.js` + one CSS line in `shell.head.html`; built + delivered + verified.
 - **#10 edit-in-box (cluster 4):** the multi-source cells (UA, 150% SAFMR, Date rents effective)
-  now render their resolved value as an **editable input** (class `uac-in srcedit`, neutral grey
+  now render their resolved value as an **editable input** (class `uac-in srcedit`, neutral gray
   dashed underline) with the source tag beside it (`· Executed RS` / `· HUD` / `· from RS`).
   Typing flips `*_source` -> `custom`, writes to `*_custom`, drops the tag, re-renders once (focus
   restored to the custom input). The `▾` dropdown + **Custom…** option remain as the alternative.

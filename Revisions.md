@@ -4,7 +4,7 @@ Form notes:
 
 \- The contract administrator city / state / ZIP in section 4 should mirror section 2's address box with the separate fields in a single box and drop-down for the state. The same layout should exist if "different address..." has been selected in lieu of the property address for the management address
 
-\- The utility allowance box should only be green if it is pulling data from an rcs and/or rent schedule. If the form is blank (and no parsing has occurred), then it must be grey like all the rest. Same for any of the other cells. A blank form should only have gray cells -- the current version immediately pulls the property name in section 2 and the management address in section 9 from the newly created property in the database which makes sense, but the management address is particularly finnicky; it is currently reading ", property" - completely glitched out.
+\- The utility allowance box should only be green if it is pulling data from an rcs and/or rent schedule. If the form is blank (and no parsing has occurred), then it must be gray like all the rest. Same for any of the other cells. A blank form should only have gray cells -- the current version immediately pulls the property name in section 2 and the management address in section 9 from the newly created property in the database which makes sense, but the management address is particularly finnicky; it is currently reading ", property" - completely glitched out.
 
 \- Most overwrites do not get picked up by the amber review warning. Some of the only ones that do are changes in rent. some edits update the number to reflect all the overrides, but they do not immediately get picked up or reflected in the review warnings.
 
@@ -90,7 +90,7 @@ NOTE:
 
 \- The RCS report is addressed to the PM on file which can be parsed to fill in that section of the RCS form automatically. Even if no RCS report is attached, the PM contact should still be a dropdown that automatically fills the email and phone number sections based on the PM team's information (uploaded and managed separately in a sort of "contact" page). Of course, there should be an option to add a custom value, which, if a pre-fed PM is selected, would clear the email and phone cells once switched to custom.
 
-\- Ensure that there is a Date Rents Will Be Effective box in the form, automatically pulled from the current RS and able to be custom input. Green when pulled from RS and grey when custom input, just like all the rest.
+\- Ensure that there is a Date Rents Will Be Effective box in the form, automatically pulled from the current RS and able to be custom input. Green when pulled from RS and gray when custom input, just like all the rest.
 
 
 
@@ -190,7 +190,7 @@ Notes:
 
 ~~- Verify that the SAFMR and overall Affordability Check is weighting inputs correctly and properly calculating values. I could be wrong, but the asset-level SAFMR cap as well as other metrics seemed incorrect.~~
 
-~~- Reorder section 4 to be balanced with 2 cells in each row. I am struggling to determine the optimal order, but I believe that it should lead with the name so that all the other cells can be automatically filled when I add a CA contacts database later. The order can potentially be: CA Name > CA organization > (2nd column) > Position > Address. Use your best judgement.~~
+~~- Reorder section 4 to be balanced with 2 cells in each row. I am struggling to determine the optimal order, but I believe that it should lead with the name so that all the other cells can be automatically filled when I add a CA contacts database later. The order can potentially be: CA Name > CA organization > (2nd column) > Position > Address. Use your best judgment.~~
 
 ~~- Add the appraisal company address to section 5. I am struggling to determine the best order for this as well, but I would likely lead with name for the same reason as section 4. A potential order is: Appraiser name > Appraisal company > Address > Email > Phone.~~
 

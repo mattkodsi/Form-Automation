@@ -210,7 +210,7 @@ async function makeDb(adapter, opts) {
     D.props[pid] = { id: pid, created_at: today(), updated_at: now(), durable: {}, percycle: {} };
     if (name) D.props[pid].durable['property.name'] = cell(name);
     // New-property checklist default is applied at the FORM layer (app.js applyChecklistDefaults)
-    // as source 'new' (grey/unsaved), NOT seeded here as 'database' (which would render blue).
+    // as source 'new' (gray/unsaved), NOT seeded here as 'database' (which would render blue).
     D.meta.activePid = pid;
     return { pid };
   }
