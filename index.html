@@ -3256,7 +3256,7 @@ function showPackageModal(nm,docs,combined,missingRcs,missingLh,capMsgs,blocked)
        as separate named files; the two beneath it are the single-file forms of
        it — one merged PDF and the workbook — so they sit together as a pair. */
     +(nReady?('<button class="gprim" id="dlFolder">'+folderIcon+'<span><span class="gprim-t">Download the RCS Package folder</span>'
-      +'<span class="gprim-s">'+nReady+' document'+(nReady===1?'':'s')+', named and in order</span></span></button>'
+      +'<span class="gprim-s">'+(nReady+2)+' files \u2014 '+(nReady===1?'the document':'each of the '+nReady+' documents')+', the combined PDF, and the workbook</span></span></button>'
       +'<div class="gpair"><button class="btn gsub" id="dlCombined">'+pdfIcon+'RCS Package PDF</button>'
       +'<button class="btn gsub gsub-x" id="dlXlsx">'+xlIcon+'Rent Analysis</button></div>'):'')
     +'<div class="dlg-row"><span class="dlg-sp"></span><button class="btn" id="dlgCancel">Close</button></div>','pkg');
