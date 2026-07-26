@@ -69,9 +69,32 @@ body.scrolled #ccbar{transform:translateY(0);opacity:1}
 .gline+.gline{margin-top:1px}
 .draft-off{color:#9aa4b5} .dtick{display:inline-block;width:13px;font-style:normal}
 /* Reads as a sibling of the bed/bath dropdowns, not a control competing with them. */
-.desig{margin-left:6px;flex:none;min-width:22px;height:19px;padding:0 5px;border:1px solid;border-radius:5px;font:700 10px/17px inherit;letter-spacing:.3px;cursor:pointer;font-family:inherit}
-.desig.empty{opacity:.42;font-weight:600}
+/* Every property below was previously packed into one `font:` shorthand ending in
+   `inherit` — not a legal font-family there, so the browser discarded the WHOLE
+   declaration and the chip rendered as a raw native button: 13.3px default face,
+   weight 400, platform chrome, wrong height. Longhand only, plus appearance:none,
+   so nothing silently falls back to the user agent's idea of a button. */
+/* Without a floor the two dropdowns collapsed from 96px to 70px the moment the
+   save/revert pair appeared, and "2BR" ran into its own clear icon — the row
+   silently changed shape depending on whether it had been edited. */
+.rbox.brba .uadrop{min-width:84px}
+.urnov{grid-column:1/6;display:flex;min-width:0;margin-top:1px}
+.urnov .ovnote{margin:0}
+.desig{margin-left:7px;flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;
+  appearance:none;-webkit-appearance:none;box-sizing:border-box;
+  min-width:30px;height:26px;padding:0 7px;border:1px solid;border-radius:6px;
+  font-family:inherit;font-size:11px;font-weight:700;line-height:1;letter-spacing:.4px;text-align:center;cursor:pointer}
+.desig.empty{opacity:.5;font-weight:600}
 .desig:hover{opacity:1;filter:brightness(.97)}
+.desig:focus-visible{outline:2px solid #2563eb;outline-offset:1px}
+.rgh .hsub{display:block;margin-top:1px;font-size:9px;font-weight:600;font-style:normal;color:#9aa4b5;letter-spacing:.2px;text-transform:none}
+.dkey{display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px;margin:0 2px 10px;font-size:11px;color:#5b6577}
+.dkey b{font-size:9.5px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.3px}
+.dkey span{display:inline-flex;align-items:center;gap:5px}
+.dkey i{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:19px;padding:0 5px;
+  border:1px solid #c9d3e2;border-radius:5px;background:#f6f8fc;color:#33405c;
+  font-style:normal;font-size:10px;font-weight:700;letter-spacing:.3px}
+.dkey em{font-style:normal;color:#9aa4b5;font-size:10.5px}
 .liftnote{font-size:11px;color:#64748b;margin-top:4px;line-height:1.45}
 .glbl{font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#a3adbe;margin-right:9px}
 .gneed-flat{text-decoration:none;cursor:default}
@@ -1748,8 +1771,16 @@ function refreshFlags(){document.querySelectorAll('[data-pill]').forEach(p=>{con
 function unitCard(i,pos){const trash=UNITS.length>1?`<button class="trash" data-delunit="${i}" title="Delete this unit type">✕</button>`:'';
   const _c=numf(get('units.'+i+'.current')),_p=numf(get('units.'+i+'.proposed'));const _d=_p-_c,_pc=_c>0?Math.round(_d/_c*100):0;
   const metric=(_c>0&&_p>0)?`<span class="ucmetric" data-metric="${i}" style="color:${_d>=0?'#166534':'#b91c1c'}">${sMoney(_d)} / unit · ${sPct(_pc)}</span>`:`<span class="ucmetric" data-metric="${i}"></span>`;
+  /* The compact .ovic pair inside the cell squeezed the bed/bath dropdowns from
+     96px to 70px the moment it appeared, so a row changed shape once edited and
+     "2BR" collided with its own clear icon. Roomy cells put save/revert in the
+     note row beneath instead, which is what the rest of the form already does. */
   const notes=[typeNote(i),numNote(i),uaNoteCell(i),hasProg('rcs')?safmrNote(i):''].filter(Boolean).join('');
-  const sub=((_c>0&&_p>0)||notes)?`<div class="urnotes"><div class="urnmetric">${metric}</div><div class="urnsub">${notes}</div></div>`:'';
+  /* The designation's save/revert gets its own full-width line under the row.
+     Sharing the right-hand note column squeezed "save this field" onto three
+     lines — the buttons are wider than the short status notes beside them. */
+  const desigOv=ovNote('units.'+i+'.desig');
+  const sub=((_c>0&&_p>0)||notes||desigOv)?`<div class="urnotes"><div class="urnmetric">${metric}</div><div class="urnsub">${notes}</div><div class="urnov">${desigOv}</div></div>`:'';
   return `<div class="urow"><div class="ucells">${unitTypeCell(i)}${unitCountCell(i)}${moneyBox('units.'+i+'.current')}${moneyBox('units.'+i+'.proposed')}${uaBox(i)}${hasProg('rcs')?safmrBox(i):''}<div class="urx">${trash}</div></div>${sub}</div>`;}
 function renderRents(){
   const cards=UNITS.map((i,pos)=>unitCard(i,pos)).join('');
@@ -1769,8 +1800,11 @@ function renderRents(){
     lh+=`<div class="addrow" id="addNs8">+ Add non-Section 8 unit type</div>`;
   }
   lh+=undoBits('LI');
-  const rgHead=`<div class="rgh"><span>Unit type</span><span>Units</span><span>Current rent</span><span>Proposed rent</span><span>Utility allowance</span>${hasProg('rcs')?(function(){const st=pullBtnState('safmr');return '<span class="safmrhead">150% SAFMR<button class="urev hudbtn'+st.cls+'" id="pullSafmr"'+st.dis+' title="'+esc(st.why||'Re-pull 150% ceilings from HUD for this property’s ZIP')+'">⤓ HUD</button></span>';})():''}<span></span></div>`;
-  return card(6,sectionPill(6),`<div class="reseff">${dateEffCell()}</div>${capNote()}<div class="ucards${hasProg('rcs')?'':' noprop'}">${UNITS.length?rgHead:''}${cards}</div><div class="addrow" id="addUnit">+ Add unit type</div>${_undoStack.length?(' <span class="addrow ghostlink" id="undoUnit">↩ Undo delete'+(_undoStack.length>1?(' ('+_undoStack.length+')'):'')+'</span><button class="undocommit" id="undoCommit" title="Keep deletions — dismiss undo">✓</button>'):''}<div class="partd">${lh}</div><div class="partd">${pd}</div>`);}
+  const rgHead=`<div class="rgh"><span>Unit type <em class="hsub">br / ba \u00b7 designation</em></span><span>Units</span><span>Current rent</span><span>Proposed rent</span><span>Utility allowance</span>${hasProg('rcs')?(function(){const st=pullBtnState('safmr');return '<span class="safmrhead">150% SAFMR<button class="urev hudbtn'+st.cls+'" id="pullSafmr"'+st.dis+' title="'+esc(st.why||'Re-pull 150% ceilings from HUD for this property’s ZIP')+'">⤓ HUD</button></span>';})():''}<span></span></div>`;
+  /* One key for the whole section rather than four words of explanation per row.
+     HUD prints only the letter, so the letter is what the chip shows. */
+  const desigKey=UNITS.length?`<div class="dkey"><b>Designation</b>${DESIG.filter(d=>d[0]).map(d=>'<span><i>'+d[0]+'</i>'+d[1]+'</span>').join('')}<em>set it on the unit type \u2014 it prints after the bedroom size on the rent schedule</em></div>`:'';
+  return card(6,sectionPill(6),`<div class="reseff">${dateEffCell()}</div>${capNote()}${desigKey}<div class="ucards${hasProg('rcs')?'':' noprop'}">${UNITS.length?rgHead:''}${cards}</div><div class="addrow" id="addUnit">+ Add unit type</div>${_undoStack.length?(' <span class="addrow ghostlink" id="undoUnit">↩ Undo delete'+(_undoStack.length>1?(' ('+_undoStack.length+')'):'')+'</span><button class="undocommit" id="undoCommit" title="Keep deletions — dismiss undo">✓</button>'):''}<div class="partd">${lh}</div><div class="partd">${pd}</div>`);}
 
 const SAFMR_BR_KEY={'Studio':'efficiency','1BR':'br1','2BR':'br2','3BR':'br3','4BR':'br4'};
 let _hud={key:'',data:null,inflight:null};let _hudTimer=null;
@@ -1850,7 +1884,8 @@ function boxStyle(k){const c=Array.isArray(k)?groupColors(k):cellColors(k);retur
    type cell rather than taking a column of its own — that cell is already the
    widest in the grid and the designation belongs to the type, not beside it. */
 function desigChip(i){const k='units.'+i+'.desig';const v=get(k);const has=v!==''&&v!=null;const c=cellColors(k);
-  return '<button class="desig'+(has?'':' empty')+'" data-desig="'+i+'" title="'+esc(has?desigName(v)+' \u2014 click to change':'No designation \u2014 click to set Family, Elderly, Disabled or Near-elderly')+'" style="color:'+c[0]+';border-color:'+c[0]+';background:'+c[1]+'">'+(has?esc(v):'+')+'</button>';}
+  const t=has?(desigName(v)+' \u2014 click to change'):'No designation \u2014 click for Family, Elderly, Disabled or Near-elderly';
+  return '<button class="desig'+(has?'':' empty')+'" data-desig="'+i+'" title="'+esc(t)+'" style="color:'+c[0]+';border-color:'+c[0]+';background:'+c[1]+'">'+(has?esc(v):'\u2013')+'</button>';}
 function fuelChip(k,three){const v=get(k);const has=v!==''&&v!=null;const c=cellColors(k);const cls=three?'fuel3':'fuel';return '<span class="'+cls+(has?'':' empty')+'" data-fuel'+(three?'3':'')+'="'+k+'" style="color:'+c[0]+';border-color:'+c[0]+';background:'+c[1]+'">'+(has?esc(v):'-')+'</span>';}
 function cbx(k,label){const on=get(k)==='1';return `<label class="cb"><input type="checkbox" data-cb="${k}" ${on?'checked':''}><span class="box" style="${boxStyle(k)}">${on?'✓':''}</span><span class="cbt">${esc(label)}</span>${ovIcons(k)}</label>`;}
 function pbUtil(i,label){const on=get('partb.utilities.'+i)==='1';return `<div class="cb utrow"><label class="cbmain"><input type="checkbox" data-cb="partb.utilities.${i}" ${on?'checked':''}><span class="box" style="${boxStyle('partb.utilities.'+i)}">${on?'✓':''}</span><span class="cbt ut">${label}</span></label>${fuelChip('partb.fuel.'+i,false)}${ovIcons(['partb.utilities.'+i,'partb.fuel.'+i])}</div>`;}
@@ -2818,8 +2853,23 @@ function wireBody(){
   document.querySelectorAll('[data-desig]').forEach(dg=>dg.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();
     const k='units.'+dg.getAttribute('data-desig')+'.desig';const cur=(form[k]&&form[k].value)||'';
     const at=DESIG.findIndex(x=>x[0]===cur);const nx=DESIG[(at<0?0:at+1)%DESIG.length][0];
-    _pendingSnap=snapOf([k]);form=store.editForm(form,k,nx);_pending=[k];renderBody();
+    _pendingSnap=snapOf([k]);form=store.editForm(form,k,nx);_pending=[k];_refocusSel='[data-desig="'+dg.getAttribute('data-desig')+'"]';renderBody();
     setStatus(nx?('Unit designated '+desigName(nx)+' \u2014 it prints after the bedroom size in Column 1 of the rent schedule.'):'Designation cleared.');}));
+  /* Enter saves the designation and Escape puts it back, like every other cell.
+     The chip is a button, so the input-level key handler never saw it. Rather
+     than restate the save and revert rules here, press the very buttons this
+     cell already renders — one behaviour, whether reached by mouse or keyboard. */
+  document.querySelectorAll('[data-desig]').forEach(dg=>dg.addEventListener('keydown',e=>{
+    if(e.key!=='Enter'&&e.key!=='Escape')return;
+    const row=dg.getAttribute('data-desig'),k='units.'+row+'.desig';
+    if(_pending&&_pending.length){e.preventDefault();e.stopPropagation();
+      _refocusSel='[data-desig="'+row+'"]';
+      if(e.key==='Enter')commitPending();else revertPending();return;}
+    const sel=e.key==='Enter'?('button[data-save1="'+k+'"]'):('button[data-rev="'+k+'"]');
+    const urow=dg.closest('.urow');const btn=urow&&urow.querySelector(sel);
+    if(btn&&getComputedStyle(btn).display!=='none'){e.preventDefault();e.stopPropagation();
+      _refocusSel='[data-desig="'+row+'"]';btn.click();}
+  }));
   document.querySelectorAll('[data-fuel]').forEach(fl=>fl.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();const k=fl.getAttribute('data-fuel');const cur=(form[k]&&form[k].value)||'';const nx=cur===''?'E':(cur==='E'?'F':(cur==='F'?'G':''));_pendingSnap=snapOf([k]);form=store.editForm(form,k,nx);_pending=[k];renderBody();}));
   document.querySelectorAll('[data-fuel3]').forEach(fl=>fl.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();const k=fl.getAttribute('data-fuel3');const base=k.slice(0,k.lastIndexOf('.fuel'));if(!get(base))return;const cur=(form[k]&&form[k].value)||'';const nx=cur===''?'E':(cur==='E'?'F':(cur==='F'?'G':''));_pendingSnap=snapOf([k]);form=store.editForm(form,k,nx);_pending=[k];renderBody();}));
   document.querySelectorAll('[data-wibox]').forEach(bx=>bx.addEventListener('click',e=>{e.preventDefault();const base=bx.getAttribute('data-wibox');if(!get(base))return;const on=get(base+'.on')==='1';_pendingSnap=snapOf([base+'.on']);form=store.editForm(form,base+'.on',on?'':'1');_pending=[base+'.on'];_refocusSel='[data-wibox="'+base+'"]';renderBody();}));
