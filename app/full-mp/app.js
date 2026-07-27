@@ -103,7 +103,45 @@ async function refreshSnap(){DBSNAP=await bridge.getDb();}
    gray with a save button and no way back. Deviation from a saved value is an
    override, whether or not that saved value was blank. */
 function offFile(k){const c=form[k];return !!(c&&c.db_value!=null&&String(c.value==null?'':c.value)!==String(c.db_value));}
-function modeOf(kk){const keys=Array.isArray(kk)?kk:[kk];if(keys.some(k=>srcOf(k)==='overridden')||keys.some(offFile))return 'over';if(keys.some(k=>srcOf(k)==='new'&&get(k)!==''&&get(k)!=null))return 'new';if(keys.some(k=>srcOf(k)==='this-cycle'))return 'cycle';return '';}
+/* A source-backed cell (utility allowance, 150% SAFMR, effective date, OCAF
+   factor) is displayed through two bookkeeping keys — *_source and *_custom —
+   and on an older record NEITHER was ever written: source has db_value null and
+   custom is absent from the record entirely. The figure the cell actually shows
+   lives in *_hud / *_exec / *_rs, which IS saved. Judging the cell by the two
+   keys alone therefore gave it no memory: a saved HUD ceiling went grey the
+   moment you edited it, Escape found nothing marked overridden and emptied the
+   cell instead of putting the ceiling back, and retyping the very figure on file
+   still read as first-time entry. Ask the CELL what is on file instead. */
+function srcCellState(cusKey){
+  const sp=(typeof srcSpec==='function')?srcSpec(cusKey):null; if(!sp)return null;
+  const onSrc=srcOnFileSrc(sp).name;
+  const cu=form[sp.cusKey];const onCus=String((cu&&cu.db_value)||'');
+  const onVal=onSrc==='custom'?onCus:String(sp.resolve(onSrc)||'');
+  const curSrc=get(sp.srcKey)||sp.fallback;
+  const cur=curSrc==='custom'?String(get(sp.cusKey)||''):String(sp.resolve(curSrc)||'');
+  if(onVal==='')return cur===''?'':'new';        // nothing on file for this cell yet
+  return cur===onVal?'database':'overridden';}
+/* Put a source-backed cell back to the pair that is on file. revertForm can only
+   undo a key it marked 'overridden', which is exactly what these cells lack. */
+function srcOnFileSrc(sp){const c=form[sp.srcKey];
+  /* Two answers, deliberately: the NAME resolves the on-file figure, the WRITE is
+     what the record actually held. On a record that never stored a source the
+     write is blank — putting "hud" there instead would be a change of its own and
+     left the form dirty after returning a cell to the figure on file. */
+  const stored=(c&&c.db_value!=null&&c.db_value!=='')?c.db_value:'';
+  return {name:stored||sp.fallback, write:stored};}
+function srcRevertCell(cusKey){
+  const sp=(typeof srcSpec==='function')?srcSpec(cusKey):null; if(!sp)return false;
+  const o=srcOnFileSrc(sp);
+  const cu=form[sp.cusKey];const onCus=String((cu&&cu.db_value)||'');
+  const wantCus=o.name==='custom'?onCus:'';
+  if(String(get(sp.srcKey)||'')===o.write&&String(get(sp.cusKey)||'')===wantCus)return false;
+  form=store.editForm(form,sp.srcKey,o.write);
+  form=store.editForm(form,sp.cusKey,wantCus);
+  return true;}
+function modeOf(kk){const keys=Array.isArray(kk)?kk:[kk];
+  for(const k of keys){const st=srcCellState(k);if(st!=null){if(st==='overridden')return 'over';if(st==='new')return 'new';if(st==='database')return '';}}
+  if(keys.some(k=>srcOf(k)==='overridden')||keys.some(offFile))return 'over';if(keys.some(k=>srcOf(k)==='new'&&get(k)!==''&&get(k)!=null))return 'new';if(keys.some(k=>srcOf(k)==='this-cycle'))return 'cycle';return '';}
 function ovIcons(kk){const keys=Array.isArray(kk)?kk:[kk];const j=keys.join(',');const m=modeOf(keys);
   // A parsed value is exactly as unsaved as a typed one, so it gets the same badge.
   // It costs no more room either: cycle, like new, has nothing to revert TO, so the
@@ -367,7 +405,7 @@ function uaBox(i){const src=get('units.'+i+'.ua_source')||defUaSrc(i),exec=get('
    "clears" it, leaving a custom source with no value and a blank cell. The source
    key is the one that knows an on-file value was displaced, so the badge carries
    both: coupledKeys already saves and reverts them together. */
-  let state,c;if(src==='custom'){c=modeOf(['units.'+i+'.ua_custom','units.'+i+'.ua_source'])==='over'?provColors('overridden','units.'+i+'.ua_source'):cellColors('units.'+i+'.ua_custom');}else{state=hasAny?srcOf(src==='rcs'?('units.'+i+'.ua_rcs'):('units.'+i+'.ua_exec')):'new';const overSrc=srcOf('units.'+i+'.ua_source')==='overridden';if(uaUnresolved(i)||overSrc)state='overridden';c=provColors(state,'units.'+i+'.ua_source');}const boxKeyUA=src==='custom'?('units.'+i+'.ua_custom'):('units.'+i+'.ua_source');
+  let state,c;if(src==='custom'){const _st=srcCellState('units.'+i+'.ua_custom');c=provColors(_st==='overridden'?'overridden':(_st==='database'?'database':'new'),'units.'+i+'.ua_source');}else{state=hasAny?srcOf(src==='rcs'?('units.'+i+'.ua_rcs'):('units.'+i+'.ua_exec')):'new';const overSrc=srcOf('units.'+i+'.ua_source')==='overridden';const _cs=srcCellState('units.'+i+'.ua_custom');if(_cs==='overridden')state='overridden';else if(_cs==='database'&&state==='new')state='database';if(uaUnresolved(i)||overSrc)state='overridden';c=provColors(state,'units.'+i+'.ua_source');}const boxKeyUA=src==='custom'?('units.'+i+'.ua_custom'):('units.'+i+'.ua_source');
   const menu='<div class="uamenu">'+srcOptRow('data-uaopt="exec" data-uai="'+i+'"',(exec!==''&&exec!=null)?('$'+fmtMoney(exec)):'','Executed RS')+((hasProg('rcs')||numf(rcs)>0)?srcOptRow('data-uaopt="rcs" data-uai="'+i+'"',(rcs!==''&&rcs!=null)?('$'+fmtMoney(rcs)):'','RCS report'):'')+'<div class="uaopt" data-uaopt="custom" data-uai="'+i+'">Custom…</div></div>';
   return '<div class="rbox uacell" data-box="'+boxKeyUA+'" style="background:'+c[1]+';border-left-color:'+c[0]+'"><div class="uadrop"><div class="uatrigger" tabindex="0"><span class="ualab">'+lab+'</span><span class="cvx">▾</span></div>'+menu+'</div>'+(src==='custom'?ovIcons(['units.'+i+'.ua_custom','units.'+i+'.ua_source']):ovIcons('units.'+i+'.ua_source'))+'</div>';}
 function uaNoteCell(i){const conf=uaConflict(i),overSrc=srcOf('units.'+i+'.ua_source')==='overridden';if(!conf&&!overSrc)return '';const ex=get('units.'+i+'.ua_exec'),rc=get('units.'+i+'.ua_rcs');
@@ -399,7 +437,7 @@ function numNote(i){if(!numConflict(i))return '';const n=get('units.'+i+'.num_un
 function safmrBox(i){const src=get('units.'+i+'.safmr_source')||defSafmrSrc(i),hud=get('units.'+i+'.safmr_hud'),rcs=get('units.'+i+'.safmr_rcs'),custom=get('units.'+i+'.safmr_custom');
   const hasAny=numf(hud)>0||numf(rcs)>0||numf(custom)>0;
   const lab=src==='rcs'?('$<input class="uac-in srcedit" data-srcedit="safmr" data-si="'+i+'" data-money="1" value="'+esc(fmtMoney(rcs))+'"><span class="srctag">· RCS</span>'):(src==='custom'?('$<input class="uac-in" data-money="1" data-k="units.'+i+'.safmr_custom" value="'+esc(fmtMoney(custom))+'" placeholder="0">'):('$<input class="uac-in srcedit" data-srcedit="safmr" data-si="'+i+'" data-money="1" value="'+esc(fmtMoney(hud))+'"><span class="srctag">· HUD</span>'));
-  let state,c;if(src==='custom'){c=modeOf(['units.'+i+'.safmr_custom','units.'+i+'.safmr_source'])==='over'?provColors('overridden','units.'+i+'.safmr_source'):cellColors('units.'+i+'.safmr_custom');}else{state=hasAny?srcOf(src==='rcs'?('units.'+i+'.safmr_rcs'):('units.'+i+'.safmr_hud')):'new';const overSrc=srcOf('units.'+i+'.safmr_source')==='overridden';if(safmrUnresolved(i)||overSrc)state='overridden';c=provColors(state,'units.'+i+'.safmr_source');}const boxKeySA=src==='custom'?('units.'+i+'.safmr_custom'):('units.'+i+'.safmr_source');
+  let state,c;if(src==='custom'){const _st=srcCellState('units.'+i+'.safmr_custom');c=provColors(_st==='overridden'?'overridden':(_st==='database'?'database':'new'),'units.'+i+'.safmr_source');}else{state=hasAny?srcOf(src==='rcs'?('units.'+i+'.safmr_rcs'):('units.'+i+'.safmr_hud')):'new';const overSrc=srcOf('units.'+i+'.safmr_source')==='overridden';const _cs=srcCellState('units.'+i+'.safmr_custom');if(_cs==='overridden')state='overridden';else if(_cs==='database'&&state==='new')state='database';if(safmrUnresolved(i)||overSrc)state='overridden';c=provColors(state,'units.'+i+'.safmr_source');}const boxKeySA=src==='custom'?('units.'+i+'.safmr_custom'):('units.'+i+'.safmr_source');
   const menu='<div class="uamenu">'+srcOptRow('data-safmropt="hud" data-safmri="'+i+'"',(hud!==''&&hud!=null)?('$'+fmtMoney(hud)):'','HUD API')+((hasProg('rcs')||numf(rcs)>0)?srcOptRow('data-safmropt="rcs" data-safmri="'+i+'"',(rcs!==''&&rcs!=null)?('$'+fmtMoney(rcs)):'','RCS report'):'')+'<div class="uaopt" data-safmropt="custom" data-safmri="'+i+'">Custom…</div></div>';
   return '<div class="rbox uacell" data-box="'+boxKeySA+'" style="background:'+c[1]+';border-left-color:'+c[0]+'"><div class="uadrop"><div class="uatrigger" tabindex="0"><span class="ualab">'+lab+'</span><span class="cvx">▾</span></div>'+menu+'</div>'+(src==='custom'?ovIcons(['units.'+i+'.safmr_custom','units.'+i+'.safmr_source']):ovIcons('units.'+i+'.safmr_source'))+'</div>';}
 function safmrNote(i){const res=safmrResolvedOf(i),hud=numf(get('units.'+i+'.safmr_hud')),rcs=numf(get('units.'+i+'.safmr_rcs'));
@@ -1368,6 +1406,8 @@ function snapOf(keys){const s={};keys.forEach(k=>{s[k]=form[k]?Object.assign({},
    which is what put a "Save changes before leaving?" in front of a form nobody
    had visibly changed — and saving would have quietly persisted the stray value. */
 function revertKeys(keys){let any=false;
+  for(const k of keys){if(srcRevertCell(k))any=true;}      // source-backed cells revert as a cell
+
   keys.forEach(k=>{if(store.revertForm(form,k)){any=true;return;}
     const c=form[k];if(!c||c.db_value==null)return;
     if(String(c.value==null?'':c.value)!==String(c.db_value)){form=store.editForm(form,k,c.db_value);any=true;}});
@@ -1438,7 +1478,13 @@ function paintCell(k){const gb=groupOf(k);if(gb)return paintGroup(gb);if(k==='ca
   // modeOf, not srcOf: a source key saved BLANK reads as "new" even once it has
   // been changed, so testing for 'overridden' left an emptied override gray while
   // the badge beside it correctly said otherwise.
-  const _sr=(_ck.length>1&&modeOf(_ck)==='over')?'overridden'
+  /* And for a source-backed cell ask srcCellState, the same question the full
+     render asks. Without this the repaint still judged the cell by this key's own
+     history: typing your way back to the figure on file left the cell grey until
+     something else forced a full re-render. */
+  const _cs=srcCellState(k);
+  const _sr=_cs?(_cs==='overridden'?'overridden':(_cs==='database'?'database':'new'))
+    :(_ck.length>1&&modeOf(_ck)==='over')?'overridden'
     :(offFile(k)&&s.source!=='overridden')?'overridden'
     :((k==='rent_schedule.date_rents_effective'&&s.source==='database')?'this-cycle':s.source);
   // The blue "on file" edge belongs to a cell saved empty and STILL empty. Without
@@ -1486,12 +1532,11 @@ function srcSpec(k){
    rather than staying pinned to custom. */
 function srcEditKey(k,val){
   const sp=srcSpec(k); if(!sp)return false;
-  const c=form[sp.srcKey];
-  const onSrc=(c&&c.db_value!=null&&c.db_value!=='')?c.db_value:sp.fallback;
+  const o=srcOnFileSrc(sp);const onSrc=o.name;
   const cu=form[sp.cusKey];const onCus=String((cu&&cu.db_value)||'');
   const onVal=onSrc==='custom'?onCus:String(sp.resolve(onSrc)||'');
   if(onVal!==''&&String(val)===onVal){
-    form=store.editForm(form,sp.srcKey,onSrc);
+    form=store.editForm(form,sp.srcKey,o.write);
     form=store.editForm(form,sp.cusKey,onSrc==='custom'?onCus:'');
   }else{
     form=store.editForm(form,sp.srcKey,'custom');
