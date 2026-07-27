@@ -24,7 +24,7 @@ global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>
 const cp=require('child_process'),os=require('os'),path=require('path'),fs=require('fs');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=87;                 // the count this file is known to run to the end
+const MIN_CHECKS=108;                // the count this file is known to run to the end
 let n=0,fails=0,verdict=null;
 const BAR='═'.repeat(68);
 function fail(msg,err){
@@ -218,5 +218,81 @@ const T=(label,v)=>eq(label,!!v,true);
   T('ua_source persisted as custom', app.getVal('units.0.ua_source')==='custom'&&app.srcOf('units.0.ua_source')==='database');
   app.__edit('units.0.ua_source','exec');
   T('switch UA→exec after saved-custom → overridden (no phantom/blue skip)', app.srcOf('units.0.ua_source')==='overridden');
+  /* ── Escape walks back a RUN of edits ────────────────────────────────────
+     One press, one CELL, newest first — and a save is a wall the walk cannot
+     cross. __editCell is the text box's input handler in miniature (push the
+     cell, then write it); __saveCell is Enter in that same box. */
+  console.log('\n─ Escape walks back a run of edits, one cell per press ─');
+  app.__clearUndo();
+  const flip=(k,a,b)=>app.getVal(k)===a?b:a;      // read BEFORE the run starts
+  const RUN=[
+    ['property.name',        'Zzz Renamed'],                 // text
+    ['units.0.current',      '2222'],                        // money
+    ['units.0.br',           flip('units.0.br','1BR','3BR')],// dropdown
+    ['check.0',              flip('check.0','1','')],        // checkbox
+    ['property.addr_city',   'Nowhere'],                     // address part
+    ['units.0.ua_custom',    '9999'],                        // utility allowance
+    ['units.0.safmr_custom', '1234'],                        // 150% SAFMR
+    ['units.0.desig',        flip('units.0.desig','NE','E')],// unit designation
+    ['sig.title',            'Zzz Title'],
+    ['poc.email',            'zzz@example.test'],
+    ['tenant.sender_name',   'Zzz Sender'],
+    ['partb.writein.e2',     'Zzz Blinds'],
+  ];
+  // value, provenance AND the colour the cell paints — undo owes all three
+  const shot=()=>JSON.stringify(RUN.map(([k])=>[app.getVal(k),app.srcOf(k),app.modeOf(app.__undoScope(k))]));
+  const runBefore=shot(), dirtyBefore=app.isDirty();
+  RUN.forEach(([k,v])=>app.__editCell(k,v));
+  eq('twelve cells of eight kinds make twelve entries', app.__undoDepth(), 12);
+  T('the run left the form dirty', app.isDirty());
+  let steps=0; while(app.__undoStep())steps++;
+  eq('twelve Escapes spend all twelve',        steps, 12);
+  eq('and leave nothing on the stack',         app.__undoDepth(), 0);
+  eq('every cell is back — value, source and colour', shot(), runBefore);
+  eq('and the form is no dirtier than before the run', app.isDirty(), dirtyBefore);
+
+  console.log('\n─ the unit is the cell, not the keystroke ─');
+  app.__clearUndo();
+  const nameWas=app.getVal('property.name');
+  'Riverside'.split('').forEach((_,i)=>app.__editCell('property.name','Riverside'.slice(0,i+1)));
+  eq('nine keystrokes in one box are one entry', app.__undoDepth(), 1);
+  T('one press undoes the whole word',          app.__undoStep());
+  eq('the box holds what it held',              app.getVal('property.name'), nameWas);
+  eq('and the stack is empty',                  app.__undoDepth(), 0);
+
+  console.log('\n─ an address is one cell, however many parts you touch ─');
+  app.__clearUndo();
+  const stWas=app.getVal('property.addr_street'), ciWas=app.getVal('property.addr_city');
+  app.__editCell('property.addr_street','1 Nowhere Rd'); app.__editCell('property.addr_city','Evanston');
+  eq('street and city share one entry',   app.__undoDepth(), 1);
+  eq('because the entry is the whole group', app.__undoScope('property.addr_city'), app.fieldKeys('property.addr_zip'));
+  app.__undoStep();
+  eq('one press restores the street', app.getVal('property.addr_street'), stWas);
+  eq('and the city with it',          app.getVal('property.addr_city'),   ciWas);
+
+  console.log('\n─ a save is a wall: nothing unwinds past it ─');
+  app.__clearUndo();
+  app.__editCell('sig.name','Zzz Before The Save');
+  app.__editCell('poc.name','Zzz Saved');
+  eq('two cells, two entries', app.__undoDepth(), 2);
+  await app.__saveCell('poc.name');                       // Enter
+  eq('the save cleared the run',            app.__undoDepth(), 0);
+  T('so Escape has nothing left to walk back', !app.__undoStep());
+  eq('the saved cell keeps what was saved',  app.getVal('poc.name'), 'Zzz Saved');
+  eq('and the cell edited before it is untouched', app.getVal('sig.name'), 'Zzz Before The Save');
+
+  console.log('\n─ undo restores provenance, not just the value ─');
+  /* A source-backed cell is judged as a CELL, not key by key — so what has to
+     come back is the pair: the figure AND the pointer saying where it came
+     from. Restoring only the *_custom key is what once left one grey. */
+  app.__clearUndo();
+  await app.__saveCell('units.0.ua_custom');              // put a pair on file
+  const uaK=app.__undoScope('units.0.ua_custom');
+  const uaWas=[app.getVal(uaK[0]),app.getVal(uaK[1]),app.modeOf(uaK)];
+  app.__editCell('units.0.ua_custom','777');
+  T('typing over the allowance reads as an override', app.modeOf(uaK)==='over');
+  app.__undoStep();
+  eq('one press puts the pair back, colour and all', [app.getVal(uaK[0]),app.getVal(uaK[1]),app.modeOf(uaK)], uaWas);
+
   finish();
 })().catch(e=>fail('the suite threw before reaching its verdict',e));
