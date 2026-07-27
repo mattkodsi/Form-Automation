@@ -180,7 +180,7 @@ const T=(label,v)=>eq(label,!!v,true);
       units:[{type:br0+' / '+ba0,count:1027,rent:1027,ua:75}]}});
   await app.__openCycleForm(pid,scid);
   const utc=els.sections.innerHTML.split('<div class="urow">')[1]||'';
-  eq('the unit type carries exactly one RS badge', (utc.match(/srctag utsrc/g)||[]).length, 1);
+  eq('the unit type carries exactly one RS badge', (utc.match(/utgrp"><span class="srctag rstag"/g)||[]).length, 1);
   T('and the designation box no longer carries its own', !/dgdrop[\s\S]{0,400}?srctag/.test(utc));
   /* The clear used to be suppressed whenever the badge showed: label + badge +
      clear + chevron needed 74.7px of a 55px budget. With the badge moved to the
@@ -191,7 +191,7 @@ const T=(label,v)=>eq(label,!!v,true);
   app.__editCell('units.0.ba', ba0==='1BA'?'2BA':'1BA');
   app.__renderBody();
   const utc2=els.sections.innerHTML.split('<div class="urow">')[1]||'';
-  eq('one edit anywhere drops the badge for the whole fact', (utc2.match(/utsrc/g)||[]).length, 0);
+  eq('one edit anywhere drops the badge for the whole fact', (utc2.match(/utgrp"><span class="srctag rstag"/g)||[]).length, 0);
   await app.__openCycleForm(pid,scid);
 
   /* Every schedule-fed cell says so, not just the ones that happened to be
