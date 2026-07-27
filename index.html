@@ -84,6 +84,13 @@ body.scrolled #ccbar{transform:translateY(0);opacity:1}
 .rbox.brba .uadrop{min-width:0}
 .rbox.brba .uadrop:not(.dgdrop){flex:1 1 0}
 .rbox.brba .dgdrop{flex:0 0 74px;margin-left:7px;margin-right:6px}
+/* The slash was 7.8px of text, the mirrored spacer a flat 8px, so every pair
+   drifted a little further right across the row. Pin both to the same 8px.
+   And the provenance bar sits at left:4px 3px wide, which left one pixel before
+   the label — it read as a text cursor. Match the address cell's 11px rhythm so
+   the bar is a marker beside the text rather than part of it. */
+.rbox.brba .slash{flex:0 0 8px;width:8px;padding:0;text-align:center}
+.ucards .urow .rbox.brba .uadrop .uatrigger{padding-left:11px}
 .dgdrop .ualab{font-weight:700;font-size:11px;letter-spacing:.3px}
 .dgdrop .uamenu{min-width:170px}
 /* Spanning to column 6 collided with the metric at column 4, which pushed the
@@ -100,7 +107,7 @@ body.scrolled #ccbar{transform:translateY(0);opacity:1}
 .uracts > div{display:flex;gap:6px;min-width:0;align-items:center}
 .uracts > div:first-child{gap:0;padding-left:4px}   /* the cell's 4px left border */
 .ua-br,.ua-ba{flex:1 1 0;min-width:0;display:flex}
-.ua-sl{flex:0 0 auto;width:8px}
+.ua-sl{flex:0 0 8px;width:8px}
 .ua-dg{flex:0 0 74px;margin-left:7px;margin-right:6px;display:flex}
 .uracts .ovic{margin:0}
 .urnov .ovnote{margin:0}
