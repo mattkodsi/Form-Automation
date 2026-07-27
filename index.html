@@ -100,6 +100,17 @@ body.scrolled #ccbar{transform:translateY(0);opacity:1}
 .ucards .urow .rbox.brba .uadrop .uatrigger{padding-left:11px}
 .dgdrop .ualab{font-weight:700;font-size:11px;letter-spacing:.3px}
 .dgdrop .uamenu{min-width:170px}
+/* Butting the sub-cells together was not enough: each tint carries a 6px radius,
+   so at a zero-width seam the group's colour still showed through the two corner
+   notches. Inner edges are square and only the outer ones round, so neighbours of
+   the same colour read as one field — the way the address bar's parts do. The
+   radius is set inline by tintStyle(), hence the override. */
+.ucards .urow .rbox.brba .uatrigger{border-radius:0!important}
+.ucards .urow .rbox.brba .uadrop:first-child .uatrigger{border-radius:6px 0 0 6px!important}
+.ucards .urow .rbox.brba .dgdrop .uatrigger{border-radius:0 6px 6px 0!important}
+.homebtn{cursor:pointer;border-radius:8px;transition:opacity .12s}
+.homebtn:hover{opacity:.82}
+.homebtn:focus-visible{outline:2px solid #7aa7ff;outline-offset:3px}
 /* Spanning to column 6 collided with the metric at column 4, which pushed the
    note onto a grid row of its own, 25px under the cell. Ending at 4 is not
    enough on its own: this element comes after .urnsub in the DOM but occupies
@@ -3635,16 +3646,33 @@ function snapForm(keys){if(!FORMSNAP||!keys||!keys.length){FORMSNAP=snapOf(Objec
 function isDirty(){if(!FORMSNAP)return false;const keys=new Set([...Object.keys(form),...Object.keys(FORMSNAP)]);for(const k of keys){const fv=form[k]?(form[k].value==null?'':String(form[k].value)):'';const sv=FORMSNAP[k]?(FORMSNAP[k].value==null?'':String(FORMSNAP[k].value)):'';if(fv!==sv)return true;}return false;}
 function refreshFooter(){const t=el('unsavedTag');if(t)t.classList.toggle('on',isDirty());syncFooterRest();}
 function requestExit(){if(isDirty())openExit();else exitForm();}
+/* Where the exit flow should land. Leaving the form normally goes back to the
+   property; the home button sets this so the SAME prompt — unsaved edits, an
+   unsaved package — carries you all the way out instead. */
+let _exitTo=null;
 async function exitForm(){
   // a cycle created this session and never saved is deleted on the way out
   if(activeCid&&_cyFresh===activeCid){const cid=activeCid;_cyFresh=null;try{await mpdb.deleteCycle(cid);}catch(e){}}
-  openLauncher(activePid);
+  const to=_exitTo;_exitTo=null;
+  if(to==='menu')openMenu();else openLauncher(activePid);
 }
+/* The masthead is a home button everywhere except the sign-in screen. From the
+   form it asks about unsaved work first, exactly as the exit control does. */
+function goHome(){
+  const fv=el('viewForm');
+  if(fv&&fv.style&&fv.style.display!=='none'){_exitTo='menu';requestExit();return;}
+  _exitTo=null;openMenu();
+}
+function wireHome(){document.querySelectorAll('#viewMenu .brand,#viewLauncher .brand,#viewContacts .brand,#viewForm .hdr>div:first-child').forEach(b=>{
+  b.classList.add('homebtn');b.setAttribute('role','button');b.setAttribute('tabindex','0');
+  b.setAttribute('title','Back to all properties');
+  b.onclick=goHome;
+  b.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();goHome();}};});}
 function openExit(){const nm=get('property.name')||'this property';
   const fresh=activeCid&&_cyFresh===activeCid;
   const body=fresh?'This package was never saved \u2014 leaving without saving deletes it.':'You have unsaved edits to <b>'+esc(nm)+'</b>. Save them to the database so they pre-fill your next submission, or discard them and keep the last saved record.';
   modal('<div class="dlg-t">Save changes before leaving?</div><div class="dlg-b">'+body+'</div><div class="dlg-row"><button class="btn" id="dlgKeep">Keep editing</button><span class="dlg-sp"></span><button class="btn danger" id="dlgDiscard">'+(fresh?'Delete package':'Discard changes')+'</button><button class="btn p" id="dlgSave">Save &amp; exit</button></div>');
-  el('dlgKeep').onclick=closeModal;
+  el('dlgKeep').onclick=()=>{_exitTo=null;closeModal();};
   el('dlgDiscard').onclick=async()=>{form=await store.fillForm();await refreshSnap();fixSavedToggles();deriveUnits();snapForm();closeModal();await exitForm();setStatus('');};
   el('dlgSave').onclick=()=>requestSave(()=>{closeModal();openLauncher(activePid);});
 }
@@ -4042,6 +4070,7 @@ async function boot(){
   const bn=el('bNewProperty');if(bn)bn.onclick=createProperty;
   document.querySelectorAll('[data-sort]').forEach(b=>b.onclick=()=>{sortMode=b.getAttribute('data-sort');document.querySelectorAll('[data-sort]').forEach(x=>x.classList.toggle('on',x===b));renderMenu();});
   const be=el('bExit');if(be)be.onclick=requestExit;
+  wireHome();
   const _revertToSaved=async()=>{form=await store.fillForm();await refreshSnap();fixSavedToggles();deriveUnits();snapForm();renderBody();setStatus('Reverted to the last saved record.');};
   const bf=el('bFill');if(bf)bf.onclick=_revertToSaved;
   const bff=el('bFillFooter');if(bff)bff.onclick=_revertToSaved;
