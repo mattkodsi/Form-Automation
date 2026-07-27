@@ -85,7 +85,15 @@ body.scrolled #ccbar{transform:translateY(0);opacity:1}
    landed on row 2. Pin the row explicitly. */
 .uracts{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,.7fr) minmax(0,1fr) minmax(0,1fr) minmax(0,.95fr) minmax(0,1.05fr) 30px;gap:0 14px;align-items:center;margin-top:5px}
 .uracts.noprop{grid-template-columns:minmax(0,2fr) minmax(0,.7fr) minmax(0,1fr) minmax(0,1fr) minmax(0,.95fr) 30px}
-.uracts > div{display:flex;gap:6px;min-width:0}
+/* Column 1 holds three separate controls, so it carries three separate pairs —
+   each mirroring the flex of the cell above it so bed lands under bed, bath under
+   bath and the designation under its chip. One pair covering bed AND bath could
+   only revert both together, and sat under neither. */
+.uracts > div{display:flex;gap:6px;min-width:0;align-items:center}
+.uracts > div:first-child{gap:0;padding-left:4px}   /* the cell's 4px left border */
+.ua-br,.ua-ba{flex:1 1 0;min-width:0;display:flex}
+.ua-sl{flex:0 0 auto;width:8px}
+.ua-dg{flex:0 0 auto;margin-left:7px;margin-right:9px;min-width:22px;display:flex}
 .uracts .ovic{margin:0}
 .urnov .ovnote{margin:0}
 .desig{margin-left:7px;margin-right:9px;flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;appearance:none;-webkit-appearance:none;box-sizing:border-box;min-width:22px;height:20px;padding:0 6px;border:1px solid;border-radius:4px;font-family:inherit;font-size:10px;font-weight:700;line-height:1;text-align:center;cursor:pointer}
