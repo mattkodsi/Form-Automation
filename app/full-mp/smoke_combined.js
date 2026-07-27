@@ -20,7 +20,7 @@ global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>
 const os=require('os'),path=require('path'),fs=require('fs');
 
 /* ── the verdict machinery (mirrors test_interactions.js) ───────────────── */
-const MIN_CHECKS=72;
+const MIN_CHECKS=76;
 let n=0,fails=0,verdict=null;
 const BAR='═'.repeat(68);
 function fail(msg,err){
@@ -168,6 +168,31 @@ const T=(label,v)=>eq(label,!!v,true);
   T('the unit-count box carries the separator too', /data-money="1" data-k="units.0.num_units" value="1,027"/.test(fsec));
   T('while the UAF factor box is left alone — cleanNum would eat its decimal point',
     !/data-money="1" data-k="uaf\.f_/.test(els.sections.innerHTML));
+
+  /* Provenance belongs to the FACT, not the fragment. The unit type is one
+     string on the schedule — "1 BR / 1 BA E" — split into three boxes only so it
+     can be edited. Badging the designation alone, while the two boxes beside it
+     said nothing, is what read as arbitrary. */
+  console.log('\n─ ONE RS BADGE FOR THE WHOLE UNIT TYPE ─');
+  const br0=app.getVal('units.0.br'), ba0=app.getVal('units.0.ba');
+  await db.setCycleRs(scid,{name:'RS.pdf',kind:'fields',via:'text',at:'2026-07-27T14:00:00.000Z',
+    parsed:{scalars:{},principals:[],ns8:[],nonrev:[],
+      units:[{type:br0+' / '+ba0,count:1027,rent:1027,ua:75}]}});
+  await app.__openCycleForm(pid,scid);
+  const utc=els.sections.innerHTML.split('<div class="urow">')[1]||'';
+  eq('the unit type carries exactly one RS badge', (utc.match(/srctag utsrc/g)||[]).length, 1);
+  T('and the designation box no longer carries its own', !/dgdrop[\s\S]{0,400}?srctag/.test(utc));
+  /* The clear used to be suppressed whenever the badge showed: label + badge +
+     clear + chevron needed 74.7px of a 55px budget. With the badge moved to the
+     group, a schedule-sourced designation is clearable again. */
+  app.__editCell('units.0.desig','E'); app.__renderBody();
+  const utcD=els.sections.innerHTML.split('<div class="urow">')[1]||'';
+  T('a designation can be cleared from the cell itself', /dgdrop[\s\S]{0,300}?csclear/.test(utcD));
+  app.__editCell('units.0.ba', ba0==='1BA'?'2BA':'1BA');
+  app.__renderBody();
+  const utc2=els.sections.innerHTML.split('<div class="urow">')[1]||'';
+  eq('one edit anywhere drops the badge for the whole fact', (utc2.match(/utsrc/g)||[]).length, 0);
+  await app.__openCycleForm(pid,scid);
 
   console.log('\n─ WHAT EACH DOCUMENT REQUIRES ─');
   const miss=id=>app.__docMissing(id), warn=id=>app.__docWarns(id);
