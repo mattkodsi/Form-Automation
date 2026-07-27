@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# run_tests.sh — every automated suite, one command, one honest exit code.
+#
+# Both suites are documented post-edit gates, but only test_db.js was ever wired
+# into deliver.sh. So when test_interactions.js broke on the Supabase migration
+# it stayed broken for eleven days: the pipeline was still green, and the usual
+# manual `node … | tail -2` threw away node's exit status (a pipeline reports the
+# LAST command's). Run the suites through here and deliver.sh gets each new one
+# for free — add it to the list below, nowhere else.
+#
+# Exits non-zero if ANY suite fails, and the verdict is the last line printed,
+# so it survives being piped.
+#
+# Usage:  bash app/full-mp/run_tests.sh
+set -uo pipefail                       # deliberately NOT -e: run every suite, then report
+
+d="$(cd "$(dirname "$0")" && pwd)"     # app/full-mp
+suites="test_db.js test_interactions.js"
+failed=""
+
+for s in $suites; do
+  echo "── $s ───────────────────────────────────────────────────────"
+  node "$d/$s" || failed="$failed $s"
+  echo
+done
+
+if [ -z "$failed" ]; then
+  echo "✓ every suite passed ($suites)"
+else
+  echo "✗ FAILED SUITE(S):$failed — do not ship"
+  exit 1
+fi

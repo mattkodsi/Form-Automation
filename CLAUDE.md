@@ -93,9 +93,10 @@ five files below gives the whole picture; read them in this order:
 
 ## Build & deliver — always outputs `index.html`
 
-- Rebuild + ship in one step: **`bash app/full-mp/deliver.sh`** — syntax-checks core/db/app/gen, runs
-  `test_db.js`, builds in the sandbox, copies to the project-root **`index.html`**, then `cmp`-verifies
-  the copy landed intact (guards the mounted-folder truncation gotcha).
+- Rebuild + ship in one step: **`bash app/full-mp/deliver.sh`** — syntax-checks every JS the build
+  concatenates, runs **all** test suites via `run_tests.sh`, builds in the sandbox, copies to the
+  project-root **`index.html`**, then `cmp`-verifies the copy landed intact (guards the mounted-folder
+  truncation gotcha). A failing suite aborts before anything is written.
 - **Every build/iteration produces the single deliverable `index.html` at the project root** — the file
   Matt double-clicks. `build.sh` alone writes the same `index.html` (pass a path arg to build elsewhere).
   Renamed 2026-07-13 from `RCS Renewal — Multi-property (open in browser).html`.
@@ -108,10 +109,19 @@ five files below gives the whole picture; read them in this order:
 
 ## Tests
 
-- **`app/full-mp/test_db.js`** — data layer, 49 checks (run automatically by `deliver.sh`).
+Run them all with **`bash app/full-mp/run_tests.sh`** — one command, one exit code, and the only place
+a new suite needs registering (`deliver.sh` calls it).
+
+- **`app/full-mp/test_db.js`** — data layer, 49 checks.
 - **`app/full-mp/test_interactions.js`** — save/revert/group + esc/enter decision logic against the real
-  store (self-contained; builds its own bundle). Run: `node app/full-mp/test_interactions.js`.
-- **`app/full-mp/smoke_combined.js`** — headless render smoke of the assembled app.
+  store, incl. the unit designation chip; 82 checks (self-contained; builds its own bundle).
+- **`app/full-mp/smoke_combined.js`** — headless render smoke of the assembled app (not in `run_tests.sh`).
+
+⚠️ **Don't pipe a suite through `| tail`.** A pipeline's exit status is the LAST command's, so node's
+failure vanishes — that is half of why `test_interactions.js` sat broken for eleven days after the
+Supabase migration (the other half: `deliver.sh` never ran it). Both suites now print their verdict as
+the last line so a pipe at least *shows* the failure, and `test_interactions.js` asserts a minimum check
+count (`MIN_CHECKS`) so dying partway can't read as a pass. **Adding checks? Raise `MIN_CHECKS`.**
 
 ## Resume point
 
