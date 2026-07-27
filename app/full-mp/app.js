@@ -646,8 +646,15 @@ function desigDrop(i){const k='units.'+i+'.desig';const v=get(k);const has=v!=='
   const menu=(rsCsRow(k)||'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>')
     +DESIG.filter(d=>d[0]).map(d=>'<div class="uaopt'+((d[0]===v&&!fromRs)?' sel':'')+'" data-csopt="'+d[0]+'" data-cskey="'+k+'">'+d[0]+'<span class="uasub">'+esc(d[1])+'</span></div>').join('')
     +'<div class="uaopt'+(has?'':' sel')+'" data-csopt="" data-cskey="'+k+'">\u2014<span class="uasub">No designation</span></div>';
-  return '<div class="uadrop cs dgdrop"><div class="uatrigger" tabindex="0" data-trigfor="'+k+'" style="'+tint+'" title="'+esc(has?desigName(v):'Designation')+'">'
-    +'<span class="ualab">'+(has?esc(v):'\u2014')+'</span>'+(fromRs?'<span class="srctag">\u00b7 RS</span>':'')+'<span class="cvx">\u25be</span></div>'
+  /* The ✕ that bedroom and bathroom carry — most unit types have no designation,
+     so clearing one should not mean hunting through the menu. It is suppressed
+     while the "· RS" badge shows: this cell is pinned to 74px, and label + badge
+     + ✕ + chevron needs 74.7px of a 55px content budget, which at 1200px cannot
+     be bought back by widening without clipping the bedroom and bathroom beside
+     it. A schedule-sourced designation is still clearable from the menu row. */
+  const clr=(has&&!fromRs)?'<span class="csclear" data-csclear="'+k+'" title="Clear">\u2715</span>':'';
+  return '<div class="uadrop cs dgdrop'+((has&&!fromRs)?' clearable':'')+'"><div class="uatrigger" tabindex="0" data-trigfor="'+k+'" style="'+tint+'" title="'+esc(has?desigName(v):'Designation')+'">'
+    +'<span class="ualab">'+(has?esc(v):'\u2014')+'</span>'+(fromRs?'<span class="srctag">\u00b7 RS</span>':'')+clr+'<span class="cvx">\u25be</span></div>'
     +'<div class="uamenu">'+menu+'</div></div>';}
 function fuelChip(k,three){const v=get(k);const has=v!==''&&v!=null;const c=cellColors(k);const cls=three?'fuel3':'fuel';return '<span tabindex="0" class="'+cls+(has?'':' empty')+'" data-fuel'+(three?'3':'')+'="'+k+'" style="color:'+c[0]+';border-color:'+c[0]+';background:'+c[1]+'">'+(has?esc(v):'-')+'</span>';}
 function cbx(k,label){const on=get(k)==='1';return `<label class="cb"><input type="checkbox" data-cb="${k}" ${on?'checked':''}><span class="box" style="${boxStyle(k)}">${on?'✓':''}</span><span class="cbt">${esc(label)}</span>${ovIcons(k)}</label>`;}

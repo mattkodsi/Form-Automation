@@ -9,3 +9,6 @@ navigator-mock-handoff.zip
 .claude/
 .DS_Store
 _archive/the RA integrator/ra-port-2026-07-16/
+
+# browser-session console logs from local tooling — never a deliverable
+.playwright-mcp/
