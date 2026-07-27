@@ -3468,7 +3468,21 @@ function wireBody(){
     _pending=coupledKeys(key);
     renderBody();
     const ni=document.querySelector(sel);
-    if(ni){ni.focus({preventScroll:true});try{const L=(ni.value||'').length;ni.setSelectionRange(L,L);}catch(e){}}});});
+    if(ni){ni.focus({preventScroll:true});try{const L=(ni.value||'').length;ni.setSelectionRange(L,L);}catch(e){}}});
+    /* Rule 7: Enter saves the focused cell, for EVERY kind of cell. The
+       document handler stands down whenever focus is in a text box, on the
+       premise that the box has its own Enter — which only [data-k] inputs had.
+       Focus sat in one of these and Enter fell straight through the gap. */
+    inp.addEventListener('keydown',async e=>{
+      if(e.key==='Enter'){e.preventDefault();e.stopPropagation();
+        const fam=inp.getAttribute('data-srcedit'),i=inp.getAttribute('data-si');
+        const key=fam==='dateeff'?'rent_schedule.date_eff_custom':('units.'+i+'.'+fam+'_custom');
+        const ks=coupledKeys(key); if(!keysCanSave(ks))return;
+        try{form=await store.saveFields(form,ks);}catch(err){saveFailed(err);return;}
+        await refreshSnap();snapForm(ks);clearUndoChain();_pending=null;_pendingSnap=null;
+        _refocusSel='[data-srcedit="'+fam+'"]'+(i==null?'':'[data-si="'+i+'"]');
+        renderBody();setStatus('Saved this field to the database.');return;}
+      if(e.key==='Escape'){if(_pending&&_pending.length){e.preventDefault();e.stopPropagation();revertPending();}}});});
   document.querySelectorAll('[data-srck]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();const k=o.getAttribute('data-srck'),_tg=o.getAttribute('data-srctag')||'source';_pendingSnap=snapPend([k]);form=store.editForm(form,k,o.getAttribute('data-srcv'));
     /* A pulled figure is not typed-in data. Into an empty cell it reads as this
        package's own — green, "not saved yet" — rather than plain new; over an
@@ -4435,7 +4449,7 @@ function showAuthScreen(){show('Auth');const btn=el('authSignIn'),em=el('authEma
     if(error){if(err)err.textContent=error.message||'Sign-in failed.';return;}if(pw)pw.value='';await boot();};
   if(btn)btn.onclick=go;[em,pw].forEach(f=>{if(f)f.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();go();}};});if(em)em.focus();}
 async function boot(){
-  mpdb=await makeSupabaseDb(supaClient);
+  if(!mpdb)mpdb=await makeSupabaseDb(supaClient);   // selftest hands us a local one
   const ms=el('menuSearch');if(ms)ms.addEventListener('input',renderMenu);
   const bn=el('bNewProperty');if(bn)bn.onclick=createProperty;
   document.querySelectorAll('[data-sort]').forEach(b=>b.onclick=()=>{sortMode=b.getAttribute('data-sort');document.querySelectorAll('[data-sort]').forEach(x=>x.classList.toggle('on',x===b));renderMenu();});
@@ -4447,11 +4461,26 @@ async function boot(){
   const bs=el('bSave');if(bs)bs.onclick=()=>requestSave(()=>{renderBody();setStatus('Saved '+relTime(new Date().toISOString())+'.');});
   const bg=el('bGenerate');if(bg)bg.onclick=genPackage;const lb=el('bLauncherBack');if(lb)lb.onclick=openMenu;
   const bc=el('bContacts');if(bc)bc.onclick=openContacts; const cb2=el('bContactsBack');if(cb2)cb2.onclick=openMenu;
-  const so=el('bSignOut');if(so)so.onclick=async()=>{await supaClient.auth.signOut();};
+  const so=el('bSignOut');if(so)so.onclick=async()=>{if(supaClient)await supaClient.auth.signOut();};
   const sc=el('scrim');if(sc&&sc.addEventListener)sc.addEventListener('click',e=>{if(e.target===sc)closeModal();});
   openMenu();
 }
+const SELFTEST=(typeof location!=='undefined')&&/[?&]selftest=1(&|$)/.test(location.search||'');
 window.addEventListener('DOMContentLoaded',async()=>{
+  /* ?selftest=1 — a clickable form with no sign-in and no live data, so the
+     things only a human could check (does Enter save? does the badge fit?) can
+     be checked by a machine instead.
+
+     It NEVER builds a Supabase client. That is the whole safety argument: the
+     isolation is structural, not a permission that could be misconfigured. It
+     writes to its own localStorage key, and the real record is unreachable from
+     here because no connection to it is ever opened. */
+  if(SELFTEST){
+    mpdb=await makeDb(localAdapter('rcs_selftest'));
+    await boot();
+    document.title='SELFTEST — '+document.title;
+    return;
+  }
   if(!(window.supabase&&window.SUPABASE_URL&&window.SUPABASE_ANON_KEY)){const e=el('authErr');if(e)e.textContent='Supabase is not configured.';show('Auth');return;}
   supaClient=window.supabase.createClient(window.SUPABASE_URL,window.SUPABASE_ANON_KEY);
   supaClient.auth.onAuthStateChange((event)=>{if(event==='SIGNED_OUT')showAuthScreen();});
@@ -4497,7 +4526,7 @@ function contactDialog(c){c=c||{};
   ['ccN','ccE','ccP'].forEach(id=>{const ff=el(id);if(ff&&ff.addEventListener)ff.addEventListener('keydown',ev=>{if(ev.key!=='Enter')return;ev.preventDefault();const d=(el('ccP').value||'').replace(/\D/g,'');if(d.length===0||d.length===10)el('dlgOk').click();});});
   el('dlgCancel').onclick=closeModal;
   el('dlgOk').onclick=async()=>{const patch={name:(el('ccN').value||'').trim(),email:(el('ccE').value||'').trim(),phone:(el('ccP').value||'').trim()};closeModal();try{if(c.id)await mpdb.updateContact(c.id,patch);else await mpdb.addContact(patch);renderContacts();}catch(e){saveFailedModal(e);}};}
-if(typeof module!=='undefined')module.exports={DESIG,desigName,rsParseUnitType,fmtPhone,fmtDate,sMoney,sPct,sK,analysis,uaResolvedOf,uaConflict,uaUnresolved,renderMenu,renderLauncher,openMenu,openForm,openLauncher,ringSvg,niceDate,isDirty,overrideCount,isStateKey,attnFlags,pbUtil,clearUncheckedWriteins,srcOf:(k)=>srcOf(k),__openForm:(pid)=>{activePid=pid;return openForm('RCS');},__openCycleForm:(pid,cid)=>{activePid=pid;return openCycleForm(cid);},__renderBody:()=>renderBody(),__docMissing:(id)=>docMissing(id).map(x=>x.label),__docWarns:(id)=>docWarns(id).map(x=>x.label),__edit:(k,v)=>{form=store.editForm(form,k,v);},getVal:(k)=>get(k),modeOf:(kk)=>modeOf(kk),fieldKeys:(k)=>fieldKeys(k),keysCanSave:(ks)=>keysCanSave(ks),keysCanRevert:(ks)=>keysCanRevert(ks),keysNewDirty:(ks)=>keysNewDirty(ks),__revert:(k)=>store.revertForm(form,k),coupledKeys:(k)=>coupledKeys(k),__firstPid:()=>{const ps=mpdb?mpdb.listProperties():[];return ps.length?ps[0].id:null;},__boxes:(i)=>({ua:uaBox(i),safmr:safmrBox(i)}),__saveField:async(k)=>{form=await store.saveField(form,k);},__set:(f,u)=>{form=f;UNITS=u;},desigColors:(k)=>desigColors(k),__cell:(k)=>form[k],
+const __API={DESIG,desigName,rsParseUnitType,fmtPhone,fmtDate,sMoney,sPct,sK,analysis,uaResolvedOf,uaConflict,uaUnresolved,renderMenu,renderLauncher,openMenu,openForm,openLauncher,ringSvg,niceDate,isDirty,overrideCount,isStateKey,attnFlags,pbUtil,clearUncheckedWriteins,srcOf:(k)=>srcOf(k),__openForm:(pid)=>{activePid=pid;return openForm('RCS');},__openCycleForm:(pid,cid)=>{activePid=pid;return openCycleForm(cid);},__renderBody:()=>renderBody(),__docMissing:(id)=>docMissing(id).map(x=>x.label),__docWarns:(id)=>docWarns(id).map(x=>x.label),__edit:(k,v)=>{form=store.editForm(form,k,v);},getVal:(k)=>get(k),modeOf:(kk)=>modeOf(kk),fieldKeys:(k)=>fieldKeys(k),keysCanSave:(ks)=>keysCanSave(ks),keysCanRevert:(ks)=>keysCanRevert(ks),keysNewDirty:(ks)=>keysNewDirty(ks),__revert:(k)=>store.revertForm(form,k),coupledKeys:(k)=>coupledKeys(k),__firstPid:()=>{const ps=mpdb?mpdb.listProperties():[];return ps.length?ps[0].id:null;},__boxes:(i)=>({ua:uaBox(i),safmr:safmrBox(i)}),__saveField:async(k)=>{form=await store.saveField(form,k);},__set:(f,u)=>{form=f;UNITS=u;},desigColors:(k)=>desigColors(k),__cell:(k)=>form[k],
   /* The undo run. __editCell is the text box's input handler in miniature —
      push the cell, then write it the way that handler does — so a suite can
      build a run of edits without synthesising DOM events. */
@@ -4515,6 +4544,8 @@ if(typeof module!=='undefined')module.exports={DESIG,desigName,rsParseUnitType,f
      mpdb and dying before its first assertion. Give it the local adapter instead
      of loosening the real boot. */
   __localDb:async()=>{mpdb=await makeDb(localAdapter('rcs_test'));return mpdb;}};
+if(typeof module!=='undefined')module.exports=__API;
+if(SELFTEST)window.__t=__API;   // browser gets the identical surface, flag-gated
 /* ============ Tier 3: a scanned schedule, read by OCR ============
    The recognition itself runs server-side (supabase/functions/ocr-rs -> Azure
    Document Intelligence). It cannot run inside the edge function — Supabase caps

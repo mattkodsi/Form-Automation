@@ -118,12 +118,26 @@ function showAuthScreen(msg){show('Auth');
     'auth: showAuthScreen → access notice')
 
 app = patch(app,
-    "  const so=el('bSignOut');if(so)so.onclick=async()=>{await supaClient.auth.signOut();};",
+    "  const so=el('bSignOut');if(so)so.onclick=async()=>{if(supaClient)await supaClient.auth.signOut();};",
     "  const so=el('bSignOut');if(so)so.onclick=()=>{location.href='/.auth/logout?post_logout_redirect_uri=/';};",
     'auth: sign-out → Easy Auth logout')
 
 app = patch(app,
     """window.addEventListener('DOMContentLoaded',async()=>{
+  /* ?selftest=1 — a clickable form with no sign-in and no live data, so the
+     things only a human could check (does Enter save? does the badge fit?) can
+     be checked by a machine instead.
+
+     It NEVER builds a Supabase client. That is the whole safety argument: the
+     isolation is structural, not a permission that could be misconfigured. It
+     writes to its own localStorage key, and the real record is unreachable from
+     here because no connection to it is ever opened. */
+  if(SELFTEST){
+    mpdb=await makeDb(localAdapter('rcs_selftest'));
+    await boot();
+    document.title='SELFTEST — '+document.title;
+    return;
+  }
   if(!(window.supabase&&window.SUPABASE_URL&&window.SUPABASE_ANON_KEY)){const e=el('authErr');if(e)e.textContent='Supabase is not configured.';show('Auth');return;}
   supaClient=window.supabase.createClient(window.SUPABASE_URL,window.SUPABASE_ANON_KEY);
   supaClient.auth.onAuthStateChange((event)=>{if(event==='SIGNED_OUT')showAuthScreen();});
