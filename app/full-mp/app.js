@@ -142,9 +142,14 @@ function srcRevertCell(cusKey){
   form=store.editForm(form,sp.srcKey,o.write);
   form=store.editForm(form,sp.cusKey,wantCus);
   return true;}
-function modeOf(kk){const keys=Array.isArray(kk)?kk:[kk];
-  for(const k of keys){const st=srcCellState(k);if(st!=null){if(st==='overridden')return 'over';if(st==='new')return 'new';if(st==='database')return '';}}
-  if(keys.some(k=>srcOf(k)==='overridden')||keys.some(offFile))return 'over';if(keys.some(k=>srcOf(k)==='new'&&get(k)!==''&&get(k)!=null))return 'new';if(keys.some(k=>srcOf(k)==='this-cycle'))return 'cycle';return '';}
+function modeOf(kk){const keys=Array.isArray(kk)?kk:[kk];let _db=false;
+  for(const k of keys){const st=srcCellState(k);if(st!=null){if(st==='overridden')return 'over';if(st==='new')return 'new';if(st==='database')_db=true;}}
+  /* Judged on the figure alone a source-backed cell can read "on file" while its
+     POINTER has moved: pick a different source and the cell painted amber with
+     its pair still hidden, so the change could be neither saved nor reverted.
+     An override anywhere in the pair outranks the figure's own verdict. */
+  if(keys.some(k=>srcOf(k)==='overridden')||keys.some(offFile))return 'over';
+  if(_db)return '';if(keys.some(k=>srcOf(k)==='new'&&get(k)!==''&&get(k)!=null))return 'new';if(keys.some(k=>srcOf(k)==='this-cycle'))return 'cycle';return '';}
 function ovIcons(kk){const keys=Array.isArray(kk)?kk:[kk];const j=keys.join(',');const m=modeOf(keys);
   // A parsed value is exactly as unsaved as a typed one, so it gets the same badge.
   // It costs no more room either: cycle, like new, has nothing to revert TO, so the
@@ -427,9 +432,9 @@ function uaBox(i){const src=get('units.'+i+'.ua_source')||defUaSrc(i),exec=get('
   const menu='<div class="uamenu">'+srcOptRow('data-uaopt="exec" data-uai="'+i+'"',(exec!==''&&exec!=null)?('$'+fmtMoney(exec)):'','Executed RS',src==='exec')+srcOptRow('data-uaopt="rcs" data-uai="'+i+'"',(rcs!==''&&rcs!=null)?('$'+fmtMoney(rcs)):'','RCS report',src==='rcs')+'<div class="uaopt'+(src==='custom'?' sel':'')+'" data-uaopt="custom" data-uai="'+i+'">Custom…</div></div>';
   return '<div class="rbox uacell" data-box="'+boxKeyUA+'" style="background:'+c[1]+';border-left-color:'+c[0]+'"><div class="uadrop"><div class="uatrigger" tabindex="0"><span class="ualab">'+lab+'</span><span class="cvx">▾</span></div>'+menu+'</div></div>';}
 function uaNoteCell(i){const conf=uaConflict(i),overSrc=srcOf('units.'+i+'.ua_source')==='overridden';if(!conf&&!overSrc)return '';const ex=get('units.'+i+'.ua_exec'),rc=get('units.'+i+'.ua_rcs');
-  if(conf&&uaUnresolved(i))return '<div class="ucnote warn">⚠ exec $'+ex+' · RCS $'+rc+' <span class="pick"><button class="urev sv" data-uaok="'+i+'">approve $'+uaResolvedOf(i)+'</button></span></div>';
+  if(conf&&uaUnresolved(i))return '<div class="ucnote warn">⚠ exec '+money(numf(ex))+' · RCS '+money(numf(rc))+' <span class="pick"><button class="urev sv" data-uaok="'+i+'">approve '+money(uaResolvedOf(i))+'</button></span></div>';
   const src=get('units.'+i+'.ua_source')||defUaSrc(i);const chosen=src==='rcs'?'RCS':(src==='custom'?'custom':'exec RS');
-  return '<div class="ucnote ok">✓ '+chosen+(src==='custom'?'':' ($'+uaResolvedOf(i)+')')+'</div>';}
+  return '<div class="ucnote ok">✓ '+chosen+(src==='custom'?'':' ('+money(uaResolvedOf(i))+')')+'</div>';}
 function typeConflict(i){const br=get('units.'+i+'.br'),ba=get('units.'+i+'.ba'),brR=get('units.'+i+'.br_rcs'),baR=get('units.'+i+'.ba_rcs');const has=(brR!==''&&brR!=null)||(baR!==''&&baR!=null);return has&&((brR&&brR!==br)||(baR&&baR!==ba));}
 function typeReviewedOf(i){return get('units.'+i+'.type_reviewed')==='1';}
 function typeUnresolved(i){return typeConflict(i)&&!typeReviewedOf(i);}
@@ -462,7 +467,7 @@ function safmrBox(i){const src=get('units.'+i+'.safmr_source')||defSafmrSrc(i),h
   const menu='<div class="uamenu">'+srcOptRow('data-safmropt="hud" data-safmri="'+i+'"',(hud!==''&&hud!=null)?('$'+fmtMoney(hud)):'','HUD API',src==='hud')+srcOptRow('data-safmropt="rcs" data-safmri="'+i+'"',(rcs!==''&&rcs!=null)?('$'+fmtMoney(rcs)):'','RCS report',src==='rcs')+'<div class="uaopt'+(src==='custom'?' sel':'')+'" data-safmropt="custom" data-safmri="'+i+'">Custom…</div></div>';
   return '<div class="rbox uacell" data-box="'+boxKeySA+'" style="background:'+c[1]+';border-left-color:'+c[0]+'"><div class="uadrop"><div class="uatrigger" tabindex="0"><span class="ualab">'+lab+'</span><span class="cvx">▾</span></div>'+menu+'</div></div>';}
 function safmrNote(i){const res=safmrResolvedOf(i),hud=numf(get('units.'+i+'.safmr_hud')),rcs=numf(get('units.'+i+'.safmr_rcs'));
-  if(safmrUnresolved(i))return '<div class="ucnote warn">⚠ HUD $'+hud+' · RCS $'+rcs+' <span class="pick"><button class="urev sv" data-safmrok="'+i+'">approve $'+res+'</button></span></div>';
+  if(safmrUnresolved(i))return '<div class="ucnote warn">⚠ HUD '+money(hud)+' · RCS '+money(rcs)+' <span class="pick"><button class="urev sv" data-safmrok="'+i+'">approve '+money(res)+'</button></span></div>';
   if(res>0){const pro=numf(get('units.'+i+'.proposed'));if(pro>0)return '<div class="ucnote '+(pro<res?'ok':'warn')+'">'+(pro<res?'✓ ':'✗ ')+'$'+pro.toLocaleString()+(pro<res?' < ':' ≥ ')+'$'+res.toLocaleString()+' · 150% SAFMR</div>';return '<div class="ucnote ok">150% SAFMR $'+res.toLocaleString()+'</div>';}
   if(numf(get('units.'+i+'.num_units'))>0)return '<div class="ucnote warn">⚠ needed for the 150% test</div>';
   return '';}
@@ -1253,10 +1258,10 @@ function uafAnalysis(){let any=false;const dec=[],mismatch=[];
 function fmtFactor(f){return f>0?String(Math.round(f*10000)/10000):'—';}
 function uafResHtml(i){const r=uafRow(i);if(!(r.curSum>0))return '';
   const p=r.parts.filter(x=>x.cur>0);
-  const calc=p.map(x=>'$'+Math.round(x.cur)+' × '+(x.f>0?fmtFactor(x.f):'?')+(x.raw?(' = $'+x.raw.toFixed(2)+' → <b>$'+x.rounded+'</b>'):'')).join(' &nbsp;·&nbsp; ');
+  const calc=p.map(x=>money(x.cur)+' × '+(x.f>0?fmtFactor(x.f):'?')+(x.raw?(' = '+money2(x.raw)+' → <b>'+money(x.rounded)+'</b>'):'')).join(' &nbsp;·&nbsp; ');
   const ua=uaResolvedOf(i);
-  const mis=(ua>0&&Math.round(r.curSum)!==Math.round(ua))?' <span style="color:#b45309">⚠ components total $'+Math.round(r.curSum)+' ≠ current UA $'+Math.round(ua)+' ('+secRef(6)+')</span>':'';
-  const tot=r.newSum>0?('Total: $'+Math.round(r.curSum)+' → <b>$'+r.newSum+'</b>'+(r.newSum<r.curSum?' <span style="color:#b45309">(decrease)</span>':'')):'';
+  const mis=(ua>0&&Math.round(r.curSum)!==Math.round(ua))?' <span style="color:#b45309">⚠ components total '+money(r.curSum)+' ≠ current UA '+money(ua)+' ('+secRef(6)+')</span>':'';
+  const tot=r.newSum>0?('Total: '+money(r.curSum)+' → <b>'+money(r.newSum)+'</b>'+(r.newSum<r.curSum?' <span style="color:#b45309">(decrease)</span>':'')):'';
   return calc+(tot?'<br>'+tot:'')+mis;}
 function renderUaf(){
   const fy=get('uaf.factor_fy'),pd=get('uaf.factor_pubdate');const st=get('property.addr_state');
@@ -1461,10 +1466,13 @@ async function commitPending(){if(!_pending||!_pending.length)return;const keys=
    all three, or the cells whose pair happens to sit elsewhere have no keyboard
    route to save or revert at all — which was every unit row once the pair moved
    out from inside the cell. */
-function cellActBtn(cell,sel,mode){if(!cell)return null;
+/* A three-part cell (bedroom / bath / designation) shares ONE data-box, so a
+   lookup from the bath resolved to the bedroom's pair: Enter saved the wrong
+   sub-cell and Escape reverted it. The trigger knows its own key — take it. */
+function cellActBtn(cell,sel,mode,key){if(!cell)return null;
   const m=mode?('[data-mode="'+mode+'"]'):'[data-mode]:not([data-mode=""])';
   const inIc=cell.querySelector('.ovic'+m+' '+sel);if(inIc)return inIc;
-  const box=cell.getAttribute&&cell.getAttribute('data-box');if(!box)return null;
+  const box=key||(cell.getAttribute&&cell.getAttribute('data-box'));if(!box)return null;
   const note=document.querySelector('.ovnote[data-ov="'+box+'"]'+m);
   if(note){const b=note.querySelector(sel);if(b)return b;}
   const row=cell.closest?cell.closest('.urow,.pdrow'):null;
@@ -1472,7 +1480,7 @@ function cellActBtn(cell,sel,mode){if(!cell)return null;
     for(let i=0;i<list.length;i++){const ks=(list[i].getAttribute('data-ovic')||'').split(',');
       if(ks.indexOf(box)>=0){const b=list[i].querySelector(sel);if(b)return b;}}}
   return null;}
-function revertCellIfOver(cell){const b=cellActBtn(cell,'[data-rev],[data-revaddr]','over');if(b){b.click();return true;}return false;}
+function revertCellIfOver(cell,key){const b=cellActBtn(cell,'[data-rev],[data-revaddr]','over',key);if(b){b.click();return true;}return false;}
 function isToggleKey(k){return /^(check\.\d+|partb\.(equipment|utilities|services)\.\d+|partb\.fuel\.\d+|partb\.writein\.[a-z0-9]+\.(on|fuel))$/.test(k);}
 function fixSavedToggles(){Object.keys(DBSNAP||{}).forEach(k=>{if(isToggleKey(k)){const dv=(DBSNAP[k]&&DBSNAP[k].value!=null)?DBSNAP[k].value:'';form[k]={value:dv,source:'database',saved_at:(DBSNAP[k]&&DBSNAP[k].saved_at)||null,prior_value:null,prior_source:null,db_value:dv};}});}
 function snapOf(keys){const s={};keys.forEach(k=>{s[k]=form[k]?Object.assign({},form[k]):null;});return s;}
@@ -1506,6 +1514,12 @@ function pushUndo(keys){const sig=undoSig(keys);const top=_undoChain[_undoChain.
 function snapPend(keys){return pushUndo(keys);}
 function pushCellUndo(k){return pushUndo(undoScope(k));}
 function clearUndoChain(){_undoChain=[];}
+/* Reverting a cell is not another edit to walk back — it is the end of that
+   cell's run. Pushing the revert made Escape RE-APPLY the value the user had
+   just explicitly undone, because a cell edited twice leaves an entry holding
+   the intermediate value that the revert cannot reach. So the revert forgets
+   every entry that touches those keys and Escape walks on to the cell before. */
+function undoForget(keys){_undoChain=_undoChain.filter(e=>!e.keys.some(k=>keys.indexOf(k)>=0));}
 function undoDrop(snap){const top=_undoChain[_undoChain.length-1];if(top&&top.snap===snap)_undoChain.pop();}
 /* Restoring puts the whole CELL back — provenance and all, since source,
    prior_value and db_value ride along in the snapshot. That matters most for
@@ -1534,7 +1548,7 @@ function undoStep(){while(_undoChain.length){const e=_undoChain.pop();
    already reverted. The cell looked untouched while the form was still dirty —
    which is what put a "Save changes before leaving?" in front of a form nobody
    had visibly changed — and saving would have quietly persisted the stray value. */
-function revertKeys(keys){let any=false;
+function revertKeys(keys){undoForget(keys);let any=false;
   for(const k of keys){if(srcRevertCell(k))any=true;}      // source-backed cells revert as a cell
 
   keys.forEach(k=>{if(store.revertForm(form,k)){any=true;return;}
@@ -1542,7 +1556,11 @@ function revertKeys(keys){let any=false;
     if(String(c.value==null?'':c.value)!==String(c.db_value)){form=store.editForm(form,k,c.db_value);any=true;}});
   return any;}
 function fieldKeys(k){if(k==='ca.name')return ['ca.prefix','ca.name'];const gb=groupOf(k);if(gb)return ADDR_GROUPS[gb].slice();if(k.indexOf('partb.writein.')===0&&k.indexOf('.',14)<0){const ks=[k,k+'.on'];if(k.slice(14)==='u1'||(k+'.fuel') in form)ks.push(k+'.fuel');return ks;}return [k];}
-function coupledKeys(k){if(k.indexOf('units.')===0){if(k.slice(-10)==='.ua_custom')return [k,k.slice(0,-10)+'.ua_source'];if(k.slice(-13)==='.safmr_custom')return [k,k.slice(0,-13)+'.safmr_source'];}if(k==='rent_schedule.date_eff_custom')return [k,'rent_schedule.date_eff_source'];if(k==='ocaf.factor_custom')return [k,'ocaf.factor_src'];return [k];}
+/* The reviewed flag rides with the pair. Left out, the ↺ button put the figure
+   back and stranded the flag set — so the ⚠ conflict banner stayed hidden on a
+   value nobody had approved, and the flag was the last thing holding the form
+   dirty. Escape got this right; only the button missed it. */
+function coupledKeys(k){if(k.indexOf('units.')===0){if(k.slice(-10)==='.ua_custom')return [k,k.slice(0,-10)+'.ua_source',k.slice(0,-10)+'.ua_reviewed'];if(k.slice(-13)==='.safmr_custom')return [k,k.slice(0,-13)+'.safmr_source',k.slice(0,-13)+'.safmr_reviewed'];}if(k==='rent_schedule.date_eff_custom')return [k,'rent_schedule.date_eff_source'];if(k==='ocaf.factor_custom')return [k,'ocaf.factor_src'];return [k];}
 function keysCanRevert(keys){return keys.some(k=>srcOf(k)==='overridden');}
 function keysNewDirty(keys){return !keysCanRevert(keys)&&keys.some(k=>(srcOf(k)==='new'||srcOf(k)==='this-cycle')&&String(get(k)==null?'':get(k)).trim()!=='');} // a parsed cell is unsaved too, so Enter and the tick must both reach it
 function keysCanSave(keys){return keysCanRevert(keys)||keysNewDirty(keys);}
@@ -1727,26 +1745,27 @@ function wireBody(){
          value and left the source on Custom. The cell showed empty, and the
          allowance it had been displaying resolved to 0 for the 150% test and for
          every generated document. */
-      if(revertKeys(_rk)){e.preventDefault();e.stopPropagation();refreshIfPrereq(_rk);_refocusSel='[data-k="'+k+'"]';renderBody();setStatus(String(get(k)==null?'':get(k)).trim()!==''?'Reverted your change to the on-file value.':'Cleared your unsaved entry.');}else if(srcOf(k)==='new'&&(inp.value||'')!==''){e.preventDefault();e.stopPropagation();const _clr=groupOf(k)?[k]:_keys;_clr.forEach(kk=>store.editForm(form,kk,''));_refocusSel='[data-k="'+k+'"]';renderBody();setStatus('Cleared your unsaved entry.');}return;}e.preventDefault();if(_keys.length===1&&/^principals\.\d+\./.test(_keys[0])){const pi=+_keys[0].match(/^principals\.(\d+)\./)[1];if(!principalHasData(pi)){if(PRINCIPALS.length>1){Object.keys(form).forEach(kk=>{if(kk.indexOf('principals.'+pi+'.')===0)delete form[kk];});PRINCIPALS=PRINCIPALS.filter(x=>x!==pi);renderBody();setStatus('Empty principal row removed.');}return;}}if(handleZeroUnitCommit(_keys))return;if(k==='poc.phone'||k==='appr.phone'){const _d=(inp.value||'').replace(/[^0-9]/g,'');if(_d.length!==0&&_d.length!==10){setStatus('Enter a complete 10-digit phone before saving.');return;}}if(!keysCanSave(_keys))return;_keys.forEach(kk=>{if(kk.indexOf('partb.writein.')===0&&kk.indexOf('.',14)<0&&kk.slice(14)!=='u1')clearUncheckedWriteins([kk.slice(14)]);});const _sk=[];_keys.forEach(kk=>coupledKeys(kk).forEach(x=>{if(_sk.indexOf(x)<0)_sk.push(x);}));if(groupOf(k)==='tenant.mgmt'&&_sk.indexOf('tenant.mgmt_source')<0)_sk.push('tenant.mgmt_source');try{form=await store.saveFields(form,_sk);}catch(e){saveFailed(e);return;}await refreshSnap();snapForm(_sk);clearUndoChain();_refocusSel='[data-k="'+k+'"]';renderBody();setStatus('Saved this field to the database.');});if(wion)inp.addEventListener('focus',()=>{if(inp.value&&get(wion)!=='1'){form=store.editForm(form,wion,'1');const cb=inp.closest('.cb');if(cb){cb.classList.remove('unchecked','empty');cb.classList.add('checked');const bx=cb.querySelector('.box');if(bx)bx.textContent='✓';}}});});
+      if(revertKeys(_rk)){e.preventDefault();e.stopPropagation();refreshIfPrereq(_rk);_refocusSel='[data-k="'+k+'"]';renderBody();setStatus(String(get(k)==null?'':get(k)).trim()!==''?'Reverted your change to the on-file value.':'Cleared your unsaved entry.');}else if(srcOf(k)==='new'&&(inp.value||'')!==''){e.preventDefault();e.stopPropagation();const _clr=groupOf(k)?[k]:_keys;_clr.forEach(kk=>store.editForm(form,kk,''));_refocusSel='[data-k="'+k+'"]';renderBody();setStatus('Cleared your unsaved entry.');}return;}e.preventDefault();if(_keys.length===1&&/^principals\.\d+\./.test(_keys[0])){const pi=+_keys[0].match(/^principals\.(\d+)\./)[1];if(!principalHasData(pi)){if(PRINCIPALS.length>1){Object.keys(form).forEach(kk=>{if(kk.indexOf('principals.'+pi+'.')===0)delete form[kk];});PRINCIPALS=PRINCIPALS.filter(x=>x!==pi);renderBody();setStatus('Empty principal row removed.');}return;}}if(handleZeroUnitCommit(_keys))return;if(k==='poc.phone'||k==='appr.phone'){const _d=(inp.value||'').replace(/[^0-9]/g,'');if(_d.length!==0&&_d.length!==10){setStatus('Enter a complete 10-digit phone before saving.');return;}}if(!keysCanSave(_keys))return;_keys.forEach(kk=>{if(kk.indexOf('partb.writein.')===0&&kk.indexOf('.',14)<0&&kk.slice(14)!=='u1')clearUncheckedWriteins([kk.slice(14)]);});const _sk=[];_keys.forEach(kk=>coupledKeys(kk).forEach(x=>{if(_sk.indexOf(x)<0)_sk.push(x);}));if(groupOf(k)==='tenant.mgmt'&&_sk.indexOf('tenant.mgmt_source')<0)_sk.push('tenant.mgmt_source');try{form=await store.saveFields(form,_sk);}catch(e){saveFailed(e);return;}await refreshSnap();snapForm(_sk);clearUndoChain();_pending=null;_pendingSnap=null;_refocusSel='[data-k="'+k+'"]';renderBody();setStatus('Saved this field to the database.');});if(wion)inp.addEventListener('focus',()=>{if(inp.value&&get(wion)!=='1'){form=store.editForm(form,wion,'1');const cb=inp.closest('.cb');if(cb){cb.classList.remove('unchecked','empty');cb.classList.add('checked');const bx=cb.querySelector('.box');if(bx)bx.textContent='✓';}}});});
   document.querySelectorAll('select[data-k]').forEach(sel=>{const k=sel.getAttribute('data-k');sel.addEventListener('change',()=>{pushCellUndo(k);form=store.editForm(form,k,sel.value);paintCell(k);renderRail();renderAttention();});});
   document.querySelectorAll('input[data-cb]').forEach(c=>{const k=c.getAttribute('data-cb');c.addEventListener('change',()=>{_pendingSnap=snapPend([k]);form=store.editForm(form,k,c.checked?'1':'');_pending=[k];_refocusSel='[data-cb="'+k+'"]';renderBody();});});
-  document.querySelectorAll('[data-fuel]').forEach(fl=>fl.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();const k=fl.getAttribute('data-fuel');const cur=(form[k]&&form[k].value)||'';const nx=cur===''?'E':(cur==='E'?'F':(cur==='F'?'G':''));_pendingSnap=snapPend([k]);form=store.editForm(form,k,nx);_pending=[k];renderBody();}));
-  document.querySelectorAll('[data-fuel3]').forEach(fl=>fl.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();const k=fl.getAttribute('data-fuel3');const base=k.slice(0,k.lastIndexOf('.fuel'));if(!get(base))return;const cur=(form[k]&&form[k].value)||'';const nx=cur===''?'E':(cur==='E'?'F':(cur==='F'?'G':''));_pendingSnap=snapPend([k]);form=store.editForm(form,k,nx);_pending=[k];renderBody();}));
+  document.querySelectorAll('[data-fuel]').forEach(fl=>fl.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();const k=fl.getAttribute('data-fuel');const cur=(form[k]&&form[k].value)||'';const nx=cur===''?'E':(cur==='E'?'F':(cur==='F'?'G':''));_pendingSnap=snapPend([k]);form=store.editForm(form,k,nx);_pending=[k];_refocusSel='[data-fuel="'+k+'"]';renderBody();}));
+  document.querySelectorAll('[data-fuel3]').forEach(fl=>fl.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();const k=fl.getAttribute('data-fuel3');const base=k.slice(0,k.lastIndexOf('.fuel'));if(!get(base))return;const cur=(form[k]&&form[k].value)||'';const nx=cur===''?'E':(cur==='E'?'F':(cur==='F'?'G':''));_pendingSnap=snapPend([k]);form=store.editForm(form,k,nx);_pending=[k];_refocusSel='[data-fuel3="'+k+'"]';renderBody();}));
   document.querySelectorAll('[data-wibox]').forEach(bx=>bx.addEventListener('click',e=>{e.preventDefault();const base=bx.getAttribute('data-wibox');if(!get(base))return;const on=get(base+'.on')==='1';_pendingSnap=snapPend([base+'.on']);form=store.editForm(form,base+'.on',on?'':'1');_pending=[base+'.on'];_refocusSel='[data-wibox="'+base+'"]';renderBody();}));
-  document.querySelectorAll('button[data-rev]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();const _ks=b.getAttribute('data-rev').split(',');const _rv=[];_ks.forEach(k=>coupledKeys(k).forEach(x=>{if(_rv.indexOf(x)<0)_rv.push(x);}));pushUndo(_rv);revertKeys(_rv);refreshIfPrereq(_ks);renderBody();setStatus('Reverted to the on-file value.');}));
-  document.querySelectorAll('button[data-revaddr]').forEach(b=>b.addEventListener('click',()=>{const _box=b.getAttribute('data-revaddr');const g=(ADDR_GROUPS[_box]||ADDR).slice();if(_box==='tenant.mgmt')g.push('tenant.mgmt_source');pushUndo(g);revertKeys(g);refreshIfPrereq(g);renderBody();setStatus('Address reverted.');}));
-  document.querySelectorAll('button[data-save1]').forEach(b=>b.addEventListener('click',async e=>{e.preventDefault();e.stopPropagation();const keys=[];b.getAttribute('data-save1').split(',').forEach(_k=>coupledKeys(_k).forEach(x=>{if(keys.indexOf(x)<0)keys.push(x);}));if(handleZeroUnitCommit(keys))return;for(const _pk of ['poc.phone','appr.phone'])if(keys.indexOf(_pk)>=0){const _d=(get(_pk)||'').replace(/\D/g,'');if(_d.length!==0&&_d.length!==10){setStatus('Enter a complete 10-digit phone before saving.');return;}}keys.forEach(k=>{const m=k.match(/^partb\.writein\.(e1|e2|e3|e4|e5|s1|s2|s3|s4|s5|s6)(\.on)?$/);if(m)clearUncheckedWriteins([m[1]]);});try{form=await store.saveFields(form,keys);}catch(e){saveFailed(e);return;}await refreshSnap();snapForm(keys);clearUndoChain();renderBody();setStatus('Saved just that field to the database.');}));
-  document.querySelectorAll('button[data-save1addr]').forEach(b=>b.addEventListener('click',async()=>{const _box=b.getAttribute('data-save1addr');const ks=(ADDR_GROUPS[_box]||ADDR).slice();if(_box==='tenant.mgmt')ks.push('tenant.mgmt_source');try{form=await store.saveFields(form,ks);}catch(e){saveFailed(e);return;}await refreshSnap();snapForm(ks);clearUndoChain();renderBody();setStatus('Saved the address to the database.');}));
+  document.querySelectorAll('button[data-rev]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();const _ks=b.getAttribute('data-rev').split(',');const _rv=[];_ks.forEach(k=>coupledKeys(k).forEach(x=>{if(_rv.indexOf(x)<0)_rv.push(x);}));revertKeys(_rv);refreshIfPrereq(_ks);renderBody();setStatus('Reverted to the on-file value.');}));
+  document.querySelectorAll('button[data-revaddr]').forEach(b=>b.addEventListener('click',()=>{const _box=b.getAttribute('data-revaddr');const g=(ADDR_GROUPS[_box]||ADDR).slice();if(_box==='tenant.mgmt')g.push('tenant.mgmt_source');revertKeys(g);refreshIfPrereq(g);renderBody();setStatus('Address reverted.');}));
+  document.querySelectorAll('button[data-save1]').forEach(b=>b.addEventListener('click',async e=>{e.preventDefault();e.stopPropagation();const keys=[];b.getAttribute('data-save1').split(',').forEach(_k=>coupledKeys(_k).forEach(x=>{if(keys.indexOf(x)<0)keys.push(x);}));if(handleZeroUnitCommit(keys))return;for(const _pk of ['poc.phone','appr.phone'])if(keys.indexOf(_pk)>=0){const _d=(get(_pk)||'').replace(/\D/g,'');if(_d.length!==0&&_d.length!==10){setStatus('Enter a complete 10-digit phone before saving.');return;}}keys.forEach(k=>{const m=k.match(/^partb\.writein\.(e1|e2|e3|e4|e5|s1|s2|s3|s4|s5|s6)(\.on)?$/);if(m)clearUncheckedWriteins([m[1]]);});try{form=await store.saveFields(form,keys);}catch(e){saveFailed(e);return;}await refreshSnap();snapForm(keys);clearUndoChain();_pending=null;_pendingSnap=null;renderBody();setStatus('Saved just that field to the database.');}));
+  document.querySelectorAll('button[data-save1addr]').forEach(b=>b.addEventListener('click',async()=>{const _box=b.getAttribute('data-save1addr');const ks=(ADDR_GROUPS[_box]||ADDR).slice();if(_box==='tenant.mgmt')ks.push('tenant.mgmt_source');try{form=await store.saveFields(form,ks);}catch(e){saveFailed(e);return;}await refreshSnap();snapForm(ks);clearUndoChain();_pending=null;_pendingSnap=null;renderBody();setStatus('Saved the address to the database.');}));
   document.querySelectorAll('.uatrigger').forEach(t=>{const d=t.closest('.uadrop');if(!d)return;
     const tog=()=>{const open=d.classList.contains('open');document.querySelectorAll('.uadrop.open').forEach(x=>x.classList.remove('open'));if(!open)d.classList.add('open');};
     const openIt=()=>{document.querySelectorAll('.uadrop.open').forEach(x=>x.classList.remove('open'));d.classList.add('open');};
-    const opts=()=>[...d.querySelectorAll('.uaopt')];
+    // a dim source row offers nothing to choose, so arrowing onto it is a dead stop
+    const opts=()=>[...d.querySelectorAll('.uaopt')].filter(o=>!o.classList.contains('srcdim'));
     const setHl=idx=>{const o=opts();o.forEach(x=>x.classList.remove('hl'));if(o[idx]){o[idx].classList.add('hl');o[idx].scrollIntoView({block:'nearest'});}};
     t.addEventListener('click',e=>{e.stopPropagation();tog();});
     t.addEventListener('focus',()=>{});
     t.addEventListener('keydown',e=>{if(e.target!==t)return;const o=opts();
       if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();if(!d.classList.contains('open'))openIt();let hi=o.findIndex(x=>x.classList.contains('hl'));hi=e.key==='ArrowDown'?(hi+1>=o.length?0:hi+1):(hi<=0?o.length-1:hi-1);setHl(hi);return;}
-      if(e.key==='Enter'){e.preventDefault();e.stopPropagation();const hl=d.querySelector('.uaopt.hl');if(d.classList.contains('open')&&hl){hl.click();}else if(d.classList.contains('open')){d.classList.remove('open');}else if(_pending&&_pending.length){commitPending();}else{const _sv=cellActBtn(d.closest('[data-box]'),'[data-save1],[data-save1addr]');if(_sv)_sv.click();else tog();}return;}
+      if(e.key==='Enter'){e.preventDefault();e.stopPropagation();const hl=d.querySelector('.uaopt.hl');if(d.classList.contains('open')&&hl){hl.click();}else if(d.classList.contains('open')){d.classList.remove('open');}else if(_pending&&_pending.length){commitPending();}else{const _sv=cellActBtn(d.closest('[data-box]'),'[data-save1],[data-save1addr]',null,t.getAttribute('data-trigfor'));if(_sv)_sv.click();else tog();}return;}
       if((e.key==='Backspace'||e.key==='Delete')&&d.classList.contains('cs')){e.preventDefault();const _co=d.querySelector('.uaopt[data-cskey]');const _ck=t.getAttribute('data-trigfor')||(_co&&_co.getAttribute('data-cskey'))||null;if(_ck){_pendingSnap=snapPend([_ck]);form=store.editForm(form,_ck,'');_pending=[_ck];_refocusSel='[data-trigfor="'+_ck+'"]';renderBody();}return;}if(e.key==='Escape'){if(d.classList.contains('open')){e.preventDefault();e.stopPropagation();d.classList.remove('open');}return;}if(e.key==='Tab'){d.classList.remove('open');return;}
       if(/^[a-zA-Z0-9]$/.test(e.key)){e.preventDefault();if(!d.classList.contains('open'))openIt();d._buf=((d._buf||'')+e.key).toUpperCase();clearTimeout(d._bufT);d._bufT=setTimeout(()=>{d._buf='';},800);let idx=o.findIndex(x=>x.textContent.trim().toUpperCase().startsWith(d._buf));if(idx<0&&d._buf.length>1){d._buf=e.key.toUpperCase();idx=o.findIndex(x=>x.textContent.trim().toUpperCase().startsWith(d._buf));}setHl(idx);return;}
     });});
@@ -1864,7 +1883,7 @@ document.addEventListener('click',e=>{document.querySelectorAll('.uadrop.open').
 document.addEventListener('keydown',e=>{const vis=v=>{const x=el('view'+v);return x&&x.style&&x.style.display!=='none';};if(e.key==='Tab'){_pending=null;_pendingSnap=null;_rsArm=false;return;}if(e.key==='Enter'){const ae=document.activeElement;const inText=!!ae&&/^(INPUT|TEXTAREA)$/.test(ae.tagName)&&ae.type!=='checkbox';
     if(_dlgEnter&&el('scrim')&&el('scrim').classList.contains('open')){e.preventDefault();_dlgEnter();return;}
     if(_rsArm&&!inText){const ra=el('rsApply');if(ra){e.preventDefault();_rsArm=false;ra.click();return;}}
-    if(!inText&&_pending&&_pending.length){e.preventDefault();commitPending();}return;}if(e.key!=='Escape')return;if(el('scrim')&&el('scrim').classList&&el('scrim').classList.contains('open')){closeModal();_pending=null;_pendingSnap=null;return;}const openD=document.querySelector('.uadrop.open');if(openD){e.preventDefault();openD.classList.remove('open');return;}if(vis('Form')){if(_pending&&_pending.length){e.preventDefault();revertPending();return;}if(_undoChain.length&&undoStep()){e.preventDefault();return;}const ae=document.activeElement;const cell=(ae&&ae.closest)?ae.closest('[data-box],.cb,.wi'):null;if(cell){let _sel=null;if(ae.getAttribute){if(ae.getAttribute('data-k'))_sel='[data-k="'+ae.getAttribute('data-k')+'"]';else if(ae.getAttribute('data-cb'))_sel='[data-cb="'+ae.getAttribute('data-cb')+'"]';else if(ae.classList&&ae.classList.contains('uatrigger'))_sel='[data-box="'+(cell.getAttribute('data-box')||'')+'"] .uatrigger';}_refocusSel=_sel;if(revertCellIfOver(cell)){e.preventDefault();return;}_refocusSel=null;}requestExit();return;}if(vis('Launcher')||vis('Contacts')){openMenu();}});
+    if(!inText&&_pending&&_pending.length){e.preventDefault();commitPending();}return;}if(e.key!=='Escape')return;if(el('scrim')&&el('scrim').classList&&el('scrim').classList.contains('open')){closeModal();_pending=null;_pendingSnap=null;return;}const openD=document.querySelector('.uadrop.open');if(openD){e.preventDefault();openD.classList.remove('open');return;}if(vis('Form')){if(_pending&&_pending.length){e.preventDefault();revertPending();return;}if(_undoChain.length&&undoStep()){e.preventDefault();return;}const ae=document.activeElement;const cell=(ae&&ae.closest)?ae.closest('[data-box],.cb,.wi'):null;if(cell){let _sel=null;if(ae.getAttribute){if(ae.getAttribute('data-k'))_sel='[data-k="'+ae.getAttribute('data-k')+'"]';else if(ae.getAttribute('data-cb'))_sel='[data-cb="'+ae.getAttribute('data-cb')+'"]';else if(ae.classList&&ae.classList.contains('uatrigger'))_sel='[data-box="'+(cell.getAttribute('data-box')||'')+'"] .uatrigger';}_refocusSel=_sel;if(revertCellIfOver(cell,(ae.getAttribute&&ae.getAttribute('data-trigfor'))||null)){e.preventDefault();return;}_refocusSel=null;}requestExit();return;}if(vis('Launcher')||vis('Contacts')){openMenu();}});
 let _mouseFocus=false,_lastClickSel=null,_lastClickNode=null,_lastClickAt=0;
 document.addEventListener('mousedown',e=>{_mouseFocus=true;_rsArm=false;setTimeout(()=>{_mouseFocus=false;},60);
   const t=e.target;_lastClickSel=null;_lastClickNode=(t&&t.getBoundingClientRect)?t:null;_lastClickAt=Date.now();
@@ -2167,7 +2186,7 @@ async function saveNow(afterSave,fixFirst){clearUncheckedWriteins(['e1','e2','e3
   deriveUnits();
   try{form=await store.saveToDb(form);if(mpdb)await(activeCid?mpdb.pruneCycleCells(activeCid,UNITS,NONREV,NS8,PRINCIPALS):mpdb.pruneUnitRows(activePid,UNITS,NONREV,NS8,PRINCIPALS));}
   catch(e){saveFailed(e);return;}
-  await refreshSnap();deriveUnits();if(firstFix==='left blank'&&form[fk])form[fk].source='new';snapForm();clearUndoChain();if(afterSave)afterSave();
+  await refreshSnap();deriveUnits();if(firstFix==='left blank'&&form[fk])form[fk].source='new';snapForm();clearUndoChain();_pending=null;_pendingSnap=null;if(afterSave)afterSave();
   if(firstFix)setStatus('Saved — but zero units cannot be committed: the first unit type\u2019s count was '+firstFix+'.');}
 function requestSave(afterSave){
   const first=UNITS[0];const fk='units.'+first+'.num_units';
@@ -2719,7 +2738,7 @@ if(typeof module!=='undefined')module.exports={DESIG,desigName,rsParseUnitType,f
   /* The three writers a suite cannot reach through the DOM: the one that puts a
      source-backed cell back on its own source, the one that reverts a group to a
      saved blank, and the sweep that drops a conflict flag whose conflict is gone. */
-  __srcSetSource:(ck,ch)=>srcSetSource(ck,ch),__revertKeys:(ks)=>revertKeys(ks),__syncReviewed:()=>syncReviewed(),
+  money,money2,__srcSetSource:(ck,ch)=>srcSetSource(ck,ch),__revertKeys:(ks)=>revertKeys(ks),__syncReviewed:()=>syncReviewed(),
   __undoDepth:()=>_undoChain.length,__undoStep:()=>undoStep(),__clearUndo:()=>clearUndoChain(),__undoScope:(k)=>undoScope(k),
   /* …and __saveCell is Enter in that same box: save the cell's keys, re-baseline
      them, end the run. The three calls, and their order, are the handler's. */

@@ -206,7 +206,35 @@ No hardcoded `✓`, no unconditional `+`, no `class="teal"` on a figure that can
 negative. Every tick, colour and sign is a function of the data. The six-document card
 once hardcoded a check for five of the six.
 
-## 16. A phone is saved only when complete
+## 16. No number reaches the screen except through a formatter
+
+| Kind | Use | Gives |
+|---|---|---|
+| money, whole | `money(n)` / `fmtMoney(x)` | `$3,495` |
+| money, cents | `money2(n)` | `$1,074.50` |
+| money, signed | `sMoney(n)` | `+$120` / `-$120` |
+| date | `fmtDate(iso)` / `fmtDateLong(v)` | `3/1/2026` / `March 1, 2026` |
+| phone | `fmtPhone(x)` | `(313) 555-0142` |
+| percentage | `sPct(n)` | `+4%` |
+
+Never interpolate a bare `get()`, a naked `Math.round`, or a raw `toFixed` into
+user-visible text. Values off `get()` are **strings** — pass them through `numf()` first.
+
+**Why:** twelve sites printed `$3495`, and the 150%-ceiling card printed `⚠ HUD $3495 ·
+RCS $3435` directly above a line reading `$3,495 < $3,600`. One card, two conventions —
+which reads as a rendering glitch rather than a house style.
+
+## 17. A rule belongs to the operation, not to the button
+
+Put the invariant in the function every path calls — `revertKeys`, `srcEditKey`,
+`cellActBtn` — never in one widget's click handler.
+
+**Why:** this has now failed three times. The phantom-dirty fix lived in the `.srcedit`
+handler and missed the return trip through the generic input. The "a revert is not a
+redo" fix lived in `[data-rev]`'s handler and missed the input's own Escape. If a
+behaviour is true of reverting, it goes in `revertKeys`.
+
+## 18. A phone is saved only when complete
 
 Ten digits or empty, enforced in all three save paths — `commitPending`, the
 `[data-save1]` click, and the input's own Enter handler. Add a phone field and you add

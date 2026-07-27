@@ -24,7 +24,7 @@ global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>
 const cp=require('child_process'),os=require('os'),path=require('path'),fs=require('fs');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=116;                // the count this file is known to run to the end
+const MIN_CHECKS=124;                // the count this file is known to run to the end
 let n=0,fails=0,verdict=null;
 const BAR='═'.repeat(68);
 function fail(msg,err){
@@ -200,8 +200,12 @@ const T=(label,v)=>eq(label,!!v,true);
   T('ua_custom not canRevert (nothing on file)', !app.keysCanRevert(['units.0.ua_custom']));
 
   console.log('\n─ coupled source-selector saves (mgmt + UA/SAFMR/date) ─');
-  eq('coupledKeys ua_custom', app.coupledKeys('units.0.ua_custom'), ['units.0.ua_custom','units.0.ua_source']);
-  eq('coupledKeys safmr_custom', app.coupledKeys('units.0.safmr_custom'), ['units.0.safmr_custom','units.0.safmr_source']);
+  /* Three keys, not two: the figure, the pointer that says where it came from,
+     and the flag that silenced the conflict warning. Leaving the flag out is how
+     the revert button put a figure back while the ⚠ banner stayed hidden on a
+     value nobody had approved — and stranded the form dirty on the flag alone. */
+  eq('coupledKeys ua_custom', app.coupledKeys('units.0.ua_custom'), ['units.0.ua_custom','units.0.ua_source','units.0.ua_reviewed']);
+  eq('coupledKeys safmr_custom', app.coupledKeys('units.0.safmr_custom'), ['units.0.safmr_custom','units.0.safmr_source','units.0.safmr_reviewed']);
   eq('coupledKeys date_eff', app.coupledKeys('rent_schedule.date_eff_custom'), ['rent_schedule.date_eff_custom','rent_schedule.date_eff_source']);
   eq('coupledKeys plain unchanged', app.coupledKeys('property.name'), ['property.name']);
   // mgmt: save a custom address (with its source), then "use property address" must read as OVERRIDE (orange)
@@ -325,6 +329,41 @@ const T=(label,v)=>eq(label,!!v,true);
   T('the flag is set',      app.getVal(revK)==='1');
   app.__syncReviewed();
   eq('with no conflict left to silence, the flag goes', app.getVal(revK), '');
+
+  console.log('\n─ nothing unwinds past a save, and a revert is not a redo ─');
+  /* Both of these showed the user a value the database did not hold. The tick
+     cleared the run but not the pending edit — and it sits INSIDE its own label,
+     which the document click handler exempts — so the next Escape restored a
+     PRE-save snapshot. The revert pushed itself onto the run, so Escape put back
+     the very value the user had just undone. */
+  app.__clearUndo();
+  app.__editCell('tenant.sender_name','Zzz Saved By Tick');
+  await app.__saveCell('tenant.sender_name');
+  eq('the save ends the run',                     app.__undoDepth(), 0);
+  T('so Escape has nothing to walk back',         !app.__undoStep());
+  eq('and the saved value stands',                app.getVal('tenant.sender_name'), 'Zzz Saved By Tick');
+
+  app.__clearUndo();
+  const nm0=app.getVal('property.name');
+  app.__editCell('property.name',nm0+'X');
+  app.__editCell('poc.name','Zzz Between');
+  app.__editCell('property.name',nm0+'Z');      // same cell twice, with another between
+  eq('three entries', app.__undoDepth(), 3);
+  app.__revertKeys(app.fieldKeys('property.name'));
+  app.__undoStep();
+  T('Escape after a revert does not re-apply what was reverted', app.getVal('property.name')!==nm0+'X');
+
+  console.log('\n─ a moved pointer earns a save/revert pair ─');
+  /* Judged on the figure alone the cell read "on file" while its source had
+     moved: amber, dirty, and no buttons to either keep it or put it back. */
+  app.__clearUndo();
+  await app.__saveCell('units.0.ua_custom');
+  app.__srcSetSource('units.0.ua_custom','rcs');
+  T('switching source alone shows the pair', app.modeOf(app.coupledKeys('units.0.ua_custom'))!=='');
+
+  console.log('\n─ every figure on screen carries its commas ─');
+  eq('four figures group in thousands', app.money(3495), '$3,495');
+  eq('and so do the ones with cents',   app.money2(1074.5), '$1,074.50');
 
   finish();
 })().catch(e=>fail('the suite threw before reaching its verdict',e));
