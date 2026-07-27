@@ -836,10 +836,17 @@ function typeKey(u){return String(u.br)+'/'+String(u.ba);}
 
 /* Rows are matched as whole assembled lines. Column x-bands were rejected:
    re-export shifts every coordinate, and these row shapes are unambiguous. */
-const ROW_P5 =/^(\S+)\s+(\d+)\s+([\d,]+)\s+\$([\d,]+)\s+\$?([\d.]+)\s+([YN])\b/i;   // type count sf rent psf grid
-const ROW_5C =/^(\S+)\s+(\d+)\s+\$([\d,]+)\s+\$([\d,]+)\s+\$([\d,]+)\s*$/;          // type count rent ua gross
-const ROW_CMP=/^(\S+)\s+(\d+)\s+\$([\d,]+)\s+\$([\d,]+)\s+\$[\d,]+\s*[<>]\s*\$[\d,]+/; // type count rent 150%safmr verdict
-const ROW_4C =/^(\S+)\s+(\d+)\s+\$([\d,]+)\s+\$([\d,]+)\s*$/;                       // type count safmrbase gross
+/* The unit type is NOT one token and the grid flag is NOT always spaced off.
+   Lansing prints "1BR/1BA without patio 32 575 $1,190 $2.07 Y" — an `^(\S+)`
+   type would capture "1BR/1BA" and collapse that row into its "with patio"
+   twin. Cornerstone prints "1 BR / 1 BA 31 818 $1,870 $2.29Y" — the Y arrives
+   welded to the PSF. So: a lazy type that stops at the first standalone integer,
+   and `\s*` before the flag. */
+const ROW_P5 =/^(.+?)\s+(\d+)\s+([\d,]+)\s+\$([\d,]+)\s+\$?([\d.]+)\s*([YN])\b/i;   // type count sf rent psf grid
+const ROW_5C =/^(.+?)\s+(\d+)\s+\$([\d,]+)\s+\$([\d,]+)\s+\$([\d,]+)\s*$/;          // type count rent ua gross
+const ROW_CMP=/^(.+?)\s+(\d+)\s+\$([\d,]+)\s+\$([\d,]+)\s+\$[\d,]+\s*[<>]\s*\$[\d,]+/; // type count rent 150%safmr verdict
+const ROW_4C =/^(.+?)\s+(\d+)\s+\$([\d,]+)\s+\$([\d,]+)\s*$/;                       // type count safmrbase gross
+const ROW_CS6=/^(.+?)\s+(\d+)\s+\$([\d,]+)\s+\$([\d,]+)\s+\$([\d,]+)\s+\$([\d,]+)\s*$/; // Cornerstone: type count net ua gross monthly
 
 /* Keyed on the FULL type string, not on bedrooms+baths. Lansing Manor prints
    "1BR/1BA without patio" ($1,190) and "1BR/1BA with patio" ($1,200) as two
@@ -1982,21 +1989,24 @@ git commit -m "A unit is priced by its shape, whether or not it earns"
 proving the reader works is not the same as the firm working. This task widens `test_rcs.js` from one
 fixture to five and fixes whatever the other four break.
 
-**Fixtures.** The studies live in the user's synced Drive. Copy the five Belfry studies plus the two
-Cornerstone ones into `_archive/rcs-fixtures/` (~46 MB total). **Confirm with Matt before
-`git add`-ing them** — that is a permanent addition to repository history.
+**Fixtures.** Already built and committed at `_archive/rcs-fixtures/` — **2.3 MB total**, seven
+studies trimmed to just their letter and grid pages with `fitz` (`garbage=4, deflate=True`). Each was
+verified after trimming to parse to the same values as the full study: same firm, same letter page,
+same grid pages, same rents, same numbers.
 
-```bash
-SRC="$HOME/Library/CloudStorage/GoogleDrive-mfkodsi@gmail.com/My Drive/RA/Section 8/Village Court - Section 8"
-mkdir -p _archive/rcs-fixtures
-cp "$SRC/Colonial Village - Section 8/2026 (RCS)/RCS Package/RCS - 26-124 - Colonial Village, 3641 Irving Street, Cincinnati, OH.pdf" _archive/rcs-fixtures/belfry-colonial-village.pdf
-cp "$SRC/Fairview Homes - Section 8/2025 - RCS/Archive/Belfry RCS/25-007R - Fairview Homes, 86 17th Avenue, Newark, New Jersey (REVISED RCS).pdf" _archive/rcs-fixtures/belfry-fairview-homes.pdf
-cp "$SRC/Gates Manor - Section 8/2026 - RCS/RCS/RCS - 26-121 - Gates Manor Apt, 1135 Wilmette Avenue, Wilmette, IL.pdf" _archive/rcs-fixtures/belfry-gates-manor.pdf
-cp "$SRC/Lansing Manor - Section 8/2026 - RCS/25-119 - Lansing Manor, 5600 Mall Drive West, Lansing MI (updated).pdf" _archive/rcs-fixtures/belfry-lansing-manor.pdf
-cp "$SRC/Woodland Towers - Section 8/2026 - RCS/Submission/4. 26-069 - Woodland Towers 306 Pine Lake Road Collinsville IL.pdf" _archive/rcs-fixtures/belfry-woodland-towers.pdf
-cp "$SRC/Crossroads of East Ravenswood - Section 8/2026 (RCS)/RCS/RCS - Crossroads of East Ravenswood, Chicago, IL.pdf" _archive/rcs-fixtures/cornerstone-crossroads.pdf
-cp "$SRC/Golden Link Manor - Section 8/2025 - Termination_EXECUTED/RCS - Golden Link Manor, Ogden, UT.pdf" _archive/rcs-fixtures/cornerstone-golden-link.pdf
-```
+| Fixture | Pages kept (of original) | Letter | Grids |
+|---|---|---|---|
+| `belfry-colonial-village.pdf` | 5 of 52 | @1 | 3, 4 |
+| `belfry-fairview-homes.pdf` | 6 of 66 | @1 | 3, 4, 5 |
+| `belfry-gates-manor.pdf` | 4 of 48 | @1 | 3 |
+| `belfry-lansing-manor.pdf` | 5 of 49 | @1 | 3, 4 |
+| `belfry-woodland-towers.pdf` | 5 of 46 | @1 | none |
+| `cornerstone-crossroads.pdf` | 7 of 115 | @1 (tables on @2) | 4, 5, 6 |
+| `cornerstone-golden-link.pdf` | 5 of 57 | @1 | 3, 4 |
+
+The full 60-page `_archive/colonial-village-example/Manual RCS Package (PDF).pdf` stays in the suite as
+the whole-document classification case — trimmed fixtures shift page indices, so they exercise
+classification less than a real document does.
 
 **Expected values, verbatim from each study's own summary table:**
 
