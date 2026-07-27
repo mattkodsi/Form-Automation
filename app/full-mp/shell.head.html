@@ -174,7 +174,12 @@ button.gdoc{justify-content:space-between}
 /* A hairline under the last pulled-from-a-source row, and only when the cell's own
    options follow it: the two kinds of answer are not interchangeable, and a menu
    that is nothing but source rows has nothing to separate. */
-.utsrc{flex:0 0 auto;align-self:center;white-space:nowrap;margin-left:2px}
+/* .srctag may shrink — it also carries "· FY2026 Federal Register", which has
+   to ellipsise. A "· RS" badge must NOT: at flex:0 1 auto beside a greedy input
+   it was crushed to its own ellipsis and printed as "·." on the unit count and
+   the current rent. Five characters never need truncating. */
+.rstag,.utsrc{flex:0 0 auto;overflow:visible;text-overflow:clip;white-space:nowrap}
+.utsrc{align-self:center;margin-left:2px}
 .uaopt.srcopt:has(+.uaopt:not(.srcopt)){position:relative;margin-bottom:9px}
 .uaopt.srcopt:has(+.uaopt:not(.srcopt))::after{content:'';position:absolute;left:0;right:0;bottom:-5px;border-bottom:1px solid #ccd4e2}
 .uacustom{border:none;border-bottom:1px dashed #d8b483;background:transparent;padding:6px 2px;font:inherit;outline:none} .urev{border:1px solid #d8b483;background:#fbf1e6;color:#b45309;border-radius:5px;cursor:pointer;font-size:11px;padding:3px 6px;flex:0 0 auto}
