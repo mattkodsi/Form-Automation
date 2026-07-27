@@ -24,7 +24,7 @@ global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>
 const cp=require('child_process'),os=require('os'),path=require('path'),fs=require('fs');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=108;                // the count this file is known to run to the end
+const MIN_CHECKS=116;                // the count this file is known to run to the end
 let n=0,fails=0,verdict=null;
 const BAR='═'.repeat(68);
 function fail(msg,err){
@@ -293,6 +293,38 @@ const T=(label,v)=>eq(label,!!v,true);
   T('typing over the allowance reads as an override', app.modeOf(uaK)==='over');
   app.__undoStep();
   eq('one press puts the pair back, colour and all', [app.getVal(uaK[0]),app.getVal(uaK[1]),app.modeOf(uaK)], uaWas);
+
+  console.log('\n─ picking a source back drops the Custom figure it displaced ─');
+  /* Both of these once did a raw write to the *_source key and left *_custom
+     holding the typed figure: the cell showed the source's value, the form stayed
+     dirty with nothing on screen, and the stale figure still saved. */
+  app.__clearUndo();
+  app.__editCell('rent_schedule.date_eff_custom','12/31/2027');
+  T('typing a date switches the pointer to custom', app.getVal('rent_schedule.date_eff_source')==='custom');
+  app.__srcSetSource('rent_schedule.date_eff_custom','rs');
+  eq('picking the schedule back empties the custom date', app.getVal('rent_schedule.date_eff_custom'), '');
+  app.__editCell('ocaf.factor_custom','1.055');
+  app.__srcSetSource('ocaf.factor_custom','fr');
+  eq('and the published factor empties the custom factor', app.getVal('ocaf.factor_custom'), '');
+
+  console.log('\n─ revert restores a saved blank, not just an override ─');
+  /* After one "Update property profile" every key has been saved, most of them
+     blank — so a cell judged only on source==='overridden' has nothing to revert
+     and the button did nothing in the commonest state there is. */
+  await app.__saveCell('property.addr_city');
+  const cityWas=app.getVal('property.addr_city');
+  app.__editCell('property.addr_city','Zzz Elsewhere');
+  T('the edit shows',                       app.getVal('property.addr_city')==='Zzz Elsewhere');
+  T('revert reports it changed something',  app.__revertKeys(app.fieldKeys('property.addr_city')));
+  eq('and the cell holds what was on file', app.getVal('property.addr_city'), cityWas);
+
+  console.log('\n─ a conflict flag does not outlive its conflict ─');
+  app.__clearUndo();
+  const revK='units.0.ua_reviewed';
+  app.__edit(revK,'1');                       // as the "approve" button does
+  T('the flag is set',      app.getVal(revK)==='1');
+  app.__syncReviewed();
+  eq('with no conflict left to silence, the flag goes', app.getVal(revK), '');
 
   finish();
 })().catch(e=>fail('the suite threw before reaching its verdict',e));
