@@ -10,7 +10,7 @@ new Function('window',fs.readFileSync(D+'templates.js','utf8'))(global.window);
 const TPL=global.window.RCSTemplates;
 const G=require(D+'gen.js');
 
-const MIN_CHECKS=20;                 // the count this file is known to run to the end
+const MIN_CHECKS=21;                 // the count this file is known to run to the end
 let n=0,fails=0,verdict=null;
 const BAR='═'.repeat(68);
 function fail(msg,err){
@@ -109,6 +109,12 @@ function record(extra){
   const t2=f=>{try{return f2.getTextField(String(f)).getText()||'';}catch(e){return null;}};
   eq('column 3 carries the proposed rent, with its comma', t2(9), '1,250');
   eq('column 6 carries rent + allowance',                  t2(12), '1,325');
+
+  console.log('\n─ an allowance of $0 is a figure, not an empty cell ─');
+  /* Every utility owner-paid is a real $0. Printing a blank reads as "not filled
+     in" on a HUD form, which is a different claim entirely. */
+  const zf=(await PDFDocument.load(Buffer.from(await G.fillRentSchedule(rsBytes,record({'units.0.ua_exec':'0'}))))).getForm();
+  eq('column 5 prints the zero', (()=>{try{return zf.getTextField('11').getText()||'';}catch(e){return null;}})(), '0');
 
   console.log('\n─ a template it cannot fill is refused, not shipped blank ─');
   /* A byte-valid but completely blank HUD-92458 used to save and download
