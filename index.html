@@ -1989,7 +1989,7 @@ function moneyBox(k,noIcons){const c=boxColor(k);const _mt=moneySrcTag(k);
   const _m=k.match(/^units\.(\d+)\.current$/),_mn=k.match(/^nonrev\.(\d+)\.rent$/),_ml=k.match(/^ns8\.(\d+)\.avg_rent$/);
   const _rv=_m?rsUnit(+_m[1],'rent'):(_mn?rsFamVal('nonrev',+_mn[1],'rent'):(_ml?rsFamVal('ns8',+_ml[1],'rent'):null));
   const pick=_mt?(_rv!=null?srcPick(k,[{tag:_mt,val:_rv}]):dimPick(_mt)):'';
-  return `<div class="rbox money" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><span class="cur">$</span><input type="text" data-money="1" data-k="${k}" value="${esc(fmtMoney(get(k)))}">${pick}${noIcons?'':ovIcons(k)}</div>`;}
+  return `<div class="rbox money" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><span class="cur">$</span><input type="text" data-money="1" data-k="${k}" value="${esc(fmtMoney(get(k)))}">${rsTag(k)}${pick}${noIcons?'':ovIcons(k)}</div>`;}
 function numBox(k,ph,noIcons){const c=boxColor(k);
   /* Counts are numbers and get separators like every other number (rule 16).
      NOT via a blanket data-money: this same box renders Part D's "use" text and
@@ -1998,7 +1998,7 @@ function numBox(k,ph,noIcons){const c=boxColor(k);
   const _mc=k.match(/^ns8\.(\d+)\.num_units$/),_mu=k.match(/^nonrev\.(\d+)\.use$/);
   const _rv=_mc?rsFamVal('ns8',+_mc[1],'count'):(_mu?rsFamVal('nonrev',+_mu[1],'use'):null);
   const _rsCell=!!(_mc||_mu);   // non-Section-8 counts and Part D uses come off the schedule too
-  return `<div class="rbox" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><input type="text"${_cnt?' data-money="1"':''} data-k="${k}" value="${esc(_cnt?fmtMoney(get(k)):get(k))}" placeholder="${esc(ph||'')}">${_rv!=null?srcPick(k,[{tag:'Executed RS',val:_rv}]):(_rsCell?dimPick('Executed RS'):'')}${noIcons?'':ovIcons(k)}</div>`;}
+  return `<div class="rbox" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><input type="text"${_cnt?' data-money="1"':''} data-k="${k}" value="${esc(_cnt?fmtMoney(get(k)):get(k))}" placeholder="${esc(ph||'')}">${rsTag(k)}${_rv!=null?srcPick(k,[{tag:'Executed RS',val:_rv}]):(_rsCell?dimPick('Executed RS'):'')}${noIcons?'':ovIcons(k)}</div>`;}
 function brbaBox(brK,baK){const c=groupColors([brK,baK]);
   const withRs=(k,opts,ph)=>{const d=csDrop(k,opts,ph,'',true,partHot(k)?tintStyle(k):'',rsBrBa(k));
     const row=rsCsRow(k)||'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>';
@@ -2038,7 +2038,7 @@ function unitCountCell(i){const k='units.'+i+'.num_units';const c=numUnresolved(
   // not one is loaded right now — dimmed when there is nothing to pull, exactly as
   // the rent beside it does. Rendering nothing left the column looking as though
   // it had no source at all the moment the upload went out of session.
-  return `<div class="rbox" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><input type="text" data-money="1" data-k="${k}" value="${esc(fmtMoney(get(k)))}">${rv!=null?srcPick(k,[{tag:'Executed RS',val:rv}]):dimPick('Executed RS')}</div>`;}
+  return `<div class="rbox" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><input type="text" data-money="1" data-k="${k}" value="${esc(fmtMoney(get(k)))}">${rsTag(k)}${rv!=null?srcPick(k,[{tag:'Executed RS',val:rv}]):dimPick('Executed RS')}</div>`;}
 function typeNote(i){if(!typeConflict(i))return '';const br=get('units.'+i+'.br'),ba=get('units.'+i+'.ba'),brR=get('units.'+i+'.br_rcs')||br,baR=get('units.'+i+'.ba_rcs')||ba;
   if(typeUnresolved(i))return '<div class="ucnote warn">⚠ RS '+br+'/'+ba+' · RCS '+brR+'/'+baR+' <span class="pick"><button class="urev" data-typ="rs" data-ci="'+i+'">keep RS</button><button class="urev sv" data-typ="rcs" data-ci="'+i+'">use RCS</button></span></div>';
   return '<div class="ucnote ok">✓ RS · '+br+'/'+ba+'</div>';}
@@ -2229,6 +2229,22 @@ function desigColors(k){const c=form[k];
    the two boxes beside it did not. Provenance belongs to the fact: the group is
    the schedule's when every part of it still is, and one edit anywhere makes the
    whole type the user's. */
+/* Every cell the schedule feeds says so, by the same rule: the figure the cell
+   holds is still the figure the schedule printed. One function, so a new
+   schedule-fed cell cannot quietly ship without its badge the way the unit
+   count and the current rent did. */
+function rsOf(k){
+  let m=k.match(/^units\.(\d+)\.current$/);      if(m)return rsUnit(+m[1],'rent');
+  m=k.match(/^units\.(\d+)\.num_units$/);        if(m)return rsUnit(+m[1],'count');
+  m=k.match(/^nonrev\.(\d+)\.(rent|num_units|use)$/); if(m)return rsFamVal('nonrev',+m[1],m[2]==='num_units'?'count':m[2]);
+  m=k.match(/^ns8\.(\d+)\.(avg_rent|num_units)$/);    if(m)return rsFamVal('ns8',+m[1],m[2]==='avg_rent'?'rent':'count');
+  return null;}
+function rsTag(k){
+  const v=get(k); if(v===''||v==null)return '';
+  const r=rsOf(k); if(r==null||r==='')return '';
+  const num=/^(units|ns8|nonrev)\.\d+\.(current|proposed|num_units|rent|avg_rent)$/.test(k);
+  const same=num?(numf(v)===numf(r)):(String(v)===String(r));
+  return same?'<span class="srctag">· RS</span>':'';}
 function typeFromRs(i){
   const same=k=>{const v=get(k),r=rsBrBa(k);const hv=v!==''&&v!=null,hr=r!=null&&r!=='';
     return hv===hr&&(!hv||String(v)===String(r));};
@@ -2243,7 +2259,7 @@ function desigDrop(i){const k='units.'+i+'.desig';const v=get(k);const has=v!=='
   const rsv=rsBrBa(k);const fromRs=!!(has&&rsv&&String(rsv)===String(v));   // the attached schedule prints this very designation
   const menu=(rsCsRow(k)||'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>')
     +DESIG.filter(d=>d[0]).map(d=>'<div class="uaopt'+((d[0]===v&&!fromRs)?' sel':'')+'" data-csopt="'+d[0]+'" data-cskey="'+k+'">'+d[0]+'<span class="uasub">'+esc(d[1])+'</span></div>').join('')
-    +'<div class="uaopt'+(has?'':' sel')+'" data-csopt="" data-cskey="'+k+'">\u2014<span class="uasub">No designation</span></div>';
+    +(has?'':'<div class="uaopt sel" data-csopt="" data-cskey="'+k+'">\u2014<span class="uasub">No designation</span></div>');   // the ✕ says this once a designation exists
   /* The ✕ that bedroom and bathroom carry — most unit types have no designation,
      so clearing one should not mean hunting through the menu. It is suppressed
      while the "· RS" badge shows: this cell is pinned to 74px, and label + badge
