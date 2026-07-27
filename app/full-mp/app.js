@@ -424,8 +424,8 @@ function numUnresolved(i){return numConflict(i)&&!numReviewedOf(i);}
    belongs to — see unitActs. Inside these cells the icon pair squeezed the
    controls it sat beside, and the row changed shape the moment it was edited. */
 function unitTypeCell(i){const brK='units.'+i+'.br',baK='units.'+i+'.ba';const conf=typeUnresolved(i);const c=conf?CLR.overridden:groupColors([brK,baK]);
-  const withRs=(k,opts,ph)=>{const d=csDrop(k,opts,ph,'',true,(!conf&&partHot(k))?tintStyle(k):'');const row=rsCsRow(k);
-    return row?d.replace('<div class="uamenu">','<div class="uamenu">'+row):d;};
+  const withRs=(k,opts,ph)=>{const d=csDrop(k,opts,ph,'',true,(!conf&&partHot(k))?tintStyle(k):'');const row=rsCsRow(k)||'<div class="uaopt srcdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>';
+    return d.replace('<div class="uamenu">','<div class="uamenu">'+row);};
   return `<div class="rbox brba" data-box="${brK}" style="background:${c[1]};border-left-color:${c[0]}">${withRs(brK,BR_OPTS,'BR')}<span class="slash">/</span>${withRs(baK,BA_OPTS,'BA')}${desigDrop(i)}</div>`;}
 function unitCountCell(i){const k='units.'+i+'.num_units';const c=numUnresolved(i)?CLR.overridden:cellColors(k);const rv=rsUnit(i,'count');
   // The schedule is where this number comes from, so the cell says so whether or
@@ -618,7 +618,10 @@ function desigColors(k){const c=form[k];
 function desigDrop(i){const k='units.'+i+'.desig';const v=get(k);const has=v!==''&&v!=null;
   const c=desigColors(k);
   const tint='background:linear-gradient('+c[0]+','+c[0]+') no-repeat left 4px center/3px 60%,'+c[1]+';border-radius:6px';
-  const menu=rsCsRow(k)
+  /* A dimmed row when nothing is parsed, not a missing one: every schedule-fed
+     cell in this form declares the schedule as a source whether or not one is
+     loaded, so you can see where the value would come from. */
+  const menu=(rsCsRow(k)||'<div class="uaopt srcdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>')
     +DESIG.filter(d=>d[0]).map(d=>'<div class="uaopt" data-csopt="'+d[0]+'" data-cskey="'+k+'">'+d[0]+'<span class="uasub">'+esc(d[1])+'</span></div>').join('')
     +'<div class="uaopt" data-csopt="" data-cskey="'+k+'">\u2014<span class="uasub">No designation</span></div>';
   return '<div class="uadrop cs dgdrop"><div class="uatrigger" tabindex="0" data-trigfor="'+k+'" style="'+tint+'" title="'+esc(has?desigName(v):'Designation')+'">'
