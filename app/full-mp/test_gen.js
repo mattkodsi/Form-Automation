@@ -28,8 +28,11 @@ function finish(){
   else if(n<MIN_CHECKS){fails=1;verdict='✗ GENERATION SUITE FAILED (only '+n+' of '+MIN_CHECKS+' checks ran)';
     console.log('  ✗✗✗  GENERATION SUITE FAILED — DO NOT SHIP  ✗✗✗');
     console.log('  only '+n+' of the expected '+MIN_CHECKS+' checks ran — the suite died partway, or checks were deleted without lowering MIN_CHECKS on purpose');}
-  else{verdict='✓ ALL '+n+' GENERATION CHECKS PASSED';console.log('  ✓ ALL '+n+' GENERATION CHECKS PASSED');}
-  console.log(BAR+'\n');console.log(verdict);
+  /* On a pass the verdict IS the banner — printing both made deliver.sh's
+     "grep -o 'ALL .* PASSED'" report this suite twice. On a failure the two
+     lines say different things, so both are wanted. */
+  else verdict='✓ ALL '+n+' GENERATION CHECKS PASSED';
+  console.log(fails?(BAR+'\n'):'');console.log(verdict);
   process.exit(fails?1:0);}
 
 /* A property with two unit types and NO proposed rents — the case Matt hit:
