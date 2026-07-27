@@ -15,7 +15,7 @@
 set -uo pipefail                       # deliberately NOT -e: run every suite, then report
 
 d="$(cd "$(dirname "$0")" && pwd)"     # app/full-mp
-suites="test_db.js test_interactions.js"
+suites="test_db.js test_interactions.js smoke_combined.js"
 failed=""
 
 for s in $suites; do

@@ -115,7 +115,12 @@ a new suite needs registering (`deliver.sh` calls it).
 - **`app/full-mp/test_db.js`** — data layer, 49 checks.
 - **`app/full-mp/test_interactions.js`** — save/revert/group + esc/enter decision logic against the real
   store, incl. the unit designation chip; 82 checks (self-contained; builds its own bundle).
-- **`app/full-mp/smoke_combined.js`** — headless render smoke of the assembled app (not in `run_tests.sh`).
+- **`app/full-mp/smoke_combined.js`** — headless render smoke of the assembled app: menu → form, the
+  150% analysis numbers, and dirty-tracking; 24 checks. The **launcher phase is skipped** — it renders
+  through `mpdb.listCycles`, which `db.supabase.js` has and `db.js` does not. `db.js` is now only the
+  test harness's stand-in, so faking that surface would prove nothing; the skip retires itself (the suite
+  fails the day `db.js` gains a cycle surface). Closing that gap means giving `db.js` API parity with
+  `db.supabase.js` — a real piece of work, not a test fixture.
 
 ⚠️ **Don't pipe a suite through `| tail`.** A pipeline's exit status is the LAST command's, so node's
 failure vanishes — that is half of why `test_interactions.js` sat broken for eleven days after the
