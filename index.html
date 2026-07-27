@@ -162,7 +162,11 @@ button.gdoc{justify-content:space-between}
 .rbox.money .cur{padding-left:9px;color:#6b7280} .rbox.money input{padding-left:3px}
 .rbox.brba{overflow:visible} .rbox.brba select{border:none;background:transparent;font:inherit;font-size:13.5px;padding:9px 4px;outline:none;flex:1;min-width:0} .slash{color:#9aa4b8;padding:0 2px}
 .rbox.uacell{overflow:visible;gap:4px;padding-right:0} .fbox.mgmtcell{overflow:visible} .uadrop{position:relative;flex:1;min-width:0} .uatrigger{display:flex;align-items:center;justify-content:space-between;height:36px;padding:0 10px;font-size:13px;cursor:pointer;white-space:nowrap} .cvx{color:#9aa4b8;margin-left:6px}
-.uamenu{display:none;position:absolute;left:0;top:100%;margin-top:3px;z-index:30;background:#fff;border:1px solid #d3dae6;border-radius:8px;box-shadow:0 8px 22px rgba(20,40,80,.14);min-width:150px;max-height:240px;overflow:auto} .uadrop.open .uamenu{display:block} .uaopt{padding:9px 12px;font-size:13px;cursor:pointer;color:#33405c} .uaopt:hover{background:#eef0fc} .uaopt.srcdim{opacity:.45;cursor:default} .uaopt.srcdim:hover{background:transparent}
+.uamenu{display:none;position:absolute;left:0;top:100%;margin-top:3px;z-index:30;background:#fff;border:1px solid #d3dae6;border-radius:8px;box-shadow:0 8px 22px rgba(20,40,80,.14);min-width:150px;max-height:240px;overflow:auto} .uadrop.open .uamenu{display:block} .uaopt{padding:9px 12px;font-size:13px;cursor:pointer;color:#33405c} .uaopt:hover{background:#eef0fc} .uaopt.srcdim{opacity:.45;cursor:default} .uaopt.srcdim:hover{background:transparent} .uaopt.sel{background:#ecf0f6} .uaopt.sel:hover{background:#e3e8f5}
+/* A hairline under the last pulled-from-a-source row, and only when the cell's own
+   options follow it: the two kinds of answer are not interchangeable, and a menu
+   that is nothing but source rows has nothing to separate. */
+.uaopt.srcopt:has(+.uaopt:not(.srcopt)){border-bottom:1px solid #e8ecf3}
 .uacustom{border:none;border-bottom:1px dashed #d8b483;background:transparent;padding:6px 2px;font:inherit;outline:none} .urev{border:1px solid #d8b483;background:#fbf1e6;color:#b45309;border-radius:5px;cursor:pointer;font-size:11px;padding:3px 6px;flex:0 0 auto}
 .uanote{font-size:11.5px;align-self:center;line-height:1.5} .uanote.warn{color:#b45309} .uanote.ok{color:#166534}
 .lastcell{display:flex;align-items:center;gap:8px;justify-content:space-between} .trash{border:none;background:transparent;cursor:pointer;font-size:12px;font-weight:800;color:#b91c1c;opacity:.6;flex:0 0 auto;line-height:1;padding:2px 4px} .trash:hover{opacity:1}
@@ -1720,14 +1724,17 @@ function ovBtns(k){return `<button class="revert" data-rev="${k}">↺ revert</bu
 function overText(keys){return keys.some(k=>form[k]&&form[k].fromParse)?'parsed — changed from stored record':'changed from stored record';}
 function ovNote(kk){const keys=Array.isArray(kk)?kk:[kk];const j=keys.join(',');const m=modeOf(keys);return `<div class="ovnote" data-ov="${j}" data-mode="${m}" style="display:${m?'flex':'none'}"><span class="om-over">${overText(keys)}</span><span class="om-new">new — not saved yet</span><span class="om-cycle">parsed — not saved yet</span>${ovBtns(j)}</div>`;}
 function ovNoteAddr(box){const keys=ADDR_GROUPS[box];const m=modeOf(keys);return `<div class="ovnote" data-ov="${box}" data-mode="${m}" style="display:${m?'flex':'none'}"><span class="om-over">${overText(keys)}</span><span class="om-new">new — not saved yet</span><span class="om-cycle">parsed — not saved yet</span><button class="revert" data-revaddr="${box}">↺ revert</button><button class="save1" data-save1addr="${box}">✓ save this field</button></div>`;}
-function csDrop(key,options,ph,cls,clearable,tint){const cur=get(key);const has=cur!==''&&cur!=null;const lab=has?cur:(ph||'—');const menu=options.map(o=>'<div class="uaopt" data-csopt="'+esc(o)+'" data-cskey="'+key+'">'+esc(o)+'</div>').join('');const clr=(clearable&&has)?'<span class="csclear" data-csclear="'+key+'" title="Clear">✕</span>':'';return '<div class="uadrop cs '+(cls||'')+(clearable?' clearable':'')+'"><div class="uatrigger" tabindex="0" data-trigfor="'+key+'"'+(tint?' style="'+tint+'"':'')+'><span class="ualab">'+esc(lab)+'</span>'+clr+'<span class="cvx">▾</span></div><div class="uamenu">'+menu+'</div></div>';}
+/* claim = a value a source row prepended above this list already offers. Two rows
+   showing the selected background for one answer reads as two answers, so the
+   source row wins it — the same rule the designation's "· RS" badge reads. */
+function csDrop(key,options,ph,cls,clearable,tint,claim){const cur=get(key);const has=cur!==''&&cur!=null;const lab=has?cur:(ph||'—');const _cl=(claim!=null&&claim!==''&&claim===cur);const menu=options.map(o=>'<div class="uaopt'+((o===cur&&!_cl)?' sel':'')+'" data-csopt="'+esc(o)+'" data-cskey="'+key+'">'+esc(o)+'</div>').join('');const clr=(clearable&&has)?'<span class="csclear" data-csclear="'+key+'" title="Clear">✕</span>':'';return '<div class="uadrop cs '+(cls||'')+(clearable?' clearable':'')+'"><div class="uatrigger" tabindex="0" data-trigfor="'+key+'"'+(tint?' style="'+tint+'"':'')+'><span class="ualab">'+esc(lab)+'</span>'+clr+'<span class="cvx">▾</span></div><div class="uamenu">'+menu+'</div></div>';}
 function dateEffResolved(){const src=get('rent_schedule.date_eff_source')||(get('rent_schedule.date_eff_rs')?'rs':'custom');return src==='custom'?(get('rent_schedule.date_eff_custom')||get('rent_schedule.date_rents_effective')):get('rent_schedule.date_eff_rs');}
 function dateEffCell(){const rs=get('rent_schedule.date_eff_rs');const src=get('rent_schedule.date_eff_source')||(rs?'rs':'custom');const custom=get('rent_schedule.date_eff_custom')||get('rent_schedule.date_rents_effective');
   const rsLab=rs?(fmtDate(rs)+' · from RS'):'— · no RS date parsed';
   const lab=(src==='custom')?('<input class="uac-in dateeff-in" data-date="1" data-k="rent_schedule.date_eff_custom" value="'+esc(custom)+'" placeholder="mm/dd/yyyy" autocomplete="off">'):(rs?('<input class="uac-in srcedit" data-srcedit="dateeff" data-date="1" value="'+esc(fmtDate(rs))+'"><span class="srctag">· from RS</span>'):('<span class="ualab">'+esc(rsLab)+'</span>'));
   let state,c;if(src==='custom'){c=modeOf(['rent_schedule.date_eff_custom','rent_schedule.date_eff_source'])==='over'?provColors('overridden','rent_schedule.date_eff_source'):cellColors('rent_schedule.date_eff_custom');}else{state=rs?srcOf('rent_schedule.date_eff_rs'):'new';c=provColors(state,'rent_schedule.date_eff_source');}
   const boxKey=(src==='custom')?'rent_schedule.date_eff_custom':'rent_schedule.date_eff_source';
-  const menu='<div class="uamenu">'+srcOptRow('data-deffopt="rs"',rs?esc(fmtDate(rs)):'','A year after the executed RS')+'<div class="uaopt" data-deffopt="custom">Custom…</div></div>';
+  const menu='<div class="uamenu">'+srcOptRow('data-deffopt="rs"',rs?esc(fmtDate(rs)):'','A year after the executed RS',src==='rs')+'<div class="uaopt'+(src==='custom'?' sel':'')+'" data-deffopt="custom">Custom…</div></div>';
   return `<div class="field"><div class="flabel">Date rents will be effective</div><div class="fbox uacell" data-box="${boxKey}" style="background:${c[1]};border-left-color:${c[0]}"><div class="uadrop" style="flex:1;min-width:0"><div class="uatrigger" tabindex="0">${lab}<span class="cvx">▾</span></div>${menu}</div>${src==='custom'?ovIcons(['rent_schedule.date_eff_custom','rent_schedule.date_eff_source']):''}</div></div>`;}
 const POC_PICK_KEYS=['poc.name','poc.email','poc.phone'];
 function pocSelectContact(ct){form=store.editForm(form,'poc.name',ct.name||'');form=store.editForm(form,'poc.email',ct.email||'');form=store.editForm(form,'poc.phone',fmtPhone(ct.phone||''));
@@ -1743,7 +1750,7 @@ function pocSaveKeys(){return (form['poc.name']&&form['poc.name'].fromPick)?POC_
 function pocNote(){const m=modeOf('poc.name');const j=pocSaveKeys().join(',');return `<div class="ovnote" data-ov="poc.name" data-mode="${m}" style="display:${m?'flex':'none'}"><span class="om-over">${overText(['poc.name'])}</span><span class="om-new">new — not saved yet</span><span class="om-cycle">parsed — not saved yet</span><button class="revert" data-rev="${j}">↺ revert</button><button class="save1" data-save1="${j}">✓ save this field</button></div>`;}
 function pocCell(){const k='poc.name';const contacts=(mpdb?mpdb.listContacts():[]);const cur=get(k);const c=cellColors(k);
   const nvp=raVal('poc.name');
-  const navRow=(nvp?'<div class="uaopt" data-pocra="1">'+esc(nvp)+'<span class="uasub">Related Affordable</span></div>':'<div class="uaopt srcdim">\u2014<span class="uasub">Related Affordable \u00b7 not available</span></div>')+'<div class="uaopt srcdim">\u2014<span class="uasub">RCS report \u00b7 not available</span></div>';
+  const navRow=(nvp?'<div class="uaopt srcopt" data-pocra="1">'+esc(nvp)+'<span class="uasub">Related Affordable</span></div>':'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">Related Affordable \u00b7 not available</span></div>')+'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">RCS report \u00b7 not available</span></div>';
   const menu='<div class="uamenu">'+navRow+contacts.map(ct=>'<div class="uaopt" data-pocopt="'+esc(ct.id)+'">'+esc(ct.name)+(ct.email?'<span class="uasub">'+esc(ct.email)+'</span>':'')+'</div>').join('')+'</div>';
   const pick='<div class="uadrop pocpick"><div class="uatrigger" tabindex="0" title="Pick a saved contact"><span class="cvx">&#9662;</span></div>'+menu+'</div>';
   return `<div class="field"><div class="flabel">Point of contact</div><div class="fbox poccell" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><input class="pocname-in" data-k="poc.name" value="${esc(cur)}" placeholder="Type a name, or pick a saved contact" autocomplete="off">${pick}</div>${pocNote()}</div>`;}
@@ -1771,7 +1778,7 @@ function dirNote(fk){const P=DIR_PICK[fk];const m=modeOf(P.modeKeys);const j=dir
 function dirCell(f){const k=f.k;const P=DIR_PICK[k];const list=dirList(P.kind);const cur=get(k);
   const c=f.prefix?groupColors([f.prefix,f.k]):cellColors(k);const nameTint=(f.prefix&&partHot(k))?tintStyle(k):'';
   const pre=f.prefix?csDrop(f.prefix,['Ms.','Mr.','Dr.','Mx.'],'\u2014','csnarrow',true,partHot(f.prefix)?tintStyle(f.prefix):''):'';
-  const srcRow=DIR_SRCROW[k]?('<div class="uaopt srcdim">\u2014<span class="uasub">'+esc(DIR_SRCROW[k])+' \u00b7 not available</span></div>'):'';
+  const srcRow=DIR_SRCROW[k]?('<div class="uaopt srcopt srcdim">\u2014<span class="uasub">'+esc(DIR_SRCROW[k])+' \u00b7 not available</span></div>'):'';
   const menu='<div class="uamenu">'+srcRow+list.map(ct=>{const s=P.sub(ct);return '<div class="uaopt" data-dirid="'+esc(ct.id)+'" data-dirfor="'+k+'">'+esc(ct.name)+(s?'<span class="uasub">'+esc(s)+'</span>':'')+'</div>';}).join('')+'</div>';
   const pick=(srcRow||list.length)?('<div class="uadrop pocpick"><div class="uatrigger" tabindex="0" title="Pick a saved '+esc(P.one)+'"><span class="cvx">&#9662;</span></div>'+menu+'</div>'):'';
   return `<div class="field"><div class="flabel">${f.label}</div><div class="fbox poccell" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}">${pre}<input class="pocname-in" type="text" data-k="${k}" style="${nameTint}" value="${esc(cur)}" placeholder="Type a name, or pick a saved ${esc(P.one)}" autocomplete="off">${pick}</div>${dirNote(k)}</div>`;}
@@ -1792,11 +1799,11 @@ function dirCell(f){const k=f.k;const P=DIR_PICK[k];const list=dirList(P.kind);c
    uniformly. The form never writes back to the RA platform. */
 function raProps(){try{const p=window.RASource;const l=(p&&p.listProperties)?p.listProperties():[];return Array.isArray(l)?l:[];}catch(e){return [];}}
 function raVal(k){try{const p=window.RASource;const v=(p&&p.value)?p.value(k):null;return (v==null||v==='')?null:String(v);}catch(e){return null;}}
-function srcOptRow(attrs,val,tag){return val?('<div class="uaopt" '+attrs+'>'+val+'<span class="uasub">'+esc(tag)+'</span></div>'):('<div class="uaopt srcdim">\u2014<span class="uasub">'+esc(tag)+' \u00b7 not available</span></div>');}
+function srcOptRow(attrs,val,tag,sel){const _c='uaopt srcopt'+(sel?' sel':'');return val?('<div class="'+_c+'" '+attrs+'>'+val+'<span class="uasub">'+esc(tag)+'</span></div>'):('<div class="'+_c+' srcdim">\u2014<span class="uasub">'+esc(tag)+' \u00b7 not available</span></div>');}
 function srcPick(k,rows){
   const menu='<div class="uamenu">'+rows.map(r=> r.val!=null
-    ?'<div class="uaopt" data-srck="'+k+'" data-srcv="'+esc(r.val)+'" data-srctag="'+esc(r.tag)+'">'+esc(r.val)+'<span class="uasub">'+esc(r.tag)+'</span></div>'
-    :'<div class="uaopt srcdim">\u2014<span class="uasub">'+esc(r.tag)+' \u00b7 not available</span></div>').join('')+'</div>';
+    ?'<div class="uaopt srcopt" data-srck="'+k+'" data-srcv="'+esc(r.val)+'" data-srctag="'+esc(r.tag)+'">'+esc(r.val)+'<span class="uasub">'+esc(r.tag)+'</span></div>'
+    :'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">'+esc(r.tag)+' \u00b7 not available</span></div>').join('')+'</div>';
   return '<div class="uadrop pocpick"><div class="uatrigger" tabindex="0" title="Pull from a source"><span class="cvx">&#9662;</span></div>'+menu+'</div>';
 }
 /* Per-cell source rows in precedence order (spec \u00a73). val:null renders dim. */
@@ -1819,20 +1826,21 @@ const SRCGROUP={
  'appr.addr':()=>[{tag:'RCS report',apply:null}],
 };
 function srcGroupPick(box){const rows=SRCGROUP[box]().map((r,ix)=> r.apply
-  ?'<div class="uaopt" data-srcgrp="'+box+'" data-srcgix="'+ix+'">'+esc(r.apply[Object.keys(r.apply)[0]])+'\u2026<span class="uasub">'+esc(r.tag)+'</span></div>'
-  :'<div class="uaopt srcdim">\u2014<span class="uasub">'+esc(r.tag)+' \u00b7 not available</span></div>').join('');
+  ?'<div class="uaopt srcopt" data-srcgrp="'+box+'" data-srcgix="'+ix+'">'+esc(r.apply[Object.keys(r.apply)[0]])+'\u2026<span class="uasub">'+esc(r.tag)+'</span></div>'
+  :'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">'+esc(r.tag)+' \u00b7 not available</span></div>').join('');
   return '<div class="uadrop pocpick"><div class="uatrigger" tabindex="0" title="Pull from a source"><span class="cvx">&#9662;</span></div><div class="uamenu">'+rows+'</div></div>';}
 /* Dim source rows atop the existing contact-picker menus (spec \u00a73 notes). */
 const DIR_SRCROW={'appr.name':'RCS report','sig.name':'Executed RS'};
 function moneySrcTag(k){if(/^units\.\d+\.current$/.test(k))return 'Executed RS';if(/^units\.\d+\.proposed$/.test(k))return 'RCS report';if(/^(nonrev|ns8)\.\d+\.(rent|avg_rent)$/.test(k))return 'Executed RS';return null;}
-function dimPick(tag){return '<div class="uadrop pocpick"><div class="uatrigger" tabindex="0" title="Source"><span class="cvx">&#9662;</span></div><div class="uamenu"><div class="uaopt srcdim">\u2014<span class="uasub">'+esc(tag)+' \u00b7 not available</span></div></div></div>';}
+function dimPick(tag){return '<div class="uadrop pocpick"><div class="uatrigger" tabindex="0" title="Source"><span class="cvx">&#9662;</span></div><div class="uamenu"><div class="uaopt srcopt srcdim">\u2014<span class="uasub">'+esc(tag)+' \u00b7 not available</span></div></div></div>';}
 /* ================== end external-source dropdowns ================== */
 function refreshPrincipalOpts(){ // the list is built at render time; keep it current while typing
   const box=document.querySelector('[data-box="sig.principal"]');const menu=box&&box.querySelector('.uamenu');if(!menu)return;
   const _opts=sigPrincipalOpts();const _rp=rsVal('sig.principal');
   const _dupe=_rp!=null&&_opts.some(o=>o.trim().toLowerCase()===_rp.trim().toLowerCase());
-  const head=(_rp!=null&&!_dupe)?('<div class="uaopt" data-cskey="sig.principal" data-csopt="'+esc(_rp)+'">'+esc(_rp)+'<span class="uasub">Executed RS</span></div>'):'';
-  menu.innerHTML=head+_opts.map(o=>'<div class="uaopt" data-csopt="'+esc(o)+'" data-cskey="sig.principal">'+esc(o)+'</div>').join('');
+  const _cur=get('sig.principal');const _hd=(_rp!=null&&!_dupe&&_rp===_cur);
+  const head=(_rp!=null&&!_dupe)?('<div class="uaopt srcopt'+(_hd?' sel':'')+'" data-cskey="sig.principal" data-csopt="'+esc(_rp)+'">'+esc(_rp)+'<span class="uasub">Executed RS</span></div>'):'';
+  menu.innerHTML=head+_opts.map(o=>'<div class="uaopt'+((o===_cur&&!_hd)?' sel':'')+'" data-csopt="'+esc(o)+'" data-cskey="sig.principal">'+esc(o)+'</div>').join('');
   menu.querySelectorAll('[data-csopt]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();
     const ck=o.getAttribute('data-cskey');_pendingSnap=snapOf([ck]);form=store.editForm(form,ck,o.getAttribute('data-csopt'));
     _pending=[ck];_refocusSel='[data-trigfor="'+ck+'"]';renderBody();}));}
@@ -1843,9 +1851,10 @@ function sigTitleCell(f){const c=cellColors('sig.title');const pk='sig.principal
   // has been parsed — showing it a second time as its own "Executed RS" row just
   // duplicates the same value under a different label.
   const _dupe=_rp!=null&&_opts.some(o=>o.trim().toLowerCase()===_rp.trim().toLowerCase());
-  const dim=(_rp!=null&&!_dupe)?('<div class="uaopt" data-cskey="'+pk+'" data-csopt="'+esc(_rp)+'">'+esc(_rp)+'<span class="uasub">Executed RS</span></div>')
-    :(_dupe?'':'<div class="uaopt srcdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>');
-  let dd=csDrop(pk,_opts,'Select\u2026','',true);
+  const _pcur=get(pk);const _pcl=(_rp!=null&&!_dupe&&_rp===_pcur);
+  const dim=(_rp!=null&&!_dupe)?('<div class="uaopt srcopt'+(_pcl?' sel':'')+'" data-cskey="'+pk+'" data-csopt="'+esc(_rp)+'">'+esc(_rp)+'<span class="uasub">Executed RS</span></div>')
+    :(_dupe?'':'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>');
+  let dd=csDrop(pk,_opts,'Select\u2026','',true,'',_pcl?_rp:null);
   dd=dd.replace('<div class="uamenu">','<div class="uamenu">'+dim);
   return `<div class="fpair sigpair"><div class="field"><div class="flabel">${f.label}</div><div class="fbox" data-box="sig.title" style="background:${c[1]};border-left-color:${c[0]}"><input type="text" data-k="sig.title" value="${esc(get('sig.title'))}" autocomplete="off">${srcPick('sig.title',SRCPICK_ROWS['sig.title']())}</div>${ovNote('sig.title')}</div><div class="ofthe">of the</div><div class="field"><div class="flabel">Principal</div><div class="fbox seldrop" data-box="${pk}" style="background:${pc[1]};border-left-color:${pc[0]}">${dd}</div>${ovNote(pk)}</div></div>`;}
 function fieldCell(f){if(f.type==='sigtitle')return sigTitleCell(f);if(f.type==='pair')return '<div class="fpair">'+f.items.map(fieldCell).join('')+'</div>';if(f.type==='addr')return addrCell();if(f.type==='caaddr')return caAddrCell();if(f.type==='appraddr')return apprAddrCell();if(f.type==='mgmtaddr')return mgmtCell();if(f.type==='select')return selectCell(f);if(f.k==='poc.name')return pocCell();if(DIR_PICK[f.k])return dirCell(f);
@@ -1856,12 +1865,14 @@ function fieldCell(f){if(f.type==='sigtitle')return sigTitleCell(f);if(f.type===
 function addrCell(){return compAddrCell(ADDR,'property.addr','Address');}
 function caAddrCell(){return compAddrCell(CA_ADDR,'ca.addr','CA address');}
 function apprAddrCell(){return compAddrCell(APPR_ADDR,'appr.addr','Appraiser address');}
-function selectCell(f){const c=cellColors(f.k);let dd=csDrop(f.k,f.opts,f.ph||'Select…');
-  if(f.k==='owner.entity_type'){const nv=raVal('owner.entity_type');
-    const _rsET=rsVal('owner.entity_type');
-    const navRows=(_rsET?'<div class="uaopt" data-cskey="owner.entity_type" data-csopt="'+esc(_rsET)+'">'+esc(_rsET)+'<span class="uasub">Executed RS</span></div>':'<div class="uaopt srcdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>')
-      +(nv?'<div class="uaopt" data-cskey="owner.entity_type" data-csopt="'+esc(nv)+'">'+esc(nv)+'<span class="uasub">Related Affordable</span></div>'
-          :'<div class="uaopt srcdim">\u2014<span class="uasub">Related Affordable \u00b7 not available</span></div>');
+function selectCell(f){const c=cellColors(f.k);const _et=f.k==='owner.entity_type';
+  const _ecur=_et?get(f.k):'';const _rsET=_et?rsVal('owner.entity_type'):null;const nv=_et?raVal('owner.entity_type'):null;
+  const _rsSel=!!(_rsET&&_rsET===_ecur),_nvSel=!!(nv&&nv===_ecur&&!_rsSel);   // precedence order: the schedule answers first
+  let dd=csDrop(f.k,f.opts,f.ph||'Select…','',false,'',(_rsSel||_nvSel)?_ecur:null);
+  if(_et){
+    const navRows=(_rsET?'<div class="uaopt srcopt'+(_rsSel?' sel':'')+'" data-cskey="owner.entity_type" data-csopt="'+esc(_rsET)+'">'+esc(_rsET)+'<span class="uasub">Executed RS</span></div>':'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>')
+      +(nv?'<div class="uaopt srcopt'+(_nvSel?' sel':'')+'" data-cskey="owner.entity_type" data-csopt="'+esc(nv)+'">'+esc(nv)+'<span class="uasub">Related Affordable</span></div>'
+          :'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">Related Affordable \u00b7 not available</span></div>');
     dd=dd.replace('<div class="uamenu">','<div class="uamenu">'+navRows);}
   const sel=`<div class="field"><div class="flabel">${f.label}</div><div class="fbox seldrop" data-box="${f.k}" style="background:${c[1]};border-left-color:${c[0]}">${dd}</div>${ovNote(f.k)}</div>`;
   if(f.k==='owner.entity_type'&&get(f.k)==='Other (specify)'){const ok='owner.entity_type_other';const oc=cellColors(ok);
@@ -1889,7 +1900,7 @@ function mgmtCell(){const src=get('tenant.mgmt_source')||'property';const propHa
      ${ovNoteAddr('tenant.mgmt')}</div>`;}
   const pretty=propHas?(get('property.addr_street')+', '+get('property.addr_city')+' '+get('property.addr_state')+' '+get('property.addr_zip')).replace(/\s+/g,' ').replace(/^,\s*/,'').trim():'';
   const inner=propHas?('<span class="mgmtprop">'+esc(pretty)+'</span><span class="srctag">· property</span>'):('<span class="mgmtph">Set the property address in Section 2, or pick a different address</span>');
-  const menu='<div class="uamenu"><div class="uaopt" data-mgmt="property">Use property address</div><div class="uaopt" data-mgmt="custom">Different address…</div></div>';
+  const menu='<div class="uamenu"><div class="uaopt'+(src==='property'?' sel':'')+'" data-mgmt="property">Use property address</div><div class="uaopt'+(src==='custom'?' sel':'')+'" data-mgmt="custom">Different address…</div></div>';
   // mirroring the property address: report that address's record, since that is what prints
   const ovSrc=srcOf('tenant.mgmt_source')==='overridden';const c=ovSrc?CLR.overridden:groupColors(ADDR);
   return '<div class="field"><div class="flabel">Management address</div><div class="fbox mgmtcell" data-box="tenant.mgmt_address" style="background:'+c[1]+';border-left-color:'+c[0]+'"><div class="uadrop"><div class="uatrigger" tabindex="0"><span class="ualab">'+inner+'</span><span class="cvx">▾</span></div>'+menu+'</div>'+(ovSrc?ovIcons('tenant.mgmt_source'):'')+'</div></div>';}
@@ -1925,8 +1936,8 @@ function numBox(k,ph){const c=boxColor(k);
   const _rsCell=!!(_mc||_mu);   // non-Section-8 counts and Part D uses come off the schedule too
   return `<div class="rbox" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><input type="text" data-k="${k}" value="${esc(get(k))}" placeholder="${esc(ph||'')}">${_rv!=null?srcPick(k,[{tag:'Executed RS',val:_rv}]):(_rsCell?dimPick('Executed RS'):'')}${ovIcons(k)}</div>`;}
 function brbaBox(brK,baK){const c=groupColors([brK,baK]);
-  const withRs=(k,opts,ph)=>{const d=csDrop(k,opts,ph,'',true,partHot(k)?tintStyle(k):'');
-    const row=rsCsRow(k)||'<div class="uaopt srcdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>';
+  const withRs=(k,opts,ph)=>{const d=csDrop(k,opts,ph,'',true,partHot(k)?tintStyle(k):'',rsBrBa(k));
+    const row=rsCsRow(k)||'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>';
     return d.replace('<div class="uamenu">','<div class="uamenu">'+row);};
   return `<div class="rbox brba" data-box="${brK}" style="background:${c[1]};border-left-color:${c[0]}">${withRs(brK,BR_OPTS,'BR')}${ovIcons(brK)}<span class="slash">/</span>${withRs(baK,BA_OPTS,'BA')}${ovIcons(baK)}</div>`;}
 function uaBox(i){const src=get('units.'+i+'.ua_source')||defUaSrc(i),exec=get('units.'+i+'.ua_exec'),rcs=get('units.'+i+'.ua_rcs'),custom=get('units.'+i+'.ua_custom');
@@ -1939,7 +1950,7 @@ function uaBox(i){const src=get('units.'+i+'.ua_source')||defUaSrc(i),exec=get('
    key is the one that knows an on-file value was displaced, so the badge carries
    both: coupledKeys already saves and reverts them together. */
   let state,c;if(src==='custom'){const _st=srcCellState('units.'+i+'.ua_custom');c=provColors(_st==='overridden'?'overridden':(_st==='database'?'database':'new'),'units.'+i+'.ua_source');}else{state=hasAny?srcOf(src==='rcs'?('units.'+i+'.ua_rcs'):('units.'+i+'.ua_exec')):'new';const overSrc=srcOf('units.'+i+'.ua_source')==='overridden';const _cs=srcCellState('units.'+i+'.ua_custom');if(_cs==='overridden')state='overridden';else if(_cs==='database'&&state==='new')state='database';if(uaUnresolved(i)||overSrc)state='overridden';c=provColors(state,'units.'+i+'.ua_source');}const boxKeyUA=src==='custom'?('units.'+i+'.ua_custom'):('units.'+i+'.ua_source');
-  const menu='<div class="uamenu">'+srcOptRow('data-uaopt="exec" data-uai="'+i+'"',(exec!==''&&exec!=null)?('$'+fmtMoney(exec)):'','Executed RS')+((hasProg('rcs')||numf(rcs)>0)?srcOptRow('data-uaopt="rcs" data-uai="'+i+'"',(rcs!==''&&rcs!=null)?('$'+fmtMoney(rcs)):'','RCS report'):'')+'<div class="uaopt" data-uaopt="custom" data-uai="'+i+'">Custom…</div></div>';
+  const menu='<div class="uamenu">'+srcOptRow('data-uaopt="exec" data-uai="'+i+'"',(exec!==''&&exec!=null)?('$'+fmtMoney(exec)):'','Executed RS',src==='exec')+((hasProg('rcs')||numf(rcs)>0)?srcOptRow('data-uaopt="rcs" data-uai="'+i+'"',(rcs!==''&&rcs!=null)?('$'+fmtMoney(rcs)):'','RCS report',src==='rcs'):'')+'<div class="uaopt'+(src==='custom'?' sel':'')+'" data-uaopt="custom" data-uai="'+i+'">Custom…</div></div>';
   return '<div class="rbox uacell" data-box="'+boxKeyUA+'" style="background:'+c[1]+';border-left-color:'+c[0]+'"><div class="uadrop"><div class="uatrigger" tabindex="0"><span class="ualab">'+lab+'</span><span class="cvx">▾</span></div>'+menu+'</div></div>';}
 function uaNoteCell(i){const conf=uaConflict(i),overSrc=srcOf('units.'+i+'.ua_source')==='overridden';if(!conf&&!overSrc)return '';const ex=get('units.'+i+'.ua_exec'),rc=get('units.'+i+'.ua_rcs');
   if(conf&&uaUnresolved(i))return '<div class="ucnote warn">⚠ exec $'+ex+' · RCS $'+rc+' <span class="pick"><button class="urev sv" data-uaok="'+i+'">approve $'+uaResolvedOf(i)+'</button></span></div>';
@@ -1955,7 +1966,7 @@ function numUnresolved(i){return numConflict(i)&&!numReviewedOf(i);}
    belongs to — see unitActs. Inside these cells the icon pair squeezed the
    controls it sat beside, and the row changed shape the moment it was edited. */
 function unitTypeCell(i){const brK='units.'+i+'.br',baK='units.'+i+'.ba';const conf=typeUnresolved(i);const c=conf?CLR.overridden:groupColors([brK,baK]);
-  const withRs=(k,opts,ph)=>{const d=csDrop(k,opts,ph,'',true,(!conf&&partHot(k))?tintStyle(k):'');const row=rsCsRow(k)||'<div class="uaopt srcdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>';
+  const withRs=(k,opts,ph)=>{const d=csDrop(k,opts,ph,'',true,(!conf&&partHot(k))?tintStyle(k):'',rsBrBa(k));const row=rsCsRow(k)||'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>';
     return d.replace('<div class="uamenu">','<div class="uamenu">'+row);};
   return `<div class="rbox brba" data-box="${brK}" style="background:${c[1]};border-left-color:${c[0]}">${withRs(brK,BR_OPTS,'BR')}<span class="slash">/</span>${withRs(baK,BA_OPTS,'BA')}${desigDrop(i)}</div>`;}
 function unitCountCell(i){const k='units.'+i+'.num_units';const c=numUnresolved(i)?CLR.overridden:cellColors(k);const rv=rsUnit(i,'count');
@@ -1974,7 +1985,7 @@ function safmrBox(i){const src=get('units.'+i+'.safmr_source')||defSafmrSrc(i),h
   const hasAny=numf(hud)>0||numf(rcs)>0||numf(custom)>0;
   const lab=src==='rcs'?('$<input class="uac-in srcedit" data-srcedit="safmr" data-si="'+i+'" data-money="1" value="'+esc(fmtMoney(rcs))+'"><span class="srctag">· RCS</span>'):(src==='custom'?('$<input class="uac-in" data-money="1" data-k="units.'+i+'.safmr_custom" value="'+esc(fmtMoney(custom))+'" placeholder="0">'):('$<input class="uac-in srcedit" data-srcedit="safmr" data-si="'+i+'" data-money="1" value="'+esc(fmtMoney(hud))+'"><span class="srctag">· HUD</span>'));
   let state,c;if(src==='custom'){const _st=srcCellState('units.'+i+'.safmr_custom');c=provColors(_st==='overridden'?'overridden':(_st==='database'?'database':'new'),'units.'+i+'.safmr_source');}else{state=hasAny?srcOf(src==='rcs'?('units.'+i+'.safmr_rcs'):('units.'+i+'.safmr_hud')):'new';const overSrc=srcOf('units.'+i+'.safmr_source')==='overridden';const _cs=srcCellState('units.'+i+'.safmr_custom');if(_cs==='overridden')state='overridden';else if(_cs==='database'&&state==='new')state='database';if(safmrUnresolved(i)||overSrc)state='overridden';c=provColors(state,'units.'+i+'.safmr_source');}const boxKeySA=src==='custom'?('units.'+i+'.safmr_custom'):('units.'+i+'.safmr_source');
-  const menu='<div class="uamenu">'+srcOptRow('data-safmropt="hud" data-safmri="'+i+'"',(hud!==''&&hud!=null)?('$'+fmtMoney(hud)):'','HUD API')+((hasProg('rcs')||numf(rcs)>0)?srcOptRow('data-safmropt="rcs" data-safmri="'+i+'"',(rcs!==''&&rcs!=null)?('$'+fmtMoney(rcs)):'','RCS report'):'')+'<div class="uaopt" data-safmropt="custom" data-safmri="'+i+'">Custom…</div></div>';
+  const menu='<div class="uamenu">'+srcOptRow('data-safmropt="hud" data-safmri="'+i+'"',(hud!==''&&hud!=null)?('$'+fmtMoney(hud)):'','HUD API',src==='hud')+((hasProg('rcs')||numf(rcs)>0)?srcOptRow('data-safmropt="rcs" data-safmri="'+i+'"',(rcs!==''&&rcs!=null)?('$'+fmtMoney(rcs)):'','RCS report',src==='rcs'):'')+'<div class="uaopt'+(src==='custom'?' sel':'')+'" data-safmropt="custom" data-safmri="'+i+'">Custom…</div></div>';
   return '<div class="rbox uacell" data-box="'+boxKeySA+'" style="background:'+c[1]+';border-left-color:'+c[0]+'"><div class="uadrop"><div class="uatrigger" tabindex="0"><span class="ualab">'+lab+'</span><span class="cvx">▾</span></div>'+menu+'</div></div>';}
 function safmrNote(i){const res=safmrResolvedOf(i),hud=numf(get('units.'+i+'.safmr_hud')),rcs=numf(get('units.'+i+'.safmr_rcs'));
   if(safmrUnresolved(i))return '<div class="ucnote warn">⚠ HUD $'+hud+' · RCS $'+rcs+' <span class="pick"><button class="urev sv" data-safmrok="'+i+'">approve $'+res+'</button></span></div>';
@@ -2152,11 +2163,12 @@ function desigDrop(i){const k='units.'+i+'.desig';const v=get(k);const has=v!=='
   /* A dimmed row when nothing is parsed, not a missing one: every schedule-fed
      cell in this form declares the schedule as a source whether or not one is
      loaded, so you can see where the value would come from. */
-  const menu=(rsCsRow(k)||'<div class="uaopt srcdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>')
-    +DESIG.filter(d=>d[0]).map(d=>'<div class="uaopt" data-csopt="'+d[0]+'" data-cskey="'+k+'">'+d[0]+'<span class="uasub">'+esc(d[1])+'</span></div>').join('')
-    +'<div class="uaopt" data-csopt="" data-cskey="'+k+'">\u2014<span class="uasub">No designation</span></div>';
+  const rsv=rsBrBa(k);const fromRs=!!(has&&rsv&&String(rsv)===String(v));   // the attached schedule prints this very designation
+  const menu=(rsCsRow(k)||'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>')
+    +DESIG.filter(d=>d[0]).map(d=>'<div class="uaopt'+((d[0]===v&&!fromRs)?' sel':'')+'" data-csopt="'+d[0]+'" data-cskey="'+k+'">'+d[0]+'<span class="uasub">'+esc(d[1])+'</span></div>').join('')
+    +'<div class="uaopt'+(has?'':' sel')+'" data-csopt="" data-cskey="'+k+'">\u2014<span class="uasub">No designation</span></div>';
   return '<div class="uadrop cs dgdrop"><div class="uatrigger" tabindex="0" data-trigfor="'+k+'" style="'+tint+'" title="'+esc(has?desigName(v):'Designation')+'">'
-    +'<span class="ualab">'+(has?esc(v):'\u2014')+'</span><span class="cvx">\u25be</span></div>'
+    +'<span class="ualab">'+(has?esc(v):'\u2014')+'</span>'+(fromRs?'<span class="srctag">\u00b7 RS</span>':'')+'<span class="cvx">\u25be</span></div>'
     +'<div class="uamenu">'+menu+'</div></div>';}
 function fuelChip(k,three){const v=get(k);const has=v!==''&&v!=null;const c=cellColors(k);const cls=three?'fuel3':'fuel';return '<span class="'+cls+(has?'':' empty')+'" data-fuel'+(three?'3':'')+'="'+k+'" style="color:'+c[0]+';border-color:'+c[0]+';background:'+c[1]+'">'+(has?esc(v):'-')+'</span>';}
 function cbx(k,label){const on=get(k)==='1';return `<label class="cb"><input type="checkbox" data-cb="${k}" ${on?'checked':''}><span class="box" style="${boxStyle(k)}">${on?'✓':''}</span><span class="cbt">${esc(label)}</span>${ovIcons(k)}</label>`;}
@@ -2255,7 +2267,7 @@ function rsBrBa(k){let m=String(k||'').match(/^units\.(\d+)\.(br|ba|desig)$/);
   if(m)return rsFamVal('nonrev',+m[1],m[2]);
   return null;}
 function rsCsRow(k){const v=rsBrBa(k);   // the schedule's own unit type, offered like any other source
-  return v?('<div class="uaopt" data-cskey="'+k+'" data-csopt="'+esc(v)+'">'+esc(v)+'<span class="uasub">Executed RS</span></div>'):'';}
+  return v?('<div class="uaopt srcopt'+((String(get(k)==null?'':get(k))===String(v))?' sel':'')+'" data-cskey="'+k+'" data-csopt="'+esc(v)+'">'+esc(v)+'<span class="uasub">Executed RS</span></div>'):'';}
 function rsVal(k){try{const p=_rsUpload&&_rsUpload.parsed;const v=p&&p.scalars?p.scalars[k]:null;return (v==null||v==='')?null:String(v);}catch(e){return null;}}
 function rsNum(v){v=String(v==null?'':v).replace(/[^0-9.\-]/g,'');const n=parseFloat(v);return isFinite(n)?n:'';}
 function rsDateISO(v){v=String(v||'').trim();let m=v.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);if(m)return m[3]+'-'+('0'+m[1]).slice(-2)+'-'+('0'+m[2]).slice(-2);m=v.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m)return v.slice(0,10);const MN={january:1,february:2,march:3,april:4,may:5,june:6,july:7,august:8,september:9,october:10,november:11,december:12};m=v.toLowerCase().match(/([a-z]+)\s+(\d{1,2}),?\s+(\d{4})/);if(m&&MN[m[1]])return m[3]+'-'+('0'+MN[m[1]]).slice(-2)+'-'+('0'+m[2]).slice(-2);return '';}
@@ -2684,7 +2696,7 @@ function ocafFactorCell(){const pub=get('ocaf.factor_pub'),fy=get('ocaf.factor_f
     :(pub?('<span class="ualab">'+esc(pub)+'%<span class="srctag" style="margin-left:6px">· FY'+esc(fy)+' Federal Register</span></span>'):('<span class="ualab" style="color:#8791a5">— pull or enter the factor</span>'));
   let state,c;if(src==='custom'){c=cellColors('ocaf.factor_custom');}else{state=pub?srcOf('ocaf.factor_pub'):'new';c=provColors(state,'ocaf.factor_source');}
   const boxKey=(src==='custom')?'ocaf.factor_custom':'ocaf.factor_src';
-  const menu='<div class="uamenu">'+srcOptRow('data-ocfopt="fr"',pub?esc(pub+'% · FY'+fy):'','Federal Register')+'<div class="uaopt" data-ocfopt="custom">Custom…</div></div>';
+  const menu='<div class="uamenu">'+srcOptRow('data-ocfopt="fr"',pub?esc(pub+'% · FY'+fy):'','Federal Register',src==='fr')+'<div class="uaopt'+(src==='custom'?' sel':'')+'" data-ocfopt="custom">Custom…</div></div>';
   return '<div class="rbox uacell" data-box="'+boxKey+'" style="background:'+c[1]+';border-left-color:'+c[0]+';max-width:330px;flex:0 1 auto"><div class="uadrop" style="flex:1;min-width:0"><div class="uatrigger" tabindex="0">'+lab+'<span class="cvx">▾</span></div>'+menu+'</div>'+(src==='custom'?ovIcons('ocaf.factor_custom'):'')+'</div>';}
 function renderOcaf(){const C=ocafCalc();
   const rt=get('ocaf.rate_type')||'Fixed rate';const fl=/floating/i.test(rt);
