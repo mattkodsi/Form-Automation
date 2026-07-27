@@ -1431,7 +1431,18 @@ function renderBar(){const a=analysis();const conf=UNITS.filter(uaConflict).leng
  const PASS=CEIL>0&&PG<CEIL,HEAD=CEIL-PG;
  const gCur=CEIL>0?clamp(CG/CEIL*100):0,gPro=CEIL>0?clamp(PG/CEIL*100):0;
  el('ccbar').innerHTML=`<div class="bl"><div class="minigauge">${gaugeSegs(priced?gCur:pCur,priced?gPro:0)}<div class="oend"></div></div><div class="mn"><b style="color:#2f7d57">${money(priced?CG:a.cg)}</b> current · <b style="color:${priced?'#47a377':'#94a3b8'}">${priced?money(PG):'—'}</b> proposed · <b>${(priced?CEIL:a.ceil)>0?money(priced?CEIL:a.ceil):'—'}</b> ceiling${priced?' · <b style="color:'+liftClr(a.pct)+'">'+sPct(a.pct)+'</b> RCS '+(a.pct<0?'decrease':(a.pct>0?'boost':'change')):''}${partial?' · <b style="color:#b45309">'+(a.tTot-a.tPr)+' type'+(a.tTot-a.tPr===1?'':'s')+' unpriced</b>':''}</div><div class="bpass" style="color:${(a.ceil>0&&priced)?(PASS?'#166534':'#b91c1c'):'#64748b'}">${(a.ceil>0&&priced)?((PASS?'✓ PASS':'✗ OVER')+' · '+money(Math.abs(HEAD))):(a.ceil>0?'proposed rents needed':'SAFMR needed')}</div></div><div class="bchks">${chks}${bc(a.safmrMissing||a.safmrOver?'warn':(a.safmrConflict?'info':'ok'),'SAFMR')}</div>`;}
-function renderBody(){const _sy=window.scrollY;const _anchorSel=(_refocusSel&&!_mouseFocus)?_refocusSel:(((Date.now()-_lastClickAt)<2000)?_lastClickSel:null);let _anchorTop=null;if(_anchorSel){try{const _ac=document.querySelector(_anchorSel);if(_ac)_anchorTop=_ac.getBoundingClientRect().top;}catch(e){}}computeSecPos();const _SR={1:renderSources,2:()=>renderFieldSection(FIELD_SECTIONS[0]),3:()=>renderFieldSection(FIELD_SECTIONS[1]),4:()=>renderFieldSection(FIELD_SECTIONS[2]),5:()=>renderFieldSection(FIELD_SECTIONS[3]),6:renderRents,7:renderPartB,8:renderChecklist,9:()=>renderFieldSection(FIELD_SECTIONS[4]),10:renderOcaf,11:renderUaf,12:renderPrincipals};el('sections').innerHTML=visibleSections().map(n=>_SR[n]()).join('');
+/* A "reviewed" flag exists only to silence a warning about a conflict. When the
+   conflict itself goes away — a figure retyped, a source switched, a row cleared —
+   the flag is meaningless, and it was the last thing on the form still differing
+   from the record: the footer said "unsaved changes" with nothing on screen to
+   show for it. Clear it, but only when the record does not already hold it; a
+   saved flag matches the record, and un-setting one would make a form dirty the
+   moment it opened. */
+function syncReviewed(){const held=k=>{const c=form[k];return !!(c&&c.db_value==='1');};
+  const drop=(k,live)=>{if(get(k)==='1'&&!live&&!held(k))form=store.editForm(form,k,'');};
+  UNITS.forEach(i=>{drop('units.'+i+'.ua_reviewed',uaConflict(i));drop('units.'+i+'.safmr_reviewed',safmrConflictOf(i));
+    drop('units.'+i+'.type_reviewed',typeConflict(i));drop('units.'+i+'.num_reviewed',numConflict(i));});}
+function renderBody(){syncReviewed();const _sy=window.scrollY;const _anchorSel=(_refocusSel&&!_mouseFocus)?_refocusSel:(((Date.now()-_lastClickAt)<2000)?_lastClickSel:null);let _anchorTop=null;if(_anchorSel){try{const _ac=document.querySelector(_anchorSel);if(_ac)_anchorTop=_ac.getBoundingClientRect().top;}catch(e){}}computeSecPos();const _SR={1:renderSources,2:()=>renderFieldSection(FIELD_SECTIONS[0]),3:()=>renderFieldSection(FIELD_SECTIONS[1]),4:()=>renderFieldSection(FIELD_SECTIONS[2]),5:()=>renderFieldSection(FIELD_SECTIONS[3]),6:renderRents,7:renderPartB,8:renderChecklist,9:()=>renderFieldSection(FIELD_SECTIONS[4]),10:renderOcaf,11:renderUaf,12:renderPrincipals};el('sections').innerHTML=visibleSections().map(n=>_SR[n]()).join('');
   wireBody();renderCommand();renderBar();renderRail();renderAttention();refreshFooter();
   if(_refocusSel&&!_mouseFocus){try{const _f=document.querySelector(_refocusSel);if(_f&&_f.focus){_f.focus({preventScroll:true});if(/^(INPUT|TEXTAREA)$/.test(_f.tagName)&&typeof _f.setSelectionRange==='function'){const _L=(_f.value||'').length;try{_f.setSelectionRange(_L,_L);}catch(_e){}}}}catch(e){}}_refocusSel=null;
   if(_anchorSel&&_anchorTop!=null){try{const _a2=document.querySelector(_anchorSel);if(_a2){const _nt=_a2.getBoundingClientRect().top;window.scrollTo(0,window.scrollY+(_nt-_anchorTop));}else window.scrollTo(0,_sy);}catch(e){try{window.scrollTo(0,_sy);}catch(_z){}}}else{try{window.scrollTo(0,_sy);}catch(e){}}}
@@ -2689,6 +2700,10 @@ if(typeof module!=='undefined')module.exports={DESIG,desigName,rsParseUnitType,f
      push the cell, then write it the way that handler does — so a suite can
      build a run of edits without synthesising DOM events. */
   __editCell:(k,v)=>{pushCellUndo(k);if(!srcEditKey(k,v))form=store.editForm(form,k,v);},
+  /* The three writers a suite cannot reach through the DOM: the one that puts a
+     source-backed cell back on its own source, the one that reverts a group to a
+     saved blank, and the sweep that drops a conflict flag whose conflict is gone. */
+  __srcSetSource:(ck,ch)=>srcSetSource(ck,ch),__revertKeys:(ks)=>revertKeys(ks),__syncReviewed:()=>syncReviewed(),
   __undoDepth:()=>_undoChain.length,__undoStep:()=>undoStep(),__clearUndo:()=>clearUndoChain(),__undoScope:(k)=>undoScope(k),
   /* …and __saveCell is Enter in that same box: save the cell's keys, re-baseline
      them, end the run. The three calls, and their order, are the handler's. */
