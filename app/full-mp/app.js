@@ -2342,15 +2342,41 @@ async function combinePdfs(list){const {PDFDocument}=window.PDFLib;const out=awa
    requirements is offered as blocked, naming exactly what it needs, rather than
    generated broken. Optional details (a half-entered address, a missing phone)
    are NOT listed: those degrade cleanly. */
+/* Required vs suggested, audited document by document against what gen.js
+   ACTUALLY prints — not against what seemed obvious. REQUIRED means the document
+   is wrong or unfileable without it; SUGGESTED (docWarns) means it still files
+   but says less. Every entry below names the hole it leaves on the page.
+
+   The old table was thin enough that all five letters could generate with an
+   empty signature block, because only the checklist asked for a signatory. */
 const DOC_REQS={
+  /* Signature block, and a closing sentence that tells the CA who to call. */
   cover:[['property.name','property name',2],['property.s8','Section 8 number',2],
-         ['ca.name','CA contact name',4],['ca.org','CA organization',4],['poc.name','point of contact',3]],
+         ['ca.name','CA contact name',4],['ca.org','CA organization',4],
+         ['poc.name','point of contact',3],
+         ['sig.name','signatory name',3],['sig.title','signatory title',3]],
+  /* Certification 2 names the appraiser, 7 names the point of contact, and the
+     owner signs the lot under penalty of perjury — so each is required, not
+     merely suggested. The firm alone left "The RCS appraiser's (, Smith & Co)". */
   owner:[['property.name','property name',2],['property.s8','Section 8 number',2],
          ['ca.name','CA contact name',4],['ca.org','CA organization',4],
-         ['owner.entity_name','ownership entity',2],['appr.firm','appraisal firm',5]],
-  checklist:[['sig.name','signatory name',3],['sig.title','signatory title',3]],
-  schedule:[['property.name','property name',2]],
-  notice:[['ca.org','CA organization',4],['tenant.sender_name','tenant-notice sender name',9]],
+         ['owner.entity_name','ownership entity',2],
+         ['appr.name','appraiser name',5],['appr.firm','appraisal firm',5],
+         ['poc.name','point of contact',3],
+         ['sig.name','signatory name',3],['sig.title','signatory title',3]],
+  /* The property name prints 18pt across the head of the form. */
+  checklist:[['property.name','property name',2],
+             ['sig.name','signatory name',3],['sig.title','signatory title',3]],
+  /* HUD-92458's header block: name, FHA number, the date the rents take effect
+     (checked separately, it is a resolved value not a plain key), the mortgagor
+     entity in Part F, and the Part G signature. The FHA number is its own field
+     on this form and is NOT the Section 8 number. */
+  schedule:[['property.name','property name',2],['property.fha','FHA number',2],
+            ['owner.entity_name','ownership entity',2],
+            ['sig.name','signatory name',3],['sig.title','signatory title',3]],
+  /* The property name is the notice's subject — it appears in six sentences. */
+  notice:[['property.name','property name',2],
+          ['ca.org','CA organization',4],['tenant.sender_name','tenant-notice sender name',9]],
 };
 /* Blockers stop a document being written; caveats do not, but they change what
    it says. The management street is the clearest case: the notice generates
@@ -2360,6 +2386,29 @@ const DOC_REQS={
    and you would meet it on the next run instead. Caveats now sit on the row they
    concern, whether or not that row generated. */
 function docWarns(id){const w=[];
+  const dim=(k,label,sec)=>{if(!hasReal(k))w.push({key:k,label:label,sec:sec});};
+  /* The addressee block on both letters is filtered before printing, so a
+     missing line vanishes silently rather than printing blank — which is why
+     these are caveats and not blockers: the letter is still correct, it is just
+     addressed to a company rather than to a desk at an address. */
+  if(id==='cover'||id==='owner'){dim('ca.position','CA contact position',4);dim('ca.addr_street','CA street address',4);}
+  if(id==='cover'){if(!hasReal('poc.phone')&&!hasReal('poc.email'))
+    w.push({key:'poc.phone',label:'a phone or email for the point of contact',sec:3});}
+  /* Certification 8 promises the appraiser's contact details "below", then
+     prints nothing at all when we hold none of them. */
+  if(id==='owner'){dim('poc.email','point-of-contact email',3);dim('poc.phone','point-of-contact phone',3);
+    dim('appr.addr_street','appraiser street address',5);dim('appr.email','appraiser email',5);dim('appr.phone','appraiser phone',5);}
+  if(id==='checklist'&&!CHECKLIST_FLAT.some((_,i)=>get('check.'+i)==='1'))
+    w.push({key:'',label:'no checklist item is ticked',sec:8});
+  /* Proposed rents are SUGGESTED here and REQUIRED on the notice, deliberately.
+     The schedule is a form the owner may want blank on purpose — generate it,
+     then type the rents in and let HUD's own arithmetic extend and total them.
+     That workflow only works because the template keeps its calculations, which
+     is why they are no longer stripped. A notice has no such excuse. */
+  if(id==='schedule'){
+    if(!UNITS.some(i=>hasReal('units.'+i+'.proposed')))
+      w.push({key:'',label:'proposed rents',sec:6});
+    dim('owner.entity_type','ownership entity type',2);}
   if(id==='notice'){
     const src=get('tenant.mgmt_source')||'property';
     const onProp=src==='property';
@@ -2369,7 +2418,17 @@ function docWarns(id){const w=[];
   return w;}
 function docMissing(id){const r=DOC_REQS[id]||[];
   const m=r.filter(x=>!hasReal(x[0])).map(x=>({key:x[0],label:x[1],sec:x[2]}));   // "N/A" does not make a document ready
-  if(id==='schedule'&&!UNITS.some(i=>numf(get('units.'+i+'.num_units'))>0))m.push({key:'units',label:'at least one unit type with a count',sec:6});
+  const units=UNITS.some(i=>numf(get('units.'+i+'.num_units'))>0);
+  if(id==='schedule'){
+    if(!units)m.push({key:'units',label:'at least one unit type with a count',sec:6});
+    // resolved across three keys (RS / custom / legacy), so not a plain lookup
+    if(!String(dateEffResolved()||'').trim())m.push({key:'rent_schedule.date_eff_custom',label:'date the rents take effect',sec:6});}
+  if(id==='notice'){
+    if(!units)m.push({key:'units',label:'at least one unit type with a count',sec:6});
+    /* A notice served under 24 CFR 245 exists to state the increase. With no
+       proposed rent its Requested Rent column prints empty down the page, and
+       what reaches the resident announces nothing. */
+    else if(!UNITS.some(i=>hasReal('units.'+i+'.proposed')))m.push({key:'units.0.proposed',label:'proposed rents',sec:6});}
   return m;}
 /* Go to the cell that fixes a gap — the one whose name was clicked, not just the
    section holding it. Landing on a section and focusing whatever input came
@@ -2788,7 +2847,7 @@ function contactDialog(c){c=c||{};
   ['ccN','ccE','ccP'].forEach(id=>{const ff=el(id);if(ff&&ff.addEventListener)ff.addEventListener('keydown',ev=>{if(ev.key!=='Enter')return;ev.preventDefault();const d=(el('ccP').value||'').replace(/\D/g,'');if(d.length===0||d.length===10)el('dlgOk').click();});});
   el('dlgCancel').onclick=closeModal;
   el('dlgOk').onclick=async()=>{const patch={name:(el('ccN').value||'').trim(),email:(el('ccE').value||'').trim(),phone:(el('ccP').value||'').trim()};closeModal();try{if(c.id)await mpdb.updateContact(c.id,patch);else await mpdb.addContact(patch);renderContacts();}catch(e){saveFailedModal(e);}};}
-if(typeof module!=='undefined')module.exports={DESIG,desigName,rsParseUnitType,fmtPhone,fmtDate,sMoney,sPct,sK,analysis,uaResolvedOf,uaConflict,uaUnresolved,renderMenu,renderLauncher,openMenu,openForm,openLauncher,ringSvg,niceDate,isDirty,overrideCount,isStateKey,attnFlags,pbUtil,clearUncheckedWriteins,srcOf:(k)=>srcOf(k),__openForm:(pid)=>{activePid=pid;return openForm('RCS');},__openCycleForm:(pid,cid)=>{activePid=pid;return openCycleForm(cid);},__edit:(k,v)=>{form=store.editForm(form,k,v);},getVal:(k)=>get(k),modeOf:(kk)=>modeOf(kk),fieldKeys:(k)=>fieldKeys(k),keysCanSave:(ks)=>keysCanSave(ks),keysCanRevert:(ks)=>keysCanRevert(ks),keysNewDirty:(ks)=>keysNewDirty(ks),__revert:(k)=>store.revertForm(form,k),coupledKeys:(k)=>coupledKeys(k),__firstPid:()=>{const ps=mpdb?mpdb.listProperties():[];return ps.length?ps[0].id:null;},__boxes:(i)=>({ua:uaBox(i),safmr:safmrBox(i)}),__saveField:async(k)=>{form=await store.saveField(form,k);},__set:(f,u)=>{form=f;UNITS=u;},desigColors:(k)=>desigColors(k),__cell:(k)=>form[k],
+if(typeof module!=='undefined')module.exports={DESIG,desigName,rsParseUnitType,fmtPhone,fmtDate,sMoney,sPct,sK,analysis,uaResolvedOf,uaConflict,uaUnresolved,renderMenu,renderLauncher,openMenu,openForm,openLauncher,ringSvg,niceDate,isDirty,overrideCount,isStateKey,attnFlags,pbUtil,clearUncheckedWriteins,srcOf:(k)=>srcOf(k),__openForm:(pid)=>{activePid=pid;return openForm('RCS');},__openCycleForm:(pid,cid)=>{activePid=pid;return openCycleForm(cid);},__docMissing:(id)=>docMissing(id).map(x=>x.label),__docWarns:(id)=>docWarns(id).map(x=>x.label),__edit:(k,v)=>{form=store.editForm(form,k,v);},getVal:(k)=>get(k),modeOf:(kk)=>modeOf(kk),fieldKeys:(k)=>fieldKeys(k),keysCanSave:(ks)=>keysCanSave(ks),keysCanRevert:(ks)=>keysCanRevert(ks),keysNewDirty:(ks)=>keysNewDirty(ks),__revert:(k)=>store.revertForm(form,k),coupledKeys:(k)=>coupledKeys(k),__firstPid:()=>{const ps=mpdb?mpdb.listProperties():[];return ps.length?ps[0].id:null;},__boxes:(i)=>({ua:uaBox(i),safmr:safmrBox(i)}),__saveField:async(k)=>{form=await store.saveField(form,k);},__set:(f,u)=>{form=f;UNITS=u;},desigColors:(k)=>desigColors(k),__cell:(k)=>form[k],
   /* The undo run. __editCell is the text box's input handler in miniature —
      push the cell, then write it the way that handler does — so a suite can
      build a run of edits without synthesising DOM events. */

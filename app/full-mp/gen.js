@@ -93,7 +93,12 @@ const addrLine=(street,city,state,zip)=>{
     st.line('Dear '+t.ca_salutation+',',{}); st.gap(8);
     st.para('As outlined in the Renewal HAP contract for the above site, in Section 5b(2)(b) Contract rent adjustments:');
     st.para('“At the expiration of each 5-year period of the Renewal Contract term, the contract administrator shall compare existing contract rents with comparable market rents for the market area. At such anniversary of the Renewal Contract, the contract administrator shall make any adjustments in the monthly contract rents, as reasonably determined by the contract administrator in accordance with HUD requirements, necessary to set the contract rents for all unit sizes at comparable market rents. Such adjustment may result in a negative adjustment (decrease) or positive adjustment (increase) of the contract rents for one or more unit sizes.”');
-    st.para('Should you have any questions regarding the rent adjustment request, please do not hesitate to contact '+t.pm_name+' at '+t.pm_phone+' or '+t.pm_email+'.',{gapAfter:20});
+    /* Join only what we hold. Interpolating both unconditionally printed
+       "contact Jane Doe at  or ." on a filed letter whenever a phone or email
+       was blank — the gate now asks for one of them, and this keeps the sentence
+       whole if one is missing anyway. */
+    const _pmAt=[t.pm_phone,t.pm_email].filter(Boolean).join(' or ');
+    st.para('Should you have any questions regarding the rent adjustment request, please do not hesitate to contact '+t.pm_name+(_pmAt?' at '+_pmAt:'')+'.',{gapAfter:20});
     st.line('Best Regards,'); st.gap(42); st.line(t.sig_name); st.line(t.sig_title);
     // footer
     const H=await doc.embedFont(StandardFonts.Helvetica), HB=await doc.embedFont(StandardFonts.HelveticaBold);
@@ -120,7 +125,8 @@ const addrLine=(street,city,state,zip)=>{
     st.para('Enclosed please find the owner’s Rent Comparability Study (RCS) for the subject property. This RCS is being submitted, as required by HUD for the Section 8 HAP contract renewal.');
     st.para('This letter is also to certify to each of the following items, as required by the Section 8 Renewal Policy:',{gapAfter:8});
     st.numItem('1.','I have reviewed the content of the RCS and concluded that the RCS includes all material required by Chapter Nine and the Owner’s Checklist in Appendix 9-2-2.');
-    st.numItem('2.','The RCS appraiser’s ('+t.appr_name+', '+t.appr_firm+') narratives and Rent Grid accurately describe the subject project and properly treat non-shelter services and their funding sources as required by Section 9-12 and Appendix 9-1-1.');
+    const _aprID=[t.appr_name,t.appr_firm].filter(Boolean).join(', ');   // an empty half printed "(, Smith & Co)"
+    st.numItem('2.','The RCS appraiser’s '+(_aprID?'('+_aprID+') ':'')+'narratives and Rent Grid accurately describe the subject project and properly treat non-shelter services and their funding sources as required by Section 9-12 and Appendix 9-1-1.');
     st.numItem('3.','There is no family relationship or identity-of-interest between the principals of the subject’s Ownership or management agent entity and the principals that manage/own the projects used as comparables.');
     st.numItem('4.','I certify that: a) neither the selection of the RCS appraiser nor the RCS appraiser’s compensation was/is contingent upon the RCS appraiser reporting a predetermined rent nor direction in rent; and b) to the best of the Owner’s knowledge, the RCS appraiser meets Section 9-8.A.’s conditions regarding absence of financial, employment, and family relationships.');
     st.numItem('5.','I certify that the fee paid for the RCS is the only compensation the RCS appraiser will receive for the RCS work and there is no side agreement or other consideration.');

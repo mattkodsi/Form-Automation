@@ -20,7 +20,7 @@ global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>
 const os=require('os'),path=require('path'),fs=require('fs');
 
 /* ── the verdict machinery (mirrors test_interactions.js) ───────────────── */
-const MIN_CHECKS=45;
+const MIN_CHECKS=65;
 let n=0,fails=0,verdict=null;
 const BAR='═'.repeat(68);
 function fail(msg,err){
@@ -136,6 +136,60 @@ const T=(label,v)=>eq(label,!!v,true);
   eq('150% ceiling',   a.ceil,  178245);
   T('proposed sits under the ceiling', a.pass===true);
   eq('headroom is ceiling minus proposed', a.headroom, a.ceil-a.pg);
+
+  /* The six-document gate, audited against what gen.js actually prints. Each
+     check below is a hole the old table left open: five letters could all
+     generate with an empty signature block, because only the checklist ever
+     asked for a signatory. */
+  console.log('\n─ WHAT EACH DOCUMENT REQUIRES ─');
+  const miss=id=>app.__docMissing(id), warn=id=>app.__docWarns(id);
+  const has=(a,x)=>a.indexOf(x)>=0;
+  T('the seeded property blocks nothing on the cover letter', miss('cover').length===0);
+  app.__edit('sig.name','');
+  T('no signatory blocks the cover letter',   has(miss('cover'),'signatory name'));
+  T('…and the owner letter',                  has(miss('owner'),'signatory name'));
+  T('…and the checklist',                     has(miss('checklist'),'signatory name'));
+  T('…and the rent schedule',                 has(miss('schedule'),'signatory name'));
+  app.__edit('sig.name','A Signatory');
+  app.__edit('appr.name','');
+  T('the owner letter certifies the appraiser by name, so it blocks without one',
+    has(miss('owner'),'appraiser name'));
+  app.__edit('appr.name','An Appraiser');
+  app.__edit('property.fha','');
+  T('HUD-92458 blocks without its FHA number', has(miss('schedule'),'FHA number'));
+  T('which is NOT the Section 8 number — that one is not asked for here',
+    !has(miss('schedule'),'Section 8 number'));
+  app.__edit('property.fha','023-11111');
+  app.__edit('property.name','');
+  T('the notice names the property in six sentences, so it blocks without one',
+    has(miss('notice'),'property name'));
+  T('…and so does the checklist, which prints it 18pt across the head',
+    has(miss('checklist'),'property name'));
+  app.__edit('property.name','Gates Manor Apartments');
+
+  /* Matt's question, settled: the same figure is required for one document and
+     merely suggested for another, because the documents differ. */
+  console.log('\n─ PROPOSED RENTS: required on the notice, suggested on the schedule ─');
+  const props=[]; for(let i=0;i<12;i++){const k='units.'+i+'.proposed'; if(app.getVal(k)!=null&&app.getVal(k)!=='')props.push([k,app.getVal(k)]);}
+  T('the seeded property has proposed rents to clear', props.length>0);
+  props.forEach(([k])=>app.__edit(k,''));
+  T('with none, the tenant notice will not generate', has(miss('notice'),'proposed rents'));
+  T('but the rent schedule still generates',          !has(miss('schedule'),'proposed rents'));
+  T('and says so as a caveat instead',                has(warn('schedule'),'proposed rents'));
+  props.forEach(([k,v])=>app.__edit(k,v));
+  T('restoring them clears the notice block',  !has(miss('notice'),'proposed rents'));
+  T('and clears the schedule caveat too',      !has(warn('schedule'),'proposed rents'));
+
+  console.log('\n─ CAVEATS DEGRADE, THEY DO NOT BLOCK ─');
+  app.__edit('ca.addr_street','');
+  T('a missing CA street is a caveat on the cover letter', has(warn('cover'),'CA street address'));
+  T('and does not block it',                              !has(miss('cover'),'CA street address'));
+  app.__edit('poc.phone','');app.__edit('poc.email','');
+  T('losing BOTH ways to reach the point of contact is a caveat, not a block',
+    has(warn('cover'),'a phone or email for the point of contact'));
+  T('the cover letter still generates',                    miss('cover').length===0);
+  // this phase edited the form to probe the gate; reopen so the next one starts clean
+  await app.__openCycleForm(pid,scid);
 
   console.log('\n─ DIRTY tracking drives the exit prompt ─');
   T('a freshly opened form is not dirty', !app.isDirty());
