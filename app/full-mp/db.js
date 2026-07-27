@@ -443,7 +443,7 @@ async function makeDb(adapter, opts) {
       // the property record or the package it was built from.
       const effIn = String(o.effective_date || '').trim();
       if (effIn) { cells['rent_schedule.date_eff_source'] = { value: 'custom', saved_at: today() }; cells['rent_schedule.date_eff_custom'] = { value: effIn, saved_at: today() }; }
-      D.cycles[cid] = { id: cid, property_id: pid, programs: (o.programs || ['rcs']).join(','), label: o.label || '', effective_date: cyISO(o.effective_date) || '', cells, generated: {}, created_at: now(), updated_at: now() };
+      D.cycles[cid] = { id: cid, property_id: pid, programs: (o.programs || ['rcs']).join(','), label: o.label || '', effective_date: cyISO(o.effective_date) || '', cells, generated: {}, rs_doc: {}, created_at: now(), updated_at: now() };
       if (o.full) cySyncEff(D.cycles[cid]);
       return persist().then(() => ({ cid }));
     },
@@ -482,6 +482,11 @@ async function makeDb(adapter, opts) {
       return persist();
     },
     setCyclePrograms(cid, programs) { const c = D.cycles[cid]; if (!c) return Promise.resolve(); c.programs = (programs || []).join(','); c.updated_at = now(); return persist(); },
+    /* API parity with db.supabase.js's rs_doc surface — see CLAUDE.md: a
+       stand-in that answers differently from the real backend makes every test
+       that uses it a fiction. */
+    getCycleRs(cid) { const c = D.cycles[cid]; return (c && c.rs_doc) || {}; },
+    setCycleRs(cid, doc) { const c = D.cycles[cid]; if (!c) return Promise.resolve(); c.rs_doc = doc || {}; c.updated_at = now(); return persist(); },
     setCycleGenerated(cid, docs) { const c = D.cycles[cid]; if (!c) return Promise.resolve(); c.generated = { at: now(), docs: docs || [] }; c.updated_at = now(); return persist(); },
     clearAll() { D = freshDb(); seedGates(); return persist(); },
     computeAnalysis, computeSalutation,

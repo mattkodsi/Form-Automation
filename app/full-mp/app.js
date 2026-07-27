@@ -769,6 +769,21 @@ function rsBrBa(k){let m=String(k||'').match(/^units\.(\d+)\.(br|ba|desig)$/);
 function rsCsRow(k){const v=rsBrBa(k);   // the schedule's own unit type, offered like any other source
   return v?('<div class="uaopt srcopt'+((String(get(k)==null?'':get(k))===String(v))?' sel':'')+'" data-cskey="'+k+'" data-csopt="'+esc(v)+'">'+esc(v)+'<span class="uasub">Executed RS</span></div>'):'';}
 function rsVal(k){try{const p=_rsUpload&&_rsUpload.parsed;const v=p&&p.scalars?p.scalars[k]:null;return (v==null||v==='')?null:String(v);}catch(e){return null;}}
+/* The reading outlives the page that made it. _rsUpload was a plain variable
+   set on upload and cleared on every form open, so every source row that reads
+   rsVal()/rsUnit()/rsBrBa() went dim on refresh — or merely on leaving the form
+   and coming back — while rows backed by a real saved field (units.N.ua_exec,
+   written by rsFillFromParsed) survived. One menu, two stories, no visible rule.
+   The reading is stored with its package; the PDF bytes are not, because nothing
+   downstream reads _rsUpload.bytes and a schedule is a megabyte the record does
+   not need. */
+function rsRemember(){if(!(activeCid&&mpdb&&mpdb.setCycleRs))return;const u=_rsUpload;
+  const doc=u?{name:u.name,kind:u.kind,via:u.via,at:u.at,parsed:u.parsed}:{};
+  try{Promise.resolve(mpdb.setCycleRs(activeCid,doc)).catch(()=>{});}catch(e){}}
+function rsRecall(){if(!(activeCid&&mpdb&&mpdb.getCycleRs))return null;
+  let d=null;try{d=mpdb.getCycleRs(activeCid);}catch(e){return null;}
+  if(!d||!d.name)return null;
+  return {name:d.name,bytes:null,kind:d.kind||'scan',via:d.via,parsed:d.parsed||null,at:d.at||'',stored:true};}
 function rsNum(v){v=String(v==null?'':v).replace(/[^0-9.\-]/g,'');const n=parseFloat(v);return isFinite(n)?n:'';}
 function rsDateISO(v){v=String(v||'').trim();let m=v.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);if(m)return m[3]+'-'+('0'+m[1]).slice(-2)+'-'+('0'+m[2]).slice(-2);m=v.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m)return v.slice(0,10);const MN={january:1,february:2,march:3,april:4,may:5,june:6,july:7,august:8,september:9,october:10,november:11,december:12};m=v.toLowerCase().match(/([a-z]+)\s+(\d{1,2}),?\s+(\d{4})/);if(m&&MN[m[1]])return m[3]+'-'+('0'+MN[m[1]]).slice(-2)+'-'+('0'+m[2]).slice(-2);return '';}
 function rsYearOn(iso){const m=String(iso||'').match(/^(\d{4})-(\d{2})-(\d{2})/);return m?((+m[1])+1)+'-'+m[2]+'-'+m[3]:'';}   // the uploaded schedule is the one in force; this package renews it
@@ -1126,9 +1141,9 @@ function renderSources(){
   const ru=_rsUpload;let rs;
   if(_rsBusy)rs=`<div class="srcrow"><span class="spin" aria-hidden="true"></span><div><b>${esc(_rsBusy.name||'Rent schedule')}</b> <span class="parsed">${esc(_rsBusy.note||'reading\u2026')}</span><div class="sub">${esc(_rsBusy.sub||'Reading the schedule\u2019s form fields and printed text.')}</div></div></div>`;
   else if(!ru)rs=`<div class="srcrow"><span class="mut">○</span><div><b>Current executed rent schedule</b> <span class="missing">not uploaded</span><div class="sub">Reads the unit mix, rents, utility allowances, entity, and principals — from the schedule’s form fields, or from its printed text if a signed copy has none.</div></div><button class="btn sm" id="upRs">Upload PDF</button></div>`;
-  else if(ru.kind==='fields'){const p=ru.parsed;rs=`<div class="srcrow"><span class="ok">✓</span><div><b>${esc(ru.name)}</b> <span class="parsed">parsed</span><div class="sub">${ru.via==='text'?'Read from the printed text, checked against its own totals. ':(ru.via==='ocr'?'Read by OCR — check each value against the paper. ':'')}Fills only what the schedule has; nothing saves until you do.</div></div><button class="btn sm teal" id="rsApply">Fill form from RS</button> <button class="btn sm" id="upRs">Replace</button></div>`;}
-  else if(ru.kind==='text')rs=`<div class="srcrow"><span class="mut">△</span><div><b>${esc(ru.name)}</b> <span class="missing">no form fields — text copy</span><div class="sub">Its text doesn’t line up with the schedule’s layout — enter the values below.</div></div><button class="btn sm" id="upRs">Replace</button></div>`;
-  else rs=`<div class="srcrow"><span class="mut">△</span><div><b>${esc(ru.name)}</b> <span class="missing">scanned copy</span><div class="sub">Scanned, and what OCR read didn’t match its own totals — enter the values below.</div></div><button class="btn sm" id="upRs">Replace</button></div>`;
+  else if(ru.kind==='fields'){const p=ru.parsed;rs=`<div class="srcrow"><span class="ok">✓</span><div><b>${esc(ru.name)}</b> <span class="parsed">parsed${ru.at?" \u00b7 read "+esc(niceDate(ru.at)):""}</span><div class="sub">${ru.via==='text'?'Read from the printed text, checked against its own totals. ':(ru.via==='ocr'?'Read by OCR — check each value against the paper. ':'')}Fills only what the schedule has; nothing saves until you do.</div></div><button class="btn sm teal" id="rsApply">Fill form from RS</button> <button class="btn sm" id="upRs">Replace</button></div>`;}
+  else if(ru.kind==='text')rs=`<div class="srcrow"><span class="mut">△</span><div><b>${esc(ru.name)}</b> <span class="missing">no form fields — text copy${ru.at?" \u00b7 read "+esc(niceDate(ru.at)):""}</span><div class="sub">Its text doesn’t line up with the schedule’s layout — enter the values below.</div></div><button class="btn sm" id="upRs">Replace</button></div>`;
+  else rs=`<div class="srcrow"><span class="mut">△</span><div><b>${esc(ru.name)}</b> <span class="missing">scanned copy${ru.at?" \u00b7 read "+esc(niceDate(ru.at)):""}</span><div class="sub">Scanned, and what OCR read didn’t match its own totals — enter the values below.</div></div><button class="btn sm" id="upRs">Replace</button></div>`;
   const foot=`<input type="file" id="rcsFile" accept="application/pdf,.pdf" style="display:none"><input type="file" id="rsFile" accept="application/pdf,.pdf" style="display:none">`;
   return card(1,sectionPill(1),rcs+rs+foot);}
 
@@ -1887,7 +1902,7 @@ function wireBody(){
         setStatus('Rent schedule \u2014 '+SHORT[w]+' (page '+i+' of '+n+')\u2026');};
       busy('reading\u2026','Checking the schedule\u2019s form fields and printed text.');
       let r;try{r=await parseRsPdf(b,step);}catch(e){r={kind:'scan',parsed:null};}finally{_rsBusy=null;}
-      _rsUpload={name:f.name,bytes:b,kind:r.kind,via:r.via,parsed:r.parsed};sf.value='';_rsArm=(r.kind==='fields'&&!!r.parsed);renderBody();
+      _rsUpload={name:f.name,bytes:b,kind:r.kind,via:r.via,parsed:r.parsed,at:new Date().toISOString()};sf.value='';_rsArm=(r.kind==='fields'&&!!r.parsed);rsRemember();renderBody();
       setStatus(r.kind==='fields'?((r.via==='ocr'?'Scanned rent schedule read by OCR \u2014 check the values against the paper. ':'Rent schedule parsed \u2014 ')+'press Enter to fill the form, or use \u201cFill form from RS\u201d in '+secRef(1)+'.'):(r.kind==='text'?'This copy carries no form fields, and its printed text could not be placed on the schedule\u2019s layout \u2014 enter the values by hand.':'This copy is a scan \u2014 there is no digital text to read.'));});};
   const ra=el('rsApply');if(ra)ra.onclick=()=>rsFillFromParsed();
   const uu=el('undoUnit');if(uu)uu.onclick=()=>{if(!_undoStack.length)return;const e=_undoStack.pop();Object.keys(e.snap).forEach(k=>{form[k]=e.snap[k];});if(UNITS.indexOf(e.i)<0)UNITS.push(e.i);UNITS.sort((a,b)=>a-b);renderBody();setStatus('Unit type restored.');};
@@ -2120,8 +2135,8 @@ async function openCycleForm(cid){
   activeCid=cid;_cyFresh=null;
   const cy=mpdb.listCycles(activePid).find(c=>c.id===cid);
   activeProgram=cy?cy.programs.map(x=>PROG_NAMES[x]||x).join(' + '):'RCS';
-  _undoStack=[];_undoNR=[];_undoLI=[];_undoPR=[];_undoChain=[];_rcsUpload=null;_rsUpload=null;
-  await mpdb.setActive(activePid);await refreshSnap();form=await store.fillForm();
+  _undoStack=[];_undoNR=[];_undoLI=[];_undoPR=[];_undoChain=[];_rcsUpload=null;_rsUpload=null;_rsArm=false;
+  await mpdb.setActive(activePid);_rsUpload=rsRecall();await refreshSnap();form=await store.fillForm();
   fixSavedToggles();applyChecklistDefaults();deriveUnits();snapForm();renderFormHeader();renderBody();
   show('Form');window.scrollTo(0,0);
   if(cy&&cy.dominant&&cy.programs.indexOf('rcs')>=0)ensureHudSafmr({});   // auto-pull: dominant RCS cycles only
@@ -2237,7 +2252,7 @@ function requestSave(afterSave){
 // New-property checklist default: all §8 boxes on except Scope of repair(2) & Scope of work(4),
 // applied as source 'new' (gray/unsaved) only when the property has never saved a checklist.
 function applyChecklistDefaults(){if(Object.keys(DBSNAP).some(k=>/^check\.\d+$/.test(k)))return;for(let i=0;i<17;i++)form=store.editForm(form,'check.'+i,(i===2||i===4)?'':'1');}
-async function openForm(program){activeProgram=program||'RCS';_undoStack=[];_undoNR=[];_undoLI=[];_undoPR=[];_undoChain=[];_rcsUpload=null;_rsUpload=null;await mpdb.setActive(activePid);await refreshSnap();form=await store.fillForm();fixSavedToggles();applyChecklistDefaults();deriveUnits();snapForm();renderFormHeader();renderBody();show('Form');window.scrollTo(0,0);ensureHudSafmr({});}
+async function openForm(program){activeProgram=program||'RCS';_undoStack=[];_undoNR=[];_undoLI=[];_undoPR=[];_undoChain=[];_rcsUpload=null;_rsUpload=null;_rsArm=false;await mpdb.setActive(activePid);await refreshSnap();form=await store.fillForm();fixSavedToggles();applyChecklistDefaults();deriveUnits();snapForm();renderFormHeader();renderBody();show('Form');window.scrollTo(0,0);ensureHudSafmr({});}
 function renderFormHeader(){
   if(el('hdrProp'))el('hdrProp').textContent=(get('property.name')||'(unnamed property)');
   if(el('hdrProgram'))el('hdrProgram').textContent=activeProgram+' Package';
@@ -2766,7 +2781,7 @@ function contactDialog(c){c=c||{};
   ['ccN','ccE','ccP'].forEach(id=>{const ff=el(id);if(ff&&ff.addEventListener)ff.addEventListener('keydown',ev=>{if(ev.key!=='Enter')return;ev.preventDefault();const d=(el('ccP').value||'').replace(/\D/g,'');if(d.length===0||d.length===10)el('dlgOk').click();});});
   el('dlgCancel').onclick=closeModal;
   el('dlgOk').onclick=async()=>{const patch={name:(el('ccN').value||'').trim(),email:(el('ccE').value||'').trim(),phone:(el('ccP').value||'').trim()};closeModal();try{if(c.id)await mpdb.updateContact(c.id,patch);else await mpdb.addContact(patch);renderContacts();}catch(e){saveFailedModal(e);}};}
-if(typeof module!=='undefined')module.exports={DESIG,desigName,rsParseUnitType,fmtPhone,fmtDate,sMoney,sPct,sK,analysis,uaResolvedOf,uaConflict,uaUnresolved,renderMenu,renderLauncher,openMenu,openForm,openLauncher,ringSvg,niceDate,isDirty,overrideCount,isStateKey,attnFlags,pbUtil,clearUncheckedWriteins,srcOf:(k)=>srcOf(k),__openForm:(pid)=>{activePid=pid;return openForm('RCS');},__edit:(k,v)=>{form=store.editForm(form,k,v);},getVal:(k)=>get(k),modeOf:(kk)=>modeOf(kk),fieldKeys:(k)=>fieldKeys(k),keysCanSave:(ks)=>keysCanSave(ks),keysCanRevert:(ks)=>keysCanRevert(ks),keysNewDirty:(ks)=>keysNewDirty(ks),__revert:(k)=>store.revertForm(form,k),coupledKeys:(k)=>coupledKeys(k),__firstPid:()=>{const ps=mpdb?mpdb.listProperties():[];return ps.length?ps[0].id:null;},__boxes:(i)=>({ua:uaBox(i),safmr:safmrBox(i)}),__saveField:async(k)=>{form=await store.saveField(form,k);},__set:(f,u)=>{form=f;UNITS=u;},desigColors:(k)=>desigColors(k),__cell:(k)=>form[k],
+if(typeof module!=='undefined')module.exports={DESIG,desigName,rsParseUnitType,fmtPhone,fmtDate,sMoney,sPct,sK,analysis,uaResolvedOf,uaConflict,uaUnresolved,renderMenu,renderLauncher,openMenu,openForm,openLauncher,ringSvg,niceDate,isDirty,overrideCount,isStateKey,attnFlags,pbUtil,clearUncheckedWriteins,srcOf:(k)=>srcOf(k),__openForm:(pid)=>{activePid=pid;return openForm('RCS');},__openCycleForm:(pid,cid)=>{activePid=pid;return openCycleForm(cid);},__edit:(k,v)=>{form=store.editForm(form,k,v);},getVal:(k)=>get(k),modeOf:(kk)=>modeOf(kk),fieldKeys:(k)=>fieldKeys(k),keysCanSave:(ks)=>keysCanSave(ks),keysCanRevert:(ks)=>keysCanRevert(ks),keysNewDirty:(ks)=>keysNewDirty(ks),__revert:(k)=>store.revertForm(form,k),coupledKeys:(k)=>coupledKeys(k),__firstPid:()=>{const ps=mpdb?mpdb.listProperties():[];return ps.length?ps[0].id:null;},__boxes:(i)=>({ua:uaBox(i),safmr:safmrBox(i)}),__saveField:async(k)=>{form=await store.saveField(form,k);},__set:(f,u)=>{form=f;UNITS=u;},desigColors:(k)=>desigColors(k),__cell:(k)=>form[k],
   /* The undo run. __editCell is the text box's input handler in miniature —
      push the cell, then write it the way that handler does — so a suite can
      build a run of edits without synthesising DOM events. */
