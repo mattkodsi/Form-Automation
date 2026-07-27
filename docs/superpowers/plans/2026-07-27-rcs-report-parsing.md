@@ -64,6 +64,71 @@ Additionally, one trap that is not in the design and must not be lost:
 
 4. **Letter table 3 prints the BASE SAFMR, not the 150% figure.** `$1,390` / `$1,830` are base; the 150% values the form wants (`$2,085` / `$2,745`) are in **table 1**. `units.N.safmr_rcs` holds the 150% ceiling (per `db.js:109`). The reader cross-checks `table1 ≈ table3 × 1.5` and warns on mismatch.
 
+## Fixture corpus — nine real studies, four firms
+
+Located 2026-07-27 in the user's Google Drive (`RA / Section 8 Examples`), synced locally under
+`~/Library/CloudStorage/GoogleDrive-mfkodsi@gmail.com/My Drive/RA/Section 8/Village Court - Section 8/`.
+**Every one was run through the app's own `rsTextPages()`** — these are our reader's results, not Drive's:
+
+| Study | Firm | Pages | Letter | Grids | Reads? |
+|---|---|---|---|---|---|
+| Colonial Village `26-124` | Belfry | 52 | @1 | 22, 30 | ✅ |
+| Fairview Homes `25-007R` | Belfry | 66 | @1 | 26, 35, 44 | ✅ |
+| Gates Manor `26-121` | Belfry | 48 | @1 | 26 | ✅ |
+| Lansing Manor `25-119` | Belfry | 49 | @1 | 22, 29 | ✅ |
+| Woodland Towers `26-069` | Belfry | 46 | @1 | **none** | ⚠️ letter only |
+| Cherry Gardens `26-088` | Belfry (grids only) | 4 | — | — | ❌ font encoding |
+| South Mews `26-044` | Belfry (grids only) | 5 | — | — | ❌ font encoding |
+| Crossroads of E. Ravenswood `26.082-K` | Cornerstone | 115 | @1 | 16, 54, 60, 66, 73 | ✅ |
+| Golden Link Manor `24.055-K` | Cornerstone | 57 | @1 | 9, 38 | ✅ |
+
+Also present for later profiles: **Gill Group** (Riverwood, Fairview 2017), **Renzi & Associates**
+(Southport Mews 2024 — same appraiser as Belfry; the practice rebranded), Metropolitan Valuation
+Services, Starmark, Novogradac, Doyle, Integra, Feasibility Research Group.
+
+Two consequences for the deliverable:
+
+- **The standalone study puts its letter at page index 1**, not 5 — page 5 was the letter's position
+  inside the 60-page *package*. Classification is content-based, so both work; no page number is ever
+  assumed.
+- **Two Belfry deliverables are grid-only** (no transmittal letter at all) **and their text decodes to
+  garbage** — the same broken-ToUnicode failure class the rent-schedule parser hit on "executed"
+  copies. They fill nothing and say so. OCR (the existing `ocr.js` / `ocr-rs` path) is the only route
+  to them and is explicitly out of scope here.
+
+## Firm findings that change the design
+
+1. **Cornerstone's table rows arrive as ONE run with no spaces** — `1 BR / 1 BA31818$1,870$2.29`.
+   Splitting `31818` into units=31 and size=818 is ambiguous from the text alone. The cause is the
+   TJ handler discarding kerning offsets; **Task 0 fixes it at the reader**, after which the same row
+   reads `1 BR / 1 BA 31 818 $1,870 $2.29` and the regex approach works for both firms.
+2. **Belfry labels the Section 8 number three different ways** across the corpus:
+   `[FHA Project No. OH10M000236]` (Colonial Village, Woodland, Lansing, Gates),
+   `Section 8 Project Number: NJ390013022` (Fairview). All mean `property.s8`. None means `property.fha`.
+3. **Gates Manor contradicts itself**: the letter says `[FHA Project No. IL06H121063]`, the grid says
+   `Subject's FHA #: IL06004814` — two different numbers in one document. This is exactly what
+   `conflicts[]` exists for; the letter wins and the difference is surfaced.
+4. **Cornerstone labels both numbers correctly and separately**: `Section 8 Contract #: IL060048014`
+   plus `FHA Project No.: N/A`. The literal string `N/A` must never be written to a cell.
+5. **Lansing Manor prices two rows with identical bedrooms and baths** — `1BR/1BA without patio`
+   ($1,190, 32 units) and `1BR/1BA with patio` ($1,200, 68 units). Keying units on bedrooms+baths
+   merges them and loses a rent. `upsert` is keyed on the full type string instead, and Task 6's form-row
+   matching must warn when one form row is matched by more than one study line rather than pick one.
+6. **Cornerstone prints the 150% SAFMR only as a total, never per unit type.** Its per-type SAFMR
+   column (`$2,040`) is the BASE, and `Total Gross SAFMR Rent $297,780 · 150% of SAFMR Gross Rent
+   $446,670` confirms the 1.5 relationship at the total level only. Belfry prints the per-type 150%
+   outright. **Decision: a Cornerstone study fills `safmr_base` and the totals, and does NOT write
+   `units.N.safmr_rcs`** — deriving a per-type ceiling by multiplying would present a computed number
+   as a value read from the document. The HUD pull remains the source; the derived figure is used only
+   in the RECORD CHECKS comparison, labelled as derived.
+7. **Cornerstone does carry per-type utility allowances** (`$61`, `$76`, `$103`, `$98`) under
+   `Gross Rent Potential Calculation - "As Is"`, footnoted `*Utility Allowances From Rent Schedule.` —
+   so `ua_rcs` should agree with `ua_exec` by construction, making that check a real one.
+8. **Cornerstone's letter spans two pages with two different tables**: page 1 `Estimates of Market Rent
+   - "As Is"` (type, units, size, rent, PSF, grid), page 2 `Gross Rent Potential Calculation` (type,
+   units, net rent, utility allowance, gross, monthly) and `SAFMR Gross Rent Potential Calculation
+   (60640)` — the ZIP is in that heading.
+
 ## File Structure
 
 | File | Responsibility |
@@ -75,6 +140,104 @@ Additionally, one trap that is not in the design and must not be lost:
 | `app/full-mp/app.js` (modify) | `rcsVal`/`rcsUnitVal`/`rcsOf`/`rcsTag`/`rcsFillFromParsed`/`rcsRemember`/`rcsRecall`; live source rows; upload + apply wiring; checklist ticks; record checks. |
 | `app/full-mp/db.js` + `db.supabase.js` (modify) | `setCycleRcs`/`getCycleRcs` on both, per API parity. |
 | `supabase` migration | Add `rcs_doc jsonb` to `cycle`. |
+
+---
+
+### Task 0: Teach the text reader where the columns are
+
+**Do this first — Cornerstone cannot be parsed without it, and it is already validated.**
+
+`rsRuns` (app.js) handles a `TJ` array by joining every string part and **discarding the numeric
+kerning offsets between them**, emitting the whole array as one run at the array's start position.
+For a document that draws a table row as a single `TJ` with large negative offsets between cells —
+which is what Cornerstone does — every column boundary is destroyed:
+
+```
+1 BR / 1 BA31818$1,870$2.29
+```
+
+`31818` is units=31 and size=818, but nothing in the text says so. Restoring the gap as a space
+restores the row:
+
+```
+1 BR / 1 BA 31 818 $1,870 $2.29
+```
+
+Offsets are thousandths of an em. Measured on the Crossroads letter page: 332 offsets in `0..-49`
+(ordinary kerning), 14 in `-50..-99`, 14 in `-100..-499`, 13 in `-500..-1999`, 19 at `<=-2000`.
+A threshold of **-200** separates real gaps from kerning with wide margin on both sides.
+
+**This edit is already proven safe.** Applied to a copy of the tree: all four existing suites pass,
+and all **11** rent-schedule PDFs in the repo parse **byte-identically** to before (same `kind`,
+`via`, scalars, units, ns8, nonrev, principals, partb).
+
+**Files:**
+- Modify: `app/full-mp/app.js` (the `TJ` branch inside `rsRuns`)
+
+**Interfaces:**
+- Consumes/Produces: no signature change. `rsRuns` still emits `{s,x,y,d}`; only `s` gains spaces
+  where the document left visual gaps.
+
+- [ ] **Step 1: Capture the current behaviour as a regression baseline**
+
+```bash
+cd /Users/matthewkodsi/Desktop/github/Form-Automation
+find _archive "Reference & Research" -iname "*.pdf" 2>/dev/null | grep -iE "rent schedule|92458|executed rs" > /tmp/rslist.txt
+wc -l < /tmp/rslist.txt        # expect 12
+```
+
+- [ ] **Step 2: Make the edit**
+
+In `app.js`, inside `rsRuns`, replace the `TJ` branch:
+
+```js
+    if(t[0]==='['){const parts=[];const ri=/\((?:[^()\\]|\\.)*\)|<[0-9A-Fa-f\s]*>/g;let mm;
+      while((mm=ri.exec(t)))parts.push(mm[0][0]==='('?deLit(mm[0].slice(1,-1)):deHex(mm[0].slice(1,-1)));
+      emit(parts.join(''));nums=[];lastStr=null;continue;}
+```
+
+with:
+
+```js
+    /* A TJ array's numbers are horizontal displacements in thousandths of an em.
+       Small ones are kerning inside a word; large negative ones are the visual
+       gaps BETWEEN table cells, and dropping them welds a whole row into one
+       string ("1 BR / 1 BA31818$1,870$2.29" — is that 31 units of 818 sq ft, or
+       318 of 18?). Restore a gap as a space so the row can be read; -200 sits
+       between the kerning population (0..-99) and the column gaps (-500..-6000)
+       measured across the corpus. */
+    if(t[0]==='['){const parts=[];const ri=/\((?:[^()\\]|\\.)*\)|<[0-9A-Fa-f\s]*>|-?[0-9.]+/g;let mm;
+      while((mm=ri.exec(t))){const p=mm[0];
+        if(p[0]==='(')parts.push(deLit(p.slice(1,-1)));
+        else if(p[0]==='<')parts.push(deHex(p.slice(1,-1)));
+        else if(parseFloat(p)<=-200)parts.push(' ');}
+      emit(parts.join(''));nums=[];lastStr=null;continue;}
+```
+
+- [ ] **Step 3: Verify no rent schedule changed**
+
+Parse every schedule with the old and new code and diff the results. Both suites of bytes must agree.
+
+```bash
+node --check app/full-mp/app.js
+bash app/full-mp/run_tests.sh
+```
+
+Expected: `node --check` silent; `✓ every suite passed`. If any rent-schedule assertion moves, the
+threshold is wrong — raise it toward -500 rather than weakening a test.
+
+- [ ] **Step 4: Confirm the fix on the document that needed it**
+
+Expected after the change, on Cornerstone's letter page: the row reads
+`1 BR / 1 BA 31 818 $1,870 $2.29` rather than `1 BR / 1 BA31818$1,870$2.29`.
+
+- [ ] **Step 5: Run the anchor gate and commit**
+
+```bash
+python3 app/full-mp/build-ra.py /tmp/rcs-ra-check.html
+git add app/full-mp/app.js
+git commit -m "A gap the width of a column is not kerning"
+```
 
 ---
 
@@ -276,9 +439,14 @@ function classify(pages){
     // the grid names itself twice over: the HUD form title and the subject's FHA cell
     if(all.indexOf('rentcomparabilitygrid')>=0&&all.indexOf('subjectsfha')>=0){out.grids.push(i);return;}
     if(all.indexOf('tableofcontents')>=0&&out.toc===null){out.toc=i;return;}
-    // the transmittal letter: page 1 carries the bracketed FHA line, page 2 the totals
-    if(all.indexOf('marketrentalanalysis')>=0&&all.indexOf('fhaprojectno')>=0){out.letter.push(i);return;}
+    /* The transmittal letter names itself differently per firm: Belfry heads its
+       subject block "Market Rental Analysis", Cornerstone writes "Re: Rent
+       Comparability Study". Both are letters and both must classify. */
+    if(all.indexOf('marketrentalanalysis')>=0&&(all.indexOf('fhaprojectno')>=0||all.indexOf('section8projectnumber')>=0)){out.letter.push(i);return;}
+    if(all.indexOf('rerentcomparabilitystudy')>=0&&all.indexOf('section8contract')>=0){out.letter.push(i);return;}
+    if(all.indexOf('estimatesofmarketrent')>=0){out.letter.push(i);return;}
     if(all.indexOf('totalgrossrenewalrent')>=0&&all.indexOf('150ofsafmrgrossrent')>=0){out.letter.push(i);return;}
+    if(all.indexOf('grossrentpotentialcalculation')>=0){out.letter.push(i);return;}
     if(out.cert===null&&all.indexOf('certification')>=0&&all.indexOf('appraiser')>=0)out.cert=i;
   });
   out.letter.sort(function(a,b){return a-b;});
@@ -673,9 +841,13 @@ const ROW_5C =/^(\S+)\s+(\d+)\s+\$([\d,]+)\s+\$([\d,]+)\s+\$([\d,]+)\s*$/;      
 const ROW_CMP=/^(\S+)\s+(\d+)\s+\$([\d,]+)\s+\$([\d,]+)\s+\$[\d,]+\s*[<>]\s*\$[\d,]+/; // type count rent 150%safmr verdict
 const ROW_4C =/^(\S+)\s+(\d+)\s+\$([\d,]+)\s+\$([\d,]+)\s*$/;                       // type count safmrbase gross
 
+/* Keyed on the FULL type string, not on bedrooms+baths. Lansing Manor prints
+   "1BR/1BA without patio" ($1,190) and "1BR/1BA with patio" ($1,200) as two
+   separate priced rows: a bedrooms+baths key would silently merge them and lose
+   one of the two rents. */
 function upsert(units,type,page){
-  const p=parseType(type),k=typeKey(p);
-  for(let i=0;i<units.length;i++)if(typeKey(units[i])===k)return units[i];
+  const p=parseType(type),k=norm(type);
+  for(let i=0;i<units.length;i++)if(norm(units[i].type)===k)return units[i];
   const u={type:p.type,br:p.br,ba:p.ba,count:'',sf:'',proposed:'',ua:'',safmr:'',safmr_base:'',psf:'',grid:false,page:page};
   units.push(u);return u;
 }
@@ -1801,6 +1973,122 @@ bash app/full-mp/build.sh index.html
 git add app/full-mp/app.js app/full-mp/test_rcs.js index.html
 git commit -m "A unit is priced by its shape, whether or not it earns"
 ```
+
+---
+
+### Task 11: Belfry across all five studies
+
+**Run this immediately after Task 5 and before Task 6.** Belfry is the priority firm; one study
+proving the reader works is not the same as the firm working. This task widens `test_rcs.js` from one
+fixture to five and fixes whatever the other four break.
+
+**Fixtures.** The studies live in the user's synced Drive. Copy the five Belfry studies plus the two
+Cornerstone ones into `_archive/rcs-fixtures/` (~46 MB total). **Confirm with Matt before
+`git add`-ing them** — that is a permanent addition to repository history.
+
+```bash
+SRC="$HOME/Library/CloudStorage/GoogleDrive-mfkodsi@gmail.com/My Drive/RA/Section 8/Village Court - Section 8"
+mkdir -p _archive/rcs-fixtures
+cp "$SRC/Colonial Village - Section 8/2026 (RCS)/RCS Package/RCS - 26-124 - Colonial Village, 3641 Irving Street, Cincinnati, OH.pdf" _archive/rcs-fixtures/belfry-colonial-village.pdf
+cp "$SRC/Fairview Homes - Section 8/2025 - RCS/Archive/Belfry RCS/25-007R - Fairview Homes, 86 17th Avenue, Newark, New Jersey (REVISED RCS).pdf" _archive/rcs-fixtures/belfry-fairview-homes.pdf
+cp "$SRC/Gates Manor - Section 8/2026 - RCS/RCS/RCS - 26-121 - Gates Manor Apt, 1135 Wilmette Avenue, Wilmette, IL.pdf" _archive/rcs-fixtures/belfry-gates-manor.pdf
+cp "$SRC/Lansing Manor - Section 8/2026 - RCS/25-119 - Lansing Manor, 5600 Mall Drive West, Lansing MI (updated).pdf" _archive/rcs-fixtures/belfry-lansing-manor.pdf
+cp "$SRC/Woodland Towers - Section 8/2026 - RCS/Submission/4. 26-069 - Woodland Towers 306 Pine Lake Road Collinsville IL.pdf" _archive/rcs-fixtures/belfry-woodland-towers.pdf
+cp "$SRC/Crossroads of East Ravenswood - Section 8/2026 (RCS)/RCS/RCS - Crossroads of East Ravenswood, Chicago, IL.pdf" _archive/rcs-fixtures/cornerstone-crossroads.pdf
+cp "$SRC/Golden Link Manor - Section 8/2025 - Termination_EXECUTED/RCS - Golden Link Manor, Ogden, UT.pdf" _archive/rcs-fixtures/cornerstone-golden-link.pdf
+```
+
+**Expected values, verbatim from each study's own summary table:**
+
+| Fixture | Unit types → market rent | Section 8 number | Note |
+|---|---|---|---|
+| `belfry-colonial-village` | 2BR/1BA $1,850 · 3BR/1BA $2,400 | `OH10M000236` | the baseline |
+| `belfry-fairview-homes` | 2BR/1BA $2,450 · 3BR/2BA $3,275 · 4BR/2BA $3,825 | `NJ390013022` | labelled `Section 8 Project Number:`, **not** `[FHA Project No. …]`; 135 units; 3 grids |
+| `belfry-gates-manor` | 1BR/1BA $2,725 | letter `IL06H121063`, grid `IL06004814` | **must produce one conflict**, letter wins |
+| `belfry-lansing-manor` | 1BR/1BA without patio $1,190 · 1BR/1BA with patio $1,200 | `MI330005001` | **two rows, same bedrooms and baths** — must stay two |
+| `belfry-woodland-towers` | 1BR/1BA $1,175 | `IL06H121046` | **no readable grids** — letter alone must carry it, with a warning, not a failure |
+
+- [ ] **Step 1: Write the failing tests** — one block per fixture, asserting the table above literally,
+      plus `eq('Lansing keeps both rows',LET.units.length,2)` and
+      `eq('Gates reports the number conflict',REC.conflicts.filter(c=>/s8/.test(c.what)).length,1)`.
+- [ ] **Step 2: Run and watch them fail**, then fix `rcs.js` until each passes. Expect breakage in:
+      the S8 label regex (Fairview's wording), `upsert` keying (Lansing), and the no-grid path (Woodland).
+- [ ] **Step 3: Raise `MIN_CHECKS`** by the number of new checks.
+- [ ] **Step 4: Commit** — `git commit -m "One study proved the reader; five prove the firm"`
+
+---
+
+### Task 12: The Cornerstone profile
+
+Second priority firm. Cornerstone's letter carries everything Belfry's does, in a different shape and
+across two pages. Add it as a `PROFILES` entry plus reader branches — no parser rewrite.
+
+**Detector:** `/cornerstonevaluationservices/`.
+
+**Letter page 1** — identity and the rent table:
+
+```
+CORNERSTONE VALUATION SERVICES
+REAL ESTATE APPRAISAL AND CONSULTING
+April 13, 2026
+Ms. Claire Beatty
+Related Affordable
+30 Hudson Yards
+New York, NY 10001
+Re: Rent Comparability Study
+Crossroads of East Ravenswood
+1614 West Wilson Avenue
+Chicago, IL 60640
+Section 8 Contract #: IL060048014
+...
+Estimates of Market Rent - "As Is"
+# Avg. Unit Market Rent Market Rent Prepared Grid?
+Unit TypeUnitsSize (SF)($/Mo.)($/SF/Mo.)(Y/N)
+1 BR / 1 BA 31 818 $1,870 $2.29 Y
+```
+
+Differences from Belfry that the reader must handle:
+
+- The subject block is headed `Re: Rent Comparability Study`, not `Market Rental Analysis`, and the
+  property name/street/city sit on the three lines after it.
+- **`Section 8 Contract #:` is correctly labelled** — it goes to `property.s8`. The certification's
+  `FHA Project No.: N/A` must be **rejected**, never written: `N/A` is not a value.
+- Unit types are spaced (`1 BR / 1 BA`); `parseType` already handles this.
+- The header row's cells arrive as separate runs and assemble without separators
+  (`Unit TypeUnitsSize (SF)…`). Anchor on `norm()` substrings (`unittype`), never on the raw text.
+- The `Y`/`N` grid flag is a separate run far to the right; the row regex must tolerate it being
+  detached from the rest of the row.
+
+**Letter page 2** — the allowances and the SAFMR test:
+
+```
+Gross Rent Potential Calculation - "As Is"
+Unit TypeUnitsRent (Net)AllowanceRentRent
+1 BR / 1 BA 31 $1,870 $61 $1,931 $59,861
+Total $297,773
+*Utility Allowances From Rent Schedule.
+SAFMR Gross Rent Potential Calculation (60640)
+1 BR / 1 BA 31 $2,040 $63,240
+Total Gross SAFMR Rent$297,780
+150% of SAFMR Gross Rent$446,670
+Subject's Concluded Gross Rent - "As Is"$297,773
+```
+
+- `ua` comes from the `Allowance` column (`$61` / `$76` / `$103` / `$98`).
+- **`safmr_base` comes from the SAFMR table; `safmr` (the per-type 150% ceiling) is NOT written.**
+  Cornerstone publishes the 150% figure only as a total. Deriving a per-type ceiling by multiplying
+  would present arithmetic as a reading. The totals (`grossRenewal` 297773, `grossSafmrBase` 297780,
+  `grossSafmr150` 446670, verdict `pass`) are read and drive the RECORD CHECKS comparison.
+- The property ZIP is inside the heading `SAFMR Gross Rent Potential Calculation (60640)`.
+
+- [ ] **Step 1: Write the failing test** against `_archive/rcs-fixtures/cornerstone-crossroads.pdf`:
+      profile `cornerstone`; four unit types; `1 BR / 1 BA` → proposed 1870, ua 61, safmr_base 2040,
+      `safmr` empty; `property.s8` = `IL060048014`; `property.fha` undefined; totals as above;
+      and the same assertions for `cornerstone-golden-link.pdf` (1 BR / 1 BA, $1,580, 30 units,
+      `Section 8 Contract #: UT99T855002`).
+- [ ] **Step 2: Add the profile and the reader branches**, keeping every Belfry test green.
+- [ ] **Step 3: Raise `MIN_CHECKS`, run every gate, commit** —
+      `git commit -m "A second firm, and the same record comes out"`
 
 ---
 
