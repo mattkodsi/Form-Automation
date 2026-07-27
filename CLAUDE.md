@@ -85,7 +85,11 @@ five files below gives the whole picture; read them in this order:
    `createProperty`/`renameProperty`/`deleteProperty`, `getActive`/`setActive`, `getLetterhead` /
    `setLetterhead`, contacts (`listContacts`/`addContact`/`updateContact`/`deleteContact`),
    `propertyAnalysis`, `pruneUnitRows`, `computeAnalysis`, `computeSalutation`, `migrate`, and
-   `localAdapter` (browser localStorage). Its exports also drive `test_db.js`.
+   `localAdapter` (browser localStorage). Its exports also drive `test_db.js`. **The app itself runs on
+   `db.supabase.js` (`makeSupabaseDb`) — `db.js` is now the test harness's stand-in, reached via app.js's
+   `__localDb()`.** It is held to API PARITY with `db.supabase.js` (cycles: `listCycles`/`createCycle`/
+   `saveFlatCycle`/…; directory: `listDir`/`addDir`/…), because a stand-in that answers differently from
+   the real backend makes every test that uses it a fiction. Change one, change both.
 5. **`gen.js`** (~5k tok) — client-side **PDF generation** (`window.RCSGen`), pure record→bytes via
    `window.PDFLib` (pdf-lib): `coverLetter`, `ownerLetter`, `fillChecklist`, `fillRentSchedule`,
    `tenantNotice` (+ `resolve`, `nmv` number-clean, `_toISO` date-normalize). Fills AcroForm fields on the
@@ -112,21 +116,19 @@ five files below gives the whole picture; read them in this order:
 Run them all with **`bash app/full-mp/run_tests.sh`** — one command, one exit code, and the only place
 a new suite needs registering (`deliver.sh` calls it).
 
-- **`app/full-mp/test_db.js`** — data layer, 49 checks.
+- **`app/full-mp/test_db.js`** — data layer incl. the cycle + directory surface (which cycle is
+  dominant, what carries into a new one, what writes back to the template); 93 checks.
 - **`app/full-mp/test_interactions.js`** — save/revert/group + esc/enter decision logic against the real
   store, incl. the unit designation chip; 82 checks (self-contained; builds its own bundle).
-- **`app/full-mp/smoke_combined.js`** — headless render smoke of the assembled app: menu → form, the
-  150% analysis numbers, and dirty-tracking; 24 checks. The **launcher phase is skipped** — it renders
-  through `mpdb.listCycles`, which `db.supabase.js` has and `db.js` does not. `db.js` is now only the
-  test harness's stand-in, so faking that surface would prove nothing; the skip retires itself (the suite
-  fails the day `db.js` gains a cycle surface). Closing that gap means giving `db.js` API parity with
-  `db.supabase.js` — a real piece of work, not a test fixture.
+- **`app/full-mp/smoke_combined.js`** — headless render smoke of the assembled app: menu → launcher →
+  form, the 150% analysis numbers, and dirty-tracking; 39 checks. The launcher phase covers the
+  first-run migration that turns an existing record into package #1.
 
 ⚠️ **Don't pipe a suite through `| tail`.** A pipeline's exit status is the LAST command's, so node's
 failure vanishes — that is half of why `test_interactions.js` sat broken for eleven days after the
-Supabase migration (the other half: `deliver.sh` never ran it). Both suites now print their verdict as
-the last line so a pipe at least *shows* the failure, and `test_interactions.js` asserts a minimum check
-count (`MIN_CHECKS`) so dying partway can't read as a pass. **Adding checks? Raise `MIN_CHECKS`.**
+Supabase migration (the other half: `deliver.sh` never ran it). All three suites now print their verdict
+as the last line so a pipe at least *shows* the failure, and each asserts a minimum check count
+(`MIN_CHECKS`) so dying partway can't read as a pass. **Adding checks? Raise `MIN_CHECKS`.**
 
 ## Resume point
 

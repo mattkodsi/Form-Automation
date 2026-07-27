@@ -1,5 +1,5 @@
 /* smoke_combined.js — headless render smoke of the assembled app:
-   menu -> form, plus exit dirty-detection. Run: node smoke_combined.js
+   menu -> launcher -> form, plus exit dirty-detection. Run: node smoke_combined.js
 
    REVIVED 2026-07-27. It had been dead: it did `require('./combined.js')`, a
    build artifact that no longer exists, so it crashed on line 9 every time. It
@@ -20,7 +20,7 @@ global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>
 const os=require('os'),path=require('path'),fs=require('fs');
 
 /* ── the verdict machinery (mirrors test_interactions.js) ───────────────── */
-const MIN_CHECKS=24;
+const MIN_CHECKS=39;
 let n=0,fails=0,verdict=null;
 const BAR='═'.repeat(68);
 function fail(msg,err){
@@ -61,24 +61,37 @@ const T=(label,v)=>eq(label,!!v,true);
   T('menu count chip counts properties', /propert/.test(els.menuCount.textContent));
   T('nothing undefined leaked into the menu', !/undefined/.test(grid));
 
-  /* The LAUNCHER cannot be smoked yet. It renders through cyclesHtml(), which
-     calls mpdb.listCycles — part of the cycle surface that exists in
-     db.supabase.js (what the app actually runs on) but not in db.js (which is
-     now only this harness's stand-in). Faking listCycles here would prove
-     nothing about the real launcher, so the phase is skipped rather than
-     invented. The check below RETIRES ITSELF: the day db.js gains the cycle
-     surface, this fails and tells you to restore the launcher checks. */
-  console.log('\n─ LAUNCHER skipped — db.js has no cycle surface (see note) ─');
-  if(typeof db.listCycles==='function'){
-    n++;fails++;
-    console.log('  ✗ the launcher skip is now STALE: db.js has listCycles, so the launcher can be covered — restore those checks and delete this guard');
-  }else{
-    n++;console.log('  ✓ skip still warranted (db.js has no listCycles) — launcher coverage remains an open gap');
-  }
-
-  console.log('\n─ FORM opens and renders the RCS package ─');
+  /* The LAUNCHER phase, restored 2026-07-27 once db.js gained the cycle surface
+     db.supabase.js has. It was skipped rather than faked while that gap existed. */
+  console.log('\n─ LAUNCHER renders the property summary + packages ─');
   const pid=app.__firstPid();
   T('a seeded property id exists', !!pid);
+  app.openLauncher(pid);
+  const lb1=els.launcherBody.innerHTML;
+  T('launcher names the property',        /Gates Manor Apartments/.test(lb1));
+  T('launcher has a Packages section',    /lsec-t">Packages/.test(lb1));
+  T('launcher offers "start new package"',/id="bNewCycle"/.test(lb1));
+  T('launcher lists coming-soon programs',/Coming soon/.test(lb1));
+  T('BBRA is one of them',                /Budget-Based Rent Adjustment/.test(lb1));
+  T('launcher has the letterhead slot',   /letterhead/i.test(lb1));
+  T('a property with no packages says so',/No packages yet/.test(lb1));
+  T('nothing undefined leaked into the launcher', !/undefined/.test(lb1));
+
+  /* bootstrapFirstCycle migrates an existing single-record property into its
+     own package #1, asynchronously, then re-renders. That re-render is the
+     state a returning user actually sees, so it is the one worth asserting. */
+  for(let i=0;i<8;i++) await new Promise(r=>setTimeout(r,0));
+  const lb2=els.launcherBody.innerHTML;
+  T('the existing record is migrated into package #1', /class="cycard/.test(lb2));
+  T('that package is marked as the current one',       /cy-dom/.test(lb2));
+  T('it is labelled by its effective year',            /2026 · effective September 1, 2026/.test(lb2));
+  T('the affordability check renders inside the card', /AFFORDABILITY CHECK/.test(lb2));
+  T('and reports the headroom',                        /\$37,689 headroom/.test(lb2));
+  T('nothing undefined leaked into the re-render',     !/undefined/.test(lb2));
+  eq('the data layer agrees there is one package', db.listCycles(pid).length, 1);
+  eq('and reports its programs as an array',      db.listCycles(pid)[0].programs, ['rcs']);
+
+  console.log('\n─ FORM opens and renders the RCS package ─');
   await app.__openForm(pid);
   eq('form header names the property', els.hdrProp.textContent, 'Gates Manor Apartments');
   T('form header names the program', /RCS Package/.test(els.hdrProgram.textContent));
