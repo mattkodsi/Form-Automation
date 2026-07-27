@@ -263,7 +263,7 @@ function dirCell(f){const k=f.k;const P=DIR_PICK[k];const list=dirList(P.kind);c
   const pre=f.prefix?csDrop(f.prefix,['Ms.','Mr.','Dr.','Mx.'],'\u2014','csnarrow',true,partHot(f.prefix)?tintStyle(f.prefix):''):'';
   const _dr=DIR_SRCROW[k];const _drv=_dr?_dr.val():null;
   const srcRow=!_dr?'':(_drv!=null&&_drv!==''
-    ?('<div class="uaopt srcopt'+(String(_drv)===String(cur)?' sel':'')+'" data-srck="'+k+'" data-srcv="'+esc(_drv)+'" data-srctag="'+esc(_dr.tag)+'">'+esc(_drv)+'<span class="uasub">'+esc(_dr.tag)+'</span></div>')
+    ?('<div class="uaopt srcopt'+(String(_drv)===String(cur)?' sel':'')+'" data-srck="'+k+'" data-srcv="'+esc(_drv)+'" data-srctag="'+esc(_dr.tag)+'">'+esc(srcDisp(k,_drv))+'<span class="uasub">'+esc(_dr.tag)+'</span></div>')
     :('<div class="uaopt srcopt srcdim">\u2014<span class="uasub">'+esc(_dr.tag)+' \u00b7 not available</span></div>'));
   const menu='<div class="uamenu">'+srcRow+list.map(ct=>{const s=P.sub(ct);return '<div class="uaopt" data-dirid="'+esc(ct.id)+'" data-dirfor="'+k+'">'+esc(ct.name)+(s?'<span class="uasub">'+esc(s)+'</span>':'')+'</div>';}).join('')+'</div>';
   const pick=(srcRow||list.length)?('<div class="uadrop pocpick"><div class="uatrigger" tabindex="0" title="Pick a saved '+esc(P.one)+'"><span class="cvx">&#9662;</span></div>'+menu+'</div>'):'';
@@ -285,10 +285,26 @@ function dirCell(f){const k=f.k;const P=DIR_PICK[k];const list=dirList(P.kind);c
    uniformly. The form never writes back to the RA platform. */
 function raProps(){try{const p=window.RASource;const l=(p&&p.listProperties)?p.listProperties():[];return Array.isArray(l)?l:[];}catch(e){return [];}}
 function raVal(k){try{const p=window.RASource;const v=(p&&p.value)?p.value(k):null;return (v==null||v==='')?null:String(v);}catch(e){return null;}}
+/* Rule 16 belongs to the row builder, not to its callers — see rule 17. The UA
+   and SAFMR menus formatted at their own call sites and so looked right, which
+   is exactly how every other source row was missed: srcPick printed whatever
+   string it was handed, so a row offered "1027" directly beneath a cell reading
+   "$ 1,027". The same figure in two conventions reads as a rendering fault.
+
+   Display only. data-srcv stays RAW, because clicking the row writes that value
+   into the cell — a formatted one would put "$1,027" into the field. */
+const SRC_MONEY=/^(units\.\d+\.(current|proposed|ua_exec|ua_rcs|ua_custom|safmr_rcs|safmr_hud|safmr_custom)|nonrev\.\d+\.rent|ns8\.\d+\.avg_rent)$/;
+const SRC_COUNT=/^(units|ns8|nonrev)\.\d+\.num_units$/;
+function srcDisp(k,v){
+  if(v==null||v==='')return v;
+  if(SRC_MONEY.test(k)){const f=fmtMoney(v);return f?('$'+f):String(v);}   // a value we cannot read as a number prints as it came
+  if(SRC_COUNT.test(k)){const f=fmtMoney(v);return f||String(v);}          // separators, no currency
+  if(/\.phone$/.test(k))return fmtPhone(v)||String(v);
+  return v;}
 function srcOptRow(attrs,val,tag,sel){const _c='uaopt srcopt'+(sel?' sel':'');return val?('<div class="'+_c+'" '+attrs+'>'+val+'<span class="uasub">'+esc(tag)+'</span></div>'):('<div class="'+_c+' srcdim">\u2014<span class="uasub">'+esc(tag)+' \u00b7 not available</span></div>');}
 function srcPick(k,rows){
   const menu='<div class="uamenu">'+rows.map(r=> r.val!=null
-    ?'<div class="uaopt srcopt" data-srck="'+k+'" data-srcv="'+esc(r.val)+'" data-srctag="'+esc(r.tag)+'">'+esc(r.val)+'<span class="uasub">'+esc(r.tag)+'</span></div>'
+    ?'<div class="uaopt srcopt" data-srck="'+k+'" data-srcv="'+esc(r.val)+'" data-srctag="'+esc(r.tag)+'">'+esc(srcDisp(k,r.val))+'<span class="uasub">'+esc(r.tag)+'</span></div>'
     :'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">'+esc(r.tag)+' \u00b7 not available</span></div>').join('')+'</div>';
   return '<div class="uadrop pocpick"><div class="uatrigger" tabindex="0" title="Pull from a source"><span class="cvx">&#9662;</span></div>'+menu+'</div>';
 }
@@ -422,10 +438,14 @@ function moneyBox(k,noIcons){const c=boxColor(k);const _mt=moneySrcTag(k);
   const pick=_mt?(_rv!=null?srcPick(k,[{tag:_mt,val:_rv}]):dimPick(_mt)):'';
   return `<div class="rbox money" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><span class="cur">$</span><input type="text" data-money="1" data-k="${k}" value="${esc(fmtMoney(get(k)))}">${pick}${noIcons?'':ovIcons(k)}</div>`;}
 function numBox(k,ph,noIcons){const c=boxColor(k);
+  /* Counts are numbers and get separators like every other number (rule 16).
+     NOT via a blanket data-money: this same box renders Part D's "use" text and
+     the UAF factors, and cleanNum strips the decimal point out of 1.039. */
+  const _cnt=SRC_COUNT.test(k);
   const _mc=k.match(/^ns8\.(\d+)\.num_units$/),_mu=k.match(/^nonrev\.(\d+)\.use$/);
   const _rv=_mc?rsFamVal('ns8',+_mc[1],'count'):(_mu?rsFamVal('nonrev',+_mu[1],'use'):null);
   const _rsCell=!!(_mc||_mu);   // non-Section-8 counts and Part D uses come off the schedule too
-  return `<div class="rbox" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><input type="text" data-k="${k}" value="${esc(get(k))}" placeholder="${esc(ph||'')}">${_rv!=null?srcPick(k,[{tag:'Executed RS',val:_rv}]):(_rsCell?dimPick('Executed RS'):'')}${noIcons?'':ovIcons(k)}</div>`;}
+  return `<div class="rbox" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><input type="text"${_cnt?' data-money="1"':''} data-k="${k}" value="${esc(_cnt?fmtMoney(get(k)):get(k))}" placeholder="${esc(ph||'')}">${_rv!=null?srcPick(k,[{tag:'Executed RS',val:_rv}]):(_rsCell?dimPick('Executed RS'):'')}${noIcons?'':ovIcons(k)}</div>`;}
 function brbaBox(brK,baK){const c=groupColors([brK,baK]);
   const withRs=(k,opts,ph)=>{const d=csDrop(k,opts,ph,'',true,partHot(k)?tintStyle(k):'',rsBrBa(k));
     const row=rsCsRow(k)||'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>';
@@ -465,7 +485,7 @@ function unitCountCell(i){const k='units.'+i+'.num_units';const c=numUnresolved(
   // not one is loaded right now — dimmed when there is nothing to pull, exactly as
   // the rent beside it does. Rendering nothing left the column looking as though
   // it had no source at all the moment the upload went out of session.
-  return `<div class="rbox" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><input type="text" data-k="${k}" value="${esc(get(k))}">${rv!=null?srcPick(k,[{tag:'Executed RS',val:rv}]):dimPick('Executed RS')}</div>`;}
+  return `<div class="rbox" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><input type="text" data-money="1" data-k="${k}" value="${esc(fmtMoney(get(k)))}">${rv!=null?srcPick(k,[{tag:'Executed RS',val:rv}]):dimPick('Executed RS')}</div>`;}
 function typeNote(i){if(!typeConflict(i))return '';const br=get('units.'+i+'.br'),ba=get('units.'+i+'.ba'),brR=get('units.'+i+'.br_rcs')||br,baR=get('units.'+i+'.ba_rcs')||ba;
   if(typeUnresolved(i))return '<div class="ucnote warn">⚠ RS '+br+'/'+ba+' · RCS '+brR+'/'+baR+' <span class="pick"><button class="urev" data-typ="rs" data-ci="'+i+'">keep RS</button><button class="urev sv" data-typ="rcs" data-ci="'+i+'">use RCS</button></span></div>';
   return '<div class="ucnote ok">✓ RS · '+br+'/'+ba+'</div>';}
@@ -1140,10 +1160,10 @@ function renderSources(){
     :`<div class="srcrow${sl.need?'':' dim'}"><span class="mut">○</span><div><b>${esc(sl.title)}</b> <span class="${sl.need?'missing':'parsed'}">${sl.need?'not uploaded':'optional'}</span><div class="sub">${esc(sl.sub)}</div></div><button class="btn sm" id="upRcs">Upload PDF</button></div>`;
   const ru=_rsUpload;let rs;
   if(_rsBusy)rs=`<div class="srcrow"><span class="spin" aria-hidden="true"></span><div><b>${esc(_rsBusy.name||'Rent schedule')}</b> <span class="parsed">${esc(_rsBusy.note||'reading\u2026')}</span><div class="sub">${esc(_rsBusy.sub||'Reading the schedule\u2019s form fields and printed text.')}</div></div></div>`;
-  else if(!ru)rs=`<div class="srcrow"><span class="mut">○</span><div><b>Current executed rent schedule</b> <span class="missing">not uploaded</span><div class="sub">Reads the unit mix, rents, utility allowances, entity, and principals — from the schedule’s form fields, or from its printed text if a signed copy has none.</div></div><button class="btn sm" id="upRs">Upload PDF</button></div>`;
-  else if(ru.kind==='fields'){const p=ru.parsed;rs=`<div class="srcrow"><span class="ok">✓</span><div><b>${esc(ru.name)}</b> <span class="parsed">parsed${ru.at?" \u00b7 read "+esc(niceDate(ru.at)):""}</span><div class="sub">${ru.via==='text'?'Read from the printed text, checked against its own totals. ':(ru.via==='ocr'?'Read by OCR — check each value against the paper. ':'')}Fills only what the schedule has; nothing saves until you do.</div></div><button class="btn sm teal" id="rsApply">Fill form from RS</button> <button class="btn sm" id="upRs">Replace</button></div>`;}
-  else if(ru.kind==='text')rs=`<div class="srcrow"><span class="mut">△</span><div><b>${esc(ru.name)}</b> <span class="missing">no form fields — text copy${ru.at?" \u00b7 read "+esc(niceDate(ru.at)):""}</span><div class="sub">Its text doesn’t line up with the schedule’s layout — enter the values below.</div></div><button class="btn sm" id="upRs">Replace</button></div>`;
-  else rs=`<div class="srcrow"><span class="mut">△</span><div><b>${esc(ru.name)}</b> <span class="missing">scanned copy${ru.at?" \u00b7 read "+esc(niceDate(ru.at)):""}</span><div class="sub">Scanned, and what OCR read didn’t match its own totals — enter the values below.</div></div><button class="btn sm" id="upRs">Replace</button></div>`;
+  else if(!ru)rs=`<div class="srcrow"><span class="mut">○</span><div><b>Current executed rent schedule</b> <span class="missing">not uploaded</span><div class="sub">Fills the unit mix, rents, utility allowances, ownership entity and principals.</div></div><button class="btn sm" id="upRs">Upload PDF</button></div>`;
+  else if(ru.kind==='fields'){const p=ru.parsed;rs=`<div class="srcrow"><span class="ok">✓</span><div><b>${esc(ru.name)}</b> <span class="parsed">${ru.at?"read "+esc(niceDate(ru.at)):"read"}</span><div class="sub">${ru.via==='ocr'?'Scanned — check the values against the document. ':''}Nothing is saved until you save.</div></div><button class="btn sm teal" id="rsApply">Fill form from RS</button> <button class="btn sm" id="upRs">Replace</button></div>`;}
+  else if(ru.kind==='text')rs=`<div class="srcrow"><span class="mut">△</span><div><b>${esc(ru.name)}</b> <span class="missing">could not be read</span><div class="sub">Enter the values below.</div></div><button class="btn sm" id="upRs">Replace</button></div>`;
+  else rs=`<div class="srcrow"><span class="mut">△</span><div><b>${esc(ru.name)}</b> <span class="missing">could not be read</span><div class="sub">Scanned, but the values could not be read. Enter them below.</div></div><button class="btn sm" id="upRs">Replace</button></div>`;
   const foot=`<input type="file" id="rcsFile" accept="application/pdf,.pdf" style="display:none"><input type="file" id="rsFile" accept="application/pdf,.pdf" style="display:none">`;
   return card(1,sectionPill(1),rcs+rs+foot);}
 
@@ -1894,16 +1914,20 @@ function wireBody(){
          announced "no digital text on this page", which is simply untrue: the
          text layer had just supplied every figure, and Azure was being asked for
          the tick marks alone. Each caller now says which job it is. */
-      const WHY={ticks:'The tick boxes on this page are drawn rather than typed, so they cannot be read as text. Asking for the ticks alone \u2014 your figures still come from the document\u2019s own characters.',
-                 fill:'Filling only the boxes this page\u2019s text left blank. Anything it did read stands.',
-                 scan:'No digital text in this copy \u2014 reading the whole of it as an image. This takes a few moments.'};
-      const SHORT={ticks:'reading the tick boxes',fill:'filling the blanks',scan:'reading it as a scanned image'};
-      const step=(i,n,why)=>{const w=why||'scan';busy('reading page '+i+' of '+n+'\u2026',WHY[w]);
+      /* The row says one of two things, because there are only two a reader needs:
+         it is reading text, or it is scanning. Which OCR call is running, and why,
+         is our business and not theirs. The status bar stays granular - that line
+         is a live progress report and can afford the detail. */
+      const SCANNING='Scanning the document as an image. This takes a few moments.';
+      const SHORT={ticks:'scanning the tick boxes',fill:'scanning for anything the text missed',scan:'scanning the whole document'};
+      const step=(i,n,why)=>{const w=why||'scan';busy('Reading page '+i+' of '+n+'\u2026',SCANNING);
         setStatus('Rent schedule \u2014 '+SHORT[w]+' (page '+i+' of '+n+')\u2026');};
-      busy('reading\u2026','Checking the schedule\u2019s form fields and printed text.');
+      busy('Reading…','Reading the document’s text.');
       let r;try{r=await parseRsPdf(b,step);}catch(e){r={kind:'scan',parsed:null};}finally{_rsBusy=null;}
       _rsUpload={name:f.name,bytes:b,kind:r.kind,via:r.via,parsed:r.parsed,at:new Date().toISOString()};sf.value='';_rsArm=(r.kind==='fields'&&!!r.parsed);rsRemember();renderBody();
-      setStatus(r.kind==='fields'?((r.via==='ocr'?'Scanned rent schedule read by OCR \u2014 check the values against the paper. ':'Rent schedule parsed \u2014 ')+'press Enter to fill the form, or use \u201cFill form from RS\u201d in '+secRef(1)+'.'):(r.kind==='text'?'This copy carries no form fields, and its printed text could not be placed on the schedule\u2019s layout \u2014 enter the values by hand.':'This copy is a scan \u2014 there is no digital text to read.'));});};
+      setStatus(r.kind==='fields'
+        ?((r.via==='ocr'?'Rent schedule scanned — check the values against the document. ':'Rent schedule read. ')+'Press Enter to fill the form, or use “Fill form from RS” in '+secRef(1)+'.')
+        :'The values in this copy could not be read — enter them by hand below.');});};
   const ra=el('rsApply');if(ra)ra.onclick=()=>rsFillFromParsed();
   const uu=el('undoUnit');if(uu)uu.onclick=()=>{if(!_undoStack.length)return;const e=_undoStack.pop();Object.keys(e.snap).forEach(k=>{form[k]=e.snap[k];});if(UNITS.indexOf(e.i)<0)UNITS.push(e.i);UNITS.sort((a,b)=>a-b);renderBody();setStatus('Unit type restored.');};
   const uc=el('undoCommit');if(uc)uc.onclick=()=>{_undoStack=[];renderBody();setStatus('Deletions kept.');};

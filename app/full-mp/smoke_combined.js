@@ -20,7 +20,7 @@ global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>
 const os=require('os'),path=require('path'),fs=require('fs');
 
 /* ── the verdict machinery (mirrors test_interactions.js) ───────────────── */
-const MIN_CHECKS=65;
+const MIN_CHECKS=72;
 let n=0,fails=0,verdict=null;
 const BAR='═'.repeat(68);
 function fail(msg,err){
@@ -141,6 +141,34 @@ const T=(label,v)=>eq(label,!!v,true);
      check below is a hole the old table left open: five letters could all
      generate with an empty signature block, because only the checklist ever
      asked for a signatory. */
+  /* Rule 16, at the one place it kept escaping. A source row offered "1027"
+     directly beneath a cell reading "$ 1,027" — the same figure in two
+     conventions. The UA and SAFMR menus formatted at their own call sites and so
+     looked right, which is exactly how the rest were missed. */
+  console.log('\n─ A SOURCE ROW PRINTS ITS FIGURE THE WAY THE CELL DOES ─');
+  await db.setCycleRs(scid,{name:'Gates Manor executed RS.pdf',kind:'fields',via:'text',at:'2026-07-27T14:00:00.000Z',
+    parsed:{scalars:{},principals:[],ns8:[],nonrev:[],
+      units:[{type:'1 BR / 1 BA',count:1027,rent:1027,ua:75}]}});
+  // a four-digit count, or the separator check below cannot fail
+  await db.saveFlatCycle(scid,{'units.0.num_units':{value:'1027'}});
+  await app.__openCycleForm(pid,scid);
+  const fsec=els.sections.innerHTML;
+  T('the current-rent source row carries a dollar sign and a comma',
+    /\$1,027<span class="uasub">Executed RS<\/span>/.test(fsec));
+  T('and never the bare figure',
+    !/>1027<span class="uasub">Executed RS<\/span>/.test(fsec));
+  T('a unit count gets its separator but no dollar sign',
+    /">1,027<span class="uasub">Executed RS<\/span>/.test(fsec));
+  /* The click writes data-srcv into the cell, so it must stay unformatted —
+     a formatted one would put "$1,027" into the field. */
+  T('but the value it writes stays raw', /data-srcv="1027"/.test(fsec));
+  T('so no cell is offered a dollar sign to swallow', !/data-srcv="\$/.test(fsec));
+  /* And the cell beside it must agree, or the fix above just reverses the
+     mismatch: a dropdown reading 1,027 above a box reading 1027. */
+  T('the unit-count box carries the separator too', /data-money="1" data-k="units.0.num_units" value="1,027"/.test(fsec));
+  T('while the UAF factor box is left alone — cleanNum would eat its decimal point',
+    !/data-money="1" data-k="uaf\.f_/.test(els.sections.innerHTML));
+
   console.log('\n─ WHAT EACH DOCUMENT REQUIRES ─');
   const miss=id=>app.__docMissing(id), warn=id=>app.__docWarns(id);
   const has=(a,x)=>a.indexOf(x)>=0;
