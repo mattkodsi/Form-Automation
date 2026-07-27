@@ -24,7 +24,7 @@ global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>
 const cp=require('child_process'),os=require('os'),path=require('path'),fs=require('fs');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=82;                 // the count this file is known to run to the end
+const MIN_CHECKS=87;                 // the count this file is known to run to the end
 let n=0,fails=0,verdict=null;
 const BAR='═'.repeat(68);
 function fail(msg,err){
@@ -104,50 +104,57 @@ const T=(label,v)=>eq(label,!!v,true);
   eq('br restored', app.getVal('units.0.br'), '1BR');
   eq('br src restored', app.srcOf('units.0.br'), 'database');
 
-  /* The designation chip beside BR/BA. It is a button, not an input, so it
-     reaches save and revert by a different route than every other cell — and
-     "no designation" is a real answer, which makes its saved blank behave
-     unlike a saved-blank text box. Both of those are worth pinning down. */
-  console.log('\n─ unit designation chip: cycle, saved blank, Enter/Escape ─');
+  /* The designation picker beside BR/BA. "No designation" is a real answer, which
+     makes its saved blank behave unlike a saved-blank text box, and the schedule
+     carries a designation of its own that the picker offers as a source. */
+  console.log('\n─ unit designation: options, saved blank, Enter/Escape ─');
   const DK='units.0.desig';
-  const chip=()=>app.desigColors(DK)[2];        // the provenance word the chip paints
-  eq('cycle blank→F',  app.desigNext(''),   'F');
-  eq('cycle F→E',      app.desigNext('F'),  'E');
-  eq('cycle E→D',      app.desigNext('E'),  'D');
-  eq('cycle D→NE',     app.desigNext('D'),  'NE');
-  eq('cycle NE→blank (wraps)', app.desigNext('NE'), '');
-  eq('cycle from an unknown code lands on blank', app.desigNext('zz'), '');
+  const chip=()=>app.desigColors(DK)[2];        // the provenance word the cell paints
+  eq('four designations plus a blank', app.DESIG.map(d=>d[0]), ['','F','E','D','NE']);
+  eq('F is Family',       app.desigName('F'),  'Family');
+  eq('NE is Near-elderly',app.desigName('NE'), 'Near-elderly');
+  eq('an unknown code names nothing', app.desigName('zz'), '');
+  /* The schedule prints the designation, and the picker offers it as a source, so
+     what we read out of Column 1 has to be right in both spellings the real
+     corpus uses — and a bare letter must only count at the end of the string. */
+  eq('reads "1 BR E"',            app.rsParseUnitType('1 BR E').desig,            'E');
+  eq('reads "1 BR F"',            app.rsParseUnitType('1 BR F').desig,            'F');
+  eq('reads "2 Bedroom, Elderly"',app.rsParseUnitType('2 Bedroom, Elderly').desig,'E');
+  eq('reads "3 Bedroom, Family"', app.rsParseUnitType('3 Bedroom, Family').desig, 'F');
+  eq('near-elderly beats elderly',app.rsParseUnitType('1 BR Near-Elderly').desig, 'NE');
+  eq('an undesignated row stays undesignated', app.rsParseUnitType('2 Bedroom').desig, '');
+  eq('a letter mid-word does not designate',   app.rsParseUnitType('2 BR Efficiency').desig, '');
   eq('desig is its own cell (no address/write-in group)', app.fieldKeys(DK), [DK]);
   eq('desig has no coupled source partner',              app.coupledKeys(DK), [DK]);
   // untouched: nothing typed, nothing stored — Enter and Esc are both no-ops
   eq('untouched desig is blank', app.getVal(DK), '');
   T('untouched desig not canSave',   !app.keysCanSave([DK]));
   T('untouched desig not canRevert', !app.keysCanRevert([DK]));
-  eq('untouched desig chip reads New', chip(), 'New');
+  eq('untouched desig reads New', chip(), 'New');
   // one click = one step through DESIG; nothing is on file yet, so Esc clears rather than reverts
-  app.__edit(DK, app.desigNext(app.getVal(DK)));
-  eq('one click designates Family', app.getVal(DK), 'F');
+  app.__edit(DK,'F');
+  eq('picking Family designates Family', app.getVal(DK), 'F');
   T('first designation is new-dirty (Enter saves)', app.keysNewDirty([DK]));
   T('first designation canSave',    app.keysCanSave([DK]));
   T('first designation not canRevert (nothing on file)', !app.keysCanRevert([DK]));
   await app.__saveField(DK);                    // Enter
   eq('saved desig value', app.getVal(DK), 'F');
   eq('saved desig src',   app.srcOf(DK), 'database');
-  eq('saved desig chip reads On file', chip(), 'On file');
+  eq('saved desig reads On file', chip(), 'On file');
   T('saved desig is clean', !app.keysCanSave([DK]));
-  // click past the saved value → override, and Escape puts the saved one back
-  app.__edit(DK, app.desigNext(app.getVal(DK)));
-  eq('click past saved value', app.getVal(DK), 'E');
+  // pick a different designation → override, and Escape puts the saved one back
+  app.__edit(DK, 'E');
+  eq('picking past the saved value', app.getVal(DK), 'E');
   T('changed desig is overridden', app.srcOf(DK)==='overridden');
   T('changed desig canRevert', app.keysCanRevert([DK]));
-  eq('changed desig chip reads Overridden', chip(), 'Overridden');
+  eq('changed desig reads Overridden', chip(), 'Overridden');
   app.__revert(DK);                             // Escape
   eq('Escape restores saved desig', app.getVal(DK), 'F');
   eq('Escape restores desig src',   app.srcOf(DK), 'database');
-  /* Cycling all the way round clears the chip — on a SAVED row that is an
-     override (amber, revertable), not a blank field. */
-  for(let i=0;i<4;i++) app.__edit(DK, app.desigNext(app.getVal(DK)));
-  eq('cycled back to no designation', app.getVal(DK), '');
+  /* Picking "No designation" on a SAVED row is an override (amber, revertable),
+     not a blank field. */
+  app.__edit(DK, '');
+  eq('picked no designation', app.getVal(DK), '');
   T('clearing a saved desig is an override', app.srcOf(DK)==='overridden');
   T('cleared desig canRevert', app.keysCanRevert([DK]));
   /* Saving "no designation". core.js keeps source 'new' for any saved blank so

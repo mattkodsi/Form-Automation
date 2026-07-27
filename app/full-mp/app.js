@@ -14,7 +14,6 @@ const DESIG=[['',''],['F','Family'],['E','Elderly'],['D','Disabled'],['NE','Near
 const desigName=v=>{const r=DESIG.find(x=>x[0]===String(v||''));return r?r[1]:'';};
 /* One place decides what a click advances the chip to, so the handler and the
    suite that guards it cannot drift: '' -> F -> E -> D -> NE -> '' . */
-const desigNext=cur=>{const at=DESIG.findIndex(x=>x[0]===String(cur==null?'':cur));return DESIG[(at<0?0:at+1)%DESIG.length][0];};
 const ENTITY_TYPES=['Individual','Corporation','General Partnership','Limited Partnership','Joint Tenancy/Tenants in Common','Trust','Other (specify)'];
 const FIELD_SECTIONS=[
   {n:2,title:'Property',fields:[{k:'property.name',label:'Property name',col:0},{k:'tenant.property_alias',label:'Also known to tenants as',col:0},{k:'property.addr',label:'Address',col:0,type:'addr'},{k:'owner.entity_name',label:'Ownership entity',col:1},{k:'owner.entity_type',label:'Entity type',col:1,type:'select',opts:ENTITY_TYPES},{type:'pair',col:1,items:[{k:'property.s8',label:'Section 8 #'},{k:'property.fha',label:'FHA #'}]}]},
@@ -427,7 +426,7 @@ function numUnresolved(i){return numConflict(i)&&!numReviewedOf(i);}
 function unitTypeCell(i){const brK='units.'+i+'.br',baK='units.'+i+'.ba';const conf=typeUnresolved(i);const c=conf?CLR.overridden:groupColors([brK,baK]);
   const withRs=(k,opts,ph)=>{const d=csDrop(k,opts,ph,'',true,(!conf&&partHot(k))?tintStyle(k):'');const row=rsCsRow(k);
     return row?d.replace('<div class="uamenu">','<div class="uamenu">'+row):d;};
-  return `<div class="rbox brba" data-box="${brK}" style="background:${c[1]};border-left-color:${c[0]}">${withRs(brK,BR_OPTS,'BR')}<span class="slash">/</span>${withRs(baK,BA_OPTS,'BA')}${desigChip(i)}</div>`;}
+  return `<div class="rbox brba" data-box="${brK}" style="background:${c[1]};border-left-color:${c[0]}">${withRs(brK,BR_OPTS,'BR')}<span class="slash">/</span>${withRs(baK,BA_OPTS,'BA')}${desigDrop(i)}</div>`;}
 function unitCountCell(i){const k='units.'+i+'.num_units';const c=numUnresolved(i)?CLR.overridden:cellColors(k);const rv=rsUnit(i,'count');
   // The schedule is where this number comes from, so the cell says so whether or
   // not one is loaded right now — dimmed when there is nothing to pull, exactly as
@@ -524,9 +523,8 @@ function renderRents(){
      width the date field already leaves empty, so it costs nothing vertically and
      is out of the way while still being on screen. Muted: it is a reference, not
      a control, and the sentence explaining it lives on the header's tooltip. */
-  const desigKey=UNITS.length?`<div class="dkey" title="${esc(desigTip)}"><b>Designation</b>${DESIG.filter(d=>d[0]).map(d=>'<span><i>'+d[0]+'</i>'+d[1]+'</span>').join('')}</div>`:'';
   const rgHead=`<div class="rgh"><span title="${esc(desigTip)}">Unit type <em class="hsub">br / ba \u00b7 designation</em></span><span>Units</span><span>Current rent</span><span>Proposed rent</span><span>Utility allowance</span>${hasProg('rcs')?(function(){const st=pullBtnState('safmr');return '<span class="safmrhead">150% SAFMR<button class="urev hudbtn'+st.cls+'" id="pullSafmr"'+st.dis+' title="'+esc(st.why||'Re-pull 150% ceilings from HUD for this property’s ZIP')+'">⤓ HUD</button></span>';})():''}<span></span></div>`;
-  return card(6,sectionPill(6),`<div class="reseffrow"><div class="reseff">${dateEffCell()}</div>${desigKey}</div>${capNote()}<div class="ucards${hasProg('rcs')?'':' noprop'}">${UNITS.length?rgHead:''}${cards}</div><div class="addrow" id="addUnit">+ Add unit type</div>${_undoStack.length?(' <span class="addrow ghostlink" id="undoUnit">↩ Undo delete'+(_undoStack.length>1?(' ('+_undoStack.length+')'):'')+'</span><button class="undocommit" id="undoCommit" title="Keep deletions — dismiss undo">✓</button>'):''}<div class="partd">${lh}</div><div class="partd">${pd}</div>`);}
+  return card(6,sectionPill(6),`<div class="reseff">${dateEffCell()}</div>${capNote()}<div class="ucards${hasProg('rcs')?'':' noprop'}">${UNITS.length?rgHead:''}${cards}</div><div class="addrow" id="addUnit">+ Add unit type</div>${_undoStack.length?(' <span class="addrow ghostlink" id="undoUnit">↩ Undo delete'+(_undoStack.length>1?(' ('+_undoStack.length+')'):'')+'</span><button class="undocommit" id="undoCommit" title="Keep deletions — dismiss undo">✓</button>'):''}<div class="partd">${lh}</div><div class="partd">${pd}</div>`);}
 
 const SAFMR_BR_KEY={'Studio':'efficiency','1BR':'br1','2BR':'br2','3BR':'br3','4BR':'br4'};
 let _hud={key:'',data:null,inflight:null};let _hudTimer=null;
@@ -612,9 +610,20 @@ function boxStyle(k){const c=Array.isArray(k)?groupColors(k):cellColors(k);retur
 function desigColors(k){const c=form[k];
   if(c&&c.db_value!=null&&String(c.value==null?'':c.value)===String(c.db_value))return provColors('database',k);
   return cellColors(k);}
-function desigChip(i){const k='units.'+i+'.desig';const v=get(k);const has=v!==''&&v!=null;const c=desigColors(k);
-  const t=has?(desigName(v)+' \u2014 click to change'):'No designation \u2014 click for Family, Elderly, Disabled or Near-elderly';
-  return '<button class="desig'+(has?'':' empty')+'" data-desig="'+i+'" title="'+esc(t)+'" style="color:'+c[0]+';border-color:'+c[0]+';background:'+c[1]+'">'+(has?esc(v):'\u2013')+'</button>';}
+/* A click-to-cycle chip needed a legend to explain four bare letters, and made
+   you pass through two options to reach a third. Every other multi-option cell in
+   this form is a picker, so this is one too: the names sit in the menu where you
+   are already looking, the schedule's own designation is offered like any other
+   source, and the standalone key is no longer needed anywhere. */
+function desigDrop(i){const k='units.'+i+'.desig';const v=get(k);const has=v!==''&&v!=null;
+  const c=desigColors(k);
+  const tint='background:linear-gradient('+c[0]+','+c[0]+') no-repeat left 4px center/3px 60%,'+c[1]+';border-radius:6px';
+  const menu=rsCsRow(k)
+    +DESIG.filter(d=>d[0]).map(d=>'<div class="uaopt" data-csopt="'+d[0]+'" data-cskey="'+k+'">'+d[0]+'<span class="uasub">'+esc(d[1])+'</span></div>').join('')
+    +'<div class="uaopt" data-csopt="" data-cskey="'+k+'">\u2014<span class="uasub">No designation</span></div>';
+  return '<div class="uadrop cs dgdrop"><div class="uatrigger" tabindex="0" data-trigfor="'+k+'" style="'+tint+'" title="'+esc(has?desigName(v):'Designation')+'">'
+    +'<span class="ualab">'+(has?esc(v):'\u2014')+'</span><span class="cvx">\u25be</span></div>'
+    +'<div class="uamenu">'+menu+'</div></div>';}
 function fuelChip(k,three){const v=get(k);const has=v!==''&&v!=null;const c=cellColors(k);const cls=three?'fuel3':'fuel';return '<span class="'+cls+(has?'':' empty')+'" data-fuel'+(three?'3':'')+'="'+k+'" style="color:'+c[0]+';border-color:'+c[0]+';background:'+c[1]+'">'+(has?esc(v):'-')+'</span>';}
 function cbx(k,label){const on=get(k)==='1';return `<label class="cb"><input type="checkbox" data-cb="${k}" ${on?'checked':''}><span class="box" style="${boxStyle(k)}">${on?'✓':''}</span><span class="cbt">${esc(label)}</span>${ovIcons(k)}</label>`;}
 function pbUtil(i,label){const on=get('partb.utilities.'+i)==='1';return `<div class="cb utrow"><label class="cbmain"><input type="checkbox" data-cb="partb.utilities.${i}" ${on?'checked':''}><span class="box" style="${boxStyle('partb.utilities.'+i)}">${on?'✓':''}</span><span class="cbt ut">${label}</span></label>${fuelChip('partb.fuel.'+i,false)}${ovIcons(['partb.utilities.'+i,'partb.fuel.'+i])}</div>`;}
@@ -703,8 +712,9 @@ function rsUnitBr(i){const t=rsUnit(i,'type');if(t==null)return null;const bb=rs
 function rsUnitDesig(i){const t=rsUnit(i,'type');if(t==null)return null;return rsParseUnitType(t).desig||null;}
 function rsFamRow(fam,i){try{const arr=_rsUpload&&_rsUpload.parsed&&_rsUpload.parsed[fam];return arr&&arr[i]||null;}catch(e){return null;}}
 function rsFamVal(fam,i,f){const r=rsFamRow(fam,i);const v=r&&r[f];return (v==null||v===''||v===0)?null:String(v);}
-function rsBrBa(k){let m=String(k||'').match(/^units\.(\d+)\.(br|ba)$/);
-  if(m){const t=rsUnit(+m[1],'type');if(t==null)return null;const bb=rsParseUnitType(t);return (m[2]==='br'?bb.br:bb.ba)||null;}
+function rsBrBa(k){let m=String(k||'').match(/^units\.(\d+)\.(br|ba|desig)$/);
+  if(m){const t=rsUnit(+m[1],'type');if(t==null)return null;const bb=rsParseUnitType(t);
+    return (m[2]==='br'?bb.br:(m[2]==='ba'?bb.ba:bb.desig))||null;}
   m=String(k||'').match(/^ns8\.(\d+)\.(br|ba)$/); // ns8 rows carry a combined "type" string, like Section 8 rows
   if(m){const t=rsFamVal('ns8',+m[1],'type');if(t==null)return null;const bb=rsParseUnitType(t);return (m[2]==='br'?bb.br:bb.ba)||null;}
   m=String(k||'').match(/^nonrev\.(\d+)\.(br|ba)$/); // Part D rows already carry br/ba split, no parsing needed
@@ -1619,26 +1629,6 @@ function wireBody(){
       if(revertKeys(_rk)){e.preventDefault();e.stopPropagation();refreshIfPrereq(_rk);_refocusSel='[data-k="'+k+'"]';renderBody();setStatus(String(get(k)==null?'':get(k)).trim()!==''?'Reverted your change to the on-file value.':'Cleared your unsaved entry.');}else if(srcOf(k)==='new'&&(inp.value||'')!==''){e.preventDefault();e.stopPropagation();const _clr=groupOf(k)?[k]:_keys;_clr.forEach(kk=>store.editForm(form,kk,''));_refocusSel='[data-k="'+k+'"]';renderBody();setStatus('Cleared your unsaved entry.');}return;}e.preventDefault();if(_keys.length===1&&/^principals\.\d+\./.test(_keys[0])){const pi=+_keys[0].match(/^principals\.(\d+)\./)[1];if(!principalHasData(pi)){if(PRINCIPALS.length>1){Object.keys(form).forEach(kk=>{if(kk.indexOf('principals.'+pi+'.')===0)delete form[kk];});PRINCIPALS=PRINCIPALS.filter(x=>x!==pi);renderBody();setStatus('Empty principal row removed.');}return;}}if(handleZeroUnitCommit(_keys))return;if(k==='poc.phone'){const _d=(inp.value||'').replace(/[^0-9]/g,'');if(_d.length!==0&&_d.length!==10){setStatus('Enter a complete 10-digit phone before saving.');return;}}if(!keysCanSave(_keys))return;_keys.forEach(kk=>{if(kk.indexOf('partb.writein.')===0&&kk.indexOf('.',14)<0&&kk.slice(14)!=='u1')clearUncheckedWriteins([kk.slice(14)]);});const _sk=[];_keys.forEach(kk=>coupledKeys(kk).forEach(x=>{if(_sk.indexOf(x)<0)_sk.push(x);}));if(groupOf(k)==='tenant.mgmt'&&_sk.indexOf('tenant.mgmt_source')<0)_sk.push('tenant.mgmt_source');try{form=await store.saveFields(form,_sk);}catch(e){saveFailed(e);return;}await refreshSnap();snapForm(_sk);_refocusSel='[data-k="'+k+'"]';renderBody();setStatus('Saved this field to the database.');});if(wion)inp.addEventListener('focus',()=>{if(inp.value&&get(wion)!=='1'){form=store.editForm(form,wion,'1');const cb=inp.closest('.cb');if(cb){cb.classList.remove('unchecked','empty');cb.classList.add('checked');const bx=cb.querySelector('.box');if(bx)bx.textContent='✓';}}});});
   document.querySelectorAll('select[data-k]').forEach(sel=>{const k=sel.getAttribute('data-k');sel.addEventListener('change',()=>{form=store.editForm(form,k,sel.value);paintCell(k);renderRail();renderAttention();});});
   document.querySelectorAll('input[data-cb]').forEach(c=>{const k=c.getAttribute('data-cb');c.addEventListener('change',()=>{_pendingSnap=snapOf([k]);form=store.editForm(form,k,c.checked?'1':'');_pending=[k];_refocusSel='[data-cb="'+k+'"]';renderBody();});});
-  document.querySelectorAll('[data-desig]').forEach(dg=>dg.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();
-    const k='units.'+dg.getAttribute('data-desig')+'.desig';const cur=(form[k]&&form[k].value)||'';
-    const nx=desigNext(cur);
-    _pendingSnap=snapOf([k]);form=store.editForm(form,k,nx);_pending=[k];_refocusSel='[data-desig="'+dg.getAttribute('data-desig')+'"]';renderBody();
-    setStatus(nx?('Unit designated '+desigName(nx)+' \u2014 it prints after the bedroom size in Column 1 of the rent schedule.'):'Designation cleared.');}));
-  /* Enter saves the designation and Escape puts it back, like every other cell.
-     The chip is a button, so the input-level key handler never saw it. Rather
-     than restate the save and revert rules here, press the very buttons this
-     cell already renders — one behaviour, whether reached by mouse or keyboard. */
-  document.querySelectorAll('[data-desig]').forEach(dg=>dg.addEventListener('keydown',e=>{
-    if(e.key!=='Enter'&&e.key!=='Escape')return;
-    const row=dg.getAttribute('data-desig'),k='units.'+row+'.desig';
-    if(_pending&&_pending.length){e.preventDefault();e.stopPropagation();
-      _refocusSel='[data-desig="'+row+'"]';
-      if(e.key==='Enter')commitPending();else revertPending();return;}
-    const sel=e.key==='Enter'?('button[data-save1="'+k+'"]'):('button[data-rev="'+k+'"]');
-    const urow=dg.closest('.urow');const btn=urow&&urow.querySelector(sel);
-    if(btn&&getComputedStyle(btn).display!=='none'){e.preventDefault();e.stopPropagation();
-      _refocusSel='[data-desig="'+row+'"]';btn.click();}
-  }));
   document.querySelectorAll('[data-fuel]').forEach(fl=>fl.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();const k=fl.getAttribute('data-fuel');const cur=(form[k]&&form[k].value)||'';const nx=cur===''?'E':(cur==='E'?'F':(cur==='F'?'G':''));_pendingSnap=snapOf([k]);form=store.editForm(form,k,nx);_pending=[k];renderBody();}));
   document.querySelectorAll('[data-fuel3]').forEach(fl=>fl.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();const k=fl.getAttribute('data-fuel3');const base=k.slice(0,k.lastIndexOf('.fuel'));if(!get(base))return;const cur=(form[k]&&form[k].value)||'';const nx=cur===''?'E':(cur==='E'?'F':(cur==='F'?'G':''));_pendingSnap=snapOf([k]);form=store.editForm(form,k,nx);_pending=[k];renderBody();}));
   document.querySelectorAll('[data-wibox]').forEach(bx=>bx.addEventListener('click',e=>{e.preventDefault();const base=bx.getAttribute('data-wibox');if(!get(base))return;const on=get(base+'.on')==='1';_pendingSnap=snapOf([base+'.on']);form=store.editForm(form,base+'.on',on?'':'1');_pending=[base+'.on'];_refocusSel='[data-wibox="'+base+'"]';renderBody();}));
@@ -1755,7 +1745,7 @@ function wireBody(){
    ONE current record per property; leaving the form asks to save or discard.
    The RCS form itself (everything above) is unchanged. */
 
-document.addEventListener('click',e=>{document.querySelectorAll('.uadrop.open').forEach(x=>x.classList.remove('open'));if(_pending&&!(e.target&&e.target.closest&&e.target.closest('.uaopt,[data-cb],.cb,[data-fuel],[data-fuel3],[data-desig],[data-wibox],[data-mgmt],[data-csopt],.uatrigger'))){_pending=null;_pendingSnap=null;}});
+document.addEventListener('click',e=>{document.querySelectorAll('.uadrop.open').forEach(x=>x.classList.remove('open'));if(_pending&&!(e.target&&e.target.closest&&e.target.closest('.uaopt,[data-cb],.cb,[data-fuel],[data-fuel3],[data-wibox],[data-mgmt],[data-csopt],.uatrigger'))){_pending=null;_pendingSnap=null;}});
 document.addEventListener('keydown',e=>{const vis=v=>{const x=el('view'+v);return x&&x.style&&x.style.display!=='none';};if(e.key==='Tab'){_pending=null;_pendingSnap=null;_rsArm=false;return;}if(e.key==='Enter'){const ae=document.activeElement;const inText=!!ae&&/^(INPUT|TEXTAREA)$/.test(ae.tagName)&&ae.type!=='checkbox';
     if(_dlgEnter&&el('scrim')&&el('scrim').classList.contains('open')){e.preventDefault();_dlgEnter();return;}
     if(_rsArm&&!inText){const ra=el('rsApply');if(ra){e.preventDefault();_rsArm=false;ra.click();return;}}
@@ -1765,7 +1755,7 @@ document.addEventListener('mousedown',e=>{_mouseFocus=true;_rsArm=false;setTimeo
   const t=e.target;_lastClickSel=null;_lastClickNode=(t&&t.getBoundingClientRect)?t:null;_lastClickAt=Date.now();
   if(!t||!t.closest)return;
   // a click's anchor: the cell it hit; else the checkbox its label wraps; else the section card; else the footer
-  const attrSel=()=>{const A=['data-cb','data-wibox','data-fuel','data-fuel3','data-desig','data-box'];for(let i=0;i<A.length;i++){const n=t.closest('['+A[i]+']');if(n)return '['+A[i]+'="'+n.getAttribute(A[i])+'"]';}return null;};
+  const attrSel=()=>{const A=['data-cb','data-wibox','data-fuel','data-fuel3','data-box'];for(let i=0;i<A.length;i++){const n=t.closest('['+A[i]+']');if(n)return '['+A[i]+'="'+n.getAttribute(A[i])+'"]';}return null;};
   let sel=attrSel();
   if(!sel){const lb=t.closest('.cb,.wi,.utrow');const inner=lb&&lb.querySelector('[data-cb],[data-wibox]');if(inner)sel=inner.hasAttribute('data-cb')?('[data-cb="'+inner.getAttribute('data-cb')+'"]'):('[data-wibox="'+inner.getAttribute('data-wibox')+'"]');}
   if(!sel){const cd=t.closest('#sections .card');if(cd){const all=[].slice.call(document.querySelectorAll('#sections .card'));const i=all.indexOf(cd);if(i>=0)sel='#sections .card:nth-child('+(i+1)+')';}}
@@ -2588,7 +2578,7 @@ function contactDialog(c){c=c||{};
   ['ccN','ccE','ccP'].forEach(id=>{const ff=el(id);if(ff&&ff.addEventListener)ff.addEventListener('keydown',ev=>{if(ev.key!=='Enter')return;ev.preventDefault();const d=(el('ccP').value||'').replace(/\D/g,'');if(d.length===0||d.length===10)el('dlgOk').click();});});
   el('dlgCancel').onclick=closeModal;
   el('dlgOk').onclick=async()=>{const patch={name:(el('ccN').value||'').trim(),email:(el('ccE').value||'').trim(),phone:(el('ccP').value||'').trim()};closeModal();try{if(c.id)await mpdb.updateContact(c.id,patch);else await mpdb.addContact(patch);renderContacts();}catch(e){saveFailedModal(e);}};}
-if(typeof module!=='undefined')module.exports={fmtPhone,fmtDate,sMoney,sPct,sK,analysis,uaResolvedOf,uaConflict,uaUnresolved,renderMenu,renderLauncher,openMenu,openForm,openLauncher,ringSvg,niceDate,isDirty,overrideCount,isStateKey,attnFlags,pbUtil,clearUncheckedWriteins,srcOf:(k)=>srcOf(k),__openForm:(pid)=>{activePid=pid;return openForm('RCS');},__edit:(k,v)=>{form=store.editForm(form,k,v);},getVal:(k)=>get(k),modeOf:(kk)=>modeOf(kk),fieldKeys:(k)=>fieldKeys(k),keysCanSave:(ks)=>keysCanSave(ks),keysCanRevert:(ks)=>keysCanRevert(ks),keysNewDirty:(ks)=>keysNewDirty(ks),__revert:(k)=>store.revertForm(form,k),coupledKeys:(k)=>coupledKeys(k),__firstPid:()=>{const ps=mpdb?mpdb.listProperties():[];return ps.length?ps[0].id:null;},__boxes:(i)=>({ua:uaBox(i),safmr:safmrBox(i)}),__saveField:async(k)=>{form=await store.saveField(form,k);},__set:(f,u)=>{form=f;UNITS=u;},desigNext:(cur)=>desigNext(cur),desigColors:(k)=>desigColors(k),__cell:(k)=>form[k],
+if(typeof module!=='undefined')module.exports={DESIG,desigName,rsParseUnitType,fmtPhone,fmtDate,sMoney,sPct,sK,analysis,uaResolvedOf,uaConflict,uaUnresolved,renderMenu,renderLauncher,openMenu,openForm,openLauncher,ringSvg,niceDate,isDirty,overrideCount,isStateKey,attnFlags,pbUtil,clearUncheckedWriteins,srcOf:(k)=>srcOf(k),__openForm:(pid)=>{activePid=pid;return openForm('RCS');},__edit:(k,v)=>{form=store.editForm(form,k,v);},getVal:(k)=>get(k),modeOf:(kk)=>modeOf(kk),fieldKeys:(k)=>fieldKeys(k),keysCanSave:(ks)=>keysCanSave(ks),keysCanRevert:(ks)=>keysCanRevert(ks),keysNewDirty:(ks)=>keysNewDirty(ks),__revert:(k)=>store.revertForm(form,k),coupledKeys:(k)=>coupledKeys(k),__firstPid:()=>{const ps=mpdb?mpdb.listProperties():[];return ps.length?ps[0].id:null;},__boxes:(i)=>({ua:uaBox(i),safmr:safmrBox(i)}),__saveField:async(k)=>{form=await store.saveField(form,k);},__set:(f,u)=>{form=f;UNITS=u;},desigColors:(k)=>desigColors(k),__cell:(k)=>form[k],
   /* Tests boot without Supabase, and the DOMContentLoaded handler rightly refuses
      to start without it — which left this suite calling openForm() against a null
      mpdb and dying before its first assertion. Give it the local adapter instead

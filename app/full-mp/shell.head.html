@@ -77,7 +77,15 @@ body.scrolled #ccbar{transform:translateY(0);opacity:1}
 /* Without a floor the two dropdowns collapsed from 96px to 70px the moment the
    save/revert pair appeared, and "2BR" ran into its own clear icon — the row
    silently changed shape depending on whether it had been edited. */
-.rbox.brba .uadrop{min-width:84px}
+/* Three dropdowns share this cell: bed and bath flex, the designation is fixed
+   and narrow because it shows a one or two letter code. The actions row below
+   mirrors these exact widths so each pair lands under its own control — with a
+   flexible designation slot, bath's pair slid whenever the designation had one. */
+.rbox.brba .uadrop{min-width:0}
+.rbox.brba .uadrop:not(.dgdrop){flex:1 1 0}
+.rbox.brba .dgdrop{flex:0 0 74px;margin-left:7px;margin-right:6px}
+.dgdrop .ualab{font-weight:700;font-size:11px;letter-spacing:.3px}
+.dgdrop .uamenu{min-width:170px}
 /* Spanning to column 6 collided with the metric at column 4, which pushed the
    note onto a grid row of its own, 25px under the cell. Ending at 4 is not
    enough on its own: this element comes after .urnsub in the DOM but occupies
@@ -93,13 +101,9 @@ body.scrolled #ccbar{transform:translateY(0);opacity:1}
 .uracts > div:first-child{gap:0;padding-left:4px}   /* the cell's 4px left border */
 .ua-br,.ua-ba{flex:1 1 0;min-width:0;display:flex}
 .ua-sl{flex:0 0 auto;width:8px}
-.ua-dg{flex:0 0 auto;margin-left:7px;margin-right:9px;min-width:22px;display:flex}
+.ua-dg{flex:0 0 74px;margin-left:7px;margin-right:6px;display:flex}
 .uracts .ovic{margin:0}
 .urnov .ovnote{margin:0}
-.desig{margin-left:7px;margin-right:9px;flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;appearance:none;-webkit-appearance:none;box-sizing:border-box;min-width:22px;height:20px;padding:0 6px;border:1px solid;border-radius:4px;font-family:inherit;font-size:10px;font-weight:700;line-height:1;text-align:center;cursor:pointer}
-.desig.empty{opacity:.5;font-weight:600}
-.desig:hover{opacity:1;filter:brightness(.97)}
-.desig:focus-visible{outline:2px solid #2563eb;outline-offset:1px}
 .rgh .hsub{display:inline;margin-left:7px;font-size:9px;font-weight:600;font-style:normal;color:#9aa4b5;letter-spacing:.2px;text-transform:none}
 .liftnote{font-size:11px;color:#64748b;margin-top:4px;line-height:1.45}
 .glbl{font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#a3adbe;margin-right:9px}
@@ -333,12 +337,7 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;borde
 
 .mtopright{color:#cdd9ea}.mtopright:hover{color:#fff}
 .subtle{color:#9aa4b8;font-weight:400;font-size:10px;text-transform:none;letter-spacing:0}
-.reseffrow{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap}
 .reseff{max-width:240px;margin-bottom:16px}
-.dkey{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;margin-bottom:18px;font-size:10.5px;color:#8791a5}
-.dkey b{font-size:9px;font-weight:700;color:#9aa4b5;text-transform:uppercase;letter-spacing:.3px}
-.dkey span{display:inline-flex;align-items:center;gap:4px}
-.dkey i{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:17px;padding:0 4px;border:1px solid #dbe3ee;border-radius:4px;background:#f8fafc;color:#6b7280;font-style:normal;font-size:9px;font-weight:700}
 .cycard{background:#fff;border:1px solid #e6ebf3;border-radius:10px;padding:12px 14px;margin-bottom:9px;text-align:left;cursor:pointer}
 .cycard:hover{border-color:#c7cede;box-shadow:0 2px 8px rgba(20,40,80,.08)}
 .cycard.dom{border-color:#2563eb;box-shadow:0 1px 6px rgba(37,99,235,.12)}
