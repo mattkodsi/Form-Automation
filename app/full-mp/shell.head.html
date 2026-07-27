@@ -100,6 +100,17 @@ body.scrolled #ccbar{transform:translateY(0);opacity:1}
 .ucards .urow .rbox.brba .uadrop .uatrigger{padding-left:11px}
 .dgdrop .ualab{font-weight:700;font-size:11px;letter-spacing:.3px}
 .dgdrop .uamenu{min-width:170px}
+/* Butting the sub-cells together was not enough: each tint carries a 6px radius,
+   so at a zero-width seam the group's colour still showed through the two corner
+   notches. Inner edges are square and only the outer ones round, so neighbours of
+   the same colour read as one field — the way the address bar's parts do. The
+   radius is set inline by tintStyle(), hence the override. */
+.ucards .urow .rbox.brba .uatrigger{border-radius:0!important}
+.ucards .urow .rbox.brba .uadrop:first-child .uatrigger{border-radius:6px 0 0 6px!important}
+.ucards .urow .rbox.brba .dgdrop .uatrigger{border-radius:0 6px 6px 0!important}
+.homebtn{cursor:pointer;border-radius:8px;transition:opacity .12s}
+.homebtn:hover{opacity:.82}
+.homebtn:focus-visible{outline:2px solid #7aa7ff;outline-offset:3px}
 /* Spanning to column 6 collided with the metric at column 4, which pushed the
    note onto a grid row of its own, 25px under the cell. Ending at 4 is not
    enough on its own: this element comes after .urnsub in the DOM but occupies
