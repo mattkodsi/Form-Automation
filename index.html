@@ -1366,6 +1366,9 @@ const BR_OPTS=['Studio','1BR','2BR','3BR','4BR','5BR']; const BA_OPTS=['1BA','1.
    changes a rent or an allowance. */
 const DESIG=[['',''],['F','Family'],['E','Elderly'],['D','Disabled'],['NE','Near-elderly']];
 const desigName=v=>{const r=DESIG.find(x=>x[0]===String(v||''));return r?r[1]:'';};
+/* One place decides what a click advances the chip to, so the handler and the
+   suite that guards it cannot drift: '' -> F -> E -> D -> NE -> '' . */
+const desigNext=cur=>{const at=DESIG.findIndex(x=>x[0]===String(cur==null?'':cur));return DESIG[(at<0?0:at+1)%DESIG.length][0];};
 const ENTITY_TYPES=['Individual','Corporation','General Partnership','Limited Partnership','Joint Tenancy/Tenants in Common','Trust','Other (specify)'];
 const FIELD_SECTIONS=[
   {n:2,title:'Property',fields:[{k:'property.name',label:'Property name',col:0},{k:'tenant.property_alias',label:'Also known to tenants as',col:0},{k:'property.addr',label:'Address',col:0,type:'addr'},{k:'owner.entity_name',label:'Ownership entity',col:1},{k:'owner.entity_type',label:'Entity type',col:1,type:'select',opts:ENTITY_TYPES},{type:'pair',col:1,items:[{k:'property.s8',label:'Section 8 #'},{k:'property.fha',label:'FHA #'}]}]},
@@ -2972,7 +2975,7 @@ function wireBody(){
   document.querySelectorAll('input[data-cb]').forEach(c=>{const k=c.getAttribute('data-cb');c.addEventListener('change',()=>{_pendingSnap=snapOf([k]);form=store.editForm(form,k,c.checked?'1':'');_pending=[k];_refocusSel='[data-cb="'+k+'"]';renderBody();});});
   document.querySelectorAll('[data-desig]').forEach(dg=>dg.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();
     const k='units.'+dg.getAttribute('data-desig')+'.desig';const cur=(form[k]&&form[k].value)||'';
-    const at=DESIG.findIndex(x=>x[0]===cur);const nx=DESIG[(at<0?0:at+1)%DESIG.length][0];
+    const nx=desigNext(cur);
     _pendingSnap=snapOf([k]);form=store.editForm(form,k,nx);_pending=[k];_refocusSel='[data-desig="'+dg.getAttribute('data-desig')+'"]';renderBody();
     setStatus(nx?('Unit designated '+desigName(nx)+' \u2014 it prints after the bedroom size in Column 1 of the rent schedule.'):'Designation cleared.');}));
   /* Enter saves the designation and Escape puts it back, like every other cell.
@@ -3939,7 +3942,7 @@ function contactDialog(c){c=c||{};
   ['ccN','ccE','ccP'].forEach(id=>{const ff=el(id);if(ff&&ff.addEventListener)ff.addEventListener('keydown',ev=>{if(ev.key!=='Enter')return;ev.preventDefault();const d=(el('ccP').value||'').replace(/\D/g,'');if(d.length===0||d.length===10)el('dlgOk').click();});});
   el('dlgCancel').onclick=closeModal;
   el('dlgOk').onclick=async()=>{const patch={name:(el('ccN').value||'').trim(),email:(el('ccE').value||'').trim(),phone:(el('ccP').value||'').trim()};closeModal();try{if(c.id)await mpdb.updateContact(c.id,patch);else await mpdb.addContact(patch);renderContacts();}catch(e){saveFailedModal(e);}};}
-if(typeof module!=='undefined')module.exports={fmtPhone,fmtDate,sMoney,sPct,sK,analysis,uaResolvedOf,uaConflict,uaUnresolved,renderMenu,renderLauncher,openMenu,openForm,openLauncher,ringSvg,niceDate,isDirty,overrideCount,isStateKey,attnFlags,pbUtil,clearUncheckedWriteins,srcOf:(k)=>srcOf(k),__openForm:(pid)=>{activePid=pid;return openForm('RCS');},__edit:(k,v)=>{form=store.editForm(form,k,v);},getVal:(k)=>get(k),modeOf:(kk)=>modeOf(kk),fieldKeys:(k)=>fieldKeys(k),keysCanSave:(ks)=>keysCanSave(ks),keysCanRevert:(ks)=>keysCanRevert(ks),keysNewDirty:(ks)=>keysNewDirty(ks),__revert:(k)=>store.revertForm(form,k),coupledKeys:(k)=>coupledKeys(k),__firstPid:()=>{const ps=mpdb?mpdb.listProperties():[];return ps.length?ps[0].id:null;},__boxes:(i)=>({ua:uaBox(i),safmr:safmrBox(i)}),__saveField:async(k)=>{form=await store.saveField(form,k);},__set:(f,u)=>{form=f;UNITS=u;},
+if(typeof module!=='undefined')module.exports={fmtPhone,fmtDate,sMoney,sPct,sK,analysis,uaResolvedOf,uaConflict,uaUnresolved,renderMenu,renderLauncher,openMenu,openForm,openLauncher,ringSvg,niceDate,isDirty,overrideCount,isStateKey,attnFlags,pbUtil,clearUncheckedWriteins,srcOf:(k)=>srcOf(k),__openForm:(pid)=>{activePid=pid;return openForm('RCS');},__edit:(k,v)=>{form=store.editForm(form,k,v);},getVal:(k)=>get(k),modeOf:(kk)=>modeOf(kk),fieldKeys:(k)=>fieldKeys(k),keysCanSave:(ks)=>keysCanSave(ks),keysCanRevert:(ks)=>keysCanRevert(ks),keysNewDirty:(ks)=>keysNewDirty(ks),__revert:(k)=>store.revertForm(form,k),coupledKeys:(k)=>coupledKeys(k),__firstPid:()=>{const ps=mpdb?mpdb.listProperties():[];return ps.length?ps[0].id:null;},__boxes:(i)=>({ua:uaBox(i),safmr:safmrBox(i)}),__saveField:async(k)=>{form=await store.saveField(form,k);},__set:(f,u)=>{form=f;UNITS=u;},desigNext:(cur)=>desigNext(cur),desigColors:(k)=>desigColors(k),__cell:(k)=>form[k],
   /* Tests boot without Supabase, and the DOMContentLoaded handler rightly refuses
      to start without it — which left this suite calling openForm() against a null
      mpdb and dying before its first assertion. Give it the local adapter instead
