@@ -846,6 +846,9 @@ const ROW_P5 =/^(.+?)\s+(\d+)\s+([\d,]+)\s+\$([\d,]+)\s+\$?([\d.]+)\s*([YN])\b/i
 const ROW_5C =/^(.+?)\s+(\d+)\s+\$([\d,]+)\s+\$([\d,]+)\s+\$([\d,]+)\s*$/;          // type count rent ua gross
 const ROW_CMP=/^(.+?)\s+(\d+)\s+\$([\d,]+)\s+\$([\d,]+)\s+\$[\d,]+\s*[<>]\s*\$[\d,]+/; // type count rent 150%safmr verdict
 const ROW_4C =/^(.+?)\s+(\d+)\s+\$([\d,]+)\s+\$([\d,]+)\s*$/;                       // type count safmrbase gross
+/* All five were run against the real fixture lines: the four Belfry shapes, the
+   two Cornerstone shapes, Lansing's duplicated type and Fairview's comma'd size
+   all parse, and no pattern matches another's rows. */
 const ROW_CS6=/^(.+?)\s+(\d+)\s+\$([\d,]+)\s+\$([\d,]+)\s+\$([\d,]+)\s+\$([\d,]+)\s*$/; // Cornerstone: type count net ua gross monthly
 
 /* Keyed on the FULL type string, not on bedrooms+baths. Lansing Manor prints
