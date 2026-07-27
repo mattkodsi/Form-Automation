@@ -5,7 +5,7 @@
    shows it, and MIN_CHECKS catches a run that dies partway — a short count is
    a failure, not a pass. Adding checks? Raise MIN_CHECKS. */
 const { makeDb, memoryAdapter, isPerCycleKey, migrate, computeAnalysis, computeSalutation } = require('./db.js');
-const MIN_CHECKS = 93;
+const MIN_CHECKS = 104;
 let fails = 0, n = 0, verdict = null;
 const BAR = '═'.repeat(68);
 function fail(msg, err) {
@@ -167,6 +167,37 @@ function jsonAdapter() { let s = null; return { get: async () => (s ? JSON.parse
   ok('generated is recorded', cdb.listCycles(cpid).find(c => c.id === cid2).generated.docs, ['Cover letter']);
   await cdb.deleteCycle(cid3);
   ok('deleting a cycle removes it', cdb.listCycles(cpid).length, 2);
+
+  console.log('\n─ 8c2 · THE PARSED RENT SCHEDULE ─');
+  /* The reading of the executed schedule used to live in a page-load variable,
+     so every source row that read it went dim on refresh while rows backed by a
+     real saved field (units.N.ua_exec) survived — one dropdown menu telling two
+     different stories. It is stored with its package now, so these check the
+     rules that bug broke: it comes back whole, it comes back after a reload, and
+     it does NOT follow you into next year's package. */
+  const radapter = jsonAdapter();
+  let rdbc = await makeDb(radapter);
+  const rp = rdbc.getActive().pid;
+  const { cid: rc1 } = await rdbc.createCycle(rp, { full: true, programs: ['rcs'] });
+  ok('a fresh package remembers no schedule', rdbc.getCycleRs(rc1), {});
+  const DOC = { name: 'Beacon Hill executed RS.pdf', kind: 'fields', via: 'text', at: '2026-07-27T14:00:00.000Z',
+                parsed: { scalars: { 'property.s8': 'MI43T000123', 'property.name': 'Beacon Hill' },
+                          units: [{ type: '1 BR / 1 BA', count: 10, rent: 900, ua: 75 }], principals: [], ns8: [], nonrev: [] } };
+  await rdbc.setCycleRs(rc1, DOC);
+  ok('the reading is stored whole', rdbc.getCycleRs(rc1), DOC);
+  ok('including the nested unit rows the rows-dropdowns read', rdbc.getCycleRs(rc1).parsed.units[0].ua, 75);
+  ok('and the scalars the source rows read', rdbc.getCycleRs(rc1).parsed.scalars['property.s8'], 'MI43T000123');
+  /* THE regression: this is the reload the old code could not survive. */
+  rdbc = await makeDb(radapter);
+  ok('it survives a reload of the data layer', rdbc.getCycleRs(rc1).name, 'Beacon Hill executed RS.pdf');
+  ok('with its parse intact, not just its filename', rdbc.getCycleRs(rc1).parsed.scalars['property.name'], 'Beacon Hill');
+  ok('no PDF bytes were stored', 'bytes' in rdbc.getCycleRs(rc1), false);
+  const { cid: rc2 } = await rdbc.createCycle(rp, { programs: ['rcs'], effective_date: '2027-09-01' });
+  ok('next year’s package does NOT inherit last year’s schedule', rdbc.getCycleRs(rc2), {});
+  ok('and the package it was built from still has its own', rdbc.getCycleRs(rc1).name, 'Beacon Hill executed RS.pdf');
+  await rdbc.setCycleRs(rc1, {});
+  ok('replacing it with nothing clears it', rdbc.getCycleRs(rc1), {});
+  ok('asking an unknown package is empty, not a throw', rdbc.getCycleRs('no-such-cycle'), {});
 
   console.log('\n─ 8d · WRITE-THROUGH + PRUNING ─');
   await cdb.saveFlatCycle(cid2, { 'property.name': { value: 'Gates Manor (renamed in cycle)' } });

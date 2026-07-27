@@ -20,7 +20,7 @@ global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>
 const os=require('os'),path=require('path'),fs=require('fs');
 
 /* ── the verdict machinery (mirrors test_interactions.js) ───────────────── */
-const MIN_CHECKS=39;
+const MIN_CHECKS=45;
 let n=0,fails=0,verdict=null;
 const BAR='═'.repeat(68);
 function fail(msg,err){
@@ -103,6 +103,31 @@ const T=(label,v)=>eq(label,!!v,true);
   T('unit cards render',               /ucard/.test(secs));
   T('the address is rendered',         /Wilmette/.test(secs));
   T('nothing undefined leaked into the form', !/undefined/.test(secs));
+
+  /* The executed schedule must still be there tomorrow. It used to live in a
+     variable that openCycleForm itself cleared, so a source row reading rsVal()
+     went dim on refresh — or merely on leaving the form — while a row backed by
+     a saved field (units.N.ua_exec) survived. Note this opens the form the way
+     the app really does, through openCycleForm; __openForm above takes the
+     legacy no-cycle path. */
+  console.log('\n─ THE PARSED RENT SCHEDULE SURVIVES REOPENING THE PACKAGE ─');
+  const scid=db.listCycles(pid)[0].id;
+  eq('the package starts with no schedule read for it', db.getCycleRs(scid), {});
+  await app.__openCycleForm(pid,scid);
+  T('with none stored, the source row is honestly dim',
+    /Executed RS · not available/.test(els.sections.innerHTML));
+  await db.setCycleRs(scid,{name:'Gates Manor executed RS.pdf',kind:'fields',via:'text',
+    at:'2026-07-27T14:00:00.000Z',
+    parsed:{scalars:{'property.s8':'MI43T000123'},units:[],principals:[],ns8:[],nonrev:[]}});
+  await app.__openCycleForm(pid,scid);
+  const rsec=els.sections.innerHTML;
+  T('reopening the package restores the schedule’s value into its source row',
+    /MI43T000123<span class="uasub">Executed RS<\/span>/.test(rsec));
+  T('and the upload row names the file instead of asking for it again',
+    /Gates Manor executed RS\.pdf/.test(rsec));
+  T('it says when it was read, so it is not mistaken for this session’s work',
+    /read Jul 27, 2026/.test(rsec));
+  T('nothing undefined leaked in with it', !/undefined/.test(rsec));
 
   console.log('\n─ ANALYSIS: the numbers behind the 150% check ─');
   const a=app.analysis();

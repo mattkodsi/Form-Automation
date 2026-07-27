@@ -243,6 +243,28 @@ the third.
 
 ---
 
+## 19. What a source row offers must outlive the page that loaded it
+
+Every "Executed RS" row looks alike, so every one must behave alike. Two of them
+did not: rows fed by a real saved field (`units.N.ua_exec`, written into the
+record by `rsFillFromParsed`) still had their value tomorrow, while every row
+calling `rsVal()` / `rsUnit()` / `rsBrBa()` read `_rsUpload` — a plain variable
+set on upload and cleared by `openCycleForm` itself. So the same menu told two
+different stories, and not only on refresh: leaving the form and coming straight
+back was enough to lose the schedule while its numbers sat in the form.
+
+The reading is now stored with its package (`cycle.rs_doc`, via
+`getCycleRs` / `setCycleRs`) and rehydrated in `openCycleForm`. The PDF bytes are
+deliberately NOT stored — nothing downstream reads `_rsUpload.bytes`. If you add
+a new parsed source, store what it read, not the file it read it from.
+
+**Why the audit missed this, which matters more than the bug:** every check in
+that sweep was made inside ONE page load — change a cell, take it back, confirm
+the form is clean. Nothing ever crossed a session boundary, and this defect does
+not exist inside a single load. **Add the reload to the sweep:** after filling
+from a document, reopen the package and confirm every source row still offers
+what it offered a moment ago.
+
 ## Before you deliver
 
 `deliver.sh` runs most of this. Run it, then do the rest by hand.
@@ -261,10 +283,14 @@ the third.
 4. **Drive the real bundle in a browser.** Node tests are not enough: provenance is
    painted twice, by `renderBody()` and by `paintCell(k)`, with different inputs. A test
    calling a render function directly passes while the app is visibly broken.
-5. **Round-trip sweep.** For every control in `#viewForm` — `input[data-k]`,
+5. **Reopen the package.** Fill from an uploaded document, then leave the form
+   and come back (and reload the page). Every source row must still offer what it
+   offered before — see rule 19. A sweep confined to one page load cannot see a
+   whole class of defect.
+6. **Round-trip sweep.** For every control in `#viewForm` — `input[data-k]`,
    `input[data-srcedit]`, `input[data-cb]`, every `.uaopt`, `[data-csclear]`,
    `[data-fuel]`, `[data-fuel3]`, `[data-wibox]`, the conflict buttons, `#clAll` /
    `#clNone` — make the change, take it back, confirm `isDirty()` is false, and diff
    `form` against `FORMSNAP` key by key. `isDirty()` compares VALUES ONLY across ALL
    keys, so one hidden side-effect key strands the form dirty with nothing on screen.
-6. **Measure at 1200, 1280 and 1920**, from computed style — never from a class name.
+7. **Measure at 1200, 1280 and 1920**, from computed style — never from a class name.
