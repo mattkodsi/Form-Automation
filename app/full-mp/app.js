@@ -2419,10 +2419,14 @@ function showPackageModal(nm,docs,combined,missingRcs,missingLh,capMsgs,blocked,
     const w=[].concat(((warnOf||{})[lab])||((blkBy[lab]||{}).warns)||[],extraWarn[lab]||[]);
     const omits=w.length?'<div class="gline"><span class="glbl">suggested</span>'
       +w.map(x=>x.sec?lnk(x,'gneed'):'<span class="gneed gneed-flat">'+esc(x.label)+'</span>').join('<span class="gsep">·</span>')+'</div>':'';
-    if(hit)return '<div class="gdoc gdoc-on"><span class="gtick">✓</span>'
+    /* The whole row is the download, not the word "Download": a 46px-tall row
+       whose only target was eight characters of text at the far right. The
+       suggested-fix links inside it stay their own buttons — their handler
+       stops propagation, so they never also download. */
+    if(hit)return '<div class="gdoc gdoc-on" role="button" tabindex="0" data-dldoc="'+hit.i+'" title="Download '+esc(lab)+'"><span class="gtick">✓</span>'
       +'<span class="gdoc-n">'+esc(lab)+'</span>'
       +'<span class="gdoc-need">'+omits+'</span>'
-      +'<button class="gdoc-a" data-dldoc="'+hit.i+'">Download</button></div>';
+      +'<span class="gdoc-a">Download</span></div>';
     const b=blkBy[lab];
     const needs='<div class="gline"><span class="glbl">required</span>'
       +(b?(b.missing||[]).map(x=>lnk(x,'gneed')).join('<span class="gsep">·</span>')
@@ -2454,7 +2458,10 @@ function showPackageModal(nm,docs,combined,missingRcs,missingLh,capMsgs,blocked,
   const cbn=el('dlCombined');if(cbn)cbn.onclick=()=>dlPdf(combined,nm+' - RCS Package.pdf');
   const xb=el('dlXlsx');if(xb)xb.onclick=()=>genRentAnalysis();
   const fb=el('dlFolder');if(fb)fb.onclick=()=>dlPackageFolder(nm,docs,combined);
-  document.querySelectorAll('[data-dldoc]').forEach(b=>b.onclick=()=>{const d=docs[+b.getAttribute('data-dldoc')];dlPdf(d.bytes,d.file+'.pdf');});
+  document.querySelectorAll('[data-dldoc]').forEach(b=>{const go=()=>{const d=docs[+b.getAttribute('data-dldoc')];dlPdf(d.bytes,d.file+'.pdf');};
+    b.onclick=go;
+    // a div carrying role="button" owes the keyboard both of a button's keys
+    b.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();go();}};});
   document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=e=>{e.preventDefault();e.stopPropagation();closeModal();gotoSection(+b.getAttribute('data-goto'),b.getAttribute('data-gotok')||'');});
 }
 
