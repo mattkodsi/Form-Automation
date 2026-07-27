@@ -82,8 +82,11 @@ body.scrolled #ccbar{transform:translateY(0);opacity:1}
    mirrors these exact widths so each pair lands under its own control — with a
    flexible designation slot, bath's pair slid whenever the designation had one. */
 .rbox.brba .uadrop{min-width:0}
-.rbox.brba .uadrop:not(.dgdrop){flex:1 1 0}
-.rbox.brba .dgdrop{flex:0 0 74px;margin-left:7px;margin-right:6px}
+/* Specific enough to outrank the responsive .uadrop rules further down, which
+   is why the designation flexed to 139px at a wide window while the slot below
+   it stayed 74px — the pairs then sat 32px and 65px right of their controls. */
+.ucards .urow .rbox.brba .uadrop:not(.dgdrop){flex:1 1 0}
+.ucards .urow .rbox.brba .dgdrop{flex:0 0 74px;margin-left:7px;margin-right:6px}
 /* The slash was 7.8px of text, the mirrored spacer a flat 8px, so every pair
    drifted a little further right across the row. Pin both to the same 8px.
    And the provenance bar sits at left:4px 3px wide, which left one pixel before
@@ -105,7 +108,13 @@ body.scrolled #ccbar{transform:translateY(0);opacity:1}
    bath and the designation under its chip. One pair covering bed AND bath could
    only revert both together, and sat under neither. */
 .uracts > div{display:flex;gap:6px;min-width:0;align-items:center}
-.uracts > div:first-child{gap:0;padding-left:4px}   /* the cell's 4px left border */
+/* Mirror the cell's BOX, not just its flex. .rbox carries a 4px left border and
+   a 1px right one, so its dropdowns share ~5px less free space than these slots
+   did — a small difference that flex splits between the children and compounds
+   across the row, which is why each pair sat a little further right than the one
+   before it. Transparent borders of the same widths make the two containers
+   distribute identical space at any window size. */
+.uracts > div:first-child{gap:0;box-sizing:border-box;border-left:4px solid transparent;border-right:1px solid transparent}
 .ua-br,.ua-ba{flex:1 1 0;min-width:0;display:flex}
 .ua-sl{flex:0 0 8px;width:8px}
 .ua-dg{flex:0 0 74px;margin-left:7px;margin-right:6px;display:flex}

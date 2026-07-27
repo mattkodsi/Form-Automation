@@ -82,8 +82,11 @@ body.scrolled #ccbar{transform:translateY(0);opacity:1}
    mirrors these exact widths so each pair lands under its own control — with a
    flexible designation slot, bath's pair slid whenever the designation had one. */
 .rbox.brba .uadrop{min-width:0}
-.rbox.brba .uadrop:not(.dgdrop){flex:1 1 0}
-.rbox.brba .dgdrop{flex:0 0 74px;margin-left:7px;margin-right:6px}
+/* Specific enough to outrank the responsive .uadrop rules further down, which
+   is why the designation flexed to 139px at a wide window while the slot below
+   it stayed 74px — the pairs then sat 32px and 65px right of their controls. */
+.ucards .urow .rbox.brba .uadrop:not(.dgdrop){flex:1 1 0}
+.ucards .urow .rbox.brba .dgdrop{flex:0 0 74px;margin-left:7px;margin-right:6px}
 /* The slash was 7.8px of text, the mirrored spacer a flat 8px, so every pair
    drifted a little further right across the row. Pin both to the same 8px.
    And the provenance bar sits at left:4px 3px wide, which left one pixel before
@@ -105,7 +108,13 @@ body.scrolled #ccbar{transform:translateY(0);opacity:1}
    bath and the designation under its chip. One pair covering bed AND bath could
    only revert both together, and sat under neither. */
 .uracts > div{display:flex;gap:6px;min-width:0;align-items:center}
-.uracts > div:first-child{gap:0;padding-left:4px}   /* the cell's 4px left border */
+/* Mirror the cell's BOX, not just its flex. .rbox carries a 4px left border and
+   a 1px right one, so its dropdowns share ~5px less free space than these slots
+   did — a small difference that flex splits between the children and compounds
+   across the row, which is why each pair sat a little further right than the one
+   before it. Transparent borders of the same widths make the two containers
+   distribute identical space at any window size. */
+.uracts > div:first-child{gap:0;box-sizing:border-box;border-left:4px solid transparent;border-right:1px solid transparent}
 .ua-br,.ua-ba{flex:1 1 0;min-width:0;display:flex}
 .ua-sl{flex:0 0 8px;width:8px}
 .ua-dg{flex:0 0 74px;margin-left:7px;margin-right:6px;display:flex}
@@ -1931,8 +1940,8 @@ function numUnresolved(i){return numConflict(i)&&!numReviewedOf(i);}
    belongs to — see unitActs. Inside these cells the icon pair squeezed the
    controls it sat beside, and the row changed shape the moment it was edited. */
 function unitTypeCell(i){const brK='units.'+i+'.br',baK='units.'+i+'.ba';const conf=typeUnresolved(i);const c=conf?CLR.overridden:groupColors([brK,baK]);
-  const withRs=(k,opts,ph)=>{const d=csDrop(k,opts,ph,'',true,(!conf&&partHot(k))?tintStyle(k):'');const row=rsCsRow(k);
-    return row?d.replace('<div class="uamenu">','<div class="uamenu">'+row):d;};
+  const withRs=(k,opts,ph)=>{const d=csDrop(k,opts,ph,'',true,(!conf&&partHot(k))?tintStyle(k):'');const row=rsCsRow(k)||'<div class="uaopt srcdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>';
+    return d.replace('<div class="uamenu">','<div class="uamenu">'+row);};
   return `<div class="rbox brba" data-box="${brK}" style="background:${c[1]};border-left-color:${c[0]}">${withRs(brK,BR_OPTS,'BR')}<span class="slash">/</span>${withRs(baK,BA_OPTS,'BA')}${desigDrop(i)}</div>`;}
 function unitCountCell(i){const k='units.'+i+'.num_units';const c=numUnresolved(i)?CLR.overridden:cellColors(k);const rv=rsUnit(i,'count');
   // The schedule is where this number comes from, so the cell says so whether or
@@ -2125,7 +2134,10 @@ function desigColors(k){const c=form[k];
 function desigDrop(i){const k='units.'+i+'.desig';const v=get(k);const has=v!==''&&v!=null;
   const c=desigColors(k);
   const tint='background:linear-gradient('+c[0]+','+c[0]+') no-repeat left 4px center/3px 60%,'+c[1]+';border-radius:6px';
-  const menu=rsCsRow(k)
+  /* A dimmed row when nothing is parsed, not a missing one: every schedule-fed
+     cell in this form declares the schedule as a source whether or not one is
+     loaded, so you can see where the value would come from. */
+  const menu=(rsCsRow(k)||'<div class="uaopt srcdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>')
     +DESIG.filter(d=>d[0]).map(d=>'<div class="uaopt" data-csopt="'+d[0]+'" data-cskey="'+k+'">'+d[0]+'<span class="uasub">'+esc(d[1])+'</span></div>').join('')
     +'<div class="uaopt" data-csopt="" data-cskey="'+k+'">\u2014<span class="uasub">No designation</span></div>';
   return '<div class="uadrop cs dgdrop"><div class="uatrigger" tabindex="0" data-trigfor="'+k+'" style="'+tint+'" title="'+esc(has?desigName(v):'Designation')+'">'
