@@ -3389,9 +3389,26 @@ function wireBody(){
   document.querySelectorAll('[data-typ]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();const i=b.getAttribute('data-ci'),w=b.getAttribute('data-typ');const _tk=['units.'+i+'.br','units.'+i+'.ba','units.'+i+'.type_reviewed'];pushUndo(_tk);_pending=_tk;if(w==='rcs'){const brR=get('units.'+i+'.br_rcs'),baR=get('units.'+i+'.ba_rcs');if(brR)form=store.editForm(form,'units.'+i+'.br',brR);if(baR)form=store.editForm(form,'units.'+i+'.ba',baR);}form=store.editForm(form,'units.'+i+'.type_reviewed','1');renderBody();setStatus('Unit type resolved — using '+(w==='rcs'?'RCS':'RS')+'.');}));
   document.querySelectorAll('[data-num]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();const i=b.getAttribute('data-ci'),w=b.getAttribute('data-num');const _nk=['units.'+i+'.num_units','units.'+i+'.num_reviewed'];pushUndo(_nk);_pending=_nk;if(w==='rcs'){const nR=get('units.'+i+'.num_rcs');if(nR)form=store.editForm(form,'units.'+i+'.num_units',nR);}form=store.editForm(form,'units.'+i+'.num_reviewed','1');renderBody();setStatus('Units resolved — using '+(w==='rcs'?'RCS':'RS')+'.');}));
   document.querySelectorAll('.uac-in,.mgmt-in').forEach(inp=>{inp.addEventListener('mousedown',e=>e.stopPropagation());inp.addEventListener('click',e=>e.stopPropagation());});
-  document.querySelectorAll('.srcedit').forEach(inp=>{inp.addEventListener('input',()=>{const fam=inp.getAttribute('data-srcedit'),i=inp.getAttribute('data-si');let key,val;if(fam==='dateeff'){val=fmtDateInput(inp.value);key='rent_schedule.date_eff_custom';
-      pushCellUndo(key);srcEditKey(key,val);scheduleHudRefresh();}else{val=cleanNum(inp.value);
-      key='units.'+i+'.'+fam+'_custom';pushCellUndo(key);srcEditKey(key,val);}renderBody();const ni=document.querySelector('[data-k="'+key+'"]');if(ni){ni.focus({preventScroll:true});try{const L=(ni.value||'').length;ni.setSelectionRange(L,L);}catch(e){}}});});
+  /* This box edits a cell that can change SHAPE under the edit: typing a figure
+     equal to the source snaps it out of Custom, and in source mode the input
+     carries data-srcedit and no data-k. Two things followed from ignoring that.
+
+     It never set _pending (rule 5), so Enter had nothing to commit — the cell
+     went amber with a ✓ beside it and the keyboard did nothing at all. And it
+     refocused on [data-k], which stops existing the moment the snap happens, so
+     the caret vanished as the value landed. */
+  document.querySelectorAll('.srcedit').forEach(inp=>{inp.addEventListener('input',()=>{
+    const fam=inp.getAttribute('data-srcedit'),i=inp.getAttribute('data-si');let key,val,sel;
+    if(fam==='dateeff'){val=fmtDateInput(inp.value);key='rent_schedule.date_eff_custom';
+      _pendingSnap=pushCellUndo(key);srcEditKey(key,val);scheduleHudRefresh();
+      sel='[data-k="'+key+'"],[data-srcedit="dateeff"]';}
+    else{val=cleanNum(inp.value);key='units.'+i+'.'+fam+'_custom';
+      _pendingSnap=pushCellUndo(key);srcEditKey(key,val);
+      sel='[data-k="'+key+'"],[data-srcedit="'+fam+'"][data-si="'+i+'"]';}
+    _pending=coupledKeys(key);
+    renderBody();
+    const ni=document.querySelector(sel);
+    if(ni){ni.focus({preventScroll:true});try{const L=(ni.value||'').length;ni.setSelectionRange(L,L);}catch(e){}}});});
   document.querySelectorAll('[data-srck]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();const k=o.getAttribute('data-srck'),_tg=o.getAttribute('data-srctag')||'source';_pendingSnap=snapPend([k]);form=store.editForm(form,k,o.getAttribute('data-srcv'));
     /* A pulled figure is not typed-in data. Into an empty cell it reads as this
        package's own — green, "not saved yet" — rather than plain new; over an
