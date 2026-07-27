@@ -1046,7 +1046,7 @@ async function rsReadTextTier(pages,bytes,onStep){ // flattened copy -> same par
   // text layer, which reads them better than OCR does.
   if(bytes&&typeof ocrHalf==='function'&&typeof OCR_CHECKBOX!=='undefined'
      &&!OCR_CHECKBOX.some(id=>rects[String(id)]&&rects[String(id)].pg===0&&F[String(id)])){
-    let ticks=null;try{ticks=await ocrHalf(bytes,0,[],onStep);}catch(e){}
+    let ticks=null;try{ticks=await ocrHalf(bytes,0,[],(i,n)=>onStep&&onStep(i,n,'ticks'));}catch(e){}
     if(ticks){
       OCR_CHECKBOX.forEach(id=>{const k=String(id);
         if(rects[k]&&rects[k].pg===0&&ticks.F[k])F[k]=ticks.F[k];});
@@ -1064,7 +1064,7 @@ async function rsReadTextTier(pages,bytes,onStep){ // flattened copy -> same par
   // that half to be OCR'd; the pages already read as text are not sent again.
   if(pg1<0&&bytes&&typeof ocrHalf==='function'){
     const skip=[];pages.forEach((rs,i)=>{if(rs.length>=15)skip.push(i);});
-    let add=null;try{add=await ocrHalf(bytes,1,skip,onStep);}catch(e){}
+    let add=null;try{add=await ocrHalf(bytes,1,skip,(i,n)=>onStep&&onStep(i,n,'fill'));}catch(e){}
     if(add){Object.assign(F,add.F);if(!s8&&add.s8)s8=add.s8;}}
   const outp=rsAssembleFields(n=>String(F[String(n)]||'').trim());
   if(outp&&s8)outp.scalars['property.s8']=s8;
@@ -1080,7 +1080,7 @@ async function parseRsPdf(bytes,onStep){
   let pages=null;try{pages=await rsTextPages(doc);}catch(e){}
   const runs=pages?pages.reduce((a,p)=>a+p.length,0):0;
   if(runs<15){ // nothing to read on the page itself: tier 3 sends it out to be OCR'd
-    let oc=null;try{oc=await ocrParseRs(bytes,onStep);}catch(e){}
+    let oc=null;try{oc=await ocrParseRs(bytes,(i,n)=>onStep&&onStep(i,n,'scan'));}catch(e){}
     return oc?{kind:'fields',parsed:oc,via:'ocr'}:{kind:'scan',parsed:null};}
   let tp=null;try{tp=await rsReadTextTier(pages,bytes,onStep);}catch(e){}
   return tp?{kind:'fields',parsed:tp,via:'text'}:{kind:'text',parsed:null};}
@@ -1874,9 +1874,17 @@ function wireBody(){
       // unchanged until the whole thing finished. The row now says what is
       // happening and re-renders on every step.
       const busy=(note,sub)=>{_rsBusy={name:f.name,note:note,sub:sub};renderBody();};
-      const step=(i,n)=>{busy('reading page '+i+' of '+n+'\u2026',
-        'No digital text on this page \u2014 sending it to be read as an image. This takes a few moments.');
-        setStatus('Reading the rent schedule as a scanned image (page '+i+' of '+n+')\u2026');};
+      /* Three different jobs used to share one sentence, and it described only
+         the rarest of them. On a copy whose page 1 reads perfectly well it still
+         announced "no digital text on this page", which is simply untrue: the
+         text layer had just supplied every figure, and Azure was being asked for
+         the tick marks alone. Each caller now says which job it is. */
+      const WHY={ticks:'The tick boxes on this page are drawn rather than typed, so they cannot be read as text. Asking for the ticks alone \u2014 your figures still come from the document\u2019s own characters.',
+                 fill:'Filling only the boxes this page\u2019s text left blank. Anything it did read stands.',
+                 scan:'No digital text in this copy \u2014 reading the whole of it as an image. This takes a few moments.'};
+      const SHORT={ticks:'reading the tick boxes',fill:'filling the blanks',scan:'reading it as a scanned image'};
+      const step=(i,n,why)=>{const w=why||'scan';busy('reading page '+i+' of '+n+'\u2026',WHY[w]);
+        setStatus('Rent schedule \u2014 '+SHORT[w]+' (page '+i+' of '+n+')\u2026');};
       busy('reading\u2026','Checking the schedule\u2019s form fields and printed text.');
       let r;try{r=await parseRsPdf(b,step);}catch(e){r={kind:'scan',parsed:null};}finally{_rsBusy=null;}
       _rsUpload={name:f.name,bytes:b,kind:r.kind,via:r.via,parsed:r.parsed};sf.value='';_rsArm=(r.kind==='fields'&&!!r.parsed);renderBody();

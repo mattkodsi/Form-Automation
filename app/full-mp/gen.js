@@ -214,6 +214,11 @@ const addrLine=(street,city,state,zip)=>{
   }
 
 
+  /* An allowance of $0 is a real figure — every utility owner-paid — and it has
+     to print. Testing the number kept blanking it, which on a HUD form reads as
+     "not filled in" rather than "nothing is charged". Test whether a source
+     HOLDS a value, exactly as the rest of this file does. */
+  function uaHasG(rec,i){return ['ua_exec','ua_rcs','ua_custom'].some(k=>{const v=rec['units.'+i+'.'+k];return v!==''&&v!=null;});}
   async function fillRentSchedule(templateBytes, rec){
     const { PDFDocument, StandardFonts, PDFName, rgb } = PL();
     const doc=await PDFDocument.load(templateBytes,{parseSpeed:Infinity}); const form=doc.getForm();
@@ -282,7 +287,7 @@ const addrLine=(street,city,state,zip)=>{
         // Col.2 x Col.3 disagree with Col.4 on the face of the filing — and our own
         // reconciliation gate then rejected a schedule we had generated ourselves.
         const proR=Math.round(pro);
-        T(base, utype(br,ba,g('units.'+i+'.desig'))); T(base+1,n||''); T(base+2,hasP?money(proR):''); T(base+3,hasP?money(n*proR):''); T(base+4,ua||''); T(base+5,hasP?money(proR+ua):'');
+        T(base, utype(br,ba,g('units.'+i+'.desig'))); T(base+1,n||''); T(base+2,hasP?money(proR):''); T(base+3,hasP?money(n*proR):''); T(base+4,uaHasG(rec,i)?money(ua):''); T(base+5,hasP?money(proR+ua):'');
         if(hasP){ptU+=n;ptC+=n*proR;} else ptU+=n; }
       else if(row[0]==='li'){ const n=nmv(g('ns8.'+i+'.num_units')),ar=g('ns8.'+i+'.avg_rent');
         T(base, utype(g('ns8.'+i+'.br'),g('ns8.'+i+'.ba'))); if(n)T(base+1,n); ptU+=n;
