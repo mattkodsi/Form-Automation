@@ -381,11 +381,11 @@ function provColors(state,key){const c=CLR[state]||CLR.new;
   return c;}
 function cellColors(k){return (srcOf(k)!=='overridden'&&offFile(k))?provColors('overridden',k):provColors(srcOf(k),k);}
 function boxColor(k){return cellColors(k);}
-function moneyBox(k){const c=boxColor(k);const _mt=moneySrcTag(k);
+function moneyBox(k,noIcons){const c=boxColor(k);const _mt=moneySrcTag(k);
   const _m=k.match(/^units\.(\d+)\.current$/),_mn=k.match(/^nonrev\.(\d+)\.rent$/),_ml=k.match(/^ns8\.(\d+)\.avg_rent$/);
   const _rv=_m?rsUnit(+_m[1],'rent'):(_mn?rsFamVal('nonrev',+_mn[1],'rent'):(_ml?rsFamVal('ns8',+_ml[1],'rent'):null));
   const pick=_mt?(_rv!=null?srcPick(k,[{tag:_mt,val:_rv}]):dimPick(_mt)):'';
-  return `<div class="rbox money" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><span class="cur">$</span><input type="text" data-money="1" data-k="${k}" value="${esc(fmtMoney(get(k)))}">${pick}${ovIcons(k)}</div>`;}
+  return `<div class="rbox money" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><span class="cur">$</span><input type="text" data-money="1" data-k="${k}" value="${esc(fmtMoney(get(k)))}">${pick}${noIcons?'':ovIcons(k)}</div>`;}
 function numBox(k,ph){const c=boxColor(k);
   const _mc=k.match(/^ns8\.(\d+)\.num_units$/),_mu=k.match(/^nonrev\.(\d+)\.use$/);
   const _rv=_mc?rsFamVal('ns8',+_mc[1],'count'):(_mu?rsFamVal('nonrev',+_mu[1],'use'):null);
@@ -407,7 +407,7 @@ function uaBox(i){const src=get('units.'+i+'.ua_source')||defUaSrc(i),exec=get('
    both: coupledKeys already saves and reverts them together. */
   let state,c;if(src==='custom'){const _st=srcCellState('units.'+i+'.ua_custom');c=provColors(_st==='overridden'?'overridden':(_st==='database'?'database':'new'),'units.'+i+'.ua_source');}else{state=hasAny?srcOf(src==='rcs'?('units.'+i+'.ua_rcs'):('units.'+i+'.ua_exec')):'new';const overSrc=srcOf('units.'+i+'.ua_source')==='overridden';const _cs=srcCellState('units.'+i+'.ua_custom');if(_cs==='overridden')state='overridden';else if(_cs==='database'&&state==='new')state='database';if(uaUnresolved(i)||overSrc)state='overridden';c=provColors(state,'units.'+i+'.ua_source');}const boxKeyUA=src==='custom'?('units.'+i+'.ua_custom'):('units.'+i+'.ua_source');
   const menu='<div class="uamenu">'+srcOptRow('data-uaopt="exec" data-uai="'+i+'"',(exec!==''&&exec!=null)?('$'+fmtMoney(exec)):'','Executed RS')+((hasProg('rcs')||numf(rcs)>0)?srcOptRow('data-uaopt="rcs" data-uai="'+i+'"',(rcs!==''&&rcs!=null)?('$'+fmtMoney(rcs)):'','RCS report'):'')+'<div class="uaopt" data-uaopt="custom" data-uai="'+i+'">Custom…</div></div>';
-  return '<div class="rbox uacell" data-box="'+boxKeyUA+'" style="background:'+c[1]+';border-left-color:'+c[0]+'"><div class="uadrop"><div class="uatrigger" tabindex="0"><span class="ualab">'+lab+'</span><span class="cvx">▾</span></div>'+menu+'</div>'+(src==='custom'?ovIcons(['units.'+i+'.ua_custom','units.'+i+'.ua_source']):ovIcons('units.'+i+'.ua_source'))+'</div>';}
+  return '<div class="rbox uacell" data-box="'+boxKeyUA+'" style="background:'+c[1]+';border-left-color:'+c[0]+'"><div class="uadrop"><div class="uatrigger" tabindex="0"><span class="ualab">'+lab+'</span><span class="cvx">▾</span></div>'+menu+'</div></div>';}
 function uaNoteCell(i){const conf=uaConflict(i),overSrc=srcOf('units.'+i+'.ua_source')==='overridden';if(!conf&&!overSrc)return '';const ex=get('units.'+i+'.ua_exec'),rc=get('units.'+i+'.ua_rcs');
   if(conf&&uaUnresolved(i))return '<div class="ucnote warn">⚠ exec $'+ex+' · RCS $'+rc+' <span class="pick"><button class="urev sv" data-uaok="'+i+'">approve $'+uaResolvedOf(i)+'</button></span></div>';
   const src=get('units.'+i+'.ua_source')||defUaSrc(i);const chosen=src==='rcs'?'RCS':(src==='custom'?'custom':'exec RS');
@@ -418,16 +418,19 @@ function typeUnresolved(i){return typeConflict(i)&&!typeReviewedOf(i);}
 function numConflict(i){const nR=get('units.'+i+'.num_rcs');return (nR!==''&&nR!=null)&&numf(nR)!==numf(get('units.'+i+'.num_units'));}
 function numReviewedOf(i){return get('units.'+i+'.num_reviewed')==='1';}
 function numUnresolved(i){return numConflict(i)&&!numReviewedOf(i);}
+/* Every save/revert in a unit row now sits BELOW the row, under the column it
+   belongs to — see unitActs. Inside these cells the icon pair squeezed the
+   controls it sat beside, and the row changed shape the moment it was edited. */
 function unitTypeCell(i){const brK='units.'+i+'.br',baK='units.'+i+'.ba';const conf=typeUnresolved(i);const c=conf?CLR.overridden:groupColors([brK,baK]);
   const withRs=(k,opts,ph)=>{const d=csDrop(k,opts,ph,'',true,(!conf&&partHot(k))?tintStyle(k):'');const row=rsCsRow(k);
     return row?d.replace('<div class="uamenu">','<div class="uamenu">'+row):d;};
-  return `<div class="rbox brba" data-box="${brK}" style="background:${c[1]};border-left-color:${c[0]}">${withRs(brK,BR_OPTS,'BR')}${ovIcons(brK)}<span class="slash">/</span>${withRs(baK,BA_OPTS,'BA')}${ovIcons(baK)}${desigChip(i)}</div>`;}
+  return `<div class="rbox brba" data-box="${brK}" style="background:${c[1]};border-left-color:${c[0]}">${withRs(brK,BR_OPTS,'BR')}<span class="slash">/</span>${withRs(baK,BA_OPTS,'BA')}${desigChip(i)}</div>`;}
 function unitCountCell(i){const k='units.'+i+'.num_units';const c=numUnresolved(i)?CLR.overridden:cellColors(k);const rv=rsUnit(i,'count');
   // The schedule is where this number comes from, so the cell says so whether or
   // not one is loaded right now — dimmed when there is nothing to pull, exactly as
   // the rent beside it does. Rendering nothing left the column looking as though
   // it had no source at all the moment the upload went out of session.
-  return `<div class="rbox" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><input type="text" data-k="${k}" value="${esc(get(k))}">${rv!=null?srcPick(k,[{tag:'Executed RS',val:rv}]):dimPick('Executed RS')}${ovIcons(k)}</div>`;}
+  return `<div class="rbox" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><input type="text" data-k="${k}" value="${esc(get(k))}">${rv!=null?srcPick(k,[{tag:'Executed RS',val:rv}]):dimPick('Executed RS')}</div>`;}
 function typeNote(i){if(!typeConflict(i))return '';const br=get('units.'+i+'.br'),ba=get('units.'+i+'.ba'),brR=get('units.'+i+'.br_rcs')||br,baR=get('units.'+i+'.ba_rcs')||ba;
   if(typeUnresolved(i))return '<div class="ucnote warn">⚠ RS '+br+'/'+ba+' · RCS '+brR+'/'+baR+' <span class="pick"><button class="urev" data-typ="rs" data-ci="'+i+'">keep RS</button><button class="urev sv" data-typ="rcs" data-ci="'+i+'">use RCS</button></span></div>';
   return '<div class="ucnote ok">✓ RS · '+br+'/'+ba+'</div>';}
@@ -439,7 +442,7 @@ function safmrBox(i){const src=get('units.'+i+'.safmr_source')||defSafmrSrc(i),h
   const lab=src==='rcs'?('$<input class="uac-in srcedit" data-srcedit="safmr" data-si="'+i+'" data-money="1" value="'+esc(fmtMoney(rcs))+'"><span class="srctag">· RCS</span>'):(src==='custom'?('$<input class="uac-in" data-money="1" data-k="units.'+i+'.safmr_custom" value="'+esc(fmtMoney(custom))+'" placeholder="0">'):('$<input class="uac-in srcedit" data-srcedit="safmr" data-si="'+i+'" data-money="1" value="'+esc(fmtMoney(hud))+'"><span class="srctag">· HUD</span>'));
   let state,c;if(src==='custom'){const _st=srcCellState('units.'+i+'.safmr_custom');c=provColors(_st==='overridden'?'overridden':(_st==='database'?'database':'new'),'units.'+i+'.safmr_source');}else{state=hasAny?srcOf(src==='rcs'?('units.'+i+'.safmr_rcs'):('units.'+i+'.safmr_hud')):'new';const overSrc=srcOf('units.'+i+'.safmr_source')==='overridden';const _cs=srcCellState('units.'+i+'.safmr_custom');if(_cs==='overridden')state='overridden';else if(_cs==='database'&&state==='new')state='database';if(safmrUnresolved(i)||overSrc)state='overridden';c=provColors(state,'units.'+i+'.safmr_source');}const boxKeySA=src==='custom'?('units.'+i+'.safmr_custom'):('units.'+i+'.safmr_source');
   const menu='<div class="uamenu">'+srcOptRow('data-safmropt="hud" data-safmri="'+i+'"',(hud!==''&&hud!=null)?('$'+fmtMoney(hud)):'','HUD API')+((hasProg('rcs')||numf(rcs)>0)?srcOptRow('data-safmropt="rcs" data-safmri="'+i+'"',(rcs!==''&&rcs!=null)?('$'+fmtMoney(rcs)):'','RCS report'):'')+'<div class="uaopt" data-safmropt="custom" data-safmri="'+i+'">Custom…</div></div>';
-  return '<div class="rbox uacell" data-box="'+boxKeySA+'" style="background:'+c[1]+';border-left-color:'+c[0]+'"><div class="uadrop"><div class="uatrigger" tabindex="0"><span class="ualab">'+lab+'</span><span class="cvx">▾</span></div>'+menu+'</div>'+(src==='custom'?ovIcons(['units.'+i+'.safmr_custom','units.'+i+'.safmr_source']):ovIcons('units.'+i+'.safmr_source'))+'</div>';}
+  return '<div class="rbox uacell" data-box="'+boxKeySA+'" style="background:'+c[1]+';border-left-color:'+c[0]+'"><div class="uadrop"><div class="uatrigger" tabindex="0"><span class="ualab">'+lab+'</span><span class="cvx">▾</span></div>'+menu+'</div></div>';}
 function safmrNote(i){const res=safmrResolvedOf(i),hud=numf(get('units.'+i+'.safmr_hud')),rcs=numf(get('units.'+i+'.safmr_rcs'));
   if(safmrUnresolved(i))return '<div class="ucnote warn">⚠ HUD $'+hud+' · RCS $'+rcs+' <span class="pick"><button class="urev sv" data-safmrok="'+i+'">approve $'+res+'</button></span></div>';
   if(res>0){const pro=numf(get('units.'+i+'.proposed'));if(pro>0)return '<div class="ucnote '+(pro<res?'ok':'warn')+'">'+(pro<res?'✓ ':'✗ ')+'$'+pro.toLocaleString()+(pro<res?' < ':' ≥ ')+'$'+res.toLocaleString()+' · 150% SAFMR</div>';return '<div class="ucnote ok">150% SAFMR $'+res.toLocaleString()+'</div>';}
@@ -470,13 +473,22 @@ function unitCard(i,pos){const trash=UNITS.length>1?`<button class="trash" data-
      96px to 70px the moment it appeared, so a row changed shape once edited and
      "2BR" collided with its own clear icon. Roomy cells put save/revert in the
      note row beneath instead, which is what the rest of the form already does. */
+  /* One compact pair per column, directly under the cell it acts on. Nothing is
+     wider than its column, so no row changes shape when it is edited. */
+  const uaKeys=(get('units.'+i+'.ua_source')||defUaSrc(i))==='custom'?['units.'+i+'.ua_custom','units.'+i+'.ua_source']:['units.'+i+'.ua_source'];
+  const saKeys=(get('units.'+i+'.safmr_source')||defSafmrSrc(i))==='custom'?['units.'+i+'.safmr_custom','units.'+i+'.safmr_source']:['units.'+i+'.safmr_source'];
+  const actCols=[[1,ovIcons(['units.'+i+'.br','units.'+i+'.ba'])+ovIcons('units.'+i+'.desig')],
+                 [2,ovIcons('units.'+i+'.num_units')],[3,ovIcons('units.'+i+'.current')],
+                 [4,ovIcons('units.'+i+'.proposed')],[5,ovIcons(uaKeys)]];
+  if(hasProg('rcs'))actCols.push([6,ovIcons(saKeys)]);
+  const acts=`<div class="uracts${hasProg('rcs')?'':' noprop'}">`+actCols.map(a=>'<div style="grid-column:'+a[0]+'">'+a[1]+'</div>').join('')+'</div>';
   const notes=[typeNote(i),numNote(i),uaNoteCell(i),hasProg('rcs')?safmrNote(i):''].filter(Boolean).join('');
   /* The designation's save/revert gets its own full-width line under the row.
      Sharing the right-hand note column squeezed "save this field" onto three
      lines — the buttons are wider than the short status notes beside them. */
-  const desigOv=ovNote('units.'+i+'.desig');
-  const sub=((_c>0&&_p>0)||notes||desigOv)?`<div class="urnotes"><div class="urnmetric">${metric}</div><div class="urnsub">${notes}</div><div class="urnov">${desigOv}</div></div>`:'';
-  return `<div class="urow"><div class="ucells">${unitTypeCell(i)}${unitCountCell(i)}${moneyBox('units.'+i+'.current')}${moneyBox('units.'+i+'.proposed')}${uaBox(i)}${hasProg('rcs')?safmrBox(i):''}<div class="urx">${trash}</div></div>${sub}</div>`;}
+
+  const sub=((_c>0&&_p>0)||notes)?`<div class="urnotes"><div class="urnmetric">${metric}</div><div class="urnsub">${notes}</div></div>`:'';
+  return `<div class="urow"><div class="ucells">${unitTypeCell(i)}${unitCountCell(i)}${moneyBox('units.'+i+'.current',1)}${moneyBox('units.'+i+'.proposed',1)}${uaBox(i)}${hasProg('rcs')?safmrBox(i):''}<div class="urx">${trash}</div></div>${acts}${sub}</div>`;}
 function renderRents(){
   const cards=UNITS.map((i,pos)=>unitCard(i,pos)).join('');
   const nrOn=get('nonrev.enabled')==='1'||NONREV.length>0;
