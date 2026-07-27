@@ -60,6 +60,12 @@ built HTML (~411k tok), `templates.js` (base64 blobs), or `lib/pdf-lib.min.js`
 (third-party) — they hold nothing to "understand" and will blow up context. Reading the
 five files below gives the whole picture; read them in this order:
 
+> ⚠️ **Touching a form cell, a dropdown or a click handler? Read
+> `app/full-mp/FORM-RULES.md` first.** Sixteen rules, each one written because breaking
+> it shipped a bug: how a source names itself, when a cell may paint which colour, what
+> every mutating handler owes `_pending` and the undo run, and the delivery gates. It is
+> the checklist that replaces re-finding these faults by clicking.
+
 1. **`shell.head.html`** (~9k tok) — HTML skeleton + **all CSS**, and the four views:
    `#viewMenu` (property gallery), `#viewLauncher` (property summary + program picker +
    letterhead), `#viewContacts` (PM contacts), `#viewForm` (the RCS form: command-center
