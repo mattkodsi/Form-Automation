@@ -20,7 +20,7 @@ global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>
 const os=require('os'),path=require('path'),fs=require('fs');
 
 /* ── the verdict machinery (mirrors test_interactions.js) ───────────────── */
-const MIN_CHECKS=76;
+const MIN_CHECKS=80;
 let n=0,fails=0,verdict=null;
 const BAR='═'.repeat(68);
 function fail(msg,err){
@@ -192,6 +192,23 @@ const T=(label,v)=>eq(label,!!v,true);
   app.__renderBody();
   const utc2=els.sections.innerHTML.split('<div class="urow">')[1]||'';
   eq('one edit anywhere drops the badge for the whole fact', (utc2.match(/utsrc/g)||[]).length, 0);
+  await app.__openCycleForm(pid,scid);
+
+  /* Every schedule-fed cell says so, not just the ones that happened to be
+     built on the source-backed model. The unit count and the current rent sat
+     unbadged beside an allowance that carried one. */
+  console.log('\n─ EVERY SCHEDULE-FED CELL CARRIES ITS RS TAG ─');
+  await db.saveFlatCycle(scid,{'units.0.num_units':{value:'104'},'units.0.current':{value:'1027'}});
+  await db.setCycleRs(scid,{name:'RS.pdf',kind:'fields',via:'text',at:'2026-07-27T14:00:00.000Z',
+    parsed:{scalars:{},principals:[],ns8:[],nonrev:[],units:[{type:br0+' / '+ba0,count:104,rent:1027,ua:43}]}});
+  await app.__openCycleForm(pid,scid);
+  const rowT=els.sections.innerHTML.split('<div class=\"urow\">')[1]||'';
+  T('the unit count carries an RS tag', /data-k=\"units.0.num_units\"[^>]*>\s*<span class=\"srctag\">/.test(rowT));
+  T('the current rent carries one too',  /data-k=\"units.0.current\"[^>]*>\s*<span class=\"srctag\">/.test(rowT));
+  app.__editCell('units.0.current','999'); app.__renderBody();
+  const rowT2=els.sections.innerHTML.split('<div class=\"urow\">')[1]||'';
+  T('changing the rent drops its tag', !/data-k=\"units.0.current\"[^>]*>\s*<span class=\"srctag\">/.test(rowT2));
+  T('but the unit count keeps its own', /data-k=\"units.0.num_units\"[^>]*>\s*<span class=\"srctag\">/.test(rowT2));
   await app.__openCycleForm(pid,scid);
 
   console.log('\n─ WHAT EACH DOCUMENT REQUIRES ─');
