@@ -28,6 +28,19 @@ if ! bash "$d/run_tests.sh" > "$tmp/test.out" 2>&1; then
 fi
 grep -o 'ALL .* PASSED' "$tmp/test.out" | sed 's/^/     ✓ /'
 
+# The RA-port anchor gate. CLAUDE.md and FORM-RULES both call this mandatory after
+# any app.js / shell.head.html edit, because Kinley's Azure port patches those two
+# files at build time through assert-guarded anchor strings. It was documented as
+# a gate and never wired into one — the same way test_interactions.js sat broken
+# for eleven days because deliver.sh never ran it.
+echo "     RA-port anchors…"
+if ! python3 "$d/build-ra.py" /tmp/rcs-ra-check.html > "$tmp/ra.out" 2>&1; then
+  echo "     ✗ RA-port anchors FAILED — not delivering:"; sed 's/^/     /' "$tmp/ra.out"
+  echo "       (an anchor moved: update it in $d/build-ra.py — see RA-PORT.md)"; rm -rf "$d/__pycache__"; exit 1
+fi
+rm -rf "$d/__pycache__"
+echo "     ✓ RA-port anchors OK"
+
 echo "3/5  build in sandbox…"
 bash "$d/build.sh" "$build" >/dev/null
 [ -s "$build" ] || { echo "     ✗ build produced an empty file"; exit 1; }

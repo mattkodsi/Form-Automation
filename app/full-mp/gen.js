@@ -141,7 +141,11 @@ const addrLine=(street,city,state,zip)=>{
     const times=await doc.embedFont(StandardFonts.TimesRoman), timesB=await doc.embedFont(StandardFonts.TimesRomanBold);
     try{ const pn=form.getTextField('Property Name'); pn.setText(t.property_name); pn.setAlignment(TextAlignment.Center); pn.setFontSize(18); pn.updateAppearances(timesB); }catch(e){}
     try{ const d=form.getTextField('Date'); d.setText(t.sign_date); d.setFontSize(12); d.updateAppearances(times); }catch(e){}
-    for(let i=0;i<17;i++){ try{ const cb=form.getCheckBox('Check Box'+(i+1)); if(String(rec['check.'+i]||'')==='1')cb.check(); else cb.uncheck(); }catch(e){} }
+    /* A lookup failure here used to leave the box in whatever state the template
+       shipped with — possibly TICKED on an item nobody ticked. */
+    let _cbMissed=0;
+    for(let i=0;i<17;i++){ try{ const cb=form.getCheckBox('Check Box'+(i+1)); if(String(rec['check.'+i]||'')==='1')cb.check(); else cb.uncheck(); }catch(e){ _cbMissed++; } }
+    if(_cbMissed>8) throw new Error('Checklist template mismatch: '+_cbMissed+' of 17 boxes could not be set — do not file the result.');
     try{ const pg=doc.getPages()[0]; const {rgb}=PL(); pg.drawRectangle({x:107,y:123,width:156,height:22,color:rgb(1,1,1)}); const sline=(t.sig_name+', '+t.sig_title).replace(/, $/,''); if(sline)pg.drawText(sline,{x:109,y:129,size:11,font:times,color:rgb(0.11,0.13,0.17)}); }catch(e){}
     return await doc.save({objectsPerTick:Infinity});
   }
@@ -219,7 +223,11 @@ const addrLine=(street,city,state,zip)=>{
     const money=v=>Math.round(nmv(v)).toLocaleString('en-US');
     const dfmt=d=>{const p=String(d||'').slice(0,10).split('-');return p.length===3?p[1]+'/'+p[2]+'/'+p[0]:'';};
     const _toISO=s=>{s=String(s||'').trim();let m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);if(m)return m[1]+'-'+String(m[2]).padStart(2,'0')+'-'+String(m[3]).padStart(2,'0');m=s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);if(m)return m[3]+'-'+String(m[1]).padStart(2,'0')+'-'+String(m[2]).padStart(2,'0');return s;};
-    const T=(n,v)=>{ try{ const f=form.getTextField(String(n)); f.setText(String(v==null?'':v)); f.setFontSize(9); f.updateAppearances(font);}catch(e){} };
+    /* Every write used to be swallowed with nothing checking afterwards, so a
+       renumbered template would hand back a byte-valid, completely BLANK
+       HUD-92458 that saved and downloaded clean. Count the misses and refuse. */
+    let _wrote=0,_missed=0;
+    const T=(n,v)=>{ try{ const f=form.getTextField(String(n)); f.setText(String(v==null?'':v)); f.setFontSize(9); f.updateAppearances(font); _wrote++; }catch(e){ _missed++; } };
     const C=n=>{ try{ form.getCheckBox(String(n)).check(); }catch(e){} };
     const _de=(g('rent_schedule.date_eff_source')==='custom'?(g('rent_schedule.date_eff_custom')||g('rent_schedule.date_eff_rs')||g('rent_schedule.date_rents_effective')):(g('rent_schedule.date_eff_rs')||g('rent_schedule.date_eff_custom')||g('rent_schedule.date_rents_effective')));
     const _dei=_toISO(_de);
@@ -342,10 +350,21 @@ const addrLine=(street,city,state,zip)=>{
     }
     try{ form.getTextField('x12').setText(''); }catch(e){}
     T(228,(g('sig.name')+', '+sigTitle(g('sig.title'),g('sig.principal'))).replace(/, $/,''));
-    try{ form.acroForm.dict.delete(PDFName.of('CO')); }catch(e){}
-    form.getFields().forEach(f=>{ try{ f.acroField.dict.delete(PDFName.of('AA')); }catch(e){} });
+    /* HUD's template computes 41 of its own fields — gross rents, the column
+       extensions, every total — and orders them with /CO. Those actions used to
+       be deleted here, so a schedule generated without proposed rents printed
+       blank cells that stayed blank: the owner could type a rent in and nothing
+       downstream of it moved. We were handing over a broken form.
+
+       The reason they were stripped was a font mismatch in column 4: a viewer
+       that re-runs a field's format action redraws it from the field's OWN
+       default appearance, and this template mixes sizes (189 fields at 9pt, 37
+       at 10pt, 6 at 12pt). The loop below already fixes that properly by writing
+       9pt into the default appearance of every Part A field — so the mismatch is
+       gone at its source and the arithmetic can stay. */
     for(let q=7;q<=96;q++){ try{ const f=form.getTextField(String(q)); f.setFontSize(9); f.updateAppearances(font); }catch(e){} }
     try{ const f=form.getTextField('94a'); f.setFontSize(9); f.updateAppearances(font); }catch(e){}
+    if(_missed>_wrote) throw new Error('Rent schedule template mismatch: '+_missed+' of '+(_wrote+_missed)+' fields could not be written. The blank HUD-92458 in this build does not match the fields this app fills — do not file the result.');
     return await doc.save({objectsPerTick:Infinity});
   }
 
@@ -433,23 +452,23 @@ const addrLine=(street,city,state,zip)=>{
     simpleTable(st,['Unit type','Units','Current rent','Monthly potential'],
       C.rows.filter(r=>r.n||r.c).map(r=>[utype2(r.br,r.ba),String(r.n||''),m0(r.c),m0(r.n*r.c)]).concat([{cells:['Total (E)','','',m0(C.e)],bold:true}]),[150,60,110,130]);
     st.line('Step 2 · Debt-service carve-out and OCAF application',{font:B,size:11}); st.gap(4);
-    wsLine(st,'F','Annual expiring Section 8 contract rent potential (E × 12)',m0(C.F));
-    wsLine(st,'G','Annual rent potential, non-expiring Section 8 contracts',m0(C.G));
-    wsLine(st,'H','Annual rent potential, non-Section 8 units',m0(C.H));
-    wsLine(st,'I','Total annual project rent potential (F + G + H)',m0(C.I));
+    wsLine(st,'F','Annual expiring Section 8 contract rent potential (E × 12)',C.F>0?m0(C.F):'\u2014');
+    wsLine(st,'G','Annual rent potential, non-expiring Section 8 contracts',C.G>0?m0(C.G):'\u2014');
+    wsLine(st,'H','Annual rent potential, non-Section 8 units',C.H>0?m0(C.H):'\u2014');
+    wsLine(st,'I','Total annual project rent potential (F + G + H)',C.I>0?m0(C.I):'\u2014');
     wsLine(st,'J','Expiring Section 8 share of the project (F ÷ I)',C.I>0?C.J.toFixed(4):'—');
-    wsLine(st,'K','Total annual project debt service'+(C.fl?' (lesser of trailing-12 / forward-12)':' (P&I + MIP)'),m2(C.K));
-    wsLine(st,'L','Section 8 share of debt service (J × K)',m2(C.L));
-    wsLine(st,'M','Section 8 potential less debt-service share (F - L)',m2(C.M));
+    wsLine(st,'K','Total annual project debt service'+(C.fl?' (lesser of trailing-12 / forward-12)':' (P&I + MIP)'),C.K>0?m2(C.K):'\u2014');
+    wsLine(st,'L','Section 8 share of debt service (J × K)',C.L>0?m2(C.L):'\u2014');
+    wsLine(st,'M','Section 8 potential less debt-service share (F - L)',C.M>0?m2(C.M):'\u2014');
     wsLine(st,'N','Published OCAF adjustment factor','× '+(C.N>0?C.N.toFixed(3):'—'));
-    wsLine(st,'O','Operating portion adjusted by OCAF (M × N)',m2(C.O));
-    wsLine(st,'P','Adjusted contract rent potential (L + O)',m2(C.P));
-    wsLine(st,'Q','Adjusted potential carried forward (line Q takes line P; RCS: N/A)',m2(C.Q),{bold:true});
+    wsLine(st,'O','Operating portion adjusted by OCAF (M × N)',C.O>0?m2(C.O):'\u2014');
+    wsLine(st,'P','Adjusted contract rent potential (L + O)',C.P>0?m2(C.P):'\u2014');
+    wsLine(st,'Q','Adjusted potential carried forward (line Q takes line P; RCS: N/A)',C.Q>0?m2(C.Q):'\u2014',{bold:true});
     wsLine(st,'R','Contract rent increase factor (Q ÷ F, 3 decimals)',C.R>0?C.R.toFixed(3):'—',{bold:true});
     st.gap(8);
     st.line('Step 3 · Adjusted contract rents (current × R, rounded to whole dollars)',{font:B,size:11}); st.gap(2);
     simpleTable(st,['Unit type','Units','Current rent','Adjusted rent'],
-      C.rows.filter(r=>r.c>0).map(r=>[utype2(r.br,r.ba),String(r.n||''),m0(r.c),m0(r.pro>0?r.pro:Math.round(r.c*C.R))]),[150,60,110,110]);
+      C.rows.filter(r=>r.c>0).map(r=>[utype2(r.br,r.ba),String(r.n||''),m0(r.c),m0(r.pro>0?r.pro:(C.R>0?Math.round(r.c*C.R):r.c))]),[150,60,110,110]);
     st.para('Owner certification: I certify that the debt service and non-Section 8 rent potential figures used above are true and accurate, and that the adjusted contract rents were computed by applying the published Operating Cost Adjustment Factor in accordance with HUD requirements. WARNING: Anyone who knowingly submits a false claim or makes a false statement is subject to criminal and/or civil penalties (18 U.S.C. §§ 287, 1001; 31 U.S.C. § 3729).',{size:9,color:st.gray});
     sigBlock(st,t);
     return await doc.save({objectsPerTick:Infinity});
