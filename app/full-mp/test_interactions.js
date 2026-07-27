@@ -24,7 +24,7 @@ global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>
 const cp=require('child_process'),os=require('os'),path=require('path'),fs=require('fs');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=124;                // the count this file is known to run to the end
+const MIN_CHECKS=135;                // the count this file is known to run to the end
 let n=0,fails=0,verdict=null;
 const BAR='═'.repeat(68);
 function fail(msg,err){
@@ -364,6 +364,44 @@ const T=(label,v)=>eq(label,!!v,true);
   console.log('\n─ every figure on screen carries its commas ─');
   eq('four figures group in thousands', app.money(3495), '$3,495');
   eq('and so do the ones with cents',   app.money2(1074.5), '$1,074.50');
+
+
+  console.log('\n─ typing a source figure back must still be saveable ─');
+  /* Matt's sequence, exactly: the allowance comes off the schedule, he saves a
+     custom figure over it, then types the schedule's figure back. srcEditKey
+     snaps the cell to "RS" — a figure equal to a source IS that source — but
+     the RECORD still says custom, so the cell is genuinely changed and must be
+     savable, and saving must settle it.
+
+     Asserted on the CELL, never on isDirty(): this suite has edited a dozen
+     other cells by now, so a global dirty flag says nothing about this one. */
+  app.__clearUndo();
+  const UAK='units.0.ua_custom', UAS='units.0.ua_source', TRIO=app.coupledKeys(UAK);
+  const settled=()=>TRIO.every(k=>app.srcOf(k)!=='overridden')&&app.modeOf(TRIO)==='';
+  const rsFig=app.getVal('units.0.ua_exec');
+  T('the schedule holds an allowance to type back', !!rsFig);
+  app.__srcSetSource(UAK,'exec'); await app.__saveCell(UAK);
+  T('the cell settles on the schedule figure', settled());
+  // save a custom figure over it
+  app.__editCell(UAK, String(Number(rsFig)+7)); await app.__saveCell(UAK);
+  eq('the record now holds a custom figure', app.getVal(UAS), 'custom');
+  T('and that save settled the cell', settled());
+  // now type the schedule's own figure back in
+  app.__editCell(UAK, String(rsFig));
+  eq('the cell snaps back to the schedule as its source', app.getVal(UAS), 'exec');
+  T('which differs from the record, so the cell is unsettled', !settled());
+  T('SO IT MUST OFFER A SAVE', app.keysCanSave(TRIO));
+  await app.__saveCell(UAK);
+  T('AND THAT SAVE MUST SETTLE IT', settled());
+  eq('with the schedule recorded as the source', app.getVal(UAS), 'exec');
+
+  console.log('\n─ switching to Custom by hand is saveable too ─');
+  app.__clearUndo();
+  app.__srcSetSource(UAK,'custom');
+  T('switching to Custom unsettles the cell', !settled());
+  T('and offers a save', app.keysCanSave(TRIO));
+  await app.__saveCell(UAK);
+  T('which commits', settled());
 
   finish();
 })().catch(e=>fail('the suite threw before reaching its verdict',e));
