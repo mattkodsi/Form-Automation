@@ -699,7 +699,7 @@ function utGroupPick(i){
   const row=t!=null
     ?'<div class="uaopt srcopt'+(on?' sel':'')+'" data-utgrp="'+i+'">'+esc(t)+'<span class="uasub">Executed RS</span></div>'
     :'<div class="uaopt srcopt srcdim">—<span class="uasub">Executed RS · not available</span></div>';
-  return '<div class="uadrop pocpick utgrp">'+(on?'<span class="srctag rstag">· RS</span>':'')
+  return '<div class="uadrop pocpick utgrp">'+(on?'<span class="srctag rstag">RS</span>':'')
     +'<div class="uatrigger" tabindex="0" title="Pull the whole unit type from a source"><span class="cvx">&#9662;</span></div>'
     +'<div class="uamenu">'+row+'</div></div>';}
 function typeFromRs(i){
