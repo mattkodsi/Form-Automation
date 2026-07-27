@@ -203,12 +203,12 @@ const T=(label,v)=>eq(label,!!v,true);
     parsed:{scalars:{},principals:[],ns8:[],nonrev:[],units:[{type:br0+' / '+ba0,count:104,rent:1027,ua:43}]}});
   await app.__openCycleForm(pid,scid);
   const rowT=els.sections.innerHTML.split('<div class=\"urow\">')[1]||'';
-  T('the unit count carries an RS tag', /data-k=\"units.0.num_units\"[^>]*>\s*<span class=\"srctag\">/.test(rowT));
-  T('the current rent carries one too',  /data-k=\"units.0.current\"[^>]*>\s*<span class=\"srctag\">/.test(rowT));
+  T('the unit count carries an RS tag', /data-k=\"units.0.num_units\"[^>]*>\s*<span class=\"srctag[^\"]*\">/.test(rowT));
+  T('the current rent carries one too',  /data-k=\"units.0.current\"[^>]*>\s*<span class=\"srctag[^\"]*\">/.test(rowT));
   app.__editCell('units.0.current','999'); app.__renderBody();
   const rowT2=els.sections.innerHTML.split('<div class=\"urow\">')[1]||'';
-  T('changing the rent drops its tag', !/data-k=\"units.0.current\"[^>]*>\s*<span class=\"srctag\">/.test(rowT2));
-  T('but the unit count keeps its own', /data-k=\"units.0.num_units\"[^>]*>\s*<span class=\"srctag\">/.test(rowT2));
+  T('changing the rent drops its tag', !/data-k=\"units.0.current\"[^>]*>\s*<span class=\"srctag[^\"]*\">/.test(rowT2));
+  T('but the unit count keeps its own', /data-k=\"units.0.num_units\"[^>]*>\s*<span class=\"srctag[^\"]*\">/.test(rowT2));
   await app.__openCycleForm(pid,scid);
 
   console.log('\n─ WHAT EACH DOCUMENT REQUIRES ─');

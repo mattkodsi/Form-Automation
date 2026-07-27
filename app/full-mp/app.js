@@ -688,7 +688,7 @@ function rsTag(k){
   const r=rsOf(k); if(r==null||r==='')return '';
   const num=/^(units|ns8|nonrev)\.\d+\.(current|proposed|num_units|rent|avg_rent)$/.test(k);
   const same=num?(numf(v)===numf(r)):(String(v)===String(r));
-  return same?'<span class="srctag">· RS</span>':'';}
+  return same?'<span class="srctag rstag">· RS</span>':'';}
 function typeFromRs(i){
   const same=k=>{const v=get(k),r=rsBrBa(k);const hv=v!==''&&v!=null,hr=r!=null&&r!=='';
     return hv===hr&&(!hv||String(v)===String(r));};
