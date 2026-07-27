@@ -84,6 +84,9 @@ const CROSSWALK = {
   'nonrev.{i}.rent': ['units[].nonrev_rent', 'unit_type.nonrev_rent'],
 };
 
+/* ---- directory (appraiser / CA / signatory) field set, mirrors db.supabase.js */
+const DIRF = ['name', 'email', 'phone', 'prefix', 'org', 'firm', 'title', 'addr_street', 'addr_city', 'addr_state', 'addr_zip'];
+
 /* ---- number + computed helpers (shared by the form and the menu) -------- */
 function num(v) { const n = parseFloat(String(v == null ? '' : v).replace(/[^0-9.\-]/g, '')); return isNaN(n) ? 0 : n; }
 
@@ -201,13 +204,14 @@ async function makeDb(adapter, opts) {
   opts = opts || {};
   const today = () => new Date().toISOString().slice(0, 10);
   const now = () => new Date().toISOString();
-  const freshDb = () => ({ v: 2, meta: { seq: 0, activePid: null, contacts: [] }, props: {} });
+  const freshDb = () => ({ v: 2, meta: { seq: 0, activePid: null, contacts: [] }, props: {}, cycles: {}, dir: [] });
 
   let D = await adapter.get();
   const _needSeed = !D || !D.props;
   if (_needSeed) D = freshDb();
   else migrate(D);
   if (!D.meta) D.meta = { seq: 0, activePid: null }; if (!D.meta.contacts) D.meta.contacts = [];
+  if (!D.cycles) D.cycles = {}; if (!D.dir) D.dir = [];   // a blob written before cycles existed
 
   function nid(pre) { D.meta.seq = (D.meta.seq || 0) + 1; return pre + D.meta.seq; }
   const persist = () => adapter.set(D);
@@ -268,9 +272,88 @@ async function makeDb(adapter, opts) {
     let total = 0; idx.forEach(i => total += num(p.durable['units.' + i + '.num_units'].value)); return { types: idx.size, units: total };
   }
 
+  /* ---- cycles: one row = a complete frozen snapshot -----------------------
+     Ported from db.supabase.js so this stand-in answers the same questions the
+     real backend does. Kept deliberately line-for-line with that file: the
+     programs list is stored comma-JOINED here too, so cyRank/cyCompare read it
+     identically and a cycle cannot rank differently depending on which layer
+     the app happened to boot on.
+
+     Template stamp copies only durable IDENTITY keys; unit rows, Part B,
+     checklist, and assets stay per-cycle / property-level respectively. */
+  const isTemplateKey = k => !isPerCycleKey(k) && !/^(units|ns8|nonrev|partb|check|assets|principals)\./.test(k) && k !== 'ns8.enabled' && k !== 'nonrev.enabled';
+  /* What does NOT carry from the prevailing cycle into a NEW cycle: each
+     cycle's own outcomes (proposed rents), its year's factors, its dates, and
+     its appraiser. Everything else pre-fills so a new cycle starts from the
+     property's current reality. */
+  const cyNoCarry = k => /^units\.\d+\.proposed$/.test(k)
+    || /^appr\./.test(k)
+    || /^ocaf\.(factor_|ds_t12$|ds_f12$)/.test(k)
+    || /^uaf\./.test(k)
+    || /^rent_schedule\./.test(k)
+    || /^cycle\./.test(k)
+    || k === 'checklist.sign_date' || k === 'tenant.date_of_notice'
+    || k === 'assets.letterhead_data';
+  /* cycle hierarchy: year first, then program completeness
+     (RCS+UAF > RCS > OCAF+UAF > OCAF > UAF), then full date, then newest */
+  const CY_RANK = { 'rcs,uaf': 5, 'rcs': 4, 'ocaf,uaf': 3, 'ocaf': 2, 'uaf': 1 };
+  const cyRank = c => CY_RANK[(c.programs || '').split(',').filter(Boolean).sort().join(',')] || 0;
+  const cyYear = c => { const y = String(c.effective_date || '').slice(0, 4); return /^\d{4}$/.test(y) ? y : ((String(c.label || '').match(/\d{4}/) || [''])[0]); };
+  const cyCompare = (a, b) => cyYear(b).localeCompare(cyYear(a))
+    || (cyRank(b) - cyRank(a))
+    || String(b.effective_date || '').localeCompare(String(a.effective_date || ''))
+    || String(b.created_at || '').localeCompare(String(a.created_at || ''));
+  const cyclesOf = pid => Object.values(D.cycles || {}).filter(c => c.property_id === pid);
+  function dominantCycleId(pid) {
+    const cs = cyclesOf(pid); if (!cs.length) return null;
+    cs.sort(cyCompare);
+    return cs[0].id;
+  }
+  const cyISO = v => { v = String(v || '').trim(); if (/^\d{4}-\d{2}-\d{2}/.test(v)) return v.slice(0, 10); const m = v.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/); return m ? (m[3] + '-' + ('0' + m[1]).slice(-2) + '-' + ('0' + m[2]).slice(-2)) : ''; };
+  function cySyncEff(c) {
+    // the form's date-rents-effective drives the cycle's date + year label
+    const src = (c.cells['rent_schedule.date_eff_source'] || {}).value;
+    const eff = cyISO(src === 'custom' ? (c.cells['rent_schedule.date_eff_custom'] || {}).value
+      : ((c.cells['rent_schedule.date_eff_rs'] || {}).value || (c.cells['rent_schedule.date_eff_custom'] || {}).value));
+    if (eff) { c.effective_date = eff; const y = eff.slice(0, 4); if (y) c.label = y; }
+  }
+  function cycleAnalysisOf(cid) {
+    const c = D.cycles[cid]; const f = {}; if (!c) return computeAnalysis(f);
+    for (const k in c.cells) f[k] = { value: c.cells[k].value };
+    if ((c.programs || '').indexOf('rcs') < 0) { // OCAF/UAF: proposed falls back to current
+      for (const k in f) { const m = k.match(/^units\.(\d+)\.current$/); if (!m) continue;
+        const pk = 'units.' + m[1] + '.proposed'; if (!(f[pk] && parseFloat(f[pk].value) > 0)) f[pk] = { value: f[k].value }; }
+    }
+    return computeAnalysis(f);
+  }
+  /* The menu card reads the CURRENT cycle, not the template — same rule as the
+     backend, so a property's unit count does not change when the app is booted
+     against this layer instead. */
+  function unitCountOfPid(pid) {
+    const domId = dominantCycleId(pid);
+    if (domId) {
+      const cells = D.cycles[domId].cells; const idx = {};
+      for (const k in cells) { const m = k.match(/^units\.(\d+)\.num_units$/); if (m && cells[k].value !== '') idx[m[1]] = num(cells[k].value); }
+      const ks = Object.keys(idx);
+      if (ks.length) return { types: ks.length, units: ks.reduce((s, i) => s + idx[i], 0) };
+    }
+    const p = D.props[pid]; return p ? unitCountOf(p) : { types: 0, units: 0 };
+  }
+
+  /* saveFlat as a plain function: saveFlatCycle writes identity edits through
+     to the template and must not depend on how the caller bound `this`. */
+  function _saveFlat(pid, map) {
+    const p = D.props[pid]; if (!p) throw new Error('no property ' + pid);
+    for (const k in map) {
+      const c = { value: (map[k] && map[k].value != null ? String(map[k].value) : ''), source: 'database', saved_at: (map[k] && map[k].saved_at) ? map[k].saved_at : today() };
+      if (isPerCycleKey(k)) p.percycle[k] = c; else p.durable[k] = c;
+    }
+    touch(pid); return persist();
+  }
+
   function listProperties() {
     return Object.values(D.props).map(p => {
-      const uc = unitCountOf(p);
+      const uc = unitCountOfPid(p.id);
       return {
         id: p.id, name: dv(p, 'property.name') || '(unnamed property)', fha: dv(p, 'property.s8') || dv(p, 'property.fha') || '—',
         city_state: (dv(p, 'property.addr_city') || '') + (dv(p, 'property.addr_state') ? ', ' + dv(p, 'property.addr_state') : ''),
@@ -282,7 +365,7 @@ async function makeDb(adapter, opts) {
   }
 
   /** One property's headline analysis, for the launcher summary. */
-  function propertyAnalysis(pid) { return computeAnalysis(loadForm(pid)); }
+  function propertyAnalysis(pid) { const domId = dominantCycleId(pid); if (domId) return cycleAnalysisOf(domId); return computeAnalysis(loadForm(pid)); }
 
   if (_needSeed) { if (opts.seed !== false) { seedGates(); D.meta.contacts = [{ id: 'k1', name: 'Jordan Doe', email: 'jdoe@example.com', phone: '(929) 618-8405' }]; } await adapter.set(D); }
   else if (opts && opts.persistMigration !== false) { await adapter.set(D); }
@@ -301,26 +384,22 @@ async function makeDb(adapter, opts) {
       return persist();
     },
     loadForm, saveForm,
-    pruneUnitRows(pid, keepU, keepNR) {
+    pruneUnitRows(pid, keepU, keepNR, keepLI, keepP) {
       const p = D.props[pid]; if (!p) return Promise.resolve();
-      const ku = new Set((keepU || []).map(String)), kn = new Set((keepNR || []).map(String));
+      const ku = new Set((keepU || []).map(String)), kn = new Set((keepNR || []).map(String)), kl = new Set((keepLI || []).map(String)), kp = new Set((keepP || []).map(String));
       const uidx = k => { const r = k.slice(6); const d = r.indexOf('.'); return d > 0 ? r.slice(0, d) : null; };
       const nidx = k => { const r = k.slice(7); const d = r.indexOf('.'); return d > 0 ? r.slice(0, d) : null; };
+      const lidx = k => { const r = k.slice(4); const d = r.indexOf('.'); return d > 0 ? r.slice(0, d) : null; };   // "ns8." is 4, not 6
       [p.durable, p.percycle].forEach(b => Object.keys(b).forEach(k => {
         if (k.indexOf('units.') === 0) { const i = uidx(k); if (i !== null && !ku.has(i)) delete b[k]; }
         else if (k.indexOf('nonrev.') === 0) { const i = nidx(k); if (i !== null && !kn.has(i)) delete b[k]; }
+        else if (k.indexOf('ns8.') === 0) { const i = lidx(k); if (i !== null && !kl.has(i)) delete b[k]; }
+        else if (keepP && k.indexOf('principals.') === 0) { const r = k.slice(11), d = r.indexOf('.'), i = d > 0 ? r.slice(0, d) : null; if (i !== null && !kp.has(i)) delete b[k]; }
       }));
       touch(pid); return persist();
     },
     getFlat(pid) { return bucketsOf(pid); },
-    saveFlat(pid, map) {
-      const p = D.props[pid]; if (!p) throw new Error('no property ' + pid);
-      for (const k in map) {
-        const c = { value: (map[k] && map[k].value != null ? String(map[k].value) : ''), source: 'database', saved_at: (map[k] && map[k].saved_at) ? map[k].saved_at : today() };
-        if (isPerCycleKey(k)) p.percycle[k] = c; else p.durable[k] = c;
-      }
-      touch(pid); return persist();
-    },
+    saveFlat: _saveFlat,
     /** Letterhead — a permanent per-property durable asset (name + UI thumbnail + print-quality PNG). */
     setLetterhead(pid, name, thumb, data) {
       const p = D.props[pid]; if (!p) return;
@@ -337,6 +416,73 @@ async function makeDb(adapter, opts) {
     addContact(c) { D.meta.contacts = D.meta.contacts || []; const id = nid('k'); D.meta.contacts.push({ id, name: (c && c.name) || '', email: (c && c.email) || '', phone: (c && c.phone) || '' }); persist(); return id; },
     updateContact(id, patch) { const c = (D.meta.contacts || []).find(x => x.id === id); if (c) Object.assign(c, patch || {}); return persist(); },
     deleteContact(id) { D.meta.contacts = (D.meta.contacts || []).filter(x => x.id !== id); return persist(); },
+    listDir(kind) { return (D.dir || []).filter(c => c.kind === kind).sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''))); },
+    addDir(kind, c) { D.dir = D.dir || []; const id = nid('d'); const rec = { id, kind }; DIRF.forEach(f => rec[f] = (c && c[f]) || ''); D.dir.push(rec); persist(); return id; },
+    updateDir(id, patch) { const c = (D.dir || []).find(x => x.id === id); if (c) Object.assign(c, patch || {}); return persist(); },
+    deleteDir(id) { D.dir = (D.dir || []).filter(x => x.id !== id); return persist(); },
+    /* ---- cycle surface (mirrors db.supabase.js) ---- */
+    listCycles(pid) {
+      const dom = dominantCycleId(pid);
+      return cyclesOf(pid).map(c => ({ id: c.id, programs: (c.programs || '').split(',').filter(Boolean), label: c.label, effective_date: c.effective_date, generated: c.generated || {}, dominant: c.id === dom, created_at: c.created_at, updated_at: c.updated_at }))
+        .sort((a, b) => ((b.dominant ? 1 : 0) - (a.dominant ? 1 : 0)) || cyCompare(D.cycles[a.id], D.cycles[b.id]));
+    },
+    dominantCycleId,
+    cycleAnalysis(cid) { return cycleAnalysisOf(cid); },
+    createCycle(pid, opts) {
+      const p = D.props[pid]; if (!p) throw new Error('no property ' + pid);
+      const o = opts || {}; const cid = nid('cy'); const cells = {};
+      if (o.full) { const m = bucketsOf(pid); for (const k in m) { if (k === 'assets.letterhead_data') continue; cells[k] = { value: m[k].value, saved_at: m[k].saved_at || today() }; } }
+      else {
+        const domId = dominantCycleId(pid);
+        const src = domId ? D.cycles[domId].cells : bucketsOf(pid);
+        for (const k in src) { if (cyNoCarry(k)) continue; const v = src[k].value; if (v == null || v === '') continue; cells[k] = { value: String(v), saved_at: today() }; }
+        for (const k in p.durable) { if (!isTemplateKey(k)) continue; cells[k] = { value: p.durable[k].value, saved_at: today() }; } // property record stays authoritative for identity
+      }
+      // The date picked when the package is created is a statement about this
+      // package, so it lands in the form and outranks any date inherited from
+      // the property record or the package it was built from.
+      const effIn = String(o.effective_date || '').trim();
+      if (effIn) { cells['rent_schedule.date_eff_source'] = { value: 'custom', saved_at: today() }; cells['rent_schedule.date_eff_custom'] = { value: effIn, saved_at: today() }; }
+      D.cycles[cid] = { id: cid, property_id: pid, programs: (o.programs || ['rcs']).join(','), label: o.label || '', effective_date: cyISO(o.effective_date) || '', cells, generated: {}, created_at: now(), updated_at: now() };
+      if (o.full) cySyncEff(D.cycles[cid]);
+      return persist().then(() => ({ cid }));
+    },
+    deleteCycle(cid) { delete D.cycles[cid]; return persist(); },
+    getFlatCycle(cid) {
+      const c = D.cycles[cid]; if (!c) return {};
+      const out = {}; for (const k in c.cells) { const v = c.cells[k].value == null ? '' : String(c.cells[k].value); out[k] = { value: v, source: v === '' ? 'new' : 'database', saved_at: c.cells[k].saved_at || '' }; }
+      return out;
+    },
+    saveFlatCycle(cid, map) {
+      const c = D.cycles[cid]; if (!c) throw new Error('no cycle ' + cid);
+      for (const k in map) c.cells[k] = { value: (map[k] && map[k].value != null) ? String(map[k].value) : '', saved_at: (map[k] && map[k].saved_at) ? map[k].saved_at : today() };
+      cySyncEff(c);
+      c.updated_at = now();
+      const jobs = [persist()];
+      // dominant cycle: durable identity edits write through to the template
+      if (dominantCycleId(c.property_id) === cid) {
+        const dur = {}; let any = false;
+        for (const k in map) if (isTemplateKey(k)) { dur[k] = map[k]; any = true; }
+        if (any) jobs.push(_saveFlat(c.property_id, dur));
+      }
+      return Promise.all(jobs);
+    },
+    pruneCycleCells(cid, keepU, keepNR, keepLI, keepP) {
+      // cycle twin of pruneUnitRows: deleted unit rows must leave the snapshot too
+      const c = D.cycles[cid]; if (!c) return Promise.resolve();
+      const ku = new Set((keepU || []).map(String)), kn = new Set((keepNR || []).map(String)), kl = new Set((keepLI || []).map(String)), kp = new Set((keepP || []).map(String));
+      const idx = (k, plen) => { const r = k.slice(plen); const d = r.indexOf('.'); return d > 0 ? r.slice(0, d) : null; };
+      Object.keys(c.cells).forEach(k => {
+        if (k.indexOf('units.') === 0) { const i = idx(k, 6); if (i !== null && !ku.has(i)) delete c.cells[k]; }
+        else if (k.indexOf('nonrev.') === 0) { const i = idx(k, 7); if (i !== null && !kn.has(i)) delete c.cells[k]; }
+        else if (k.indexOf('ns8.') === 0) { const i = idx(k, 4); if (i !== null && !kl.has(i)) delete c.cells[k]; }
+        else if (keepP && k.indexOf('principals.') === 0) { const i = idx(k, 11); if (i !== null && !kp.has(i)) delete c.cells[k]; }
+      });
+      c.updated_at = now();
+      return persist();
+    },
+    setCyclePrograms(cid, programs) { const c = D.cycles[cid]; if (!c) return Promise.resolve(); c.programs = (programs || []).join(','); c.updated_at = now(); return persist(); },
+    setCycleGenerated(cid, docs) { const c = D.cycles[cid]; if (!c) return Promise.resolve(); c.generated = { at: now(), docs: docs || [] }; c.updated_at = now(); return persist(); },
     clearAll() { D = freshDb(); seedGates(); return persist(); },
     computeAnalysis, computeSalutation,
   };
