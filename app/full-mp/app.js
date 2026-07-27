@@ -171,19 +171,31 @@ function computeSecPos(){_secPos={};visibleSections().forEach((n,ix)=>_secPos[n]
 function secRef(n){return 'Section '+(_secPos[n]||n);}
 function deriveUnits(){const u=new Set([0]),nr=new Set(),lh=new Set(),pr=new Set([0]);Object.keys(form).forEach(k=>{let m=k.match(/^units\.(\d+)\./);if(m)u.add(+m[1]);m=k.match(/^nonrev\.(\d+)\./);if(m)nr.add(+m[1]);m=k.match(/^ns8\.(\d+)\./);if(m)lh.add(+m[1]);m=k.match(/^principals\.(\d+)\./);if(m)pr.add(+m[1]);});UNITS=[...u].sort((a,b)=>a-b);NONREV=[...nr].sort((a,b)=>a-b);NS8=[...lh].sort((a,b)=>a-b);PRINCIPALS=[...pr].sort((a,b)=>a-b);}
 
-function defUaSrc(i){const e=numf(get('units.'+i+'.ua_exec')),r=numf(get('units.'+i+'.ua_rcs'));return e>0?'exec':(r>0?'rcs':'custom');}
+function defUaSrc(i){return uaHas('units.'+i+'.ua_exec')?'exec':(uaHas('units.'+i+'.ua_rcs')?'rcs':'custom');}
 function defSafmrSrc(i){const h=numf(get('units.'+i+'.safmr_hud')),r=numf(get('units.'+i+'.safmr_rcs'));return h>0?'hud':(r>0?'rcs':'custom');}
 function uaResolvedOf(i){const src=get('units.'+i+'.ua_source')||defUaSrc(i);if(src==='rcs')return numf(get('units.'+i+'.ua_rcs'));if(src==='custom')return numf(get('units.'+i+'.ua_custom'));return numf(get('units.'+i+'.ua_exec'));}
-function uaConflict(i){const e=numf(get('units.'+i+'.ua_exec')),r=numf(get('units.'+i+'.ua_rcs'));return e>0&&r>0&&e!==r;}   // two sources disagreeing — an absent RCS figure is not a disagreement
+/* A property with every utility owner-paid has a real $0 allowance. Testing
+   >0 threw it away: the schedule's own $0 was unreadable, a $0-vs-$50
+   disagreement was not a disagreement, and the RCS workbook's 150% column came
+   through blank. The file already knows the right test — has(), below. */
+function uaHas(k){const v=get(k);return v!==''&&v!=null;}
+function uaConflict(i){const ek='units.'+i+'.ua_exec',rk='units.'+i+'.ua_rcs';return uaHas(ek)&&uaHas(rk)&&numf(get(ek))!==numf(get(rk));}   // two sources disagreeing — an absent RCS figure is not a disagreement
 function uaReviewedOf(i){return get('units.'+i+'.ua_reviewed')==='1';}
 function uaUnresolved(i){return uaConflict(i)&&!uaReviewedOf(i);}
+/* HUD tests the 150% ceiling against the GROSS rent — contract rent plus the
+   utility allowance. The aggregate PASS/OVER and the figure printed on the
+   92458 always did; the per-unit chip, the over-ceiling counter and the
+   Section 6 pill compared the contract rent alone, so a unit type could show a
+   green tick on its own row while pushing the property over the ceiling. */
+function grossOf(i){return numf(get('units.'+i+'.proposed'))+uaResolvedOf(i);}
+function overCeiling(i){const r=safmrResolvedOf(i);return r>0&&numf(get('units.'+i+'.proposed'))>0&&grossOf(i)>=r;}
 function safmrResolvedOf(i){const src=get('units.'+i+'.safmr_source')||defSafmrSrc(i);const sh=numf(get('units.'+i+'.safmr_hud')),sr=numf(get('units.'+i+'.safmr_rcs')),sc=numf(get('units.'+i+'.safmr_custom'));return src==='custom'?sc:(src==='rcs'?(sr||sh):(sh||sr));}
 function safmrConflictOf(i){const sh=numf(get('units.'+i+'.safmr_hud')),sr=numf(get('units.'+i+'.safmr_rcs'));return sh>0&&sr>0&&sh!==sr;}
 function safmrReviewedOf(i){return get('units.'+i+'.safmr_reviewed')==='1';}
 function safmrUnresolved(i){return safmrConflictOf(i)&&!safmrReviewedOf(i);}
 function analysis(){let cg=0,pg=0,tot=0,sc=0,sp=0,nd=0,cgC=0,pgC=0,ceilC=0,tTot=0,tPr=0,ceil=0,safmrMissing=false,safmrConflict=false,safmrOver=0;
   UNITS.forEach(i=>{const n=numf(get('units.'+i+'.num_units')),cur=numf(get('units.'+i+'.current')),pro=numf(get('units.'+i+'.proposed')),ua=uaResolvedOf(i);const safmr=safmrResolvedOf(i);
-    cg+=(cur+ua)*n;pg+=(pro+ua)*n;tot+=n;if(safmr>0){ceil+=safmr*n;if(pro>0&&pro>=safmr)safmrOver++;}else if(n>0)safmrMissing=true;if(safmrConflictOf(i))safmrConflict=true;
+    cg+=(cur+ua)*n;pg+=(pro+ua)*n;tot+=n;if(safmr>0){ceil+=safmr*n;if(overCeiling(i))safmrOver++;}else if(n>0)safmrMissing=true;if(safmrConflictOf(i))safmrConflict=true;
     if(n>0)tTot++;
     if(cur>0&&pro>0){sc+=cur*n;sp+=pro*n;nd+=n;cgC+=(cur+ua)*n;pgC+=(pro+ua)*n;if(safmr>0)ceilC+=safmr*n;tPr++;}});   // comparable rows only — see computeAnalysis in db.js
   const perUnit=nd?(sp-sc)/nd:0;const pct=sc?Math.round((sp-sc)/sc*100):0;
@@ -468,7 +480,9 @@ function safmrBox(i){const src=get('units.'+i+'.safmr_source')||defSafmrSrc(i),h
   return '<div class="rbox uacell" data-box="'+boxKeySA+'" style="background:'+c[1]+';border-left-color:'+c[0]+'"><div class="uadrop"><div class="uatrigger" tabindex="0"><span class="ualab">'+lab+'</span><span class="cvx">▾</span></div>'+menu+'</div></div>';}
 function safmrNote(i){const res=safmrResolvedOf(i),hud=numf(get('units.'+i+'.safmr_hud')),rcs=numf(get('units.'+i+'.safmr_rcs'));
   if(safmrUnresolved(i))return '<div class="ucnote warn">⚠ HUD '+money(hud)+' · RCS '+money(rcs)+' <span class="pick"><button class="urev sv" data-safmrok="'+i+'">approve '+money(res)+'</button></span></div>';
-  if(res>0){const pro=numf(get('units.'+i+'.proposed'));if(pro>0)return '<div class="ucnote '+(pro<res?'ok':'warn')+'">'+(pro<res?'✓ ':'✗ ')+'$'+pro.toLocaleString()+(pro<res?' < ':' ≥ ')+'$'+res.toLocaleString()+' · 150% SAFMR</div>';return '<div class="ucnote ok">150% SAFMR $'+res.toLocaleString()+'</div>';}
+  if(res>0){const pro=numf(get('units.'+i+'.proposed'));const gr=grossOf(i);const ok=gr<res;
+    // the figure shown is the one being judged: rent + allowance, as HUD compares it
+    if(pro>0)return '<div class="ucnote '+(ok?'ok':'warn')+'">'+(ok?'✓ ':'✗ ')+money(gr)+(ok?' < ':' ≥ ')+money(res)+' · 150% SAFMR'+(uaResolvedOf(i)>0?' (rent + UA)':'')+'</div>';return '<div class="ucnote ok">150% SAFMR $'+res.toLocaleString()+'</div>';}
   if(numf(get('units.'+i+'.num_units'))>0)return '<div class="ucnote warn">⚠ needed for the 150% test</div>';
   return '';}
 /* Rent-schedule capacity. Part A prints 11 rows: the Section 8 rows, then
@@ -1132,7 +1146,7 @@ function sectionEmpty(n){const ks=sectionKeys(n);if(!ks.length)return false;
 function sectionStatus(n){if(n!==1&&sectionEmpty(n))return 'empty';
   if(n===1)return _rcsUpload?'ok':((hasProg('rcs')||hasProg('ocaf'))?'warn':'ok');
   if(n===10){if(sectionKeys(10).some(k=>srcOf(k)==='overridden'))return'warn';const C=ocafCalc();return(C.F>0&&C.R>0)?'ok':'warn';}
-  if(n===11){if(sectionKeys(11).some(k=>srcOf(k)==='overridden'))return'warn';const A=uafAnalysis();if(A.mismatch.length)return'warn';const hasF=UAF_UTILS.some(u=>numf(get('uaf.f_'+u[0]))>0);return(hasF&&A.any)?'ok':'warn';}const over=sectionKeys(n).some(k=>srcOf(k)==='overridden');if(n===6&&(UNITS.some(uaUnresolved)||UNITS.some(typeUnresolved)||UNITS.some(numUnresolved)||UNITS.some(i=>srcOf('units.'+i+'.ua_source')==='overridden')||(hasProg('rcs')&&(UNITS.some(safmrUnresolved)||UNITS.some(i=>srcOf('units.'+i+'.safmr_source')==='overridden')||UNITS.some(i=>{const r=safmrResolvedOf(i),p=numf(get('units.'+i+'.proposed'));return r>0&&p>0&&p>=r;})))||rsCapacity().msgs.length>0))return'warn';return over?'warn':'ok';}
+  if(n===11){if(sectionKeys(11).some(k=>srcOf(k)==='overridden'))return'warn';const A=uafAnalysis();if(A.mismatch.length)return'warn';const hasF=UAF_UTILS.some(u=>numf(get('uaf.f_'+u[0]))>0);return(hasF&&A.any)?'ok':'warn';}const over=sectionKeys(n).some(k=>srcOf(k)==='overridden');if(n===6&&(UNITS.some(uaUnresolved)||UNITS.some(typeUnresolved)||UNITS.some(numUnresolved)||UNITS.some(i=>srcOf('units.'+i+'.ua_source')==='overridden')||(hasProg('rcs')&&(UNITS.some(safmrUnresolved)||UNITS.some(i=>srcOf('units.'+i+'.safmr_source')==='overridden')||UNITS.some(overCeiling)))||rsCapacity().msgs.length>0))return'warn';return over?'warn':'ok';}
 function sectionPill(n){const st=sectionStatus(n);
   if(st==='empty')return '<span class="pill empty" data-pill="'+n+'">not started</span>';
   return st==='warn'?'<span class="pill warn" data-pill="'+n+'">review</span>':'<span class="pill ok" data-pill="'+n+'">confirmed</span>';}
@@ -1317,6 +1331,13 @@ async function pullUafFactors(opts){opts=opts||{};const auto=!!opts.auto;
   }catch(e){if(!auto)setStatus('UAF pull failed: '+(e&&e.message?e.message:e));}
   finally{const b=el('pullUaf');if(b)b.disabled=false;}}
 async function uafApplyUas(){let n=0;
+  /* A utility whose factor never arrived contributes 0 to the new total but its
+     full amount to the old one. Applying that writes an allowance short by the
+     whole component, reports it as a DECREASE — which is a 30-day notice to
+     residents that was never warranted — and prints $0 to them as the proposed
+     figure. Refuse until every priced utility has a factor. */
+  const gaps=[];UNITS.forEach(i=>{uafRow(i).parts.forEach(p=>{if(p.cur>0&&!(p.f>0)&&gaps.indexOf(p.label)<0)gaps.push(p.label);});});
+  if(gaps.length){setStatus('Cannot apply: no published factor for '+gaps.join(', ')+'. Pull the factors, or enter one by hand, before applying.');return;}
   UNITS.forEach(i=>{const r=uafRow(i);if(r.curSum>0&&r.newSum>0){srcEditKey('units.'+i+'.ua_custom',String(r.newSum));form=store.editForm(form,'units.'+i+'.ua_reviewed','1');n++;}});
   if(n){renderBody();setStatus('Set the new UA for '+n+' unit type'+(n===1?'':'s')+' (as the custom UA source in '+secRef(6)+') — review, then “Update property profile”.');}
   else setStatus('Enter UA components and factors first.');}
@@ -2430,7 +2451,7 @@ function buildRentAnalysisBytes(){
   const nn=v=>{const n=numf(v);return n>0?n:null;};
   const rows=UNITS.map(i=>({type:(get('units.'+i+'.br')||'')+(get('units.'+i+'.ba')?'/'+get('units.'+i+'.ba'):''),
     units:nn(get('units.'+i+'.num_units')),cur:nn(get('units.'+i+'.current')),pro:nn(get('units.'+i+'.proposed')),
-    ua:uaResolvedOf(i)>0?uaResolvedOf(i):null,safmr150:safmrResolvedOf(i)>0?safmrResolvedOf(i):null}));
+    ua:uaHas('units.'+i+'.ua_exec')||uaHas('units.'+i+'.ua_rcs')||uaHas('units.'+i+'.ua_custom')?uaResolvedOf(i):null,safmr150:safmrResolvedOf(i)>0?safmrResolvedOf(i):null}));
   return window.RCSXlsx.rentAnalysis({propertyName:get('property.name')||'Property',apprFirm:get('appr.firm')||'',rows});}
 async function genRentAnalysis(){
   if(!window.RCSXlsx){setStatus('Excel generator still loading \u2014 try again in a moment.');return;}
