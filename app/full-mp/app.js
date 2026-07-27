@@ -237,7 +237,7 @@ function pocCell(){const k='poc.name';const contacts=(mpdb?mpdb.listContacts():[
   const menu='<div class="uamenu">'+navRow+contacts.map(ct=>'<div class="uaopt" data-pocopt="'+esc(ct.id)+'">'+esc(ct.name)+(ct.email?'<span class="uasub">'+esc(ct.email)+'</span>':'')+'</div>').join('')+'</div>';
   const pick='<div class="uadrop pocpick"><div class="uatrigger" tabindex="0" title="Pick a saved contact"><span class="cvx">&#9662;</span></div>'+menu+'</div>';
   return `<div class="field"><div class="flabel">Point of contact</div><div class="fbox poccell" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><input class="pocname-in" data-k="poc.name" value="${esc(cur)}" placeholder="Type a name, or pick a saved contact" autocomplete="off">${pick}</div>${pocNote()}</div>`;}
-/* Saved-contact pickers (appraiser / CA / signatory) — same mechanics as the
+/* Saved-contact pickers (appraiser / CA) — same mechanics as the
    PM point-of-contact cell: picking a saved contact fills its whole section as
    a pending change (Enter commits every filled cell, Esc restores what was
    there, clicking anywhere else annuls the pending group), and the name cell's
@@ -250,9 +250,6 @@ const DIR_PICK={
  'ca.name':{kind:'ca',one:'contract administrator',keys:['ca.prefix','ca.name','ca.position','ca.org','ca.addr_street','ca.addr_city','ca.addr_state','ca.addr_zip'],modeKeys:['ca.prefix','ca.name'],
   apply:ct=>dirFill([['ca.prefix',ct.prefix],['ca.name',ct.name],['ca.position',ct.title],['ca.org',ct.org],['ca.addr_street',ct.addr_street],['ca.addr_city',ct.addr_city],['ca.addr_state',ct.addr_state],['ca.addr_zip',ct.addr_zip]]),
   sub:ct=>[ct.title,ct.org,dirAddrLine(ct)].filter(Boolean).join(' \u00b7 ')},
- 'sig.name':{kind:'signatory',one:'signatory',keys:['sig.name','sig.title'],modeKeys:['sig.name'],
-  apply:ct=>dirFill([['sig.name',ct.name],['sig.title',ct.title]]),
-  sub:ct=>ct.title||''},
 };
 function dirFill(pairs){pairs.forEach(p=>{form=store.editForm(form,p[0],p[1]||'');if(form[p[0]])form[p[0]].fromPick=true;});}
 function dirList(kind){return (mpdb&&mpdb.listDir)?mpdb.listDir(kind):[];}
@@ -2838,13 +2835,10 @@ const DIR_SECTIONS=[
  {kind:'ca',title:'Contract administrators',one:'contract administrator',add:'+ Add contract administrator',
   rows:[[['prefix','Prefix',['Ms.','Mr.','Dr.','Mx.'],'nrw'],['name','Name']],[['title','Position']],[['org','Organization']],[['addr_street','Street']],[['addr_city','City'],['addr_state','State',STATES,'nrw'],['addr_zip','ZIP',null,'nrw']]],
   sub:c=>[c.title,c.org,dirAddrLine(c)].filter(Boolean).join('  \u00b7  ')},
- {kind:'signatory',title:'Signatories',one:'signatory',add:'+ Add signatory',
-  rows:[[['name','Name']],[['title','Title']]],
-  sub:c=>c.title||''},
 ];
 function renderContacts(){const list=mpdb.listContacts();
   const pmRows=list.map(c=>'<div class="crow2"><div class="cc-main"><div class="cc-name">'+esc(c.name||'(unnamed)')+'</div><div class="cc-sub">'+esc(c.email||'\u2014')+'  \u00b7  '+esc(c.phone?fmtPhone(c.phone):'\u2014')+'</div></div><button class="txtbtn" data-ced="'+c.id+'">Edit</button><span class="dotsep">\u00b7</span><button class="txtbtn del" data-cdel="'+c.id+'">Delete</button></div>').join('');
-  let html='<div class="lhead" style="display:block"><div class="lh-name">Contacts</div><div class="lh-meta">Shared across all properties. Picking a saved contact on a property auto-fills that part of the form \u2014 PM contacts fill the point of contact, the directories below fill the appraiser, contract administrator, and signatory cells.</div></div>';
+  let html='<div class="lhead" style="display:block"><div class="lh-name">Contacts</div><div class="lh-meta">Shared across all properties. Picking a saved contact on a property fills that part of the form.</div></div>';
   html+='<div class="lsec"><div class="lsec-t">PM contacts</div>'+(pmRows||'<div class="mempty" style="padding:20px">No contacts yet.</div>')+'<div class="addrow" id="cAdd">+ Add PM contact</div></div>';
   DIR_SECTIONS.forEach(S=>{const rows=dirList(S.kind).map(c=>'<div class="crow2"><div class="cc-main"><div class="cc-name">'+esc(((c.prefix?c.prefix+' ':'')+(c.name||'')).trim()||'(unnamed)')+'</div><div class="cc-sub">'+esc(S.sub(c)||'\u2014')+'</div></div><button class="txtbtn" data-dired="'+c.id+'" data-dkind="'+S.kind+'">Edit</button><span class="dotsep">\u00b7</span><button class="txtbtn del" data-dirdel="'+c.id+'" data-dkind="'+S.kind+'">Delete</button></div>').join('');
     html+='<div class="lsec"><div class="lsec-t">'+S.title+'</div>'+(rows||'<div class="mempty" style="padding:20px">None saved yet.</div>')+'<div class="addrow" data-diradd="'+S.kind+'">'+S.add+'</div></div>';});
