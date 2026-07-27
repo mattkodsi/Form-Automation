@@ -85,19 +85,19 @@ body.scrolled #ccbar{transform:translateY(0);opacity:1}
 /* Specific enough to outrank the responsive .uadrop rules further down, which
    is why the designation flexed to 139px at a wide window while the slot below
    it stayed 74px — the pairs then sat 32px and 65px right of their controls. */
-.ucards .urow .rbox.brba .uadrop:not(.dgdrop){flex:1 1 0}
+.ucards .urow .rbox.brba .uadrop:not(.dgdrop),.pdrow .rbox.brba .uadrop:not(.dgdrop){flex:1 1 0}
 /* No margins: the cell's own background sits behind these sub-cells, so any gap
    between them shows the GROUP's colour — a saved-blue row leaked blue either
    side of an amber bath. They butt together now; the 8px slash is the only
    separator, and it is deliberate and symmetrical. */
-.ucards .urow .rbox.brba .dgdrop{flex:0 0 74px;margin-left:0;margin-right:0}
+.ucards .urow .rbox.brba .dgdrop,.pdrow .rbox.brba .dgdrop{flex:0 0 74px;margin-left:0;margin-right:0}
 /* The slash was 7.8px of text, the mirrored spacer a flat 8px, so every pair
    drifted a little further right across the row. Pin both to the same 8px.
    And the provenance bar sits at left:4px 3px wide, which left one pixel before
    the label — it read as a text cursor. Match the address cell's 11px rhythm so
    the bar is a marker beside the text rather than part of it. */
 .rbox.brba .slash{flex:0 0 8px;width:8px;padding:0;text-align:center}
-.ucards .urow .rbox.brba .uadrop .uatrigger{padding-left:11px}
+.ucards .urow .rbox.brba .uadrop .uatrigger,.pdrow .rbox.brba .uadrop .uatrigger{padding-left:11px}
 .dgdrop .ualab{font-weight:700;font-size:11px;letter-spacing:.3px}
 .dgdrop .uamenu{min-width:170px}
 /* Butting the sub-cells together was not enough: each tint carries a 6px radius,
@@ -105,9 +105,9 @@ body.scrolled #ccbar{transform:translateY(0);opacity:1}
    notches. Inner edges are square and only the outer ones round, so neighbours of
    the same colour read as one field — the way the address bar's parts do. The
    radius is set inline by tintStyle(), hence the override. */
-.ucards .urow .rbox.brba .uatrigger{border-radius:0!important}
-.ucards .urow .rbox.brba .uadrop:first-child .uatrigger{border-radius:6px 0 0 6px!important}
-.ucards .urow .rbox.brba .dgdrop .uatrigger{border-radius:0 6px 6px 0!important}
+.ucards .urow .rbox.brba .uatrigger,.pdrow .rbox.brba .uatrigger{border-radius:0!important}
+.ucards .urow .rbox.brba .uadrop:first-child .uatrigger,.pdrow .rbox.brba .uadrop:first-child .uatrigger{border-radius:6px 0 0 6px!important}
+.ucards .urow .rbox.brba .dgdrop .uatrigger,.pdrow .rbox.brba .uadrop:last-child .uatrigger{border-radius:0 6px 6px 0!important}
 .homebtn{cursor:pointer;border-radius:8px;transition:opacity .12s}
 .homebtn:hover{opacity:.82}
 .homebtn:focus-visible{outline:2px solid #7aa7ff;outline-offset:3px}
@@ -118,6 +118,11 @@ body.scrolled #ccbar{transform:translateY(0);opacity:1}
    landed on row 2. Pin the row explicitly. */
 .uracts{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,.7fr) minmax(0,1fr) minmax(0,1fr) minmax(0,.95fr) minmax(0,1.05fr) 30px;gap:0 14px;align-items:center;margin-top:5px}
 .uracts.noprop{grid-template-columns:minmax(0,2fr) minmax(0,.7fr) minmax(0,1fr) minmax(0,1fr) minmax(0,.95fr) 30px}
+/* A .pdrow is BOTH the row and the grid, where a .urow wraps one. So the acts
+   line cannot be a sibling — it is a grid item spanning every column. Row 2 is
+   pinned deliberately: auto-placement never backtracks, and an unpinned
+   full-width item lands wherever the cursor happens to be. */
+.pdrow .uracts{grid-column:1/-1;grid-row:2;margin-top:2px}
 /* Column 1 holds three separate controls, so it carries three separate pairs —
    each mirroring the flex of the cell above it so bed lands under bed, bath under
    bath and the designation under its chip. One pair covering bed AND bath could
