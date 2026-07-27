@@ -475,9 +475,13 @@ function unitCard(i,pos){const trash=UNITS.length>1?`<button class="trash" data-
      note row beneath instead, which is what the rest of the form already does. */
   /* One compact pair per column, directly under the cell it acts on. Nothing is
      wider than its column, so no row changes shape when it is edited. */
-  const uaKeys=(get('units.'+i+'.ua_source')||defUaSrc(i))==='custom'?['units.'+i+'.ua_custom','units.'+i+'.ua_source']:['units.'+i+'.ua_source'];
-  const saKeys=(get('units.'+i+'.safmr_source')||defSafmrSrc(i))==='custom'?['units.'+i+'.safmr_custom','units.'+i+'.safmr_source']:['units.'+i+'.safmr_source'];
-  const actCols=[[1,ovIcons(['units.'+i+'.br','units.'+i+'.ba'])+ovIcons('units.'+i+'.desig')],
+  /* Always the pair. Offering save/revert on the pointer alone gave buttons that
+     changed nothing you could see, because the figure lives in the other key. */
+  const uaKeys=['units.'+i+'.ua_custom','units.'+i+'.ua_source'];
+  const saKeys=['units.'+i+'.safmr_custom','units.'+i+'.safmr_source'];
+  const actCols=[[1,'<span class="ua-br">'+ovIcons('units.'+i+'.br')+'</span><span class="ua-sl"></span>'
+                   +'<span class="ua-ba">'+ovIcons('units.'+i+'.ba')+'</span>'
+                   +'<span class="ua-dg">'+ovIcons('units.'+i+'.desig')+'</span>'],
                  [2,ovIcons('units.'+i+'.num_units')],[3,ovIcons('units.'+i+'.current')],
                  [4,ovIcons('units.'+i+'.proposed')],[5,ovIcons(uaKeys)]];
   if(hasProg('rcs'))actCols.push([6,ovIcons(saKeys)]);
@@ -1528,28 +1532,54 @@ function wireArrowNav(){document.querySelectorAll('.fbox:not(.uacell),.rbox:not(
    how to read the figure each non-custom source holds. */
 function srcSpec(k){
   let m=k.match(/^units\.(\d+)\.ua_custom$/);
-  if(m)return{srcKey:'units.'+m[1]+'.ua_source',cusKey:k,fallback:defUaSrc(m[1]),
+  if(m)return{srcKey:'units.'+m[1]+'.ua_source',cusKey:k,fallback:defUaSrc(m[1]),names:['exec','rcs'],
     resolve:ss=>cleanNum(get('units.'+m[1]+'.ua_'+(ss==='rcs'?'rcs':'exec')))};
   m=k.match(/^units\.(\d+)\.safmr_custom$/);
-  if(m)return{srcKey:'units.'+m[1]+'.safmr_source',cusKey:k,fallback:defSafmrSrc(m[1]),
+  if(m)return{srcKey:'units.'+m[1]+'.safmr_source',cusKey:k,fallback:defSafmrSrc(m[1]),names:['hud','rcs'],
     resolve:ss=>cleanNum(get('units.'+m[1]+'.safmr_'+(ss==='rcs'?'rcs':'hud')))};
   if(k==='rent_schedule.date_eff_custom')return{srcKey:'rent_schedule.date_eff_source',cusKey:k,
-    fallback:'rs',resolve:()=>fmtDate(get('rent_schedule.date_eff_rs'))};
-  if(k==='ocaf.factor_custom')return{srcKey:'ocaf.factor_src',cusKey:k,
+    fallback:'rs',names:['rs'],resolve:()=>fmtDate(get('rent_schedule.date_eff_rs'))};
+  if(k==='ocaf.factor_custom')return{srcKey:'ocaf.factor_src',cusKey:k,names:['fr'],
     fallback:(get('ocaf.factor_pub')?'fr':'custom'),resolve:ss=>ss==='fr'?String(get('ocaf.factor_pub')||''):''};
   return null;
 }
 /* Writes a source-backed cell. Returns false if k isn't one, so callers fall
    through to a plain edit. Matching what is on file restores the on-file source
    rather than staying pinned to custom. */
+/* A figure is only "custom" when it differs from every source we hold. Type
+   $1,146 while HUD publishes $1,146 and the cell is a HUD cell — there is no
+   sense in which that is a hand-entered figure, and storing it as one is what
+   dropped the badge, drifted the pointer away from the record, and produced a
+   save/revert pair that could not change anything on screen. Prefer the source
+   already selected, then the one on file, then the natural order. */
+function srcMatchName(sp,val){
+  if(val==='')return '';
+  const seen=[],order=[];
+  [get(sp.srcKey)||sp.fallback, srcOnFileSrc(sp).name].concat(sp.names||[]).forEach(n=>{
+    if(n&&n!=='custom'&&seen.indexOf(n)<0){seen.push(n);order.push(n);}});
+  for(const n of order){if(String(sp.resolve(n)||'')===String(val))return n;}
+  return '';}
+/* Picking a source from the dropdown goes through the same rule: choosing the
+   one already on file writes what the record holds — usually blank — rather than
+   the literal name, so it does not register as a change. */
+function srcSetSource(cusKey,chosen){
+  const sp=srcSpec(cusKey); if(!sp)return false;
+  const o=srcOnFileSrc(sp);
+  form=store.editForm(form,sp.srcKey,chosen===o.name?o.write:chosen);
+  if(chosen!=='custom')form=store.editForm(form,sp.cusKey,'');
+  return true;}
 function srcEditKey(k,val){
   const sp=srcSpec(k); if(!sp)return false;
   const o=srcOnFileSrc(sp);const onSrc=o.name;
   const cu=form[sp.cusKey];const onCus=String((cu&&cu.db_value)||'');
   const onVal=onSrc==='custom'?onCus:String(sp.resolve(onSrc)||'');
+  const match=srcMatchName(sp,String(val));
   if(onVal!==''&&String(val)===onVal){
     form=store.editForm(form,sp.srcKey,o.write);
     form=store.editForm(form,sp.cusKey,onSrc==='custom'?onCus:'');
+  }else if(match){                       // equals a source we hold — that IS its source
+    form=store.editForm(form,sp.srcKey,match===o.name?o.write:match);
+    form=store.editForm(form,sp.cusKey,'');
   }else{
     form=store.editForm(form,sp.srcKey,'custom');
     form=store.editForm(form,sp.cusKey,val);
@@ -1558,7 +1588,14 @@ function srcEditKey(k,val){
 }
 function wireBody(){
   document.querySelectorAll('input[data-k]').forEach(inp=>{const k=inp.getAttribute('data-k'),wion=inp.getAttribute('data-wion');
-    inp.addEventListener('input',()=>{let v=inp.value;if(inp.getAttribute('data-phone')){v=fmtPhone(v);inp.value=v;}else if(inp.getAttribute('data-money')){v=cleanNum(v);inp.value=fmtMoney(v);}else if(inp.getAttribute('data-date')){v=fmtDateInput(v);inp.value=v;}if(!srcEditKey(k,v))form=store.editForm(form,k,v);if(k==='property.name'&&el('hdrProp'))el('hdrProp').textContent=(v||'(unnamed property)');if(k==='property.addr_zip')scheduleHudRefresh();
+    inp.addEventListener('input',()=>{let v=inp.value;if(inp.getAttribute('data-phone')){v=fmtPhone(v);inp.value=v;}else if(inp.getAttribute('data-money')){v=cleanNum(v);inp.value=fmtMoney(v);}else if(inp.getAttribute('data-date')){v=fmtDateInput(v);inp.value=v;}const _spb=srcSpec(k),_srcWas=_spb?String(get(_spb.srcKey)||''):null;
+      if(!srcEditKey(k,v))form=store.editForm(form,k,v);
+      if(_spb&&String(get(_spb.srcKey)||'')!==_srcWas){
+        const _now=get(_spb.srcKey)||_spb.fallback;
+        _refocusSel=_now==='custom'?('[data-k="'+_spb.cusKey+'"]')
+          :('[data-box="'+_spb.srcKey+'"] .srcedit');
+        renderBody();return;}
+      if(k==='property.name'&&el('hdrProp'))el('hdrProp').textContent=(v||'(unnamed property)');if(k==='property.addr_zip')scheduleHudRefresh();
       if(wion){const on=v.length>0;form=store.editForm(form,wion,on?'1':'');const cbEl=inp.closest('.cb');if(cbEl){cbEl.classList.remove('empty','unchecked','checked');cbEl.classList.add(!v?'empty':(on?'checked':'unchecked'));const bx=cbEl.querySelector('.box');if(bx){bx.textContent=on?'✓':'';bx.style.color=provColor(wion);}}}else if(inp.getAttribute('data-util')){if(v===''){form=store.editForm(form,k+'.on','');form=store.editForm(form,k+'.fuel','');}const cbEl=inp.closest('.cb');const stillOn=v!==''&&get(k+'.on')==='1';if(cbEl){cbEl.classList.remove('empty','unchecked','checked');cbEl.classList.add(!v?'empty':(stillOn?'checked':'unchecked'));const bx=cbEl.querySelector('.box');if(bx){bx.textContent=stillOn?'✓':'';bx.style.color=provColor(k+'.on');}const f3=cbEl.querySelector('[data-fuel3]');if(f3){const fk=k+'.fuel',fv=get(fk),fhas=fv!==''&&fv!=null,fc=CLR[fhas?srcOf(fk):'new']||CLR.new;f3.textContent=fhas?fv:'-';f3.style.color=fc[0];f3.style.borderColor=fc[0];f3.style.background=fc[1];}}}
       paintCell(k);refreshFlags();if(/^principals\.\d+\.(name|title)$/.test(k))refreshPrincipalOpts();if(/^units\.|^nonrev\./.test(k)){renderCommand();renderBar();const mm=k.match(/^units\.(\d+)\.(current|proposed)$/);if(mm){const ui=mm[1],me=document.querySelector('[data-metric="'+ui+'"]');if(me){const cc=numf(get('units.'+ui+'.current')),pp=numf(get('units.'+ui+'.proposed'));if(cc>0&&pp>0){me.textContent=sMoney(pp-cc)+' / unit · '+sPct(Math.round((pp-cc)/cc*100));me.style.color=(pp-cc)>=0?'#166534':'#b91c1c';}else me.textContent='';}}}refreshOcafLines(k);refreshUafLines(k);if(/^property\.addr_|^rent_schedule\.date_eff/.test(k)){scheduleHudRefresh();scheduleFactorRefresh();}setStatus('Editing — on-file changes show Overridden until you Update or Revert.');});inp.addEventListener('keydown',async e=>{if(e.key!=='Enter'&&e.key!=='Escape')return;const _keys=fieldKeys(k);if(_pending&&_pending.length&&_pending.indexOf(k)>=0){e.preventDefault();e.stopPropagation();if(e.key==='Escape')revertPending();else commitPending();return;}if(e.key==='Escape'){
       /* Expand to the coupled pair before deciding. Typing in a UA / SAFMR / date
@@ -1619,7 +1656,7 @@ function wireBody(){
       if((e.key==='Backspace'||e.key==='Delete')&&d.classList.contains('cs')){e.preventDefault();const _co=d.querySelector('.uaopt');if(_co){const _ck=_co.getAttribute('data-cskey');_pendingSnap=snapOf([_ck]);form=store.editForm(form,_ck,'');_pending=[_ck];_refocusSel='[data-trigfor="'+_ck+'"]';renderBody();}return;}if(e.key==='Escape'){if(d.classList.contains('open')){e.preventDefault();e.stopPropagation();d.classList.remove('open');}return;}if(e.key==='Tab'){d.classList.remove('open');return;}
       if(/^[a-zA-Z0-9]$/.test(e.key)){e.preventDefault();if(!d.classList.contains('open'))openIt();d._buf=((d._buf||'')+e.key).toUpperCase();clearTimeout(d._bufT);d._bufT=setTimeout(()=>{d._buf='';},800);let idx=o.findIndex(x=>x.textContent.trim().toUpperCase().startsWith(d._buf));if(idx<0&&d._buf.length>1){d._buf=e.key.toUpperCase();idx=o.findIndex(x=>x.textContent.trim().toUpperCase().startsWith(d._buf));}setHl(idx);return;}
     });});
-  document.querySelectorAll('.uaopt').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();const i=o.getAttribute('data-uai');if(i===null)return;const v=o.getAttribute('data-uaopt');_pendingSnap=snapOf(['units.'+i+'.ua_source','units.'+i+'.ua_reviewed']);form=store.editForm(form,'units.'+i+'.ua_source',v);form=store.editForm(form,'units.'+i+'.ua_reviewed','1');_pending=['units.'+i+'.ua_source'];_refocusSel='[data-box="units.'+i+'.ua_source"] .uatrigger';renderBody();setStatus('UA source set — conflict resolved.');}));document.querySelectorAll('[data-mgmt]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();_pendingSnap=snapOf(['tenant.mgmt_source']);form=store.editForm(form,'tenant.mgmt_source',o.getAttribute('data-mgmt'));_pending=['tenant.mgmt_source'];_refocusSel='[data-box="tenant.mgmt_address"] .uatrigger';renderBody();}));document.querySelectorAll('[data-csopt]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();const _ck=o.getAttribute('data-cskey');const _cb=o.closest('[data-box]');_pendingSnap=snapOf([_ck]);form=store.editForm(form,_ck,o.getAttribute('data-csopt'));_pending=[_ck];_refocusSel='[data-trigfor="'+_ck+'"]';renderBody();if(/\.br$/.test(_ck))scheduleHudRefresh();if(_ck==='property.addr_state'){scheduleHudRefresh();scheduleFactorRefresh();}}));document.querySelectorAll('[data-csclear]').forEach(x=>x.addEventListener('click',e=>{e.stopPropagation();e.preventDefault();form=store.editForm(form,x.getAttribute('data-csclear'),'');renderBody();setStatus('Cleared to blank.');}));document.querySelectorAll('[data-uaok]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();form=store.editForm(form,'units.'+b.getAttribute('data-uaok')+'.ua_reviewed','1');renderBody();setStatus('UA conflict resolved — approved the shown value.');}));document.querySelectorAll('[data-safmropt]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();const i=o.getAttribute('data-safmri'),v=o.getAttribute('data-safmropt');_pendingSnap=snapOf(['units.'+i+'.safmr_source','units.'+i+'.safmr_reviewed']);form=store.editForm(form,'units.'+i+'.safmr_source',v);form=store.editForm(form,'units.'+i+'.safmr_reviewed','1');_pending=['units.'+i+'.safmr_source'];_refocusSel='[data-box="units.'+i+'.safmr_source"] .uatrigger';renderBody();setStatus('SAFMR source set.');}));
+  document.querySelectorAll('.uaopt').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();const i=o.getAttribute('data-uai');if(i===null)return;const v=o.getAttribute('data-uaopt');_pendingSnap=snapOf(['units.'+i+'.ua_source','units.'+i+'.ua_custom','units.'+i+'.ua_reviewed']);srcSetSource('units.'+i+'.ua_custom',v);if(uaConflict(i))form=store.editForm(form,'units.'+i+'.ua_reviewed','1');_pending=['units.'+i+'.ua_source'];_refocusSel='[data-box="units.'+i+'.ua_source"] .uatrigger';renderBody();setStatus('UA source set — conflict resolved.');}));document.querySelectorAll('[data-mgmt]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();_pendingSnap=snapOf(['tenant.mgmt_source']);form=store.editForm(form,'tenant.mgmt_source',o.getAttribute('data-mgmt'));_pending=['tenant.mgmt_source'];_refocusSel='[data-box="tenant.mgmt_address"] .uatrigger';renderBody();}));document.querySelectorAll('[data-csopt]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();const _ck=o.getAttribute('data-cskey');const _cb=o.closest('[data-box]');_pendingSnap=snapOf([_ck]);form=store.editForm(form,_ck,o.getAttribute('data-csopt'));_pending=[_ck];_refocusSel='[data-trigfor="'+_ck+'"]';renderBody();if(/\.br$/.test(_ck))scheduleHudRefresh();if(_ck==='property.addr_state'){scheduleHudRefresh();scheduleFactorRefresh();}}));document.querySelectorAll('[data-csclear]').forEach(x=>x.addEventListener('click',e=>{e.stopPropagation();e.preventDefault();form=store.editForm(form,x.getAttribute('data-csclear'),'');renderBody();setStatus('Cleared to blank.');}));document.querySelectorAll('[data-uaok]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();form=store.editForm(form,'units.'+b.getAttribute('data-uaok')+'.ua_reviewed','1');renderBody();setStatus('UA conflict resolved — approved the shown value.');}));document.querySelectorAll('[data-safmropt]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();const i=o.getAttribute('data-safmri'),v=o.getAttribute('data-safmropt');_pendingSnap=snapOf(['units.'+i+'.safmr_source','units.'+i+'.safmr_custom','units.'+i+'.safmr_reviewed']);srcSetSource('units.'+i+'.safmr_custom',v);if(safmrConflictOf(i))form=store.editForm(form,'units.'+i+'.safmr_reviewed','1');_pending=['units.'+i+'.safmr_source'];_refocusSel='[data-box="units.'+i+'.safmr_source"] .uatrigger';renderBody();setStatus('SAFMR source set.');}));
   document.querySelectorAll('[data-safmrok]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();form=store.editForm(form,'units.'+b.getAttribute('data-safmrok')+'.safmr_reviewed','1');renderBody();setStatus('SAFMR conflict resolved.');}));
   document.querySelectorAll('[data-typ]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();const i=b.getAttribute('data-ci'),w=b.getAttribute('data-typ');if(w==='rcs'){const brR=get('units.'+i+'.br_rcs'),baR=get('units.'+i+'.ba_rcs');if(brR)form=store.editForm(form,'units.'+i+'.br',brR);if(baR)form=store.editForm(form,'units.'+i+'.ba',baR);}form=store.editForm(form,'units.'+i+'.type_reviewed','1');renderBody();setStatus('Unit type resolved — using '+(w==='rcs'?'RCS':'RS')+'.');}));
   document.querySelectorAll('[data-num]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();const i=b.getAttribute('data-ci'),w=b.getAttribute('data-num');if(w==='rcs'){const nR=get('units.'+i+'.num_rcs');if(nR)form=store.editForm(form,'units.'+i+'.num_units',nR);}form=store.editForm(form,'units.'+i+'.num_reviewed','1');renderBody();setStatus('Units resolved — using '+(w==='rcs'?'RCS':'RS')+'.');}));
