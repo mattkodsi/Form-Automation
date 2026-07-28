@@ -35,7 +35,7 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=91;   // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
+const MIN_CHECKS=95;   // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
                        // pristine (three seeds, two checks each). 2026-07-27: the unit-type cell
                        // lost a divider with the designation, so the pair of divider checks
                        // became one. Lowered on purpose.
@@ -235,6 +235,33 @@ const FULL=process.argv.includes('--full');
        Every expectation below was read off the rendered page, not off the
        parser's output. Against the pre-fix rsNum this whole block returns null
        with "the figures did not reconcile"; that is what it is here to catch. */
+    /* ── the save/revert pair inside the bedroom/bath cell ──────────────────
+       It used to sit in a row under the cells, which pushed the whole section
+       open. It is back in the cell — and the reason it was moved out in the
+       first place is that it appeared on edit and squeezed the dropdowns beside
+       it, so the row changed shape as you used it. These four are the guard on
+       that: the slot is laid out whether or not there is anything to save. */
+    const brbaGeo=()=>c.eval(`
+      const row=document.querySelector('#viewForm .ucards .urow');
+      const cell=row.querySelector('.rbox.brba');
+      const ov=cell.querySelector(':scope > .ovic');
+      const R=e=>e.getBoundingClientRect(), cb=R(cell);
+      return {rowH:+R(row).height.toFixed(1), cellH:+cb.height.toFixed(1),
+        dropW:[...cell.querySelectorAll('.uadrop')].map(d=>+R(d).width.toFixed(1)),
+        laidOut: !!ov && R(ov).width>0,
+        inside: !!ov && R(ov).right<=cb.right+0.5 && R(ov).left>=cb.left-0.5};`);
+    const brbaClean=await brbaGeo();
+    await c.eval("window.__t.__editCell('units.0.br','3BR');window.__t.__renderBody();return 1");
+    await sleep(320);
+    const brbaDirty=await brbaGeo();
+    eq('the unit row does not change height when it becomes saveable',brbaDirty.rowH,brbaClean.rowH);
+    eq('nor does the bedroom/bath cell',brbaDirty.cellH,brbaClean.cellH);
+    eq('nor do the two dropdowns give up any width',brbaDirty.dropW,brbaClean.dropW);
+    eq('the pair is laid out inside the cell either way',
+       [brbaClean.laidOut,brbaClean.inside,brbaDirty.laidOut,brbaDirty.inside],[true,true,true,true]);
+    await c.eval("window.__t.__revertKeys(['units.0.br']);window.__t.__renderBody();return 1");
+    await sleep(320);
+
     const scan=JSON.parse(fs.readFileSync(path.join(__dirname,'fixture_rs_scan.json'),'utf8'));
     const rec=await c.eval('return await window.__t.ocrMapPages('+JSON.stringify(scan)+')');
     T('a flattened scan parses at all',!!rec);
