@@ -129,7 +129,9 @@ function ocrRegister(words,anchors){ // -> transform onto the template, or null
     const f2=ocrFit(k2);if(!f2)break;f=f2;}
   // decline rather than misplace: an implausible size, more than ~5deg of skew,
   // or a fit the anchors themselves do not sit on is not worth filling a form from
-  if(f.a<0.8||f.a>1.25||Math.abs(f.s/f.a)>0.09||f.resid>OCR_MAXRESID)return null;
+  if(f.a<0.8||f.a>1.25){OCR_WHY='The page was read, but it sits at '+Math.round(f.a*100)+'% of the blank form\u2019s size, which is too far off to place values onto it.';return null;}
+  if(Math.abs(f.s/f.a)>0.09){OCR_WHY='The page was read, but it is skewed on the page (about '+Math.round(Math.atan(f.s/f.a)*180/Math.PI)+'\u00b0), which is too far off to place values onto it.';return null;}
+  if(f.resid>OCR_MAXRESID){OCR_WHY='The page was read and squared with the blank form, but the printed labels do not sit where the form puts them (they are out by about '+f.resid.toFixed(1)+' points), so the values could not be placed with confidence.';return null;}
   return f;}
 
 function ocrDropLabels(words,labels,f){ // the form's own printed text is not an entered value

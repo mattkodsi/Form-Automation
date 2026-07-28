@@ -12,8 +12,12 @@ function makeStore(adapter, FIELDS) {
     emptyForm(){ const f={}; for(const {key} of FIELDS) f[key]=blank(); return f; },
     async fillForm(){ const db=await adapter.getDb(); const f=this.emptyForm();
       for(const key of Object.keys(db)){ const r=db[key]; if(!r||r.value==null) continue;
-        // A record saved blank keeps db_value:'' so a later entry reads as an
-        // override (and revert restores the saved blank), not first-time data.
+        // A record saved blank keeps db_value:'' so the cell can still say it is
+        // ON FILE and empty on purpose (provColors reads exactly that pair) rather
+        // than looking like a cell nobody has reached. Entering into it is still
+        // NEW data, not an override — see editForm below, and note that a full
+        // save writes every key including the empty ones, so the other reading
+        // would turn the whole form amber the first time anyone typed in it.
         if(r.value==='') f[key]={value:'',source:'new',saved_at:r.saved_at,prior_value:null,prior_source:null,db_value:''};
         else f[key]={value:r.value,source:'database',saved_at:r.saved_at,prior_value:null,prior_source:null,db_value:r.value}; }
       return f; },

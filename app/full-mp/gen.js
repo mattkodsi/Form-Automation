@@ -11,7 +11,7 @@
 /* Dates are stamped in New York, not UTC. toISOString() rolls over at 7 or 8pm
    Eastern, so a package generated in the evening was dated tomorrow — and the
    tenant notice's date is what starts the 30-day comment clock. */
-const ET_TODAY=()=>{try{return new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());}catch(e){return ET_TODAY();}};
+const ET_TODAY=()=>{try{return new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());}catch(e){return new Date().toISOString().slice(0,10);}};
 /* Join only the parts that exist. Concatenating street, city, state and zip with
    hard commas printed "at the Management Office, , , ," on any property whose
    address is half entered — on a notice served on residents. */
@@ -152,7 +152,7 @@ const addrLine=(street,city,state,zip)=>{
     let _cbMissed=0;
     for(let i=0;i<17;i++){ try{ const cb=form.getCheckBox('Check Box'+(i+1)); if(String(rec['check.'+i]||'')==='1')cb.check(); else cb.uncheck(); }catch(e){ _cbMissed++; } }
     if(_cbMissed>8) throw new Error('Checklist template mismatch: '+_cbMissed+' of 17 boxes could not be set — do not file the result.');
-    try{ const pg=doc.getPages()[0]; const {rgb}=PL(); pg.drawRectangle({x:107,y:123,width:156,height:22,color:rgb(1,1,1)}); const sline=(t.sig_name+', '+t.sig_title).replace(/, $/,''); if(sline)pg.drawText(sline,{x:109,y:129,size:11,font:times,color:rgb(0.11,0.13,0.17)}); }catch(e){}
+    try{ const pg=doc.getPages()[0]; const {rgb}=PL(); pg.drawRectangle({x:107,y:123,width:156,height:22,color:rgb(1,1,1)}); const sline=[t.sig_name,t.sig_title].filter(Boolean).join(', '); if(sline)pg.drawText(sline,{x:109,y:129,size:11,font:times,color:rgb(0.11,0.13,0.17)}); }catch(e){}
     return await doc.save({objectsPerTick:Infinity});
   }
 
@@ -353,7 +353,7 @@ const addrLine=(street,city,state,zip)=>{
     if(g('owner.entity_type')==='Other (specify)'){ C(204); T(205,g('owner.entity_type_other')); }
     const nrIdx=[...new Set(Object.keys(rec).map(k=>(k.match(/^nonrev\.(\d+)\./)||[])[1]).filter(x=>x!=null))].sort((a,b)=>a-b);
     const dUse=[159,162,165,168,171],dType=[160,163,166,169,172],dRent=[161,164,167,170,173]; let dr=0,trl=0;
-    nrIdx.forEach(i=>{ if(dr>4)return; const use=g('nonrev.'+i+'.use'),br=g('nonrev.'+i+'.br'),ba=g('nonrev.'+i+'.ba'),rent=g('nonrev.'+i+'.rent'); if(!(use||br||ba||rent||nmv(g('nonrev.'+i+'.num_units'))))return; T(dUse[dr],use); T(dType[dr],(String(br).replace(/(\d+)\s*BR/i,'$1 BR')+(ba?'/'+ba:'')).replace(/^\//,'')); T(dRent[dr],(rent!==''&&rent!=null)?money(rent):''); trl+=nmv(rent); dr++; });
+    nrIdx.forEach(i=>{ if(dr>4)return; const use=g('nonrev.'+i+'.use'),br=g('nonrev.'+i+'.br'),ba=g('nonrev.'+i+'.ba'),rent=g('nonrev.'+i+'.rent'); if(!(use||br||ba||rent||nmv(g('nonrev.'+i+'.num_units'))))return; T(dUse[dr],use); T(dType[dr],(String(br).replace(/(\d+)\s*BR/i,'$1 BR')+(ba?'/'+ba:'')).replace(/^\//,'')); T(dRent[dr],(rent!==''&&rent!=null)?money(rent):''); trl+=nmv(rent)*(nmv(g('nonrev.'+i+'.num_units'))||1); dr++; });
     T(174, dr?money(trl):'');
     // Part G: the principals roster fills the name (left) / title (right) rows in order
     { const gL=[206,208,210,212,214,216,218,220,222,224,226], gR=[207,209,211,213,215,217,219,221,223,225,227];
@@ -362,7 +362,7 @@ const addrLine=(street,city,state,zip)=>{
       if(!pr && g('owner.gp')){ T(206,g('owner.gp')); T(207,'General Partner'); } // no roster on file yet: the General Partner row
     }
     try{ form.getTextField('x12').setText(''); }catch(e){}
-    T(228,(g('sig.name')+', '+sigTitle(g('sig.title'),g('sig.principal'))).replace(/, $/,''));
+    T(228,[g('sig.name'),sigTitle(g('sig.title'),g('sig.principal'))].filter(Boolean).join(', '));
     /* HUD's template computes 41 of its own fields — gross rents, the column
        extensions, every total — and orders them with /CO. Those actions used to
        be deleted here, so a schedule generated without proposed rents printed
@@ -414,11 +414,18 @@ const addrLine=(street,city,state,zip)=>{
   function uafCalcRec(rec){
     const g=k=>rec[k]!=null?String(rec[k]):'';
     const rows=idxOf(rec,'units').map(i=>{
-      const parts=UAF_UTILS_G.map(x=>{const cur=nmv2(g('units.'+i+'.uac_'+x[0]));const f=nmv2(g('uaf.f_'+x[0]));const raw=(cur>0&&f>0)?cur*f:0;return{u:x[0],label:x[1],cur,f,raw,rounded:raw?Math.round(raw):0};});
+      const parts=UAF_UTILS_G.map(x=>{const cur=nmv2(g('units.'+i+'.uac_'+x[0]));const f=nmv2(g('uaf.f_'+x[0]));
+        /* No factor is not a factor of zero. Carried forward unchanged, the
+           total moves only by the utilities that were actually adjusted. */
+        const raw=cur>0?(f>0?cur*f:cur):0;
+        return{u:x[0],label:x[1],cur,f,raw,rounded:raw?Math.round(raw):0,nofac:cur>0&&!(f>0)};});
       const curSum=parts.reduce((s,p)=>s+p.cur,0),newSum=parts.reduce((s,p)=>s+p.rounded,0);
       return {i,br:g('units.'+i+'.br'),ba:g('units.'+i+'.ba'),n:nmv2(g('units.'+i+'.num_units')),parts,curSum,newSum};
     }).filter(r=>r.curSum>0);
     return {rows,dec:rows.filter(r=>r.newSum>0&&r.newSum<r.curSum),
+      /* Named so a caller can say so rather than let the reader assume every
+         line was factored. */
+      nofac:UAF_UTILS_G.map(x=>x[0]).filter(u=>rows.some(r=>r.parts.some(p=>p.u===u&&p.nofac))),
       factors:UAF_UTILS_G.map(x=>({u:x[0],label:x[1],f:nmv2(g('uaf.f_'+x[0]))})).filter(x=>x.f>0),
       fy:g('uaf.factor_fy'),pub:g('uaf.factor_pubdate'),state:g('property.addr_state')};
   }

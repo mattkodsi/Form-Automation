@@ -67,7 +67,7 @@ function makeSupabaseDb(client) {
   const toInt = v => { if (v == null || String(v).trim() === '') return null; const n = Math.round(num(v)); return isNaN(n) ? null : n; };
 
   /* ---- in-memory mirror -------------------------------------------------- */
-  let D = { props: {}, contacts: [], dir: [], activePid: null };
+  let D = { props: {}, contacts: [], dir: [], activePid: null, cycles: {} };
 
   const place = (p, key, raw, sa) => {
     const cell = { value: (raw == null ? '' : String(raw)), source: 'database', saved_at: sa };
@@ -383,10 +383,15 @@ function makeSupabaseDb(client) {
         const r = await client.from('app_contact').delete().eq('id', id); if (r.error) throw r.error;
       },
       async clearAll() {
+        /* Cycles are deleted FIRST: they carry a foreign key to property, and
+           leaving them behind left rows in the table that nothing could reach —
+           while the in-memory shape lost its cycles map entirely, so the next
+           createCycle threw on an undefined. */
+        await client.from('cycle').delete().not('id', 'is', null);
         await client.from('property').delete().not('id', 'is', null);
         await client.from('pm_contact').delete().not('id', 'is', null);
         await client.from('app_contact').delete().not('id', 'is', null);
-        D = { props: {}, contacts: [], dir: [], activePid: null };
+        D = { props: {}, contacts: [], dir: [], activePid: null, cycles: {} };
       },
       /* ---- cycle surface ---- */
       listCycles(pid) {
