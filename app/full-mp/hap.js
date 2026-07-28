@@ -72,6 +72,20 @@
   const STARTABLE = { OCAF: 1, RCS: 1 };
   const isStartable = t => !!STARTABLE[String(t || '').trim().toUpperCase()];
 
+  /* EXPIRES and Request are known non-events: an option term ending, and a PBV.
+     Stepping over them is correct. A type we have never seen is NOT the same
+     thing — it may be the very work that is due — so it stops the action and is
+     shown verbatim rather than skipped, per the design's failure table. A blank
+     type falls here too, deliberately: today's export has none, and one
+     appearing tomorrow is news, not noise. */
+  const KNOWN_SKIP = { EXPIRES: 1, REQUEST: 1 };
+  function typeKind(t) {
+    const u = String(t == null ? '' : t).trim().toUpperCase();
+    if (STARTABLE[u]) return 'startable';
+    if (KNOWN_SKIP[u]) return 'skip';
+    return 'unknown';
+  }
+
   /* Matched by meaning, not spelling. Exact normalized hits are silent; a
      substring fallback is allowed but always reported, so an integration never
      depends on a guess nobody saw. */
@@ -231,10 +245,131 @@
     return targetFor(rows, code, todayISO) ? 'scheduled' : 'awaiting-schedule';
   }
 
+  /* ---- the primary action ----------------------------------------------
+     What one property's button does. Compares the tracker's next startable row
+     against the packages that exist locally. Facts only — the words are app.js's,
+     because a data module that owns copy is a data module nobody can restyle.
+
+     It lives here and not in app.js so it can be held to the real 2853-row
+     corpus in node, where Bastrop, Sample Property and Sample Property already are; and
+     because a second copy in app.js would be one rule with two implementations,
+     which is the shape CLAUDE.md's parity warning is about. hap.js stays
+     read-only: cycles arrive as an argument. */
+
+  /* A TERMINAL `EXPIRES` IS THE CONTRACT EXPIRING, NOT THE TRACKER'S HORIZON.
+     The original design said EXPIRES is never terminal and the contract always
+     renews. Measured against the export, that is wrong as a blanket rule:
+
+       · a mid-schedule EXPIRES — one with a startable row after it — is an
+         option-term boundary and occurs on exactly four properties (Crossroads
+         of Shoreview 75948, Roosevelt 90020, Sample Property 90030, Luther
+         Towers 90111). There the contract carries on and the row is stepped over.
+       · a schedule that ENDS on an EXPIRES is 125 properties, and its date
+         matches the Contract Exp column: 122 of the 125 agree within a year
+         either way. Sample Property expires 2029-06-26 against a contract ending
+         2029-06-30; Greenacres 2027-10-01 against 2027-09-30.
+       · the horizon theory fails on the distribution besides. Properties whose
+         last row is startable pile up at the export's edge — 99 of 103 in 2039
+         or 2040 — while terminal-EXPIRES years spread evenly from 2027 to 2040.
+         The tracker stops on purpose.
+
+     Three properties are the exception, their contract running two years or more
+     past the EXPIRES row: Sample Property (75444), Sample Property (79612)
+     and Sample Property (90063) — the one the original design generalised from. That is
+     a gap in the schedule, not an expiry, and it is said differently.
+
+     Either way the property STAYS listed and is never rendered finished or
+     retired: the tracker records a date, not an outcome, and whether a contract
+     renews is a business fact it does not hold. */
+  const GAP_DAYS = 730;
+
+  function actionFor(rows, code, cycles, todayISO) {
+    const t = todayISO || isoOf(new Date());
+    const out = {
+      kind: 'none', type: '', year: '', effective: '', deadline: '', contractExp: '',
+      cid: null, programs: [], label: '', disabled: true, reasonCode: '',
+    };
+    if (!inScope(rows)[code]) { out.reasonCode = 'out-of-scope'; return out; }
+
+    const mine = rows.filter(r => r.code === code)
+      .sort((a, b) => (a.effective < b.effective ? -1 : a.effective > b.effective ? 1 : 0));
+    const future = mine.filter(r => r.effective >= t);
+    const target = future.find(r => typeKind(r.type) === 'startable') || null;
+    const blocker = future.find(r => typeKind(r.type) === 'unknown') || null;
+
+    /* An unrecognised type only blocks when it comes FIRST. A property with an
+       OCAF in 2027 and something strange in 2032 still starts its 2027 OCAF. */
+    if (blocker && (!target || blocker.effective < target.effective)) {
+      return Object.assign(out, {
+        kind: 'unsupported', type: blocker.type, year: blocker.effective.slice(0, 4),
+        effective: blocker.effective, deadline: blocker.deadline,
+        disabled: true, reasonCode: 'unknown-type',
+      });
+    }
+
+    if (!target) {
+      const last = mine[mine.length - 1] || null;
+      if (last && String(last.type).trim().toUpperCase() === 'EXPIRES') {
+        const beyond = last.contractExp ? daysBetween(last.effective, last.contractExp) : null;
+        if (beyond != null && beyond >= GAP_DAYS)
+          return Object.assign(out, {
+            kind: 'gap', type: last.type, effective: last.effective,
+            contractExp: last.contractExp, disabled: false, reasonCode: 'schedule-gap',
+          });
+        return Object.assign(out, {
+          kind: 'expiring', type: last.type, effective: last.effective,
+          contractExp: last.contractExp, disabled: true, reasonCode: 'contract-expires',
+        });
+      }
+      /* The schedule simply runs out — on a startable row, or on a PBV request.
+         That IS the tracker's horizon, and the contract is assumed to carry on. */
+      return Object.assign(out, { kind: 'awaiting', disabled: false, reasonCode: 'no-future-row' });
+    }
+
+    const year = target.effective.slice(0, 4);
+    const prog = target.type.toLowerCase();
+    const base = {
+      type: target.type, year, effective: target.effective, deadline: target.deadline,
+      programs: [prog], label: year, disabled: false, reasonCode: '',
+    };
+
+    /* Two startable rows in one calendar year means year+program cannot identify
+       a package. Sample Property (90111) is the only one of the 249 with that
+       shape — OCAF 2026-09-01 and OCAF 2026-12-06, same label, same program — so
+       the loose match is switched off for exactly it, and the September package
+       cannot be mistaken for the December one. */
+    const concurrent = future.filter(r => typeKind(r.type) === 'startable'
+      && r.effective.slice(0, 4) === year).length > 1;
+    const cyISO = c => String((c && c.effective_date) || '').slice(0, 10);
+    const cyYear = c => cyISO(c).slice(0, 4) || (String((c && c.label) || '').match(/\d{4}/) || [''])[0];
+    const list = Array.isArray(cycles) ? cycles : [];
+    /* Never cycles[0] or c.dominant: listCycles sorts the dominant one first,
+       and the dominant cycle is the latest-effective, which for a property being
+       worked a year ahead is not the one the target names. */
+    const match = list.find(c => cyISO(c) === target.effective)
+      || (concurrent ? null
+        : list.find(c => (c.programs || []).indexOf(prog) >= 0 && cyYear(c) === year))
+      || null;
+
+    if (!match) return Object.assign(out, base, { kind: 'start' });
+    const gen = !!(match.generated && match.generated.at);
+    /* A generated package does NOT advance to the next target. Packages are
+       generated ~120 days before their effective date, so the current target is
+       normally still in the future when its package is done — advancing would
+       put "Start 2028 OCAF" directly beneath a deadline line reading "Due Sep 1
+       · 34 days left", one card describing two renewals. targetFor moves on by
+       itself once the date passes. */
+    return Object.assign(out, base, { kind: gen ? 'view' : 'continue', cid: match.id });
+  }
+
+  /* Exported, because the home page explains these bands in prose ("due in the
+     next 30 days") and prose that restates a constant is a second copy of it.
+     The rail reads _bandDays rather than writing 30 again. */
+  const BAND_DAYS = { now: 30, soon: 90 };
   const BANDS = [
     ['overdue', d => d < 0],
-    ['now', d => d <= 30],
-    ['soon', d => d <= 90],
+    ['now', d => d <= BAND_DAYS.now],
+    ['soon', d => d <= BAND_DAYS.soon],
     ['later', () => true],
   ];
   function bandOf(deadlineISO, todayISO) {
@@ -314,8 +449,8 @@
   const API = {
     parseCSV, normalize, mapColumns, diagnose, read,
     targetFor, statusFor, inScope, bandOf, managers, codesOf,
-    isStartable, toISO, addDays, daysBetween,
-    _cols: COLS, _required: REQUIRED,
+    isStartable, typeKind, actionFor, toISO, addDays, daysBetween,
+    _cols: COLS, _required: REQUIRED, _bandDays: BAND_DAYS, _gapDays: GAP_DAYS,
   };
   if (typeof window !== 'undefined') window.RCSHap = API;
   if (typeof module !== 'undefined' && module.exports) module.exports = API;
