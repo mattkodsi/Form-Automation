@@ -235,11 +235,31 @@ button.gdoc{justify-content:space-between}
 @keyframes spin{to{transform:rotate(360deg)}}
 .spin{width:13px;height:13px;flex:0 0 auto;border-radius:50%;border:2px solid #cbd5e1;border-top-color:#0f766e;animation:spin .7s linear infinite}
 @media (prefers-reduced-motion:reduce){.spin{animation-duration:2.4s}}
-.srcrow{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid #f0f2f7}
+/* min-height, so a row whose text wraps to one line and a row whose text wraps
+   to two put their buttons at the same distance from the row's own top edge —
+   the buttons are what the eye tracks down the column, and they were stepping. */
+.srcrow{display:flex;align-items:center;gap:12px;padding:9px 0;min-height:47px;border-bottom:1px solid #f0f2f7;box-sizing:border-box}
 /* A separator BETWEEN rows, never under the last one: the trailing rule fenced
    off nothing and left a band of empty card below it. :last-of-type, not
    :last-child — the hidden file inputs follow the rows. */
-.srcrow:last-of-type{border-bottom:none;padding-bottom:0} .srcrow>div{min-width:0;max-width:640px} .srcrow .ok{color:#166534;font-weight:800} .srcrow .mut{color:#9aa4b8;font-weight:800} .srcrow.dim{opacity:.8} .missing{color:#8791a5;font-weight:700;font-size:11px} .srcrow .sub{color:#7c86a2;font-size:11px} .parsed{color:#0f766e;font-weight:700;font-size:11px} .srcrow b{font-size:13.5px} .srcrow button{margin-left:8px;flex:0 0 auto}
+/* One drawn icon, sized off the line it sits on, so the checks card and the
+   upload banner cannot disagree about what a warning looks like. */
+.wicon{width:1em;height:1em;display:block;flex:0 0 auto}
+.chk .warn .wicon{margin-top:1px}
+.srcrow .warn{color:#b45309;font-weight:800;font-size:15px;display:flex;align-items:center}
+/* The rows already sit inside the card's own 16px, so the first one adding
+   another 9 put 25px above the top row against 18 between the rows — the block
+   read as hanging off the header rather than starting under it. The first row
+   gives its top padding back.
+   The last row keeps its rule: a card that simply stops on a rounded corner
+   reads unfinished. It pulls the card's bottom padding in behind it so the rule
+   closes the section instead of floating well above the end of it. */
+/* margin, not padding. Trimming the first row’s PADDING closed the gap but
+   moved its contents up inside it, so its button sat 4.5px higher than every
+   button below — and the buttons are the column the eye tracks down. The row
+   keeps its shape and simply starts higher. */
+.srcrow:first-of-type{margin-top:-6px}
+.srcrow:last-of-type{margin-bottom:-8px} .srcrow>div{min-width:0;max-width:640px} .srcrow .ok{color:#166534;font-weight:800} .srcrow .mut{color:#9aa4b8;font-weight:800} .srcrow.dim{opacity:.8} .missing{color:#8791a5;font-weight:700;font-size:11px} .srcrow .sub{color:#7c86a2;font-size:11px} .parsed{color:#0f766e;font-weight:700;font-size:11px} .srcrow b{font-size:13.5px} .srcrow button{margin-left:8px;flex:0 0 auto}
 .srcfoot{display:flex;align-items:center;gap:12px;margin-top:11px} .srcfoot .sub{color:#7c86a2;font-size:11.5px} .ph{margin-top:9px;font-size:11.5px;color:#98a2b3;font-style:italic;background:#f8fafc;border-radius:6px;padding:7px 9px}
 .footer{display:flex;gap:12px;align-items:center;justify-content:center;margin-top:4px;position:sticky;bottom:0;background:#eef1f7;padding:12px 10px;box-shadow:0 -6px 16px rgba(20,40,80,.08);border-radius:8px 8px 0 0;z-index:15} .footer.rest{border-radius:8px} .footer .fsp{display:none} .unsaved{display:none;position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#b45309;font-weight:700;font-size:12.5px;align-items:center;gap:6px} .unsaved.on{display:inline-flex}
 table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;border:1px solid #e6ebf3;border-radius:10px;overflow:hidden} th,td{text-align:left;padding:9px 13px;border-bottom:1px solid #eef1f6} th{font-size:10px;letter-spacing:.4px;color:#8791a5;text-transform:uppercase}

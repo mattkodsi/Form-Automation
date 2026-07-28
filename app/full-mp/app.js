@@ -1110,7 +1110,19 @@ function rcsRecall(){if(!(activeCid&&mpdb&&mpdb.getCycleRcs))return null;
   let d=null;try{d=mpdb.getCycleRcs(activeCid);}catch(e){return null;}
   if(!d||!d.name)return null;
   return {name:d.name,bytes:null,parsed:d.parsed||null,at:d.at||'',stored:true};}
-function rsNum(v){v=String(v==null?'':v).replace(/[^0-9.\-]/g,'');const n=parseFloat(v);return isFinite(n)?n:'';}
+function rsNum(v){let s=String(v==null?'':v).replace(/[^0-9.,\-]/g,'');
+  /* A dot is not always a decimal point. These schedules are typed by hand and
+     real copies use both conventions: White Oak's prints 1.147 / 36.704 /
+     $83.135 where another prints 1,147 / 36,704 / $83,135. Money and unit counts
+     never carry three decimal places, so a separator followed by exactly three
+     digits is a grouping mark whichever mark it is.
+     Read as a decimal it was silent: every rent came through as $1.15, and the
+     totals gate below still passed it, because every figure on the page was
+     wrong by the same factor. A gate that only checks internal consistency
+     cannot catch an error that scales the whole page. */
+  if(/^-?\d{1,3}(?:[.,]\d{3})+$/.test(s))s=s.replace(/[.,]/g,'');
+  else s=s.replace(/,/g,'');
+  const n=parseFloat(s);return isFinite(n)?n:'';}
 function rsDateISO(v){v=String(v||'').trim();let m=v.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);if(m)return m[3]+'-'+('0'+m[1]).slice(-2)+'-'+('0'+m[2]).slice(-2);m=v.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m)return v.slice(0,10);const MN={january:1,february:2,march:3,april:4,may:5,june:6,july:7,august:8,september:9,october:10,november:11,december:12};m=v.toLowerCase().match(/([a-z]+)\s+(\d{1,2}),?\s+(\d{4})/);if(m&&MN[m[1]])return m[3]+'-'+('0'+MN[m[1]]).slice(-2)+'-'+('0'+m[2]).slice(-2);return '';}
 function rsYearOn(iso){const m=String(iso||'').match(/^(\d{4})-(\d{2})-(\d{2})/);return m?((+m[1])+1)+'-'+m[2]+'-'+m[3]:'';}   // the uploaded schedule is the one in force; this package renews it
 function rsParseUnitType(t){t=String(t||'');let br='',ba='';if(/studio|efficiency/i.test(t))br='Studio';else{const m=t.match(/(\d+)\s*(?:br\b|bed)/i);if(m&&BR_OPTS.indexOf(m[1]+'BR')>=0)br=m[1]+'BR';else{const bare=t.trim().match(/^(\d+)$/);if(bare&&BR_OPTS.indexOf(bare[1]+'BR')>=0)br=bare[1]+'BR';}}const b=t.match(/(\d+(?:\.\d+)?)\s*(?:ba\b|bath)/i);if(b&&BA_OPTS.indexOf(b[1]+'BA')>=0)ba=b[1]+'BA';
@@ -1445,11 +1457,21 @@ async function parseRsPdf(bytes,onStep){
     return {kind:'fields',parsed:pf1};}
   let pages=null;try{pages=await rsTextPages(doc);}catch(e){}
   const runs=pages?pages.reduce((a,p)=>a+p.length,0):0;
+  const scan=async()=>{let oc=null;try{oc=await ocrParseRs(bytes,(i,n)=>onStep&&onStep(i,n,'scan'));}catch(e){}return oc;};
   if(runs<15){ // nothing to read on the page itself: tier 3 sends it out to be OCR'd
-    let oc=null;try{oc=await ocrParseRs(bytes,(i,n)=>onStep&&onStep(i,n,'scan'));}catch(e){}
-    return oc?{kind:'fields',parsed:oc,via:'ocr'}:{kind:'scan',parsed:null};}
+    const oc=await scan();
+    return oc?{kind:'fields',parsed:oc,via:'ocr'}:{kind:'scan',parsed:null,why:ocrWhy()};}
   let tp=null;try{tp=await rsReadTextTier(pages,bytes,onStep);}catch(e){}
-  return tp?{kind:'fields',parsed:tp,via:'text'}:{kind:'text',parsed:null};}
+  if(tp)return {kind:'fields',parsed:tp,via:'text'};
+  /* Text on the page and none of it the values — so OCR, which the runs<15 gate
+     alone would never have reached. An e-signed copy is that gate's worst case:
+     signing flattens every entered figure into artwork the extractor cannot
+     recover, while leaving the blank form's own printing behind. Colonial
+     Village's schedule carries 287 text runs and not one of them is a value, so
+     the page reads as maximally readable and yields nothing. "Is there text on
+     it" was never the question. "Did we manage to read any of it" is. */
+  const oc=await scan();
+  return oc?{kind:'fields',parsed:oc,via:'ocr'}:{kind:'text',parsed:null,why:ocrWhy()};}
 function rsFillFromParsed(){const P=_rsUpload&&_rsUpload.parsed;if(!P)return;
   const mark=k=>{markCycle(k);if(form[k])form[k].fromParse=true;};   // came from the schedule, not typed — tags an override as "parsed", not just "changed", in its note text
   const setk=(k,v)=>{if(v!=null&&v!==''){form=store.editForm(form,k,String(v));mark(k);}};
@@ -1491,14 +1513,14 @@ function renderSources(){
   const rcs=_rcsBusy
     ?`<div class="srcrow"><span class="spin" aria-hidden="true"></span><div><b>${esc(_rcsBusy.name)}</b> <span class="parsed">reading…</span><div class="sub">Reading the appraiser’s transmittal letter.</div></div></div>`
     :up
-    ?`<div class="srcrow"><span class="ok">✓</span><div><b>${esc(up.name)}</b> <span class="parsed">${_rn?'read · '+esc(_rfirm||'study')+' · '+_rn+' unit type'+(_rn===1?'':'s'):'uploaded · not read'}</span><div class="sub">${_rn?'The values are ready to apply.':'The letter could not be read — enter the values by hand below.'}</div></div>${_rn?'<button class="btn sm" id="rcsApply">Fill form from the study</button>':''}<button class="btn sm" id="upRcs">Replace</button></div>`
+    ?`<div class="srcrow"><span class="ok">✓</span><div><b>${esc(up.name)}</b> <span class="parsed">${_rn?'read · '+esc(_rfirm||'study')+' · '+_rn+' unit type'+(_rn===1?'':'s'):'uploaded · not read'}</span><div class="sub">${_rn?'The values are ready to apply.':'The letter could not be read — enter the values by hand below.'}</div></div>${_rn?'<button class="btn sm teal" id="rcsApply">Fill form from the study</button>':''}<button class="btn sm" id="upRcs">Replace</button></div>`
     :`<div class="srcrow${sl.need?'':' dim'}"><span class="mut">○</span><div><b>${esc(sl.title)}</b> <span class="${sl.need?'missing':'parsed'}">${sl.need?'not uploaded':'optional'}</span><div class="sub">${esc(sl.sub)}</div></div><button class="btn sm" id="upRcs">Upload PDF</button></div>`;
   const ru=_rsUpload;let rs;
   if(_rsBusy)rs=`<div class="srcrow"><span class="spin" aria-hidden="true"></span><div><b>${esc(_rsBusy.name||'Rent schedule')}</b> <span class="parsed">${esc(_rsBusy.note||'reading\u2026')}</span><div class="sub">${esc(_rsBusy.sub||'Reading the schedule\u2019s form fields and printed text.')}</div></div></div>`;
   else if(!ru)rs=`<div class="srcrow"><span class="mut">○</span><div><b>Current executed rent schedule</b> <span class="missing">not uploaded</span><div class="sub">Fills the unit mix, rents, utility allowances, ownership entity and principals.</div></div><button class="btn sm" id="upRs">Upload PDF</button></div>`;
   else if(ru.kind==='fields'){const p=ru.parsed;rs=`<div class="srcrow"><span class="ok">✓</span><div><b>${esc(ru.name)}</b> <span class="parsed">${ru.at?"read "+esc(niceDate(ru.at)):"read"}</span><div class="sub">${ru.via==='ocr'?'Scanned — check the values against the document. ':''}Nothing is saved until you save.</div></div><button class="btn sm teal" id="rsApply">Fill form from RS</button> <button class="btn sm" id="upRs">Replace</button></div>`;}
-  else if(ru.kind==='text')rs=`<div class="srcrow"><span class="mut">⚠</span><div><b>${esc(ru.name)}</b> <span class="missing">could not be read</span><div class="sub">Enter the values below.</div></div><button class="btn sm" id="upRs">Replace</button></div>`;
-  else rs=`<div class="srcrow"><span class="mut">⚠</span><div><b>${esc(ru.name)}</b> <span class="missing">could not be read</span><div class="sub">Scanned, but the values could not be read. Enter them below.</div></div><button class="btn sm" id="upRs">Replace</button></div>`;
+  else if(ru.kind==='text')rs=`<div class="srcrow"><span class="warn">${WARNICON}</span><div><b>${esc(ru.name)}</b> <span class="missing">could not be read</span><div class="sub">${ru.why?esc(ru.why)+' Enter the values below.':'Enter the values below.'}</div></div><button class="btn sm" id="upRs">Replace</button></div>`;
+  else rs=`<div class="srcrow"><span class="warn">${WARNICON}</span><div><b>${esc(ru.name)}</b> <span class="missing">could not be read</span><div class="sub">${ru.why?esc(ru.why)+' Enter the values below.':'Scanned, but the values could not be read. Enter them below.'}</div></div><button class="btn sm" id="upRs">Replace</button></div>`;
   const foot=`<input type="file" id="rcsFile" accept="application/pdf,.pdf" style="display:none"><input type="file" id="rsFile" accept="application/pdf,.pdf" style="display:none">`;
   /* The executed rent schedule comes first: it is the document that fills the
      form, and the one every package needs. The RCS study is second because it
@@ -1793,7 +1815,11 @@ function pkgCard(){
    green check to "FHA # · N/A". Presence is not the same as an answer. */
 const NA_RE=/^(n\/?a|n\.a\.?|none|null|tbd|-{1,3})$/i;
 function hasReal(k){const v=String(get(k)==null?'':get(k)).trim();return v!==''&&!NA_RE.test(v);}
-function chk(st,name,note){const ic=st==='warn'?'⚠':(st==='info'?'ⓘ':'✓');const cl=st==='warn'?'warn':(st==='info'?'info':'ok');return `<div class="chk"><span class="${cl}">${ic}</span><div><b>${name}</b><div class="sub">${note}</div></div></div>`;}
+const WARNICON='<svg class="wicon" viewBox="0 0 24 24" aria-hidden="true">'
+  +'<path d="M12 3.4 22.2 20.6H1.8Z" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round"/>'
+  +'<path d="M12 9.7v4.3" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/>'
+  +'<circle cx="12" cy="17.4" r="1.2" fill="currentColor"/></svg>';
+function chk(st,name,note){const ic=st==='warn'?WARNICON:(st==='info'?'ⓘ':'✓');const cl=st==='warn'?'warn':(st==='info'?'info':'ok');return `<div class="chk"><span class="${cl}">${ic}</span><div><b>${name}</b><div class="sub">${note}</div></div></div>`;}
 
 function isStateKey(k){return /\.(ua_reviewed|safmr_reviewed|type_reviewed|num_reviewed|ua_custom|safmr_custom)$/.test(k)||k==='tenant.mgmt_source'||k==='poc.mode'||/^poc\.custom_/.test(k)||k==='rent_schedule.date_eff_source'||k==='rent_schedule.date_eff_custom'||k==='ocaf.factor_src'||k==='ocaf.factor_custom';}
 function overrideCount(){const grouped=new Set();for(const b in ADDR_GROUPS)ADDR_GROUPS[b].forEach(k=>grouped.add(k));UNITS.forEach(i=>{grouped.add('units.'+i+'.br');grouped.add('units.'+i+'.ba');});
@@ -2340,10 +2366,10 @@ function wireBody(){
         setStatus('Rent schedule \u2014 '+SHORT[w]+' (page '+i+' of '+n+')\u2026');};
       busy('Reading…','Reading the document’s text.');
       let r;try{r=await parseRsPdf(b,step);}catch(e){r={kind:'scan',parsed:null};}finally{_rsBusy=null;}
-      _rsUpload={name:f.name,bytes:b,kind:r.kind,via:r.via,parsed:r.parsed,at:new Date().toISOString()};sf.value='';_rsArm=(r.kind==='fields'&&!!r.parsed);rsRemember();renderBody();
+      _rsUpload={name:f.name,bytes:b,kind:r.kind,via:r.via,why:r.why||'',parsed:r.parsed,at:new Date().toISOString()};sf.value='';_rsArm=(r.kind==='fields'&&!!r.parsed);rsRemember();renderBody();
       setStatus(r.kind==='fields'
         ?((r.via==='ocr'?'Rent schedule scanned — check the values against the document. ':'Rent schedule read. ')+'Press Enter to fill the form, or use “Fill form from RS” in '+secRef(1)+'.')
-        :'The values in this copy could not be read — enter them by hand below.');});};
+        :((r.why?r.why+' ':'')+'The values in this copy could not be read — enter them by hand below.'));});};
   const ra=el('rsApply');if(ra)ra.onclick=()=>rsFillFromParsed();
   const uu=el('undoUnit');if(uu)uu.onclick=()=>{if(!_undoStack.length)return;const e=_undoStack.pop();Object.keys(e.snap).forEach(k=>{form[k]=e.snap[k];});if(UNITS.indexOf(e.i)<0)UNITS.push(e.i);UNITS.sort((a,b)=>a-b);renderBody();setStatus('Unit type restored.');};
   const uc=el('undoCommit');if(uc)uc.onclick=()=>{_undoStack=[];renderBody();setStatus('Deletions kept.');};
@@ -3402,7 +3428,7 @@ function contactDialog(c){c=c||{};
   ['ccN','ccE','ccP'].forEach(id=>{const ff=el(id);if(ff&&ff.addEventListener)ff.addEventListener('keydown',ev=>{if(ev.key!=='Enter')return;ev.preventDefault();const d=(el('ccP').value||'').replace(/\D/g,'');if(d.length===0||d.length===10)el('dlgOk').click();});});
   el('dlgCancel').onclick=closeModal;
   el('dlgOk').onclick=async()=>{const patch={name:(el('ccN').value||'').trim(),email:(el('ccE').value||'').trim(),phone:(el('ccP').value||'').trim()};closeModal();try{if(c.id)await mpdb.updateContact(c.id,patch);else await mpdb.addContact(patch);renderContacts();}catch(e){saveFailedModal(e);}};}
-const __API={LABEL_HINTS,rsParseUnitType,fmtPhone,fmtDate,sMoney,sPct,sK,analysis,uaResolvedOf,uaConflict,uaUnresolved,renderMenu,renderLauncher,openMenu,openForm,openLauncher,ringSvg,niceDate,isDirty,overrideCount,isStateKey,attnFlags,pbUtil,clearUncheckedWriteins,srcOf:(k)=>srcOf(k),__openForm:(pid)=>{activePid=pid;return openForm('RCS');},__openCycleForm:(pid,cid)=>{activePid=pid;return openCycleForm(cid);},__renderBody:()=>renderBody(),__docMissing:(id)=>docMissing(id).map(x=>x.label),__docWarns:(id)=>docWarns(id).map(x=>x.label),__edit:(k,v)=>{form=store.editForm(form,k,v);},getVal:(k)=>get(k),modeOf:(kk)=>modeOf(kk),fieldKeys:(k)=>fieldKeys(k),keysCanSave:(ks)=>keysCanSave(ks),keysCanRevert:(ks)=>keysCanRevert(ks),keysNewDirty:(ks)=>keysNewDirty(ks),__revert:(k)=>store.revertForm(form,k),coupledKeys:(k)=>coupledKeys(k),__firstPid:()=>{const ps=mpdb?mpdb.listProperties():[];return ps.length?ps[0].id:null;},__boxes:(i)=>({ua:uaBox(i),safmr:safmrBox(i)}),__saveField:async(k)=>{form=await store.saveField(form,k);},__set:(f,u)=>{form=f;UNITS=u;},__cell:(k)=>form[k],
+const __API={LABEL_HINTS,rsParseUnitType,rsNum,fmtPhone,fmtDate,sMoney,sPct,sK,analysis,uaResolvedOf,uaConflict,uaUnresolved,renderMenu,renderLauncher,openMenu,openForm,openLauncher,ringSvg,niceDate,isDirty,overrideCount,isStateKey,attnFlags,pbUtil,clearUncheckedWriteins,srcOf:(k)=>srcOf(k),__openForm:(pid)=>{activePid=pid;return openForm('RCS');},__openCycleForm:(pid,cid)=>{activePid=pid;return openCycleForm(cid);},__renderBody:()=>renderBody(),__docMissing:(id)=>docMissing(id).map(x=>x.label),__docWarns:(id)=>docWarns(id).map(x=>x.label),__edit:(k,v)=>{form=store.editForm(form,k,v);},getVal:(k)=>get(k),modeOf:(kk)=>modeOf(kk),fieldKeys:(k)=>fieldKeys(k),keysCanSave:(ks)=>keysCanSave(ks),keysCanRevert:(ks)=>keysCanRevert(ks),keysNewDirty:(ks)=>keysNewDirty(ks),__revert:(k)=>store.revertForm(form,k),coupledKeys:(k)=>coupledKeys(k),__firstPid:()=>{const ps=mpdb?mpdb.listProperties():[];return ps.length?ps[0].id:null;},__boxes:(i)=>({ua:uaBox(i),safmr:safmrBox(i)}),__saveField:async(k)=>{form=await store.saveField(form,k);},__set:(f,u)=>{form=f;UNITS=u;},__cell:(k)=>form[k],
   /* The whole record, and the snapshot isDirty() measures against. The round-trip
      sweep needs a key-by-key diff (FORM-RULES "Before you deliver" 6): isDirty()
      compares VALUES ONLY, so a hidden side-effect key strands the form dirty with

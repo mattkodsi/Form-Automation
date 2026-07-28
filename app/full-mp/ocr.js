@@ -14,6 +14,14 @@
    anchors are read out of the template at runtime, never hand-measured, so a
    HUD form revision that moves the labels moves the anchors with it. */
 
+/* Why the last scan came back empty, in the endpoint's own words. Every failure
+   below used to collapse into one null, and the form then said "could not be
+   read" — which is what it says for a page with nothing on it, for a page Azure
+   declined, and for a page that simply took too long. Three different problems,
+   one useless sentence, and no way for the reader to know that trying again
+   might work. */
+let OCR_WHY='';
+function ocrWhy(){return OCR_WHY;}
 const OCR_MAXPAGES=4;                  // template is 3 pages; leave room for a cover sheet
 const OCR_MINPAIRS=8;                  // fewer matched labels than this is a guess, not a fit:
                                        // four alone will sit perfectly on the WRONG template page
@@ -102,17 +110,19 @@ function ocrRegister(words,anchors){ // -> transform onto the template, or null
   const cand=[];
   words.forEach(w=>{const t=w.s.trim();if(!OCR_TOKEN.test(t))return;
     const a=anchors[t.toLowerCase()];if(a)cand.push({dx:w.x0,dy:w.y0,tx:a.x,ty:a.y});});
-  if(cand.length<OCR_MINPAIRS)return null;
+  if(cand.length<OCR_MINPAIRS){
+    OCR_WHY='The scan came back, but only '+cand.length+' of the blank form\u2019s printed labels were recognised on the page (it needs '+OCR_MINPAIRS+' to line the page up).';
+    return null;}
   // Vote for a shift on a coarse grid: the true correspondences pile into one
   // bin while the mismatched ones scatter. Scale is left to least squares below.
   const votes=new Map();
   cand.forEach(p=>{const k=Math.round((p.tx-p.dx)/OCR_BIN)+':'+Math.round((p.ty-p.dy)/OCR_BIN);
     votes.set(k,(votes.get(k)||0)+1);});
   let bk=null,bv=0;votes.forEach((v,k)=>{if(v>bv){bv=v;bk=k;}});
-  if(!bk)return null;
+  if(!bk){OCR_WHY='The scan came back, but its '+cand.length+' recognised labels did not agree on where the page sits.';return null;}
   const kp=bk.split(':'),sx=+kp[0]*OCR_BIN,sy=+kp[1]*OCR_BIN;
   let f=ocrFit(cand.filter(p=>Math.abs(p.tx-p.dx-sx)<=OCR_BIN*2&&Math.abs(p.ty-p.dy-sy)<=OCR_BIN*2));
-  if(!f)return null;
+  if(!f){OCR_WHY='The scan came back and '+cand.length+' labels were recognised, but the page could not be squared with the blank form \u2014 it may be rotated or cropped.';return null;}
   for(let it=0;it<3;it++){ // re-select inliers against the fit, then refit
     const k2=cand.filter(p=>Math.hypot(ocrX(f,p.dx,p.dy)-p.tx,ocrY(f,p.dx,p.dy)-p.ty)<=OCR_TIGHT);
     if(k2.length<OCR_MINPAIRS)break;
@@ -226,7 +236,11 @@ async function ocrHalf(bytes,tplPg,skip,onStep){
   for(let i=0;i<pages.length;i++){
     if(skip&&skip.indexOf(i)>=0)continue;
     if(onStep)onStep(i+1,pages.length);
-    let pg=null;try{pg=await ocrAnalyze(pages[i]);}catch(e){return null;}
+    /* Skip the page, do not abandon the document. Azure timed out on page 1 of a
+       three-page executed copy and this returned null, so pages 2 and 3 — which
+       between them carry both halves of the form — were never even sent. A page
+       we could not read is a page we could not read, not a verdict on the rest. */
+    let pg=null;try{pg=await ocrAnalyze(pages[i]);}catch(e){OCR_WHY=(e&&e.message)||OCR_WHY;continue;}
     if(!pg||!pg.words||!pg.words.length)continue;
     if(!re.test(pg.words.map(w=>w.s).join(' ')))continue;   // never guess the half
     const got=ocrPageMap(pg,tplPg,tpl,rects);
@@ -234,25 +248,38 @@ async function ocrHalf(bytes,tplPg,skip,onStep){
   return null;}
 
 async function ocrParseRs(bytes,onStep){ // scan -> the tier-1 parsed shape, or null
+  OCR_WHY='';
   if(!window.PDFLib||!supaClient)return null;
-  const tpl=await ocrTemplate();if(!tpl)return null;
-  const rects=await rsFieldRects();if(!Object.keys(rects).length)return null;
-  let pages;try{pages=await ocrSplitPages(bytes,OCR_MAXPAGES);}catch(e){return null;}
+  const tpl=await ocrTemplate();if(!tpl){OCR_WHY='The blank HUD-92458 template could not be opened, so there was nothing to line the scan up against.';return null;}
+  const rects=await rsFieldRects();if(!Object.keys(rects).length){OCR_WHY='The blank form\u2019s field positions could not be read, so a scan cannot be placed onto it.';return null;}
+  let pages;try{pages=await ocrSplitPages(bytes,OCR_MAXPAGES);}catch(e){OCR_WHY='The document\u2019s pages could not be separated for scanning.';return null;}
   // Stop as soon as both halves of the form have turned up: on a plain two-page
   // scan that is two pages billed, not four, and nothing is read that we cannot
   // place. Which page is which is never assumed from its position.
   const got=[],txt=[];let pg0=-1,pg1=-1;
   for(let i=0;i<pages.length&&(pg0<0||pg1<0);i++){
     if(onStep)onStep(i+1,pages.length);
-    let pg=null;try{pg=await ocrAnalyze(pages[i]);}catch(e){return null;}
+    let pg=null;try{pg=await ocrAnalyze(pages[i]);}catch(e){OCR_WHY=(e&&e.message)||OCR_WHY;continue;}
     if(!pg||!pg.words||!pg.words.length)continue;
+    /* got[] and txt[] are indexed together and rsClassifyPages answers in that
+       index, not the page number — which is why a skipped page must not push a
+       placeholder here. */
     got.push(pg);txt.push(pg.words.map(w=>w.s).join(' '));
     const c=rsClassifyPages(txt);pg0=c.pg0;pg1=c.pg1;}
-  if(pg0<0)return null;
-  const A=ocrPageMap(got[pg0],0,tpl,rects);if(!A)return null;  // Part A is the half we cannot do without
+  if(pg0<0){
+    if(!OCR_WHY)OCR_WHY='The scan read '+got.length+' page'+(got.length===1?'':'s')+', but none of them looked like Part A of form HUD-92458.';
+    return null;}
+  const A=ocrPageMap(got[pg0],0,tpl,rects);
+  if(!A){if(!OCR_WHY)OCR_WHY='Part A was found but could not be lined up with the blank form.';return null;}  // Part A is the half we cannot do without
   const B=pg1>=0?ocrPageMap(got[pg1],1,tpl,rects):null;
   const s8=(A&&A.s8)||(B&&B.s8)||'';
   const F=Object.assign({},A.F,B?B.F:{});
   const outp=rsAssembleFields(n=>String(F[String(n)]||'').trim());
-  if(outp&&s8)outp.scalars['property.s8']=s8;
+  /* The last silent exit. The page can register perfectly and still fail here,
+     because rsAssembleFields holds the same totals gate tiers 1 and 2 answer to:
+     a unit mix whose counts do not add up is a misread, not a record. Saying so
+     is the difference between "the scan failed" and "the scan read the page but
+     the numbers did not reconcile" — only one of those is worth retrying. */
+  if(!outp){OCR_WHY='The page was read and placed correctly, but the figures it produced did not reconcile (the unit counts or rents did not add up), so they were not applied.';return null;}
+  if(s8)outp.scalars['property.s8']=s8;
   return outp;}   // rsPartB is told not to claim definite reads for a positional tier
