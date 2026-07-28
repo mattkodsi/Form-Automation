@@ -56,6 +56,7 @@ body.scrolled #ccbar{transform:translateY(0);opacity:1}
 .pksrcf{color:#6b7280;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pksrcrow.off .pksrcn{color:#8791a5;font-weight:500}
 .pkhead{margin-top:10px;color:#33405c}
+.pkhead1{display:flex;align-items:center;gap:8px}
 /* Two columns of six short labels, each on ONE line: the tick has a column of
    its own so a label that does wrap wraps under itself and not under the tick. */
 .drafts{display:grid;grid-template-columns:1fr 1fr;gap:5px 14px;font-size:11.5px;color:#33405c;margin-top:5px;line-height:1.3}
@@ -104,7 +105,7 @@ body.scrolled #ccbar{transform:translateY(0);opacity:1}
 /* needs / omits: same amber, told apart by the word rather than a second hue */
 .gline{display:flex;align-items:baseline;justify-content:flex-end;flex-wrap:wrap;gap:0 2px;line-height:1.7}
 .gline+.gline{margin-top:1px}
-.draft-off{color:#9aa4b5} .dtick{display:inline-block;width:13px;font-style:normal;color:#15803d}
+.draft-off{color:#9aa4b5} .dtick,.pktick{display:inline-block;width:13px;font-style:normal;color:#15803d}
 .dtick.pend{color:#c2c9d6}
 /* Reads as a sibling of the bed/bath dropdowns, not a control competing with them. */
 /* Every property below was previously packed into one `font:` shorthand ending in
@@ -554,6 +555,8 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;borde
 .pc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
 .pc-name{font-size:15.5px;font-weight:700;color:#1f2937;line-height:1.32} .pc-alias{font-size:12px;font-weight:400;color:#8791a5;margin-left:7px}
 .pc-meta{font-size:12px;color:#7c86a2;margin-top:6px}
+.pc-cap{font-size:11px;color:#8791a5;margin-top:3px}                 /* what the ring is counting — the number alone never said */
+.gpf-wrap{margin:2px -9px 0}                                        /* the gap list sits flush inside the card, gpf brings its own padding */
 .pc-div{border-top:1px solid #eef1f6;margin-top:auto}
 .pc-foot{display:flex;align-items:center;justify-content:space-between;margin-top:11px;gap:8px}
 .pc-units{font-size:12px;color:#33405c;font-weight:600}

@@ -49,7 +49,7 @@ const _d=__dirname,_b=path.join(os.tmpdir(),'rcs_combined_smoke.'+process.pid+'.
    writing the file still exits quietly, and the try/catch so cleanup can never be
    the thing that fails an otherwise-green run. */
 process.on('exit',()=>{try{fs.rmSync(_b,{force:true});}catch(e){}});
-fs.writeFileSync(_b,['core.js','db.js','app.js'].map(x=>fs.readFileSync(path.join(_d,x),'utf8')).join('\n'));
+fs.writeFileSync(_b,['core.js','score.js','db.js','app.js'].map(x=>fs.readFileSync(path.join(_d,x),'utf8')).join('\n'));
 const app=require(_b);
 const eq=(label,got,want)=>{n++;const p=JSON.stringify(got)===JSON.stringify(want);if(!p){fails++;console.log(`  ✗ ${label}: got ${JSON.stringify(got)} want ${JSON.stringify(want)}`);}else console.log(`  ✓ ${label}`);};
 const T=(label,v)=>eq(label,!!v,true);

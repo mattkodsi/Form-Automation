@@ -2134,51 +2134,52 @@ function _renderCommand(){const a=analysis();const pCur=a.ceil>0?clamp(a.cg/a.ce
      +'</div>';})()}
    ${pkgCard()}`;}
 function pkgCard(){
+  const S=packageScore();
+  /* Every row's tick is computed, for every program. The OCAF/UAF card used to
+     list its documents as plain strings with no readiness at all — a card
+     asserting its documents are in the package without asking whether one of
+     them could be written, which is FORM-RULES §15 exactly. A hollow ring
+     rather than an empty slot: grey text alone left the reader to notice an
+     absence, and an absence is the thing hardest to notice. */
+  const rows=S.docs.map(d=>{
+    const t=d.ready?'':' class="draft-off" title="Needs '+esc(d.missing.map(x=>x.label).join(', '))+'"';
+    return '<span'+t+'><i class="dtick'+(d.ready?'':' pend')+'">'+(d.ready?'\u2713':'\u25cb')+'</i>'+esc(d.label)+'</span>';}).join('');
   /* A row for a document the package is BUILT from, as against one it
      produces. Both sources are named whether or not either is loaded — the
      same rule the cells follow — so an absent schedule reads as a thing not
      done yet rather than a thing that does not exist. */
   const srcRow=(name,file,note,have)=>'<div class="pksrcrow'+(have?'':' off')+'">'
-    +'<i class="dtick'+(have?'':' pend')+'">'+(have?'\u2713':'\u25cb')+'</i>'
+    +'<i class="pktick'+(have?'':' pend')+'">'+(have?'\u2713':'\u25cb')+'</i>'
     +'<span class="pksrcn">'+esc(name)+'</span>'
     +'<span class="pksrcf" title="'+esc(file||note)+'">'+esc(file||note)+'</span></div>';
-  if(hasProg('rcs')){
-      /* Ask the same question the generate dialog asks. These ticks were hardcoded
-         to 1 for five of the six, so the card claimed five documents were ready on
-         a property that could produce two — and it was the first thing you saw. */
-      const L=[['Cover letter (CA)','cover'],['Owner cover letter','owner'],['Owner’s checklist','checklist'],
-               ['RCS report','rcs'],['Draft rent schedule','schedule'],['Tenant notice','notice']];
-      /* "(uploaded PDF)" wrapped to a second line and lifted the row beside it,
-         which is most of what made this card look untidy. The source row above
-         already says the study is a file you supplied. */
-      const st=L.map(d=>{const miss=d[1]==='rcs'?(_rcsUpload?[]:[{label:'no study uploaded yet'}]):docMissing(d[1]);
-        return {label:d[0],miss:miss,ok:!miss.length};});
-      const ready=st.filter(x=>x.ok).length;
-      /* A hollow ring rather than an empty slot: grey text alone left the reader
-         to notice an absence, and an absence is the thing hardest to notice. */
-      const list=st.map(x=>'<span'+(x.ok?'':' class="draft-off" title="Needs '+esc(x.miss.map(m=>m.label).join(', '))+'"')
-        +'><i class="dtick'+(x.ok?'':' pend')+'">'+(x.ok?'\u2713':'\u25cb')+'</i>'+x.label+'</span>').join('');
-      /* The headline answers the card's own question. It used to repeat the
-         study's source row, which the reader had already read one line down. */
-      const head=ready===6?'All six documents ready':(ready+' of 6 ready to generate');
-      return `<div class="ccard"><div class="cck">THIS PACKAGE</div><div class="cctitle" style="font-size:15px">${head}</div>
-     <div class="pksrc">${srcRow('Executed rent schedule',_rsUpload?_rsUpload.name:'',_rsUpload?'':'not uploaded yet',!!_rsUpload)
-       +srcRow('RCS report',_rcsUpload?_rcsUpload.name:'',_rcsUpload?'':'not uploaded yet — it is document 04',!!_rcsUpload)}</div>
-     <div class="ccsub pkhead"><b>The 6-document package</b></div><div class="drafts">${list}</div>
-     <div class="wb">Documents are generated from the form exactly as shown. Save with “Update property profile” before generating.</div></div>`;}
-  const docs=[];
-  if(hasProg('ocaf'))docs.push('9625 worksheet (Q = P)','Corrected auto-OCAF letter — election box 1','Revised Exhibit A','Debt-service evidence');
-  if(hasProg('uaf')){docs.push('UAF certification / breakdown');if(uafAnalysis().dec.length)docs.push('30-day tenant notice (UA decrease)','Tenant-comment certification');}
-  docs.push('Revised rent schedule'+(hasProg('ocaf')&&hasProg('uaf')?' — one, merged OCAF + UAF':''));
-  return `<div class="ccard"><div class="cck">THIS PACKAGE</div><div class="cctitle" style="font-size:15px">${esc(cycleProgs().map(x=>PROG_NAMES[x]||x).join(' + '))} package</div><div class="ccsub">${_rcsUpload?esc(_rcsUpload.name)+' uploaded — the package’s source document':esc(srcDocLabel().title)+(srcDocLabel().need?' goes in '+secRef(1):' — optional, '+secRef(1))}</div>
-     <div class="ccsub" style="margin-top:7px;color:#33405c"><b>This package includes</b></div><div class="drafts">${docs.map(d=>'<span>· '+d+'</span>').join('')}</div>
-     <div class="wb">Documents are generated from the form exactly as shown. Save with “Update property profile” before generating.</div></div>`;}
-/* A schedule that prints "N/A" for the FHA number is telling us there ISN'T one.
-   Storing that is right — it is what the document says, and it is what we print
-   back. Counting it as a filled field is not: the record checks were awarding a
-   green check to "FHA # · N/A". Presence is not the same as an answer. */
-const NA_RE=/^(n\/?a|n\.a\.?|none|null|tbd|-{1,3})$/i;
-function hasReal(k){const v=String(get(k)==null?'':get(k)).trim();return v!==''&&!NA_RE.test(v);}
+  /* In an RCS year the study is document 04 and has a name of its own. In an
+     OCAF or UAF year there is no study, and srcDocLabel says what stands in
+     its place — and whether the package needs one at all. */
+  const sl=srcDocLabel();
+  const second=hasProg('rcs')
+    ? srcRow('RCS report',_rcsUpload?_rcsUpload.name:'',_rcsUpload?'':'not uploaded yet \u2014 it is document 04',!!_rcsUpload)
+    : srcRow(sl.title,_rcsUpload?_rcsUpload.name:'',_rcsUpload?'':(sl.need?'not uploaded yet':'optional'),!!_rcsUpload);
+  /* The headline answers the card's own question. It used to repeat the
+     study's source row, which the reader had already read one line down. The
+     total comes off S.docs, because an OCAF year does not have six. */
+  const ready=S.docs.filter(d=>d.ready).length,total=S.docs.length;
+  const head=(total&&ready===total)?('All '+total+' documents ready'):(ready+' of '+total+' ready to generate');
+  /* What is holding it, on the card, one press from the cell that fixes it.
+     A ring that says 55% and a card that says four of six are ready both leave
+     the same question — this answers it without opening the generate dialog. */
+  const gap=(list,cls,h)=>list.length?('<div class="ccsub pkhead"><b>'+h+'</b></div><div class="gpf-wrap">'+list.map(x=>gpf(x,cls)).join('')+'</div>'):'';
+  return '<div class="ccard"><div class="cck">THIS PACKAGE</div>'
+    +'<div class="cctitle pkhead1" style="font-size:15px">'+ringSvg(S.pct,26)+'<span>'+head+'</span></div>'
+    +'<div class="pksrc">'+srcRow('Executed rent schedule',_rsUpload?_rsUpload.name:'',_rsUpload?'':'not uploaded yet',!!_rsUpload)+second+'</div>'
+    +'<div class="drafts">'+rows+'</div>'
+    +gap(S.blockers,'',(S.blockers.length===1?'This is what a document is short of':'These are what the documents are short of'))
+    +gap(S.caveats,' gpf-s','Not blocking, but each one changes what a document says')
+    +'<div class="wb">Documents are generated from the form exactly as shown. Save with \u201cUpdate property profile\u201d before generating.</div></div>';}
+
+/* "N/A" is an answer to what the FHA number IS, not a filled field. The test
+   lives in score.js now, with the tables that use it; this is its binding to
+   the open form. */
+function hasReal(k){return window.RCSScore.hasReal(get,k);}
 const WARNICON='<svg class="wicon" viewBox="0 0 24 24" aria-hidden="true">'
   +'<path d="M12 3.4 22.2 20.6H1.8Z" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round"/>'
   +'<path d="M12 9.7v4.3" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/>'
@@ -2884,7 +2885,9 @@ function renderMenu(){
   const card=p=>{const pct=Math.round(p.completeness*100);
     const al=(p.alias||'').trim();const showAl=al&&al.toLowerCase()!==String(p.name||'').trim().toLowerCase();
     return '<button class="pcard" data-open="'+p.id+'"><div class="pc-top"><div class="pc-name">'+esc(p.name)+(showAl?'<span class="pc-alias">&ldquo;'+esc(al)+'&rdquo;</span>':'')+'</div>'+ringSvg(pct)+'</div>'
-      +'<div class="pc-meta">'+esc(p.fha)+(p.city_state?' &middot; '+esc(p.city_state):'')+'</div><div class="pc-div"></div>'
+      +'<div class="pc-meta">'+esc(p.fha)+(p.city_state?' &middot; '+esc(p.city_state):'')+'</div>'
+      /* The number alone never said what it was counting. */
+      +(p.caption?'<div class="pc-cap">'+esc(p.caption)+'</div>':'')+'<div class="pc-div"></div>'
       +'<div class="pc-foot"><span class="pc-units">'+p.total_units+' unit'+(p.total_units===1?'':'s')+(p.unit_types?' &middot; '+p.unit_types+' type'+(p.unit_types===1?'':'s'):'')+'</span><span class="pc-upd" title="'+esc(updTitle(p.updated_at))+'">Updated '+relTime(p.updated_at)+'</span></div></button>';};
   const newTile='<button class="pcard newcard" id="tileNew"><span class="plus">+</span><span>New property</span></button>';
   const empty='<div class="mempty">No properties match &ldquo;'+esc(q)+'&rdquo;. <span class="link" id="mClear">Clear search</span></div>';
@@ -3252,132 +3255,20 @@ async function combinePdfs(list){const {PDFDocument}=window.PDFLib;const out=awa
 
    The old table was thin enough that all five letters could generate with an
    empty signature block, because only the checklist asked for a signatory. */
-const DOC_REQS={
-  /* Signature block, and a closing sentence that tells the CA who to call. */
-  cover:[['property.name','property name',2],['property.s8','Section 8 number',2],
-         ['ca.name','CA contact name',4],['ca.org','CA organization',4],
-         ['poc.name','point of contact',3],
-         ['sig.name','signatory name',3],['sig.title','signatory title',3]],
-  /* Certification 2 names the appraiser, 7 names the point of contact, and the
-     owner signs the lot under penalty of perjury — so each is required, not
-     merely suggested. The firm alone left "The RCS appraiser's (, Smith & Co)". */
-  owner:[['property.name','property name',2],['property.s8','Section 8 number',2],
-         ['ca.name','CA contact name',4],['ca.org','CA organization',4],
-         ['owner.entity_name','ownership entity',2],
-         ['appr.name','appraiser name',5],['appr.firm','appraisal firm',5],
-         ['poc.name','point of contact',3],
-         ['sig.name','signatory name',3],['sig.title','signatory title',3]],
-  /* The property name prints 18pt across the head of the form. */
-  checklist:[['property.name','property name',2],
-             ['sig.name','signatory name',3],['sig.title','signatory title',3]],
-  /* HUD-92458's header block: name, FHA number, the date the rents take effect
-     (checked separately, it is a resolved value not a plain key), the mortgagor
-     entity in Part F, and the Part G signature. The FHA number is its own field
-     on this form and is NOT the Section 8 number. */
-  schedule:[['property.name','property name',2],['property.fha','FHA number',2],
-            ['owner.entity_name','ownership entity',2],
-            ['sig.name','signatory name',3],['sig.title','signatory title',3]],
-  /* ── the OCAF / UAF year ────────────────────────────────────────────────
-     Audited the same way as the six above: against what gen.js ACTUALLY prints,
-     not against what seemed obvious. Every one of these carries a signature
-     block under a false-claims warning, so the signatory is required on each.
-
-     The published factor is required rather than suggested. Without it every
-     line from (N) to (R) prints a dash and Step 3 lists the CURRENT rents under
-     the heading "Adjusted contract rents" — a worksheet that looks complete and
-     says the rents are not changing. */
-  ocafws:[['property.name','property name',2],['property.s8','Section 8 number',2],
-          ['sig.name','signatory name',3],['sig.title','signatory title',3]],
-  exhibita:[['property.name','property name',2],['property.s8','Section 8 number',2],
-            ['sig.name','signatory name',3],['sig.title','signatory title',3]],
-  /* Written only for a floating rate, and its whole subject is the comparison —
-     with neither figure it certifies a determination it did not make. */
-  dsevid:[['property.name','property name',2],['property.s8','Section 8 number',2],
-          ['sig.name','signatory name',3],['sig.title','signatory title',3]],
-  uafcert:[['property.name','property name',2],['property.s8','Section 8 number',2],
-           ['sig.name','signatory name',3],['sig.title','signatory title',3]],
-  /* Served on residents under 24 CFR 245.420. The contract administrator is
-     named in five of its sentences, and it is signed by the sender. */
-  uanotice:[['property.name','property name',2],['ca.org','CA organization',4],
-            ['tenant.sender_name','tenant-notice sender name',9]],
-  /* Addressed to the CA by name, and headed by the ownership entity — which
-     printed "[Ownership Entity Name]" in the letterhead when we held none. */
-  tcert:[['property.name','property name',2],['property.s8','Section 8 number',2],
-         ['owner.entity_name','ownership entity',2],
-         ['ca.name','CA contact name',4],['ca.org','CA organization',4],
-         ['sig.name','signatory name',3],['sig.title','signatory title',3]],
-  /* The property name is the notice's subject — it appears in six sentences. */
-  notice:[['property.name','property name',2],
-          ['ca.org','CA organization',4],['tenant.sender_name','tenant-notice sender name',9]],
-};
-/* Blockers stop a document being written; caveats do not, but they change what
-   it says. The management street is the clearest case: the notice generates
-   without it and simply never tells a tenant where to inspect the materials. It
-   used to be announced at the foot of the dialog, and only once the notice
-   ACTUALLY generated — so a notice blocked on two other fields hid it entirely,
-   and you would meet it on the next run instead. Caveats now sit on the row they
-   concern, whether or not that row generated. */
-function docWarns(id){const w=[];
-  const dim=(k,label,sec)=>{if(!hasReal(k))w.push({key:k,label:label,sec:sec});};
-  /* The addressee block on both letters is filtered before printing, so a
-     missing line vanishes silently rather than printing blank — which is why
-     these are caveats and not blockers: the letter is still correct, it is just
-     addressed to a company rather than to a desk at an address. */
-  if(id==='cover'||id==='owner'){dim('ca.position','CA contact position',4);dim('ca.addr_street','CA street address',4);}
-  if(id==='cover'){if(!hasReal('poc.phone')&&!hasReal('poc.email'))
-    w.push({key:'poc.phone',label:'a phone or email for the point of contact',sec:3});}
-  /* Certification 8 promises the appraiser's contact details "below", then
-     prints nothing at all when we hold none of them. */
-  if(id==='owner'){dim('poc.email','point-of-contact email',3);dim('poc.phone','point-of-contact phone',3);
-    dim('appr.addr_street','appraiser street address',5);dim('appr.email','appraiser email',5);dim('appr.phone','appraiser phone',5);}
-  if(id==='checklist'&&!CHECKLIST_FLAT.some((_,i)=>get('check.'+i)==='1'))
-    w.push({key:'',label:'no checklist item is ticked',sec:8});
-  /* Proposed rents are SUGGESTED here and REQUIRED on the notice, deliberately.
-     The schedule is a form the owner may want blank on purpose — generate it,
-     then type the rents in and let HUD's own arithmetic extend and total them.
-     That workflow only works because the template keeps its calculations, which
-     is why they are no longer stripped. A notice has no such excuse. */
-  if(id==='schedule'){
-    if(!UNITS.some(i=>hasReal('units.'+i+'.proposed')))
-      w.push({key:'',label:'proposed rents',sec:6});
-    dim('owner.entity_type','ownership entity type',2);}
-  if(id==='notice'){
-    const src=get('tenant.mgmt_source')||'property';
-    const onProp=src==='property';
-    const street=String((onProp?get('property.addr_street'):get('tenant.mgmt_street'))||'').trim();
-    if(!street)w.push({key:onProp?'property.addr_street':'tenant.mgmt_street',
-      label:'management street address',sec:onProp?2:9});}
-  return w;}
-function docMissing(id){const r=DOC_REQS[id]||[];
-  const m=r.filter(x=>!hasReal(x[0])).map(x=>({key:x[0],label:x[1],sec:x[2]}));   // "N/A" does not make a document ready
-  const units=UNITS.some(i=>numf(get('units.'+i+'.num_units'))>0);
-  if(id==='schedule'){
-    if(!units)m.push({key:'units',label:'at least one unit type with a count',sec:6});
-    // resolved across three keys (RS / custom / legacy), so not a plain lookup
-    if(!String(dateEffResolved()||'').trim())m.push({key:'rent_schedule.date_eff_custom',label:'date the rents take effect',sec:6});}
-  /* Resolved values and row conditions, the same way the rent schedule's date
-     and unit mix are handled above: not a lookup, so not a plain key. */
-  if(id==='ocafws'||id==='exhibita'||id==='dsevid'){
-    if(!units)m.push({key:'units',label:'at least one unit type with a count',sec:6});
-    else if(!UNITS.some(i=>numf(get('units.'+i+'.current'))>0))m.push({key:'units.0.current',label:'current contract rents',sec:6});
-    if(id!=='dsevid'&&!(ocafFactorResolved()>0))m.push({key:'ocaf.factor_custom',label:'the published OCAF factor',sec:10});
-    if(id==='dsevid'&&!(numf(get('ocaf.ds_t12'))>0||numf(get('ocaf.ds_f12'))>0))
-      m.push({key:'ocaf.ds_t12',label:'a trailing-12 or forward-12 debt service figure',sec:10});
-    if(!String(dateEffResolved()||'').trim())m.push({key:'rent_schedule.date_eff_custom',label:'date the rents take effect',sec:6});}
-  if(id==='uafcert'||id==='uanotice'){
-    if(!UAF_UTILS.some(u=>numf(get('uaf.f_'+u[0]))>0))m.push({key:'uaf.f_electric',label:'at least one utility allowance factor',sec:11});
-    if(!uafAnalysis().any)m.push({key:'units.0.uac_electric',label:'the current allowance broken down by utility',sec:11});}
-  /* The notice exists to state the decrease. With none there is nothing to
-     serve, and its table prints a column of unchanged figures. */
-  if(id==='uanotice'&&!uafAnalysis().dec.length)
-    m.push({key:'',label:'a utility allowance that actually decreases',sec:11});
-  if(id==='notice'){
-    if(!units)m.push({key:'units',label:'at least one unit type with a count',sec:6});
-    /* A notice served under 24 CFR 245 exists to state the increase. With no
-       proposed rent its Requested Rent column prints empty down the page, and
-       what reaches the resident announces nothing. */
-    else if(!UNITS.some(i=>hasReal('units.'+i+'.proposed')))m.push({key:'units.0.proposed',label:'proposed rents',sec:6});}
-  return m;}
+/* The requirement tables, the caveats and the score itself live in score.js —
+   one computation the form, the menu and the launcher all read, because the ring
+   used to answer to ten durable keys while the documents answered to this table,
+   and a property could read 100% with two documents unbuildable. These wrappers
+   are all that is left here: they bind the score to THIS form's reader. */
+function scoreCtx(){
+  let lh=null;try{lh=mpdb&&mpdb.getLetterhead?mpdb.getLetterhead(activePid):null;}catch(e){}
+  return {programs:cycleProgs(),units:UNITS,checklistLen:CHECKLIST_FLAT.length,
+    hasLetterhead:!!(lh&&lh.name),hasStudy:!!_rcsUpload,hasCaPkg:!!_rcsUpload,
+    rateType:get('ocaf.rate_type'),uafDec:uafAnalysis().dec.length};}
+function docMissing(id){return window.RCSScore.docMissing(get,scoreCtx(),id);}
+function docWarns(id){return window.RCSScore.docWarns(get,scoreCtx(),id);}
+function packageScore(){return window.RCSScore.packageScore(get,scoreCtx());}
+function packageDocs(){return window.RCSScore.packageDocs(scoreCtx());}
 /* Go to the cell that fixes a gap — the one whose name was clicked, not just the
    section holding it. Landing on a section and focusing whatever input came
    first meant "CA organization" could put the cursor in the CA contact name.
@@ -4029,7 +3920,7 @@ function contactDialog(c){c=c||{};
    ReferenceError at load and took three suites down with zero checks run. An
    arrow defers the lookup to the call, which only ever happens in the browser
    suite, which has the whole bundle. */
-const __API={LABEL_HINTS,rsParseUnitType,rsNum,ocrMapPages:(p)=>ocrMapPages(p),ocrWhy:()=>ocrWhy(),fmtPhone,fmtDate,sMoney,sPct,sK,analysis,uaResolvedOf,uaConflict,uaUnresolved,renderMenu,renderLauncher,openMenu,openForm,openLauncher,ringSvg,niceDate,isDirty,overrideCount,isStateKey,attnFlags,pbUtil,clearUncheckedWriteins,srcOf:(k)=>srcOf(k),__openForm:(pid)=>{activePid=pid;return openForm('RCS');},__openCycleForm:(pid,cid)=>{activePid=pid;return openCycleForm(cid);},__renderBody:()=>renderBody(),__docMissing:(id)=>docMissing(id).map(x=>x.label),__docWarns:(id)=>docWarns(id).map(x=>x.label),__edit:(k,v)=>{form=store.editForm(form,k,v);},getVal:(k)=>get(k),modeOf:(kk)=>modeOf(kk),fieldKeys:(k)=>fieldKeys(k),keysCanSave:(ks)=>keysCanSave(ks),keysCanRevert:(ks)=>keysCanRevert(ks),keysNewDirty:(ks)=>keysNewDirty(ks),__revert:(k)=>store.revertForm(form,k),coupledKeys:(k)=>coupledKeys(k),__firstPid:()=>{const ps=mpdb?mpdb.listProperties():[];return ps.length?ps[0].id:null;},__boxes:(i)=>({ua:uaBox(i),safmr:safmrBox(i)}),__saveField:async(k)=>{form=await store.saveField(form,k);},__set:(f,u)=>{form=f;UNITS=u;},__cell:(k)=>form[k],
+const __API={LABEL_HINTS,rsParseUnitType,rsNum,ocrMapPages:(p)=>ocrMapPages(p),ocrWhy:()=>ocrWhy(),fmtPhone,fmtDate,sMoney,sPct,sK,analysis,uaResolvedOf,uaConflict,uaUnresolved,renderMenu,renderLauncher,openMenu,openForm,openLauncher,ringSvg,niceDate,isDirty,overrideCount,isStateKey,attnFlags,pbUtil,clearUncheckedWriteins,srcOf:(k)=>srcOf(k),__openForm:(pid)=>{activePid=pid;return openForm('RCS');},__openCycleForm:(pid,cid)=>{activePid=pid;return openCycleForm(cid);},__renderBody:()=>renderBody(),__docMissing:(id)=>docMissing(id).map(x=>x.label),__docWarns:(id)=>docWarns(id).map(x=>x.label),__edit:(k,v)=>{form=store.editForm(form,k,v);},getVal:(k)=>get(k),modeOf:(kk)=>modeOf(kk),fieldKeys:(k)=>fieldKeys(k),keysCanSave:(ks)=>keysCanSave(ks),keysCanRevert:(ks)=>keysCanRevert(ks),keysNewDirty:(ks)=>keysNewDirty(ks),__revert:(k)=>store.revertForm(form,k),coupledKeys:(k)=>coupledKeys(k),__firstPid:()=>{const ps=mpdb?mpdb.listProperties():[];return ps.length?ps[0].id:null;},__listProps:()=>(mpdb?mpdb.listProperties():[]),__cycles:()=>(mpdb?mpdb.listCycles(activePid):[]),packageScore:()=>packageScore(),packageDocs:()=>packageDocs(),scoreCtx:()=>scoreCtx(),__pkgCard:()=>pkgCard(),__boxes:(i)=>({ua:uaBox(i),safmr:safmrBox(i)}),__saveField:async(k)=>{form=await store.saveField(form,k);},__set:(f,u)=>{form=f;UNITS=u;},__cell:(k)=>form[k],
   /* The whole record, and the snapshot isDirty() measures against. The round-trip
      sweep needs a key-by-key diff (FORM-RULES "Before you deliver" 6): isDirty()
      compares VALUES ONLY, so a hidden side-effect key strands the form dirty with

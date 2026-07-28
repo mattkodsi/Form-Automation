@@ -1,7 +1,7 @@
 # Package completion score — design
 
-_2026-07-28 · status: design approved by Matt (scope, ladder, summit, clean gate, step size) · spec
-awaiting review · re-audited against `main` @ `4ac56f8` after the overnight run of 23 commits_
+_2026-07-28 · status: **built** on branch `claude/pensive-pike-434395` · design approved by Matt (scope, ladder,
+summit, clean gate, step size) · re-audited against `main` @ `4ac56f8`_
 
 ## In one line
 

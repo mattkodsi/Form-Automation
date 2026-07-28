@@ -5,7 +5,7 @@
    shows it, and MIN_CHECKS catches a run that dies partway — a short count is
    a failure, not a pass. Adding checks? Raise MIN_CHECKS. */
 const { makeDb, memoryAdapter, isPerCycleKey, migrate, computeAnalysis, computeSalutation, CROSSWALK } = require('./db.js');
-const MIN_CHECKS = 119;
+const MIN_CHECKS = 143;
 let fails = 0, n = 0, verdict = null;
 const BAR = '═'.repeat(68);
 function fail(msg, err) {
@@ -37,7 +37,13 @@ function jsonAdapter() { let s = null; return { get: async () => (s ? JSON.parse
   ok('seeds one property', props.length, 1);
   ok('seeded name', props[0].name, 'Gates Manor Apartments');
   ok('seeded total units', props[0].total_units, 51);
-  ok('completeness 100%', Math.round(props[0].completeness*100), 100);
+  /* The ring answers the question generation asks — see score.js. Gates Manor
+     holds all ten of the keys the OLD ring counted and still cannot write four
+     of its six documents, so 100% was never true of it. This is the headline
+     regression: it read 100 before, and a green suite said nothing. */
+  ok('the seed does not claim to be complete', Math.round(props[0].completeness*100), 65);
+  ok('and the number says what it is counting', props[0].caption, '4 of 6 documents ready');
+  ok('which is the same count the row carries', [props[0].docs_ready, props[0].docs_total], [4, 6]);
   ok('no cycles field', props[0].cycles, undefined);
   const gates = db.getActive().pid; truthy('active pid set', gates); ok('no sid', db.getActive().sid, undefined);
 
@@ -327,6 +333,82 @@ function jsonAdapter() { let s = null; return { get: async () => (s ? JSON.parse
     if(/^(ns8|principals|partb|check)\./.test(k))return false;
     return true;});
   ok('every durable flat key has somewhere in the backend to land', homeless, []);
+
+  /* ─ 9 · THE PACKAGE SCORE ────────────────────────────────────────────────
+     score.js as a pure function: the gates, the cap, the step, and the two
+     invariants the whole design rests on. Driven directly rather than through
+     the data layer, because a score that is wrong is wrong before any record
+     reaches it — and because both data layers call this same function. */
+  console.log('\n─ 9 · THE PACKAGE SCORE ─');
+  const SC = require('./score.js');
+  const rd = m => k => (m[k] == null ? '' : String(m[k]));
+  const CTX = x => Object.assign({ programs: ['rcs'], units: [0], checklistLen: 17, hasStudy: true, hasLetterhead: true }, x || {});
+  const sc = (m, x) => SC.packageScore(rd(m), CTX(x));
+
+  /* One key at a time, in the order a package is actually filled in. */
+  const WALK = [['property.name', 'Colonial Village'], ['property.s8', 'OH10M000236'],
+    ['property.addr_street', '1 Oak'], ['property.addr_city', 'Dayton'], ['property.addr_state', 'OH'], ['property.addr_zip', '45402'],
+    ['owner.entity_name', 'Colonial Village LP'], ['units.0.num_units', '32'],
+    ['ca.name', 'J Smith'], ['ca.org', 'CGI'], ['poc.name', 'M Kodsi'], ['sig.name', 'D Pearson'], ['sig.title', 'VP'],
+    ['appr.name', 'A Ross'], ['appr.firm', 'Belfry'], ['property.fha', '043-11045'], ['tenant.sender_name', 'M Kodsi'],
+    ['rent_schedule.date_eff_custom', '10/01/2025'], ['units.0.proposed', '1147'],
+    ['ca.position', 'Analyst'], ['ca.addr_street', '9 Main'], ['poc.phone', '3135550142'], ['poc.email', 'm@x.com'],
+    ['appr.addr_street', '2 Elm'], ['appr.email', 'a@b.com'], ['appr.phone', '2165550100'],
+    ['owner.entity_type', 'Limited Partnership'], ['check.0', '1'], ['units.0.safmr_hud', '1800']];
+  const rec = {}; const steps = [];
+  WALK.forEach(([k, v]) => { rec[k] = v; steps.push(sc(rec)); });
+
+  ok('an empty record scores 0', sc({}).pct, 0);
+  ok('every score on the way up is a multiple of 5', steps.filter(x => x.pct % 5 !== 0).map(x => x.pct), []);
+  ok('and it never goes backwards', steps.filter((x, i) => i && x.pct < steps[i - 1].pct).map(x => x.pct), []);
+  ok('a full record reads 100', steps[steps.length - 1].pct, 100);
+  ok('with nothing left to enter', [steps[steps.length - 1].blockers.length, steps[steps.length - 1].caveats.length], [0, 0]);
+
+  /* The two invariants. Each boundary means exactly one thing, at every step. */
+  ok('70 or better ⟺ every document has its source',
+    steps.filter(x => (x.pct >= 70) !== (x.docsReady === x.docsTotal)).map(x => x.pct), []);
+  ok('100 ⟺ no blockers and no caveats',
+    steps.filter(x => (x.pct === 100) !== (!x.blockers.length && !x.caveats.length)).map(x => x.pct), []);
+  ok('under 30 ⟺ the profile is not finished',
+    steps.filter(x => (x.pct < 30) !== (x.profile.done < x.profile.total)).map(x => x.pct), []);
+
+  /* The gates cap: a gate is left only when it is finished. */
+  const profileOnly = {}; WALK.slice(0, 8).forEach(([k, v]) => profileOnly[k] = v);
+  /* Profile finished and nothing yet done in the next gate — the one state
+     that reads exactly 30. With a study already in hand it reads 35, because
+     the study is a gate-2 item: one of twelve, already met. */
+  ok('the profile gate tops out at exactly 30', sc(profileOnly, { hasStudy: false }).pct, 30);
+  ok('and a study in hand is already progress into the next gate', sc(profileOnly).pct, 35);
+  const short = Object.assign({}, rec); delete short['property.fha'];
+  ok('one blocker short is capped below 70', sc(short).pct, 65);
+  ok('and it is a blocker, named', sc(short).blockers.map(b => b.label), ['FHA number']);
+  const clean = Object.assign({}, rec); delete clean['ca.position'];
+  ok('one caveat short is capped below 100', sc(clean).pct, 95);
+
+  /* The study is document 04, not a nicety: a package with none cannot be
+     produced, and the ring says so rather than promising six documents. */
+  ok('no study caps the package below 70', sc(rec, { hasStudy: false }).pct, 65);
+  ok('and names it as the blocker', sc(rec, { hasStudy: false }).blockers.map(b => b.label), ['the completed RCS report (document 04)']);
+  ok('the letterhead is a caveat, not a blocker', sc(rec, { hasLetterhead: false }).pct, 95);
+
+  /* The old ring's ten keys, and nothing else. This is the reported defect. */
+  const TEN = {}; ['property.name', 'property.s8', 'property.addr_street', 'property.addr_city', 'property.addr_state',
+    'property.addr_zip', 'owner.entity_name', 'sig.name', 'ca.org', 'ca.name'].forEach(k => TEN[k] = 'x');
+  ok('the ten keys the old ring counted do not make a package', sc(TEN).pct < 70, true);
+  ok('and the rent schedule is one of the documents they leave unwritable',
+    sc(TEN).docs.filter(d => !d.ready).map(d => d.id).indexOf('schedule') >= 0, true);
+
+  /* Each program's package is its own list of documents. */
+  ok('an RCS package is six documents', SC.packageDocs({ programs: ['rcs'] }).map(d => d.id),
+    ['cover', 'owner', 'checklist', 'rcs', 'schedule', 'notice']);
+  ok('an OCAF package is its own four, plus the CA package',
+    SC.packageDocs({ programs: ['ocaf'] }).map(d => d.id), ['ocafws', 'exhibita', 'schedule', 'capkg']);
+  ok('a floating rate adds the debt-service determination',
+    SC.packageDocs({ programs: ['ocaf'], rateType: 'Floating rate' }).map(d => d.id).indexOf('dsevid') >= 0, true);
+  ok('a UAF package offers the decrease notice only where there is a decrease',
+    [SC.packageDocs({ programs: ['uaf'], uafDec: 0 }).map(d => d.id),
+     SC.packageDocs({ programs: ['uaf'], uafDec: 2 }).map(d => d.id)],
+    [['uafcert', 'schedule'], ['uafcert', 'schedule', 'uanotice', 'tcert']]);
 })();
 
 finish();

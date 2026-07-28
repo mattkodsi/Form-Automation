@@ -264,9 +264,46 @@ async function makeDb(adapter, opts) {
   }
 
   /* ---- property registry ------------------------------------------------ */
-  const REQUIRED_DURABLE = ['property.name', 'property.s8', 'property.addr_street', 'property.addr_city', 'property.addr_state', 'property.addr_zip', 'owner.entity_name', 'sig.name', 'ca.org', 'ca.name'];
   const dv = (p, k) => (p.durable[k] && p.durable[k].value !== '' ? p.durable[k].value : '');
-  const completenessOf = p => REQUIRED_DURABLE.filter(k => dv(p, k) !== '').length / REQUIRED_DURABLE.length;
+  /* The ring is the DOMINANT PACKAGE's score — see score.js. It used to be ten
+     durable keys, counted, which is why a property could read 100% with the
+     draft rent schedule and the tenant notice unbuildable: those ten were never
+     reconciled with what a document needs. The form, the menu and the launcher
+     now all read one computation. */
+  const SCORE = (typeof window !== 'undefined' && window.RCSScore) ? window.RCSScore
+    : (typeof require !== 'undefined' ? require('./score.js') : null);
+  /* Reading the dominant cycle, falling back to the template. A cycle that HOLDS
+     a key answers for it even when the value is blank — the package is what was
+     frozen, not the template underneath it. */
+  function scoreRead(pid) {
+    const domId = dominantCycleId(pid);
+    const cells = domId && D.cycles[domId] ? D.cycles[domId].cells : null;
+    /* With no package yet, the template IS what would be scored — and the
+       template is BOTH buckets. Reading p.durable alone left the appraiser, the
+       rents and every other per-cycle key invisible, so the menu scored a
+       property lower than the form it opens. */
+    const base = bucketsOf(pid);
+    return k => {
+      if (cells && Object.prototype.hasOwnProperty.call(cells, k)) { const v = cells[k].value; return v == null ? '' : String(v); }
+      const d = base[k]; const v = d ? d.value : '';
+      return v == null ? '' : String(v);
+    };
+  }
+  function scoreOfPid(pid) {
+    const p = D.props[pid]; if (!p || !SCORE) return { pct: 0, gate: 'profile', docsReady: 0, docsTotal: 0 };
+    const domId = dominantCycleId(pid); const cy = domId ? D.cycles[domId] : null;
+    const u = new Set(); const scan = o => { for (const k in o) { const m = k.match(/^units\.(\d+)\./); if (m) u.add(+m[1]); } };
+    scan(bucketsOf(pid)); if (cy) scan(cy.cells);
+    const progs = cy ? (Array.isArray(cy.programs) ? cy.programs : String(cy.programs || '').split(',').filter(Boolean)) : [];
+    const held = !!(cy && cy.rcs_doc && Object.keys(cy.rcs_doc).length);
+    const read = scoreRead(pid);
+    return SCORE.packageScore(read, {
+      programs: progs.length ? progs : ['rcs'], units: [...u].sort((a, b) => a - b), checklistLen: 17,
+      hasLetterhead: dv(p, 'assets.letterhead_name') !== '', hasStudy: held, hasCaPkg: held,
+      rateType: read('ocaf.rate_type'),
+    });
+  }
+  const completenessOf = p => scoreOfPid(p.id).pct / 100;
   function unitCountOf(p) {
     const idx = new Set(); Object.keys(p.durable).forEach(k => { const m = k.match(/^units\.(\d+)\.num_units$/); if (m && p.durable[k].value !== '') idx.add(m[1]); });
     let total = 0; idx.forEach(i => total += num(p.durable['units.' + i + '.num_units'].value)); return { types: idx.size, units: total };
@@ -376,12 +413,14 @@ async function makeDb(adapter, opts) {
 
   function listProperties() {
     return Object.values(D.props).map(p => {
-      const uc = unitCountOfPid(p.id);
+      const uc = unitCountOfPid(p.id); const _s = scoreOfPid(p.id);
       return {
         id: p.id, name: dv(p, 'property.name') || '(unnamed property)', fha: dv(p, 'property.s8') || dv(p, 'property.fha') || '—',
         city_state: (dv(p, 'property.addr_city') || '') + (dv(p, 'property.addr_state') ? ', ' + dv(p, 'property.addr_state') : ''),
         entity: dv(p, 'owner.entity_name') || '', alias: dv(p, 'tenant.property_alias') || '', unit_types: uc.types, total_units: uc.units,
-        completeness: completenessOf(p), created_at: p.created_at, updated_at: p.updated_at || p.created_at,
+        completeness: _s.pct / 100, score: _s.pct, caption: SCORE ? SCORE.scoreCaption(_s) : "",
+        docs_ready: _s.docsReady, docs_total: _s.docsTotal,
+        created_at: p.created_at, updated_at: p.updated_at || p.created_at,
         has_letterhead: dv(p, 'assets.letterhead_name') !== '',
       };
     }).sort((a, b) => a.name.localeCompare(b.name));
