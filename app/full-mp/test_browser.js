@@ -35,7 +35,7 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=194;   // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
+const MIN_CHECKS=198;   // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
                        // pristine (three seeds, two checks each). 2026-07-27: the unit-type cell
                        // lost a divider with the designation, so the pair of divider checks
                        // became one. Lowered on purpose.
@@ -1451,6 +1451,59 @@ const FULL=process.argv.includes('--full');
         !!dots.row&&dots.row.text==='RS'&&!!dots.cell&&dots.cell.text==='RS');
       T('a narrow unit-mix cell puts one back',!!dots.row&&/·/.test(dots.row.before));
       T('and a full-width cell does not',!!dots.cell&&dots.cell.before==='none');
+    }
+
+    /* ── no cell keeps quiet about where its value came from ────────────────
+       The general rule, swept rather than spot-checked: fill from BOTH
+       documents, then ask of every key whether a badge computes, and if it does
+       whether one is actually on screen. rcsTag was computed for six cells and
+       rendered for one; rsOf did not answer at all for the bedroom count, the
+       bath count or the designation, so nothing could be computed for the three
+       cells most obviously read off Part A. */
+    console.log('\n── every cell says where its value came from ─────────');
+    await c.reload();
+    await c.eval(HELPERS);
+    await c.eval('await window.__t.__openForm('+JSON.stringify(pid)+');return 1');
+    await sleep(300);
+    {
+      const _r=await c.eval('return await window.__t.ocrMapPages('+JSON.stringify(JSON.parse(fs.readFileSync(path.join(__dirname,'fixture_rs_scan.json'),'utf8')))+')');
+      await c.eval('window.__t.__setRsParsed('+JSON.stringify(_r)+');window.__t.__rsFill();return 1');
+      const study={scalars:{'appr.firm':'Belfry Valuation, LLC','appr.name':'Aaron M. Zabel',
+        'appr.email':'azabel@belfryvaluation.com','appr.phone':'7085002380','_poc_name':'Ms. Claire Beatty'},
+        units:[{type:'2 Bedroom',count:32,rent:'',ua:161,proposed:1850,safmr:2085},
+               {type:'3 Bedroom',count:33,rent:'',ua:171,proposed:2400,safmr:2400}],firm:'belfry'};
+      await c.eval('window.__t.__setRcsParsed('+JSON.stringify(study)+');window.__t.__rcsFill();window.__t.__renderBody();return 1');
+      await sleep(600);
+      const sweep=await c.eval(`
+        const f=window.__t.__form();const miss=[],shown=[];
+        Object.keys(f).forEach(k=>{
+          let t='';try{t=window.__t.__srcTags(k);}catch(e){}
+          if(!t)return;
+          /* Part B is ticks, fuel letters and write-ins: provenance is carried
+             by the box's own colour, and there is no room beside a 16px tick for
+             a word. units.N.ua_exec has no cell of its own — the allowance cell
+             is keyed to its source and prints a fuller note than a badge
+             ("exec $31 · RCS $34"). Both are deliberate, and named so that a
+             cell which QUIETLY loses its badge still fails this. */
+          if(k.indexOf('partb.')===0||/\\.ua_exec$/.test(k))return;
+          let el=document.querySelector('[data-box="'+k+'"]');
+          if(!el){const g=k.replace(/_(street|city|state|zip)$/,'');el=document.querySelector('[data-box="'+g+'"]');}
+          if(!el){const tr=document.querySelector('[data-trigfor="'+k+'"]');el=tr?(tr.closest('[data-box]')||tr.parentElement):null;}
+          if(!el){miss.push(k+' (no cell)');return;}
+          (el.querySelector('.srctag')?shown:miss).push(k);});
+        return {shown:shown.length,missing:miss.sort()};`);
+      T('the two documents between them badge a good many cells',sweep.shown>=15);
+      eq('and every badge that computes is on screen',sweep.missing,[]);
+
+      /* The three Matt named. They had no badge because rsOf never answered for
+         them, and no place to draw one because a dropdown trigger had none. */
+      const brba=await c.eval(`
+        const g=k=>{const t=document.querySelector('[data-trigfor="'+k+'"]');
+          return t?{tag:!!t.querySelector('.srctag'),
+            clipped:(()=>{const l=t.querySelector('.ualab');return !!l&&l.scrollWidth>l.clientWidth+1;})()}:null;};
+        return {br:g('units.0.br'),ba:g('units.0.ba'),label:g('units.0.label')};`);
+      T('the bedroom cell says the schedule gave it',!!brba.br&&brba.br.tag);
+      T('and the value beside it is not squeezed',!!brba.br&&!brba.br.clipped);
     }
 
     console.log('\n── the console stayed quiet ───────────────────────────');

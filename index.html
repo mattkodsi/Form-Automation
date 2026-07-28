@@ -168,6 +168,13 @@ body.scrolled #ccbar{transform:translateY(0);opacity:1}
    chrome AND its figure. The figure wins: it is the thing being read. */
 @media (max-width:1340px){
   .ucells .rbox .pocpick .uatrigger,.pdrow .rbox .pocpick .uatrigger{padding:0 4px}
+  /* The bedroom/bath cells now carry a source badge too, and at these widths
+     there is not room for it AND the padding either side of the ✕. The value is
+     what is being read; the chrome gives way first. */
+  .ucells .rbox.brba .uadrop.cs .uatrigger,.pdrow .rbox.brba .uadrop.cs .uatrigger{padding:0 3px;gap:2px}
+  .ucells .rbox.brba .csclear,.pdrow .rbox.brba .csclear{padding:0 2px}
+  .ucells .rbox.brba .srctag,.pdrow .rbox.brba .srctag{margin-left:3px}
+  .ucells .rbox.brba .cvx,.pdrow .rbox.brba .cvx{margin-left:2px}
   .ucells .rbox input,.pdrow .rbox input{min-width:3ch;padding-left:6px;padding-right:2px}
   .ucells .rbox.money .cur,.pdrow .rbox.money .cur{padding-left:5px}
   .ucells .rbox .srctag,.pdrow .rbox .srctag{margin-left:3px}
@@ -1981,7 +1988,7 @@ function csDrop(key,options,ph,cls,clearable,tint,claim,subs){const cur=get(key)
      and all nine have always cleared from the keyboard with Backspace, so the
      mouse was the odd one out. One pattern: if it holds a value, it can be
      cleared where you are looking at it. */
-  const clr=has?'<span class="csclear" data-csclear="'+key+'" title="Clear">✕</span>':'';return '<div class="uadrop cs '+(cls||'')+(has?' clearable':'')+'"><div class="uatrigger" tabindex="0" data-trigfor="'+key+'"'+(tint?' style="'+tint+'"':'')+'><span class="ualab">'+esc(lab)+'</span>'+clr+'<span class="cvx">▾</span></div><div class="uamenu">'+menu+'</div></div>';}
+  const clr=has?'<span class="csclear" data-csclear="'+key+'" title="Clear">✕</span>':'';return '<div class="uadrop cs '+(cls||'')+(has?' clearable':'')+'"><div class="uatrigger" tabindex="0" data-trigfor="'+key+'"'+(tint?' style="'+tint+'"':'')+'><span class="ualab">'+esc(lab)+'</span>'+srcTags(key)+clr+'<span class="cvx">▾</span></div><div class="uamenu">'+menu+'</div></div>';}
 function dateEffResolved(){const src=get('rent_schedule.date_eff_source')||(get('rent_schedule.date_eff_rs')?'rs':'custom');return src==='custom'?(get('rent_schedule.date_eff_custom')||get('rent_schedule.date_rents_effective')):get('rent_schedule.date_eff_rs');}
 function dateEffCell(){const rs=get('rent_schedule.date_eff_rs');const src=get('rent_schedule.date_eff_source')||(rs?'rs':'custom');
   /* Whichever key answers, it reaches the box in the form the reader types into
@@ -2020,7 +2027,7 @@ function pocCell(){const k='poc.name';const contacts=(mpdb?mpdb.listContacts():[
         :'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">RCS report \u00b7 not available</span></div>');
   const menu='<div class="uamenu">'+navRow+contacts.map(ct=>'<div class="uaopt" data-pocopt="'+esc(ct.id)+'">'+esc(ct.name)+(ct.email?'<span class="uasub">'+esc(ct.email)+'</span>':'')+'</div>').join('')+'</div>';
   const pick='<div class="uadrop pocpick"><div class="uatrigger" tabindex="0" title="Pick a saved contact"><span class="cvx">&#9662;</span></div>'+menu+'</div>';
-  return `<div class="field"><div class="flabel">Point of contact</div><div class="fbox poccell" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><input class="pocname-in" data-k="poc.name" value="${esc(cur)}" placeholder="Type a name, or pick a saved contact" autocomplete="off">${pick}</div>${pocNote()}</div>`;}
+  return `<div class="field"><div class="flabel">Point of contact</div><div class="fbox poccell" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><input class="pocname-in" data-k="poc.name" value="${esc(cur)}" placeholder="Type a name, or pick a saved contact" autocomplete="off">${srcTags('poc.name')}${pick}</div>${pocNote()}</div>`;}
 /* Saved-contact pickers (appraiser / CA) — same mechanics as the
    PM point-of-contact cell: picking a saved contact fills its whole section as
    a pending change (Enter commits every filled cell, Esc restores what was
@@ -2186,7 +2193,7 @@ function sigTitleCell(f){const c=cellColors('sig.title');const pk='sig.principal
      without this it repeats the box and tells the reader nothing. */
   let dd=csDrop(pk,_opts,'Select\u2026','',true,'',_pcl?_rp:null,sigPrincipalSubs());
   dd=dd.replace('<div class="uamenu">','<div class="uamenu">'+dim);
-  return `<div class="fpair sigpair"><div class="field"><div class="flabel">${f.label}</div><div class="fbox" data-box="sig.title" style="background:${c[1]};border-left-color:${c[0]}"><input type="text" data-k="sig.title" value="${esc(get('sig.title'))}" autocomplete="off">${srcPick('sig.title',SRCPICK_ROWS['sig.title']())}</div>${ovNote('sig.title')}</div><div class="ofthe">of the</div><div class="field"><div class="flabel">Principal</div><div class="fbox seldrop" data-box="${pk}" style="background:${pc[1]};border-left-color:${pc[0]}">${dd}</div>${ovNote(pk)}</div></div>`;}
+  return `<div class="fpair sigpair"><div class="field"><div class="flabel">${f.label}</div><div class="fbox" data-box="sig.title" style="background:${c[1]};border-left-color:${c[0]}"><input type="text" data-k="sig.title" value="${esc(get('sig.title'))}" autocomplete="off">${srcTags('sig.title')}${srcPick('sig.title',SRCPICK_ROWS['sig.title']())}</div>${ovNote('sig.title')}</div><div class="ofthe">of the</div><div class="field"><div class="flabel">Principal</div><div class="fbox seldrop" data-box="${pk}" style="background:${pc[1]};border-left-color:${pc[0]}">${dd}</div>${ovNote(pk)}</div></div>`;}
 function fieldCell(f){if(f.type==='sigtitle')return sigTitleCell(f);if(f.type==='pair')return '<div class="fpair">'+f.items.map(fieldCell).join('')+'</div>';if(f.type==='addr')return addrCell();if(f.type==='caaddr')return caAddrCell();if(f.type==='appraddr')return apprAddrCell();if(f.type==='mgmtaddr')return mgmtCell();if(f.type==='select')return selectCell(f);if(f.k==='poc.name')return pocCell();if(DIR_PICK[f.k])return dirCell(f);
   const s=form[f.k]||{value:'',source:'new'};
   const c=f.prefix?groupColors([f.prefix,f.k]):cellColors(f.k);
@@ -2573,6 +2580,12 @@ function rsOf(k){
   m=k.match(/^units\.(\d+)\.num_units$/);        if(m)return rsUnit(+m[1],'count');
   m=k.match(/^nonrev\.(\d+)\.(rent|num_units|use)$/); if(m)return rsFamVal('nonrev',+m[1],m[2]==='num_units'?'count':m[2]);
   m=k.match(/^ns8\.(\d+)\.(avg_rent|num_units)$/);    if(m)return rsFamVal('ns8',+m[1],m[2]==='avg_rent'?'rent':'count');
+  /* rsOffers and rsBrBa have always known these; rsOf did not ask them, so no
+     badge could be computed for the bedroom count, the bath count or the
+     designation — the three cells most obviously read off Part A. */
+  m=k.match(/^units\.(\d+)\.(br|ba|label)$/);         if(m)return rsBrBa(k);
+  m=k.match(/^units\.(\d+)\.ua_exec$/);               if(m)return rsUnit(+m[1],'ua');
+  m=k.match(/^(nonrev|ns8)\.(\d+)\.(br|ba)$/);        if(m)return rsFamVal(m[1],+m[2],m[3]);
   m=k.match(/^principals\.(\d+)\.(name|title)$/);       if(m)return rsPrin(+m[1],m[2]);
   if(k.indexOf('partb.')===0){const P=_rsUpload&&_rsUpload.parsed&&_rsUpload.parsed.partb;const v=P?P[k]:null;return (v==null||v==='')?null:String(v);}
   return rsVal(k);}
@@ -5668,7 +5681,7 @@ __rcsFill:()=>rcsFillFromParsed(),/* The same door for the rent schedule. Fillin
   /* The whole ladder, on real bytes: which tier answered, and with what. The
      only way to ask that question of a document without a Supabase session. */
   __parseRsPdf:(by,onStep)=>parseRsPdf(by,onStep),
-  __rsFill:()=>rsFillFromParsed(),__UNITS:()=>UNITS.slice(),__moneySrcRows:(k)=>moneySrcRows(k),__rcsChecks:()=>rcsChecks(),__rcsTag:(k)=>rcsTag(k),__rcsFillKeys:()=>rcsFillKeys(),__rcsMatch:(i)=>rcsMatch(i),__rcsOf:(k)=>rcsOf(k),
+  __rsFill:()=>rsFillFromParsed(),__UNITS:()=>UNITS.slice(),__moneySrcRows:(k)=>moneySrcRows(k),__rcsChecks:()=>rcsChecks(),__rcsTag:(k)=>rcsTag(k),__rsTag:(k)=>rsTag(k),__srcTags:(k)=>srcTags(k),__rcsFillKeys:()=>rcsFillKeys(),__rcsMatch:(i)=>rcsMatch(i),__rcsOf:(k)=>rcsOf(k),
   /* The undo run. __editCell is the text box's input handler in miniature —
      push the cell, then write it the way that handler does — so a suite can
      build a run of edits without synthesising DOM events. */

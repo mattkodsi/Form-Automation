@@ -168,6 +168,13 @@ body.scrolled #ccbar{transform:translateY(0);opacity:1}
    chrome AND its figure. The figure wins: it is the thing being read. */
 @media (max-width:1340px){
   .ucells .rbox .pocpick .uatrigger,.pdrow .rbox .pocpick .uatrigger{padding:0 4px}
+  /* The bedroom/bath cells now carry a source badge too, and at these widths
+     there is not room for it AND the padding either side of the ✕. The value is
+     what is being read; the chrome gives way first. */
+  .ucells .rbox.brba .uadrop.cs .uatrigger,.pdrow .rbox.brba .uadrop.cs .uatrigger{padding:0 3px;gap:2px}
+  .ucells .rbox.brba .csclear,.pdrow .rbox.brba .csclear{padding:0 2px}
+  .ucells .rbox.brba .srctag,.pdrow .rbox.brba .srctag{margin-left:3px}
+  .ucells .rbox.brba .cvx,.pdrow .rbox.brba .cvx{margin-left:2px}
   .ucells .rbox input,.pdrow .rbox input{min-width:3ch;padding-left:6px;padding-right:2px}
   .ucells .rbox.money .cur,.pdrow .rbox.money .cur{padding-left:5px}
   .ucells .rbox .srctag,.pdrow .rbox .srctag{margin-left:3px}
