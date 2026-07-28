@@ -105,8 +105,49 @@ const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').rep
 const setStatus=t=>{el('status').textContent=t||'';};
 const srcOf=k=>form[k]?form[k].source:'new';
 const markCycle=k=>{if(form[k]&&form[k].source==='new')form[k].source='this-cycle';};
-function saveFailed(e){setStatus('\u26a0 Save failed \u2014 this change is NOT in the database yet. Check your connection and try again. ('+((e&&e.message)||e)+')');}
-function saveFailedModal(e){dialogConfirm('Save failed','The change did not reach the database \u2014 check your connection and try again.<div class="sub" style="margin-top:7px;color:#8791a5">'+esc((e&&e.message)||e)+'</div>','OK',false,function(){});}
+function saveFailed(e){if(dupNameModal(e))return;setStatus('\u26a0 Save failed \u2014 this change is NOT in the database yet. Check your connection and try again. ('+((e&&e.message)||e)+')');}
+function saveFailedModal(e){if(dupNameModal(e))return;dialogConfirm('Save failed','The change did not reach the database \u2014 check your connection and try again.<div class="sub" style="margin-top:7px;color:#8791a5">'+esc((e&&e.message)||e)+'</div>','OK',false,function(){});}
+/* A name already taken is not a failed save, and must not be reported as one.
+
+   Every save path in this file ends at saveFailed() or saveFailedModal(), so
+   the interception goes there rather than at eight call sites — and a caller
+   that only knows how to say "check your connection" would otherwise say it
+   about a refusal that has nothing to do with the connection.
+
+   Stopping the save is only half the job. The name being typed is usually the
+   right one and the OTHER property is usually the stale twin, so the way out —
+   give this one a name of its own — is in the dialog, with a suggestion that is
+   already free. */
+function freeName(base){
+  const taken=(mpdb?(mpdb.listProperties()||[]):[]).map(p=>String(p.name||'').trim().toLowerCase());
+  const b=String(base||'').trim();
+  for(let i=2;i<60;i++){const c=b+' '+i;if(taken.indexOf(c.toLowerCase())<0)return c;}
+  return b;}
+function dupNameModal(e){
+  if(!(e&&e.code==='DUP_PROPERTY_NAME'))return false;
+  const other=(mpdb?(mpdb.listProperties()||[]):[]).find(p=>p.id===e.pid);
+  const nm=e.dupName||(other&&other.name)||'';
+  modal('<div class="dlg-t">That name is already taken</div>'
+    +'<div class="dlg-sub">Another property is already called \u201c'+esc(nm)+'\u201d. Two properties under one name is how the record came to hold three of some of them \u2014 so this one needs a name of its own.</div>'
+    +'<div class="dlg-field"><label>Call this property</label><input id="dlgIn" autocomplete="off" value="'+esc(freeName(nm))+'"></div>'
+    +'<div class="dlg-row"><button class="btn" id="dlgOther">Open the other one</button><span class="dlg-sp"></span><button class="btn p" id="dlgOk">Use this name</button></div>');
+  const inp=el('dlgIn');if(inp){inp.focus();if(inp.select)inp.select();}
+  _dlgEnter=()=>{const b=el('dlgOk');if(b)b.click();};
+  el('dlgOther').onclick=()=>{closeModal();if(other)openLauncher(other.id);};
+  el('dlgOk').onclick=async()=>{
+    const v=((el('dlgIn')||{}).value||'').trim();if(!v)return;
+    closeModal();
+    const onForm=el('viewForm')&&el('viewForm').style&&el('viewForm').style.display!=='none';
+    if(onForm){
+      /* Put the new name in the cell rather than saving behind his back: the
+         press that failed was a save, and the next one should be his. */
+      form=store.editForm(form,'property.name',v);renderFormHeader();renderBody();
+      setStatus('Named \u201c'+v+'\u201d \u2014 save again to commit it.');
+    }else{
+      try{await mpdb.renameProperty(activePid,v);renderLauncher();setStatus('Renamed to \u201c'+v+'\u201d.');}
+      catch(err){saveFailed(err);}
+    }};
+  return true;}
 let DBSNAP={};let FORMSNAP=null; // isDirty compares against THIS, a snapshot taken after boot-time defaults (e.g. the owner's checklist) are applied — not the raw db read, so auto-applied defaults never masquerade as unsaved edits
 async function refreshSnap(){DBSNAP=await bridge.getDb();}
 /* A cell saved EMPTY is still on file. core.js can only call that "new", because

@@ -106,7 +106,7 @@ function makeCosmosDb() {
   const assertNameFree = (name, skipPid) => {
     const clash = propByName(name, skipPid); if (!clash) return;
     const e = new Error('A property named \u201c' + String(name).trim() + '\u201d already exists.');
-    e.code = 'DUP_PROPERTY_NAME'; e.pid = clash.id; throw e;
+    e.code = 'DUP_PROPERTY_NAME'; e.pid = clash.id; e.dupName = String(name).trim(); throw e;
   };
   const completenessOf = p => REQUIRED_DURABLE.filter(k => dv(p, k) !== '').length / REQUIRED_DURABLE.length;
   function unitCountOf(p) {
@@ -218,6 +218,7 @@ function makeCosmosDb() {
       },
       renameProperty(pid, name) {
         const p = D.props[pid]; if (!p) return Promise.resolve();
+        assertNameFree(name, pid);
         p.durable['property.name'] = { value: String(name), source: 'database', saved_at: today() }; touch(pid);
         return pushSoon(pid);
       },
@@ -229,6 +230,11 @@ function makeCosmosDb() {
       loadForm(pid) { return loadFormCells(pid); },
       saveForm(pid, form) {
         const p = D.props[pid]; if (!p) throw new Error('no such property ' + pid);
+  /* A save that carries property.name IS a rename — which is how the twins got
+     in: a fresh property, an executed schedule uploaded, its parse applied, and
+     the name it printed saved over whatever the property was called before.
+     skipPid so a property saving its OWN name is not in its own way. */
+        if (form && form['property.name']) assertNameFree(form['property.name'].value, pid);
         for (const k in form) place(p, k, (form[k] && form[k].value != null ? form[k].value : ''), today());
         touch(pid); return pushSoon(pid);
       },
@@ -248,6 +254,7 @@ function makeCosmosDb() {
       getFlat(pid) { return merged(pid); },
       saveFlat(pid, map) {
         const p = D.props[pid]; if (!p) throw new Error('no property ' + pid);
+        if (map && map['property.name']) assertNameFree(map['property.name'].value, pid);
         for (const k in map) place(p, k, (map[k] && map[k].value != null ? map[k].value : ''), (map[k] && map[k].saved_at) ? map[k].saved_at : today());
         touch(pid); return pushSoon(pid);
       },

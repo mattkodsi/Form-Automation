@@ -89,6 +89,32 @@ create table public.property (
 );
 create index property_owner_idx on public.property(owner_id);
 
+-- One owner, one property of a given name. The app enforces this in every data
+-- layer (assertNameFree in db.js / db.supabase.js / db.cosmos.js), but the app
+-- is not the only thing that can write here: a second client, a direct insert,
+-- or the next adapter would all be free to make a twin. The live record grew
+-- three "Sample Property"s and three "Sample Property"s while the only check lived
+-- in a dialog, so the constraint belongs where the rows do.
+--
+-- NOT YET APPLIED TO THE LIVE DATABASE (project plgegtosqwehriqecaui): creating
+-- it fails while those duplicate rows exist. Give the twins distinct names
+-- first — renaming them in the app is enough, and no row need be deleted — then
+-- run this statement once. A fresh database gets it from this file.
+--
+-- Which of a set of twins is the real one:
+--   select p.id, p.name, p.created_at, p.updated_at,
+--          (select count(*) from public.unit_type u where u.property_id = p.id) as unit_rows,
+--          (select count(*) from public.cycle    c where c.property_id = p.id) as packages
+--     from public.property p
+--    where lower(trim(p.name)) in (
+--          select lower(trim(name)) from public.property
+--           where name is not null and trim(name) <> ''
+--           group by owner_id, lower(trim(name)) having count(*) > 1)
+--    order by lower(trim(p.name)), unit_rows desc, p.updated_at desc;
+create unique index property_owner_name_uniq
+  on public.property (owner_id, lower(trim(name)))
+  where name is not null and trim(name) <> '';
+
 -- --------------------------------------------------------------- unit_type --
 -- Section 8 revenue unit rows (flat keys units.{i}.*). flat_index mirrors the
 -- UI's array index. *_rcs / *_source / *_reviewed columns support the parsed-
