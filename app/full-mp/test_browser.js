@@ -35,7 +35,7 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=209;   // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
+const MIN_CHECKS=219;   // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
                        // pristine (three seeds, two checks each). 2026-07-27: the unit-type cell
                        // lost a divider with the designation, so the pair of divider checks
                        // became one. Lowered on purpose.
@@ -398,6 +398,54 @@ const FULL=process.argv.includes('--full');
          j&&j.units?[j.scalars['rs_date'],j.units.length,j.units[0].rent,j.units[1].rent]:null,
          ['2025-10-01',2,1147,1407]);
     }
+
+    /* ── the package score, on the real bundle ──────────────────────────────
+       The defect this replaced was two computations of one number: the ring in
+       the data layer counting ten durable keys, the documents in app.js asking
+       DOC_REQS. A property read 100% with the draft rent schedule and the tenant
+       notice unbuildable. So the checks that matter are the ones a pure unit
+       test cannot make — that the SAME number reaches the menu row and the form,
+       and that the card the reader looks at is drawn from it. */
+    console.log('\n── one score, three readers ───────────────────────────');
+    const scoreNow=async()=>c.eval('const s=window.__t.packageScore();'
+      +'const row=(window.__t.__listProps()||[]).find(p=>p.id==='+JSON.stringify(pid)+')||{};'
+      +'return {form:s.pct,row:row.score,caption:row.caption,ready:s.docsReady,total:s.docsTotal,'
+      +'blockers:s.blockers.map(b=>b.label),caveats:s.caveats.length};');
+    /* Like with like: the menu row IS the dominant package, so the form has to
+       be that package for the two to be answering one question. Opened on the
+       property template instead, they legitimately differ — the template is not
+       a package and has no documents to be ready. */
+    const domCid=await c.eval('const cs=window.__t.__cycles()||[];const d=cs.find(x=>x.dominant)||cs[0];return d?d.id:null;');
+    if(domCid){await c.eval('await window.__t.__openCycleForm('+JSON.stringify(pid)+','+JSON.stringify(domCid)+');return 1');
+      await sleep(450);await c.eval(HELPERS);}
+    const S0=await scoreNow();
+    eq('the package and its menu row report the same number',[S0.form,S0.row],[S0.form,S0.form]);
+    eq('and the number is a multiple of 5',S0.form%5,0);
+    eq('the caption counts documents, not fields',S0.caption,S0.ready+' of '+S0.total+' documents ready');
+    /* The card is the surface the reader actually meets. Drawn from the score
+       or drawn from anything else is the whole distinction — pkgCard used to
+       hardcode a tick for five of its six rows. */
+    const card=await c.eval('return window.__t.__pkgCard();');
+    eq('the card draws one row per document in the package',
+       (card.match(/<i class="dtick">/g)||[]).length,S0.total);
+    eq('and ticks exactly the ones that are ready',
+       (card.match(/<i class="dtick">✓<\/i>/g)||[]).length,S0.ready);
+    eq('every gap on the card is one press from the cell that fixes it',
+       S0.blockers.length+S0.caveats.length>0?/data-goto="/.test(card):true,true);
+
+    /* Crossing 70. The FHA number is on no document but the rent schedule, and
+       was on none of the ten keys the old ring counted — which is exactly why
+       the schedule could not be written on a property reading 100%. */
+    const before=await scoreNow();
+    await c.eval('window.__t.__edit("property.fha","");window.__t.__renderBody();return 1');
+    const without=await scoreNow();
+    eq('clearing the FHA number costs the package a document',without.ready,before.ready-1);
+    eq('and names it as a blocker',without.blockers.indexOf('FHA number')>=0,true);
+    eq('so the score cannot sit at 70 or better',without.form<70,true);
+    await c.eval('window.__t.__edit("property.fha","043-11045");window.__t.__renderBody();return 1');
+    const after=await scoreNow();
+    eq('putting it back restores the count',[after.ready,after.blockers.indexOf('FHA number')],[before.ready,-1]);
+    await openForm();   // the rest of the suite runs on the property form, not the package
 
     /* ─────────────────────────────────────────────────────────────────────
        1. coupledKeys — a cell answers the same whichever identity you hand it.

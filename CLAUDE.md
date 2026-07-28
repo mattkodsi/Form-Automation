@@ -19,7 +19,7 @@ renewal package as review-ready drafts. See `RCS Renewal Automation - Project Pl
 **the deliverable** Matt double-clicks — a complete standalone browser app.
 
 It is **built, not hand-written.** `app/full-mp/build.sh` concatenates the modular
-source — `shell.head.html` + `lib/pdf-lib.min.js` + `core.js` + `db.js` + `app.js`
+source — `shell.head.html` + `lib/pdf-lib.min.js` + `core.js` + `score.js` + `db.js` + `app.js`
 + `gen.js` + `templates.js` + `shell.tail.html` — into that one HTML. So:
 
 - the **HTML is the bundle** (what runs in the browser);
@@ -100,7 +100,16 @@ five files below gives the whole picture; read them in this order:
    `__localDb()`.** It is held to API PARITY with `db.supabase.js` (cycles: `listCycles`/`createCycle`/
    `saveFlatCycle`/…; directory: `listDir`/`addDir`/…), because a stand-in that answers differently from
    the real backend makes every test that uses it a fiction. Change one, change both.
-5. **`gen.js`** (~5k tok) — client-side **PDF generation** (`window.RCSGen`), pure record→bytes via
+5. **`score.js`** (~2k tok) — **how far along a package is, and what is holding it**
+   (`window.RCSScore`): the per-document requirement tables (`DOC_REQS`), the caveats, the list of
+   documents each program's package contains (`packageDocs`), and `packageScore(read, ctx)` — a
+   three-gate ladder in steps of 5 where **30** means the record is real, **70** that every document
+   in the package has its source, and **100** that nothing is left to enter. Pure over a
+   `read(key)`, because the form, the menu card and the launcher all read it: `app.js` passes its own
+   `get`, the two data layers pass a read over the dominant cycle. It replaced `completenessOf`,
+   which counted ten durable keys and so reported 100% on a property whose draft rent schedule and
+   tenant notice could not be written.
+6. **`gen.js`** (~5k tok) — client-side **PDF generation** (`window.RCSGen`), pure record→bytes via
    `window.PDFLib` (pdf-lib): `coverLetter`, `ownerLetter`, `fillChecklist`, `fillRentSchedule`,
    `tenantNotice` (+ `resolve`, `nmv` number-clean, `_toISO` date-normalize). Fills AcroForm fields on the
    base64 templates in `templates.js`. **The remaining "package generation" work lives here.**
@@ -147,7 +156,7 @@ a new suite needs registering (`deliver.sh` calls it).
 - **`app/full-mp/test_gen.js`** — record → PDF bytes: what each generated document actually prints,
   and what it refuses to print rather than print wrong; 33 checks.
 
-**852 checks across six suites** (114 · 144 · 85 · 33 · 230 · 165) as of 2026-07-28. These numbers go
+**864 checks across six suites** (138 · 144 · 85 · 33 · 245 · 219) as of 2026-07-28. These numbers go
 stale the moment a suite grows — `MIN_CHECKS` in each file is the binding floor; this list is a map.
 
 ⚠️ **Don't pipe a suite through `| tail`.** A pipeline's exit status is the LAST command's, so node's

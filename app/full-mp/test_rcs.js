@@ -46,7 +46,7 @@ const _d=__dirname;
 global.window.PDFLib=global.window.PDFLib||globalThis.PDFLib;
 const _b=path.join(os.tmpdir(),'rcs_parse_test.js');
 fs.writeFileSync(_b,'function ocrHalf(b,p,skip){(globalThis.__HALF=globalThis.__HALF||[]).push({p:p,skip:(skip||[]).slice()});return Promise.resolve(null);}\n'
-  +['templates.js','core.js','db.js','app.js','rcs.js'].map(x=>fs.readFileSync(path.join(_d,x),'utf8')).join('\n')
+  +['templates.js','core.js','score.js','db.js','app.js','rcs.js'].map(x=>fs.readFileSync(path.join(_d,x),'utf8')).join('\n')
   +'\nif(typeof module!=="undefined")Object.assign(module.exports,{__rsTextPageAt:rsTextPageAt,__rsTextPages:rsTextPages,__rsReadTextTier:rsReadTextTier});\n');
 const app=require(_b);
 const R=global.window.RCSParse;

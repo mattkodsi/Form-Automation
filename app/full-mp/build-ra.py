@@ -179,6 +179,7 @@ parts = [
     read('lib/pdf-lib.min.js'),
     '\n;\n',
     read('core.js'),
+    read('score.js'),
     read('db.js'),
     read('db.cosmos.js'),
     app,

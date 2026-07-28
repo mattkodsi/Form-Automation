@@ -17,7 +17,7 @@ tmp="$(mktemp -d)"; build="$tmp/app.html"
 trap 'rm -rf "$tmp"' EXIT
 
 echo "1/5  syntax check (every JS the build concatenates)…"
-for f in config.js core.js db.js db.supabase.js app.js ocr.js gen.js xlsx.js; do node --check "$d/$f"; done
+for f in config.js core.js score.js db.js db.supabase.js app.js ocr.js gen.js xlsx.js; do node --check "$d/$f"; done
 echo "     ✓ syntax OK"
 
 echo "2/5  test suites (run_tests.sh)…"
