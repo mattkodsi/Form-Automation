@@ -16,7 +16,7 @@ const els={};
 global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>null,querySelectorAll:()=>[],createElement:()=>mk(),addEventListener(){},body:{classList:{toggle(){},contains(){return false;}}}};
 const fs=require('fs'),path=require('path'),os=require('os');
 
-const MIN_CHECKS=241;
+const MIN_CHECKS=245;
 let n=0,fails=0,verdict=null;
 const BAR='='.repeat(68);
 function fail(msg,err){
@@ -536,6 +536,18 @@ async function reader(file){
       T('and the page it needs is not skipped',globalThis.__HALF[0].skip.indexOf(1)<0);
     }
   }
+
+  /* Two ways to read nothing, and the reader has to tell them apart, because
+     they ask different things of the person holding the file: a copy with no
+     text on it will never be readable, while a readable file with no letter in
+     it is probably the wrong file. */
+  const blank=await R.readLetter({pageCount:39,getPage:async()=>[]});
+  eq('a copy with no text says so',blank.textless,true);
+  eq('and reads nothing',blank.units.length,0);
+  const noLetter=await R.readLetter({pageCount:6,getPage:async()=>[
+    {x:72,y:700,s:'Appendix C'},{x:72,y:680,s:'Photographs of the subject'}]});
+  eq('a readable file with no letter is not called a scan',!!noLetter.textless,false);
+  eq('and it reads nothing either',noLetter.units.length,0);
 
   finish();
 })().catch(e=>{fail('the suite threw',e);process.exit(1);});

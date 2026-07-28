@@ -1770,7 +1770,7 @@ function renderSources(){
   const rcs=_rcsBusy
     ?`<div class="srcrow"><span class="spin" aria-hidden="true"></span><div><b>${esc(_rcsBusy.name)}</b> <span class="parsed">reading…</span><div class="sub">Reading the appraiser’s transmittal letter.</div></div></div>`
     :up
-    ?`<div class="srcrow"><span class="ok">✓</span><div><b>${esc(up.name)}</b> <span class="parsed">${_rn?'read · '+esc(_rfirm||'study')+' · '+_rn+' unit type'+(_rn===1?'':'s'):'uploaded · not read'}</span><div class="sub">${_rn?'The values are ready to apply.':'The letter could not be read — enter the values by hand below.'}</div></div>${_rn?'<button class="btn sm teal" id="rcsApply">Fill form from study</button>':''}<button class="btn sm" id="upRcs">Replace</button></div>`
+    ?`<div class="srcrow"><span class="ok">✓</span><div><b>${esc(up.name)}</b> <span class="parsed">${_rn?'read · '+esc(_rfirm||'study')+' · '+_rn+' unit type'+(_rn===1?'':'s'):'uploaded · not read'}</span><div class="sub">${_rn?'The values are ready to apply.':((up.parsed&&up.parsed.textless)?'This copy is a scan, so no values could be read. Enter them by hand below.':'No appraiser’s letter was found in this file. Check that it is the complete study.')}</div></div>${_rn?'<button class="btn sm teal" id="rcsApply">Fill form from study</button>':''}<button class="btn sm" id="upRcs">Replace</button></div>`
     :`<div class="srcrow${sl.need?'':' dim'}"><span class="mut">○</span><div><b>${esc(sl.title)}</b> <span class="${sl.need?'missing':'parsed'}">${sl.need?'not uploaded':'optional'}</span><div class="sub">${esc(sl.sub)}</div></div><button class="btn sm" id="upRcs">Upload PDF</button></div>`;
   const ru=_rsUpload;let rs;
   if(_rsBusy)rs=`<div class="srcrow"><span class="spin" aria-hidden="true"></span><div><b>${esc(_rsBusy.name||'Rent schedule')}</b> <span class="parsed">${esc(_rsBusy.note||'reading\u2026')}</span><div class="sub">${esc(_rsBusy.sub||'Reading the schedule\u2019s form fields and printed text.')}</div></div></div>`;
@@ -2672,7 +2672,9 @@ function wireBody(){
       const nu=r&&r.units?r.units.length:0;
       setStatus(nu
         ?('RCS study read \u2014 '+(r.firm==='belfry'?'Belfry Valuation':r.firm==='cornerstone'?'Cornerstone Valuation Services':'the study')+', '+nu+' unit type'+(nu===1?'':'s')+' from page'+(r.pages.length===1?' ':'s ')+r.pages.map(x=>x+1).join(' and ')+'. Use \u201cFill form from study\u201d in '+secRef(1)+' to apply it.')
-        :'The study was uploaded, but its letter could not be read \u2014 enter the values by hand below. It still goes in as document 04.');
+        :((r&&r.textless)
+          ?'The study was uploaded as a scanned copy, so no values could be read from it. It still goes in as document 04.'
+          :'The study was uploaded, but no appraiser\u2019s letter was found in it. It still goes in as document 04.'));
     });};
   const rap=el('rcsApply');if(rap)rap.onclick=()=>rcsFillFromParsed();
   const upS=el('upRs');if(upS)upS.onclick=()=>{const f=el('rsFile');if(f)f.click();};
