@@ -502,11 +502,7 @@ function numUnresolved(i){return numConflict(i)&&!numReviewedOf(i);}
 function unitTypeCell(i){const brK='units.'+i+'.br',baK='units.'+i+'.ba';const conf=typeUnresolved(i);const c=conf?CLR.overridden:groupColors([brK,baK]);
   const withRs=(k,opts,ph)=>{const d=csDrop(k,opts,ph,'',!/\.br$/.test(k),(!conf&&partHot(k))?tintStyle(k):'',rsBrBa(k));const row=rsCsRow(k)||'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>';
     return d.replace('<div class="uamenu">','<div class="uamenu">'+row);};
-  return `<div class="utwrap"><div class="rbox brba" data-box="${brK}" style="background:${c[1]};border-left-color:${c[0]}">${withRs(brK,BR_OPTS,'BR')}<span class="slash">/</span>${withRs(baK,BA_OPTS,'BA')}</div>`
-    /* Directly under the cell it acts on, and ABOVE the label line — the label
-       is a separate control with a separate pair, and one pair sitting between
-       the two read as belonging to whichever you looked at last. */
-    +`<div class="uracts ucolacts c1"><span class="ua-br">${ovIcons(brK)}</span><span class="ua-sl"></span><span class="ua-ba">${ovIcons(baK)}</span></div>`
+  return `<div class="utwrap"><div class="rbox brba" data-box="${brK}" style="background:${c[1]};border-left-color:${c[0]}">${withRs(brK,BR_OPTS,'BR')}<span class="slash">/</span>${withRs(baK,BA_OPTS,'BA')}${ovIcons([brK,baK])}</div>`
     +`${labelLine(i)}</div>`;}
 function unitCountCell(i){const k='units.'+i+'.num_units';const c=numUnresolved(i)?CLR.overridden:cellColors(k);const rv=rsUnit(i,'count');
   // The schedule is where this number comes from, so the cell says so whether or
@@ -531,7 +527,14 @@ function safmrNote(i){const res=safmrResolvedOf(i),hud=numf(get('units.'+i+'.saf
   if(res>0){const pro=numf(get('units.'+i+'.proposed'));const gr=grossOf(i);const ok=gr<res;
     // the figure shown is the one being judged: rent + allowance, as HUD compares it
     if(pro>0)return '<div class="ucnote '+(ok?'ok':'warn')+'">'+(ok?'✓ ':'✗ ')+money(gr)+(ok?' < ':' ≥ ')+money(res)+' · 150% SAFMR'+(uaResolvedOf(i)>0?' (rent + UA)':'')+'</div>';return '<div class="ucnote ok">150% SAFMR $'+res.toLocaleString()+'</div>';}
-  if(numf(get('units.'+i+'.num_units'))>0)return '<div class="ucnote warn">⚠ needed for the 150% test</div>';
+  /* Name what is missing, in the cell that is empty because of it. The pull is
+     keyed to the PROPERTY's ZIP in section 2 — HUD's rents are per the building's
+     own location — and an appraiser address filled in below is easy to read as
+     having supplied one. "Needed for the 150% test" is true of a cell nobody can
+     act on; the blockers were already computed for the analysis card, three
+     hundred lines up, and were simply never offered to the row. */
+  if(numf(get('units.'+i+'.num_units'))>0){const _b=hudBlockerNames();
+    return '<div class="ucnote warn">⚠ '+(_b?'the 150% test needs the '+esc(_b):'needed for the 150% test')+'</div>';}
   return '';}
 /* Rent-schedule capacity. Part A prints 11 rows: the Section 8 rows, then
    (when non-S8 units exist) a banner row + those rows; non-rev rows print in
@@ -576,8 +579,9 @@ function unitCard(i,pos){const trash=UNITS.length>1?`<button class="trash" data-
   const col=(cell,act,note)=>'<div class="ucol">'+cell+(act?'<div class="uracts ucolacts">'+act+'</div>':'')+(note||'')+'</div>';
   const metricCell=metric?'<div class="urnmetric">'+metric+'</div>':'';
   return '<div class="urow"><div class="ucells'+(hasProg('rcs')?'':' noprop')+'">'
-    /* column one's two pairs live inside the type cell, between the box and the
-       label line and beneath the label line — see unitTypeCell and labelLine. */
+    /* column one carries no band of its own: bedroom/bath keep their pair INSIDE
+       the box and the label keeps its own in the label line, so nothing under
+       this column adds height to the row. */
     +col(unitTypeCell(i),'',typeNote(i))
     +col(unitCountCell(i),ovIcons('units.'+i+'.num_units'),numNote(i))
     +col(moneyBox('units.'+i+'.current',1),ovIcons('units.'+i+'.current'),'')
@@ -641,11 +645,12 @@ function hudBlockers(){ // everything a SAFMR pull needs, not just the first thi
   return out;}
 function hudBlockerText(){const b=hudBlockers();if(!b.length)return '';
   return 'add '+andJoin(b);}
-function hudBlockerShort(){ // the card has room for the names, not the sentence
+function hudBlockerNames(){ // the card and the cell have room for the names, not the sentence
   const b=[];if(hudZipMissing())b.push('ZIP');
   if(!dateEffResolved())b.push('effective date');
   if(UNITS.some(i=>!get('units.'+i+'.br')))b.push('bedroom size');
-  return b.length?('add the '+andJoin(b)):'';}
+  return andJoin(b);}
+function hudBlockerShort(){const n=hudBlockerNames();return n?('add the '+n):'';}
 function hudParams(){const zip=String(get('property.addr_zip')||'').replace(/\D/g,'').slice(0,5);
   const de=dateEffResolved();const _ym=String(de||'').match(/\d{4}/);const year=_ym?parseInt(_ym[0],10):(new Date()).getFullYear();
   return{zip,year,street:get('property.addr_street'),city:get('property.addr_city'),state:get('property.addr_state')};}
