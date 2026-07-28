@@ -35,7 +35,7 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=180;   // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
+const MIN_CHECKS=188;   // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
                        // pristine (three seeds, two checks each). 2026-07-27: the unit-type cell
                        // lost a divider with the designation, so the pair of divider checks
                        // became one. Lowered on purpose.
@@ -1361,6 +1361,44 @@ const FULL=process.argv.includes('--full');
       await feed('Ms. Claire Beatty');
       T('the cell offers the study as a source of its own',
         await c.eval("return [...document.querySelectorAll('[data-pocrcs]')].some(x=>/Claire Beatty/.test(x.innerText))"));
+    }
+
+    /* ── one badge, and a dropdown to take it from ──────────────────────────
+       Two badges on one value read as two answers to one question, and a badge
+       with no picker beside it sits where the picker belongs — hard against the
+       cell edge, looking misplaced, because there was nothing to open. */
+    console.log('\n── the cell says one thing, and offers it ────────────');
+    await c.reload();
+    await c.eval(HELPERS);
+    await c.eval('await window.__t.__openForm('+JSON.stringify(pid)+');return 1');
+    await sleep(300);
+    {
+      await c.eval("window.__t.__setRcsParsed({scalars:{'_poc_name':'Ms. Claire Beatty',"
+        +"'property.s8':window.__t.getVal('property.s8'),'appr.name':'Marcus Feldman'},units:[],firm:'belfry'});"
+        +"window.__t.__setRsParsed({scalars:{'property.s8':window.__t.getVal('property.s8')},units:[],ns8:[],principals:[],nonrev:[]});"
+        +"window.__t.__renderBody();return 1");
+      await sleep(400);
+      const look=async k=>await c.eval(`
+        const b=document.querySelector('[data-box="`+k+`"]');if(!b)return null;
+        const br=b.getBoundingClientRect(),tr=b.querySelector('.uatrigger');
+        return {tags:[...b.querySelectorAll('.srctag')].length,
+          picker:!!tr,
+          gap:tr?Math.round(br.right-tr.getBoundingClientRect().right):null,
+          rows:[...b.querySelectorAll('.uaopt')].length};`);
+
+      /* Both documents give the same Section 8 number. That is one answer twice
+         over, not two answers. */
+      const s8=await look('property.s8');
+      eq('a value both documents give wears one badge, not two',s8&&s8.tags,1);
+
+      for(const k of ['poc.email','poc.phone','ca.position','ca.org','tenant.sender_name','tenant.sender_title']){
+        const r=await look(k);
+        T(k+': has a dropdown to take a value from',!!r&&r.picker&&r.rows>0);
+      }
+      /* The complaint that started this: the badge was sitting where the picker
+         belongs, because there was no picker. */
+      const em=await look('poc.email');
+      T('and the point-of-contact email’s picker sits at the cell edge',!!em&&em.gap<=2);
     }
 
     console.log('\n── the console stayed quiet ───────────────────────────');

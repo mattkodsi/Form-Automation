@@ -279,13 +279,20 @@ function pocCell(){const k='poc.name';const contacts=(mpdb?mpdb.listContacts():[
    there, clicking anywhere else annuls the pending group), and the name cell's
    revert / save-this-field buttons act on every autofilled key. */
 function dirAddrLine(c){return [c.addr_street,c.addr_city,[c.addr_state,c.addr_zip].filter(Boolean).join(' ')].filter(s=>s&&String(s).trim()).join(', ');}
+function caDir(modeKeys,sub){return {kind:'ca',one:'contract administrator',
+  keys:['ca.prefix','ca.name','ca.position','ca.org','ca.addr_street','ca.addr_city','ca.addr_state','ca.addr_zip'],
+  modeKeys:modeKeys,
+  apply:ct=>dirFill([['ca.prefix',ct.prefix],['ca.name',ct.name],['ca.position',ct.title],['ca.org',ct.org],['ca.addr_street',ct.addr_street],['ca.addr_city',ct.addr_city],['ca.addr_state',ct.addr_state],['ca.addr_zip',ct.addr_zip]]),
+  sub:sub};}
 const DIR_PICK={
  'appr.name':{kind:'appraiser',one:'appraiser',keys:['appr.name','appr.firm','appr.email','appr.phone','appr.addr_street','appr.addr_city','appr.addr_state','appr.addr_zip'],modeKeys:['appr.name'],
   apply:ct=>dirFill([['appr.name',ct.name],['appr.firm',ct.firm],['appr.email',ct.email],['appr.phone',fmtPhone(ct.phone||'')],['appr.addr_street',ct.addr_street],['appr.addr_city',ct.addr_city],['appr.addr_state',ct.addr_state],['appr.addr_zip',ct.addr_zip]]),
   sub:ct=>[ct.firm,dirAddrLine(ct)].filter(Boolean).join(' \u00b7 ')||ct.email||''},
- 'ca.name':{kind:'ca',one:'contract administrator',keys:['ca.prefix','ca.name','ca.position','ca.org','ca.addr_street','ca.addr_city','ca.addr_state','ca.addr_zip'],modeKeys:['ca.prefix','ca.name'],
-  apply:ct=>dirFill([['ca.prefix',ct.prefix],['ca.name',ct.name],['ca.position',ct.title],['ca.org',ct.org],['ca.addr_street',ct.addr_street],['ca.addr_city',ct.addr_city],['ca.addr_state',ct.addr_state],['ca.addr_zip',ct.addr_zip]]),
-  sub:ct=>[ct.title,ct.org,dirAddrLine(ct)].filter(Boolean).join(' \u00b7 ')},
+ 'ca.name':caDir(['ca.prefix','ca.name'],ct=>[ct.title,ct.org,dirAddrLine(ct)].filter(Boolean).join(' \u00b7 ')),
+ /* The same entry, reached from the cell you happen to be looking at. Each
+    row's subtitle leads with what THIS cell will take from it. */
+ 'ca.position':caDir(['ca.position'],ct=>[ct.title,ct.org].filter(Boolean).join(' \u00b7 ')),
+ 'ca.org':caDir(['ca.org'],ct=>[ct.org,ct.title].filter(Boolean).join(' \u00b7 ')),
 };
 function dirFill(pairs){pairs.forEach(p=>{form=store.editForm(form,p[0],p[1]||'');if(form[p[0]])form[p[0]].fromPick=true;});}
 function dirList(kind){return (mpdb&&mpdb.listDir)?mpdb.listDir(kind):[];}
@@ -298,9 +305,13 @@ function dirCell(f){const k=f.k;const P=DIR_PICK[k];const list=dirList(P.kind);c
   const srcRow=!_dr?'':(_drv!=null&&_drv!==''
     ?('<div class="uaopt srcopt'+(String(_drv)===String(cur)?' sel':'')+'" data-srck="'+k+'" data-srcv="'+esc(_drv)+'" data-srctag="'+esc(_dr.tag)+'">'+esc(srcDisp(k,_drv))+'<span class="uasub">'+esc(_dr.tag)+'</span></div>')
     :('<div class="uaopt srcopt srcdim">\u2014<span class="uasub">'+esc(_dr.tag)+' \u00b7 not available</span></div>'));
-  const menu='<div class="uamenu">'+srcRow+list.map(ct=>{const s=P.sub(ct);return '<div class="uaopt" data-dirid="'+esc(ct.id)+'" data-dirfor="'+k+'">'+esc(ct.name)+(s?'<span class="uasub">'+esc(s)+'</span>':'')+'</div>';}).join('')+'</div>';
-  const pick=(srcRow||list.length)?('<div class="uadrop pocpick"><div class="uatrigger" tabindex="0" title="Pick a saved '+esc(P.one)+'"><span class="cvx">&#9662;</span></div>'+menu+'</div>'):'';
-  return `<div class="field"><div class="flabel">${f.label}</div><div class="fbox poccell" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}">${pre}<input class="pocname-in" type="text" data-k="${k}" style="${nameTint}" value="${esc(cur)}" placeholder="Type a name, or pick a saved ${esc(P.one)}" autocomplete="off">${rcsTag(k)}${pick}</div>${dirNote(k)}</div>`;}
+  /* Drawn even with nothing in it. A cell with no dropdown where its
+     neighbours have one reads as an oversight; a dimmed row saying the list is
+     empty is a shorter answer than wondering. */
+  const _none=!srcRow&&!list.length;
+  const menu='<div class="uamenu">'+(_none?('<div class="uaopt srcopt srcdim">\u2014<span class="uasub">No saved '+esc(P.one)+'</span></div>'):(srcRow+list.map(ct=>{const s=P.sub(ct);return '<div class="uaopt" data-dirid="'+esc(ct.id)+'" data-dirfor="'+k+'">'+esc(ct.name)+(s?'<span class="uasub">'+esc(s)+'</span>':'')+'</div>';}).join('')))+'</div>';
+  const pick='<div class="uadrop pocpick"><div class="uatrigger" tabindex="0" title="Pick a saved '+esc(P.one)+'"><span class="cvx">&#9662;</span></div>'+menu+'</div>';
+  return `<div class="field"><div class="flabel">${f.label}</div><div class="fbox poccell" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}">${pre}<input class="pocname-in" type="text" data-k="${k}" style="${nameTint}" value="${esc(cur)}" placeholder="Type a name, or pick a saved ${esc(P.one)}" autocomplete="off">${srcTags(k)}${pick}</div>${dirNote(k)}</div>`;}
 /* ====== External-source dropdowns (Related Affordable / RS / RCS) ======
    Sourced options sit at the top of each cell's dropdown in precedence order;
    a source with no data is a dimmed "\u2014 \u00b7 not available" row, never
@@ -349,6 +360,14 @@ const SRCPICK_ROWS={
  'owner.entity_type_other':()=>[{tag:'Executed RS',val:rsVal('owner.entity_type_other')}],
  'owner.entity_name':()=>[{tag:'Executed RS',val:rsVal('owner.entity_name')},{tag:'Related Affordable',val:raVal('owner.entity_name')}],
  'sig.title':()=>[{tag:'Executed RS',val:rsVal('sig.title')}],
+ /* rcsOf, not rcsVal: the study gives a NAME, and the email and phone come from
+    the saved contact that name matches. */
+ 'poc.email':()=>[{tag:'RCS report',val:rcsOf('poc.email')}],
+ 'poc.phone':()=>[{tag:'RCS report',val:rcsOf('poc.phone')}],
+ /* The sender of the tenant notice is a person at the management company, whom
+    no document names — the platform does. */
+ 'tenant.sender_name':()=>[{tag:'Related Affordable',val:raVal('tenant.sender_name')}],
+ 'tenant.sender_title':()=>[{tag:'Related Affordable',val:raVal('tenant.sender_title')}],
  'appr.firm':()=>[{tag:'RCS report',val:rcsVal('appr.firm')}],
  'appr.email':()=>[{tag:'RCS report',val:rcsVal('appr.email')}],
  'appr.phone':()=>[{tag:'RCS report',val:rcsVal('appr.phone')?fmtPhone(rcsVal('appr.phone')):null}],
@@ -414,7 +433,7 @@ function fieldCell(f){if(f.type==='sigtitle')return sigTitleCell(f);if(f.type===
   const s=form[f.k]||{value:'',source:'new'};
   const c=f.prefix?groupColors([f.prefix,f.k]):cellColors(f.k);
   const pre=f.prefix?csDrop(f.prefix,['Ms.','Mr.','Dr.','Mx.'],'—','csnarrow',true,partHot(f.prefix)?tintStyle(f.prefix):''):'';
-  return `<div class="field"><div class="flabel">${f.label}</div><div class="fbox" data-box="${f.k}" style="background:${c[1]};border-left-color:${c[0]}">${pre}<input type="text" data-k="${f.k}" style="${f.prefix&&partHot(f.k)?tintStyle(f.k):''}"${f.type==='phone'?' data-phone="1" inputmode="tel" maxlength="14"':''} value="${esc(f.type==='phone'?fmtPhone(s.value):s.value)}" autocomplete="off">${rsTag(f.k)}${rcsTag(f.k)}${SRCPICK_ROWS[f.k]?srcPick(f.k,SRCPICK_ROWS[f.k]()):''}</div>${ovNote(f.prefix?[f.prefix,f.k]:f.k)}</div>`;}
+  return `<div class="field"><div class="flabel">${f.label}</div><div class="fbox" data-box="${f.k}" style="background:${c[1]};border-left-color:${c[0]}">${pre}<input type="text" data-k="${f.k}" style="${f.prefix&&partHot(f.k)?tintStyle(f.k):''}"${f.type==='phone'?' data-phone="1" inputmode="tel" maxlength="14"':''} value="${esc(f.type==='phone'?fmtPhone(s.value):s.value)}" autocomplete="off">${srcTags(f.k)}${SRCPICK_ROWS[f.k]?srcPick(f.k,SRCPICK_ROWS[f.k]()):''}</div>${ovNote(f.prefix?[f.prefix,f.k]:f.k)}</div>`;}
 function addrCell(){return compAddrCell(ADDR,'property.addr','Address');}
 function caAddrCell(){return compAddrCell(CA_ADDR,'ca.addr','CA address');}
 function apprAddrCell(){return compAddrCell(APPR_ADDR,'appr.addr','Appraiser address');}
@@ -489,7 +508,7 @@ function cellColors(k){return (srcOf(k)!=='overridden'&&offFile(k))?provColors('
 function boxColor(k){return cellColors(k);}
 function moneyBox(k,noIcons){const c=boxColor(k);const _rows=moneySrcRows(k);
   const pick=_rows.length?srcPick(k,_rows):'';
-  return `<div class="rbox money" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><span class="cur">$</span><input type="text" data-money="1" data-k="${k}" value="${esc(fmtMoney(get(k)))}">${rsTag(k)}${rcsTag(k)}${pick}${noIcons?'':ovIcons(k)}</div>`;}
+  return `<div class="rbox money" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><span class="cur">$</span><input type="text" data-money="1" data-k="${k}" value="${esc(fmtMoney(get(k)))}">${srcTags(k)}${pick}${noIcons?'':ovIcons(k)}</div>`;}
 function numBox(k,ph,noIcons){const c=boxColor(k);
   /* Counts are numbers and get separators like every other number (rule 16).
      NOT via a blanket data-money: this same box renders Part D's "use" text and
@@ -805,6 +824,12 @@ function rsTag(k){
   const num=/^(units|ns8|nonrev)\.\d+\.(current|proposed|num_units|rent|avg_rent)$/.test(k);
   const same=num?(numf(v)===numf(r)):(String(v)===String(r));
   return same?'<span class="srctag rstag">· RS</span>':'';}
+/* What the renderers ask for. rsTag and rcsTag stay pure — the suites assert
+   each of them on its own — and this decides which of the two is drawn. */
+function srcTags(k){
+  const r=rsTag(k),c=rcsTag(k);
+  if(r&&c)return '<span class="srctag rstag" title="The rent schedule and the RCS study both give this value">· RS</span>';
+  return r||c;}
 /* The whole fact, offered as one answer — the twin of srcGroupPick on an
    address. The sub-cells keep their own Executed RS rows so a type can still be
    mixed: the schedule right about the bathroom, wrong about the bedroom. */
