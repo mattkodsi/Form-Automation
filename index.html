@@ -629,6 +629,13 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;borde
 .seg-b+.seg-b{border-left:1px solid #e6ebf3}
 .seg-b.on{background:#1e3a5f;color:#fff}
 .lh-right{display:flex;flex-direction:column;align-items:flex-end;gap:7px;flex:0 0 auto}
+/* The state of the record, where the ring used to be. Amber because it is
+   something to do, not something wrong — and on the launcher it says so either
+   way, because that page is about this one property and the answer is worth
+   stating. The gallery shows it only when there is something to show. */
+.pchip{display:inline-block;font-size:11px;font-weight:700;color:#92400e;background:#fef3c7;border:1px solid #fde68a;border-radius:999px;padding:3px 9px;white-space:nowrap;cursor:default}
+.pchip.ok{color:#166534;background:#dcfce7;border-color:#bbf7d0}
+.lh-prof{margin-top:2px}
 .aff{margin-top:10px;border-top:1px solid #eef1f6;padding-top:10px}
 .aff-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
 .aff-k{font-size:9.5px;font-weight:800;letter-spacing:.6px;color:#8791a5}
@@ -1176,7 +1183,9 @@ function packageScore(read,ctx){
     docsReady:docs.filter(d=>d.ready).length, docsTotal:docs.length,
     blockers:blockers.map(x=>({key:x.key,label:x.label,sec:x.sec})),
     caveats:caveats.map(x=>({key:x.key,label:x.label,sec:x.sec})),
-    profile:{done:g1done,total:g1.length},
+    profile:{done:g1done,total:g1.length,
+      /* Named, because "3 of 5" is not something anyone can act on. */
+      missing:g1.filter(x=>!x.ok).map(x=>({key:x.key,label:x.label,sec:x.sec}))},
     buildable:{done:g2done,total:g2.length},
     clean:{done:g3done,total:g3.length}};}
 
@@ -1652,6 +1661,7 @@ async function makeDb(adapter, opts) {
         city_state: (dv(p, 'property.addr_city') || '') + (dv(p, 'property.addr_state') ? ', ' + dv(p, 'property.addr_state') : ''),
         entity: dv(p, 'owner.entity_name') || '', alias: dv(p, 'tenant.property_alias') || '', unit_types: uc.types, total_units: uc.units,
         completeness: _s.pct / 100, score: _s.pct, caption: SCORE ? SCORE.scoreCaption(_s) : "",
+            profile: _s.profile,
         docs_ready: _s.docsReady, docs_total: _s.docsTotal,
         created_at: p.created_at, updated_at: p.updated_at || p.created_at,
         has_letterhead: dv(p, 'assets.letterhead_name') !== '',
@@ -2197,6 +2207,7 @@ function makeSupabaseDb(client) {
             city_state: (dv(p, 'property.addr_city') || '') + (dv(p, 'property.addr_state') ? ', ' + dv(p, 'property.addr_state') : ''),
             entity: dv(p, 'owner.entity_name') || '', alias: dv(p, 'tenant.property_alias') || '', unit_types: uc.types, total_units: uc.units,
             completeness: _s.pct / 100, score: _s.pct, caption: SCORE ? SCORE.scoreCaption(_s) : "",
+            profile: _s.profile,
             docs_ready: _s.docsReady, docs_total: _s.docsTotal,
             created_at: p.created_at, updated_at: p.updated_at || p.created_at,
             has_letterhead: dv(p, 'assets.letterhead_name') !== '',
@@ -5352,6 +5363,16 @@ function ringColor(pct){const p=Math.max(0,Math.min(100,pct))/100;
      reading as a colour at all. */
   const lig=Math.round(40+p*8-Math.max(0,1-Math.abs(h-55)/38)*7);
   return 'hsl('+h+','+sat+'%,'+lig+'%)';}
+/* A property's record is either sufficient to build a package from or it is
+   short specific fields. That is a state, not a percentage: there is no such
+   thing as a property being 65% of a property. The chip names what is missing,
+   and says nothing at all when nothing is. */
+function profileChip(p){
+  const m=(p&&p.profile&&p.profile.missing)||[];
+  if(!m.length)return '';
+  const names=m.map(x=>x.label);
+  return '<span class="pchip" title="'+esc('Missing: '+andJoin(names))+'">'
+    +m.length+' missing from the profile</span>';}
 function ringSvg(pct,size){size=size||36;const r=size/2-3;const c=2*Math.PI*r;const off=c*(1-Math.max(0,Math.min(100,pct))/100);const col=ringColor(pct);
   return '<svg class="ringsvg" width="'+size+'" height="'+size+'" viewBox="0 0 '+size+' '+size+'"><circle cx="'+size/2+'" cy="'+size/2+'" r="'+r+'" fill="none" stroke="#e9edf4" stroke-width="3.4"/><circle cx="'+size/2+'" cy="'+size/2+'" r="'+r+'" fill="none" stroke="'+col+'" stroke-width="3.4" stroke-linecap="round" stroke-dasharray="'+c.toFixed(1)+'" stroke-dashoffset="'+off.toFixed(1)+'" transform="rotate(-90 '+size/2+' '+size/2+')"/><text x="50%" y="53%" dominant-baseline="middle" text-anchor="middle" font-size="'+(size<44?10:12.5)+'" font-weight="700" fill="#33405c">'+pct+'</text></svg>';}
 function niceDate(d){if(!d)return '—';const m=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];const p=String(d).slice(0,10).split('-');if(p.length!==3)return d;return m[(+p[1])-1]+' '+(+p[2])+', '+p[0];}
@@ -5512,7 +5533,7 @@ function renderMenu(){
        small grey text per card that nobody reads six of. The caption still
        says what the ring counts; it says it on hover, where a reader who
        wants it asks for it. */
-    return '<button class="pcard" data-open="'+p.id+'"'+(p.caption?' title="'+esc(p.caption)+'"':'')+'><div class="pc-top"><div class="pc-name">'+esc(p.name)+(showAl?'<span class="pc-alias">&ldquo;'+esc(al)+'&rdquo;</span>':'')+'</div>'+ringSvg(pct)+'</div>'
+    return '<button class="pcard" data-open="'+p.id+'"'+(p.caption?' title="'+esc(p.caption)+'"':'')+'><div class="pc-top"><div class="pc-name">'+esc(p.name)+(showAl?'<span class="pc-alias">&ldquo;'+esc(al)+'&rdquo;</span>':'')+'</div>'+profileChip(p)+'</div>'
       +'<div class="pc-meta">'+(p.hap?(esc(p.pm||'Unassigned')+(p.city_state?' &middot; '+esc(p.city_state):'')):(esc(p.fha)+(p.city_state?' &middot; '+esc(p.city_state):'')))+'</div>'
       +(p.hap?dueLine(p):'')
       +'<div class="pc-div"></div>'
@@ -5713,7 +5734,7 @@ function renderLauncher(){
     '<div class="lhead"><div class="lh-left"><div class="lh-name">'+esc(p.name)+(_showAl?'<span class="lh-alias">&ldquo;'+esc(_al)+'&rdquo;</span>':'')+'</div>'
       +'<div class="lh-meta">'+esc(p.fha)+(p.city_state?' &middot; '+esc(p.city_state):'')+(p.total_units?' &middot; '+p.total_units+' units':'')+'</div>'
       +(p.entity?'<div class="lh-entity">'+esc(p.entity)+'</div>':'')+'</div>'
-      +'<div class="lh-right"><div class="lh-tools"><button class="txtbtn" id="pRename">Rename</button><span class="dotsep">&middot;</span><button class="txtbtn del" id="pDelete">Delete</button></div><div class="lh-ring">'+ringSvg(pct,46)+'</div><div class="lh-rlab">'+pct+'% complete</div></div></div>'
+      +'<div class="lh-right"><div class="lh-tools"><button class="txtbtn" id="pRename">Rename</button><span class="dotsep">&middot;</span><button class="txtbtn del" id="pDelete">Delete</button></div><div class="lh-prof">'+(profileChip(p)||'<span class="pchip ok">Profile complete</span>')+'</div></div></div>'
     +'<div class="lsec"><div class="lsec-t">Property letterhead</div>'+letter+'<div class="lh-note">The uploaded letterhead appears on the tenant notice. All other letterheads are built into the document templates.</div><input type="file" id="lhFile" accept="image/*,.pdf,application/pdf" style="display:none"></div>'
     +'<div class="lsec"><div class="lsec-t">Packages</div>'+cyclesHtml()+'<div class="progrow" style="margin-top:10px">'+soon('BBRA','Budget-Based Rent Adjustment')+'</div></div>';
   wireCycles();

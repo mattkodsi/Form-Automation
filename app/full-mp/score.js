@@ -305,7 +305,9 @@ function packageScore(read,ctx){
     docsReady:docs.filter(d=>d.ready).length, docsTotal:docs.length,
     blockers:blockers.map(x=>({key:x.key,label:x.label,sec:x.sec})),
     caveats:caveats.map(x=>({key:x.key,label:x.label,sec:x.sec})),
-    profile:{done:g1done,total:g1.length},
+    profile:{done:g1done,total:g1.length,
+      /* Named, because "3 of 5" is not something anyone can act on. */
+      missing:g1.filter(x=>!x.ok).map(x=>({key:x.key,label:x.label,sec:x.sec}))},
     buildable:{done:g2done,total:g2.length},
     clean:{done:g3done,total:g3.length}};}
 
