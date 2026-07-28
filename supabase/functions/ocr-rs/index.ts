@@ -26,8 +26,16 @@ import { createClient } from 'jsr:@supabase/supabase-js@2';
 
 const API_VERSION = '2024-11-30';
 const MODEL = 'prebuilt-layout';
-const POLL_MS = 900;
-const POLL_TRIES = 45;          // ~40s, inside the 150s free-plan wall clock
+// F0 allows roughly ONE request per second across the subscription. Polling at
+// 900ms was faster than that on its own, before the analyze call that opened the
+// operation is even counted.
+const POLL_MS = 1200;
+// ~90s of polling. It was 45 (~40s), which is comfortably more than the 3-7s a
+// typical page takes — and not enough for a heavy one. A three-page executed
+// schedule gave up at 41,990ms with a 504 while Azure was still working, and the
+// form reported the whole document unreadable. 100 tries leaves ~40s of headroom
+// under the 150s free-plan wall clock once the polls' own round trips are counted.
+const POLL_TRIES = 75;          // x1200ms = ~90s
 
 let DI_ENDPOINT = Deno.env.get('AZURE_DI_ENDPOINT') ?? '';
 let DI_KEY = Deno.env.get('AZURE_DI_KEY') ?? '';
@@ -85,15 +93,37 @@ Deno.serve(async (req: Request) => {
     if (!op) return J({ error: 'Azure accepted the page but returned no result location.' }, 502);
 
     let result: any = null;
+    let lastHttp = 0, lastState = '', throttled = 0;
+    const t0 = Date.now();
     for (let i = 0; i < POLL_TRIES; i++) {
       await sleep(POLL_MS);
       const r = await fetch(op, { headers: { 'Ocp-Apim-Subscription-Key': key } });
+      lastHttp = r.status;
+      // A 429 carries no operation status, and this loop used to read "no status"
+      // as "still running" — so a throttled call burned the whole budget and then
+      // reported a timeout it had never actually measured. Back off instead, and
+      // remember that it happened: "we were rate limited" and "the page is slow"
+      // are different problems with different answers.
+      if (r.status === 429) {
+        throttled++;
+        const ra = Number(r.headers.get('retry-after') || 0);
+        await sleep(Math.min(Math.max(ra * 1000, 2000), 10_000));
+        continue;
+      }
       const j = await r.json().catch(() => null);
       const st = j?.status;
+      if (st) lastState = st;
       if (st === 'succeeded') { result = j; break; }
       if (st === 'failed') return J({ error: 'Azure could not read that page.' }, 502);
     }
-    if (!result) return J({ error: 'Azure did not finish reading that page in time.' }, 504);
+    if (!result) {
+      const secs = Math.round((Date.now() - t0) / 1000);
+      return J({
+        error: throttled
+          ? `Azure rate-limited this scan (${throttled} of the checks in ${secs}s came back throttled). Try again in a minute.`
+          : `Azure did not finish reading that page in ${secs}s (last seen: ${lastState || 'HTTP ' + lastHttp}).`,
+      }, 504);
+    }
 
     // Hand back only what the geometry needs. The raw response is large and
     // mostly paragraphs/tables/styles the client has no use for.

@@ -235,11 +235,31 @@ button.gdoc{justify-content:space-between}
 @keyframes spin{to{transform:rotate(360deg)}}
 .spin{width:13px;height:13px;flex:0 0 auto;border-radius:50%;border:2px solid #cbd5e1;border-top-color:#0f766e;animation:spin .7s linear infinite}
 @media (prefers-reduced-motion:reduce){.spin{animation-duration:2.4s}}
-.srcrow{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid #f0f2f7}
+/* min-height, so a row whose text wraps to one line and a row whose text wraps
+   to two put their buttons at the same distance from the row's own top edge —
+   the buttons are what the eye tracks down the column, and they were stepping. */
+.srcrow{display:flex;align-items:center;gap:12px;padding:9px 0;min-height:47px;border-bottom:1px solid #f0f2f7;box-sizing:border-box}
 /* A separator BETWEEN rows, never under the last one: the trailing rule fenced
    off nothing and left a band of empty card below it. :last-of-type, not
    :last-child — the hidden file inputs follow the rows. */
-.srcrow:last-of-type{border-bottom:none;padding-bottom:0} .srcrow>div{min-width:0;max-width:640px} .srcrow .ok{color:#166534;font-weight:800} .srcrow .mut{color:#9aa4b8;font-weight:800} .srcrow.dim{opacity:.8} .missing{color:#8791a5;font-weight:700;font-size:11px} .srcrow .sub{color:#7c86a2;font-size:11px} .parsed{color:#0f766e;font-weight:700;font-size:11px} .srcrow b{font-size:13.5px} .srcrow button{margin-left:8px;flex:0 0 auto}
+/* One drawn icon, sized off the line it sits on, so the checks card and the
+   upload banner cannot disagree about what a warning looks like. */
+.wicon{width:1em;height:1em;display:block;flex:0 0 auto}
+.chk .warn .wicon{margin-top:1px}
+.srcrow .warn{color:#b45309;font-weight:800;font-size:15px;display:flex;align-items:center}
+/* The rows already sit inside the card's own 16px, so the first one adding
+   another 9 put 25px above the top row against 18 between the rows — the block
+   read as hanging off the header rather than starting under it. The first row
+   gives its top padding back.
+   The last row keeps its rule: a card that simply stops on a rounded corner
+   reads unfinished. It pulls the card's bottom padding in behind it so the rule
+   closes the section instead of floating well above the end of it. */
+/* margin, not padding. Trimming the first row’s PADDING closed the gap but
+   moved its contents up inside it, so its button sat 4.5px higher than every
+   button below — and the buttons are the column the eye tracks down. The row
+   keeps its shape and simply starts higher. */
+.srcrow:first-of-type{margin-top:-6px}
+.srcrow:last-of-type{margin-bottom:-8px} .srcrow>div{min-width:0;max-width:640px} .srcrow .ok{color:#166534;font-weight:800} .srcrow .mut{color:#9aa4b8;font-weight:800} .srcrow.dim{opacity:.8} .missing{color:#8791a5;font-weight:700;font-size:11px} .srcrow .sub{color:#7c86a2;font-size:11px} .parsed{color:#0f766e;font-weight:700;font-size:11px} .srcrow b{font-size:13.5px} .srcrow button{margin-left:8px;flex:0 0 auto}
 .srcfoot{display:flex;align-items:center;gap:12px;margin-top:11px} .srcfoot .sub{color:#7c86a2;font-size:11.5px} .ph{margin-top:9px;font-size:11.5px;color:#98a2b3;font-style:italic;background:#f8fafc;border-radius:6px;padding:7px 9px}
 .footer{display:flex;gap:12px;align-items:center;justify-content:center;margin-top:4px;position:sticky;bottom:0;background:#eef1f7;padding:12px 10px;box-shadow:0 -6px 16px rgba(20,40,80,.08);border-radius:8px 8px 0 0;z-index:15} .footer.rest{border-radius:8px} .footer .fsp{display:none} .unsaved{display:none;position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#b45309;font-weight:700;font-size:12.5px;align-items:center;gap:6px} .unsaved.on{display:inline-flex}
 table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;border:1px solid #e6ebf3;border-radius:10px;overflow:hidden} th,td{text-align:left;padding:9px 13px;border-bottom:1px solid #eef1f6} th{font-size:10px;letter-spacing:.4px;color:#8791a5;text-transform:uppercase}
@@ -2751,7 +2771,19 @@ function rcsRecall(){if(!(activeCid&&mpdb&&mpdb.getCycleRcs))return null;
   let d=null;try{d=mpdb.getCycleRcs(activeCid);}catch(e){return null;}
   if(!d||!d.name)return null;
   return {name:d.name,bytes:null,parsed:d.parsed||null,at:d.at||'',stored:true};}
-function rsNum(v){v=String(v==null?'':v).replace(/[^0-9.\-]/g,'');const n=parseFloat(v);return isFinite(n)?n:'';}
+function rsNum(v){let s=String(v==null?'':v).replace(/[^0-9.,\-]/g,'');
+  /* A dot is not always a decimal point. These schedules are typed by hand and
+     real copies use both conventions: White Oak's prints 1.147 / 36.704 /
+     $83.135 where another prints 1,147 / 36,704 / $83,135. Money and unit counts
+     never carry three decimal places, so a separator followed by exactly three
+     digits is a grouping mark whichever mark it is.
+     Read as a decimal it was silent: every rent came through as $1.15, and the
+     totals gate below still passed it, because every figure on the page was
+     wrong by the same factor. A gate that only checks internal consistency
+     cannot catch an error that scales the whole page. */
+  if(/^-?\d{1,3}(?:[.,]\d{3})+$/.test(s))s=s.replace(/[.,]/g,'');
+  else s=s.replace(/,/g,'');
+  const n=parseFloat(s);return isFinite(n)?n:'';}
 function rsDateISO(v){v=String(v||'').trim();let m=v.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);if(m)return m[3]+'-'+('0'+m[1]).slice(-2)+'-'+('0'+m[2]).slice(-2);m=v.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m)return v.slice(0,10);const MN={january:1,february:2,march:3,april:4,may:5,june:6,july:7,august:8,september:9,october:10,november:11,december:12};m=v.toLowerCase().match(/([a-z]+)\s+(\d{1,2}),?\s+(\d{4})/);if(m&&MN[m[1]])return m[3]+'-'+('0'+MN[m[1]]).slice(-2)+'-'+('0'+m[2]).slice(-2);return '';}
 function rsYearOn(iso){const m=String(iso||'').match(/^(\d{4})-(\d{2})-(\d{2})/);return m?((+m[1])+1)+'-'+m[2]+'-'+m[3]:'';}   // the uploaded schedule is the one in force; this package renews it
 function rsParseUnitType(t){t=String(t||'');let br='',ba='';if(/studio|efficiency/i.test(t))br='Studio';else{const m=t.match(/(\d+)\s*(?:br\b|bed)/i);if(m&&BR_OPTS.indexOf(m[1]+'BR')>=0)br=m[1]+'BR';else{const bare=t.trim().match(/^(\d+)$/);if(bare&&BR_OPTS.indexOf(bare[1]+'BR')>=0)br=bare[1]+'BR';}}const b=t.match(/(\d+(?:\.\d+)?)\s*(?:ba\b|bath)/i);if(b&&BA_OPTS.indexOf(b[1]+'BA')>=0)ba=b[1]+'BA';
@@ -3086,11 +3118,21 @@ async function parseRsPdf(bytes,onStep){
     return {kind:'fields',parsed:pf1};}
   let pages=null;try{pages=await rsTextPages(doc);}catch(e){}
   const runs=pages?pages.reduce((a,p)=>a+p.length,0):0;
+  const scan=async()=>{let oc=null;try{oc=await ocrParseRs(bytes,(i,n)=>onStep&&onStep(i,n,'scan'));}catch(e){}return oc;};
   if(runs<15){ // nothing to read on the page itself: tier 3 sends it out to be OCR'd
-    let oc=null;try{oc=await ocrParseRs(bytes,(i,n)=>onStep&&onStep(i,n,'scan'));}catch(e){}
-    return oc?{kind:'fields',parsed:oc,via:'ocr'}:{kind:'scan',parsed:null};}
+    const oc=await scan();
+    return oc?{kind:'fields',parsed:oc,via:'ocr'}:{kind:'scan',parsed:null,why:ocrWhy()};}
   let tp=null;try{tp=await rsReadTextTier(pages,bytes,onStep);}catch(e){}
-  return tp?{kind:'fields',parsed:tp,via:'text'}:{kind:'text',parsed:null};}
+  if(tp)return {kind:'fields',parsed:tp,via:'text'};
+  /* Text on the page and none of it the values — so OCR, which the runs<15 gate
+     alone would never have reached. An e-signed copy is that gate's worst case:
+     signing flattens every entered figure into artwork the extractor cannot
+     recover, while leaving the blank form's own printing behind. Colonial
+     Village's schedule carries 287 text runs and not one of them is a value, so
+     the page reads as maximally readable and yields nothing. "Is there text on
+     it" was never the question. "Did we manage to read any of it" is. */
+  const oc=await scan();
+  return oc?{kind:'fields',parsed:oc,via:'ocr'}:{kind:'text',parsed:null,why:ocrWhy()};}
 function rsFillFromParsed(){const P=_rsUpload&&_rsUpload.parsed;if(!P)return;
   const mark=k=>{markCycle(k);if(form[k])form[k].fromParse=true;};   // came from the schedule, not typed — tags an override as "parsed", not just "changed", in its note text
   const setk=(k,v)=>{if(v!=null&&v!==''){form=store.editForm(form,k,String(v));mark(k);}};
@@ -3132,14 +3174,14 @@ function renderSources(){
   const rcs=_rcsBusy
     ?`<div class="srcrow"><span class="spin" aria-hidden="true"></span><div><b>${esc(_rcsBusy.name)}</b> <span class="parsed">reading…</span><div class="sub">Reading the appraiser’s transmittal letter.</div></div></div>`
     :up
-    ?`<div class="srcrow"><span class="ok">✓</span><div><b>${esc(up.name)}</b> <span class="parsed">${_rn?'read · '+esc(_rfirm||'study')+' · '+_rn+' unit type'+(_rn===1?'':'s'):'uploaded · not read'}</span><div class="sub">${_rn?'The values are ready to apply.':'The letter could not be read — enter the values by hand below.'}</div></div>${_rn?'<button class="btn sm" id="rcsApply">Fill form from the study</button>':''}<button class="btn sm" id="upRcs">Replace</button></div>`
+    ?`<div class="srcrow"><span class="ok">✓</span><div><b>${esc(up.name)}</b> <span class="parsed">${_rn?'read · '+esc(_rfirm||'study')+' · '+_rn+' unit type'+(_rn===1?'':'s'):'uploaded · not read'}</span><div class="sub">${_rn?'The values are ready to apply.':'The letter could not be read — enter the values by hand below.'}</div></div>${_rn?'<button class="btn sm teal" id="rcsApply">Fill form from the study</button>':''}<button class="btn sm" id="upRcs">Replace</button></div>`
     :`<div class="srcrow${sl.need?'':' dim'}"><span class="mut">○</span><div><b>${esc(sl.title)}</b> <span class="${sl.need?'missing':'parsed'}">${sl.need?'not uploaded':'optional'}</span><div class="sub">${esc(sl.sub)}</div></div><button class="btn sm" id="upRcs">Upload PDF</button></div>`;
   const ru=_rsUpload;let rs;
   if(_rsBusy)rs=`<div class="srcrow"><span class="spin" aria-hidden="true"></span><div><b>${esc(_rsBusy.name||'Rent schedule')}</b> <span class="parsed">${esc(_rsBusy.note||'reading\u2026')}</span><div class="sub">${esc(_rsBusy.sub||'Reading the schedule\u2019s form fields and printed text.')}</div></div></div>`;
   else if(!ru)rs=`<div class="srcrow"><span class="mut">○</span><div><b>Current executed rent schedule</b> <span class="missing">not uploaded</span><div class="sub">Fills the unit mix, rents, utility allowances, ownership entity and principals.</div></div><button class="btn sm" id="upRs">Upload PDF</button></div>`;
   else if(ru.kind==='fields'){const p=ru.parsed;rs=`<div class="srcrow"><span class="ok">✓</span><div><b>${esc(ru.name)}</b> <span class="parsed">${ru.at?"read "+esc(niceDate(ru.at)):"read"}</span><div class="sub">${ru.via==='ocr'?'Scanned — check the values against the document. ':''}Nothing is saved until you save.</div></div><button class="btn sm teal" id="rsApply">Fill form from RS</button> <button class="btn sm" id="upRs">Replace</button></div>`;}
-  else if(ru.kind==='text')rs=`<div class="srcrow"><span class="mut">⚠</span><div><b>${esc(ru.name)}</b> <span class="missing">could not be read</span><div class="sub">Enter the values below.</div></div><button class="btn sm" id="upRs">Replace</button></div>`;
-  else rs=`<div class="srcrow"><span class="mut">⚠</span><div><b>${esc(ru.name)}</b> <span class="missing">could not be read</span><div class="sub">Scanned, but the values could not be read. Enter them below.</div></div><button class="btn sm" id="upRs">Replace</button></div>`;
+  else if(ru.kind==='text')rs=`<div class="srcrow"><span class="warn">${WARNICON}</span><div><b>${esc(ru.name)}</b> <span class="missing">could not be read</span><div class="sub">${ru.why?esc(ru.why)+' Enter the values below.':'Enter the values below.'}</div></div><button class="btn sm" id="upRs">Replace</button></div>`;
+  else rs=`<div class="srcrow"><span class="warn">${WARNICON}</span><div><b>${esc(ru.name)}</b> <span class="missing">could not be read</span><div class="sub">${ru.why?esc(ru.why)+' Enter the values below.':'Scanned, but the values could not be read. Enter them below.'}</div></div><button class="btn sm" id="upRs">Replace</button></div>`;
   const foot=`<input type="file" id="rcsFile" accept="application/pdf,.pdf" style="display:none"><input type="file" id="rsFile" accept="application/pdf,.pdf" style="display:none">`;
   /* The executed rent schedule comes first: it is the document that fills the
      form, and the one every package needs. The RCS study is second because it
@@ -3434,7 +3476,11 @@ function pkgCard(){
    green check to "FHA # · N/A". Presence is not the same as an answer. */
 const NA_RE=/^(n\/?a|n\.a\.?|none|null|tbd|-{1,3})$/i;
 function hasReal(k){const v=String(get(k)==null?'':get(k)).trim();return v!==''&&!NA_RE.test(v);}
-function chk(st,name,note){const ic=st==='warn'?'⚠':(st==='info'?'ⓘ':'✓');const cl=st==='warn'?'warn':(st==='info'?'info':'ok');return `<div class="chk"><span class="${cl}">${ic}</span><div><b>${name}</b><div class="sub">${note}</div></div></div>`;}
+const WARNICON='<svg class="wicon" viewBox="0 0 24 24" aria-hidden="true">'
+  +'<path d="M12 3.4 22.2 20.6H1.8Z" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round"/>'
+  +'<path d="M12 9.7v4.3" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/>'
+  +'<circle cx="12" cy="17.4" r="1.2" fill="currentColor"/></svg>';
+function chk(st,name,note){const ic=st==='warn'?WARNICON:(st==='info'?'ⓘ':'✓');const cl=st==='warn'?'warn':(st==='info'?'info':'ok');return `<div class="chk"><span class="${cl}">${ic}</span><div><b>${name}</b><div class="sub">${note}</div></div></div>`;}
 
 function isStateKey(k){return /\.(ua_reviewed|safmr_reviewed|type_reviewed|num_reviewed|ua_custom|safmr_custom)$/.test(k)||k==='tenant.mgmt_source'||k==='poc.mode'||/^poc\.custom_/.test(k)||k==='rent_schedule.date_eff_source'||k==='rent_schedule.date_eff_custom'||k==='ocaf.factor_src'||k==='ocaf.factor_custom';}
 function overrideCount(){const grouped=new Set();for(const b in ADDR_GROUPS)ADDR_GROUPS[b].forEach(k=>grouped.add(k));UNITS.forEach(i=>{grouped.add('units.'+i+'.br');grouped.add('units.'+i+'.ba');});
@@ -3981,10 +4027,10 @@ function wireBody(){
         setStatus('Rent schedule \u2014 '+SHORT[w]+' (page '+i+' of '+n+')\u2026');};
       busy('Reading…','Reading the document’s text.');
       let r;try{r=await parseRsPdf(b,step);}catch(e){r={kind:'scan',parsed:null};}finally{_rsBusy=null;}
-      _rsUpload={name:f.name,bytes:b,kind:r.kind,via:r.via,parsed:r.parsed,at:new Date().toISOString()};sf.value='';_rsArm=(r.kind==='fields'&&!!r.parsed);rsRemember();renderBody();
+      _rsUpload={name:f.name,bytes:b,kind:r.kind,via:r.via,why:r.why||'',parsed:r.parsed,at:new Date().toISOString()};sf.value='';_rsArm=(r.kind==='fields'&&!!r.parsed);rsRemember();renderBody();
       setStatus(r.kind==='fields'
         ?((r.via==='ocr'?'Rent schedule scanned — check the values against the document. ':'Rent schedule read. ')+'Press Enter to fill the form, or use “Fill form from RS” in '+secRef(1)+'.')
-        :'The values in this copy could not be read — enter them by hand below.');});};
+        :((r.why?r.why+' ':'')+'The values in this copy could not be read — enter them by hand below.'));});};
   const ra=el('rsApply');if(ra)ra.onclick=()=>rsFillFromParsed();
   const uu=el('undoUnit');if(uu)uu.onclick=()=>{if(!_undoStack.length)return;const e=_undoStack.pop();Object.keys(e.snap).forEach(k=>{form[k]=e.snap[k];});if(UNITS.indexOf(e.i)<0)UNITS.push(e.i);UNITS.sort((a,b)=>a-b);renderBody();setStatus('Unit type restored.');};
   const uc=el('undoCommit');if(uc)uc.onclick=()=>{_undoStack=[];renderBody();setStatus('Deletions kept.');};
@@ -5043,7 +5089,7 @@ function contactDialog(c){c=c||{};
   ['ccN','ccE','ccP'].forEach(id=>{const ff=el(id);if(ff&&ff.addEventListener)ff.addEventListener('keydown',ev=>{if(ev.key!=='Enter')return;ev.preventDefault();const d=(el('ccP').value||'').replace(/\D/g,'');if(d.length===0||d.length===10)el('dlgOk').click();});});
   el('dlgCancel').onclick=closeModal;
   el('dlgOk').onclick=async()=>{const patch={name:(el('ccN').value||'').trim(),email:(el('ccE').value||'').trim(),phone:(el('ccP').value||'').trim()};closeModal();try{if(c.id)await mpdb.updateContact(c.id,patch);else await mpdb.addContact(patch);renderContacts();}catch(e){saveFailedModal(e);}};}
-const __API={LABEL_HINTS,rsParseUnitType,fmtPhone,fmtDate,sMoney,sPct,sK,analysis,uaResolvedOf,uaConflict,uaUnresolved,renderMenu,renderLauncher,openMenu,openForm,openLauncher,ringSvg,niceDate,isDirty,overrideCount,isStateKey,attnFlags,pbUtil,clearUncheckedWriteins,srcOf:(k)=>srcOf(k),__openForm:(pid)=>{activePid=pid;return openForm('RCS');},__openCycleForm:(pid,cid)=>{activePid=pid;return openCycleForm(cid);},__renderBody:()=>renderBody(),__docMissing:(id)=>docMissing(id).map(x=>x.label),__docWarns:(id)=>docWarns(id).map(x=>x.label),__edit:(k,v)=>{form=store.editForm(form,k,v);},getVal:(k)=>get(k),modeOf:(kk)=>modeOf(kk),fieldKeys:(k)=>fieldKeys(k),keysCanSave:(ks)=>keysCanSave(ks),keysCanRevert:(ks)=>keysCanRevert(ks),keysNewDirty:(ks)=>keysNewDirty(ks),__revert:(k)=>store.revertForm(form,k),coupledKeys:(k)=>coupledKeys(k),__firstPid:()=>{const ps=mpdb?mpdb.listProperties():[];return ps.length?ps[0].id:null;},__boxes:(i)=>({ua:uaBox(i),safmr:safmrBox(i)}),__saveField:async(k)=>{form=await store.saveField(form,k);},__set:(f,u)=>{form=f;UNITS=u;},__cell:(k)=>form[k],
+const __API={LABEL_HINTS,rsParseUnitType,rsNum,fmtPhone,fmtDate,sMoney,sPct,sK,analysis,uaResolvedOf,uaConflict,uaUnresolved,renderMenu,renderLauncher,openMenu,openForm,openLauncher,ringSvg,niceDate,isDirty,overrideCount,isStateKey,attnFlags,pbUtil,clearUncheckedWriteins,srcOf:(k)=>srcOf(k),__openForm:(pid)=>{activePid=pid;return openForm('RCS');},__openCycleForm:(pid,cid)=>{activePid=pid;return openCycleForm(cid);},__renderBody:()=>renderBody(),__docMissing:(id)=>docMissing(id).map(x=>x.label),__docWarns:(id)=>docWarns(id).map(x=>x.label),__edit:(k,v)=>{form=store.editForm(form,k,v);},getVal:(k)=>get(k),modeOf:(kk)=>modeOf(kk),fieldKeys:(k)=>fieldKeys(k),keysCanSave:(ks)=>keysCanSave(ks),keysCanRevert:(ks)=>keysCanRevert(ks),keysNewDirty:(ks)=>keysNewDirty(ks),__revert:(k)=>store.revertForm(form,k),coupledKeys:(k)=>coupledKeys(k),__firstPid:()=>{const ps=mpdb?mpdb.listProperties():[];return ps.length?ps[0].id:null;},__boxes:(i)=>({ua:uaBox(i),safmr:safmrBox(i)}),__saveField:async(k)=>{form=await store.saveField(form,k);},__set:(f,u)=>{form=f;UNITS=u;},__cell:(k)=>form[k],
   /* The whole record, and the snapshot isDirty() measures against. The round-trip
      sweep needs a key-by-key diff (FORM-RULES "Before you deliver" 6): isDirty()
      compares VALUES ONLY, so a hidden side-effect key strands the form dirty with
@@ -5095,6 +5141,14 @@ if(SELFTEST)window.__t=__API;   // browser gets the identical surface, flag-gate
    anchors are read out of the template at runtime, never hand-measured, so a
    HUD form revision that moves the labels moves the anchors with it. */
 
+/* Why the last scan came back empty, in the endpoint's own words. Every failure
+   below used to collapse into one null, and the form then said "could not be
+   read" — which is what it says for a page with nothing on it, for a page Azure
+   declined, and for a page that simply took too long. Three different problems,
+   one useless sentence, and no way for the reader to know that trying again
+   might work. */
+let OCR_WHY='';
+function ocrWhy(){return OCR_WHY;}
 const OCR_MAXPAGES=4;                  // template is 3 pages; leave room for a cover sheet
 const OCR_MINPAIRS=8;                  // fewer matched labels than this is a guess, not a fit:
                                        // four alone will sit perfectly on the WRONG template page
@@ -5183,17 +5237,19 @@ function ocrRegister(words,anchors){ // -> transform onto the template, or null
   const cand=[];
   words.forEach(w=>{const t=w.s.trim();if(!OCR_TOKEN.test(t))return;
     const a=anchors[t.toLowerCase()];if(a)cand.push({dx:w.x0,dy:w.y0,tx:a.x,ty:a.y});});
-  if(cand.length<OCR_MINPAIRS)return null;
+  if(cand.length<OCR_MINPAIRS){
+    OCR_WHY='The scan came back, but only '+cand.length+' of the blank form\u2019s printed labels were recognised on the page (it needs '+OCR_MINPAIRS+' to line the page up).';
+    return null;}
   // Vote for a shift on a coarse grid: the true correspondences pile into one
   // bin while the mismatched ones scatter. Scale is left to least squares below.
   const votes=new Map();
   cand.forEach(p=>{const k=Math.round((p.tx-p.dx)/OCR_BIN)+':'+Math.round((p.ty-p.dy)/OCR_BIN);
     votes.set(k,(votes.get(k)||0)+1);});
   let bk=null,bv=0;votes.forEach((v,k)=>{if(v>bv){bv=v;bk=k;}});
-  if(!bk)return null;
+  if(!bk){OCR_WHY='The scan came back, but its '+cand.length+' recognised labels did not agree on where the page sits.';return null;}
   const kp=bk.split(':'),sx=+kp[0]*OCR_BIN,sy=+kp[1]*OCR_BIN;
   let f=ocrFit(cand.filter(p=>Math.abs(p.tx-p.dx-sx)<=OCR_BIN*2&&Math.abs(p.ty-p.dy-sy)<=OCR_BIN*2));
-  if(!f)return null;
+  if(!f){OCR_WHY='The scan came back and '+cand.length+' labels were recognised, but the page could not be squared with the blank form \u2014 it may be rotated or cropped.';return null;}
   for(let it=0;it<3;it++){ // re-select inliers against the fit, then refit
     const k2=cand.filter(p=>Math.hypot(ocrX(f,p.dx,p.dy)-p.tx,ocrY(f,p.dx,p.dy)-p.ty)<=OCR_TIGHT);
     if(k2.length<OCR_MINPAIRS)break;
@@ -5307,7 +5363,11 @@ async function ocrHalf(bytes,tplPg,skip,onStep){
   for(let i=0;i<pages.length;i++){
     if(skip&&skip.indexOf(i)>=0)continue;
     if(onStep)onStep(i+1,pages.length);
-    let pg=null;try{pg=await ocrAnalyze(pages[i]);}catch(e){return null;}
+    /* Skip the page, do not abandon the document. Azure timed out on page 1 of a
+       three-page executed copy and this returned null, so pages 2 and 3 — which
+       between them carry both halves of the form — were never even sent. A page
+       we could not read is a page we could not read, not a verdict on the rest. */
+    let pg=null;try{pg=await ocrAnalyze(pages[i]);}catch(e){OCR_WHY=(e&&e.message)||OCR_WHY;continue;}
     if(!pg||!pg.words||!pg.words.length)continue;
     if(!re.test(pg.words.map(w=>w.s).join(' ')))continue;   // never guess the half
     const got=ocrPageMap(pg,tplPg,tpl,rects);
@@ -5315,27 +5375,40 @@ async function ocrHalf(bytes,tplPg,skip,onStep){
   return null;}
 
 async function ocrParseRs(bytes,onStep){ // scan -> the tier-1 parsed shape, or null
+  OCR_WHY='';
   if(!window.PDFLib||!supaClient)return null;
-  const tpl=await ocrTemplate();if(!tpl)return null;
-  const rects=await rsFieldRects();if(!Object.keys(rects).length)return null;
-  let pages;try{pages=await ocrSplitPages(bytes,OCR_MAXPAGES);}catch(e){return null;}
+  const tpl=await ocrTemplate();if(!tpl){OCR_WHY='The blank HUD-92458 template could not be opened, so there was nothing to line the scan up against.';return null;}
+  const rects=await rsFieldRects();if(!Object.keys(rects).length){OCR_WHY='The blank form\u2019s field positions could not be read, so a scan cannot be placed onto it.';return null;}
+  let pages;try{pages=await ocrSplitPages(bytes,OCR_MAXPAGES);}catch(e){OCR_WHY='The document\u2019s pages could not be separated for scanning.';return null;}
   // Stop as soon as both halves of the form have turned up: on a plain two-page
   // scan that is two pages billed, not four, and nothing is read that we cannot
   // place. Which page is which is never assumed from its position.
   const got=[],txt=[];let pg0=-1,pg1=-1;
   for(let i=0;i<pages.length&&(pg0<0||pg1<0);i++){
     if(onStep)onStep(i+1,pages.length);
-    let pg=null;try{pg=await ocrAnalyze(pages[i]);}catch(e){return null;}
+    let pg=null;try{pg=await ocrAnalyze(pages[i]);}catch(e){OCR_WHY=(e&&e.message)||OCR_WHY;continue;}
     if(!pg||!pg.words||!pg.words.length)continue;
+    /* got[] and txt[] are indexed together and rsClassifyPages answers in that
+       index, not the page number — which is why a skipped page must not push a
+       placeholder here. */
     got.push(pg);txt.push(pg.words.map(w=>w.s).join(' '));
     const c=rsClassifyPages(txt);pg0=c.pg0;pg1=c.pg1;}
-  if(pg0<0)return null;
-  const A=ocrPageMap(got[pg0],0,tpl,rects);if(!A)return null;  // Part A is the half we cannot do without
+  if(pg0<0){
+    if(!OCR_WHY)OCR_WHY='The scan read '+got.length+' page'+(got.length===1?'':'s')+', but none of them looked like Part A of form HUD-92458.';
+    return null;}
+  const A=ocrPageMap(got[pg0],0,tpl,rects);
+  if(!A){if(!OCR_WHY)OCR_WHY='Part A was found but could not be lined up with the blank form.';return null;}  // Part A is the half we cannot do without
   const B=pg1>=0?ocrPageMap(got[pg1],1,tpl,rects):null;
   const s8=(A&&A.s8)||(B&&B.s8)||'';
   const F=Object.assign({},A.F,B?B.F:{});
   const outp=rsAssembleFields(n=>String(F[String(n)]||'').trim());
-  if(outp&&s8)outp.scalars['property.s8']=s8;
+  /* The last silent exit. The page can register perfectly and still fail here,
+     because rsAssembleFields holds the same totals gate tiers 1 and 2 answer to:
+     a unit mix whose counts do not add up is a misread, not a record. Saying so
+     is the difference between "the scan failed" and "the scan read the page but
+     the numbers did not reconcile" — only one of those is worth retrying. */
+  if(!outp){OCR_WHY='The page was read and placed correctly, but the figures it produced did not reconcile (the unit counts or rents did not add up), so they were not applied.';return null;}
+  if(s8)outp.scalars['property.s8']=s8;
   return outp;}   // rsPartB is told not to claim definite reads for a positional tier
 /* rcs.js — reads the appraiser's completed RCS study.  window.RCSParse
    ------------------------------------------------------------------
