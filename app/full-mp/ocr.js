@@ -14,6 +14,14 @@
    anchors are read out of the template at runtime, never hand-measured, so a
    HUD form revision that moves the labels moves the anchors with it. */
 
+/* Why the last scan came back empty, in the endpoint's own words. Every failure
+   below used to collapse into one null, and the form then said "could not be
+   read" — which is what it says for a page with nothing on it, for a page Azure
+   declined, and for a page that simply took too long. Three different problems,
+   one useless sentence, and no way for the reader to know that trying again
+   might work. */
+let OCR_WHY='';
+function ocrWhy(){return OCR_WHY;}
 const OCR_MAXPAGES=4;                  // template is 3 pages; leave room for a cover sheet
 const OCR_MINPAIRS=8;                  // fewer matched labels than this is a guess, not a fit:
                                        // four alone will sit perfectly on the WRONG template page
@@ -226,7 +234,11 @@ async function ocrHalf(bytes,tplPg,skip,onStep){
   for(let i=0;i<pages.length;i++){
     if(skip&&skip.indexOf(i)>=0)continue;
     if(onStep)onStep(i+1,pages.length);
-    let pg=null;try{pg=await ocrAnalyze(pages[i]);}catch(e){return null;}
+    /* Skip the page, do not abandon the document. Azure timed out on page 1 of a
+       three-page executed copy and this returned null, so pages 2 and 3 — which
+       between them carry both halves of the form — were never even sent. A page
+       we could not read is a page we could not read, not a verdict on the rest. */
+    let pg=null;try{pg=await ocrAnalyze(pages[i]);}catch(e){OCR_WHY=(e&&e.message)||OCR_WHY;continue;}
     if(!pg||!pg.words||!pg.words.length)continue;
     if(!re.test(pg.words.map(w=>w.s).join(' ')))continue;   // never guess the half
     const got=ocrPageMap(pg,tplPg,tpl,rects);
@@ -234,6 +246,7 @@ async function ocrHalf(bytes,tplPg,skip,onStep){
   return null;}
 
 async function ocrParseRs(bytes,onStep){ // scan -> the tier-1 parsed shape, or null
+  OCR_WHY='';
   if(!window.PDFLib||!supaClient)return null;
   const tpl=await ocrTemplate();if(!tpl)return null;
   const rects=await rsFieldRects();if(!Object.keys(rects).length)return null;
@@ -244,8 +257,11 @@ async function ocrParseRs(bytes,onStep){ // scan -> the tier-1 parsed shape, or 
   const got=[],txt=[];let pg0=-1,pg1=-1;
   for(let i=0;i<pages.length&&(pg0<0||pg1<0);i++){
     if(onStep)onStep(i+1,pages.length);
-    let pg=null;try{pg=await ocrAnalyze(pages[i]);}catch(e){return null;}
+    let pg=null;try{pg=await ocrAnalyze(pages[i]);}catch(e){OCR_WHY=(e&&e.message)||OCR_WHY;continue;}
     if(!pg||!pg.words||!pg.words.length)continue;
+    /* got[] and txt[] are indexed together and rsClassifyPages answers in that
+       index, not the page number — which is why a skipped page must not push a
+       placeholder here. */
     got.push(pg);txt.push(pg.words.map(w=>w.s).join(' '));
     const c=rsClassifyPages(txt);pg0=c.pg0;pg1=c.pg1;}
   if(pg0<0)return null;
