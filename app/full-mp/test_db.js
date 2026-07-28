@@ -5,7 +5,7 @@
    shows it, and MIN_CHECKS catches a run that dies partway — a short count is
    a failure, not a pass. Adding checks? Raise MIN_CHECKS. */
 const { makeDb, memoryAdapter, isPerCycleKey, migrate, computeAnalysis, computeSalutation, CROSSWALK } = require('./db.js');
-const MIN_CHECKS = 114;
+const MIN_CHECKS = 119;
 let fails = 0, n = 0, verdict = null;
 const BAR = '═'.repeat(68);
 function fail(msg, err) {
@@ -141,7 +141,18 @@ function jsonAdapter() { let s = null; return { get: async () => (s ? JSON.parse
   console.log('\n─ 8b · WHAT CARRIES INTO A NEW CYCLE ─');
   const { cid: cid2 } = await cdb.createCycle(cpid, { programs: ['rcs'], effective_date: '2027-09-01' });
   const c2 = cdb.getFlatCycle(cid2);
-  ok('current rents carry forward', c2['units.0.current'].value, '1903');
+  /* An RCS year uploads an executed rent schedule that states the current
+     rents and the utility allowances. Inheriting last year's put them on the
+     form wearing the colour of saved truth, which is the one thing they are
+     not. OCAF and UAF years have no schedule to upload, so there they still
+     carry — cycleAnalysis already falls back to the current rent for the
+     proposed. */
+  ok('an RCS year does NOT inherit last year\'s current rents', c2['units.0.current'], undefined);
+  ok('nor its utility allowances', c2['units.0.ua_exec'], undefined);
+  ok('nor what LAST year\'s study read', c2['units.0.br_rcs'], undefined);
+  ok('nor the SAFMR ceilings HUD restates every year', c2['units.0.safmr_hud'], undefined);
+  ok('nor a decision made about numbers that have changed', c2['units.0.safmr_reviewed'], undefined);
+  ok('nor the owner\'s checklist, which is signed per package', c2['check.0'], undefined);
   ok('unit mix carries forward', c2['units.0.num_units'].value, '51');
   ok('last cycle\'s PROPOSED rents do not', c2['units.0.proposed'], undefined);
   ok('the appraiser does not', c2['appr.firm'], undefined);

@@ -1785,10 +1785,13 @@ function fillNote(rec,up){
    sit level and the section does not reflow as a file is read. */
 function srcTile(o){
   return '<div class="srcrow'+(o.dim?' dim':'')+'">'
-    +'<div class="sfhead">'+o.icon+'<b class="sfname" title="'+esc(o.name)+'">'+esc(o.name)+'</b></div>'
-    +'<div class="sfmeta"><span class="'+o.stateCls+'">'+o.state+'</span></div>'
-    +'<div class="sfsub">'+o.sub+'</div>'
-    +(o.acts?('<div class="sfacts">'+o.acts+'</div>'):'<div class="sfacts"></div>')
+    +o.icon
+    +'<div class="sftext">'
+      +'<b class="sfname" title="'+esc(o.name)+'">'+esc(o.name)+'</b>'
+      +'<div class="sfmeta"><span class="'+o.stateCls+'">'+o.state+'</span></div>'
+      +'<div class="sfsub">'+o.sub+'</div>'
+    +'</div>'
+    +'<div class="sfacts">'+(o.acts||'')+'</div>'
     +'</div>';}
 let _rsFill=null,_rcsFill=null;
 function renderSources(){
@@ -2097,13 +2100,13 @@ function _renderCommand(){const a=analysis();const pCur=a.ceil>0?clamp(a.cg/a.ce
         <div class="glabels"><div class="gl l"><b style="color:#2f7d57">${money(priced?CG:a.cg)}</b><i>current</i></div><div class="gl c"><b style="color:${priced?'#47a377':'#94a3b8'}">${priced?money(PG):'—'}</b><i>proposed</i></div><div class="gl r"><b>${(priced?CEIL:a.ceil)>0?money(priced?CEIL:a.ceil):'—'}</b><i>150% ceiling · HUD SAFMR</i>${partial?`<i class="amber">⚠ ${a.tTot-a.tPr} unit type${a.tTot-a.tPr===1?'':'s'} not priced yet</i>`:''}${a.safmrConflict?`<i class="amber">⚠ RCS differs on ≥1 type</i>`:(a.safmrMissing?`<i class="amber">⚠ SAFMR needed</i>`:(a.countsMissing&&a.safmrHave?`<i class="amber">⚠ unit counts needed</i>`:''))}</div></div>
        </div>
        ${(a.ceil>0&&priced)?`<div class="passbox" style="background:${PASS?'#dcfce7':'#fee2e2'};color:${PASS?'#166534':'#b91c1c'};border-color:${PASS?'#86efac':'#fca5a5'}">${PASS?'✓ PASS':'✗ OVER'}<small>${money(Math.abs(HEAD))} ${PASS?'headroom':'over'}${partial?' · so far':''}</small></div>`:`<div class="passbox" style="background:#f1f4f9;color:#64748b;border-color:#d7deea">${a.ceil>0?'Proposed rents needed':(a.countsMissing&&a.safmrHave?'Unit counts needed':'SAFMR needed')}<small>${a.ceil>0?('enter them in '+secRef(6)):(a.countsMissing&&a.safmrHave?('add the number of units in '+secRef(6)):(hudBlockerShort()||'enter or pull from HUD'))}</small></div>`}</div>
-     <div class="lift"><b>RCS increase over the current rent roll</b>${!priced?`<div class="liftnote">The lift appears once proposed rents are entered in ${secRef(6)}.</div>`:`<div class="liftnums"><span><b style="color:${liftClr(a.pct)}">${sPct(a.pct)}</b><i>${liftWord(a.pct)}</i></span><span><b style="color:${liftClr(a.perUnit)}">${sMoney(a.perUnit)}</b><i>per unit</i></span><span><b style="color:${liftClr(a.dMo)}">${sMoney(a.dMo)}</b><i>/mo</i></span><span><b style="color:${liftClr(a.dYr)}">${sK(a.dYr)}</b><i>annualized</i></span></div>`}</div>
+     <div class="lift"><b>RCS increase over the current rent roll</b>${!priced?`<div class="liftnote">The lift appears once proposed rents are entered in ${secRef(6)}.</div>`:`<div class="liftnums"><span><b style="color:${liftClr(a.pct)}">${sPct(a.pct)}</b><i>${liftWord(a.pct)}</i></span><span><b style="color:${liftClr(a.perUnit)}">${sMoney(a.perUnit)}</b><i>per unit</i></span><span><b style="color:${liftClr(a.dMo)}">${sMoney(a.dMo)}</b><i>per month</i></span><span><b style="color:${liftClr(a.dYr)}">${sK(a.dYr)}</b><i>per year</i></span></div>`}</div>
    </div>`;
   } else {
     const C=ocafCalc();let dMo=0,units=0;UNITS.forEach(i=>{const n=numf(get('units.'+i+'.num_units')),cur=numf(get('units.'+i+'.current'));if(n&&cur&&C.R>0){dMo+=n*(Math.round(cur*C.R)-cur);units+=n;}});
     const ocafBits=hasProg('ocaf')
       ?`<div class="cctitle">${C.R>0?('OCAF applies ×'+C.R.toFixed(3)+' to current contract rents'):'Complete the OCAF worksheet — factor and debt service'}</div><div class="ccsub">${C.pct>0?('Published ×'+C.N.toFixed(3)+(get('ocaf.factor_fy')?' (FY'+esc(get('ocaf.factor_fy'))+')':'')+' → ×'+(C.R>0?C.R.toFixed(3):'—')+' effective after the debt-service carve-out'):'Pull the published factor from the Federal Register, or enter it manually ('+secRef(10)+').'}</div>
-        <div class="lift"><b>OCAF increase over the current rent roll</b><div class="liftnums"><span><b style="color:${liftClr(C.R>0?C.R-1:0)}">${C.R>0?((C.R>=1?'+':'')+((C.R-1)*100).toFixed(1)+'%'):'—'}</b><i>${C.R>0&&C.R<1?'decrease':'increase'}</i></span><span><b style="color:${liftClr(dMo)}">${units?sMoney(dMo/units):'+$0'}</b><i>per unit avg</i></span><span><b style="color:${liftClr(dMo)}">${sMoney(dMo)}</b><i>/mo</i></span><span><b style="color:${liftClr(dMo)}">${sK(dMo*12)}</b><i>annualized</i></span></div></div>`
+        <div class="lift"><b>OCAF increase over the current rent roll</b><div class="liftnums"><span><b style="color:${liftClr(C.R>0?C.R-1:0)}">${C.R>0?((C.R>=1?'+':'')+((C.R-1)*100).toFixed(1)+'%'):'—'}</b><i>${C.R>0&&C.R<1?'decrease':'increase'}</i></span><span><b style="color:${liftClr(dMo)}">${units?sMoney(dMo/units):'+$0'}</b><i>per unit avg</i></span><span><b style="color:${liftClr(dMo)}">${sMoney(dMo)}</b><i>per month</i></span><span><b style="color:${liftClr(dMo)}">${sK(dMo*12)}</b><i>per year</i></span></div></div>`
       :`<div class="cctitle">Utility allowance factor adjustment</div><div class="ccsub">Tenant-paid utility allowances, adjusted by the published state factors. Contract rents are not affected.</div>`;
     card1=`<div class="ccard afford"><div class="cck">${esc(cycleProgs().map(x=>PROG_NAMES[x]||x).join(' + '))} ADJUSTMENT</div>${ocafBits}${hasProg('uaf')?uaStrip():''}</div>`;
   }
@@ -2932,7 +2935,7 @@ function rcsAffPane(a){
   return '<div class="aff"><div class="aff-top"><span class="aff-k">AFFORDABILITY CHECK</span><span class="aff-pass '+(PASS?'ok':'over')+'">'+(PASS?'&#10003; PASS':'&#10007; OVER')+' &middot; '+money(Math.abs(HEAD))+(PASS?' headroom':' over')+(partial?' &middot; '+a.types_priced+' of '+a.types_total+' types priced':'')+'</span></div>'
     +'<div class="aff-body"><div class="aff-left"><div class="aff-gauge">'+gaugeSegs(pCur,pPro)+'<div class="oend"></div></div>'
       +'<div class="aff-anchors"><span><b style="color:#2f7d57">'+money(CG)+'</b><i>current</i></span><span><b style="color:#47a377">'+money(PG)+'</b><i>proposed</i></span><span><b>'+money(CEIL)+'</b><i>150% ceiling</i></span></div></div>'
-    +'<div class="aff-right"><span><b style="color:'+liftClr(a.pct)+'">'+sPct(a.pct)+'</b><i>'+liftWord(a.pct)+'</i></span><span><b style="color:'+liftClr(a.per_unit)+'">'+sMoney(a.per_unit)+'</b><i>per unit</i></span><span><b style="color:'+liftClr(dMo)+'">'+sMoney(dMo)+'</b><i>/mo</i></span><span><b style="color:'+liftClr(dYr)+'">'+sK(dYr)+'</b><i>/yr</i></span></div></div></div>';}
+    +'<div class="aff-right"><span><b style="color:'+liftClr(a.pct)+'">'+sPct(a.pct)+'</b><i>'+liftWord(a.pct)+'</i></span><span><b style="color:'+liftClr(a.per_unit)+'">'+sMoney(a.per_unit)+'</b><i>per unit</i></span><span><b style="color:'+liftClr(dMo)+'">'+sMoney(dMo)+'</b><i>per month</i></span><span><b style="color:'+liftClr(dYr)+'">'+sK(dYr)+'</b><i>/yr</i></span></div></div></div>';}
 /* ---- CYCLES: property-page cards + create picker ----------------------
    A cycle is a complete frozen snapshot (see CYCLES-OCAF-UAF-DESIGN.md).
    The dominant cycle (latest effective date; rent-setting beats UAF-only)
@@ -2993,23 +2996,34 @@ function bootstrapFirstCycle(p){
 function newCycleDialog(){
   let effPh='';try{const _cys=(mpdb.listCycles(activePid)||[]).filter(c=>c.effective_date);
     if(_cys.length){const d=String(_cys.map(c=>String(c.effective_date)).sort().pop());const m=d.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m)effPh=m[2]+'/'+m[3]+'/'+((+m[1])+1);}}catch(e){}
+  /* Two cards for one question. A year sets its rents by a market study or by
+     the published factor, never both, and the old dialog enforced that by
+     quietly unticking whichever you had ticked first — a rule you could only
+     learn by watching it happen to you. */
+  const card=(id,tag,name,sub)=>'<label class="cypg" for="'+id+'">'
+    +'<input type="radio" name="cyprog" id="'+id+'">'
+    +'<span class="cyc-tag">'+tag+'</span>'
+    +'<span class="cyc-n">'+name+'</span>'
+    +'<span class="cyc-s">'+sub+'</span></label>';
   modal('<div class="dlg-t">Start new package</div>'
-    +'<div class="dlg-field"><label>This package completes</label>'
-    +'<div class="cypick"><label class="cyopt"><input type="checkbox" id="cyRCS"> RCS \u2014 5-year market reset</label>'
-    +'<label class="cyopt"><input type="checkbox" id="cyOCAF"> OCAF \u2014 annual factor adjustment</label>'
-    +'<label class="cyopt"><input type="checkbox" id="cyUAF"> UAF \u2014 utility allowance factor</label></div></div>'
-    +'<div class="dlg-field"><label>Rents effective (mm/dd/yyyy)</label><input id="cyEff" autocomplete="off" placeholder="'+esc(effPh)+'"></div>'
+    +'<div class="dlg-sub">'+esc((((mpdb.listProperties()||[]).find(p=>p.id===activePid))||{}).name||'')+(effPh?(' \u00b7 the next one after '+esc(String(effPh).slice(-4))):'')+'</div>'
+    +'<div class="dlg-field"><label>How are the rents being set?</label>'
+    +'<div class="cypgs">'+card('cyRCS','RCS','Market reset','A rent comparability study sets the rents. Every fifth year.')
+                            +card('cyOCAF','OCAF','Factor adjustment','HUD\u2019s published operating-cost factor sets the rents.')+'</div></div>'
+    +'<div class="dlg-field"><label class="cyaddl">And alongside it</label>'
+    +'<label class="cyopt cyadd"><input type="checkbox" id="cyUAF"> <span><b>UAF</b> \u2014 revise the utility allowances in the same package</span></label></div>'
+    +'<div class="dlg-field"><label>Rents effective (mm/dd/yyyy)</label><input id="cyEff" autocomplete="off" value="'+esc(effPh)+'" placeholder="'+esc(effPh)+'"></div>'
     +'<div class="autherr" id="cyErr"></div>'
     +'<div class="dlg-row"><button class="btn" id="dlgCancel">Cancel</button><span class="dlg-sp"></span><button class="btn p" id="dlgOk">Create</button></div>');
   const rcs=el('cyRCS'),ocaf=el('cyOCAF'),uaf=el('cyUAF'),err=el('cyErr');
   const ce=el('cyEff');if(ce)ce.addEventListener('input',()=>{ce.value=fmtDateInput(ce.value);});
   _dlgEnter=()=>{const ok=el('dlgOk');if(ok)ok.click();};
-  rcs.onchange=()=>{if(rcs.checked)ocaf.checked=false;};   // RCS and OCAF never share a year
-  ocaf.onchange=()=>{if(ocaf.checked)rcs.checked=false;};
+  /* One radio group. The exclusion is the control's own, not a pair of
+     handlers reaching across to each other. */
   el('dlgCancel').onclick=closeModal;
   el('dlgOk').onclick=async()=>{
     const programs=[];if(rcs.checked)programs.push('rcs');if(ocaf.checked)programs.push('ocaf');if(uaf.checked)programs.push('uaf');
-    if(!programs.length){err.textContent='Pick at least one program.';return;}
+    if(!rcs.checked&&!ocaf.checked){err.textContent='Choose how the rents are being set \u2014 a market reset or a factor adjustment.';return;}
     const eff=fmtDateInput((el('cyEff').value||'').trim())||effPh;   // left blank, the package takes the date shown in gray: a year on from the last one
     const label=(eff.match(/(\d{4})/)||[])[1]||String(new Date().getFullYear());
     closeModal();
