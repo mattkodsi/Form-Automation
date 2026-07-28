@@ -1159,7 +1159,8 @@ function rcsFillKeys(){
 function rcsFillFromParsed(){
   const P=_rcsUpload&&_rcsUpload.parsed;if(!P)return;
   deriveUnits();          // a row added since the last render is still a row to fill
-  const mark=k=>{markCycle(k);if(form[k])form[k].fromParse=true;};
+  const _wrote=[];
+  const mark=k=>{markCycle(k);if(form[k])form[k].fromParse=true;if(_wrote.indexOf(k)<0)_wrote.push(k);};
   const put=(k,v)=>{if(v!=null&&v!==''){form=store.editForm(form,k,String(v));mark(k);}};
   const setk=(k,v)=>{if(rsOffers(k))return;put(k,v);};      // RS > RCS — see rsOffers
 
@@ -1243,7 +1244,7 @@ function rcsFillFromParsed(){
 
   deriveUnits();renderBody();scheduleHudRefresh();
   const n=rcsFillKeys().length;
-  setStatus('Form filled from the RCS study — '+n+' value'+(n===1?'':'s')+' marked “RCS report”.'
+  _rcsFill=fillRecord(_rcsUpload,_wrote);  setStatus('Form filled from the RCS study — '+n+' value'+(n===1?'':'s')+' marked “RCS report”.'
     +(added.length?' Added '+added.length+' unit row'+(added.length===1?'':'s')+' the study prices and the form did not have ('+added.join(', ')+') — check the count and type against the executed schedule.':'')
     +(ambiguous?' '+ambiguous+' unit row'+(ambiguous===1?'':'s')+' matched more than one line in the study and '+(ambiguous===1?'was':'were')+' left for you — the study prices them separately and the form cannot tell which is which.':'')
     +' Review the highlighted cells, then “Update property profile”.');
@@ -1731,7 +1732,8 @@ async function parseRsPdf(bytes,onStep){
   const oc=await scan();
   return oc?{kind:'fields',parsed:oc,via:'ocr'}:{kind:'text',parsed:null,why:ocrWhy()};}
 function rsFillFromParsed(){const P=_rsUpload&&_rsUpload.parsed;if(!P)return;
-  const mark=k=>{markCycle(k);if(form[k])form[k].fromParse=true;};   // came from the schedule, not typed — tags an override as "parsed", not just "changed", in its note text
+  const _wrote=[];
+  const mark=k=>{markCycle(k);if(form[k])form[k].fromParse=true;if(_wrote.indexOf(k)<0)_wrote.push(k);};   // came from the schedule, not typed — tags an override as "parsed", not just "changed", in its note text
   const setk=(k,v)=>{if(v!=null&&v!==''){form=store.editForm(form,k,String(v));mark(k);}};
   { const pn=P.scalars['property.name'];
     if(pn&&pn.indexOf('/')>=0){const parts=pn.split('/').map(x=>x.trim()).filter(Boolean);
@@ -1767,30 +1769,76 @@ function rsFillFromParsed(){const P=_rsUpload&&_rsUpload.parsed;if(!P)return;
          paints as this-cycle and its pair can save it; unmarked it wore the grey
          of an untouched cell and could not be saved at all. */
       if(get('nonrev.'+ix+'.num_units')===''){form=store.editForm(form,'nonrev.'+ix+'.num_units','1');mark('nonrev.'+ix+'.num_units');}});}
+  _rsFill=fillRecord(_rsUpload,_wrote);
   deriveUnits();renderBody();scheduleHudRefresh();scheduleFactorRefresh();
   setStatus('Form filled from the executed rent schedule \u2014 review the highlighted values, then \u201cUpdate property profile\u201d.');}
+/* A fill is remembered against the FILE it came from, so replacing the
+   document — or opening another property — leaves nothing behind claiming a
+   fill that did not happen here. */
+function fillRecord(up,keys){return up?{name:up.name||'',n:keys.length,keys:keys.slice()}:null;}
+function fillNote(rec,up){
+  if(!rec||!up||rec.name!==(up.name||''))return null;
+  const left=rec.keys.filter(k=>form[k]&&form[k].source!=='database').length;
+  const n=rec.n+' value'+(rec.n===1?'':'s');
+  return left?('Filled '+n+' \u2014 '+left+' still to save.'):('Filled '+n+', all saved.');}
+/* One tile per document, the same shape whichever state it is in, so the two
+   sit level and the section does not reflow as a file is read. */
+function srcTile(o){
+  return '<div class="srcrow'+(o.dim?' dim':'')+'">'
+    +'<div class="sfhead">'+o.icon+'<b class="sfname" title="'+esc(o.name)+'">'+esc(o.name)+'</b></div>'
+    +'<div class="sfmeta"><span class="'+o.stateCls+'">'+o.state+'</span></div>'
+    +'<div class="sfsub">'+o.sub+'</div>'
+    +(o.acts?('<div class="sfacts">'+o.acts+'</div>'):'<div class="sfacts"></div>')
+    +'</div>';}
+let _rsFill=null,_rcsFill=null;
 function renderSources(){
   const up=_rcsUpload;const sl=srcDocLabel();
   const _rp=up&&up.parsed,_rn=(_rp&&_rp.units)?_rp.units.length:0;
   const _rfirm=_rp&&_rp.firm==='belfry'?'Belfry Valuation':(_rp&&_rp.firm==='cornerstone'?'Cornerstone Valuation Services':null);
+  const SPIN='<span class="spin" aria-hidden="true"></span>',OK='<span class="ok">\u2713</span>',
+        MUT='<span class="mut">\u25cb</span>',WARN='<span class="warn">'+WARNICON+'</span>';
   const rcs=_rcsBusy
-    ?`<div class="srcrow"><span class="spin" aria-hidden="true"></span><div><b>${esc(_rcsBusy.name)}</b> <span class="parsed">reading…</span><div class="sub">Reading the appraiser’s transmittal letter.</div></div></div>`
+    ?srcTile({icon:SPIN,name:_rcsBusy.name,state:'reading\u2026',stateCls:'parsed',
+              sub:'Reading the appraiser\u2019s transmittal letter.'})
     :up
-    ?`<div class="srcrow"><span class="ok">✓</span><div><b>${esc(up.name)}</b> <span class="parsed">${_rn?'read · '+esc(_rfirm||'study')+' · '+_rn+' unit type'+(_rn===1?'':'s'):'uploaded · not read'}</span><div class="sub">${_rn?'The values are ready to apply.':((up.parsed&&up.parsed.textless)?'This copy is a scan, so no values could be read. Enter them by hand below.':'No appraiser’s letter was found in this file. Check that it is the complete study.')}</div></div>${_rn?'<button class="btn sm teal" id="rcsApply">Fill form from study</button>':''}<button class="btn sm" id="upRcs">Replace</button></div>`
-    :`<div class="srcrow${sl.need?'':' dim'}"><span class="mut">○</span><div><b>${esc(sl.title)}</b> <span class="${sl.need?'missing':'parsed'}">${sl.need?'not uploaded':'optional'}</span><div class="sub">${esc(sl.sub)}</div></div><button class="btn sm" id="upRcs">Upload PDF</button></div>`;
+    ?srcTile({icon:OK,name:up.name,
+              state:_rn?('read \u00b7 '+(_rfirm||'study')+' \u00b7 '+_rn+' unit type'+(_rn===1?'':'s')):'uploaded \u00b7 not read',
+              stateCls:'parsed',
+              sub:_rn?(fillNote(_rcsFill,up)||'The values are ready to apply.')
+                    :((up.parsed&&up.parsed.textless)?'This copy is a scan, so no values could be read. Enter them by hand below.'
+                                                     :'No appraiser\u2019s letter was found in this file. Check that it is the complete study.'),
+              acts:(_rn?'<button class="btn sm teal" id="rcsApply">Fill form from study</button>':'')
+                   +'<button class="btn sm" id="upRcs">Replace</button>'})
+    :srcTile({icon:MUT,dim:!sl.need,name:sl.title,state:sl.need?'not uploaded':'optional',
+              stateCls:sl.need?'missing':'parsed',sub:esc(sl.sub),
+              acts:'<button class="btn sm" id="upRcs">Upload PDF</button>'});
   const ru=_rsUpload;let rs;
-  if(_rsBusy)rs=`<div class="srcrow"><span class="spin" aria-hidden="true"></span><div><b>${esc(_rsBusy.name||'Rent schedule')}</b> <span class="parsed">${esc(_rsBusy.note||'reading\u2026')}</span><div class="sub">${esc(_rsBusy.sub||'Reading the schedule\u2019s form fields and printed text.')}</div></div></div>`;
-  else if(!ru)rs=`<div class="srcrow"><span class="mut">○</span><div><b>Current executed rent schedule</b> <span class="missing">not uploaded</span><div class="sub">Fills the unit mix, rents, utility allowances, ownership entity and principals.</div></div><button class="btn sm" id="upRs">Upload PDF</button></div>`;
+  if(_rsBusy)rs=srcTile({icon:SPIN,name:_rsBusy.name||'Rent schedule',
+      state:_rsBusy.note||'reading\u2026',stateCls:'parsed',
+      sub:esc(_rsBusy.sub||'Reading the schedule\u2019s form fields and printed text.')});
+  else if(!ru)rs=srcTile({icon:MUT,name:'Current executed rent schedule',state:'not uploaded',stateCls:'missing',
+      sub:'Fills the unit mix, rents, utility allowances, ownership entity and principals.',
+      acts:'<button class="btn sm" id="upRs">Upload PDF</button>'});
   else if(ru.kind==='fields'){const p=ru.parsed;const _half=!!(p&&p.halfB);
-    rs=`<div class="srcrow"><span class="${_half?'warn':'ok'}">${_half?WARNICON:'✓'}</span><div><b>${esc(ru.name)}</b> <span class="${_half?'missing':'parsed'}">${_half?'front half read only':(ru.at?"read "+esc(niceDate(ru.at)):"read")}</span><div class="sub">${_half?'Part A came through; Parts F and G — the ownership entity, the principals and the signatory — did not. Replace with a clearer copy, or enter those by hand. ':(ru.via==='ocr'?'Scanned — check the values against the document. ':'')}Nothing is saved until you save.</div></div><button class="btn sm teal" id="rsApply">Fill form from RS</button> <button class="btn sm" id="upRs">Replace</button></div>`;}
-  else if(ru.kind==='text')rs=`<div class="srcrow"><span class="warn">${WARNICON}</span><div><b>${esc(ru.name)}</b> <span class="missing">could not be read</span><div class="sub">${ru.why?esc(ru.why)+' Enter the values below.':'Enter the values below.'}</div></div><button class="btn sm" id="upRs">Replace</button></div>`;
-  else rs=`<div class="srcrow"><span class="warn">${WARNICON}</span><div><b>${esc(ru.name)}</b> <span class="missing">could not be read</span><div class="sub">${ru.why?esc(ru.why)+' Enter the values below.':'Scanned, but the values could not be read. Enter them below.'}</div></div><button class="btn sm" id="upRs">Replace</button></div>`;
+    /* The half-read warning is about the FILE, so it stays with the file; the
+       fill line is about the form, and replaces the sentence that used to be
+       there whether or not anything had been filled. */
+    rs=srcTile({icon:_half?WARN:OK,name:ru.name,
+      state:_half?'front half read only':(ru.at?('read '+niceDate(ru.at)):'read'),
+      stateCls:_half?'missing':'parsed',
+      sub:(_half?'Part A came through; Parts F and G \u2014 the ownership entity, the principals and the signatory \u2014 did not. Replace with a clearer copy, or enter those by hand. ':(ru.via==='ocr'?'Scanned \u2014 check the values against the document. ':''))
+          +(fillNote(_rsFill,ru)||'No values have been applied to the form yet.'),
+      acts:'<button class="btn sm teal" id="rsApply">Fill form from RS</button><button class="btn sm" id="upRs">Replace</button>'});}
+  else rs=srcTile({icon:WARN,name:ru.name,state:'could not be read',stateCls:'missing',
+      sub:ru.why?(esc(ru.why)+' Enter the values below.')
+                :(ru.kind==='text'?'Enter the values below.':'Scanned, but the values could not be read. Enter them below.'),
+      acts:'<button class="btn sm" id="upRs">Replace</button>'});
   const foot=`<input type="file" id="rcsFile" accept="application/pdf,.pdf" style="display:none"><input type="file" id="rsFile" accept="application/pdf,.pdf" style="display:none">`;
   /* The executed rent schedule comes first: it is the document that fills the
      form, and the one every package needs. The RCS study is second because it
      is the package's own new evidence, and in an OCAF or UAF year there is no
      study at all. */
-  return card(1,sectionPill(1),rs+rcs+foot);}
+  return card(1,sectionPill(1),'<div class="srcgrid">'+rs+rcs+'</div>'+foot);}
 
 function sectionKeys(n){if(n===10)return ['ocaf.g','ocaf.rate_type','ocaf.ds_annual','ocaf.ds_t12','ocaf.ds_f12','ocaf.factor_pub','ocaf.factor_custom','ocaf.factor_src'];
   if(n===11)return ['uaf.f_oil','uaf.f_gas','uaf.f_electric','uaf.f_water'].concat(UNITS.flatMap(i=>UAF_UTILS.map(u=>'units.'+i+'.uac_'+u[0])));

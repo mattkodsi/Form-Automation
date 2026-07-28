@@ -335,12 +335,25 @@ button.gdoc{justify-content:space-between}
 /* min-height, so a row whose text wraps to one line and a row whose text wraps
    to two put their buttons at the same distance from the row's own top edge —
    the buttons are what the eye tracks down the column, and they were stepping. */
-.srcrow{display:grid;grid-template-columns:17px minmax(0,1fr) 172px 96px;justify-content:start;align-items:center;gap:0 12px;padding:9px 0;min-height:47px;border-bottom:1px solid #f0f2f7;box-sizing:border-box}
-/* The text column stops growing well before the card's edge: the buttons are
-   meant to sit at a settled distance in from the right, not jammed against it.
-   A row with one button (Upload PDF, or Replace on a copy that could not be
-   read) lands it in the action column, beside the others. */
-.srcrow{grid-template-columns:17px minmax(0,560px) 172px 96px}
+/* Two documents, side by side while there is room for both and stacked when
+   there is not. Equal tiles rather than a table: the buttons then line up
+   because they are in the same place in two identical shapes, not because a
+   column was measured to fit the longer of two labels. */
+.srcgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:12px;padding:11px 0 3px;align-items:stretch}
+.srcrow{display:grid;grid-template-rows:auto auto 1fr auto;gap:3px;border:1px solid #e3e8f1;border-radius:10px;background:#fff;padding:11px 13px 12px;box-sizing:border-box}
+/* Two tiles of unequal content are still two tiles of one height: an
+   uploaded schedule beside a study nobody has supplied yet must not sit six
+   pixels proud of it. */
+.srcgrid>.srcrow{align-self:stretch}
+.srcrow.dim{background:#fbfcfe;border-style:dashed}
+.sfhead{display:grid;grid-template-columns:17px minmax(0,1fr);align-items:baseline;gap:0 8px}
+/* A filename is as long as somebody made it. It ends here, and carries the
+   whole of itself in its tooltip. */
+.sfname{display:block;font-size:13px;color:#1e293b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sfmeta,.sfsub{padding-left:25px}
+.sfsub{font-size:11px;color:#6b7280;line-height:1.4;margin-top:1px}
+.sfacts{display:flex;gap:8px;padding-left:25px;margin-top:9px}
+.sfacts .btn{flex:0 0 auto}
 /* A separator BETWEEN rows, never under the last one: the trailing rule fenced
    off nothing and left a band of empty card below it. :last-of-type, not
    :last-child — the hidden file inputs follow the rows. */
@@ -360,12 +373,13 @@ button.gdoc{justify-content:space-between}
    moved its contents up inside it, so its button sat 4.5px higher than every
    button below — and the buttons are the column the eye tracks down. The row
    keeps its shape and simply starts higher. */
-.srcrow:first-of-type{margin-top:-6px}
-.srcrow:last-of-type{margin-bottom:-8px} /* flex:1 so the two rows' buttons start at the same x. The rhythm comment
+/* The negative margins closed the gap between two rows stacked one on the
+   other. Side by side they do not close a gap, they knock the tiles out of
+   line with each other — the first six pixels high, the second two short. */ /* flex:1 so the two rows' buttons start at the same x. The rhythm comment
      below reasons that "the buttons are what the eye tracks down the column" —
      they were columned vertically and never horizontally, because each row's
      text block sized to its own sentence, a 155px step between them. */
-  .srcrow>div{min-width:0} .srcrow .ok{color:#166534;font-weight:800} .srcrow .mut{color:#9aa4b8;font-weight:800} .srcrow.dim{opacity:.8} .missing{color:#8791a5;font-weight:700;font-size:11px} .srcrow .sub{color:#7c86a2;font-size:11px} .parsed{color:#0f766e;font-weight:700;font-size:11px} .srcrow b{font-size:13.5px} .srcrow button{margin-left:0;width:100%;flex:0 0 auto}
+  .srcrow>div{min-width:0} .srcrow .ok{color:#166534;font-weight:800} .srcrow .mut{color:#9aa4b8;font-weight:800} .srcrow.dim{opacity:.8} .missing{color:#8791a5;font-weight:700;font-size:11px} .srcrow .sub{color:#7c86a2;font-size:11px} .parsed{color:#0f766e;font-weight:700;font-size:11px} .srcrow b{font-size:13.5px} .srcrow button{margin-left:0;flex:0 0 auto}
 .srcfoot{display:flex;align-items:center;gap:12px;margin-top:11px} .srcfoot .sub{color:#7c86a2;font-size:11.5px} .ph{margin-top:9px;font-size:11.5px;color:#98a2b3;font-style:italic;background:#f8fafc;border-radius:6px;padding:7px 9px}
 .footer{display:flex;gap:12px;align-items:center;justify-content:center;margin-top:4px;position:sticky;bottom:0;background:#eef1f7;padding:12px 10px;box-shadow:0 -6px 16px rgba(20,40,80,.08);border-radius:8px 8px 0 0;z-index:15} .footer.rest{border-radius:8px} .footer .fsp{display:none} .unsaved{display:none;position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#b45309;font-weight:700;font-size:12.5px;align-items:center;gap:6px} .unsaved.on{display:inline-flex}
 table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;border:1px solid #e6ebf3;border-radius:10px;overflow:hidden} th,td{text-align:left;padding:9px 13px;border-bottom:1px solid #eef1f6} th{font-size:10px;letter-spacing:.4px;color:#8791a5;text-transform:uppercase}
