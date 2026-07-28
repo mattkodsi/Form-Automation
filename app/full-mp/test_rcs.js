@@ -16,7 +16,7 @@ const els={};
 global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>null,querySelectorAll:()=>[],createElement:()=>mk(),addEventListener(){},body:{classList:{toggle(){},contains(){return false;}}}};
 const fs=require('fs'),path=require('path'),os=require('os');
 
-const MIN_CHECKS=207;
+const MIN_CHECKS=212;
 let n=0,fails=0,verdict=null;
 const BAR='='.repeat(68);
 function fail(msg,err){
@@ -407,6 +407,28 @@ async function reader(file){
   eq('a non-revenue rent offers both documents as sources',rows,['Executed RS','RCS report']);
   eq('and the study’s figure is the one on offer',
     app.__moneySrcRows('nonrev.0.rent').filter(function(r){return r.tag==='RCS report';})[0].val,'1850');
+
+  /* An untouched row is a row waiting for a unit type, not a row to add one
+     after. Filling a blank form left its empty first row sitting above the two
+     the study had just built — the form said three unit types where the study
+     priced two. */
+  await app.__openForm(app.__firstPid());
+  ['br','ba','num_units','current','proposed'].forEach(function(f){app.__edit('units.0.'+f,'');});
+  app.__setRcsParsed(cvRec);
+  app.__rcsFill();
+  eq('the study starts in the empty row rather than below it',app.__UNITS().length,2);
+  eq('and the empty row took the first line',
+    [app.getVal('units.0.br'),app.getVal('units.0.num_units'),app.getVal('units.0.proposed')],['2BR','32','1850']);
+  eq('with the second line beneath it',app.getVal('units.1.br'),'3BR');
+
+  /* A row with anything of yours in it is not empty, whatever else is blank. */
+  await app.__openForm(app.__firstPid());
+  ['br','ba','num_units','current','proposed'].forEach(function(f){app.__edit('units.0.'+f,'');});
+  app.__edit('units.0.num_units','12');
+  app.__setRcsParsed(cvRec);
+  app.__rcsFill();
+  eq('a row holding a count of yours is left alone',app.getVal('units.0.num_units'),'12');
+  eq('and the study builds its own rows below it',app.__UNITS().length,3);
 
   finish();
 })().catch(e=>{fail('the suite threw',e);process.exit(1);});
