@@ -5,7 +5,7 @@
    shows it, and MIN_CHECKS catches a run that dies partway — a short count is
    a failure, not a pass. Adding checks? Raise MIN_CHECKS. */
 const { makeDb, memoryAdapter, isPerCycleKey, migrate, computeAnalysis, computeSalutation, CROSSWALK } = require('./db.js');
-const MIN_CHECKS = 168;
+const MIN_CHECKS = 169;
 let fails = 0, n = 0, verdict = null;
 const BAR = '═'.repeat(68);
 function fail(msg, err) {
@@ -41,9 +41,17 @@ function jsonAdapter() { let s = null; return { get: async () => (s ? JSON.parse
      holds all ten of the keys the OLD ring counted and still cannot write four
      of its six documents, so 100% was never true of it. This is the headline
      regression: it read 100 before, and a green suite said nothing. */
+  /* Was 65 / 4 of 6 while the FHA number was a blocker. It is a caveat now: a
+     Section 8 property with no FHA-insured mortgage prints N/A in that box, and
+     hasReal() reads N/A as not-an-answer — so requiring it made the draft rent
+     schedule permanently un-generatable for those properties. The seed gains
+     the schedule and the notice that depended on it. */
+  /* Still 65: the percentage is progress through gate 2, and one blocker
+     remains (the tenant-notice sender). Only the DOCUMENT count moved, which is
+     the point — the schedule can be written now. */
   ok('the seed does not claim to be complete', Math.round(props[0].completeness*100), 65);
-  ok('and the number says what it is counting', props[0].caption, '4 of 6 documents ready');
-  ok('which is the same count the row carries', [props[0].docs_ready, props[0].docs_total], [4, 6]);
+  ok('and the number says what it is counting', props[0].caption, '5 of 6 documents ready');
+  ok('which is the same count the row carries', [props[0].docs_ready, props[0].docs_total], [5, 6]);
   ok('no cycles field', props[0].cycles, undefined);
   const gates = db.getActive().pid; truthy('active pid set', gates); ok('no sid', db.getActive().sid, undefined);
 
@@ -379,9 +387,17 @@ function jsonAdapter() { let s = null; return { get: async () => (s ? JSON.parse
      the study is a gate-2 item: one of twelve, already met. */
   ok('the profile gate tops out at exactly 30', sc(profileOnly, { hasStudy: false }).pct, 30);
   ok('and a study in hand is already progress into the next gate', sc(profileOnly).pct, 35);
+  /* The FHA number no longer blocks — see above. What it must NOT do is vanish:
+     it still changes what page 1 of the rent schedule prints, so it is a caveat,
+     and it is satisfied by anything entered including the N/A the document
+     itself carries. */
   const short = Object.assign({}, rec); delete short['property.fha'];
-  ok('one blocker short is capped below 70', sc(short).pct, 65);
-  ok('and it is a blocker, named', sc(short).blockers.map(b => b.label), ['FHA number']);
+  ok('a missing FHA number no longer blocks the package', sc(short).blockers.map(b => b.label), []);
+  ok('but it is still named as something that changes what prints',
+     sc(short).caveats.some(b => /FHA number/.test(b.label)), true);
+  const na = Object.assign({}, rec, { 'property.fha': 'N/A' });
+  ok('and N/A answers it, because the document says N/A',
+     sc(na).caveats.some(b => /FHA number/.test(b.label)), false);
   const clean = Object.assign({}, rec); delete clean['ca.position'];
   ok('one caveat short is capped below 100', sc(clean).pct, 95);
 

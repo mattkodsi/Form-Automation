@@ -20,7 +20,7 @@ global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>
 const os=require('os'),path=require('path'),fs=require('fs');
 
 /* ── the verdict machinery (mirrors test_interactions.js) ───────────────── */
-const MIN_CHECKS=137;   // 2026-07-28: +32 the home page's filter rail, +24 the primary action
+const MIN_CHECKS=138;   // 2026-07-28: +32 the home page's filter rail, +24 the primary action
 let n=0,fails=0,verdict=null;
 const BAR='═'.repeat(68);
 function fail(msg,err){
@@ -430,8 +430,16 @@ const T=(label,v)=>eq(label,!!v,true);
   T('the owner letter certifies the appraiser by name, so it blocks without one',
     has(miss('owner'),'appraiser name'));
   app.__edit('appr.name','An Appraiser');
+  /* It does NOT block without it, and requiring it was a dead end: a Section 8
+     property with no FHA-insured mortgage prints N/A in that box, and hasReal()
+     reads N/A as not-an-answer — so the draft rent schedule could never be
+     written for one. It changes what page 1 prints, so it is a caveat. */
   app.__edit('property.fha','');
-  T('HUD-92458 blocks without its FHA number', has(miss('schedule'),'FHA number'));
+  T('HUD-92458 does not block on a number the property may not have',
+    !has(miss('schedule'),'FHA number'));
+  app.__edit('property.fha','N/A');
+  T('and N/A answers it, because that is what the document itself carries',
+    !has(miss('schedule'),'FHA number'));
   T('which is NOT the Section 8 number — that one is not asked for here',
     !has(miss('schedule'),'Section 8 number'));
   app.__edit('property.fha','023-11111');

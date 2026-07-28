@@ -434,7 +434,7 @@ const FULL=process.argv.includes('--full');
     const scoreNow=async()=>c.eval('const s=window.__t.packageScore();'
       +'const row=(window.__t.__listProps()||[]).find(p=>p.id==='+JSON.stringify(pid)+')||{};'
       +'return {form:s.pct,row:row.score,caption:row.caption,ready:s.docsReady,total:s.docsTotal,'
-      +'blockers:s.blockers.map(b=>b.label),caveats:s.caveats.length};');
+      +'blockers:s.blockers.map(b=>b.label),caveats:s.caveats.length,caveatLabels:s.caveats.map(c=>c.label)};');
     /* Like with like: the menu row IS the dominant package, so the form has to
        be that package for the two to be answering one question. Opened on the
        property template instead, they legitimately differ — the template is not
@@ -461,21 +461,41 @@ const FULL=process.argv.includes('--full');
        (card.match(/<i class="dtick[ "]/g)||[]).length,S0.total);
     eq('and ticks exactly the ones that are ready',
        (card.match(/<i class="dtick">✓<\/i>/g)||[]).length,S0.ready);
-    eq('every gap on the card is one press from the cell that fixes it',
-       S0.blockers.length+S0.caveats.length>0?/data-goto="/.test(card):true,true);
+    /* The named gap list came off the card — it tripled the height of the one
+       card that sets the height of all three, to repeat what was already there.
+       What the card promises now is narrower and testable: every document it
+       cannot produce says what it is short of, in its own row. The generate
+       dialog is still where the fields are pressable.
 
-    /* Crossing 70. The FHA number is on no document but the rent schedule, and
-       was on none of the ten keys the old ring counted — which is exactly why
-       the schedule could not be written on a property reading 100%. */
+       The check this replaces read 'gaps > 0 ? card has data-goto : true' and
+       was passing on the vacuous branch — this fixture has no gaps, so it would
+       not have caught the card losing them either. */
+    {
+      const unready=[...card.matchAll(/<span class="draft-off" title="Needs ([^"]*)"/g)].map(m=>m[1]);
+      eq('every document the package cannot produce says what it is short of',
+         [unready.length,unready.every(t=>t.trim().length>0)],
+         [S0.total-S0.ready,true]);
+    }
+
+    /* The FHA number is a CAVEAT, not a blocker, and the check that used to sit
+       here encoded a dead end. A Section 8 property with no FHA-insured mortgage
+       prints "N/A" in that box, and hasReal() reads N/A as not-an-answer — so
+       requiring it meant the draft rent schedule could never be written for one,
+       no matter what anybody typed. What must still hold: it does not vanish, it
+       is named among the things that change what prints, and the number the
+       document itself carries answers it. */
     const before=await scoreNow();
     await c.eval('window.__t.__edit("property.fha","");window.__t.__renderBody();return 1');
     const without=await scoreNow();
-    eq('clearing the FHA number costs the package a document',without.ready,before.ready-1);
-    eq('and names it as a blocker',without.blockers.indexOf('FHA number')>=0,true);
-    eq('so the score cannot sit at 70 or better',without.form<70,true);
+    eq('clearing the FHA number costs the package no document',without.ready,before.ready);
+    eq('and it is not a blocker',without.blockers.indexOf('FHA number')>=0,false);
+    eq('but it is named as something that changes what prints',
+       without.caveatLabels.some(x=>/FHA number/.test(x)),true);
+    await c.eval('window.__t.__edit("property.fha","N/A");window.__t.__renderBody();return 1');
+    const naOK=await scoreNow();
+    eq('and N/A answers it, because that is what the schedule prints',
+       naOK.caveatLabels.some(x=>/FHA number/.test(x)),false);
     await c.eval('window.__t.__edit("property.fha","043-11045");window.__t.__renderBody();return 1');
-    const after=await scoreNow();
-    eq('putting it back restores the count',[after.ready,after.blockers.indexOf('FHA number')],[before.ready,-1]);
     await openForm();   // the rest of the suite runs on the property form, not the package
 
     /* ─────────────────────────────────────────────────────────────────────
