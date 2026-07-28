@@ -24,6 +24,18 @@ body.scrolled #ccbar{transform:translateY(0);opacity:1}
 .lift{border-top:1px solid #eef1f6;margin-top:12px;padding-top:9px} .lift>b{font-size:10px;letter-spacing:.5px;color:#8791a5}
 .liftnums{display:flex;justify-content:space-between;margin-top:6px} .liftnums span b{font-size:16px} .liftnums span i{font-style:normal;color:#8791a5;font-size:9.5px;display:block} .teal{color:#0f766e}
 .chkgrid{display:grid;grid-template-columns:1fr 1fr;gap:0 16px;margin-top:2px}
+/* Nine checks, most of which say "agree", made this the tallest card in the row
+   and dragged the other two out of line. What wants a person stays on the card;
+   what agrees collapses to a count and opens over the card on hover, so nothing
+   below it moves. */
+.chkcard{position:relative}
+.chkmore{margin-top:9px;padding-top:8px;border-top:1px solid #eef1f6;outline:none}
+.chkgrid+.chkmore{margin-top:10px}
+.chksum{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:#7c86a2;cursor:help;border-bottom:1px dotted #c9d1de;padding-bottom:1px}
+.chksum .ok{color:#166534;font-weight:800}
+.chkmore:hover .chksum,.chkmore:focus-visible .chksum{color:#33405c;border-bottom-color:#8791a5}
+.chkall{display:none;position:absolute;left:10px;right:10px;top:100%;margin-top:4px;z-index:35;background:#fff;border:1px solid #d3dae6;border-radius:11px;box-shadow:0 14px 34px rgba(20,40,80,.17);padding:11px 15px 12px}
+.chkmore:hover .chkall,.chkmore:focus-within .chkall{display:block}
 .chk{display:flex;gap:8px;align-items:flex-start;margin:6px 0} .chk .ok{color:#166534;font-weight:800} .chk .warn{color:#b45309;font-weight:800} .chk .info{color:#2563eb;font-weight:800} .chk b{font-size:12px} .chk .sub{color:#7c86a2;font-size:10.5px}
 .drafts{display:grid;grid-template-columns:1fr 1fr;gap:2px 12px;font-size:11.5px;color:#33405c;margin-top:4px} .wb{margin-top:8px;font-size:10.5px;color:#4c51bf;background:#f0f0fb;border-radius:6px;padding:6px 8px;text-align:center;font-weight:600}
 .attn{background:#fdf6e7;border:1px solid #ecd9a6;border-radius:9px;padding:9px 14px;margin-bottom:12px;color:#8a5a12} .attn .sub{color:#a9803a;font-size:12px}
@@ -3798,9 +3810,22 @@ function _renderCommand(){const a=analysis();const pCur=a.ceil>0?clamp(a.cg/a.ce
   }
   el('cc').innerHTML=`
    ${card1}
-   <div class="ccard"><div class="cck">RECORD CHECKS</div><div class="chkgrid">
+   ${(function(){const _all=`
      ${chk(nmOk?'ok':'warn','Property name',nmOk?esc(get('property.name')):('missing — '+secRef(2)))}${chk(s8Ok?'ok':'warn','Section 8 #',s8Ok?esc(get('property.s8')):('missing — '+secRef(2)))}${chk(fhaOk?'ok':'info','FHA #',fhaOk?esc(get('property.fha')):((get('property.fha')||'').trim()?'the schedule says “'+esc(get('property.fha'))+'” — no number to print':'none on file — fills page 1 of the rent schedule'))}${chk(sigOk?'ok':'warn','Signatory (Part H)',sigOk?(esc(get('sig.name'))+(get('sig.title')?' · '+esc(get('sig.title'))+(get('sig.principal')?' of the '+esc(get('sig.principal')):''):'')):('missing — '+secRef(3)))}
-     ${chk(ua[0],'Utility allowance',ua[1])}${hasProg('rcs')?chk((a.safmrMissing||a.ceil<=0)?'warn':(a.safmrOver?'warn':(a.safmrConflict?'info':'ok')),'SAFMR (150% ceiling)',a.safmrMissing?'enter or pull SAFMR per unit type':(a.ceil<=0?(a.countsMissing&&a.safmrHave?'no ceiling yet — unit counts needed':'no ceiling yet'):(a.safmrOver?(a.safmrOver+' type'+(a.safmrOver>1?'s':'')+' over 150% SAFMR'):(a.safmrConflict?'HUD vs RCS differ — using HUD':(UNITS.every(i=>(get('units.'+i+'.safmr_source')||defSafmrSrc(i))==='hud')?'per unit type · HUD':'per unit type'))))):''}${(()=>{const c=rsCapacity();return c.msgs.length?chk('warn','Rent schedule capacity',esc(c.flags.join(' · '))):'';})()}${rcsChecks()}</div></div>
+     ${chk(ua[0],'Utility allowance',ua[1])}${hasProg('rcs')?chk((a.safmrMissing||a.ceil<=0)?'warn':(a.safmrOver?'warn':(a.safmrConflict?'info':'ok')),'SAFMR (150% ceiling)',a.safmrMissing?'enter or pull SAFMR per unit type':(a.ceil<=0?(a.countsMissing&&a.safmrHave?'no ceiling yet — unit counts needed':'no ceiling yet'):(a.safmrOver?(a.safmrOver+' type'+(a.safmrOver>1?'s':'')+' over 150% SAFMR'):(a.safmrConflict?'HUD vs RCS differ — using HUD':(UNITS.every(i=>(get('units.'+i+'.safmr_source')||defSafmrSrc(i))==='hud')?'per unit type · HUD':'per unit type'))))):''}${(()=>{const c=rsCapacity();return c.msgs.length?chk('warn','Rent schedule capacity',esc(c.flags.join(' · '))):'';})()}${rcsChecks()}`;
+   /* .chk never nests, and chk() is its only producer, so the concatenation
+      splits back into items on its own opening tag. */
+   const _items=_all.split('<div class="chk"').filter(x=>x.trim()).map(x=>'<div class="chk"'+x);
+   const _attn=_items.filter(x=>!/data-st="ok"/.test(x));
+   const _ok=_items.filter(x=>/data-st="ok"/.test(x));
+   const _n=_ok.length;
+   return '<div class="ccard chkcard"><div class="cck">RECORD CHECKS</div>'
+     +(_attn.length?'<div class="chkgrid">'+_attn.join('')+'</div>':'')
+     +(_n?('<div class="chkmore" tabindex="0">'
+        +'<div class="chksum"><span class="ok">\u2713</span> '+_n+' check'+(_n===1?'':'s')
+        +' agree'+(_attn.length?'':' \u2014 nothing to review')+'</div>'
+        +'<div class="chkall"><div class="chkgrid">'+_ok.join('')+'</div></div></div>'):'')
+     +'</div>';})()}
    ${pkgCard()}`;}
 function pkgCard(){
   if(hasProg('rcs'))return `<div class="ccard"><div class="cck">THIS PACKAGE</div><div class="cctitle" style="font-size:15px">${_rcsUpload?'RCS report uploaded':'RCS report needed'}</div><div class="ccsub">${_rcsUpload?esc(_rcsUpload.name)+' — goes in as document 04':'Upload the completed RCS report in '+secRef(1)+' — it becomes document 04 of the package.'}</div>
@@ -3835,7 +3860,7 @@ const WARNICON='<svg class="wicon" viewBox="0 0 24 24" aria-hidden="true">'
   +'<path d="M12 3.4 22.2 20.6H1.8Z" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round"/>'
   +'<path d="M12 9.7v4.3" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/>'
   +'<circle cx="12" cy="17.4" r="1.2" fill="currentColor"/></svg>';
-function chk(st,name,note){const ic=st==='warn'?WARNICON:(st==='info'?'ⓘ':'✓');const cl=st==='warn'?'warn':(st==='info'?'info':'ok');return `<div class="chk"><span class="${cl}">${ic}</span><div><b>${name}</b><div class="sub">${note}</div></div></div>`;}
+function chk(st,name,note){const ic=st==='warn'?WARNICON:(st==='info'?'ⓘ':'✓');const cl=st==='warn'?'warn':(st==='info'?'info':'ok');return `<div class="chk" data-st="${cl}"><span class="${cl}">${ic}</span><div><b>${name}</b><div class="sub">${note}</div></div></div>`;}
 
 function isStateKey(k){return /\.(ua_reviewed|safmr_reviewed|type_reviewed|num_reviewed|ua_custom|safmr_custom)$/.test(k)||k==='tenant.mgmt_source'||k==='poc.mode'||/^poc\.custom_/.test(k)||k==='rent_schedule.date_eff_source'||k==='rent_schedule.date_eff_custom'||k==='ocaf.factor_src'||k==='ocaf.factor_custom';}
 function overrideCount(){const grouped=new Set();for(const b in ADDR_GROUPS)ADDR_GROUPS[b].forEach(k=>grouped.add(k));UNITS.forEach(i=>{grouped.add('units.'+i+'.br');grouped.add('units.'+i+'.ba');});

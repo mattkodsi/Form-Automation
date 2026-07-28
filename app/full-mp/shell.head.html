@@ -24,6 +24,18 @@ body.scrolled #ccbar{transform:translateY(0);opacity:1}
 .lift{border-top:1px solid #eef1f6;margin-top:12px;padding-top:9px} .lift>b{font-size:10px;letter-spacing:.5px;color:#8791a5}
 .liftnums{display:flex;justify-content:space-between;margin-top:6px} .liftnums span b{font-size:16px} .liftnums span i{font-style:normal;color:#8791a5;font-size:9.5px;display:block} .teal{color:#0f766e}
 .chkgrid{display:grid;grid-template-columns:1fr 1fr;gap:0 16px;margin-top:2px}
+/* Nine checks, most of which say "agree", made this the tallest card in the row
+   and dragged the other two out of line. What wants a person stays on the card;
+   what agrees collapses to a count and opens over the card on hover, so nothing
+   below it moves. */
+.chkcard{position:relative}
+.chkmore{margin-top:9px;padding-top:8px;border-top:1px solid #eef1f6;outline:none}
+.chkgrid+.chkmore{margin-top:10px}
+.chksum{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:#7c86a2;cursor:help;border-bottom:1px dotted #c9d1de;padding-bottom:1px}
+.chksum .ok{color:#166534;font-weight:800}
+.chkmore:hover .chksum,.chkmore:focus-visible .chksum{color:#33405c;border-bottom-color:#8791a5}
+.chkall{display:none;position:absolute;left:10px;right:10px;top:100%;margin-top:4px;z-index:35;background:#fff;border:1px solid #d3dae6;border-radius:11px;box-shadow:0 14px 34px rgba(20,40,80,.17);padding:11px 15px 12px}
+.chkmore:hover .chkall,.chkmore:focus-within .chkall{display:block}
 .chk{display:flex;gap:8px;align-items:flex-start;margin:6px 0} .chk .ok{color:#166534;font-weight:800} .chk .warn{color:#b45309;font-weight:800} .chk .info{color:#2563eb;font-weight:800} .chk b{font-size:12px} .chk .sub{color:#7c86a2;font-size:10.5px}
 .drafts{display:grid;grid-template-columns:1fr 1fr;gap:2px 12px;font-size:11.5px;color:#33405c;margin-top:4px} .wb{margin-top:8px;font-size:10.5px;color:#4c51bf;background:#f0f0fb;border-radius:6px;padding:6px 8px;text-align:center;font-weight:600}
 .attn{background:#fdf6e7;border:1px solid #ecd9a6;border-radius:9px;padding:9px 14px;margin-bottom:12px;color:#8a5a12} .attn .sub{color:#a9803a;font-size:12px}
