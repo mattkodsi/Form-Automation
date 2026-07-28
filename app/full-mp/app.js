@@ -1389,7 +1389,7 @@ async function parseRsPdf(bytes,onStep){
   const scan=async()=>{let oc=null;try{oc=await ocrParseRs(bytes,(i,n)=>onStep&&onStep(i,n,'scan'));}catch(e){}return oc;};
   if(runs<15){ // nothing to read on the page itself: tier 3 sends it out to be OCR'd
     const oc=await scan();
-    return oc?{kind:'fields',parsed:oc,via:'ocr'}:{kind:'scan',parsed:null};}
+    return oc?{kind:'fields',parsed:oc,via:'ocr'}:{kind:'scan',parsed:null,why:ocrWhy()};}
   let tp=null;try{tp=await rsReadTextTier(pages,bytes,onStep);}catch(e){}
   if(tp)return {kind:'fields',parsed:tp,via:'text'};
   /* Text on the page and none of it the values — so OCR, which the runs<15 gate
@@ -1400,7 +1400,7 @@ async function parseRsPdf(bytes,onStep){
      the page reads as maximally readable and yields nothing. "Is there text on
      it" was never the question. "Did we manage to read any of it" is. */
   const oc=await scan();
-  return oc?{kind:'fields',parsed:oc,via:'ocr'}:{kind:'text',parsed:null};}
+  return oc?{kind:'fields',parsed:oc,via:'ocr'}:{kind:'text',parsed:null,why:ocrWhy()};}
 function rsFillFromParsed(){const P=_rsUpload&&_rsUpload.parsed;if(!P)return;
   const mark=k=>{markCycle(k);if(form[k])form[k].fromParse=true;};   // came from the schedule, not typed — tags an override as "parsed", not just "changed", in its note text
   const setk=(k,v)=>{if(v!=null&&v!==''){form=store.editForm(form,k,String(v));mark(k);}};
@@ -1442,14 +1442,14 @@ function renderSources(){
   const rcs=_rcsBusy
     ?`<div class="srcrow"><span class="spin" aria-hidden="true"></span><div><b>${esc(_rcsBusy.name)}</b> <span class="parsed">reading…</span><div class="sub">Reading the appraiser’s transmittal letter.</div></div></div>`
     :up
-    ?`<div class="srcrow"><span class="ok">✓</span><div><b>${esc(up.name)}</b> <span class="parsed">${_rn?'read · '+esc(_rfirm||'study')+' · '+_rn+' unit type'+(_rn===1?'':'s'):'uploaded · not read'}</span><div class="sub">${_rn?'The values are ready to apply.':'The letter could not be read — enter the values by hand below.'}</div></div>${_rn?'<button class="btn sm" id="rcsApply">Fill form from the study</button>':''}<button class="btn sm" id="upRcs">Replace</button></div>`
+    ?`<div class="srcrow"><span class="ok">✓</span><div><b>${esc(up.name)}</b> <span class="parsed">${_rn?'read · '+esc(_rfirm||'study')+' · '+_rn+' unit type'+(_rn===1?'':'s'):'uploaded · not read'}</span><div class="sub">${_rn?'The values are ready to apply.':'The letter could not be read — enter the values by hand below.'}</div></div>${_rn?'<button class="btn sm teal" id="rcsApply">Fill form from the study</button>':''}<button class="btn sm" id="upRcs">Replace</button></div>`
     :`<div class="srcrow${sl.need?'':' dim'}"><span class="mut">○</span><div><b>${esc(sl.title)}</b> <span class="${sl.need?'missing':'parsed'}">${sl.need?'not uploaded':'optional'}</span><div class="sub">${esc(sl.sub)}</div></div><button class="btn sm" id="upRcs">Upload PDF</button></div>`;
   const ru=_rsUpload;let rs;
   if(_rsBusy)rs=`<div class="srcrow"><span class="spin" aria-hidden="true"></span><div><b>${esc(_rsBusy.name||'Rent schedule')}</b> <span class="parsed">${esc(_rsBusy.note||'reading\u2026')}</span><div class="sub">${esc(_rsBusy.sub||'Reading the schedule\u2019s form fields and printed text.')}</div></div></div>`;
   else if(!ru)rs=`<div class="srcrow"><span class="mut">○</span><div><b>Current executed rent schedule</b> <span class="missing">not uploaded</span><div class="sub">Fills the unit mix, rents, utility allowances, ownership entity and principals.</div></div><button class="btn sm" id="upRs">Upload PDF</button></div>`;
   else if(ru.kind==='fields'){const p=ru.parsed;rs=`<div class="srcrow"><span class="ok">✓</span><div><b>${esc(ru.name)}</b> <span class="parsed">${ru.at?"read "+esc(niceDate(ru.at)):"read"}</span><div class="sub">${ru.via==='ocr'?'Scanned — check the values against the document. ':''}Nothing is saved until you save.</div></div><button class="btn sm teal" id="rsApply">Fill form from RS</button> <button class="btn sm" id="upRs">Replace</button></div>`;}
-  else if(ru.kind==='text')rs=`<div class="srcrow"><span class="warn">${WARNICON}</span><div><b>${esc(ru.name)}</b> <span class="missing">could not be read</span><div class="sub">Enter the values below.</div></div><button class="btn sm" id="upRs">Replace</button></div>`;
-  else rs=`<div class="srcrow"><span class="warn">${WARNICON}</span><div><b>${esc(ru.name)}</b> <span class="missing">could not be read</span><div class="sub">Scanned, but the values could not be read. Enter them below.</div></div><button class="btn sm" id="upRs">Replace</button></div>`;
+  else if(ru.kind==='text')rs=`<div class="srcrow"><span class="warn">${WARNICON}</span><div><b>${esc(ru.name)}</b> <span class="missing">could not be read</span><div class="sub">${ru.why?esc(ru.why)+' Enter the values below.':'Enter the values below.'}</div></div><button class="btn sm" id="upRs">Replace</button></div>`;
+  else rs=`<div class="srcrow"><span class="warn">${WARNICON}</span><div><b>${esc(ru.name)}</b> <span class="missing">could not be read</span><div class="sub">${ru.why?esc(ru.why)+' Enter the values below.':'Scanned, but the values could not be read. Enter them below.'}</div></div><button class="btn sm" id="upRs">Replace</button></div>`;
   const foot=`<input type="file" id="rcsFile" accept="application/pdf,.pdf" style="display:none"><input type="file" id="rsFile" accept="application/pdf,.pdf" style="display:none">`;
   /* The executed rent schedule comes first: it is the document that fills the
      form, and the one every package needs. The RCS study is second because it
@@ -2295,10 +2295,10 @@ function wireBody(){
         setStatus('Rent schedule \u2014 '+SHORT[w]+' (page '+i+' of '+n+')\u2026');};
       busy('Reading…','Reading the document’s text.');
       let r;try{r=await parseRsPdf(b,step);}catch(e){r={kind:'scan',parsed:null};}finally{_rsBusy=null;}
-      _rsUpload={name:f.name,bytes:b,kind:r.kind,via:r.via,parsed:r.parsed,at:new Date().toISOString()};sf.value='';_rsArm=(r.kind==='fields'&&!!r.parsed);rsRemember();renderBody();
+      _rsUpload={name:f.name,bytes:b,kind:r.kind,via:r.via,why:r.why||'',parsed:r.parsed,at:new Date().toISOString()};sf.value='';_rsArm=(r.kind==='fields'&&!!r.parsed);rsRemember();renderBody();
       setStatus(r.kind==='fields'
         ?((r.via==='ocr'?'Rent schedule scanned — check the values against the document. ':'Rent schedule read. ')+'Press Enter to fill the form, or use “Fill form from RS” in '+secRef(1)+'.')
-        :'The values in this copy could not be read — enter them by hand below.');});};
+        :((r.why?r.why+' ':'')+'The values in this copy could not be read — enter them by hand below.'));});};
   const ra=el('rsApply');if(ra)ra.onclick=()=>rsFillFromParsed();
   const uu=el('undoUnit');if(uu)uu.onclick=()=>{if(!_undoStack.length)return;const e=_undoStack.pop();Object.keys(e.snap).forEach(k=>{form[k]=e.snap[k];});if(UNITS.indexOf(e.i)<0)UNITS.push(e.i);UNITS.sort((a,b)=>a-b);renderBody();setStatus('Unit type restored.');};
   const uc=el('undoCommit');if(uc)uc.onclick=()=>{_undoStack=[];renderBody();setStatus('Deletions kept.');};

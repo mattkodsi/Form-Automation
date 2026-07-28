@@ -27,7 +27,12 @@ import { createClient } from 'jsr:@supabase/supabase-js@2';
 const API_VERSION = '2024-11-30';
 const MODEL = 'prebuilt-layout';
 const POLL_MS = 900;
-const POLL_TRIES = 45;          // ~40s, inside the 150s free-plan wall clock
+// ~90s of polling. It was 45 (~40s), which is comfortably more than the 3-7s a
+// typical page takes — and not enough for a heavy one. A three-page executed
+// schedule gave up at 41,990ms with a 504 while Azure was still working, and the
+// form reported the whole document unreadable. 100 tries leaves ~40s of headroom
+// under the 150s free-plan wall clock once the polls' own round trips are counted.
+const POLL_TRIES = 100;
 
 let DI_ENDPOINT = Deno.env.get('AZURE_DI_ENDPOINT') ?? '';
 let DI_KEY = Deno.env.get('AZURE_DI_KEY') ?? '';
