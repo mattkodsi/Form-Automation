@@ -5,7 +5,7 @@
    shows it, and MIN_CHECKS catches a run that dies partway — a short count is
    a failure, not a pass. Adding checks? Raise MIN_CHECKS. */
 const { makeDb, memoryAdapter, isPerCycleKey, migrate, computeAnalysis, computeSalutation, CROSSWALK } = require('./db.js');
-const MIN_CHECKS = 162;
+const MIN_CHECKS = 168;
 let fails = 0, n = 0, verdict = null;
 const BAR = '═'.repeat(68);
 function fail(msg, err) {
@@ -441,13 +441,32 @@ function jsonAdapter() { let s = null; return { get: async () => (s ? JSON.parse
   ok('two names, two properties', ndb.listProperties().length, nBefore + 1);
 
   /* A property with no name collides with nothing — there is no name yet for
-     anything to be the same as. It gets one later, through the form, and THAT
-     is the route still open: renameProperty and saveFlat do not check. Asserted
-     here so the hole is recorded rather than assumed shut. */
+     anything to be the same as. It gets one later, through the form, and that
+     used to be the way round the rule. */
   ok('an unnamed property is allowed', grab(() => ndb.createProperty('')), null);
   ok('and so is a second one', grab(() => ndb.createProperty('   ')), null);
-  await ndb.renameProperty(ndb.listProperties().find(p => p.name === 'Beacon Hill').id, 'Colonial Village');
-  ok('KNOWN GAP: a rename can still make a twin', ndb.listProperties().filter(p => p.name === 'Colonial Village').length, 2);
+
+  /* The two routes that actually made the twins. A property's name need not be
+     the name it was created with: a rename changes it, and so does any save
+     carrying property.name — which is exactly what applying an executed rent
+     schedule's parse does. Both are held to the same rule now. */
+  const grabA = async fn => { try { await fn(); return null; } catch (e) { return e; } };
+  const bh = ndb.listProperties().find(p => p.name === 'Beacon Hill').id;
+
+  ok('a rename onto a name already taken is refused',
+    (await grabA(() => ndb.renameProperty(bh, 'Colonial Village')) || {}).code, 'DUP_PROPERTY_NAME');
+  ok('and the rename did not happen',
+    ndb.listProperties().filter(p => p.name === 'Colonial Village').length, 1);
+  ok('while renaming a property to what it is already called is fine',
+    await grabA(() => ndb.renameProperty(bh, 'Beacon Hill')), null);
+
+  const sv = await grabA(() => ndb.saveFlat(bh, { 'property.name': { value: 'colonial village' } }));
+  ok('a save carrying a taken property.name is refused too', (sv || {}).code, 'DUP_PROPERTY_NAME');
+  ok('and says which name it would not take', (sv || {}).dupName, 'colonial village');
+  ok('so the property keeps the name it had',
+    ndb.listProperties().find(p => p.id === bh).name, 'Beacon Hill');
+  ok('and a property saving its OWN name is never in its own way',
+    await grabA(() => ndb.saveFlat(bh, { 'property.name': { value: 'Beacon Hill' } })), null);
 
   /* API PARITY (CLAUDE.md): db.js is the harness's stand-in, db.supabase.js is
      what actually runs, db.cosmos.js is what the RA port runs. A guard in one

@@ -137,7 +137,8 @@ Run them all with **`bash app/full-mp/run_tests.sh`** — one command, one exit 
 a new suite needs registering (`deliver.sh` calls it).
 
 - **`app/full-mp/test_db.js`** — data layer incl. the cycle + directory surface (which cycle is
-  dominant, what carries into a new one, what writes back to the template); 114 checks.
+  dominant, what carries into a new one, what writes back to the template), and the one-name rule
+  the whole registry rests on; 168 checks.
 - **`app/full-mp/test_interactions.js`** — save/revert/group + esc/enter decision logic against the real
   store, incl. the unit designation chip; 144 checks (self-contained; builds its own bundle).
 - **`app/full-mp/smoke_combined.js`** — headless render smoke of the assembled app: menu → launcher →
@@ -146,7 +147,7 @@ a new suite needs registering (`deliver.sh` calls it).
 - **`app/full-mp/test_browser.js`** — **the only suite that presses keys.** Builds its own bundle,
   drives it in a real headless chromium through `?selftest=1`, and dispatches real trusted key
   events over CDP (zero dependencies — node's own WebSocket). It covers the hole the other suites
-  cannot see: they prove `save()` saves, this proves a keystroke *reaches* it. 165 checks — Enter and
+  cannot see: they prove `save()` saves, this proves a keystroke *reaches* it. 241 checks — Enter and
   Escape on every kind of cell, the source dropdowns, the conflict buttons, the session boundary,
   and tier 3 end to end on `fixture_rs_scan.json` — read pristine, and read nudged half a point.
   `--full` drives all ~110 controls instead of one per kind. Skips **loudly** (never as a pass) when
@@ -168,10 +169,9 @@ a new suite needs registering (`deliver.sh` calls it).
   they arrive — renamed columns, ISO dates, Excel serials, a promise, a bare array — and that when we
   cannot, `diagnose()` says why instead of showing an empty list.
 
-**1027 checks across seven suites** (162 · 144 · 85 · 33 · 245 · 124 · 234) as of 2026-07-28. These
+**1040 checks across seven suites** (168 · 144 · 85 · 33 · 245 · 124 · 241) as of 2026-07-28. These
 numbers go stale the moment a suite grows — `MIN_CHECKS` in each file is the binding floor; this list
 is a map.
-
 ⚠️ **Don't pipe a suite through `| tail`.** A pipeline's exit status is the LAST command's, so node's
 failure vanishes — that is half of why `test_interactions.js` sat broken for eleven days after the
 Supabase migration (the other half: `deliver.sh` never ran it). All six suites now print their verdict

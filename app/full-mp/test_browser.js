@@ -35,7 +35,7 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=234;   // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
+const MIN_CHECKS=241;   // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
                        // pristine (three seeds, two checks each). 2026-07-27: the unit-type cell
                        // lost a divider with the designation, so the pair of divider checks
                        // became one. Lowered on purpose.
@@ -1780,6 +1780,42 @@ const FULL=process.argv.includes('--full');
       await c.eval('if(typeof createPropNamed==="function")createPropNamed("Willow Woods Phase II","");return 1');
       await sleep(400);
       eq('a free name still creates',(await names()).length,n0.length+1);
+
+      /* The route that actually made the twins: a save carrying property.name.
+         A refusal reported as "check your connection" would be a lie about a
+         working connection, and would leave him pressing Save for ever — so
+         what the refusal LOOKS like is the thing worth driving. */
+      const before=await names();
+      const dup=await c.eval('try{await mpdb.saveFlat(mpdb.getActive().pid,{"property.name":{value:'+JSON.stringify(NM)+'}});return "SAVED";}catch(e){return e.code||"?";}');
+      eq('a save that would rename onto a taken name is refused',dup,'DUP_PROPERTY_NAME');
+      eq('and nothing was renamed',await names(),before);
+
+      /* Now the same refusal as the app reports it, with the form open — which
+         is where it will actually be met, because the save that carries
+         property.name is the one at the bottom of the form. */
+      await c.eval('await window.__t.__openForm('+JSON.stringify(pid)+');return 1');
+      await sleep(400);
+      await c.eval('saveFailed({code:"DUP_PROPERTY_NAME",pid:(mpdb.listProperties().find(p=>p.name==='+JSON.stringify(NM)+')||{}).id,dupName:'+JSON.stringify(NM)+'});return 1');
+      await sleep(300);
+      const dlg=await c.eval('return {open:document.getElementById("scrim").classList.contains("open"),'
+        +'title:(document.querySelector(".dlg-t")||{}).textContent||"",'
+        +'body:(document.querySelector(".dlg-sub")||{}).textContent||"",'
+        +'suggested:(document.getElementById("dlgIn")||{}).value||"",'
+        +'status:(document.getElementById("status")||{}).textContent||""};');
+      T('a taken name opens a dialog, not a connection warning',dlg.open&&!/connection/i.test(dlg.status));
+      T('which says the name is the problem',/already taken/i.test(dlg.title)&&dlg.body.indexOf(NM)>=0);
+      T('and offers a name that is actually free',
+        dlg.suggested!==''&&(await names()).map(x=>x.toLowerCase()).indexOf(dlg.suggested.toLowerCase())<0);
+
+      /* Taking the suggestion puts it in the cell and leaves the save to him. */
+      await c.eval('document.getElementById("dlgOk").click();return 1');
+      await sleep(400);
+      const after=await c.eval('return {open:document.getElementById("scrim").classList.contains("open"),'
+        +'status:(document.getElementById("status")||{}).textContent||"",'
+        +'name:window.__t.getVal("property.name")};');
+      T('taking the suggestion closes the dialog and leaves the save to him',
+        !after.open&&/save again/i.test(after.status));
+      eq('with the offered name now in the cell',after.name,dlg.suggested);
     }
 
     console.log('\n── the console stayed quiet ───────────────────────────');

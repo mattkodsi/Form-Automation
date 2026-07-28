@@ -254,6 +254,11 @@ async function makeDb(adapter, opts) {
 
   function saveForm(pid, form) {
     const p = D.props[pid]; if (!p) throw new Error('no such property ' + pid);
+  /* A save that carries property.name IS a rename — which is how the twins got
+     in: a fresh property, an executed schedule uploaded, its parse applied, and
+     the name it printed saved over whatever the property was called before.
+     skipPid so a property saving its OWN name is not in its own way. */
+    if (form && form['property.name']) assertNameFree(form['property.name'].value, pid);
     for (const k in form) {
       const v = form[k].value;
       const c = { value: (v == null ? '' : String(v)), source: 'database', saved_at: today() };
@@ -289,7 +294,7 @@ async function makeDb(adapter, opts) {
   const assertNameFree = (name, skipPid) => {
     const clash = propByName(name, skipPid); if (!clash) return;
     const e = new Error('A property named \u201c' + String(name).trim() + '\u201d already exists.');
-    e.code = 'DUP_PROPERTY_NAME'; e.pid = clash.id; throw e;
+    e.code = 'DUP_PROPERTY_NAME'; e.pid = clash.id; e.dupName = String(name).trim(); throw e;
   };
   /* The ring is the DOMINANT PACKAGE's score — see score.js. It used to be ten
      durable keys, counted, which is why a property could read 100% with the
@@ -430,6 +435,7 @@ async function makeDb(adapter, opts) {
      to the template and must not depend on how the caller bound `this`. */
   function _saveFlat(pid, map) {
     const p = D.props[pid]; if (!p) throw new Error('no property ' + pid);
+    if (map && map['property.name']) assertNameFree(map['property.name'].value, pid);
     for (const k in map) {
       const c = { value: (map[k] && map[k].value != null ? String(map[k].value) : ''), source: 'database', saved_at: (map[k] && map[k].saved_at) ? map[k].saved_at : today() };
       if (isPerCycleKey(k)) p.percycle[k] = c; else p.durable[k] = c;
@@ -465,7 +471,7 @@ async function makeDb(adapter, opts) {
     getActive() { return { pid: D.meta.activePid }; },
     setActive(pid) { if (D.props[pid]) D.meta.activePid = pid; return Promise.resolve(); }, // pointer only; nav must not write (real saves persist it)
     createProperty(name) { assertNameFree(name); const r = _createProperty(name || ''); persist(); return r; },
-    renameProperty(pid, name) { const p = D.props[pid]; if (!p) return; p.durable['property.name'] = cell(name); touch(pid); return persist(); },
+    renameProperty(pid, name) { const p = D.props[pid]; if (!p) return; assertNameFree(name, pid); p.durable['property.name'] = cell(name); touch(pid); return persist(); },
     deleteProperty(pid) {
       delete D.props[pid];
       if (D.meta.activePid === pid) { const rest = Object.keys(D.props); D.meta.activePid = rest.length ? rest[0] : null; }
