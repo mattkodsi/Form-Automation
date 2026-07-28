@@ -88,7 +88,7 @@ const DOC_REQS={
      (checked separately, it is a resolved value not a plain key), the mortgagor
      entity in Part F, and the Part G signature. The FHA number is its own field
      on this form and is NOT the Section 8 number. */
-  schedule:[['property.name','property name',2],['property.fha','FHA number',2],
+  schedule:[['property.name','property name',2],
             ['owner.entity_name','ownership entity',2],
             ['sig.name','signatory name',3],['sig.title','signatory title',3]],
   /* ── the OCAF / UAF year ────────────────────────────────────────────────
@@ -160,6 +160,18 @@ function docCaveatReqs(read,ctx,id){
   /* The addressee block on both letters is filtered before printing, so a
      missing line vanishes silently rather than printing blank — which is why
      these are caveats and not blockers. */
+  /* The FHA number is NOT required, and requiring it was a dead end rather than
+     merely strict. Plenty of Section 8 properties carry no FHA-insured mortgage
+     and their rent schedule prints "N/A" in that box — and hasReal() reads N/A
+     as not-an-answer, by design, so such a property could never satisfy it even
+     by entering exactly what its own document says. The draft rent schedule was
+     permanently un-generatable and the package could never reach ready.
+
+     So: a caveat, and satisfied by anything entered INCLUDING N/A. This is the
+     one place that departs from hasReal, because the question here is not "do we
+     know the number" but "has somebody said what goes in the box" — and N/A is
+     an answer to that. */
+  if(id==='schedule')add('property.fha','FHA number',2,String(read('property.fha')||'').trim()!=='');
   if(id==='cover'||id==='owner'){dim('ca.position','CA contact position',4);dim('ca.addr_street','CA street address',4);}
   if(id==='cover')add('poc.phone','a phone or email for the point of contact',3,hasReal(read,'poc.phone')||hasReal(read,'poc.email'));
   /* Certification 8 promises the appraiser's contact details "below", then

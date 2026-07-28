@@ -1020,7 +1020,7 @@ const DOC_REQS={
      (checked separately, it is a resolved value not a plain key), the mortgagor
      entity in Part F, and the Part G signature. The FHA number is its own field
      on this form and is NOT the Section 8 number. */
-  schedule:[['property.name','property name',2],['property.fha','FHA number',2],
+  schedule:[['property.name','property name',2],
             ['owner.entity_name','ownership entity',2],
             ['sig.name','signatory name',3],['sig.title','signatory title',3]],
   /* ── the OCAF / UAF year ────────────────────────────────────────────────
@@ -1092,6 +1092,18 @@ function docCaveatReqs(read,ctx,id){
   /* The addressee block on both letters is filtered before printing, so a
      missing line vanishes silently rather than printing blank — which is why
      these are caveats and not blockers. */
+  /* The FHA number is NOT required, and requiring it was a dead end rather than
+     merely strict. Plenty of Section 8 properties carry no FHA-insured mortgage
+     and their rent schedule prints "N/A" in that box — and hasReal() reads N/A
+     as not-an-answer, by design, so such a property could never satisfy it even
+     by entering exactly what its own document says. The draft rent schedule was
+     permanently un-generatable and the package could never reach ready.
+
+     So: a caveat, and satisfied by anything entered INCLUDING N/A. This is the
+     one place that departs from hasReal, because the question here is not "do we
+     know the number" but "has somebody said what goes in the box" — and N/A is
+     an answer to that. */
+  if(id==='schedule')add('property.fha','FHA number',2,String(read('property.fha')||'').trim()!=='');
   if(id==='cover'||id==='owner'){dim('ca.position','CA contact position',4);dim('ca.addr_street','CA street address',4);}
   if(id==='cover')add('poc.phone','a phone or email for the point of contact',3,hasReal(read,'poc.phone')||hasReal(read,'poc.email'));
   /* Certification 8 promises the appraiser's contact details "below", then
@@ -4699,19 +4711,6 @@ function pkgCard(){
   /* What is holding it, on the card, one press from the cell that fixes it.
      A ring that says 55% and a card that says four of six are ready both leave
      the same question — this answers it without opening the generate dialog. */
-  /* A property nobody has filled in yet is short of everything, so this list
-     ran to twenty rows — and the three cards are held to one height, so the
-     two beside it grew to match and the row became a screen. The first few are
-     the ones you act on; the rest sit behind a count, the same disclosure the
-     record checks use. */
-  const GAPMAX=3;
-  const gap=(list,cls,h)=>{
-    if(!list.length)return '';
-    const head=list.slice(0,GAPMAX),rest=list.slice(GAPMAX);
-    return '<div class="ccsub pkhead"><b>'+h+'</b></div>'
-      +'<div class="gpf-wrap">'+head.map(x=>gpf(x,cls)).join('')+'</div>'
-      +(rest.length?('<div class="gpmore" tabindex="0"><span class="gpmore-t">and '+rest.length+' more</span>'
-        +'<div class="gpall"><div class="gpf-wrap">'+rest.map(x=>gpf(x,cls)).join('')+'</div></div></div>'):'');};
   return '<div class="ccard"><div class="cck">THIS PACKAGE</div>'
     /* The ring counted percent and the headline counts documents, so the card
        showed "5" beside "0 of 6 ready to generate" — two scales on one line,
@@ -4721,9 +4720,12 @@ function pkgCard(){
     +'<div class="cctitle" style="font-size:15px" title="'+esc(S.pct+'% complete')+'">'+head+'</div>'
     +'<div class="pksrc">'+srcRow('Executed rent schedule',_rsUpload?_rsUpload.name:'',_rsUpload?'':'not uploaded yet',!!_rsUpload)+second+'</div>'
     +'<div class="drafts">'+rows+'</div>'
-    +gap(S.blockers,'','Needed to generate')
-    +(S.caveats.length?('<div class="gpmore gpmore-l" tabindex="0"><span class="gpmore-t">'+S.caveats.length+' more, not required \u2014 they change what prints</span>'
-      +'<div class="gpall"><div class="gpf-wrap">'+S.caveats.map(x=>gpf(x,' gpf-s')).join('')+'</div></div></div>'):'')
+    /* The gap list came off. It was three named fields, a heading, and two
+       disclosure lines, and it tripled a card that sets the height of the two
+       beside it — for information already on the card: every unready document
+       row above carries title="Needs …" naming exactly what it is short of,
+       and the generate dialog lists the same fields with a link to each cell.
+       Three ways of saying it was two too many. */
     +'<div class="wb">Documents are generated from the form exactly as shown. Save with \u201cUpdate property profile\u201d before generating.</div></div>';}
 
 /* "N/A" is an answer to what the FHA number IS, not a filled field. The test
