@@ -161,7 +161,14 @@ function modeOf(kk){const keys=Array.isArray(kk)?kk:[kk];let _db=false;
      An override anywhere in the pair outranks the figure's own verdict. */
   if(keys.some(k=>srcOf(k)==='overridden')||keys.some(offFile))return 'over';
   if(_db)return '';if(keys.some(k=>srcOf(k)==='new'&&get(k)!==''&&get(k)!=null))return 'new';if(keys.some(k=>srcOf(k)==='this-cycle'))return 'cycle';return '';}
-function ovIcons(kk){const keys=Array.isArray(kk)?kk:[kk];const j=keys.join(',');const m=modeOf(keys);
+/* The pair shows for every key its own press would save. The click handler has
+   always widened through coupledKeys before saving; the RENDER did not, so a
+   cell could be keyed to one name, be dirty in another, and show nothing —
+   which is how a parsed effective date, a pulled OCAF factor and the fiscal
+   year behind a utility factor each came to be unsaveable in turn. Widening
+   here fixes the family rather than the members: what is shown and what is
+   saved are now computed from the same set. */
+function ovIcons(kk){const keys=[];(Array.isArray(kk)?kk:[kk]).forEach(function(k){coupledKeys(k).forEach(function(x){if(keys.indexOf(x)<0)keys.push(x);});});const j=keys.join(',');const m=modeOf(keys);
   // A parsed value is exactly as unsaved as a typed one, so it gets the same badge.
   // It costs no more room either: cycle, like new, has nothing to revert TO, so the
   // CSS hides the revert arrow and only the tick shows. (An earlier attempt left
@@ -1703,7 +1710,12 @@ function ocafFactorCell(){const pub=get('ocaf.factor_pub'),fy=get('ocaf.factor_f
   let state,c;if(src==='custom'){const _st=srcCellState('ocaf.factor_custom');c=provColors(_st==='overridden'?'overridden':(_st==='database'?'database':'new'),'ocaf.factor_src');}else{state=pub?srcOf('ocaf.factor_pub'):'new';const _cs=srcCellState('ocaf.factor_custom');if(_cs==='overridden')state='overridden';else if(_cs==='database'&&state==='new')state='database';c=provColors(state,'ocaf.factor_src');}
   const boxKey=(src==='custom')?'ocaf.factor_custom':'ocaf.factor_src';
   const menu='<div class="uamenu">'+srcOptRow('data-ocfopt="fr"',pub?esc(pub+'% · FY'+fy):'','Federal Register',src==='fr')+'<div class="uaopt'+(src==='custom'?' sel':'')+'" data-ocfopt="custom">Custom…</div></div>';
-  return '<div class="rbox uacell" data-box="'+boxKey+'" style="background:'+c[1]+';border-left-color:'+c[0]+';max-width:330px;flex:0 1 auto"><div class="uadrop" style="flex:1;min-width:0"><div class="uatrigger" tabindex="0">'+lab+'<span class="cvx">▾</span></div>'+menu+'</div>'+(src==='custom'?ovIcons('ocaf.factor_custom'):'')+'</div>';}
+  /* Not gated on src==='custom'. That guard is the one the effective date
+     carried: it showed the pair only for a value typed by hand, so the state
+     that ALWAYS has something to save — a factor just pulled from the Federal
+     Register — was the state with no button. ovIcons hides itself when there is
+     nothing to save, so the guard bought nothing. */
+  return '<div class="rbox uacell" data-box="'+boxKey+'" style="background:'+c[1]+';border-left-color:'+c[0]+';max-width:330px;flex:0 1 auto"><div class="uadrop" style="flex:1;min-width:0"><div class="uatrigger" tabindex="0">'+lab+'<span class="cvx">▾</span></div>'+menu+'</div>'+ovIcons(coupledKeys('ocaf.factor_custom'))+'</div>';}
 function renderOcaf(){const C=ocafCalc();
   const rt=get('ocaf.rate_type')||'Fixed rate';const fl=/floating/i.test(rt);
   const fy=get('ocaf.factor_fy'),pd=get('ocaf.factor_pubdate');const st=get('property.addr_state');
@@ -2128,8 +2140,13 @@ function coupledKeys(k){const m=k.match(/^(units\.\d+)\.(ua|safmr)_(custom|sourc
   const _fam=k.match(/^(nonrev|ns8)\.\d+\.[a-z_]+$/);
   if(_fam&&get(_fam[1]+'.enabled')==='1'&&srcOf(_fam[1]+'.enabled')!=='database')
     return [k,_fam[1]+'.enabled'];
-  if(k==='ocaf.factor_custom')return [k,'ocaf.factor_src'];
-  if(k==='ocaf.factor_src')return [k,'ocaf.factor_custom'];
+  const OCAF_F=['ocaf.factor_custom','ocaf.factor_src','ocaf.factor_pub','ocaf.factor_fy','ocaf.factor_pubdate','ocaf.factor_state'];
+  if(OCAF_F.indexOf(k)>=0)return [k].concat(OCAF_F.filter(x=>x!==k));
+  /* Each utility factor has its own cell and its own pair; the fiscal year, the
+     state and the publication date that came down with them have none. They ride
+     with whichever factor is saved — the provenance of a figure is part of it. */
+  if(/^uaf\.f_(oil|gas|electric|water)$/.test(k))
+    return [k,'uaf.factor_fy','uaf.factor_state','uaf.factor_pubdate'];
   return [k];}
 function keysCanRevert(keys){return keys.some(k=>srcOf(k)==='overridden');}
 function keysNewDirty(keys){return !keysCanRevert(keys)&&keys.some(k=>(srcOf(k)==='new'||srcOf(k)==='this-cycle')&&String(get(k)==null?'':get(k)).trim()!=='');} // a parsed cell is unsaved too, so Enter and the tick must both reach it
