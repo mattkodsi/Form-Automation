@@ -2489,8 +2489,18 @@ async function rsRuns(txt,ctx){ // content stream -> ctx.runs [{s,x,y,d}] in pag
     if(t[0]==='('){lastStr=deLit(t.slice(1,-1));continue;}
     if(t[0]==='<'){lastStr=deHex(t.slice(1,-1));continue;}
     if(t[0]==='/'){lastName=t.slice(1);continue;}
-    if(t[0]==='['){const parts=[];const ri=/\((?:[^()\\]|\\.)*\)|<[0-9A-Fa-f\s]*>/g;let mm;
-      while((mm=ri.exec(t)))parts.push(mm[0][0]==='('?deLit(mm[0].slice(1,-1)):deHex(mm[0].slice(1,-1)));
+    /* A TJ array's numbers are horizontal displacements in thousandths of an em.
+       Small ones are kerning inside a word; large negative ones are the visual
+       gaps BETWEEN table cells, and dropping them welds a whole row into one
+       string ("1 BR / 1 BA31818$1,870$2.29" — is that 31 units of 818 sq ft, or
+       318 of 18?). Restore a gap as a space so the row can be read; -200 sits
+       between the kerning population (0..-99) and the column gaps (-500..-6000)
+       measured across the corpus. */
+    if(t[0]==='['){const parts=[];const ri=/\((?:[^()\\]|\\.)*\)|<[0-9A-Fa-f\s]*>|-?[0-9.]+/g;let mm;
+      while((mm=ri.exec(t))){const p=mm[0];
+        if(p[0]==='(')parts.push(deLit(p.slice(1,-1)));
+        else if(p[0]==='<')parts.push(deHex(p.slice(1,-1)));
+        else if(parseFloat(p)<=-200)parts.push(' ');}
       emit(parts.join(''));nums=[];lastStr=null;continue;}
     if(/^[-.0-9]+$/.test(t)){nums.push(parseFloat(t));continue;}
     switch(t){
