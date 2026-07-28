@@ -1985,7 +1985,11 @@ function dateEffCell(){const rs=get('rent_schedule.date_eff_rs');const src=get('
   let state,c;if(src==='custom'){c=modeOf(['rent_schedule.date_eff_custom','rent_schedule.date_eff_source'])==='over'?provColors('overridden','rent_schedule.date_eff_source'):cellColors('rent_schedule.date_eff_custom');}else{state=rs?srcOf('rent_schedule.date_eff_rs'):'new';c=provColors(state,'rent_schedule.date_eff_source');}
   const boxKey=(src==='custom')?'rent_schedule.date_eff_custom':'rent_schedule.date_eff_source';
   const menu='<div class="uamenu">'+srcOptRow('data-deffopt="rs"',rs?esc(fmtDate(rs)):'','A year after the executed RS',src==='rs')+'<div class="uaopt'+(src==='custom'?' sel':'')+'" data-deffopt="custom">Custom…</div></div>';
-  return `<div class="field"><div class="flabel">Date rents will be effective</div><div class="fbox uacell" data-box="${boxKey}" style="background:${c[1]};border-left-color:${c[0]}"><div class="uadrop" style="flex:1;min-width:0"><div class="uatrigger" tabindex="0">${lab}<span class="cvx">▾</span></div>${menu}</div>${ovIcons(['rent_schedule.date_eff_custom','rent_schedule.date_eff_source','rent_schedule.date_eff_rs'])}</div></div>`;}
+  /* Silence would let 20/26/0301 sit in the box looking like a date that had
+     been entered on purpose. Everything downstream now ignores it, so the cell
+     is the only place left that can say why nothing happened. */
+  const _bad=(src==='custom')&&String(custom||'').trim()!==''&&!dateParts(custom);
+  return `<div class="field"><div class="flabel">Date rents will be effective</div>${_bad?'<div class="ucnote warn" style="margin:0 0 4px">\u26a0 That is not a date \u2014 enter it as mm/dd/yyyy.</div>':''}<div class="fbox uacell" data-box="${boxKey}" style="background:${c[1]};border-left-color:${c[0]}"><div class="uadrop" style="flex:1;min-width:0"><div class="uatrigger" tabindex="0">${lab}<span class="cvx">▾</span></div>${menu}</div>${ovIcons(['rent_schedule.date_eff_custom','rent_schedule.date_eff_source','rent_schedule.date_eff_rs'])}</div></div>`;}
 const POC_PICK_KEYS=['poc.name','poc.email','poc.phone'];
 function pocSelectContact(ct){form=store.editForm(form,'poc.name',ct.name||'');form=store.editForm(form,'poc.email',ct.email||'');form=store.editForm(form,'poc.phone',fmtPhone(ct.phone||''));
   POC_PICK_KEYS.forEach(k=>{if(form[k])form[k].fromPick=true;});}
@@ -2436,7 +2440,7 @@ function hudBlockerNames(){ // the card and the cell have room for the names, no
   return andJoin(b);}
 function hudBlockerShort(){const n=hudBlockerNames();return n?('add the '+n):'';}
 function hudParams(){const zip=String(get('property.addr_zip')||'').replace(/\D/g,'').slice(0,5);
-  const de=dateEffResolved();const _ym=String(de||'').match(/\d{4}/);const year=_ym?parseInt(_ym[0],10):(new Date()).getFullYear();
+  const _dp=dateParts(dateEffResolved());const year=_dp?_dp.y:(new Date()).getFullYear();
   return{zip,year,street:get('property.addr_street'),city:get('property.addr_city'),state:get('property.addr_state')};}
 function applyHudSafmr(){if(!_hud.data)return 0;const rents=_hud.data.zip_rents||_hud.data.area_rents;if(!rents)return 0;
   let changed=0;UNITS.forEach(i=>{const br=get('units.'+i+'.br');if(!br)return;const v=hudCeil(rents,br);
@@ -3446,7 +3450,17 @@ function pullBtnState(api){
 function refreshIfPrereq(keys){if((Array.isArray(keys)?keys:[keys]).some(k=>/^property\.addr_|^rent_schedule\.date_eff/.test(String(k)))){scheduleHudRefresh();scheduleFactorRefresh();}}
 let _facTimer=null;
 function scheduleFactorRefresh(){clearTimeout(_facTimer);_facTimer=setTimeout(()=>{if(hasProg('ocaf'))pullOcafFactor({auto:true});if(hasProg('uaf'))pullUafFactors({auto:true});},900);}
-function effYear(){const m=String(dateEffResolved()||'').match(/(\d{4})/);return m?m[1]:'';}
+/* mm/dd/yyyy or yyyy-mm-dd, and a real month and day. 20/26/0301 is neither,
+   and it used to answer "which year" with 0301 — the year the SAFMR pull and
+   both factor pulls then asked HUD about. */
+function dateParts(v){
+  const s=String(v==null?'':v).trim();
+  let m=s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/); let mo,d,y;
+  if(m){mo=+m[1];d=+m[2];y=+m[3];}
+  else{m=s.match(/^(\d{4})-(\d{2})-(\d{2})$/);if(!m)return null;y=+m[1];mo=+m[2];d=+m[3];}
+  if(!(mo>=1&&mo<=12)||!(d>=1&&d<=31)||!(y>=1900&&y<=2200))return null;
+  return {y:y,m:mo,d:d};}
+function effYear(){const p=dateParts(dateEffResolved());return p?String(p.y):'';}
 function ocafFactorResolved(){const src=get('ocaf.factor_src')||(get('ocaf.factor_pub')?'fr':'custom');return src==='custom'?numf(get('ocaf.factor_custom')):numf(get('ocaf.factor_pub'));}
 function ocafK(){const rt=get('ocaf.rate_type')||'Fixed rate';if(/floating/i.test(rt)){const t=numf(get('ocaf.ds_t12')),f=numf(get('ocaf.ds_f12'));return (t>0&&f>0)?Math.min(t,f):(t||f);}return numf(get('ocaf.ds_annual'));}
 function ocafCalc(){let e=0;UNITS.forEach(i=>{e+=numf(get('units.'+i+'.num_units'))*numf(get('units.'+i+'.current'));});
@@ -4069,7 +4083,17 @@ function srcEditKey(k,val){
 }
 function wireBody(){
   document.querySelectorAll('input[data-k]').forEach(inp=>{const k=inp.getAttribute('data-k'),wion=inp.getAttribute('data-wion');
-    inp.addEventListener('input',()=>{pushCellUndo(k);let v=inp.value;if(inp.getAttribute('data-phone')){v=fmtPhone(v);inp.value=v;}else if(inp.getAttribute('data-money')){v=cleanNum(v);inp.value=fmtMoney(v);}else if(inp.getAttribute('data-date')){v=fmtDateInput(v);inp.value=v;}const _spb=srcSpec(k),_srcWas=_spb?String(get(_spb.srcKey)||''):null;
+    inp.addEventListener('input',()=>{pushCellUndo(k);let v=inp.value;if(inp.getAttribute('data-phone')){v=fmtPhone(v);inp.value=v;}else if(inp.getAttribute('data-money')){v=cleanNum(v);inp.value=fmtMoney(v);}else if(inp.getAttribute('data-date')){
+      /* Keep the caret where the reader left it. The mask lays the digits out
+         again from scratch, which moves every character after the one just
+         typed — so without this a correction to the month left the caret in the
+         year, and the next keystroke landed there. Counted in DIGITS, not
+         characters, because the slashes move too. */
+      const _before=String(inp.value).slice(0,inp.selectionStart||0).replace(/\D/g,'').length;
+      v=fmtDateInput(v);inp.value=v;
+      let _n=0,_i=0;for(;_i<v.length&&_n<_before;_i++)if(/\d/.test(v[_i]))_n++;
+      try{inp.setSelectionRange(_i,_i);}catch(e){}
+    }const _spb=srcSpec(k),_srcWas=_spb?String(get(_spb.srcKey)||''):null;
       if(!srcEditKey(k,v))form=store.editForm(form,k,v);
       if(_spb&&String(get(_spb.srcKey)||'')!==_srcWas){
         const _now=get(_spb.srcKey)||_spb.fallback;
