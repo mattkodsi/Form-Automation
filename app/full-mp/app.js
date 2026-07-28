@@ -1672,11 +1672,21 @@ function fieldKeys(k){if(k==='ca.name')return ['ca.prefix','ca.name'];const gb=g
    to save. Keyed off _custom the same press saved all three. */
 function coupledKeys(k){const m=k.match(/^(units\.\d+)\.(ua|safmr)_(custom|source|reviewed)$/);
   if(m){const b=m[1]+'.'+m[2];return [k].concat([b+'_custom',b+'_source',b+'_reviewed'].filter(x=>x!==k));}
-  if(k==='rent_schedule.date_eff_custom')return [k,'rent_schedule.date_eff_source'];if(k==='ocaf.factor_custom')return [k,'ocaf.factor_src'];return [k];}
+  if(k==='rent_schedule.date_eff_custom')return [k,'rent_schedule.date_eff_source'];
+  if(k==='rent_schedule.date_eff_source')return [k,'rent_schedule.date_eff_custom'];
+  if(k==='ocaf.factor_custom')return [k,'ocaf.factor_src'];
+  if(k==='ocaf.factor_src')return [k,'ocaf.factor_custom'];
+  return [k];}
 function keysCanRevert(keys){return keys.some(k=>srcOf(k)==='overridden');}
 function keysNewDirty(keys){return !keysCanRevert(keys)&&keys.some(k=>(srcOf(k)==='new'||srcOf(k)==='this-cycle')&&String(get(k)==null?'':get(k)).trim()!=='');} // a parsed cell is unsaved too, so Enter and the tick must both reach it
 function keysCanSave(keys){return keysCanRevert(keys)||keysNewDirty(keys);}
-function refocusSelForKey(k){if(/^(check\.\d+|partb\.(equipment|utilities|services)\.\d+)$/.test(k))return '[data-cb="'+k+'"]';const w=k.match(/^(partb\.writein\.[a-z0-9]+)\.on$/);if(w)return '[data-wibox="'+w[1]+'"]';const gb=groupOf(k);if(gb)return '[data-box="'+gb+'"] input,[data-box="'+gb+'"] .uatrigger';return '[data-trigfor="'+k+'"],[data-box="'+k+'"] .uatrigger,[data-k="'+k+'"],[data-fuel="'+k+'"],[data-fuel3="'+k+'"],[data-wibox="'+k+'"],[data-cb="'+k+'"]';}
+function refocusSelForKey(k){if(/^(check\.\d+|partb\.(equipment|utilities|services)\.\d+)$/.test(k))return '[data-cb="'+k+'"]';const w=k.match(/^(partb\.writein\.[a-z0-9]+)\.on$/);if(w)return '[data-wibox="'+w[1]+'"]';const gb=groupOf(k);if(gb)return '[data-box="'+gb+'"] input,[data-box="'+gb+'"] .uatrigger';/* Name the whole cell, not one of its spellings. The allowance and the SAFMR
+     flip data-box between *_source and *_custom with the mode (rule 9), and
+     saving can change that mode — so a selector built from the key we started
+     with pointed at a box that had just stopped existing, and the caret fell to
+     <body>. coupledKeys knows both names; ask it. */
+  if(k.indexOf('tenant.mgmt')===0)return '[data-box="tenant.mgmt_address"] .uatrigger,[data-box="tenant.mgmt_address"] input,[data-box="tenant.mgmt"] input,[data-k="'+k+'"]';
+  return coupledKeys(k).map(function(x){return '[data-trigfor="'+x+'"],[data-box="'+x+'"] .uatrigger,[data-k="'+x+'"],[data-fuel="'+x+'"],[data-fuel3="'+x+'"],[data-wibox="'+x+'"],[data-cb="'+x+'"]';}).join(',');}
 function revertPending(){if(!_pending||!_pending.length)return false;const keys=_pending;const snap=_pendingSnap;_pending=null;_pendingSnap=null;let any=false;if(snap){any=restoreSnap(snap);undoDrop(snap);}else{keys.forEach(k=>{const gb=groupOf(k);if(revertKeys(gb?ADDR_GROUPS[gb]:coupledKeys(k)))any=true;});}if(any){refreshIfPrereq(keys);_refocusSel=refocusSelForKey(keys[0]);renderBody();}setStatus(undoMsg());return true;}
 function aggSrc(keys){if(keys.some(k=>srcOf(k)==='overridden'))return'overridden';if(keys.some(k=>srcOf(k)==='database'))return'database';if(keys.some(k=>srcOf(k)==='this-cycle'))return'this-cycle';return'new';}
 function groupOf(k){for(const b in ADDR_GROUPS){if(ADDR_GROUPS[b].indexOf(k)>=0)return b;}return null;}
