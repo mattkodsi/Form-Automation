@@ -15,7 +15,11 @@
 set -uo pipefail                       # deliberately NOT -e: run every suite, then report
 
 d="$(cd "$(dirname "$0")" && pwd)"     # app/full-mp
-suites="test_db.js test_interactions.js smoke_combined.js test_gen.js"
+# test_browser.js builds its own bundle and drives it in a real headless
+# chromium, pressing real keys. It is the only suite that can see whether a
+# keystroke ever REACHES the code the others test. Where no chromium is
+# installed it skips loudly — never as a pass.
+suites="test_db.js test_interactions.js smoke_combined.js test_gen.js test_browser.js"
 failed=""
 
 for s in $suites; do
