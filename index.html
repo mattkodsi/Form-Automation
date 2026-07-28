@@ -3156,7 +3156,7 @@ function renderBody(){syncReviewed();const _sy=window.scrollY;const _anchorSel=(
   wireBody();renderCommand();renderBar();renderRail();renderAttention();refreshFooter();
   if(_refocusSel&&!_mouseFocus){try{const _f=document.querySelector(_refocusSel);if(_f&&_f.focus){_f.focus({preventScroll:true});if(/^(INPUT|TEXTAREA)$/.test(_f.tagName)&&typeof _f.setSelectionRange==='function'){const _L=(_f.value||'').length;try{_f.setSelectionRange(_L,_L);}catch(_e){}}}}catch(e){}}_refocusSel=null;
   if(_anchorSel&&_anchorTop!=null){try{const _a2=document.querySelector(_anchorSel);if(_a2){const _nt=_a2.getBoundingClientRect().top;window.scrollTo(0,window.scrollY+(_nt-_anchorTop));}else window.scrollTo(0,_sy);}catch(e){try{window.scrollTo(0,_sy);}catch(_z){}}}else{try{window.scrollTo(0,_sy);}catch(e){}}}
-async function commitPending(){if(!_pending||!_pending.length)return;const keys=_pending;_pending=null;if(handleZeroUnitCommit(keys))return;for(const _pk of ['poc.phone','appr.phone'])if(keys.indexOf(_pk)>=0){const _d=(get(_pk)||'').replace(/\D/g,'');if(_d.length!==0&&_d.length!==10){setStatus('Enter a complete 10-digit phone before saving.');return;}}keys.forEach(k=>{const m=k.match(/^partb\.writein\.(e1|e2|e3|e4|e5|s1|s2|s3|s4|s5|s6)(\.on)?$/);if(m)clearUncheckedWriteins([m[1]]);});const _sk=[];keys.forEach(k=>{const gb=groupOf(k);(gb?ADDR_GROUPS[gb]:[k]).forEach(kk=>{if(_sk.indexOf(kk)<0)_sk.push(kk);});});try{form=await store.saveFields(form,_sk);}catch(e){saveFailed(e);return;}await refreshSnap();snapForm(_sk);_pendingSnap=null;clearUndoChain();_refocusSel=refocusSelForKey(keys[0]);renderBody();setStatus('Saved this field to the database.');}
+async function commitPending(){if(!_pending||!_pending.length)return;const keys=_pending;_pending=null;if(handleZeroUnitCommit(keys))return;for(const _pk of ['poc.phone','appr.phone'])if(keys.indexOf(_pk)>=0){const _d=(get(_pk)||'').replace(/\D/g,'');if(_d.length!==0&&_d.length!==10){setStatus('Enter a complete 10-digit phone before saving.');return;}}keys.forEach(k=>{const m=k.match(/^partb\.writein\.(e1|e2|e3|e4|e5|s1|s2|s3|s4|s5|s6)(\.on)?$/);if(m)clearUncheckedWriteins([m[1]]);});const _sk=[];keys.forEach(k=>{const gb=groupOf(k);(gb?ADDR_GROUPS[gb]:coupledKeys(k)).forEach(kk=>{if(_sk.indexOf(kk)<0)_sk.push(kk);});});try{form=await store.saveFields(form,_sk);}catch(e){saveFailed(e);return;}await refreshSnap();snapForm(_sk);_pendingSnap=null;clearUndoChain();_refocusSel=refocusSelForKey(keys[0]);renderBody();setStatus('Saved this field to the database.');}
 /* A cell's save/revert pair sits in one of three places: inside the cell for a
    roomy one (.ovic), beside it for a plain text field (.ovnote), or below the row
    under its own column for a unit row (.uracts). Escape and Enter have to reach
@@ -3257,7 +3257,16 @@ function fieldKeys(k){if(k==='ca.name')return ['ca.prefix','ca.name'];const gb=g
    back and stranded the flag set — so the ⚠ conflict banner stayed hidden on a
    value nobody had approved, and the flag was the last thing holding the form
    dirty. Escape got this right; only the button missed it. */
-function coupledKeys(k){if(k.indexOf('units.')===0){if(k.slice(-10)==='.ua_custom')return [k,k.slice(0,-10)+'.ua_source',k.slice(0,-10)+'.ua_reviewed'];if(k.slice(-13)==='.safmr_custom')return [k,k.slice(0,-13)+'.safmr_source',k.slice(0,-13)+'.safmr_reviewed'];}if(k==='rent_schedule.date_eff_custom')return [k,'rent_schedule.date_eff_source'];if(k==='ocaf.factor_custom')return [k,'ocaf.factor_src'];return [k];}
+/* A cell answers the same set whichever of its identities you hand it.
+   The utility allowance and the 150% SAFMR each flip data-box between a
+   *_source and a *_custom key depending on mode (rule 9), so the cell reached
+   through the dropdown used to widen to itself alone — and the *_reviewed flag
+   the pick had just set was left behind. Enter then said "Saved this field to
+   the database" while the footer said "Unsaved changes", with nothing on screen
+   to save. Keyed off _custom the same press saved all three. */
+function coupledKeys(k){const m=k.match(/^(units\.\d+)\.(ua|safmr)_(custom|source|reviewed)$/);
+  if(m){const b=m[1]+'.'+m[2];return [k].concat([b+'_custom',b+'_source',b+'_reviewed'].filter(x=>x!==k));}
+  if(k==='rent_schedule.date_eff_custom')return [k,'rent_schedule.date_eff_source'];if(k==='ocaf.factor_custom')return [k,'ocaf.factor_src'];return [k];}
 function keysCanRevert(keys){return keys.some(k=>srcOf(k)==='overridden');}
 function keysNewDirty(keys){return !keysCanRevert(keys)&&keys.some(k=>(srcOf(k)==='new'||srcOf(k)==='this-cycle')&&String(get(k)==null?'':get(k)).trim()!=='');} // a parsed cell is unsaved too, so Enter and the tick must both reach it
 function keysCanSave(keys){return keysCanRevert(keys)||keysNewDirty(keys);}
@@ -4591,6 +4600,11 @@ function contactDialog(c){c=c||{};
   el('dlgCancel').onclick=closeModal;
   el('dlgOk').onclick=async()=>{const patch={name:(el('ccN').value||'').trim(),email:(el('ccE').value||'').trim(),phone:(el('ccP').value||'').trim()};closeModal();try{if(c.id)await mpdb.updateContact(c.id,patch);else await mpdb.addContact(patch);renderContacts();}catch(e){saveFailedModal(e);}};}
 const __API={DESIG,desigName,rsParseUnitType,fmtPhone,fmtDate,sMoney,sPct,sK,analysis,uaResolvedOf,uaConflict,uaUnresolved,renderMenu,renderLauncher,openMenu,openForm,openLauncher,ringSvg,niceDate,isDirty,overrideCount,isStateKey,attnFlags,pbUtil,clearUncheckedWriteins,srcOf:(k)=>srcOf(k),__openForm:(pid)=>{activePid=pid;return openForm('RCS');},__openCycleForm:(pid,cid)=>{activePid=pid;return openCycleForm(cid);},__renderBody:()=>renderBody(),__docMissing:(id)=>docMissing(id).map(x=>x.label),__docWarns:(id)=>docWarns(id).map(x=>x.label),__edit:(k,v)=>{form=store.editForm(form,k,v);},getVal:(k)=>get(k),modeOf:(kk)=>modeOf(kk),fieldKeys:(k)=>fieldKeys(k),keysCanSave:(ks)=>keysCanSave(ks),keysCanRevert:(ks)=>keysCanRevert(ks),keysNewDirty:(ks)=>keysNewDirty(ks),__revert:(k)=>store.revertForm(form,k),coupledKeys:(k)=>coupledKeys(k),__firstPid:()=>{const ps=mpdb?mpdb.listProperties():[];return ps.length?ps[0].id:null;},__boxes:(i)=>({ua:uaBox(i),safmr:safmrBox(i)}),__saveField:async(k)=>{form=await store.saveField(form,k);},__set:(f,u)=>{form=f;UNITS=u;},desigColors:(k)=>desigColors(k),__cell:(k)=>form[k],
+  /* The whole record, and the snapshot isDirty() measures against. The round-trip
+     sweep needs a key-by-key diff (FORM-RULES "Before you deliver" 6): isDirty()
+     compares VALUES ONLY, so a hidden side-effect key strands the form dirty with
+     nothing on screen and no way to name the culprit from outside. */
+  __form:()=>form, __formSnap:()=>FORMSNAP,
   /* The undo run. __editCell is the text box's input handler in miniature —
      push the cell, then write it the way that handler does — so a suite can
      build a run of edits without synthesising DOM events. */
