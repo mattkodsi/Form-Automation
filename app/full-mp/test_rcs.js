@@ -16,7 +16,7 @@ const els={};
 global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>null,querySelectorAll:()=>[],createElement:()=>mk(),addEventListener(){},body:{classList:{toggle(){},contains(){return false;}}}};
 const fs=require('fs'),path=require('path'),os=require('os');
 
-const MIN_CHECKS=180;
+const MIN_CHECKS=184;
 let n=0,fails=0,verdict=null;
 const BAR='='.repeat(68);
 function fail(msg,err){
@@ -314,6 +314,20 @@ async function reader(file){
   /* no study at all: no checks, no claims */
   app.__setRcsParsed(null);
   eq('with no study there are no checks',app.__rcsChecks(),'');
+
+
+  /* ============ non-revenue rents ============ */
+  app.__setRcsParsed(cvRec);
+  app.__edit('nonrev.0.br','2BR');app.__edit('nonrev.0.ba','1BA');
+  app.__rcsFill();
+  eq('a non-revenue unit takes the matching market rent',app.getVal('nonrev.0.rent'),'1850');
+  T('and it says where it came from',app.__rcsTag('nonrev.0.rent').indexOf('RCS')>=0);
+  eq('it is declared as a key the fill writes',app.__rcsFillKeys().indexOf('nonrev.0.rent')>=0,true);
+
+  /* the same ambiguity rule, with no unit count available to break the tie */
+  app.__setRcsParsed(lnRec);
+  app.__edit('nonrev.0.br','1BR');app.__edit('nonrev.0.ba','1BA');
+  eq('an ambiguous non-revenue row fills nothing',app.__rcsOf('nonrev.0.rent'),null);
 
   finish();
 })().catch(e=>{fail('the suite threw',e);process.exit(1);});
