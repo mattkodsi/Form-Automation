@@ -35,7 +35,7 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=111;   // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
+const MIN_CHECKS=116;   // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
                        // pristine (three seeds, two checks each). 2026-07-27: the unit-type cell
                        // lost a divider with the designation, so the pair of divider checks
                        // became one. Lowered on purpose.
@@ -733,6 +733,60 @@ const FULL=process.argv.includes('--full');
       b.click();
       return {open:document.getElementById('scrim').classList.contains('open')};`);
     eq('pressing a field closes the dialog and travels to it',jumped&&jumped.open,false);
+
+    /* ── a pulled factor is as unsaved as a typed one ───────────────────────
+       The same sweep as the parse, on the other two flows that fetch figures
+       from outside. The Federal Register pull writes five keys and marks all
+       five; the OCAF cell rendered its pair only for a factor typed by hand, so
+       the ordinary way to get one left the form dirty with nothing to press.
+       The utility-allowance pull writes seven: four factors that each have a
+       cell, and three — the fiscal year, the state, the publication date — that
+       no cell names at all. Both are the effective date's defect wearing a
+       different section number, which is why ovIcons now widens through
+       coupledKeys for everything rather than for these one at a time. */
+    console.log('\n── a pulled factor can be saved ───────────────────────');
+    await c.reload();
+    await c.eval(HELPERS);
+    {
+      const cid=await c.eval('await window.__t.__openForm('+JSON.stringify(pid)+');'
+        +"const cy=await window.__t.__newCycle({programs:['ocaf','uaf'],label:'FACTORS'});"
+        +'return (cy&&(cy.cid||cy.id))||cy;');
+      await c.eval('await window.__t.__openCycleForm('+JSON.stringify(pid)+','+JSON.stringify(cid)+');return 1');
+      await sleep(400);
+      const secs=await c.eval("return [...document.querySelectorAll('#sections .ctitle')].map(x=>x.textContent)");
+      T('an OCAF + UAF package shows both factor sections',
+        secs.indexOf('OCAF rent adjustment (HUD-9625)')>=0&&secs.indexOf('Utility allowance factors')>=0);
+
+      // exactly what the two pulls write
+      await c.eval("window.__t.__edit('ocaf.factor_pub','4.9');window.__t.__edit('ocaf.factor_fy','2026');"
+        +"window.__t.__edit('ocaf.factor_pubdate','2025-11-03');window.__t.__edit('ocaf.factor_state','MI');"
+        +"window.__t.__srcSetSource('ocaf.factor_custom','fr');"
+        +"['oil','gas','electric','water'].forEach((u,ix)=>window.__t.__edit('uaf.f_'+u,String(1.0+ix/100)));"
+        +"window.__t.__edit('uaf.factor_fy','2026');window.__t.__edit('uaf.factor_state','MI');"
+        +"window.__t.__edit('uaf.factor_pubdate','2025-10-01');window.__t.__renderBody();return 1");
+      await sleep(400);
+      const cov=await c.eval(`
+        const vis=el=>{if(!el||!el.offsetParent)return false;const r=el.getBoundingClientRect();
+          if(r.width<1||r.height<1)return false;const cs=getComputedStyle(el);
+          return cs.visibility!=='hidden'&&cs.display!=='none'&&+cs.opacity>0.01;};
+        const covered=new Set();
+        document.querySelectorAll('[data-save1]').forEach(b=>{if(!vis(b))return;
+          b.getAttribute('data-save1').split(',').forEach(k=>covered.add(k));});
+        const f=window.__t.__form(),snap=window.__t.__formSnap()||{};
+        const val=o=>o&&o.value!=null?String(o.value):'';
+        const dirty=[];
+        new Set([...Object.keys(f),...Object.keys(snap)]).forEach(k=>{
+          const a=val(f[k]),b=val(snap[k]),src=f[k]&&f[k].source;
+          if(a!==b||((src==='new'||src==='this-cycle'||src==='overridden')&&a!==''))dirty.push(k);});
+        return {pairOnScreen:vis(document.querySelector('[data-ovic*="ocaf.factor"]')),
+          ocaf:['ocaf.factor_pub','ocaf.factor_fy','ocaf.factor_pubdate','ocaf.factor_state','ocaf.factor_src'].filter(k=>!covered.has(k)),
+          uaf:['uaf.factor_fy','uaf.factor_state','uaf.factor_pubdate'].filter(k=>!covered.has(k)),
+          naked:dirty.filter(k=>!covered.has(k)).sort()};`);
+      T('the pulled OCAF factor has a save control on screen',cov.pairOnScreen);
+      eq('and it covers every key the pull wrote',cov.ocaf,[]);
+      eq('the utility factors carry their fiscal year, state and publication date',cov.uaf,[]);
+      eq('and a pull leaves nothing that cannot be saved',cov.naked,[]);
+    }
 
     console.log('\n── the console stayed quiet ───────────────────────────');
     eq('no console errors and no uncaught exceptions',c.logs.slice(0,3),[]);
