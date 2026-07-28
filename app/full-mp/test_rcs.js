@@ -16,7 +16,7 @@ const els={};
 global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>null,querySelectorAll:()=>[],createElement:()=>mk(),addEventListener(){},body:{classList:{toggle(){},contains(){return false;}}}};
 const fs=require('fs'),path=require('path'),os=require('os');
 
-const MIN_CHECKS=237;
+const MIN_CHECKS=241;
 let n=0,fails=0,verdict=null;
 const BAR='='.repeat(68);
 function fail(msg,err){
@@ -45,8 +45,9 @@ const _d=__dirname;
 (0,eval)(fs.readFileSync(path.join(_d,'lib/pdf-lib.min.js'),'utf8'));
 global.window.PDFLib=global.window.PDFLib||globalThis.PDFLib;
 const _b=path.join(os.tmpdir(),'rcs_parse_test.js');
-fs.writeFileSync(_b,['core.js','db.js','app.js','rcs.js'].map(x=>fs.readFileSync(path.join(_d,x),'utf8')).join('\n')
-  +'\nif(typeof module!=="undefined")module.exports.__rsTextPageAt=rsTextPageAt;\n');
+fs.writeFileSync(_b,'function ocrHalf(b,p,skip){(globalThis.__HALF=globalThis.__HALF||[]).push({p:p,skip:(skip||[]).slice()});return Promise.resolve(null);}\n'
+  +['templates.js','core.js','db.js','app.js','rcs.js'].map(x=>fs.readFileSync(path.join(_d,x),'utf8')).join('\n')
+  +'\nif(typeof module!=="undefined")Object.assign(module.exports,{__rsTextPageAt:rsTextPageAt,__rsTextPages:rsTextPages,__rsReadTextTier:rsReadTextTier});\n');
 const app=require(_b);
 const R=global.window.RCSParse;
 const FIX=path.join(_d,'..','..','_archive','rcs-fixtures');
@@ -508,6 +509,33 @@ async function reader(file){
     eq('and a dotted one',S['appr.phone'],'7085002380'); }
   { const S={};R._readSender(['Smith & Co Valuation','Phone: 7085002380'],S);
     eq('and a bare run that something calls a phone',S['appr.phone'],'7085002380'); }
+
+  /* \u2500\u2500 "found" is not "read" \u2500\u2500
+     A signature-flattened copy keeps the BLANK FORM'S printing on page 2 —
+     "Part G", "Information on Mortgagor Entity", "Name of Entity", "General
+     Partnership" — so the page classifies perfectly as the second half and
+     yields not one value. Judged by classification alone it looked read, and
+     the ownership entity, the principals and the signatory came back empty
+     from a page that shows all three.
+
+     The blank template IS that case exactly: every label, no values. */
+  console.log('\n\u2500 a half found but not read \u2500');
+  {
+    const P=global.window.PDFLib;
+    const tplB=Buffer.from(global.window.RCSTemplates.rentSchedule,'base64');
+    const tdoc=await P.PDFDocument.load(new Uint8Array(tplB),{ignoreEncryption:true,throwOnInvalidObject:false});
+    const tpages=await app.__rsTextPages(tdoc);
+    T('the blank form has text on its second page',tpages.length>=2&&tpages[1].length>0);
+    globalThis.__HALF=[];
+    await app.__rsReadTextTier(tpages,new Uint8Array(tplB),null);
+    T('a second half with printing but no values is sent to be scanned',globalThis.__HALF.length>0);
+    if(globalThis.__HALF.length){
+      eq('and it is the SECOND half that is asked for',globalThis.__HALF[0].p,1);
+      /* The page we are here for must not be in the skip list, or the request
+         goes out asking for everything except the thing it needs. */
+      T('and the page it needs is not skipped',globalThis.__HALF[0].skip.indexOf(1)<0);
+    }
+  }
 
   finish();
 })().catch(e=>{fail('the suite threw',e);process.exit(1);});

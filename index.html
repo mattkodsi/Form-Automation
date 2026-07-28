@@ -3088,7 +3088,15 @@ function rsReadFields(pdfForm){
    and are matched against the template's own field rectangles. Hex strings decode
    through the font's ToUnicode map when it has one, covering CID-encoded copies. */
 async function rsInflate(seg){let e=seg.length;while(e>0&&(seg[e-1]===10||seg[e-1]===13||seg[e-1]===32))e--;seg=seg.slice(0,e);
-  const ds=new DecompressionStream('deflate');const w=ds.writable.getWriter();const pr=new Response(ds.readable).arrayBuffer();await w.write(seg);await w.close();return new TextDecoder('latin1').decode(await pr);}
+  const ds=new DecompressionStream('deflate');const w=ds.writable.getWriter();
+  const pr=new Response(ds.readable).arrayBuffer();
+  /* Both ends of the stream reject when the bytes are malformed, and the caller
+     can only await one of them. The other went unhandled — a console error in
+     the browser, and a hard exit under node, on a real signed schedule that has
+     one bad stream among sixty good ones. */
+  pr.catch(()=>{});
+  try{await w.write(seg);await w.close();}catch(err){try{w.releaseLock();}catch(e2){}throw err;}
+  return new TextDecoder('latin1').decode(await pr);}
 function rsMul(a,b){return [a[0]*b[0]+a[1]*b[2],a[0]*b[1]+a[1]*b[3],a[2]*b[0]+a[3]*b[2],a[2]*b[1]+a[3]*b[3],a[4]*b[0]+a[5]*b[2]+b[4],a[4]*b[1]+a[5]*b[3]+b[5]];}
 async function rsStreamText(s){const P=window.PDFLib;if(!s||!s.dict)return '';
   let f=s.dict.get(P.PDFName.of('Filter'));f=f?String(f):'';
@@ -3382,11 +3390,24 @@ async function rsReadTextTier(pages,bytes,onStep){ // flattened copy -> same par
   // reads fine over a certification page rendered as dozens of little images.
   // Rather than drop the entity, principals, signatory and HAP number, send just
   // that half to be OCR'd; the pages already read as text are not sent again.
-  let gotB=pg1>=0;
-  if(pg1<0&&bytes&&typeof ocrHalf==='function'){
-    const skip=[];pages.forEach((rs,i)=>{if(rs.length>=15)skip.push(i);});
+  /* Was the half FOUND, or was anything READ off it? A flattened copy's page 2
+     still carries the blank form's own printing — "Part G", "Name of Entity",
+     "General Partnership" — so it classifies perfectly and yields no values at
+     all. Judged by classification alone it looked read, and the entity, the
+     principals and the signatory came back empty from a page that shows them. */
+  const bIds=Object.keys(rects).filter(k=>rects[k]&&rects[k].pg===1);
+  let gotB=pg1>=0&&bIds.some(k=>String(F[k]||'').trim()!=='');
+  if(!gotB&&bytes&&typeof ocrHalf==='function'){
+    /* Every page already read AS TEXT is skipped — except the one we are here
+       for. When the second half was classified and came back empty, it is
+       precisely the page that has to be sent. */
+    const skip=[];pages.forEach((rs,i)=>{if(i!==pg1&&rs.length>=15)skip.push(i);});
     let add=null;try{add=await ocrHalf(bytes,1,skip,(i,n)=>onStep&&onStep(i,n,'fill'));}catch(e){}
-    if(add){Object.assign(F,add.F);if(!s8&&add.s8)s8=add.s8;gotB=true;}}
+    /* Fill, never overwrite — the same rule the tick merge above states: where
+       the text layer has a value that value stands, because it is the
+       document's own characters, and OCR is a reading of them. */
+    if(add){Object.keys(add.F).forEach(k=>{if(!String(F[k]||'').trim())F[k]=add.F[k];});
+      if(!s8&&add.s8)s8=add.s8;gotB=true;}}
   const outp=rsAssembleFields(n=>String(F[String(n)]||'').trim());
   if(outp&&s8)outp.scalars['property.s8']=s8;
   if(outp&&!gotB)outp.halfB=true;
@@ -5627,6 +5648,9 @@ __rcsFill:()=>rcsFillFromParsed(),/* The same door for the rent schedule. Fillin
      clears the reading, which is how a test says "no schedule was ever read".
      kind:'fields' matches what parseRsPdf returns for a readable copy. */
   __setRsParsed:(rec)=>{_rsUpload=rec?{name:'rs.pdf',bytes:null,kind:'fields',parsed:rec,at:''}:null;},
+  /* The whole ladder, on real bytes: which tier answered, and with what. The
+     only way to ask that question of a document without a Supabase session. */
+  __parseRsPdf:(by,onStep)=>parseRsPdf(by,onStep),
   __rsFill:()=>rsFillFromParsed(),__UNITS:()=>UNITS.slice(),__moneySrcRows:(k)=>moneySrcRows(k),__rcsChecks:()=>rcsChecks(),__rcsTag:(k)=>rcsTag(k),__rcsFillKeys:()=>rcsFillKeys(),__rcsMatch:(i)=>rcsMatch(i),__rcsOf:(k)=>rcsOf(k),
   /* The undo run. __editCell is the text box's input handler in miniature —
      push the cell, then write it the way that handler does — so a suite can
