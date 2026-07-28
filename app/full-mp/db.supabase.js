@@ -86,7 +86,7 @@ function makeSupabaseDb(client) {
     ]);
     for (const q of [pr, ur, nr, li, ct, dr, cy]) if (q && q.error) throw q.error;
     D = { props: {}, contacts: [], dir: [], activePid: null, cycles: {} };
-    ((cy && cy.data) || []).forEach(c => { D.cycles[c.id] = { id: c.id, property_id: c.property_id, programs: c.programs || '', label: c.label || '', effective_date: c.effective_date || '', cells: c.cells || {}, generated: c.generated || {}, rs_doc: c.rs_doc || {}, created_at: c.created_at || '', updated_at: c.updated_at || c.created_at || '' }; });
+    ((cy && cy.data) || []).forEach(c => { D.cycles[c.id] = { id: c.id, property_id: c.property_id, programs: c.programs || '', label: c.label || '', effective_date: c.effective_date || '', cells: c.cells || {}, generated: c.generated || {}, rs_doc: c.rs_doc || {}, rcs_doc: c.rcs_doc || {}, created_at: c.created_at || '', updated_at: c.updated_at || c.created_at || '' }; });
     (pr.data || []).forEach(r => {
       const sa = String(r.updated_at || '').slice(0, 10);
       const p = { id: r.id, created_at: String(r.created_at || '').slice(0, 10), updated_at: r.updated_at || r.created_at, durable: {}, percycle: {} };
@@ -265,7 +265,7 @@ function makeSupabaseDb(client) {
   }
   async function pushCycle(cid) {
     const c = D.cycles[cid]; if (!c) return;
-    const r = await client.from('cycle').upsert({ id: c.id, property_id: c.property_id, programs: c.programs, label: c.label, effective_date: c.effective_date, cells: c.cells, generated: c.generated, rs_doc: c.rs_doc || {}, updated_at: now() });
+    const r = await client.from('cycle').upsert({ id: c.id, property_id: c.property_id, programs: c.programs, label: c.label, effective_date: c.effective_date, cells: c.cells, generated: c.generated, rs_doc: c.rs_doc || {}, rcs_doc: c.rcs_doc || {}, updated_at: now() });
     if (r.error) throw r.error;
   }
 
@@ -419,7 +419,7 @@ function makeSupabaseDb(client) {
         // property record or the package it was built from.
         const effIn = String(o.effective_date || '').trim();
         if (effIn) { cells['rent_schedule.date_eff_source'] = { value: 'custom', saved_at: today() }; cells['rent_schedule.date_eff_custom'] = { value: effIn, saved_at: today() }; }
-        D.cycles[cid] = { id: cid, property_id: pid, programs: (o.programs || ['rcs']).join(','), label: o.label || '', effective_date: cyISO(o.effective_date) || '', cells, generated: {}, rs_doc: {}, created_at: now(), updated_at: now() };
+        D.cycles[cid] = { id: cid, property_id: pid, programs: (o.programs || ['rcs']).join(','), label: o.label || '', effective_date: cyISO(o.effective_date) || '', cells, generated: {}, rs_doc: {}, rcs_doc: {}, created_at: now(), updated_at: now() };
         if (o.full) cySyncEff(D.cycles[cid]);
         return enqueue('cy' + cid, () => pushCycle(cid)).then(() => ({ cid }));
       },
@@ -467,6 +467,8 @@ function makeSupabaseDb(client) {
          parse lived only in the page load that made it. */
       getCycleRs(cid) { const c = D.cycles[cid]; return (c && c.rs_doc) || {}; },
       setCycleRs(cid, doc) { const c = D.cycles[cid]; if (!c) return Promise.resolve(); c.rs_doc = doc || {}; c.updated_at = now(); return enqueue('cy' + cid, () => pushCycle(cid)); },
+      getCycleRcs(cid) { const c = D.cycles[cid]; return (c && c.rcs_doc) || {}; },
+      setCycleRcs(cid, doc) { const c = D.cycles[cid]; if (!c) return Promise.resolve(); c.rcs_doc = doc || {}; c.updated_at = now(); return enqueue('cy' + cid, () => pushCycle(cid)); },
       setCycleGenerated(cid, docs) { const c = D.cycles[cid]; if (!c) return Promise.resolve(); c.generated = { at: now(), docs: docs || [] }; c.updated_at = now(); return enqueue('cy' + cid, () => pushCycle(cid)); },
       computeAnalysis, computeSalutation,
     };

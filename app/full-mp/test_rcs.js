@@ -16,7 +16,7 @@ const els={};
 global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>null,querySelectorAll:()=>[],createElement:()=>mk(),addEventListener(){},body:{classList:{toggle(){},contains(){return false;}}}};
 const fs=require('fs'),path=require('path'),os=require('os');
 
-const MIN_CHECKS=140;
+const MIN_CHECKS=165;
 let n=0,fails=0,verdict=null;
 const BAR='='.repeat(68);
 function fail(msg,err){
@@ -208,6 +208,57 @@ async function reader(file){
   eq('the hyphenated printing reduces to the same value',R._s8From("Subject's FHA #: OH10-M000-236"),'OH10M000236');
   eq('a spelled-out grid heading parses',R.parseType('Two Bedroom').br,2);
   eq('a spaced type parses',[R.parseType('1 BR / 1 BA').br,R.parseType('1 BR / 1 BA').ba],[1,1]);
+
+
+  /* ============ the form side: values must actually land ============ */
+  await global.__ready();
+  await app.__localDb();
+  await app.__openForm(app.__firstPid());
+
+  const cvRec=await R.readLetter(await reader(path.join(FIX,'belfry-colonial-village.pdf')));
+  app.__setRcsParsed(cvRec);
+  /* the form's own rows must describe the same units for a match to exist */
+  app.__edit('units.0.br','2BR');app.__edit('units.0.ba','1BA');
+  app.__edit('units.1.br','3BR');app.__edit('units.1.ba','1BA');
+  /* These already hold the property's stored values. The point is not that they
+     are empty — it is that reading a study never disturbs them. */
+  const untouched={};
+  ['poc.name','sig.name','units.0.current','property.fha','owner.entity_name']
+    .forEach(function(k){untouched[k]=app.getVal(k);});
+  app.__rcsFill();
+
+  eq('market rent landed on row 0',app.getVal('units.0.proposed'),'1850');
+  eq('market rent landed on row 1',app.getVal('units.1.proposed'),'2400');
+  eq('utility allowance landed',app.getVal('units.0.ua_rcs'),'161');
+  eq('150% SAFMR landed',app.getVal('units.0.safmr_rcs'),'2085');
+  eq('the appraiser firm landed',app.getVal('appr.firm'),'Belfry Valuation, LLC');
+  eq('the appraiser name landed',app.getVal('appr.name'),'Aaron M. Zabel');
+  eq('the phone is formatted on the way in',app.getVal('appr.phone'),'(708) 500-2380');
+  eq('the property name landed',app.getVal('property.name'),'Colonial Village');
+  eq('the section 8 number landed',app.getVal('property.s8'),'OH10M000236');
+  Object.keys(untouched).forEach(function(k){
+    eq('the study leaves '+k+' alone',app.getVal(k),untouched[k]);
+  });
+
+  T('a filled cell says where it came from',app.__rcsTag('units.0.proposed').indexOf('RCS')>=0);
+  T('every key the fill writes is covered by rcsTag',
+    app.__rcsFillKeys().every(function(k){return app.__rcsTag(k)!=='';}));
+  eq('the fill wrote the keys it claims',app.__rcsFillKeys().length>=16,true);
+
+  /* Bedrooms and baths decide the match — never position. A 3BR row must not
+     take the 2BR rent just because it came second. */
+  eq('row 1 matched the 3BR line, not the first line',app.__rcsOf('units.1.proposed'),'2400');
+
+  /* Lansing prices two rows of identical bedrooms and baths at different
+     rents. Nothing on the form says which is which, so the app fills neither
+     rather than picking. */
+  const lnRec=await R.readLetter(await reader(path.join(FIX,'belfry-lansing-manor.pdf')));
+  app.__setRcsParsed(lnRec);
+  app.__edit('units.0.br','1BR');app.__edit('units.0.ba','1BA');
+  const m=app.__rcsMatch(0);
+  eq('an ambiguous unit row is recognised as ambiguous',m.many,true);
+  eq('and it yields no value',app.__rcsOf('units.0.proposed'),null);
+  eq('so nothing is silently guessed',m.u,null);
 
   finish();
 })().catch(e=>{fail('the suite threw',e);process.exit(1);});
