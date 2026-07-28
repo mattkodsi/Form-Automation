@@ -3032,11 +3032,21 @@ async function parseRsPdf(bytes,onStep){
     return {kind:'fields',parsed:pf1};}
   let pages=null;try{pages=await rsTextPages(doc);}catch(e){}
   const runs=pages?pages.reduce((a,p)=>a+p.length,0):0;
+  const scan=async()=>{let oc=null;try{oc=await ocrParseRs(bytes,(i,n)=>onStep&&onStep(i,n,'scan'));}catch(e){}return oc;};
   if(runs<15){ // nothing to read on the page itself: tier 3 sends it out to be OCR'd
-    let oc=null;try{oc=await ocrParseRs(bytes,(i,n)=>onStep&&onStep(i,n,'scan'));}catch(e){}
+    const oc=await scan();
     return oc?{kind:'fields',parsed:oc,via:'ocr'}:{kind:'scan',parsed:null};}
   let tp=null;try{tp=await rsReadTextTier(pages,bytes,onStep);}catch(e){}
-  return tp?{kind:'fields',parsed:tp,via:'text'}:{kind:'text',parsed:null};}
+  if(tp)return {kind:'fields',parsed:tp,via:'text'};
+  /* Text on the page and none of it the values — so OCR, which the runs<15 gate
+     alone would never have reached. An e-signed copy is that gate's worst case:
+     signing flattens every entered figure into artwork the extractor cannot
+     recover, while leaving the blank form's own printing behind. Colonial
+     Village's schedule carries 287 text runs and not one of them is a value, so
+     the page reads as maximally readable and yields nothing. "Is there text on
+     it" was never the question. "Did we manage to read any of it" is. */
+  const oc=await scan();
+  return oc?{kind:'fields',parsed:oc,via:'ocr'}:{kind:'text',parsed:null};}
 function rsFillFromParsed(){const P=_rsUpload&&_rsUpload.parsed;if(!P)return;
   const mark=k=>{markCycle(k);if(form[k])form[k].fromParse=true;};   // came from the schedule, not typed — tags an override as "parsed", not just "changed", in its note text
   const setk=(k,v)=>{if(v!=null&&v!==''){form=store.editForm(form,k,String(v));mark(k);}};
