@@ -35,7 +35,7 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=162;   // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
+const MIN_CHECKS=165;   // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
                        // pristine (three seeds, two checks each). 2026-07-27: the unit-type cell
                        // lost a divider with the designation, so the pair of divider checks
                        // became one. Lowered on purpose.
@@ -1230,6 +1230,44 @@ const FULL=process.argv.includes('--full');
       eq('nothing offers to travel to a section that does not exist',lh.zero,0);
       T('and the letterhead says where it is uploaded instead',
         lh.flat.some(x=>/letterhead/i.test(x.n)&&/property page/.test(x.w)));
+    }
+
+    /* ── a date that is not a date does not get to answer "which year" ──────
+       The mask lays every digit out again on each keystroke. Typed from empty
+       that is right; typed INTO, it moves everything after the caret — and the
+       caret was not preserved, so a correction to the month landed in the year.
+       Worse, nothing asked whether the result was a date: effYear() and
+       hudParams() take the first four digits they find, so 20/26/0301 answered
+       "0301", and 0301 is the year the SAFMR pull and both factor pulls then
+       asked HUD about. */
+    console.log('\n── a date that is not a date ─────────────────────────');
+    await c.reload();
+    await c.eval(HELPERS);
+    await c.eval('await window.__t.__openForm('+JSON.stringify(pid)+');return 1');
+    await sleep(300);
+    {
+      await c.eval("window.__t.__edit('rent_schedule.date_eff_rs','');"
+        +"window.__t.__edit('rent_schedule.date_eff_source','custom');"
+        +"window.__t.__edit('rent_schedule.date_eff_custom','');window.__t.__renderBody();return 1");
+      await sleep(250);
+      await c.eval("document.querySelector('.dateeff-in').focus();return 1");
+      await c.type('10012026');
+      await sleep(250);
+      eq('a date typed from empty comes out as a date',
+        await c.eval("return document.querySelector('.dateeff-in').value"),'10/01/2026');
+
+      await c.eval("window.__t.__edit('rent_schedule.date_eff_custom','20/26/0301');window.__t.__renderBody();return 1");
+      await sleep(250);
+      const bad=await c.eval(`
+        return {warned:[...document.querySelectorAll('#viewForm .ucnote.warn')]
+            .some(x=>/not a date/.test(x.textContent)),
+          year:window.__t.__effYear?window.__t.__effYear():null};`);
+      T('a scramble in that box is called what it is',bad.warned);
+
+      await c.eval("window.__t.__edit('rent_schedule.date_eff_custom','10/01/2026');window.__t.__renderBody();return 1");
+      await sleep(250);
+      eq('and a real date draws no warning',
+        await c.eval("return [...document.querySelectorAll('#viewForm .ucnote.warn')].filter(x=>/not a date/.test(x.textContent)).length"),0);
     }
 
     console.log('\n── the console stayed quiet ───────────────────────────');
