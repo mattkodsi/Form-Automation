@@ -5,7 +5,7 @@
    shows it, and MIN_CHECKS catches a run that dies partway — a short count is
    a failure, not a pass. Adding checks? Raise MIN_CHECKS. */
 const { makeDb, memoryAdapter, isPerCycleKey, migrate, computeAnalysis, computeSalutation } = require('./db.js');
-const MIN_CHECKS = 104;
+const MIN_CHECKS = 112;
 let fails = 0, n = 0, verdict = null;
 const BAR = '═'.repeat(68);
 function fail(msg, err) {
@@ -237,5 +237,51 @@ function jsonAdapter() { let s = null; return { get: async () => (s ? JSON.parse
   ok('and still dominant', rdb2.listCycles(rpid)[0].dominant, true);
   ok('a blob written before cycles existed still opens', (await makeDb(jsonAdapter())).listCycles('nope'), []);
 
-  finish();
+  
+/* ---- schema parity: every column we WRITE must actually exist -------------
+   This suite runs against db.js, the localStorage stand-in, so it can never
+   catch a column that Supabase does not have. Two real bugs got through that
+   gap: db.js maps 'units.{i}.desig' to unit_type.designation, a column that has
+   never existed in the live database, and rcs_doc was threaded through
+   db.supabase.js before the column was added — which would have failed every
+   cycle save on the deployed app.
+
+   schema.sql is the checked-in record of the real schema. Comparing what
+   db.supabase.js writes against it is static, needs no credentials, and would
+   have caught both. If it fails: add the column and record it in schema.sql,
+   or stop writing it. */
+(function schemaParity(){
+  const _fs=require('fs'),_p=require('path'),_d=__dirname;
+  const sql=_fs.readFileSync(_p.join(_d,'..','..','schema.sql'),'utf8');
+  const sup=_fs.readFileSync(_p.join(_d,'db.supabase.js'),'utf8');
+  const tables={};
+  const re=/create table public\.([a-z_0-9]+)\s*\(([\s\S]*?)\n\);/g;
+  let m;
+  while((m=re.exec(sql))){
+    const cols=new Set();
+    m[2].split('\n').forEach(function(line){
+      const c=line.trim().match(/^"?([a-z_][a-z0-9_]*)"?\s+/);   // "use" is quoted: it is a reserved word
+      if(c&&!/^(unique|primary|foreign|constraint|check)$/i.test(c[1]))cols.add(c[1]);
+    });
+    tables[m[1]]=cols;
+  }
+  function mapCols(name){
+    const i=sup.indexOf('const '+name);
+    if(i<0)return [];
+    const body=sup.slice(i,sup.indexOf('};',i));
+    return (body.match(/:\s*'([a-z_][a-z0-9_]*)'/g)||[]).map(function(x){return x.replace(/:\s*'/,'').replace(/'$/,'');});
+  }
+  const checks=[['unit_type',mapCols('UCOL')],['nonrev_unit',mapCols('NRCOL')],['ns8_unit',mapCols('NS8COL')]];
+  const cy=sup.match(/from\('cycle'\)\.upsert\(\{([^}]*)\}/);
+  if(cy)checks.push(['cycle',(cy[1].match(/([a-z_][a-z0-9_]*)\s*:/g)||[]).map(function(x){return x.replace(/\s*:$/,'');})]);
+  checks.forEach(function(pair){
+    const t=pair[0],cols=pair[1];
+    ok('schema.sql documents the '+t+' table',!!tables[t],true);
+    if(!tables[t])return;
+    ok('every column written to '+t+' exists in schema.sql',
+       cols.filter(function(c){return !tables[t].has(c);}),[]);
+  });
+})();
+
+finish();
 })().catch(e => fail('the suite threw before reaching its verdict', e));
