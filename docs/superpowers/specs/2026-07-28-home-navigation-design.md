@@ -1,7 +1,8 @@
 # Home page navigation — design
 
 **Date:** 2026-07-28
-**Status:** design approved in outline; two items need Michael Kinley before build
+**Status:** design approved in outline; both open questions resolved 2026-07-28 —
+ready to build
 **Supersedes:** the property gallery's name/recency sort (`renderMenu`, `app.js:2877`)
 
 ---
@@ -15,17 +16,23 @@ single action that either starts this year's package or resumes the draft alread
 in progress. A portfolio manager opens the app and sees their own work, ordered by
 deadline.
 
-## Open questions — need Kinley, not us
+## Open questions — both resolved
 
 1. **Is HAP's `Property Code` the same identifier as AUM's `RAID`?**
-   `db.cosmos.js:302` projects `RAID || ra_master_id`. This design joins on
-   `Property Code`. If they are different identifiers, properties attach to the
-   wrong records and the failure is quiet rather than loud. **Nothing should be
-   built until this is confirmed.**
-2. **What do `Increase Type` values `EXPIRES` and `Request` mean?**
-   286 of 2853 rows (~10%). Neither maps to RCS/OCAF/UAF/BBRA. Until answered,
-   both are carried through and displayed with the action disabled and a reason
-   given — visible, not startable, never silently hidden.
+   `db.cosmos.js:302` projects `RAID || ra_master_id`. **Assume yes and proceed**
+   — this was originally flagged as blocking, which was wrong. Because properties
+   originate from the tracker, `Property Code` is the app's own primary key and is
+   self-consistent; there is no second population to reconcile it against.
+
+   It matters in one place only: AUM prefill. `RASource.value(k)` (`app.js:363`)
+   reads owner entity, address and point of contact by AUM id. If the identifiers
+   differ, a tracker-created property cannot find its AUM record and those fields
+   are typed once instead of arriving pre-filled. Degraded convenience, not a
+   wrong package, and the remedy is a mapping call rather than a redesign.
+2. ~~What do `Increase Type` values `EXPIRES` and `Request` mean?~~
+   **Resolved 2026-07-28 (Matt).** `EXPIRES` means the HAP contract is expiring —
+   not a rent adjustment. `Request` is for PBVs, which get neither an RCS nor an
+   OCAF. Neither produces a package from this app. See *Which rows are startable*.
 
 ---
 
@@ -123,7 +130,8 @@ Two providers behind one interface:
 
 Per property code:
 
-1. Rows with `effective >= today`, earliest wins — the current target.
+1. Rows with `effective >= today` **and a startable type**, earliest wins — the
+   current target. See *Which rows are startable*.
 2. `deadline = due` when present **and** `due < effective`; else
    `effective − HAP_LEAD_DAYS`. A row failing the sanity check is flagged as a
    tracker discrepancy rather than rendering a negative countdown.
@@ -143,6 +151,33 @@ Compares tracker target against local cycles (`listCycles`, `db.supabase.js:420`
 
 Available in both places: the properties list and the property profile. This
 promotes what `cyclesHtml` (`app.js:2966`) already does one level up.
+
+### Which rows are startable
+
+Only `OCAF` and `RCS` produce a package. `EXPIRES` is a contract ending; `Request`
+is a PBV, which gets neither an RCS nor an OCAF (Matt, 2026-07-28).
+
+**Filter on `Increase Type`, never on `Contract Type`.** `Request` is mostly PBV
+(107 of 141 rows) but the remaining 34 are SPRAC, Section 811 and Option 5 —
+keying off the contract type misjudges all of them. Compare case-insensitively:
+the export contains both `EXPIRES` and `Expires`.
+
+**Skip the row, not the property.** `EXPIRES` is usually terminal, but not always:
+Bastrop Oak Grove (90030) runs OCAF · OCAF · OCAF · EXPIRES 2029 · OCAF 2030 · …
+· EXPIRES 2034 · OCAF …, marking the end of each five-year option term while the
+contract continues. 129 properties mix startable and non-startable rows. So the
+target is the earliest future *startable* row, skipping past the others.
+
+**228 of 249 properties have a future OCAF or RCS.** The remaining 21 never
+produce a package. They appear only under All properties, labelled with why, and
+are excluded from the workflow views — a PBV is still someone's property, it just
+isn't this app's work.
+
+**Six properties carry concurrent renewal streams.** Luther Towers (90111) has 41
+rows and up to three renewals in a single year, each with its own date and
+program. "The next renewal" is therefore the next row chronologically, not the
+next year — and a property may legitimately have two open packages at once, which
+the cycle model already supports.
 
 ### Property names must be unique
 
@@ -206,7 +241,9 @@ action.
 | Ragged CSV row | Skipped, counted, reported in the import summary |
 | Duplicate property name on create | Rejected at the data layer, not just the dialog |
 | No name chosen yet | Prompted on first load; "All" until chosen |
-| Unknown `Increase Type` | Displayed verbatim, action disabled with a reason |
+| `Increase Type` is EXPIRES / Request | Skipped when picking the target; property shown under All properties with the reason |
+| Unknown `Increase Type` (new value) | Displayed verbatim, action disabled with a reason — never silently dropped |
+| Property has no future startable row | Excluded from workflow views (21 of 249 today) |
 
 ---
 
