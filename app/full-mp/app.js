@@ -487,7 +487,7 @@ function numUnresolved(i){return numConflict(i)&&!numReviewedOf(i);}
 function unitTypeCell(i){const brK='units.'+i+'.br',baK='units.'+i+'.ba';const conf=typeUnresolved(i);const c=conf?CLR.overridden:groupColors([brK,baK]);
   const withRs=(k,opts,ph)=>{const d=csDrop(k,opts,ph,'',!/\.br$/.test(k),(!conf&&partHot(k))?tintStyle(k):'',rsBrBa(k));const row=rsCsRow(k)||'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>';
     return d.replace('<div class="uamenu">','<div class="uamenu">'+row);};
-  return `<div class="utwrap"><div class="rbox brba" data-box="${brK}" style="background:${c[1]};border-left-color:${c[0]}">${withRs(brK,BR_OPTS,'BR')}<span class="slash">/</span>${withRs(baK,BA_OPTS,'BA')}<span class="utdiv"></span>${utGroupPick(i)}</div>${labelLine(i)}</div>`;}
+  return `<div class="utwrap"><div class="rbox brba" data-box="${brK}" style="background:${c[1]};border-left-color:${c[0]}">${withRs(brK,BR_OPTS,'BR')}<span class="slash">/</span>${withRs(baK,BA_OPTS,'BA')}</div>${labelLine(i)}</div>`;}
 function unitCountCell(i){const k='units.'+i+'.num_units';const c=numUnresolved(i)?CLR.overridden:cellColors(k);const rv=rsUnit(i,'count');
   // The schedule is where this number comes from, so the cell says so whether or
   // not one is loaded right now — dimmed when there is nothing to pull, exactly as
@@ -546,7 +546,7 @@ function unitCard(i,pos){const trash=UNITS.length>1?`<button class="trash" data-
   const saKeys=['units.'+i+'.safmr_custom','units.'+i+'.safmr_source'];
   const actCols=[[1,'<span class="ua-br">'+ovIcons('units.'+i+'.br')+'</span><span class="ua-sl"></span>'
                    +'<span class="ua-ba">'+ovIcons('units.'+i+'.ba')+'</span>'
-                   +'<span class="ua-dg">'+ovIcons('units.'+i+'.label')+'</span>'],
+                   /* the label's pair lives in the label line itself — see labelLine */],
                  [2,ovIcons('units.'+i+'.num_units')],[3,ovIcons('units.'+i+'.current')],
                  [4,ovIcons('units.'+i+'.proposed')],[5,ovIcons(uaKeys)]];
   if(hasProg('rcs'))actCols.push([6,ovIcons(saKeys)]);
@@ -671,10 +671,26 @@ function labelLine(i){const k='units.'+i+'.label';const v=get(k)||'';
   const printed=[get('units.'+i+'.br'),get('units.'+i+'.ba')].filter(Boolean).join(' / ')+(v?' '+v:'');
   const over=printed.length>LABEL_PRINT_MAX;
   const rsv=rsBrBa(k);const fromRs=!!(v&&rsv&&String(rsv)===String(v));
-  return '<div class="ulabline'+(v?' on':'')+'" data-box="'+k+'" style="background:'+c[1]+';border-left-color:'+c[0]+'">'
-    +'<input class="ulab-in" data-k="'+k+'" value="'+esc(v)+'" placeholder="add a label" list="ulabhints" autocomplete="off" spellcheck="false">'
+  /* The same menu every other cell in this form uses, not the browser's own.
+     A native datalist draws a black system triangle and a system popup, which
+     is a second dropdown grammar on one screen — and rule 1 applies here too:
+     the schedule and the RCS report are declared as sources whether or not
+     either has anything to offer, and render dimmed when they do not. The four
+     words below them are suggestions; any text is still valid. */
+  const rsRow=rsCsRow(k)||'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>';
+  const rcsRow='<div class="uaopt srcopt srcdim">\u2014<span class="uasub">RCS report \u00b7 not available</span></div>';
+  const hints=LABEL_HINTS.map(o=>'<div class="uaopt'+(o===v?' sel':'')+'" data-csopt="'+esc(o)+'" data-cskey="'+k+'">'+esc(o)+'</div>').join('');
+  return '<div class="ulabline" data-box="'+k+'" style="background:'+c[1]+';border-left-color:'+c[0]+'">'
+    +'<input class="ulab-in" data-k="'+k+'" value="'+esc(v)+'" placeholder="add a label" autocomplete="off" spellcheck="false">'
     +(fromRs?'<span class="srctag">\u00b7 RS</span>':'')
     +(over?'<span class="ulabwarn" title="'+esc('The schedule prints \u201c'+printed+'\u201d, which is wider than the box on the form.')+'">clips when printed</span>':'')
+    /* The pair sits IN the line, not under the row. The row's other pairs sit
+       below because their cells are narrow and the buttons squeezed them; this
+       line is full-width and fixed-height, so the pair costs it nothing and
+       lands under the field it acts on instead of adrift at the right. */
+    +ovIcons(k)
+    +'<div class="uadrop cs ulabdrop"><div class="uatrigger" tabindex="0" data-trigfor="'+k+'"><span class="cvx">\u25be</span></div>'
+    +'<div class="uamenu">'+rsRow+rcsRow+hints+'</div></div>'
     +'</div>';}
 /* The unit type is ONE fact — the schedule states it as one string, "1 BR / 1 BA E" —
    and the form splits it only to make it editable. Provenance belongs to the
@@ -1197,7 +1213,11 @@ function renderSources(){
   else if(ru.kind==='text')rs=`<div class="srcrow"><span class="mut">△</span><div><b>${esc(ru.name)}</b> <span class="missing">could not be read</span><div class="sub">Enter the values below.</div></div><button class="btn sm" id="upRs">Replace</button></div>`;
   else rs=`<div class="srcrow"><span class="mut">△</span><div><b>${esc(ru.name)}</b> <span class="missing">could not be read</span><div class="sub">Scanned, but the values could not be read. Enter them below.</div></div><button class="btn sm" id="upRs">Replace</button></div>`;
   const foot=`<input type="file" id="rcsFile" accept="application/pdf,.pdf" style="display:none"><input type="file" id="rsFile" accept="application/pdf,.pdf" style="display:none">`;
-  return card(1,sectionPill(1),rcs+rs+foot);}
+  /* The executed rent schedule comes first: it is the document that fills the
+     form, and the one every package needs. The RCS study is second because it
+     is the package's own new evidence, and in an OCAF or UAF year there is no
+     study at all. */
+  return card(1,sectionPill(1),rs+rcs+foot);}
 
 function sectionKeys(n){if(n===10)return ['ocaf.g','ocaf.rate_type','ocaf.ds_annual','ocaf.ds_t12','ocaf.ds_f12','ocaf.factor_pub','ocaf.factor_custom','ocaf.factor_src'];
   if(n===11)return ['uaf.f_oil','uaf.f_gas','uaf.f_electric','uaf.f_water'].concat(UNITS.flatMap(i=>UAF_UTILS.map(u=>'units.'+i+'.uac_'+u[0])));

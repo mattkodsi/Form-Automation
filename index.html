@@ -235,7 +235,11 @@ button.gdoc{justify-content:space-between}
 @keyframes spin{to{transform:rotate(360deg)}}
 .spin{width:13px;height:13px;flex:0 0 auto;border-radius:50%;border:2px solid #cbd5e1;border-top-color:#0f766e;animation:spin .7s linear infinite}
 @media (prefers-reduced-motion:reduce){.spin{animation-duration:2.4s}}
-.srcrow{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid #f0f2f7} .srcrow>div{min-width:0;max-width:640px} .srcrow .ok{color:#166534;font-weight:800} .srcrow .mut{color:#9aa4b8;font-weight:800} .srcrow.dim{opacity:.8} .missing{color:#8791a5;font-weight:700;font-size:11px} .srcrow .sub{color:#7c86a2;font-size:11px} .parsed{color:#0f766e;font-weight:700;font-size:11px} .srcrow b{font-size:13.5px} .srcrow button{margin-left:8px;flex:0 0 auto}
+.srcrow{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid #f0f2f7}
+/* A separator BETWEEN rows, never under the last one: the trailing rule fenced
+   off nothing and left a band of empty card below it. :last-of-type, not
+   :last-child — the hidden file inputs follow the rows. */
+.srcrow:last-of-type{border-bottom:none;padding-bottom:0} .srcrow>div{min-width:0;max-width:640px} .srcrow .ok{color:#166534;font-weight:800} .srcrow .mut{color:#9aa4b8;font-weight:800} .srcrow.dim{opacity:.8} .missing{color:#8791a5;font-weight:700;font-size:11px} .srcrow .sub{color:#7c86a2;font-size:11px} .parsed{color:#0f766e;font-weight:700;font-size:11px} .srcrow b{font-size:13.5px} .srcrow button{margin-left:8px;flex:0 0 auto}
 .srcfoot{display:flex;align-items:center;gap:12px;margin-top:11px} .srcfoot .sub{color:#7c86a2;font-size:11.5px} .ph{margin-top:9px;font-size:11.5px;color:#98a2b3;font-style:italic;background:#f8fafc;border-radius:6px;padding:7px 9px}
 .footer{display:flex;gap:12px;align-items:center;justify-content:center;margin-top:4px;position:sticky;bottom:0;background:#eef1f7;padding:12px 10px;box-shadow:0 -6px 16px rgba(20,40,80,.08);border-radius:8px 8px 0 0;z-index:15} .footer.rest{border-radius:8px} .footer .fsp{display:none} .unsaved{display:none;position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#b45309;font-weight:700;font-size:12.5px;align-items:center;gap:6px} .unsaved.on{display:inline-flex}
 table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;border:1px solid #e6ebf3;border-radius:10px;overflow:hidden} th,td{text-align:left;padding:9px 13px;border-bottom:1px solid #eef1f6} th{font-size:10px;letter-spacing:.4px;color:#8791a5;text-transform:uppercase}
@@ -244,10 +248,19 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;borde
    vertical space at all, so a property that labels nothing is exactly as tall
    as it was before the field existed; it appears on hover or focus so the
    affordance is still findable, and stays put once it holds something. */
+/* ALWAYS present and always the same height, so nothing on the screen moves
+   when a label is typed, cleared, or saved — not the row, not the row below,
+   not the columns beside it. A line that appears on hover moved six rows every
+   time the mouse crossed one. */
 .utwrap{display:flex;flex-direction:column;gap:3px;min-width:0}
-.ulabline{display:none;align-items:center;gap:6px;border:1px solid #e6ebf3;border-left:3px solid #64748b;border-radius:6px;padding:0 8px;min-height:24px;box-sizing:border-box}
-.ulabline.on,.urow:hover .ulabline,.ulabline:focus-within{display:flex}
-.ulab-in{border:none;background:transparent;font:inherit;font-size:12px;color:#33405c;outline:none;flex:1;min-width:0;height:22px;padding:0}
+.ulabline{display:flex;align-items:center;gap:6px;border:1px solid #e6ebf3;border-left:3px solid #64748b;border-radius:6px;padding:0 4px 0 8px;height:28px;box-sizing:border-box}
+.ulab-in{border:none;background:transparent;font:inherit;font-size:12px;color:#33405c;outline:none;flex:1;min-width:0;height:24px;padding:0}
+/* The pair is in the line; reserve its slot so the input does not resize when
+   the cell becomes saveable. */
+.ulabline .ovic{margin:0 2px 0 0;flex:0 0 auto}
+.ulabdrop{flex:0 0 22px;position:relative}
+.ulabdrop .uatrigger{padding:0;justify-content:center;min-height:24px;border:none;background:transparent}
+.ulabdrop .uamenu{right:0;left:auto;min-width:190px}
 .ulab-in::placeholder{color:#9aa3b5;font-style:italic}
 .ulabwarn{font-size:10.5px;color:#b45309;flex:0 0 auto;white-space:nowrap;cursor:help}
 .uadrop.cs{position:relative} .brba .uadrop.cs{flex:1;min-width:0} .uadrop.cs.csnarrow{flex:0 0 auto} .uadrop.cs .uatrigger{padding:0 10px} .uadrop.cs.csnarrow .uatrigger{padding:0 8px;gap:4px} .fbox>.uadrop.cs.csnarrow{border-right:1px solid #e0e5ee;min-width:56px} .fbox>.uadrop.cs.csnarrow:has(+.adiv){border-right:none} .brba .uadrop.cs .uatrigger{padding:0 8px}.uasub{display:block;font-size:11px;color:#7c86a2;white-space:nowrap;margin-top:1px;overflow:hidden;text-overflow:ellipsis}
@@ -273,7 +286,11 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;borde
 .cycbox .addrow{margin-top:9px}
 .mgempty{background:#fff;border:1px dashed #cbd5e1;border-radius:11px;padding:26px;text-align:center;color:#6b7280}
 .ucards{display:flex;flex-direction:column}
-.rgh,.ucells,.pdrow{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,.7fr) minmax(0,1fr) minmax(0,1fr) minmax(0,.95fr) minmax(0,1.05fr) 30px;gap:8px 14px;align-items:center}
+.rgh,/* start, not center: the type column is taller than the rest because it
+   carries the label line, and centring made every other column drift down by
+   half of it. Pinned to the top, the row reads as one line whatever column 1
+   is doing. */
+.ucells,.pdrow{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,.7fr) minmax(0,1fr) minmax(0,1fr) minmax(0,.95fr) minmax(0,1.05fr) 30px;gap:8px 14px;align-items:start}
 .ucards.noprop .rgh,.ucards.noprop .ucells,.ucards.noprop .urnotes{grid-template-columns:minmax(0,2fr) minmax(0,.7fr) minmax(0,1fr) minmax(0,1fr) minmax(0,.95fr) 30px} .ucards.noprop .urnsub{grid-column:5/7} .rgh.noprop,.pdrow.noprop{grid-template-columns:minmax(0,2fr) minmax(0,.7fr) minmax(0,1fr) minmax(0,1fr) minmax(0,.95fr) 30px}
 .rgh{padding:0 2px 6px;margin-bottom:2px;border-bottom:1px solid #e6ebf3}
 .rgh span{font-size:10px;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
@@ -524,10 +541,7 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;borde
    <div class="mtop"><div class="brand"><span class="mark"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M4 11 12 4l8 7" stroke="#1e3a5f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 10v9h12v-9" stroke="#1e3a5f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><div class="bname">Section 8 Rent Adjustments</div><div class="btag">Related Affordable</div></div></div><button class="backlink" id="bContactsBack"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg> All properties</button></div>
    <div class="lwrap" id="contactsBody"></div>
  </div>
- <!-- Suggestions, never a constraint: the label is free text and any value is
-      valid. These four are simply what most schedules say. -->
- <datalist id="ulabhints"><option value="Elderly"><option value="Family"><option value="Disabled"><option value="Near-elderly"></datalist>
- <div id="viewForm" style="display:none">
+  <div id="viewForm" style="display:none">
    <div id="ccbar"></div>
    <div class="hdr"><div><h1>Package Builder</h1><div class="sub">HUD Section 8</div></div><div class="hdrmid"><div class="hprop" id="hdrProp">&mdash;</div><span class="hprogram" id="hdrProgram">RCS Package</span></div><div class="progs"><span class="prog on">RCS</span><span class="prog off">OCAF</span><span class="prog off">UAF</span><span class="prog off">BBRA</span></div></div>
    <div class="toolbar"><button class="btn" id="bExit">&larr; Back to property</button><button class="btn" id="bFill">&#8635; Revert to saved</button><span class="status" id="status"></span></div>
@@ -2105,7 +2119,7 @@ function numUnresolved(i){return numConflict(i)&&!numReviewedOf(i);}
 function unitTypeCell(i){const brK='units.'+i+'.br',baK='units.'+i+'.ba';const conf=typeUnresolved(i);const c=conf?CLR.overridden:groupColors([brK,baK]);
   const withRs=(k,opts,ph)=>{const d=csDrop(k,opts,ph,'',!/\.br$/.test(k),(!conf&&partHot(k))?tintStyle(k):'',rsBrBa(k));const row=rsCsRow(k)||'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>';
     return d.replace('<div class="uamenu">','<div class="uamenu">'+row);};
-  return `<div class="utwrap"><div class="rbox brba" data-box="${brK}" style="background:${c[1]};border-left-color:${c[0]}">${withRs(brK,BR_OPTS,'BR')}<span class="slash">/</span>${withRs(baK,BA_OPTS,'BA')}<span class="utdiv"></span>${utGroupPick(i)}</div>${labelLine(i)}</div>`;}
+  return `<div class="utwrap"><div class="rbox brba" data-box="${brK}" style="background:${c[1]};border-left-color:${c[0]}">${withRs(brK,BR_OPTS,'BR')}<span class="slash">/</span>${withRs(baK,BA_OPTS,'BA')}</div>${labelLine(i)}</div>`;}
 function unitCountCell(i){const k='units.'+i+'.num_units';const c=numUnresolved(i)?CLR.overridden:cellColors(k);const rv=rsUnit(i,'count');
   // The schedule is where this number comes from, so the cell says so whether or
   // not one is loaded right now — dimmed when there is nothing to pull, exactly as
@@ -2164,7 +2178,7 @@ function unitCard(i,pos){const trash=UNITS.length>1?`<button class="trash" data-
   const saKeys=['units.'+i+'.safmr_custom','units.'+i+'.safmr_source'];
   const actCols=[[1,'<span class="ua-br">'+ovIcons('units.'+i+'.br')+'</span><span class="ua-sl"></span>'
                    +'<span class="ua-ba">'+ovIcons('units.'+i+'.ba')+'</span>'
-                   +'<span class="ua-dg">'+ovIcons('units.'+i+'.label')+'</span>'],
+                   /* the label's pair lives in the label line itself — see labelLine */],
                  [2,ovIcons('units.'+i+'.num_units')],[3,ovIcons('units.'+i+'.current')],
                  [4,ovIcons('units.'+i+'.proposed')],[5,ovIcons(uaKeys)]];
   if(hasProg('rcs'))actCols.push([6,ovIcons(saKeys)]);
@@ -2289,10 +2303,26 @@ function labelLine(i){const k='units.'+i+'.label';const v=get(k)||'';
   const printed=[get('units.'+i+'.br'),get('units.'+i+'.ba')].filter(Boolean).join(' / ')+(v?' '+v:'');
   const over=printed.length>LABEL_PRINT_MAX;
   const rsv=rsBrBa(k);const fromRs=!!(v&&rsv&&String(rsv)===String(v));
-  return '<div class="ulabline'+(v?' on':'')+'" data-box="'+k+'" style="background:'+c[1]+';border-left-color:'+c[0]+'">'
-    +'<input class="ulab-in" data-k="'+k+'" value="'+esc(v)+'" placeholder="add a label" list="ulabhints" autocomplete="off" spellcheck="false">'
+  /* The same menu every other cell in this form uses, not the browser's own.
+     A native datalist draws a black system triangle and a system popup, which
+     is a second dropdown grammar on one screen — and rule 1 applies here too:
+     the schedule and the RCS report are declared as sources whether or not
+     either has anything to offer, and render dimmed when they do not. The four
+     words below them are suggestions; any text is still valid. */
+  const rsRow=rsCsRow(k)||'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>';
+  const rcsRow='<div class="uaopt srcopt srcdim">\u2014<span class="uasub">RCS report \u00b7 not available</span></div>';
+  const hints=LABEL_HINTS.map(o=>'<div class="uaopt'+(o===v?' sel':'')+'" data-csopt="'+esc(o)+'" data-cskey="'+k+'">'+esc(o)+'</div>').join('');
+  return '<div class="ulabline" data-box="'+k+'" style="background:'+c[1]+';border-left-color:'+c[0]+'">'
+    +'<input class="ulab-in" data-k="'+k+'" value="'+esc(v)+'" placeholder="add a label" autocomplete="off" spellcheck="false">'
     +(fromRs?'<span class="srctag">\u00b7 RS</span>':'')
     +(over?'<span class="ulabwarn" title="'+esc('The schedule prints \u201c'+printed+'\u201d, which is wider than the box on the form.')+'">clips when printed</span>':'')
+    /* The pair sits IN the line, not under the row. The row's other pairs sit
+       below because their cells are narrow and the buttons squeezed them; this
+       line is full-width and fixed-height, so the pair costs it nothing and
+       lands under the field it acts on instead of adrift at the right. */
+    +ovIcons(k)
+    +'<div class="uadrop cs ulabdrop"><div class="uatrigger" tabindex="0" data-trigfor="'+k+'"><span class="cvx">\u25be</span></div>'
+    +'<div class="uamenu">'+rsRow+rcsRow+hints+'</div></div>'
     +'</div>';}
 /* The unit type is ONE fact — the schedule states it as one string, "1 BR / 1 BA E" —
    and the form splits it only to make it editable. Provenance belongs to the
@@ -2815,7 +2845,11 @@ function renderSources(){
   else if(ru.kind==='text')rs=`<div class="srcrow"><span class="mut">△</span><div><b>${esc(ru.name)}</b> <span class="missing">could not be read</span><div class="sub">Enter the values below.</div></div><button class="btn sm" id="upRs">Replace</button></div>`;
   else rs=`<div class="srcrow"><span class="mut">△</span><div><b>${esc(ru.name)}</b> <span class="missing">could not be read</span><div class="sub">Scanned, but the values could not be read. Enter them below.</div></div><button class="btn sm" id="upRs">Replace</button></div>`;
   const foot=`<input type="file" id="rcsFile" accept="application/pdf,.pdf" style="display:none"><input type="file" id="rsFile" accept="application/pdf,.pdf" style="display:none">`;
-  return card(1,sectionPill(1),rcs+rs+foot);}
+  /* The executed rent schedule comes first: it is the document that fills the
+     form, and the one every package needs. The RCS study is second because it
+     is the package's own new evidence, and in an OCAF or UAF year there is no
+     study at all. */
+  return card(1,sectionPill(1),rs+rcs+foot);}
 
 function sectionKeys(n){if(n===10)return ['ocaf.g','ocaf.rate_type','ocaf.ds_annual','ocaf.ds_t12','ocaf.ds_f12','ocaf.factor_pub','ocaf.factor_custom','ocaf.factor_src'];
   if(n===11)return ['uaf.f_oil','uaf.f_gas','uaf.f_electric','uaf.f_water'].concat(UNITS.flatMap(i=>UAF_UTILS.map(u=>'units.'+i+'.uac_'+u[0])));
