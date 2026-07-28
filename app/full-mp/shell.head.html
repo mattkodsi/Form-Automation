@@ -340,19 +340,22 @@ button.gdoc{justify-content:space-between}
    because they are in the same place in two identical shapes, not because a
    column was measured to fit the longer of two labels. */
 .srcgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:12px;padding:11px 0 3px;align-items:stretch}
-.srcrow{display:grid;grid-template-rows:auto auto 1fr auto;gap:3px;border:1px solid #e3e8f1;border-radius:10px;background:#fff;padding:11px 13px 12px;box-sizing:border-box}
+/* Tick, text, buttons — across, because the tile is far wider than it is
+   tall and the height is the scarce dimension on this page. Stacked, the
+   filename got one line of a 900px tile and the buttons got another. */
+.srcrow{display:grid;grid-template-columns:17px minmax(0,1fr) auto;align-items:center;gap:0 11px;border:1px solid #e3e8f1;border-radius:10px;background:#fff;padding:11px 13px;box-sizing:border-box}
+.sftext{min-width:0}
 /* Two tiles of unequal content are still two tiles of one height: an
    uploaded schedule beside a study nobody has supplied yet must not sit six
    pixels proud of it. */
 .srcgrid>.srcrow{align-self:stretch}
 .srcrow.dim{background:#fbfcfe;border-style:dashed}
-.sfhead{display:grid;grid-template-columns:17px minmax(0,1fr);align-items:baseline;gap:0 8px}
+.srcrow>.ok,.srcrow>.warn,.srcrow>.mut,.srcrow>.spin{align-self:center}
 /* A filename is as long as somebody made it. It ends here, and carries the
    whole of itself in its tooltip. */
 .sfname{display:block;font-size:13px;color:#1e293b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.sfmeta,.sfsub{padding-left:25px}
-.sfsub{font-size:11px;color:#6b7280;line-height:1.4;margin-top:1px}
-.sfacts{display:flex;gap:8px;padding-left:25px;margin-top:9px}
+.sfsub{font-size:11px;color:#6b7280;line-height:1.4;margin-top:2px}
+.sfacts{display:flex;gap:8px;flex:0 0 auto}
 .sfacts .btn{flex:0 0 auto}
 /* A separator BETWEEN rows, never under the last one: the trailing rule fenced
    off nothing and left a band of empty card below it. :last-of-type, not
@@ -645,6 +648,22 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;borde
 .cy-st.ok{background:#dcfce7;color:#166534}
 .cy-line{font-size:12px;color:#4b5563;margin-top:6px}
 .cy-act{display:flex;gap:10px;align-items:center;justify-content:flex-end;margin-top:8px}
+/* Two cards for one question: the exclusion is visible in the shape rather
+   than performed by a handler unticking the other one behind your back. */
+.cypgs{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:5px}
+.cypg{position:relative;display:block;border:1px solid #ccd5e6;border-radius:10px;padding:10px 11px 11px;cursor:pointer;background:#fff}
+.cypg input{position:absolute;opacity:0;pointer-events:none}
+.cyc-tag{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.06em;color:#5b6577;background:#eef1f7;border-radius:5px;padding:2px 6px}
+.cyc-n{display:block;font-size:13.5px;font-weight:700;color:#1e293b;margin-top:6px}
+.cyc-s{display:block;font-size:11px;color:#7c86a2;line-height:1.35;margin-top:3px}
+.cypg:hover{border-color:#9fb2d4}
+.cypg:has(input:checked){border-color:#1e3a5f;background:#f5f8ff;box-shadow:0 0 0 2px rgba(30,58,95,.13)}
+.cypg:has(input:checked) .cyc-tag{background:#1e3a5f;color:#fff}
+.cypg:has(input:focus-visible){box-shadow:0 0 0 3px rgba(30,58,95,.22)}
+.cyaddl{margin-bottom:2px}
+.cyadd{padding:9px 11px;border:1px solid #e3e8f1;border-radius:9px;background:#fbfcfe;align-items:flex-start}
+.cyadd b{color:#33405c}
+.dlg-sub{font-size:11.5px;color:#7c86a2;margin-top:3px}
 .cypick{display:flex;flex-direction:column;gap:6px;margin-top:4px}
 .cyopt{display:flex;align-items:center;gap:8px;font-size:13px;color:#33405c;cursor:pointer}
 .cyopt input{width:14px;height:14px;accent-color:#1e3a5f;margin:0;flex:0 0 auto}
