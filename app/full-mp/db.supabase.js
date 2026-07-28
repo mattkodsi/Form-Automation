@@ -198,6 +198,32 @@ function makeSupabaseDb(client) {
 
   /* ---- registry helpers (mirror db.js) ----------------------------------- */
   const dv = (p, k) => (p.durable[k] && p.durable[k].value !== '' ? p.durable[k].value : '');
+
+  /* One property, one name — enforced here, where every caller passes.
+
+     The dialog has asked existingPropByName() since 2026-07-24 and opens the
+     twin rather than making a second one. But a courtesy only guards the path
+     that remembers it, and three routes never did: creating a property with no
+     name and naming it afterwards, renaming one onto a name already taken, and
+     a plain save of property.name — which is exactly what applying an executed
+     schedule's parse does. The live record grew three "Sample Property"s and three
+     "Sample Property"s with that dialog check in place the whole time.
+
+     So the rule lives in the data layer and the dialog keeps the courtesy:
+     callers that ask first still open the existing profile and never see this
+     throw. Case- and space-insensitive, because "Sample Property" and "beacon
+     hill " are the same building. */
+  const nameKey = s => String(s == null ? '' : s).trim().toLowerCase();
+  const propByName = (name, skipPid) => {
+    const k = nameKey(name); if (!k) return null;
+    for (const id in D.props) { if (id === skipPid) continue; if (nameKey(dv(D.props[id], 'property.name')) === k) return D.props[id]; }
+    return null;
+  };
+  const assertNameFree = (name, skipPid) => {
+    const clash = propByName(name, skipPid); if (!clash) return;
+    const e = new Error('A property named \u201c' + String(name).trim() + '\u201d already exists.');
+    e.code = 'DUP_PROPERTY_NAME'; e.pid = clash.id; throw e;
+  };
   /* The ring is the DOMINANT PACKAGE's score — see score.js. It used to be ten
      durable keys, counted, which is why a property could read 100% with the
      draft rent schedule and the tenant notice unbuildable: those ten were never
@@ -357,6 +383,7 @@ function makeSupabaseDb(client) {
       getActive() { return { pid: D.activePid }; },
       setActive(pid) { if (D.props[pid]) D.activePid = pid; return Promise.resolve(); },
       createProperty(name) {
+        assertNameFree(name);
         const pid = uuid();
         D.props[pid] = { id: pid, created_at: today(), updated_at: now(), durable: {}, percycle: {} };
         if (name) D.props[pid].durable['property.name'] = { value: String(name), source: 'database', saved_at: today() };

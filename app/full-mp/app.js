@@ -2901,9 +2901,25 @@ function renderMenu(){
   const mc=el('mClear');if(mc)mc.onclick=()=>{if(el('menuSearch'))el('menuSearch').value='';renderMenu();};
 }
 function existingPropByName(nm){nm=String(nm||'').trim().toLowerCase();if(!nm)return null;try{return (mpdb.listProperties()||[]).find(p=>String(p.name||'').trim().toLowerCase()===nm)||null;}catch(e){return null;}}
+/* Naming a property something already taken opens that property instead of
+   making a twin of it. That is a courtesy, and it always was: the rule itself
+   now lives in the data layer (assertNameFree in db.js / db.supabase.js /
+   db.cosmos.js), because a check that only runs in this dialog only covers the
+   people who came through this dialog. Both readings end in the same place —
+   the profile you meant — so the catch says what the pre-check says. */
+function createPropNamed(v,pickedId){
+  const ex=existingPropByName(v);
+  if(ex){openLauncher(ex.id);setStatus('\u201c'+v+'\u201d already exists \u2014 opened its profile.');return;}
+  let r;
+  try{r=mpdb.createProperty(v,pickedId||'');}
+  catch(e){
+    if(e&&e.code==='DUP_PROPERTY_NAME'&&e.pid){openLauncher(e.pid);setStatus('\u201c'+v+'\u201d already exists \u2014 opened its profile.');return;}
+    saveFailedModal(e);return;}
+  openLauncher(r.pid);
+}
 function createProperty(){
   const props=raProps();
-  if(!props.length){dialogInput('New property','Property name','','Create',nm=>{const v=(nm||'').trim();const ex=existingPropByName(v);if(ex){openLauncher(ex.id);setStatus('\u201c'+v+'\u201d already exists \u2014 opened its profile.');return;}const r=mpdb.createProperty(v);openLauncher(r.pid);});return;}
+  if(!props.length){dialogInput('New property','Property name','','Create',nm=>{createPropNamed((nm||'').trim(),'');});return;}
   const rows=props.map(p=>'<div class="uaopt" data-raprop="'+esc(p.name)+'" data-rapid="'+esc(p.id==null?'':String(p.id))+'" style="padding:9px 12px;cursor:pointer">'+esc(p.name)+'<span class="uasub">Related Affordable</span></div>').join('');
   modal('<div class="dlg-t">New property</div><div class="dlg-field"><label>Property name</label><input id="dlgIn" autocomplete="off" placeholder="Type a name, or pick a Related Affordable property"></div>'
     +'<div style="margin:10px 0 4px;font-size:11px;font-weight:700;letter-spacing:.4px;color:#8791a5">RELATED AFFORDABLE PROPERTIES \u2014 TYPE ABOVE TO FILTER</div>'
@@ -2921,11 +2937,10 @@ function createProperty(){
   inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();el('dlgOk').click();}else if(e.key==='Escape')closeModal();});
   el('dlgCancel').onclick=closeModal;
   el('dlgOk').onclick=()=>{const v=(el('dlgIn').value||'').trim();closeModal();
-    const ex=existingPropByName(v);if(ex){openLauncher(ex.id);setStatus('\u201c'+v+'\u201d already exists \u2014 opened its profile.');return;}
     /* pickedId = the picked RA master-registry id. The Supabase adapter ignores
        the 2nd arg today; the RA port's createProperty(name, raMasterId) uses it
        for the read-only prefill. */
-    const r=mpdb.createProperty(v,pickedId);openLauncher(r.pid);};
+    createPropNamed(v,pickedId);};
 }
 
 /* ---- LAUNCHER: property summary + program picker --------------------- */
