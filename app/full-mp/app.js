@@ -871,7 +871,20 @@ function rcsMatch(i){
     if(String(u.br)+'BR'!==br)return false;
     if(ba&&u.ba!==''&&String(u.ba)+'BA'!==ba)return false;
     return true;});
-  if(hit.length>1)return {u:null,many:true,types:hit.map(function(u){return u.type;})};
+  /* Two study lines, one form row — but the unit COUNT usually tells them
+     apart. The rent schedule writes Lansing's rows as "1Bedroom" (32) and
+     "1Bedroom Patio" (68); the form keeps the counts even though the word
+     "Patio" is lost turning that into bedrooms and baths. The study prices
+     "1BR/1BA without patio" for 32 units and "with patio" for 68. Counts are a
+     hard number both documents state on their own, so they decide it. */
+  if(hit.length>1){
+    const n=numf(get('units.'+i+'.num_units'));
+    if(n>0){
+      const byCount=hit.filter(function(u){return Number(u.count)===n;});
+      if(byCount.length===1)return {u:byCount[0],many:false,by:'count'};
+    }
+    return {u:null,many:true,types:hit.map(function(u){return u.type;})};
+  }
   return {u:hit[0]||null,many:false};
 }
 function rcsUnitVal(i,field){
