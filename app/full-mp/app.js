@@ -229,7 +229,7 @@ function ovNoteAddr(box){const keys=addrKeys(box);const m=modeOf(keys);return `<
 /* claim = a value a source row prepended above this list already offers. Two rows
    showing the selected background for one answer reads as two answers, so the
    source row wins it — the same rule the designation's "· RS" badge reads. */
-function csDrop(key,options,ph,cls,clearable,tint,claim){const cur=get(key);const has=cur!==''&&cur!=null;const lab=has?cur:(ph||'—');const _cl=(claim!=null&&claim!==''&&claim===cur);const menu=options.map(o=>'<div class="uaopt'+((o===cur&&!_cl)?' sel':'')+'" data-csopt="'+esc(o)+'" data-cskey="'+key+'">'+esc(o)+'</div>').join('');/* Five of these cells offered a ✕ and three did not, with no visible rule —
+function csDrop(key,options,ph,cls,clearable,tint,claim,subs){const cur=get(key);const has=cur!==''&&cur!=null;const lab=has?cur:(ph||'—');const _cl=(claim!=null&&claim!==''&&claim===cur);const menu=options.map(o=>'<div class="uaopt'+((o===cur&&!_cl)?' sel':'')+'" data-csopt="'+esc(o)+'" data-cskey="'+key+'">'+esc(o)+((subs&&subs[o])?'<span class="uasub">'+esc(subs[o])+'</span>':'')+'</div>').join('');/* Five of these cells offered a ✕ and three did not, with no visible rule —
      and all nine have always cleared from the keyboard with Backspace, so the
      mouse was the odd one out. One pattern: if it holds a value, it can be
      cleared where you are looking at it. */
@@ -291,7 +291,10 @@ const DIR_PICK={
  'ca.name':caDir(['ca.prefix','ca.name'],ct=>[ct.title,ct.org,dirAddrLine(ct)].filter(Boolean).join(' \u00b7 ')),
  /* The same entry, reached from the cell you happen to be looking at. Each
     row's subtitle leads with what THIS cell will take from it. */
- 'ca.position':caDir(['ca.position'],ct=>[ct.title,ct.org].filter(Boolean).join(' \u00b7 ')),
+ 'sig.name':{kind:'signatory',one:'signatory',keys:['sig.name','sig.title'],modeKeys:['sig.name'],
+  apply:ct=>dirFill([['sig.name',ct.name],['sig.title',ct.title]]),
+  sub:ct=>[ct.title,ct.org].filter(Boolean).join(' \u00b7 ')},
+ 'ca.position':caDir(['ca.position'],ct=>[ct.title,ct.org].filter(Boolean).join(' · ')),
  'ca.org':caDir(['ca.org'],ct=>[ct.org,ct.title].filter(Boolean).join(' \u00b7 ')),
 };
 function dirFill(pairs){pairs.forEach(p=>{form=store.editForm(form,p[0],p[1]||'');if(form[p[0]])form[p[0]].fromPick=true;});}
@@ -416,6 +419,11 @@ function refreshPrincipalOpts(){ // the list is built at render time; keep it cu
   menu.querySelectorAll('[data-csopt]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();
     const ck=o.getAttribute('data-cskey');_pendingSnap=snapPend([ck]);form=store.editForm(form,ck,o.getAttribute('data-csopt'));
     _pending=[ck];_refocusSel='[data-trigfor="'+ck+'"]';renderBody();}));}
+/* option -> the principal it belongs to, keyed by the value the option itself
+   carries, so the two lists cannot drift apart. */
+function sigPrincipalSubs(){const m={};PRINCIPALS.forEach(i=>{
+  const t=(get('principals.'+i+'.title')||'').trim(),n=(get('principals.'+i+'.name')||'').trim();
+  const v=t||n;if(v&&!m[v]&&n&&n!==v)m[v]=n;});return m;}
 function sigPrincipalOpts(){const o=[];PRINCIPALS.forEach(i=>{const t=(get('principals.'+i+'.title')||'').trim(),n=(get('principals.'+i+'.name')||'').trim();const v=t||n;if(v&&o.indexOf(v)<0)o.push(v);});return o;}
 function sigTitleCell(f){const c=cellColors('sig.title');const pk='sig.principal';const pc=cellColors(pk);
   const _rp=rsVal('sig.principal');const _opts=sigPrincipalOpts();
@@ -426,7 +434,9 @@ function sigTitleCell(f){const c=cellColors('sig.title');const pk='sig.principal
   const _pcur=get(pk);const _pcl=(_rp!=null&&!_dupe&&_rp===_pcur);
   const dim=(_rp!=null&&!_dupe)?('<div class="uaopt srcopt'+(_pcl?' sel':'')+'" data-cskey="'+pk+'" data-csopt="'+esc(_rp)+'">'+esc(_rp)+'<span class="uasub">Executed RS</span></div>')
     :(_dupe?'':'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>');
-  let dd=csDrop(pk,_opts,'Select\u2026','',true,'',_pcl?_rp:null);
+  /* Whose role it is. With one principal on file the list is a single row, and
+     without this it repeats the box and tells the reader nothing. */
+  let dd=csDrop(pk,_opts,'Select\u2026','',true,'',_pcl?_rp:null,sigPrincipalSubs());
   dd=dd.replace('<div class="uamenu">','<div class="uamenu">'+dim);
   return `<div class="fpair sigpair"><div class="field"><div class="flabel">${f.label}</div><div class="fbox" data-box="sig.title" style="background:${c[1]};border-left-color:${c[0]}"><input type="text" data-k="sig.title" value="${esc(get('sig.title'))}" autocomplete="off">${srcPick('sig.title',SRCPICK_ROWS['sig.title']())}</div>${ovNote('sig.title')}</div><div class="ofthe">of the</div><div class="field"><div class="flabel">Principal</div><div class="fbox seldrop" data-box="${pk}" style="background:${pc[1]};border-left-color:${pc[0]}">${dd}</div>${ovNote(pk)}</div></div>`;}
 function fieldCell(f){if(f.type==='sigtitle')return sigTitleCell(f);if(f.type==='pair')return '<div class="fpair">'+f.items.map(fieldCell).join('')+'</div>';if(f.type==='addr')return addrCell();if(f.type==='caaddr')return caAddrCell();if(f.type==='appraddr')return apprAddrCell();if(f.type==='mgmtaddr')return mgmtCell();if(f.type==='select')return selectCell(f);if(f.k==='poc.name')return pocCell();if(DIR_PICK[f.k])return dirCell(f);
@@ -459,7 +469,7 @@ function selectCell(f){const c=cellColors(f.k);const _et=f.k==='owner.entity_typ
 function addrRcsTag(keys){
   const held=keys.filter(k=>String(get(k)||'').trim()!=='');
   if(!held.length)return '';
-  return held.every(k=>rcsTag(k))?'<span class="srctag rcstag">· RCS</span>':'';}
+  return held.every(k=>rcsTag(k))?'<span class="srctag rcstag">RCS</span>':'';}
 function compAddrCell(keys,box,label){const c=groupColors(keys);const parts=addrParts(keys,c);
   const ti=i=>{const t=addrPartStyle(parts[i]);return t?(';'+t):'';};
   const dv=i=>addrDivStyle(parts[i],parts[i+1]);
@@ -823,12 +833,12 @@ function rsTag(k){
   const r=rsOf(k); if(r==null||r==='')return '';
   const num=/^(units|ns8|nonrev)\.\d+\.(current|proposed|num_units|rent|avg_rent)$/.test(k);
   const same=num?(numf(v)===numf(r)):(String(v)===String(r));
-  return same?'<span class="srctag rstag">· RS</span>':'';}
+  return same?'<span class="srctag rstag">RS</span>':'';}
 /* What the renderers ask for. rsTag and rcsTag stay pure — the suites assert
    each of them on its own — and this decides which of the two is drawn. */
 function srcTags(k){
   const r=rsTag(k),c=rcsTag(k);
-  if(r&&c)return '<span class="srctag rstag" title="The rent schedule and the RCS study both give this value">· RS</span>';
+  if(r&&c)return '<span class="srctag rstag" title="The rent schedule and the RCS study both give this value">RS</span>';
   return r||c;}
 /* The whole fact, offered as one answer — the twin of srcGroupPick on an
    address. The sub-cells keep their own Executed RS rows so a type can still be
@@ -1108,7 +1118,7 @@ function rcsTag(k){
   const same=num?(numf(v)===numf(r))
     :(k==='appr.phone'?String(v).replace(/\D/g,'')===String(r).replace(/\D/g,'')
     :String(v)===String(r));
-  return same?'<span class="srctag rcstag">· RCS</span>':'';
+  return same?'<span class="srctag rcstag">RCS</span>':'';
 }
 /* Declared, not inferred, so the suite can assert rcsTag covers every one. */
 const RCS_SCALARS=['appr.firm','appr.name','appr.email','appr.phone','appr.addr_street','appr.addr_city','appr.addr_state','appr.addr_zip',
