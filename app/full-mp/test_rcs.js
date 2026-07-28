@@ -16,7 +16,7 @@ const els={};
 global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>null,querySelectorAll:()=>[],createElement:()=>mk(),addEventListener(){},body:{classList:{toggle(){},contains(){return false;}}}};
 const fs=require('fs'),path=require('path'),os=require('os');
 
-const MIN_CHECKS=24;
+const MIN_CHECKS=30;
 let n=0,fails=0,verdict=null;
 const BAR='='.repeat(68);
 function fail(msg,err){
@@ -90,7 +90,7 @@ async function reader(file){
     const rd=await reader(path.join(FIX,f));
     const r=await R.findLetter(rd);
     eq(`${f.replace('.pdf','')}: letter pages`,r.pages,want);
-    LE(`${f.replace('.pdf','')}: pages read`,rd.hits,4);
+    LE(`${f.replace('.pdf','')}: pages read`,rd.hits,3);
   }
 
   /* The 60-page renewal package hides the letter behind the owner's cover
@@ -98,13 +98,19 @@ async function reader(file){
   const pk=await reader(PKG);
   const pr=await R.findLetter(pk);
   eq('package: letter found behind the cover documents',pr.pages,[5,6]);
-  LE('package: pages read to find it',pk.hits,8);
+  LE('package: pages read to find it',pk.hits,4);
   eq('package: total pages available',pk.pageCount,60);
 
   /* A 115-page study must not cost 115 pages. */
   const cs=await reader(path.join(FIX,'cornerstone-crossroads.pdf'));
   await R.findLetter(cs);
-  LE('a study is never read whole',cs.hits,4);
+  LE('a study is never read whole',cs.hits,3);
+
+  /* The order pages are TRIED in is what the scanning tier is billed for. */
+  eq('page 0 is never tried first',R._probeOrder(60)[0],1);
+  eq('the package layout is tried before the tail',R._probeOrder(60).slice(0,4),[1,2,5,6]);
+  eq('probe order never exceeds the scan cap',R._probeOrder(115).length,14);
+  eq('a short document is not over-probed',R._probeOrder(3),[1,2,0]);
 
   finish();
 })().catch(e=>{fail('the suite threw',e);process.exit(1);});
