@@ -117,6 +117,7 @@ create table public.unit_type (
   flat_index              integer not null,
   bedrooms                text,      -- 'Studio' | '1BR' … '5BR'
   bathrooms               text,      -- '1BA' | '1.5BA' … '3BA'
+  label                   text,      -- free text beside the type ('Patio', 'Elderly'); replaced the fixed designation
   num_units               integer,
   current_contract_rent   integer,
   proposed_contract_rent  integer,
