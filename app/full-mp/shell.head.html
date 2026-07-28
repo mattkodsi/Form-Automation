@@ -218,6 +218,11 @@ button.gdoc{justify-content:space-between}
    under the pointer that is travelling to it. */
 .gpop{display:none;position:absolute;right:0;top:100%;padding-top:7px;z-index:40;width:330px;max-width:78vw;text-align:left;cursor:default}
 .gpw:hover .gpop,.gpw:focus-within .gpop,.gpw.open .gpop{display:block}
+/* Opened downward on the last row it landed over "Download the RCS Package
+   folder", and a click at that button's own centre fired the card's link
+   instead — the dialog's primary action became a different action. The flip is
+   decided when it opens, since the card's height depends on the document. */
+.gpop.gpop-up{top:auto;bottom:100%;padding-top:0;padding-bottom:7px}
 .gpop-in{background:#fff;border:1px solid #d3dae6;border-radius:11px;box-shadow:0 14px 34px rgba(20,40,80,.17);padding:9px 6px 7px}
 .gpop-h{font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#a3adbe;padding:0 9px 5px}
 .gpop-h2{border-top:1px solid #eef1f6;margin-top:5px;padding-top:8px}
@@ -225,6 +230,8 @@ button.gdoc{justify-content:space-between}
 .gpf{display:block;width:100%;background:none;border:none;font:inherit;text-align:left;padding:5px 9px 6px;border-radius:7px;cursor:pointer}
 .gpf:hover{background:#f6f7f9}
 .gpf:focus-visible{outline:2px solid #0f766e;outline-offset:-2px}
+.gpf-flat{cursor:default}
+.gpf-flat:hover{background:none}
 .gpf-n{display:block;font-size:12.5px;font-weight:650;color:#b45309}
 /* Where the value was supposed to come from. It is the line that stops the
    dialog reading as an accusation and starts it reading as an instruction. */
@@ -305,7 +312,11 @@ button.gdoc{justify-content:space-between}
    button below — and the buttons are the column the eye tracks down. The row
    keeps its shape and simply starts higher. */
 .srcrow:first-of-type{margin-top:-6px}
-.srcrow:last-of-type{margin-bottom:-8px} .srcrow>div{min-width:0;max-width:640px} .srcrow .ok{color:#166534;font-weight:800} .srcrow .mut{color:#9aa4b8;font-weight:800} .srcrow.dim{opacity:.8} .missing{color:#8791a5;font-weight:700;font-size:11px} .srcrow .sub{color:#7c86a2;font-size:11px} .parsed{color:#0f766e;font-weight:700;font-size:11px} .srcrow b{font-size:13.5px} .srcrow button{margin-left:8px;flex:0 0 auto}
+.srcrow:last-of-type{margin-bottom:-8px} /* flex:1 so the two rows' buttons start at the same x. The rhythm comment
+     below reasons that "the buttons are what the eye tracks down the column" —
+     they were columned vertically and never horizontally, because each row's
+     text block sized to its own sentence, a 155px step between them. */
+  .srcrow>div{flex:1;min-width:0;max-width:640px} .srcrow .ok{color:#166534;font-weight:800} .srcrow .mut{color:#9aa4b8;font-weight:800} .srcrow.dim{opacity:.8} .missing{color:#8791a5;font-weight:700;font-size:11px} .srcrow .sub{color:#7c86a2;font-size:11px} .parsed{color:#0f766e;font-weight:700;font-size:11px} .srcrow b{font-size:13.5px} .srcrow button{margin-left:8px;flex:0 0 auto}
 .srcfoot{display:flex;align-items:center;gap:12px;margin-top:11px} .srcfoot .sub{color:#7c86a2;font-size:11.5px} .ph{margin-top:9px;font-size:11.5px;color:#98a2b3;font-style:italic;background:#f8fafc;border-radius:6px;padding:7px 9px}
 .footer{display:flex;gap:12px;align-items:center;justify-content:center;margin-top:4px;position:sticky;bottom:0;background:#eef1f7;padding:12px 10px;box-shadow:0 -6px 16px rgba(20,40,80,.08);border-radius:8px 8px 0 0;z-index:15} .footer.rest{border-radius:8px} .footer .fsp{display:none} .unsaved{display:none;position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#b45309;font-weight:700;font-size:12.5px;align-items:center;gap:6px} .unsaved.on{display:inline-flex}
 table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;border:1px solid #e6ebf3;border-radius:10px;overflow:hidden} th,td{text-align:left;padding:9px 13px;border-bottom:1px solid #eef1f6} th{font-size:10px;letter-spacing:.4px;color:#8791a5;text-transform:uppercase}

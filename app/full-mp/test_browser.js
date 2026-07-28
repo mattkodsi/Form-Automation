@@ -35,7 +35,7 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=148;   // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
+const MIN_CHECKS=162;   // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
                        // pristine (three seeds, two checks each). 2026-07-27: the unit-type cell
                        // lost a divider with the designation, so the pair of divider checks
                        // became one. Lowered on purpose.
@@ -1100,6 +1100,136 @@ const FULL=process.argv.includes('--full');
       eq('every row is one height here too',G.heights.length,1);
       T('and the card names the factor it is waiting for',
         G.firstList.some(x=>/utility allowance factor/.test(x)));
+    }
+
+    /* ── the whole loop: document in, document out ──────────────────────────
+       Every other check in this file tests one leg. This one runs the round
+       trip on a REAL executed schedule: read Colonial Village's own HUD-92458
+       through tier 3, fill the form from it, then generate a rent schedule and
+       read the AcroForm fields back out. What comes out the far end has to be
+       what went in the near one — the unit types, their counts, the allowances,
+       and the totals that follow from them.
+
+       It runs in the page, against the real templates.js and the real pdf-lib,
+       so nothing here is a stand-in for anything. */
+    console.log('\n── document in, document out ─────────────────────────');
+    await c.reload();
+    await c.eval(HELPERS);
+    await c.eval('await window.__t.__openForm('+JSON.stringify(pid)+');return 1');
+    await sleep(300);
+    {
+      const _rec3=await c.eval('return await window.__t.ocrMapPages('+JSON.stringify(JSON.parse(fs.readFileSync(path.join(__dirname,'fixture_rs_scan.json'),'utf8')))+')');
+      // a property nobody has typed into, so everything on the page came off the document
+      await c.eval("const f=window.__t.__form();Object.keys(f).forEach(k=>window.__t.__edit(k,''));return 1");
+      await c.eval('window.__t.__setRsParsed('+JSON.stringify(_rec3)+');window.__t.__rsFill();return 1');
+      await sleep(500);
+      const out=await c.eval(`
+        const f=window.__t.__form(),rec={};
+        for(const k in f)rec[k]=f[k].value;
+        const b64=window.RCSTemplates.rentSchedule;
+        const bin=atob(b64),by=new Uint8Array(bin.length);
+        for(let i=0;i<bin.length;i++)by[i]=bin.charCodeAt(i);
+        const bytes=await window.RCSGen.fillRentSchedule(by,rec);
+        const doc=await window.PDFLib.PDFDocument.load(bytes);
+        const fm=doc.getForm();
+        const V=id=>{try{return fm.getTextField(String(id)).getText()||'';}catch(e){return '(no field '+id+')';}};
+        const row=r=>[V(7+r*8),V(7+r*8+1),V(7+r*8+4)];
+        return {name:V(1),rows:[row(0),row(1),row(2)],total:V('94a'),
+          formCounts:window.__t.__UNITS().map(i=>window.__t.getVal('units.'+i+'.num_units')).filter(v=>v!=='')};`);
+      eq('the project name the schedule printed comes back out',out.name,'Colonial Village');
+      /* No bath count: Part A of this schedule gives '2 Bedroom' and nothing more,
+         so the row that comes out says exactly what the row that went in said. */
+      eq('the first unit type, its count and its allowance',out.rows[0],['2 BR','32','161']);
+      eq('and the second',out.rows[1],['3 BR','33','171']);
+      /* Part A carries the non-revenue rows too — HUD's own Col.1 heading says
+         "Include Non-revenue Producing Units" — so the leasing office is row 3
+         (after the blank spacer) and its one unit counts into the total. */
+      eq('the total units foots the rows that printed',out.total,'66');
+      eq('which is what the form itself holds',out.formCounts,['32','33']);
+    }
+
+    /* ── what the eye sees, measured ────────────────────────────────────────
+       From a pass done in a real browser, looking at it. Each of these was a
+       screenshot before it was a check. */
+    console.log('\n── seen, and now measured ────────────────────────────');
+    await c.reload();
+    await c.eval(HELPERS);
+    await c.eval('await window.__t.__openForm('+JSON.stringify(pid)+');return 1');
+    await sleep(300);
+    {
+      /* The banner is written per keystroke and was redrawn only by openForm, so
+         any revert, Escape or undo left it naming a value that existed nowhere
+         else in the app. */
+      const h=await c.eval(`
+        const g=()=>document.getElementById('hdrProp').textContent;
+        const before=g();
+        window.__t.__editCell('property.name',(window.__t.getVal('property.name')||'')+'Q');
+        window.__t.__renderBody();
+        const typed=g();
+        window.__t.__undoStep();
+        return {before,typed,after:g(),value:window.__t.getVal('property.name')};`);
+      T('the header follows the name as it is typed',h.typed!==h.before);
+      eq('and follows it back when the edit is reverted',h.after,h.value);
+
+      /* Rule 16: shown in the form the reader types it in. The input handler
+         formatted as you typed, so a number entered by hand looked right and the
+         same number arriving from the record did not. */
+      eq('a phone from the record reads as a phone',
+        await c.eval('const i=document.querySelector(\'[data-k="poc.phone"]\');return i?i.value:null'),
+        '(313) 555-0142');
+
+      /* Ticking a section flag put a save pair on every cell of a row nobody had
+         typed in — four buttons offering to save four blanks. */
+      const ns8=await c.eval(`
+        const cb=document.getElementById('ns8Toggle');if(!cb)return null;
+        cb.checked=true;cb.onchange();
+        const vis=el=>{if(!el||!el.offsetParent)return false;const r=el.getBoundingClientRect();return r.width>0&&r.height>0;};
+        return {inRows:[...document.querySelectorAll('.pdrow')].reduce((n,r)=>n+[...r.querySelectorAll('.ovic')].filter(vis).length,0),
+          onFlag:[...document.querySelectorAll('[data-ovic="ns8.enabled"]')].filter(vis).length};`);
+      eq('switching a section on offers nothing to save in its empty row',ns8&&ns8.inRows,0);
+      eq('and the flag itself carries the pair, beside its own checkbox',ns8&&ns8.onFlag,1);
+    }
+
+    /* The card opened downward and never flipped. On the last row it landed over
+       "Download the RCS Package folder", and a click at that button's own centre
+       fired a link inside the card instead — the dialog's primary action became
+       a different action. Bounded by the top of the download block, not the
+       bottom of the dialog: a card can fit inside the dialog and still cover it. */
+    await c.reload();
+    await c.eval(HELPERS);
+    await c.eval('await window.__t.__openForm('+JSON.stringify(pid)+');return 1');
+    await c.eval("['ca.name','ca.org','poc.name'].forEach(k=>window.__t.__edit(k,''));window.__t.__renderBody();return 1");
+    await c.eval("document.getElementById('bGenerate').click();return 1");
+    await sleep(800);
+    await c.eval("const b=document.getElementById('dlgOk');if(b)b.click();return 1");
+    for(let i=0;i<100;i++){const n=await c.eval("return document.querySelectorAll('.gdoc').length");if(n)break;await sleep(250);}
+    await sleep(300);
+    {
+      const r=await c.eval(`
+        const out=[];
+        [...document.querySelectorAll('.gpw')].forEach(function(w,ix){
+          w.querySelector('.gshort').click();
+          const pr=w.querySelector('.gpop-in').getBoundingClientRect();
+          const fb=document.getElementById('dlFolder');
+          const fr=fb?fb.getBoundingClientRect():null;
+          out.push({ix,covers:!!(fr&&pr.bottom>fr.top&&pr.top<fr.bottom&&pr.right>fr.left&&pr.left<fr.right),
+            onScreen:pr.top>=0&&pr.bottom<=window.innerHeight});
+          w.classList.remove('open');});
+        return out;`);
+      eq('no card covers the download button, on any row',r.filter(x=>x.covers).map(x=>x.ix),[]);
+      eq('and every card is fully on screen',r.filter(x=>!x.onScreen).map(x=>x.ix),[]);
+
+      /* The letterhead is uploaded on the property page, so it has no section.
+         secRef(0) printed "Section 0" and gotoSection(0) landed on Section 1. */
+      const lh=await c.eval(`
+        const w=[...document.querySelectorAll('.gpw')];w.forEach(x=>x.classList.add('open'));
+        return {zero:[...document.querySelectorAll('[data-goto]')].filter(b=>b.getAttribute('data-goto')==='0').length,
+          flat:[...document.querySelectorAll('.gpf-flat')].map(x=>({
+            n:x.querySelector('.gpf-n').textContent,
+            w:(x.querySelector('.gpf-w')||{}).textContent||''}))};`);
+      eq('nothing offers to travel to a section that does not exist',lh.zero,0);
+      T('and the letterhead says where it is uploaded instead',
+        lh.flat.some(x=>/letterhead/i.test(x.n)&&/property page/.test(x.w)));
     }
 
     console.log('\n── the console stayed quiet ───────────────────────────');
