@@ -141,6 +141,20 @@ body.scrolled #ccbar{transform:translateY(0);opacity:1}
 .ua-br,.ua-ba{flex:1 1 0;min-width:0;display:flex}
 .ua-sl{flex:0 0 8px;width:8px}
 .ua-dg{flex:0 0 74px;margin-left:0;margin-right:0;display:flex}
+/* A column that grows grows alone: cell, pair, note stacked inside the grid
+   cell instead of three grids stacked under one another. Column one carries a
+   label line and two pairs; before this it decided where every other column's
+   pair and note began, which put the 150% SAFMR reading two bands below the
+   figure it describes. */
+.ucol{display:flex;flex-direction:column;min-width:0;gap:5px}
+.ucells .uracts.ucolacts{display:flex;grid-template-columns:none;gap:6px;margin:0;align-items:center;min-width:0}
+.ucells .uracts.ucolacts:empty{display:none}
+/* Column one mirrors its cell's box the way the old acts grid did — a 4px left
+   border and a 1px right one — so bed lands under bed and bath under bath at
+   any width (rule 11: watch flex growth, not media queries). */
+.ucells .uracts.ucolacts.c1{gap:0;box-sizing:border-box;border-left:4px solid transparent;border-right:1px solid transparent}
+.ucells .uracts.ucolacts.c1lab{padding-left:8px}
+.ucol .ucnote,.ucol .urnmetric{min-width:0}
 .uracts .ovic{margin:0}
 .urnov .ovnote{margin:0}
 .rgh .hsub{display:inline;margin-left:7px;font-size:9px;font-weight:600;font-style:normal;color:#9aa4b5;letter-spacing:.2px;text-transform:none}
