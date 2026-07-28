@@ -597,16 +597,22 @@ function makeStore(adapter, FIELDS) {
     revertForm(form,key){ const cur=form[key]; if(!cur||cur.source!=='overridden') return false;
       const v=cur.prior_value; // reverting to a saved blank shows as empty/new, not "on file"
       form[key]={value:v,source:(v==null||v==='')?'new':(cur.prior_source||'database'),saved_at:cur.saved_at,prior_value:null,prior_source:null,db_value:cur.db_value}; return true; },
-    async saveField(form,key){ const db=await adapter.getDb(); const v=form[key].value; db[key]={value:(v==null?'':v),source:'database',saved_at:today()}; await adapter.saveDb(db); form[key]={value:db[key].value,source:db[key].value===''?'new':'database',saved_at:db[key].saved_at,prior_value:null,prior_source:null,db_value:db[key].value}; return form; },
+    async saveField(form,key){ const db=await adapter.getDb(); const v=(form[key]||blank()).value; db[key]={value:(v==null?'':v),source:'database',saved_at:today()}; await adapter.saveDb(db); form[key]={value:db[key].value,source:db[key].value===''?'new':'database',saved_at:db[key].saved_at,prior_value:null,prior_source:null,db_value:db[key].value}; return form; },
     /* Batch form of saveField: one adapter round-trip (=> one backend push)
        for a group of keys saved together (contact fills, address groups). */
     async saveFields(form,keys){ const db=await adapter.getDb();
-      for(const key of keys){ const v=form[key].value; db[key]={value:(v==null?'':v),source:'database',saved_at:today()}; }
+      /* A cell that has never been touched is blank, not a crash. editForm has
+         always guarded this way; save did not, and a group is routinely widened
+         (coupledKeys) to keys the user never entered — a utility allowance
+         switched to Custom carries a *_custom and a *_reviewed that may not
+         exist yet. Saving then threw "Cannot read properties of undefined", and
+         the form told the user the save had FAILED. */
+      for(const key of keys){ const v=(form[key]||blank()).value; db[key]={value:(v==null?'':v),source:'database',saved_at:today()}; }
       await adapter.saveDb(db);
       for(const key of keys) form[key]={value:db[key].value,source:db[key].value===''?'new':'database',saved_at:db[key].saved_at,prior_value:null,prior_source:null,db_value:db[key].value};
       return form; },
     async saveToDb(form){ const db=await adapter.getDb();
-      for(const key of Object.keys(form)){ const v=form[key].value; db[key]={value:(v==null?'':v),source:'database',saved_at:today()}; }
+      for(const key of Object.keys(form)){ const v=(form[key]||blank()).value; db[key]={value:(v==null?'':v),source:'database',saved_at:today()}; }
       await adapter.saveDb(db);
       for(const key of Object.keys(form)) form[key]={value:db[key].value,source:db[key].value===''?'new':'database',saved_at:db[key].saved_at,prior_value:null,prior_source:null,db_value:db[key].value};
       return form; },
