@@ -2208,13 +2208,26 @@ function pkgCard(){
   /* What is holding it, on the card, one press from the cell that fixes it.
      A ring that says 55% and a card that says four of six are ready both leave
      the same question — this answers it without opening the generate dialog. */
-  const gap=(list,cls,h)=>list.length?('<div class="ccsub pkhead"><b>'+h+'</b></div><div class="gpf-wrap">'+list.map(x=>gpf(x,cls)).join('')+'</div>'):'';
+  /* A property nobody has filled in yet is short of everything, so this list
+     ran to twenty rows — and the three cards are held to one height, so the
+     two beside it grew to match and the row became a screen. The first few are
+     the ones you act on; the rest sit behind a count, the same disclosure the
+     record checks use. */
+  const GAPMAX=3;
+  const gap=(list,cls,h)=>{
+    if(!list.length)return '';
+    const head=list.slice(0,GAPMAX),rest=list.slice(GAPMAX);
+    return '<div class="ccsub pkhead"><b>'+h+'</b></div>'
+      +'<div class="gpf-wrap">'+head.map(x=>gpf(x,cls)).join('')+'</div>'
+      +(rest.length?('<div class="gpmore" tabindex="0"><span class="gpmore-t">and '+rest.length+' more</span>'
+        +'<div class="gpall"><div class="gpf-wrap">'+rest.map(x=>gpf(x,cls)).join('')+'</div></div></div>'):'');};
   return '<div class="ccard"><div class="cck">THIS PACKAGE</div>'
     +'<div class="cctitle pkhead1" style="font-size:15px">'+ringSvg(S.pct,26)+'<span>'+head+'</span></div>'
     +'<div class="pksrc">'+srcRow('Executed rent schedule',_rsUpload?_rsUpload.name:'',_rsUpload?'':'not uploaded yet',!!_rsUpload)+second+'</div>'
     +'<div class="drafts">'+rows+'</div>'
-    +gap(S.blockers,'',(S.blockers.length===1?'This is what a document is short of':'These are what the documents are short of'))
-    +gap(S.caveats,' gpf-s','Not blocking, but each one changes what a document says')
+    +gap(S.blockers,'','Needed to generate')
+    +(S.caveats.length?('<div class="gpmore gpmore-l" tabindex="0"><span class="gpmore-t">'+S.caveats.length+' more, not required \u2014 they change what prints</span>'
+      +'<div class="gpall"><div class="gpf-wrap">'+S.caveats.map(x=>gpf(x,' gpf-s')).join('')+'</div></div></div>'):'')
     +'<div class="wb">Documents are generated from the form exactly as shown. Save with \u201cUpdate property profile\u201d before generating.</div></div>';}
 
 /* "N/A" is an answer to what the FHA number IS, not a filled field. The test
@@ -2857,10 +2870,10 @@ document.addEventListener('click',e=>{document.querySelectorAll('.uadrop.open').
   /* .gpw is the generate dialog's count, .chkmore the record-checks summary.
      A press inside one is that card's own business; a press anywhere else ends
      it, which is what a reader expects of anything they pinned open. */
-  if(!(e.target&&e.target.closest&&e.target.closest('.gpw,.chkmore')))
-    document.querySelectorAll('.gpw.open,.chkmore.open').forEach(x=>{x.classList.remove('open');if(x.blur)x.blur();});if(_pending&&!(e.target&&e.target.closest&&e.target.closest('.uaopt,[data-cb],.cb,[data-fuel],[data-fuel3],[data-wibox],[data-mgmt],[data-csopt],.uatrigger'))){_pending=null;_pendingSnap=null;}});
+  if(!(e.target&&e.target.closest&&e.target.closest('.gpw,.chkmore,.gpmore')))
+    document.querySelectorAll('.gpw.open,.chkmore.open,.gpmore.open').forEach(x=>{x.classList.remove('open');if(x.blur)x.blur();});if(_pending&&!(e.target&&e.target.closest&&e.target.closest('.uaopt,[data-cb],.cb,[data-fuel],[data-fuel3],[data-wibox],[data-mgmt],[data-csopt],.uatrigger'))){_pending=null;_pendingSnap=null;}});
 document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){const _p=document.querySelectorAll('.gpw.open,.chkmore.open');
+  if(e.key==='Escape'){const _p=document.querySelectorAll('.gpw.open,.chkmore.open,.gpmore.open');
     if(_p.length){_p.forEach(x=>{x.classList.remove('open');if(x.blur)x.blur();});e.stopPropagation();return;}}const vis=v=>{const x=el('view'+v);return x&&x.style&&x.style.display!=='none';};if(e.key==='Tab'){_pending=null;_pendingSnap=null;_rsArm=false;return;}if(e.key==='Enter'){const ae=document.activeElement;const inText=!!ae&&/^(INPUT|TEXTAREA)$/.test(ae.tagName)&&ae.type!=='checkbox';
     if(_dlgEnter&&el('scrim')&&el('scrim').classList.contains('open')){e.preventDefault();_dlgEnter();return;}
     if(_rsArm&&!inText){const ra=el('rsApply');if(ra){e.preventDefault();_rsArm=false;ra.click();return;}}
@@ -2888,11 +2901,22 @@ function syncFooterRest(){const f=document.querySelector('#viewForm .footer');if
 window.addEventListener('scroll',syncFooterRest,{passive:true});
 window.addEventListener('resize',syncFooterRest);
 
-let activeProgram='RCS';let sortMode='name';
+let activeProgram='RCS';let sortMode='name';let menuLens='mine';let pmName='';
 function show(v){['Auth','Menu','Launcher','Form','Contacts'].forEach(V=>{const e=el('view'+V);if(e)e.style.display=(v===V)?'':'none';});window.scrollTo(0,0);}
 
 /* ---- small helpers for the menu -------------------------------------- */
-function ringSvg(pct,size){size=size||36;const r=size/2-3;const c=2*Math.PI*r;const off=c*(1-Math.max(0,Math.min(100,pct))/100);const col=pct>=100?'#1e3a5f':'#b45309';
+/* The ring was one amber for everything short of complete and navy at 100, so
+   a record with nothing in it and a package one field away from generating
+   looked the same at a glance — which is the glance the gallery exists for.
+   It runs red to green now, the hue walking 0° to 145° with the score. The
+   lightness dips through the yellows around 55°, where a hue at a constant
+   lightness goes pale enough on white to stop reading as a colour at all. */
+function ringColor(pct){const p=Math.max(0,Math.min(100,pct))/100;
+  const h=Math.round(p*145);
+  const sat=Math.round(72-p*14);
+  const lig=Math.round(46-Math.max(0,1-Math.abs(h-55)/38)*8);
+  return 'hsl('+h+','+sat+'%,'+lig+'%)';}
+function ringSvg(pct,size){size=size||36;const r=size/2-3;const c=2*Math.PI*r;const off=c*(1-Math.max(0,Math.min(100,pct))/100);const col=ringColor(pct);
   return '<svg class="ringsvg" width="'+size+'" height="'+size+'" viewBox="0 0 '+size+' '+size+'"><circle cx="'+size/2+'" cy="'+size/2+'" r="'+r+'" fill="none" stroke="#e9edf4" stroke-width="3.4"/><circle cx="'+size/2+'" cy="'+size/2+'" r="'+r+'" fill="none" stroke="'+col+'" stroke-width="3.4" stroke-linecap="round" stroke-dasharray="'+c.toFixed(1)+'" stroke-dashoffset="'+off.toFixed(1)+'" transform="rotate(-90 '+size/2+' '+size/2+')"/><text x="50%" y="53%" dominant-baseline="middle" text-anchor="middle" font-size="'+(size<44?10:12.5)+'" font-weight="700" fill="#33405c">'+pct+'</text></svg>';}
 function niceDate(d){if(!d)return '—';const m=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];const p=String(d).slice(0,10).split('-');if(p.length!==3)return d;return m[(+p[1])-1]+' '+(+p[2])+', '+p[0];}
 function relTime(iso){if(!iso)return '—';const s=String(iso);if(s.indexOf('T')<0)return niceDate(s);const then=new Date(s);if(isNaN(then))return niceDate(s);const now=new Date();const d=(now-then)/1000;if(d<45)return 'just now';if(d<3600)return Math.max(1,Math.round(d/60))+'m ago';if(d<86400)return then.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});return niceDate(s);}
@@ -2916,13 +2940,135 @@ function dialogConfirm(title,body,okLabel,danger,onOk){
 }
 
 /* ---- MENU: the property gallery -------------------------------------- */
-function openMenu(){activeCid=null;renderMenu();show('Menu');}
+function openMenu(){activeCid=null;renderWho();renderMenu();show('Menu');}
+/* ====== The HAP tracker on the home page ==============================
+   The tracker is the catalogue: 249 properties, each with a next renewal and
+   the manager who owns it. The app's own records are the WORK — they come into
+   existence the first time someone opens a property, and are joined back by the
+   tracker's property code.
+
+   Which means the menu shows two populations, and they must not be confused
+   with one another: properties the tracker knows about, and records made before
+   the tracker existed (or by hand) that carry no code. The second group is shown
+   under its own heading rather than matched by name, because matching names
+   across two systems is how one firm's Sample Property becomes another's. */
+function hapAll(){
+  try{
+    const H=window.RCSHap;if(!H)return null;
+    const src=(window.HAPSource&&window.HAPSource.rows)?window.HAPSource.rows():[];
+    if(!src||!src.length)return null;
+    if(!_hapCache||_hapCache.src!==src.length){const n=H.normalize(src);_hapCache={src:src.length,rows:n.rows};}
+    return _hapCache.rows;
+  }catch(e){return null;}
+}
+let _hapCache=null;
+
+/* One card's worth of fact per tracker property, merged with the app record if
+   one exists yet. */
+function hapProperties(){
+  const H=window.RCSHap,rows=hapAll();
+  if(!H||!rows)return [];
+  const today=mpdb&&mpdb.today?mpdb.today():new Date().toISOString().slice(0,10);
+  const scope=H.inScope(rows),byCode={};
+  rows.forEach(r=>{if(scope[r.code]&&!byCode[r.code])byCode[r.code]=r;});
+  return Object.keys(byCode).map(code=>{
+    const any=byCode[code],t=H.targetFor(rows,code,today);
+    const pid=(mpdb&&mpdb.propByRaCode)?mpdb.propByRaCode(code):null;
+    const rec=pid?(mpdb.listProperties()||[]).find(p=>p.id===pid):null;
+    return {
+      id:pid||('hap:'+code), code:code, hap:true, started:!!pid,
+      name:(rec&&rec.name)||any.name, alias:(rec&&rec.alias)||'',
+      fha:(rec&&rec.fha)||'—', city_state:(rec&&rec.city_state)||'',
+      total_units:(rec&&rec.total_units)||0, unit_types:(rec&&rec.unit_types)||0,
+      completeness:rec?rec.completeness:0, updated_at:(rec&&rec.updated_at)||'',
+      pm:any.pm, program:t?t.type:'', deadline:t?t.deadline:'',
+      effective:t?t.effective:'', band:t?H.bandOf(t.deadline,today):'undated',
+      status:H.statusFor(rows,code,today), days:t?H.daysBetween(today,t.deadline):null,
+    };
+  });
+}
+
+/* The deadline, said the way a person would say it. */
+function dueLine(p){
+  if(p.status==='awaiting-schedule')return '<div class="pc-due ok">Awaiting the next schedule</div>';
+  if(!p.deadline)return '<div class="pc-due ok">No date scheduled</div>';
+  const d=p.days;
+  if(d==null)return '<div class="pc-due ok">No date scheduled</div>';
+  if(d<0)return '<div class="pc-due over">Was due '+esc(fmtDateShort(p.deadline))+' · '+(-d)+' day'+(-d===1?'':'s')+' late</div>';
+  if(d<=30)return '<div class="pc-due now">Due '+esc(fmtDateShort(p.deadline))+' · '+d+' day'+(d===1?'':'s')+' left</div>';
+  return '<div class="pc-due ok">Due '+esc(fmtDateShort(p.deadline))+' · '+d+' days</div>';
+}
+function fmtDateShort(iso){
+  const m=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const p=String(iso||'').slice(0,10).split('-');
+  return p.length===3?(m[(+p[1])-1]+' '+(+p[2])+(p[0]!==String(new Date().getFullYear())?', '+p[0]:'')):String(iso||'');
+}
+
+/* Who you are, in the tracker's vocabulary. Asked once; the names offered are
+   the ones the tracker actually contains, so there is no mapping to drift. */
+function pickWhoDialog(){
+  const H=window.RCSHap,rows=hapAll();
+  const names=(H&&rows)?H.managers(rows):[];
+  if(!names.length){setStatus('The renewal schedule has not loaded, so there are no names to choose from.');return;}
+  const rowsHtml=names.map(nm=>'<div class="uaopt" data-who="'+esc(nm)+'" style="padding:9px 12px;cursor:pointer'
+    +(nm===pmName?';font-weight:700':'')+'">'+esc(nm)+(nm===pmName?'<span class="uasub">current</span>':'')+'</div>').join('');
+  modal('<div class="dlg-t">Which portfolio manager are you?</div>'
+    +'<div class="lh-note" style="margin-bottom:10px">Your name decides which properties show under <b>Mine</b>. '
+    +'These are the managers named in the renewal schedule.</div>'
+    +'<div id="whoList" style="max-height:230px;overflow:auto;border:1px solid #e0e5ee;border-radius:8px">'+rowsHtml+'</div>'
+    +'<div class="dlg-row"><button class="btn" id="dlgCancel">Cancel</button><span class="dlg-sp"></span></div>');
+  el('dlgCancel').onclick=closeModal;
+  document.querySelectorAll('[data-who]').forEach(r=>r.onclick=async()=>{
+    const nm=r.getAttribute('data-who');closeModal();
+    pmName=nm;renderWho();renderMenu();
+    try{if(mpdb&&mpdb.setPmName)await mpdb.setPmName(nm);}catch(e){saveFailedModal(e);}
+  });
+}
+function renderWho(){
+  const w=el('menuWho');if(!w)return;
+  w.textContent=pmName||'Who are you?';
+  w.classList.toggle('unset',!pmName);
+  w.title=pmName?('Signed in as '+pmName+' — click to change'):'Choose which portfolio manager you are';
+}
+
+/* Opening a tracker property for the first time is what brings its record into
+   existence. Everything downstream — cycles, the form, generation — already
+   works on a record, so this is the only new step. */
+async function openHapProperty(code){
+  const p=hapProperties().find(x=>x.code===code);
+  if(!p)return;
+  let pid=(mpdb&&mpdb.propByRaCode)?mpdb.propByRaCode(code):null;
+  if(!pid){
+    try{const r=await mpdb.createProperty(p.name,code);pid=r&&r.pid;}
+    catch(e){saveFailedModal(e);return;}
+  }
+  if(pid)openLauncher(pid);
+}
 function renderMenu(){
   const q=((el('menuSearch')&&el('menuSearch').value)||'').toLowerCase();
-  const all=mpdb.listProperties();
+  const hp=hapProperties();
+  const lensed=hp.filter(p=>menuLens==='all'||!pmName||p.pm===pmName);
+  const orphans=(mpdb.listProperties()||[]).filter(p=>!hp.some(h=>h.id===p.id));
+  const all=hp.length?lensed.concat(orphans.map(p=>Object.assign({},p,{hap:false}))):(mpdb.listProperties()||[]);
   const props=all.filter(p=>!q||(p.name+' '+(p.alias||'')+' '+p.fha+' '+(p.city_state||'')).toLowerCase().indexOf(q)>=0);if(sortMode==='updated'){const idn=x=>parseInt(String(x).replace(/\D/g,''),10)||0;props.sort((a,b)=>String(b.updated_at||'').localeCompare(String(a.updated_at||''))||(idn(b.id)-idn(a.id)));}else if(q){const _sc=p=>{const nm=String(p.name||'').toLowerCase();if(nm.startsWith(q))return 0;if(nm.split(/\s+/).some(w=>w.startsWith(q)))return 1;if(nm.indexOf(q)>=0)return 2;const al=String(p.alias||'').toLowerCase();if(al.startsWith(q)||al.split(/\s+/).some(w=>w.startsWith(q)))return 3;return 4;};props.sort((a,b)=>_sc(a)-_sc(b)||String(a.name||'').localeCompare(String(b.name||'')));}
   const need=all.filter(p=>p.completeness<1).length;
-  if(el('menuCount'))el('menuCount').textContent=all.length+(all.length===1?' property':' properties')+(all.length?(need?'  ·  '+need+' need'+(need===1?'s':'')+' review':'  ·  all complete'):'');
+  if(el('menuCount')){
+    /* A record with no tracker code is assigned to nobody, so counting it among
+       the properties assigned to you overstates your own workload. */
+    const tracked=all.filter(p=>p.hap),other=all.length-tracked.length;
+    const hot=tracked.filter(p=>p.band==='overdue'||p.band==='now').length;
+    const bits=[];
+    if(hot)bits.push(hot+' need'+(hot===1?'s':'')+' attention now');
+    if(hp.length){
+      bits.push(tracked.length+(tracked.length===1?' property':' properties')+(menuLens==='mine'&&pmName?' assigned to you':''));
+      if(menuLens==='mine'&&pmName)bits.push(hp.length+' in the portfolio');
+      if(other)bits.push(other+' not in the schedule');
+    }else{
+      bits.push(all.length+(all.length===1?' property':' properties'));
+      if(need)bits.push(need+' need'+(need===1?'s':'')+' review');
+    }
+    el('menuCount').textContent=bits.join('  \u00b7  ');
+  }
   const card=p=>{const pct=Math.round(p.completeness*100);
     const al=(p.alias||'').trim();const showAl=al&&al.toLowerCase()!==String(p.name||'').trim().toLowerCase();
     /* The gallery is read by scanning it — six cards, and the eye is looking
@@ -2931,13 +3077,23 @@ function renderMenu(){
        says what the ring counts; it says it on hover, where a reader who
        wants it asks for it. */
     return '<button class="pcard" data-open="'+p.id+'"'+(p.caption?' title="'+esc(p.caption)+'"':'')+'><div class="pc-top"><div class="pc-name">'+esc(p.name)+(showAl?'<span class="pc-alias">&ldquo;'+esc(al)+'&rdquo;</span>':'')+'</div>'+ringSvg(pct)+'</div>'
-      +'<div class="pc-meta">'+esc(p.fha)+(p.city_state?' &middot; '+esc(p.city_state):'')+'</div>'
+      +'<div class="pc-meta">'+(p.hap?(esc(p.pm||'Unassigned')+(p.city_state?' &middot; '+esc(p.city_state):'')):(esc(p.fha)+(p.city_state?' &middot; '+esc(p.city_state):'')))+'</div>'
+      +(p.hap?dueLine(p):'')
       +'<div class="pc-div"></div>'
-      +'<div class="pc-foot"><span class="pc-units">'+p.total_units+' unit'+(p.total_units===1?'':'s')+(p.unit_types?' &middot; '+p.unit_types+' type'+(p.unit_types===1?'':'s'):'')+'</span><span class="pc-upd" title="'+esc(updTitle(p.updated_at))+'">Updated '+relTime(p.updated_at)+'</span></div></button>';};
+      +'<div class="pc-foot">'+(p.hap&&p.program?'<span class="pc-prog'+(p.program==='OCAF'?' ocaf':'')+'">'+esc(p.program)+'</span>':'')
+      +'<span class="pc-units">'+(p.hap&&!p.started?'Not started':(p.total_units+' unit'+(p.total_units===1?'':'s')+(p.unit_types?' &middot; '+p.unit_types+' type'+(p.unit_types===1?'':'s'):'')))+'</span>'
+      +(p.hap&&!p.started?'':'<span class="pc-upd" title="'+esc(updTitle(p.updated_at))+'">Updated '+relTime(p.updated_at)+'</span>')+'</div></button>';};
   const newTile='<button class="pcard newcard" id="tileNew"><span class="plus">+</span><span>New property</span></button>';
   const empty='<div class="mempty">No properties match &ldquo;'+esc(q)+'&rdquo;. <span class="link" id="mClear">Clear search</span></div>';
-  el('menuGrid').innerHTML=(props.length?props.map(card).join(''):'')+(q&&!props.length?empty:'')+(q?'':newTile);
-  document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openLauncher(b.getAttribute('data-open')));
+  /* Two populations, and they must be told apart on sight: mixed together, a
+     record with no renewal date reads as a property with nothing due. */
+  const _tr=props.filter(p=>p.hap),_or=props.filter(p=>!p.hap);
+  const _body=(_tr.length?_tr.map(card).join(''):'')
+    +((_or.length&&_tr.length)?'<div class="mgroup">Not in the renewal schedule</div>':'')
+    +(_or.length?_or.map(card).join(''):'');
+  el('menuGrid').innerHTML=_body+(q&&!props.length?empty:'')+(q?'':newTile);
+  document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>{const v=b.getAttribute('data-open');
+    if(v.indexOf('hap:')===0)openHapProperty(v.slice(4));else openLauncher(v);});
   const tn=el('tileNew');if(tn)tn.onclick=createProperty;
   const mc=el('mClear');if(mc)mc.onclick=()=>{if(el('menuSearch'))el('menuSearch').value='';renderMenu();};
 }
@@ -3464,10 +3620,11 @@ function wirePkgRows(docs){
   document.querySelectorAll('.gpw').forEach(function(w){
     w.addEventListener('mouseenter',function(){placePop(w);});
     w.addEventListener('focusin',function(){placePop(w);});});
-  document.querySelectorAll('.chkmore').forEach(function(m){m.addEventListener('click',function(e){
+  /* The gap list's tail pins the same way the checks summary does. */
+  document.querySelectorAll('.chkmore,.gpmore').forEach(function(m){m.addEventListener('click',function(e){
     e.stopPropagation();
     const on=m.classList.contains('open');
-    document.querySelectorAll('.chkmore.open').forEach(function(x){x.classList.remove('open');});
+    document.querySelectorAll('.chkmore.open,.gpmore.open').forEach(function(x){x.classList.remove('open');});
     if(!on)m.classList.add('open');else m.blur();});});
   document.querySelectorAll('.gpw>.gshort').forEach(function(b){b.addEventListener('click',function(e){
     e.preventDefault();e.stopPropagation();
@@ -3830,8 +3987,13 @@ function showAuthScreen(){show('Auth');const btn=el('authSignIn'),em=el('authEma
   if(btn)btn.onclick=go;[em,pw].forEach(f=>{if(f)f.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();go();}};});if(em)em.focus();}
 async function boot(){
   if(!mpdb)mpdb=await makeSupabaseDb(supaClient);   // selftest hands us a local one
+  if(!window.HAPSource)window.HAPSource={rows:()=>{try{return (mpdb&&mpdb.hapRows)?mpdb.hapRows():[];}catch(e){return [];}}};
+  try{pmName=(mpdb&&mpdb.getPmName)?mpdb.getPmName():'';}catch(e){pmName='';}
   const ms=el('menuSearch');if(ms)ms.addEventListener('input',renderMenu);
   const bn=el('bNewProperty');if(bn)bn.onclick=createProperty;
+  const who=el('menuWho');if(who)who.onclick=pickWhoDialog;
+  document.querySelectorAll('[data-lens]').forEach(b=>b.onclick=()=>{menuLens=b.getAttribute('data-lens');
+    document.querySelectorAll('[data-lens]').forEach(x=>x.classList.toggle('on',x===b));renderMenu();});
   document.querySelectorAll('[data-sort]').forEach(b=>b.onclick=()=>{sortMode=b.getAttribute('data-sort');document.querySelectorAll('[data-sort]').forEach(x=>x.classList.toggle('on',x===b));renderMenu();});
   const be=el('bExit');if(be)be.onclick=requestExit;
   wireHome();
