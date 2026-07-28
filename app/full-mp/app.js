@@ -407,7 +407,7 @@ function fieldCell(f){if(f.type==='sigtitle')return sigTitleCell(f);if(f.type===
   const s=form[f.k]||{value:'',source:'new'};
   const c=f.prefix?groupColors([f.prefix,f.k]):cellColors(f.k);
   const pre=f.prefix?csDrop(f.prefix,['Ms.','Mr.','Dr.','Mx.'],'—','csnarrow',true,partHot(f.prefix)?tintStyle(f.prefix):''):'';
-  return `<div class="field"><div class="flabel">${f.label}</div><div class="fbox" data-box="${f.k}" style="background:${c[1]};border-left-color:${c[0]}">${pre}<input type="text" data-k="${f.k}" style="${f.prefix&&partHot(f.k)?tintStyle(f.k):''}"${f.type==='phone'?' data-phone="1" inputmode="tel" maxlength="14"':''} value="${esc(s.value)}" autocomplete="off">${rsTag(f.k)}${rcsTag(f.k)}${SRCPICK_ROWS[f.k]?srcPick(f.k,SRCPICK_ROWS[f.k]()):''}</div>${ovNote(f.prefix?[f.prefix,f.k]:f.k)}</div>`;}
+  return `<div class="field"><div class="flabel">${f.label}</div><div class="fbox" data-box="${f.k}" style="background:${c[1]};border-left-color:${c[0]}">${pre}<input type="text" data-k="${f.k}" style="${f.prefix&&partHot(f.k)?tintStyle(f.k):''}"${f.type==='phone'?' data-phone="1" inputmode="tel" maxlength="14"':''} value="${esc(f.type==='phone'?fmtPhone(s.value):s.value)}" autocomplete="off">${rsTag(f.k)}${rcsTag(f.k)}${SRCPICK_ROWS[f.k]?srcPick(f.k,SRCPICK_ROWS[f.k]()):''}</div>${ovNote(f.prefix?[f.prefix,f.k]:f.k)}</div>`;}
 function addrCell(){return compAddrCell(ADDR,'property.addr','Address');}
 function caAddrCell(){return compAddrCell(CA_ADDR,'ca.addr','CA address');}
 function apprAddrCell(){return compAddrCell(APPR_ADDR,'appr.addr','Appraiser address');}
@@ -516,7 +516,7 @@ function uaBox(i){const src=get('units.'+i+'.ua_source')||defUaSrc(i),exec=get('
   return '<div class="rbox uacell" data-box="'+boxKeyUA+'" style="background:'+c[1]+';border-left-color:'+c[0]+'"><div class="uadrop"><div class="uatrigger" tabindex="0"><span class="ualab">'+lab+'</span><span class="cvx">▾</span></div>'+menu+'</div></div>';}
 function uaNoteCell(i){const conf=uaConflict(i),overSrc=srcOf('units.'+i+'.ua_source')==='overridden';if(!conf&&!overSrc)return '';const ex=get('units.'+i+'.ua_exec'),rc=get('units.'+i+'.ua_rcs');
   if(conf&&uaUnresolved(i))return '<div class="ucnote warn">⚠ exec '+money(numf(ex))+' · RCS '+money(numf(rc))+' <span class="pick"><button class="urev sv" data-uaok="'+i+'">approve '+money(uaResolvedOf(i))+'</button></span></div>';
-  const src=get('units.'+i+'.ua_source')||defUaSrc(i);const chosen=src==='rcs'?'RCS':(src==='custom'?'custom':'exec RS');
+  const src=get('units.'+i+'.ua_source')||defUaSrc(i);const chosen=src==='rcs'?'the study':(src==='custom'?'your own figure':'the executed schedule');
   return '<div class="ucnote ok">✓ '+chosen+(src==='custom'?'':' ('+money(uaResolvedOf(i))+')')+'</div>';}
 function typeConflict(i){const br=get('units.'+i+'.br'),ba=get('units.'+i+'.ba'),brR=get('units.'+i+'.br_rcs'),baR=get('units.'+i+'.ba_rcs');const has=(brR!==''&&brR!=null)||(baR!==''&&baR!=null);return has&&((brR&&brR!==br)||(baR&&baR!==ba));}
 function typeReviewedOf(i){return get('units.'+i+'.type_reviewed')==='1';}
@@ -640,18 +640,18 @@ function unitCard(i,pos){const trash=UNITS.length>1?`<button class="trash" data-
 function renderRents(){
   const cards=UNITS.map((i,pos)=>unitCard(i,pos)).join('');
   const nrOn=get('nonrev.enabled')==='1'||NONREV.length>0;
-  let pd=`<div class="pdhead"><label class="ns8flag"><input type="checkbox" id="nonrevToggle"${nrOn?' checked':''}><span>This property has non-revenue units (Part D)</span></label>${nrOn?' <span class="sub">manager’s unit, model, etc. — excluded from rent totals</span>':''}</div>`;
+  let pd=`<div class="pdhead"><label class="ns8flag"><input type="checkbox" id="nonrevToggle"${nrOn?' checked':''}><span>This property has non-revenue units (Part D)</span></label>${nrOn?ovIcons('nonrev.enabled'):''}${nrOn?' <span class="sub">manager’s unit, model, etc. — excluded from rent totals</span>':''}</div>`;
   if(nrOn){
     if(NONREV.length){const _np=hasProg('rcs')?'':' noprop',_xc=hasProg('rcs')?7:6;
-    pd+=`<div class="rgh${_np}"><span style="grid-column:1">Unit type</span><span style="grid-column:2">Units</span><span style="grid-column:3">Contract rent</span><span style="grid-column:4/6">Use</span></div>`+NONREV.map(i=>`<div class="pdrow${_np}"><div style="grid-column:1">${brbaBox('nonrev.'+i+'.br','nonrev.'+i+'.ba')}</div><div style="grid-column:2">${numBox('nonrev.'+i+'.num_units','',1)}</div><div style="grid-column:3">${moneyBox('nonrev.'+i+'.rent',1)}</div><div style="grid-column:4/6">${numBox('nonrev.'+i+'.use',"e.g. Manager’s unit",1)}</div><div class="urx" style="grid-column:${_xc}"><button class="trash" data-delnonrev="${i}" title="Delete">✕</button></div><div class="uracts${_np}"><div style="grid-column:1"><span class="ua-br">${ovIcons('nonrev.'+i+'.br')}</span><span class="ua-sl"></span><span class="ua-ba">${ovIcons('nonrev.'+i+'.ba')}</span></div><div style="grid-column:2">${ovIcons(coupledKeys('nonrev.'+i+'.num_units'))}</div><div style="grid-column:3">${ovIcons('nonrev.'+i+'.rent')}</div><div style="grid-column:4/6">${ovIcons('nonrev.'+i+'.use')}</div></div></div>`).join('');}
+    pd+=`<div class="rgh${_np}"><span style="grid-column:1">Unit type</span><span style="grid-column:2">Units</span><span style="grid-column:3">Contract rent</span><span style="grid-column:4/6">Use</span></div>`+NONREV.map(i=>`<div class="pdrow${_np}"><div style="grid-column:1">${brbaBox('nonrev.'+i+'.br','nonrev.'+i+'.ba')}</div><div style="grid-column:2">${numBox('nonrev.'+i+'.num_units','',1)}</div><div style="grid-column:3">${moneyBox('nonrev.'+i+'.rent',1)}</div><div style="grid-column:4/6">${numBox('nonrev.'+i+'.use',"e.g. Manager’s unit",1)}</div><div class="urx" style="grid-column:${_xc}"><button class="trash" data-delnonrev="${i}" title="Delete">✕</button></div><div class="uracts${_np}"><div style="grid-column:1"><span class="ua-br">${ovIcons('nonrev.'+i+'.br')}</span><span class="ua-sl"></span><span class="ua-ba">${ovIcons('nonrev.'+i+'.ba')}</span></div><div style="grid-column:2">${ovIcons('nonrev.'+i+'.num_units')}</div><div style="grid-column:3">${ovIcons('nonrev.'+i+'.rent')}</div><div style="grid-column:4/6">${ovIcons('nonrev.'+i+'.use')}</div></div></div>`).join('');}
     pd+=`<div class="addrow" id="addNonrev">+ Add non-revenue unit</div>`;
   }
   pd+=undoBits('NR');
   const lhOn=get('ns8.enabled')==='1';
-  let lh=`<div class="pdhead"><label class="ns8flag"><input type="checkbox" id="ns8Toggle"${lhOn?' checked':''}><span>This property has non-Section 8 revenue producing units</span></label>${lhOn?' <span class="sub">entered as unit type and average rent, as shown on the rent schedule</span>':''}</div>`;
+  let lh=`<div class="pdhead"><label class="ns8flag"><input type="checkbox" id="ns8Toggle"${lhOn?' checked':''}><span>This property has non-Section 8 revenue producing units</span></label>${lhOn?ovIcons('ns8.enabled'):''}${lhOn?' <span class="sub">entered as unit type and average rent, as shown on the rent schedule</span>':''}</div>`;
   if(lhOn){
     if(NS8.length){const _np2=hasProg('rcs')?'':' noprop',_xc2=hasProg('rcs')?7:6;
-    lh+=`<div class="rgh${_np2}"><span style="grid-column:1">Unit type</span><span style="grid-column:2">Units</span><span style="grid-column:3">Average unit rent</span></div>`+NS8.map(i=>`<div class="pdrow${_np2}"><div style="grid-column:1">${brbaBox('ns8.'+i+'.br','ns8.'+i+'.ba')}</div><div style="grid-column:2">${numBox('ns8.'+i+'.num_units','',1)}</div><div style="grid-column:3">${moneyBox('ns8.'+i+'.avg_rent',1)}</div><div class="urx" style="grid-column:${_xc2}"><button class="trash" data-delns8="${i}" title="Delete">✕</button></div><div class="uracts${_np2}"><div style="grid-column:1"><span class="ua-br">${ovIcons('ns8.'+i+'.br')}</span><span class="ua-sl"></span><span class="ua-ba">${ovIcons('ns8.'+i+'.ba')}</span></div><div style="grid-column:2">${ovIcons(coupledKeys('ns8.'+i+'.num_units'))}</div><div style="grid-column:3">${ovIcons('ns8.'+i+'.avg_rent')}</div></div></div>`).join('');}
+    lh+=`<div class="rgh${_np2}"><span style="grid-column:1">Unit type</span><span style="grid-column:2">Units</span><span style="grid-column:3">Average unit rent</span></div>`+NS8.map(i=>`<div class="pdrow${_np2}"><div style="grid-column:1">${brbaBox('ns8.'+i+'.br','ns8.'+i+'.ba')}</div><div style="grid-column:2">${numBox('ns8.'+i+'.num_units','',1)}</div><div style="grid-column:3">${moneyBox('ns8.'+i+'.avg_rent',1)}</div><div class="urx" style="grid-column:${_xc2}"><button class="trash" data-delns8="${i}" title="Delete">✕</button></div><div class="uracts${_np2}"><div style="grid-column:1"><span class="ua-br">${ovIcons('ns8.'+i+'.br')}</span><span class="ua-sl"></span><span class="ua-ba">${ovIcons('ns8.'+i+'.ba')}</span></div><div style="grid-column:2">${ovIcons('ns8.'+i+'.num_units')}</div><div style="grid-column:3">${ovIcons('ns8.'+i+'.avg_rent')}</div></div></div>`).join('');}
     lh+=`<div class="addrow" id="addNs8">+ Add non-Section 8 unit type</div>`;
   }
   lh+=undoBits('LI');
@@ -835,7 +835,7 @@ function renderPartB(){const eq=PARTB.equipment,sv=PARTB.services;
     <div>${cbx('partb.services.4',sv[4])}${cbx('partb.services.5',sv[5])}${writein('s5')}${writein('s6')}</div></div>`);}
 function renderChecklist(){const F=CHECKLIST_FLAT;const item=n=>{const on=get('check.'+n)==='1';return `<label class="cb"><input type="checkbox" data-cb="check.${n}" ${on?'checked':''}><span class="box" style="${boxStyle('check.'+n)}">${on?'✓':''}</span><span class="cbt">${F[n]}</span>${ovIcons('check.'+n)}</label>`;};
   const grp=(t,arr)=>`<div class="clhead">${t}</div>${arr.map(item).join('')}`;
-  const left=grp("Owner’s Materials",[0,1,2])+grp("RCS Materials",[3,4,5,6,7,8]);const right=`<div class="clcont">${[9,10,11,12,13,14].map(item).join('')}</div>`+grp("Mandatory Market Rent Threshold",[15,16]);
+  const left=grp("Owner’s Materials",[0,1,2])+grp("RCS Materials",[3,4,5,6,7,8]);const right=grp("RCS Materials, continued",[9,10,11,12,13,14])+grp("Mandatory Market Rent Threshold",[15,16]);
   let sel=0;for(let j=0;j<F.length;j++)if(get('check.'+j)==='1')sel++;
   return card(8,sectionPill(8),`<div class="cltop"><b>${sel} of ${F.length} selected</b><span class="clbtns"><button class="mini" id="clAll">✓ Check all</button><button class="mini" id="clNone">Clear</button></span></div><div class="cols2"><div>${left}</div><div>${right}</div></div>`);}
 function srcDocLabel(){
@@ -1908,13 +1908,13 @@ function _renderCommand(){const a=analysis();const pCur=a.ceil>0?clamp(a.cg/a.ce
         <div class="glabels"><div class="gl l"><b style="color:#2f7d57">${money(priced?CG:a.cg)}</b><i>current</i></div><div class="gl c"><b style="color:${priced?'#47a377':'#94a3b8'}">${priced?money(PG):'—'}</b><i>proposed</i></div><div class="gl r"><b>${(priced?CEIL:a.ceil)>0?money(priced?CEIL:a.ceil):'—'}</b><i>150% ceiling · HUD SAFMR</i>${partial?`<i class="amber">⚠ ${a.tTot-a.tPr} unit type${a.tTot-a.tPr===1?'':'s'} not priced yet</i>`:''}${a.safmrConflict?`<i class="amber">⚠ RCS differs on ≥1 type</i>`:(a.safmrMissing?`<i class="amber">⚠ SAFMR needed</i>`:(a.countsMissing&&a.safmrHave?`<i class="amber">⚠ unit counts needed</i>`:''))}</div></div>
        </div>
        ${(a.ceil>0&&priced)?`<div class="passbox" style="background:${PASS?'#dcfce7':'#fee2e2'};color:${PASS?'#166534':'#b91c1c'};border-color:${PASS?'#86efac':'#fca5a5'}">${PASS?'✓ PASS':'✗ OVER'}<small>${money(Math.abs(HEAD))} ${PASS?'headroom':'over'}${partial?' · so far':''}</small></div>`:`<div class="passbox" style="background:#f1f4f9;color:#64748b;border-color:#d7deea">${a.ceil>0?'Proposed rents needed':(a.countsMissing&&a.safmrHave?'Unit counts needed':'SAFMR needed')}<small>${a.ceil>0?('enter them in '+secRef(6)):(a.countsMissing&&a.safmrHave?('add the number of units in '+secRef(6)):(hudBlockerShort()||'enter or pull from HUD'))}</small></div>`}</div>
-     <div class="lift"><b>RCS LIFT vs current rent roll</b>${!priced?`<div class="liftnote">The lift appears once proposed rents are entered in ${secRef(6)}.</div>`:`<div class="liftnums"><span><b style="color:${liftClr(a.pct)}">${sPct(a.pct)}</b><i>${liftWord(a.pct)}</i></span><span><b style="color:${liftClr(a.perUnit)}">${sMoney(a.perUnit)}</b><i>per unit</i></span><span><b style="color:${liftClr(a.dMo)}">${sMoney(a.dMo)}</b><i>/mo</i></span><span><b style="color:${liftClr(a.dYr)}">${sK(a.dYr)}</b><i>annualized</i></span></div>`}</div>
+     <div class="lift"><b>RCS increase over the current rent roll</b>${!priced?`<div class="liftnote">The lift appears once proposed rents are entered in ${secRef(6)}.</div>`:`<div class="liftnums"><span><b style="color:${liftClr(a.pct)}">${sPct(a.pct)}</b><i>${liftWord(a.pct)}</i></span><span><b style="color:${liftClr(a.perUnit)}">${sMoney(a.perUnit)}</b><i>per unit</i></span><span><b style="color:${liftClr(a.dMo)}">${sMoney(a.dMo)}</b><i>/mo</i></span><span><b style="color:${liftClr(a.dYr)}">${sK(a.dYr)}</b><i>annualized</i></span></div>`}</div>
    </div>`;
   } else {
     const C=ocafCalc();let dMo=0,units=0;UNITS.forEach(i=>{const n=numf(get('units.'+i+'.num_units')),cur=numf(get('units.'+i+'.current'));if(n&&cur&&C.R>0){dMo+=n*(Math.round(cur*C.R)-cur);units+=n;}});
     const ocafBits=hasProg('ocaf')
       ?`<div class="cctitle">${C.R>0?('OCAF applies ×'+C.R.toFixed(3)+' to current contract rents'):'Complete the OCAF worksheet — factor and debt service'}</div><div class="ccsub">${C.pct>0?('Published ×'+C.N.toFixed(3)+(get('ocaf.factor_fy')?' (FY'+esc(get('ocaf.factor_fy'))+')':'')+' → ×'+(C.R>0?C.R.toFixed(3):'—')+' effective after the debt-service carve-out'):'Pull the published factor from the Federal Register, or enter it manually ('+secRef(10)+').'}</div>
-        <div class="lift"><b>OCAF LIFT vs current rent roll</b><div class="liftnums"><span><b style="color:${liftClr(C.R>0?C.R-1:0)}">${C.R>0?((C.R>=1?'+':'')+((C.R-1)*100).toFixed(1)+'%'):'—'}</b><i>${C.R>0&&C.R<1?'decrease':'increase'}</i></span><span><b style="color:${liftClr(dMo)}">${units?sMoney(dMo/units):'+$0'}</b><i>per unit avg</i></span><span><b style="color:${liftClr(dMo)}">${sMoney(dMo)}</b><i>/mo</i></span><span><b style="color:${liftClr(dMo)}">${sK(dMo*12)}</b><i>annualized</i></span></div></div>`
+        <div class="lift"><b>OCAF increase over the current rent roll</b><div class="liftnums"><span><b style="color:${liftClr(C.R>0?C.R-1:0)}">${C.R>0?((C.R>=1?'+':'')+((C.R-1)*100).toFixed(1)+'%'):'—'}</b><i>${C.R>0&&C.R<1?'decrease':'increase'}</i></span><span><b style="color:${liftClr(dMo)}">${units?sMoney(dMo/units):'+$0'}</b><i>per unit avg</i></span><span><b style="color:${liftClr(dMo)}">${sMoney(dMo)}</b><i>/mo</i></span><span><b style="color:${liftClr(dMo)}">${sK(dMo*12)}</b><i>annualized</i></span></div></div>`
       :`<div class="cctitle">Utility allowance factor adjustment</div><div class="ccsub">Tenant-paid utility allowances, adjusted by the published state factors. Contract rents are not affected.</div>`;
     card1=`<div class="ccard afford"><div class="cck">${esc(cycleProgs().map(x=>PROG_NAMES[x]||x).join(' + '))} ADJUSTMENT</div>${ocafBits}${hasProg('uaf')?uaStrip():''}</div>`;
   }
@@ -1987,8 +1987,8 @@ function attnFlags(){const f=[];const u=UNITS.filter(uaUnresolved).length;if(u)f
   return f;}
 function renderRail(){const vis=visibleSections();const st={};vis.forEach(n=>st[n]=(n===7?'ok':sectionStatus(n)));let conf=0;vis.forEach(n=>{if(st[n]!=='warn')conf++;});const need=vis.length-conf;
   el('rail').innerHTML=vis.map(n=>`<div class="railitem"><span class="ri ${st[n]==='warn'?'warn':'ok'}">${st[n]==='warn'?'!':'✓'}</span><span class="rname">${_secPos[n]||n}. ${SECTION_TITLES[n]}</span></div>`).join('');
-  el('railprog').innerHTML=`<b>${conf} of ${vis.length} confirmed</b>${need?`<div class="warnt">${need} need your review</div>`:''}<div class="track sm"><div style="width:${conf/vis.length*100}%;background:#166534"></div></div>`;
-  const fl=attnFlags();el('railattn').style.display=fl.length?'block':'none';el('railattn').innerHTML=fl.length?`⚠ <b>${fl.length} to review</b>${fl.map(x=>`<div class="sub" style="margin-top:6px">${x}</div>`).join('')}`:'';}
+  el('railprog').innerHTML=`<b>${conf} of ${vis.length} confirmed</b>${need?`<div class="warnt">${need} section${need===1?"":"s"} still to confirm</div>`:''}<div class="track sm"><div style="width:${conf/vis.length*100}%;background:#166534"></div></div>`;
+  const fl=attnFlags();el('railattn').style.display=fl.length?'block':'none';el('railattn').innerHTML=fl.length?`⚠ <b>${fl.length} thing${fl.length===1?"":"s"} to look at</b>${fl.map(x=>`<div class="sub" style="margin-top:6px">${x}</div>`).join('')}`:'';}
 function renderAttention(){/* the section rail carries the attention list; the old top banner duplicated it */}
 
 function renderBar(){const a=analysis();const conf=UNITS.filter(uaConflict).length,unres=UNITS.filter(uaUnresolved).length;const uaOk=conf===0||unres===0;
@@ -2009,7 +2009,7 @@ function renderBar(){const a=analysis();const conf=UNITS.filter(uaConflict).leng
  const CG=partial?a.cgC:a.cg,PG=partial?a.pgC:a.pg,CEIL=partial?a.ceilC:a.ceil;
  const PASS=CEIL>0&&PG<CEIL,HEAD=CEIL-PG;
  const gCur=CEIL>0?clamp(CG/CEIL*100):0,gPro=CEIL>0?clamp(PG/CEIL*100):0;
- el('ccbar').innerHTML=`<div class="bl"><div class="minigauge">${gaugeSegs(priced?gCur:pCur,priced?gPro:0)}<div class="oend"></div></div><div class="mn"><b style="color:#2f7d57">${money(priced?CG:a.cg)}</b> current · <b style="color:${priced?'#47a377':'#94a3b8'}">${priced?money(PG):'—'}</b> proposed · <b>${(priced?CEIL:a.ceil)>0?money(priced?CEIL:a.ceil):'—'}</b> ceiling${priced?' · <b style="color:'+liftClr(a.pct)+'">'+sPct(a.pct)+'</b> RCS '+(a.pct<0?'decrease':(a.pct>0?'boost':'change')):''}${partial?' · <b style="color:#b45309">'+(a.tTot-a.tPr)+' type'+(a.tTot-a.tPr===1?'':'s')+' unpriced</b>':''}</div><div class="bpass" style="color:${(a.ceil>0&&priced)?(PASS?'#166534':'#b91c1c'):'#64748b'}">${(a.ceil>0&&priced)?((PASS?'✓ PASS':'✗ OVER')+' · '+money(Math.abs(HEAD))):(a.ceil>0?'proposed rents needed':'SAFMR needed')}</div></div><div class="bchks">${chks}${bc(a.safmrMissing||a.safmrOver?'warn':(a.safmrConflict?'info':'ok'),'SAFMR')}</div>`;}
+ el('ccbar').innerHTML=`<div class="bl"><div class="minigauge">${gaugeSegs(priced?gCur:pCur,priced?gPro:0)}<div class="oend"></div></div><div class="mn"><b style="color:#2f7d57">${money(priced?CG:a.cg)}</b> current · <b style="color:${priced?'#47a377':'#94a3b8'}">${priced?money(PG):'—'}</b> proposed · <b>${(priced?CEIL:a.ceil)>0?money(priced?CEIL:a.ceil):'—'}</b> ceiling${priced?' · <b style="color:'+liftClr(a.pct)+'">'+sPct(a.pct)+'</b> RCS '+(a.pct===0?'change':liftWord(a.pct)):''}${partial?' · <b style="color:#b45309">'+(a.tTot-a.tPr)+' type'+(a.tTot-a.tPr===1?'':'s')+' unpriced</b>':''}</div><div class="bpass" style="color:${(a.ceil>0&&priced)?(PASS?'#166534':'#b91c1c'):'#64748b'}">${(a.ceil>0&&priced)?((PASS?'✓ PASS':'✗ OVER')+' · '+money(Math.abs(HEAD))):(a.ceil>0?'proposed rents needed':'SAFMR needed')}</div></div><div class="bchks">${chks}${bc(a.safmrMissing||a.safmrOver?'warn':(a.safmrConflict?'info':'ok'),'SAFMR')}</div>`;}
 /* A "reviewed" flag exists only to silence a warning about a conflict. When the
    conflict itself goes away — a figure retyped, a source switched, a row cleared —
    the flag is meaningless, and it was the last thing on the form still differing
@@ -2022,7 +2022,7 @@ function syncReviewed(){const held=k=>{const c=form[k];return !!(c&&c.db_value==
   UNITS.forEach(i=>{drop('units.'+i+'.ua_reviewed',uaConflict(i));drop('units.'+i+'.safmr_reviewed',safmrConflictOf(i));
     drop('units.'+i+'.type_reviewed',typeConflict(i));drop('units.'+i+'.num_reviewed',numConflict(i));});}
 function renderBody(){syncReviewed();const _sy=window.scrollY;const _anchorSel=(_refocusSel&&!_mouseFocus)?_refocusSel:(((Date.now()-_lastClickAt)<2000)?_lastClickSel:null);let _anchorTop=null;if(_anchorSel){try{const _ac=document.querySelector(_anchorSel);if(_ac)_anchorTop=_ac.getBoundingClientRect().top;}catch(e){}}computeSecPos();const _SR={1:renderSources,2:()=>renderFieldSection(FIELD_SECTIONS[0]),3:()=>renderFieldSection(FIELD_SECTIONS[1]),4:()=>renderFieldSection(FIELD_SECTIONS[2]),5:()=>renderFieldSection(FIELD_SECTIONS[3]),6:renderRents,7:renderPartB,8:renderChecklist,9:()=>renderFieldSection(FIELD_SECTIONS[4]),10:renderOcaf,11:renderUaf,12:renderPrincipals};el('sections').innerHTML=visibleSections().map(n=>_SR[n]()).join('');
-  wireBody();renderCommand();renderBar();renderRail();renderAttention();refreshFooter();
+  renderFormHeader();wireBody();renderCommand();renderBar();renderRail();renderAttention();refreshFooter();
   if(_refocusSel&&!_mouseFocus){try{const _f=document.querySelector(_refocusSel);if(_f&&_f.focus){_f.focus({preventScroll:true});if(/^(INPUT|TEXTAREA)$/.test(_f.tagName)&&typeof _f.setSelectionRange==='function'){const _L=(_f.value||'').length;try{_f.setSelectionRange(_L,_L);}catch(_e){}}}}catch(e){}}_refocusSel=null;
   if(_anchorSel&&_anchorTop!=null){try{const _a2=document.querySelector(_anchorSel);if(_a2){const _nt=_a2.getBoundingClientRect().top;window.scrollTo(0,window.scrollY+(_nt-_anchorTop));}else window.scrollTo(0,_sy);}catch(e){try{window.scrollTo(0,_sy);}catch(_z){}}}else{try{window.scrollTo(0,_sy);}catch(e){}}}
 async function commitPending(){if(!_pending||!_pending.length)return;const keys=_pending;_pending=null;if(handleZeroUnitCommit(keys))return;for(const _pk of ['poc.phone','appr.phone'])if(keys.indexOf(_pk)>=0){const _d=(get(_pk)||'').replace(/\D/g,'');if(_d.length!==0&&_d.length!==10){setStatus('Enter a complete 10-digit phone before saving.');return;}}keys.forEach(k=>{const m=k.match(/^partb\.writein\.(e1|e2|e3|e4|e5|s1|s2|s3|s4|s5|s6)(\.on)?$/);if(m)clearUncheckedWriteins([m[1]]);});const _sk=[];keys.forEach(k=>{const gb=groupOf(k);(gb?ADDR_GROUPS[gb]:coupledKeys(k)).forEach(kk=>{if(_sk.indexOf(kk)<0)_sk.push(kk);});});try{form=await store.saveFields(form,_sk);}catch(e){saveFailed(e);return;}await refreshSnap();snapForm(_sk);_pendingSnap=null;clearUndoChain();_refocusSel=refocusSelForKey(keys[0]);renderBody();setStatus('Saved this field to the database.');}
@@ -2159,9 +2159,6 @@ function coupledKeys(k){const m=k.match(/^(units\.\d+)\.(ua|safmr)_(custom|sourc
      one state with no button. */
   if(/^rent_schedule\.date_eff_(custom|source|rs)$/.test(k))
     return [k].concat(['rent_schedule.date_eff_custom','rent_schedule.date_eff_source','rent_schedule.date_eff_rs'].filter(x=>x!==k));
-  const _fam=k.match(/^(nonrev|ns8)\.\d+\.[a-z_]+$/);
-  if(_fam&&get(_fam[1]+'.enabled')==='1'&&srcOf(_fam[1]+'.enabled')!=='database')
-    return [k,_fam[1]+'.enabled'];
   const OCAF_F=['ocaf.factor_custom','ocaf.factor_src','ocaf.factor_pub','ocaf.factor_fy','ocaf.factor_pubdate','ocaf.factor_state'];
   if(OCAF_F.indexOf(k)>=0)return [k].concat(OCAF_F.filter(x=>x!==k));
   /* Each utility factor has its own cell and its own pair; the fiscal year, the
@@ -2793,7 +2790,7 @@ function renderLauncher(){
   const lhSub=lh.data?(lhIsPdf?'PDF letterhead &middot; the tenant notice prints on it full-page':'Property letterhead &middot; reused on every package'):'<span style="color:#b4552d">Not print-ready &mdash; re-upload the letterhead (PDF, PNG or JPG) so it prints on the tenant notice</span>';
   const letter=lh.name
     ?'<div class="letter has"><div class="lh-doc">'+(lh.thumb?'<img src="'+esc(lh.thumb)+'">':docIcon())+'</div><div class="lh-info"><b>'+esc(lh.name)+'</b><i>'+lhSub+'</i></div><div class="lh-act"><button class="btn sm" id="lhReplace">Replace</button><button class="btn sm" id="lhRemove">Remove</button></div></div>'
-    :'<div class="letter empty"><div class="lh-doc">'+docIcon()+'</div><div class="lh-info"><b>Add the property letterhead</b><i>Used on the tenant notice &middot; PDF, PNG or JPG, stored once</i></div><button class="btn sm" id="lhAdd">Upload</button></div>';
+    :'<div class="letter empty"><div class="lh-doc">'+docIcon()+'</div><div class="lh-info"><b>Add the property letterhead</b><i>Used on the tenant notice &middot; PDF, PNG or JPG, kept with the property</i></div><button class="btn sm" id="lhAdd">Upload</button></div>';
   el('launcherBody').innerHTML=
     '<div class="lhead"><div class="lh-left"><div class="lh-name">'+esc(p.name)+(_showAl?'<span class="lh-alias">&ldquo;'+esc(_al)+'&rdquo;</span>':'')+'</div>'
       +'<div class="lh-meta">'+esc(p.fha)+(p.city_state?' &middot; '+esc(p.city_state):'')+(p.total_units?' &middot; '+p.total_units+' units':'')+'</div>'
@@ -3154,7 +3151,8 @@ function gotoSection(n,key){
    says plainly when nothing but a person will ever fill it. */
 const RS_CARRIES=/^(units$|property\.(name|fha|s8)|owner\.entity|sig\.(name|title|principal)|principals\.|rent_schedule\.date_eff|units\.\d+\.(br|ba|label|num_units|current|ua_exec)|ns8\.|nonrev\.)/;
 const RCS_CARRIES=/^(appr\.|units\.\d+\.(proposed|ua_rcs|safmr_rcs|num_rcs|br_rcs|ba_rcs))/;
-const whyShort=k=>{
+const whyShort=(k,own)=>{
+  if(own)return own;      // an entry that already knows its own answer
   if(!k)return '';
   let v=null;try{v=rsVal(k);}catch(e){}
   try{if((v==null||v==='')&&rsOffers(k))v='\u2713';}catch(e){}
@@ -3170,10 +3168,14 @@ const whyShort=k=>{
      note are the ones worth reading. */
   return '';
 };
-const gpf=(x,cls)=>'<button class="gpf'+(cls||'')+'" data-goto="'+x.sec+'" data-gotok="'+esc(x.key||'')+'" title="Go to '+esc(secRef(x.sec))+'">'
-  +'<span class="gpf-n">'+esc(x.label)+'</span>'
-  +(function(){const w=whyShort(x.key)||(x.sec?(SECTION_TITLES[x.sec]||secRef(x.sec)):'');
-    return w?'<span class="gpf-w">'+esc(w)+'</span>':'';})()+'</button>';
+const gpf=(x,cls)=>{
+  const w=whyShort(x.key,x.why)||(x.sec?(SECTION_TITLES[x.sec]||secRef(x.sec)):'');
+  const body='<span class="gpf-n">'+esc(x.label)+'</span>'+(w?'<span class="gpf-w">'+esc(w)+'</span>':'');
+  /* No section means no journey. The letterhead is uploaded on the property
+     page, and an entry offering to travel to "Section 0" landed on Section 1,
+     which is not where it lives. */
+  if(!x.sec)return '<span class="gpf gpf-flat'+(cls||'')+'">'+body+'</span>';
+  return '<button class="gpf'+(cls||'')+'" data-goto="'+x.sec+'" data-gotok="'+esc(x.key||'')+'" title="Go to '+esc(secRef(x.sec))+'">'+body+'</button>';};
 /* One popover per document, on the count itself. Six rows of fixed height say
    which documents you can take away; what each one is short of is one hover
    behind the number, where it does not have to compete with that answer. */
@@ -3206,11 +3208,32 @@ function wirePkgRows(docs){
     const inPop=function(e){return !!(e.target&&e.target.closest&&e.target.closest('.gpw'));};
     b.onclick=function(e){if(inPop(e))return;go();};
     b.onkeydown=function(e){if(inPop(e))return;if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();go();}};});
+  const placePop=function(w){
+    const p=w.querySelector('.gpop');if(!p)return;
+    p.classList.remove('gpop-up');
+    const inner=p.querySelector('.gpop-in');if(!inner)return;
+    /* Measured with the card laid out. A hidden element has no height, and the
+       press route adds .open only AFTER this runs — so measuring what is on
+       screen at the time gave zero, and the flip never fired. */
+    let h=inner.offsetHeight;
+    if(!h){const d=p.style.display;p.style.display='block';h=inner.offsetHeight;p.style.display=d;}
+    const r=w.getBoundingClientRect();
+    /* Bounded by the top of the DOWNLOAD block, not the bottom of the dialog.
+       The dialog's bottom is below its own buttons, so a card that fits inside
+       the dialog can still land squarely on the primary action — which is how a
+       click at that button's centre came to fire a link inside the card. */
+    const act=document.getElementById('dlFolder')||document.querySelector('#dialog .gpair')||document.querySelector('#dialog .dlg-row');
+    const dlg=document.getElementById('dialog');
+    const bound=act?act.getBoundingClientRect().top:(dlg?dlg.getBoundingClientRect().bottom:window.innerHeight);
+    if(r.bottom+h+10>Math.min(bound,window.innerHeight))p.classList.add('gpop-up');};
+  document.querySelectorAll('.gpw').forEach(function(w){
+    w.addEventListener('mouseenter',function(){placePop(w);});
+    w.addEventListener('focusin',function(){placePop(w);});});
   document.querySelectorAll('.gpw>.gshort').forEach(function(b){b.addEventListener('click',function(e){
     e.preventDefault();e.stopPropagation();
     const w=b.parentElement;const on=w.classList.contains('open');
     document.querySelectorAll('.gpw.open').forEach(function(x){x.classList.remove('open');});
-    if(!on)w.classList.add('open');});});
+    if(!on){w.classList.add('open');placePop(w);}});});
   document.querySelectorAll('[data-goto]').forEach(function(b){b.onclick=function(e){
     e.preventDefault();e.stopPropagation();closeModal();
     gotoSection(+b.getAttribute('data-goto'),b.getAttribute('data-gotok')||'');};});}
@@ -3233,7 +3256,8 @@ function showPackageModal(nm,docs,combined,missingRcs,missingLh,capMsgs,blocked,
      ever affected the tenant notice — so nothing document-specific is left
      stranded at the foot of the dialog in a second shade. */
   const extraWarn={};
-  if(missingLh)extraWarn['Tenant notice']=[{label:'letterhead',sec:0}];
+  if(missingLh)extraWarn['Tenant notice']=[{label:'A letterhead for the notice',sec:0,
+    why:'uploaded on the property page, not in the form \u2014 without one the notice prints a generated header'}];
   /* A field that blocks three documents used to be printed three times. True,
      and it turned a six-row dialog into forty links on rows that grew to 156px
      — so the one thing the dialog exists to say, which of the six you can take
