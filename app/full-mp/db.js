@@ -453,6 +453,7 @@ async function makeDb(adapter, opts) {
         city_state: (dv(p, 'property.addr_city') || '') + (dv(p, 'property.addr_state') ? ', ' + dv(p, 'property.addr_state') : ''),
         entity: dv(p, 'owner.entity_name') || '', alias: dv(p, 'tenant.property_alias') || '', unit_types: uc.types, total_units: uc.units,
         completeness: _s.pct / 100, score: _s.pct, caption: SCORE ? SCORE.scoreCaption(_s) : "",
+            profile: _s.profile,
         docs_ready: _s.docsReady, docs_total: _s.docsTotal,
         created_at: p.created_at, updated_at: p.updated_at || p.created_at,
         has_letterhead: dv(p, 'assets.letterhead_name') !== '',

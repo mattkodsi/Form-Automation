@@ -20,7 +20,7 @@ global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>
 const os=require('os'),path=require('path'),fs=require('fs');
 
 /* ── the verdict machinery (mirrors test_interactions.js) ───────────────── */
-const MIN_CHECKS=80;
+const MIN_CHECKS=81;
 let n=0,fails=0,verdict=null;
 const BAR='═'.repeat(68);
 function fail(msg,err){
@@ -63,7 +63,13 @@ const T=(label,v)=>eq(label,!!v,true);
   const grid=els.menuGrid.innerHTML;
   T('menu names the seeded property', /Gates Manor Apartments/.test(grid));
   T('menu draws property cards',      /class="pcard"/.test(grid));
-  T('menu draws the completeness ring', /svg/.test(grid));
+  /* The ring came off the property card: it was reading the dominant PACKAGE,
+     so it moved when a form was opened and again when one was abandoned
+     unsaved. A record is either sufficient to build from or short specific
+     fields — a state, which the chip names, and which says nothing at all when
+     there is nothing to say. */
+  T('menu draws no ring on a property card', !/<svg/.test(grid));
+  T('a short profile says what it is short of', !/missing from the profile/.test(grid)||/pchip/.test(grid));
   T('menu count chip counts properties', /propert/.test(els.menuCount.textContent));
   T('nothing undefined leaked into the menu', !/undefined/.test(grid));
 
