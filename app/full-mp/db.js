@@ -71,7 +71,7 @@ const CROSSWALK = {
   'appr.phone': ['study.appraiser_phone', 'submission.appraiser_phone'],
   'units.{i}.br': ['units[].bedrooms', 'unit_type.bedrooms'],
   'units.{i}.ba': ['units[].bathrooms', 'unit_type.bathrooms'],
-  'units.{i}.desig': ['units[].designation', 'unit_type.designation'],   // E/F/D/NE — see DESIG in app.js
+  'units.{i}.label': ['units[].label', 'unit_type.label'],   // free text, whatever the schedule prints after the counts
   'units.{i}.num_units': ['units[].num_units', 'unit_type.num_units'],
   'units.{i}.current': ['units[].current_contract_rent', 'unit_cycle_value.current_contract_rent'],
   'units.{i}.proposed': ['units[].proposed_contract_rent', 'unit_cycle_value.proposed_contract_rent'],

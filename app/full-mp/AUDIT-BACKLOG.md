@@ -73,12 +73,16 @@ were fixed for. **Needs measurement.**
 
 ## E. Verified only in source — never reached in a browser
 
-- `[data-typ]` / `[data-num]`, the unit-type and unit-count conflict buttons. Zero
-  occurrences in `#viewForm` in any state the audit reached. Their fixes are
-  source-verified only.
+- ~~`[data-typ]` / `[data-num]`, the unit-type and unit-count conflict buttons.~~
+  **Reached 2026-07-27.** The seeded record holds no conflict, which is why they never
+  rendered; `test_browser.js` synthesises one (`units.0.br_rcs`, `units.0.num_rcs`),
+  drives both buttons, and holds three things in place: the conflict renders both ways
+  out, resolving it clears the conflict, and the `*_reviewed` flag does not outlive it
+  (rule 14). No defect found — the source-only fixes were right.
 - The **live** OCAF and UAF factor pulls. The edge functions return 401 when not signed
   in, so the round-trip was verified against a synthesised saved factor; the network
-  path is untested.
+  path is untested. **Still out of reach** — the stub database cannot fake an
+  authenticated edge function, so this needs Matt or a real session.
 
 ---
 

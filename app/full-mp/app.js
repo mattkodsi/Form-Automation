@@ -1,17 +1,28 @@
 /* app.js — the whole RCS package form (Rich Review v4), on the keyed-cell store. */
 const STATES='AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY'.split(' ');
 const BR_OPTS=['Studio','1BR','2BR','3BR','4BR','5BR']; const BA_OPTS=['1BA','1.5BA','2BA','2.5BA','3BA'];
-/* The "E" and "F" a schedule prints after the bedroom count are the unit's
-   DESIGNATION. HUD defines nothing here — the 92458 only tells you to show
-   "other features that cause rents to vary" — but 4350.3 is explicit about the
-   underlying idea: units in a project may be "designated for specific family
-   types, such as those who are elderly or disabled", and it calls the reserved
-   quantity a set-aside. So the row-level label is the designation; the count is
-   the set-aside. Family is the unrestricted default and prints nothing unless a
-   property actually splits its rows, which is the only time the distinction
-   changes a rent or an allowance. */
-const DESIG=[['',''],['F','Family'],['E','Elderly'],['D','Disabled'],['NE','Near-elderly']];
-const desigName=v=>{const r=DESIG.find(x=>x[0]===String(v||''));return r?r[1]:'';};
+/* What a schedule prints after the bedroom count is the unit's LABEL. HUD
+   defines nothing here — the 92458 only asks you to show "other features that
+   cause rents to vary" — and the corpus takes it at its word: "E" and "F" at
+   Beacon Hill, "Elderly" and "Family" at Willow Woods, "Patio" at Lansing
+   Manor. 4350.3 supplies the idea behind the common ones, units "designated for
+   specific family types, such as those who are elderly or disabled", with the
+   reserved quantity a set-aside — but it is one example of the field, not its
+   definition. So this is free text, and the count beside it is the set-aside. */
+/* HUD's Part A unit type is ONE free-text column, so the form keeps it as one.
+   An enum of four could only hold two of the four things the corpus actually
+   prints: "1 BR E" and "2 Bedroom, Elderly" matched, "1Bedroom Patio" did not —
+   the parser kept the bedroom count and threw "Patio" away, and the generated
+   schedule then printed Lansing Manor's two 1-bedroom types identically at
+   different rents. These four are autocomplete entries and nothing more; any
+   text is valid, and what the schedule said is what the schedule gets back. */
+const LABEL_HINTS=['Elderly','Family','Disabled','Near-elderly'];
+/* Measured against the real template: the printed unit-type box is 105pt wide
+   and the text sets at 9pt Helvetica, where "1 BR / 1 BA Near-elderly" runs
+   98.7pt. Past roughly this many characters HUD's box clips without saying so,
+   so the form says so instead. A warning, never a limit — the rule is that a
+   label is free text. */
+const LABEL_PRINT_MAX=24;
 /* One place decides what a click advances the chip to, so the handler and the
    suite that guards it cannot drift: '' -> F -> E -> D -> NE -> '' . */
 const ENTITY_TYPES=['Individual','Corporation','General Partnership','Limited Partnership','Joint Tenancy/Tenants in Common','Trust','Other (specify)'];
@@ -41,7 +52,7 @@ const SEED={ // key manifest only — the VALUES are never read (ALL_KEYS below 
   'ca.org':['',D],'ca.prefix':['',D],'ca.name':['',D],'ca.position':['',D],
   'ca.addr_street':['',D],'ca.addr_city':['',D],'ca.addr_state':['',D],'ca.addr_zip':['',D],
   'appr.firm':['',T],'appr.name':['',T],'appr.email':['',T],'appr.phone':['',T],'appr.addr_street':['',T],'appr.addr_city':['',T],'appr.addr_state':['',T],'appr.addr_zip':['',T],
-  'units.0.br':['',D],'units.0.ba':['',D],'units.0.desig':['',D],'units.0.num_units':['',D],'units.0.current':['',T],'units.0.proposed':['',T],
+  'units.0.br':['',D],'units.0.ba':['',D],'units.0.label':['',D],'units.0.num_units':['',D],'units.0.current':['',T],'units.0.proposed':['',T],
   'units.0.ua_exec':['',T],'units.0.ua_rcs':['',T],'units.0.ua_source':['',T],'units.0.ua_reviewed':['',T],'units.0.ua_custom':['',T],
   'units.0.safmr_rcs':['',T],'units.0.safmr_hud':['',T],'units.0.safmr_source':['',T],'units.0.safmr_reviewed':['',T],
   'rent_schedule.date_eff_rs':['',T],'rent_schedule.date_eff_source':['',T],'rent_schedule.date_eff_custom':['',T],'rent_schedule.date_rents_effective':['',T],
@@ -210,7 +221,11 @@ function ovNoteAddr(box){const keys=ADDR_GROUPS[box];const m=modeOf(keys);return
 /* claim = a value a source row prepended above this list already offers. Two rows
    showing the selected background for one answer reads as two answers, so the
    source row wins it — the same rule the designation's "· RS" badge reads. */
-function csDrop(key,options,ph,cls,clearable,tint,claim){const cur=get(key);const has=cur!==''&&cur!=null;const lab=has?cur:(ph||'—');const _cl=(claim!=null&&claim!==''&&claim===cur);const menu=options.map(o=>'<div class="uaopt'+((o===cur&&!_cl)?' sel':'')+'" data-csopt="'+esc(o)+'" data-cskey="'+key+'">'+esc(o)+'</div>').join('');const clr=(clearable&&has)?'<span class="csclear" data-csclear="'+key+'" title="Clear">✕</span>':'';return '<div class="uadrop cs '+(cls||'')+(clearable?' clearable':'')+'"><div class="uatrigger" tabindex="0" data-trigfor="'+key+'"'+(tint?' style="'+tint+'"':'')+'><span class="ualab">'+esc(lab)+'</span>'+clr+'<span class="cvx">▾</span></div><div class="uamenu">'+menu+'</div></div>';}
+function csDrop(key,options,ph,cls,clearable,tint,claim){const cur=get(key);const has=cur!==''&&cur!=null;const lab=has?cur:(ph||'—');const _cl=(claim!=null&&claim!==''&&claim===cur);const menu=options.map(o=>'<div class="uaopt'+((o===cur&&!_cl)?' sel':'')+'" data-csopt="'+esc(o)+'" data-cskey="'+key+'">'+esc(o)+'</div>').join('');/* Five of these cells offered a ✕ and three did not, with no visible rule —
+     and all nine have always cleared from the keyboard with Backspace, so the
+     mouse was the odd one out. One pattern: if it holds a value, it can be
+     cleared where you are looking at it. */
+  const clr=has?'<span class="csclear" data-csclear="'+key+'" title="Clear">✕</span>':'';return '<div class="uadrop cs '+(cls||'')+(has?' clearable':'')+'"><div class="uatrigger" tabindex="0" data-trigfor="'+key+'"'+(tint?' style="'+tint+'"':'')+'><span class="ualab">'+esc(lab)+'</span>'+clr+'<span class="cvx">▾</span></div><div class="uamenu">'+menu+'</div></div>';}
 function dateEffResolved(){const src=get('rent_schedule.date_eff_source')||(get('rent_schedule.date_eff_rs')?'rs':'custom');return src==='custom'?(get('rent_schedule.date_eff_custom')||get('rent_schedule.date_rents_effective')):get('rent_schedule.date_eff_rs');}
 function dateEffCell(){const rs=get('rent_schedule.date_eff_rs');const src=get('rent_schedule.date_eff_source')||(rs?'rs':'custom');const custom=get('rent_schedule.date_eff_custom')||get('rent_schedule.date_rents_effective');
   const rsLab=rs?(fmtDate(rs)+' · from RS'):'— · no RS date parsed';
@@ -477,7 +492,7 @@ function numUnresolved(i){return numConflict(i)&&!numReviewedOf(i);}
 function unitTypeCell(i){const brK='units.'+i+'.br',baK='units.'+i+'.ba';const conf=typeUnresolved(i);const c=conf?CLR.overridden:groupColors([brK,baK]);
   const withRs=(k,opts,ph)=>{const d=csDrop(k,opts,ph,'',!/\.br$/.test(k),(!conf&&partHot(k))?tintStyle(k):'',rsBrBa(k));const row=rsCsRow(k)||'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>';
     return d.replace('<div class="uamenu">','<div class="uamenu">'+row);};
-  return `<div class="rbox brba" data-box="${brK}" style="background:${c[1]};border-left-color:${c[0]}">${withRs(brK,BR_OPTS,'BR')}<span class="slash">/</span>${withRs(baK,BA_OPTS,'BA')}${desigDrop(i)}<span class="utdiv"></span>${utGroupPick(i)}</div>`;}
+  return `<div class="utwrap"><div class="rbox brba" data-box="${brK}" style="background:${c[1]};border-left-color:${c[0]}">${withRs(brK,BR_OPTS,'BR')}<span class="slash">/</span>${withRs(baK,BA_OPTS,'BA')}</div>${labelLine(i)}</div>`;}
 function unitCountCell(i){const k='units.'+i+'.num_units';const c=numUnresolved(i)?CLR.overridden:cellColors(k);const rv=rsUnit(i,'count');
   // The schedule is where this number comes from, so the cell says so whether or
   // not one is loaded right now — dimmed when there is nothing to pull, exactly as
@@ -536,15 +551,12 @@ function unitCard(i,pos){const trash=UNITS.length>1?`<button class="trash" data-
   const saKeys=['units.'+i+'.safmr_custom','units.'+i+'.safmr_source'];
   const actCols=[[1,'<span class="ua-br">'+ovIcons('units.'+i+'.br')+'</span><span class="ua-sl"></span>'
                    +'<span class="ua-ba">'+ovIcons('units.'+i+'.ba')+'</span>'
-                   +'<span class="ua-dg">'+ovIcons('units.'+i+'.desig')+'</span>'],
+                   /* the label's pair lives in the label line itself — see labelLine */],
                  [2,ovIcons('units.'+i+'.num_units')],[3,ovIcons('units.'+i+'.current')],
                  [4,ovIcons('units.'+i+'.proposed')],[5,ovIcons(uaKeys)]];
   if(hasProg('rcs'))actCols.push([6,ovIcons(saKeys)]);
   const acts=`<div class="uracts${hasProg('rcs')?'':' noprop'}">`+actCols.map(a=>'<div style="grid-column:'+a[0]+'">'+a[1]+'</div>').join('')+'</div>';
   const notes=[typeNote(i),numNote(i),uaNoteCell(i),hasProg('rcs')?safmrNote(i):''].filter(Boolean).join('');
-  /* The designation's save/revert gets its own full-width line under the row.
-     Sharing the right-hand note column squeezed "save this field" onto three
-     lines — the buttons are wider than the short status notes beside them. */
 
   const sub=((_c>0&&_p>0)||notes)?`<div class="urnotes"><div class="urnmetric">${metric}</div><div class="urnsub">${notes}</div></div>`:'';
   return `<div class="urow"><div class="ucells">${unitTypeCell(i)}${unitCountCell(i)}${moneyBox('units.'+i+'.current',1)}${moneyBox('units.'+i+'.proposed',1)}${uaBox(i)}${hasProg('rcs')?safmrBox(i):''}<div class="urx">${trash}</div></div>${acts}${sub}</div>`;}
@@ -571,12 +583,14 @@ function renderRents(){
      a coded chip explains itself where it is used. The codes live on the column
      header's tooltip, each chip names its own designation, and clicking one says
      it in the status line. */
-  const desigTip='Designation \u2014 '+DESIG.filter(d=>d[0]).map(d=>d[0]+' '+d[1]).join(', ')+'. It prints after the bedroom size on the rent schedule.';
   /* Above the grid the key was a row every unit had to be read past. Here it uses
      width the date field already leaves empty, so it costs nothing vertically and
      is out of the way while still being on screen. Muted: it is a reference, not
      a control, and the sentence explaining it lives on the header's tooltip. */
-  const rgHead=`<div class="rgh"><span title="${esc(desigTip)}">Unit type <em class="hsub">br / ba \u00b7 designation</em></span><span>Units</span><span>Current rent</span><span>Proposed rent</span><span>Utility allowance</span>${hasProg('rcs')?(function(){const st=pullBtnState('safmr');return '<span class="safmrhead">150% SAFMR<button class="urev hudbtn'+st.cls+'" id="pullSafmr"'+st.dis+' title="'+esc(st.why||'Re-pull 150% ceilings from HUD for this property’s ZIP')+'">⤓ HUD</button></span>';})():''}<span></span></div>`;
+  /* The old note enumerated four letters because a chip of four letters needed
+     explaining. Free text does not — the column says what it holds. */
+  const LABEL_HEAD_TIP='Whatever the rent schedule prints after the bedroom and bath counts \u2014 Elderly, Family, Patio, anything. It prints after the unit size on the schedule.';
+  const rgHead=`<div class="rgh"><span title="${esc(LABEL_HEAD_TIP)}">Unit type <em class="hsub">br / ba \u00b7 label</em></span><span>Units</span><span>Current rent</span><span>Proposed rent</span><span>Utility allowance</span>${hasProg('rcs')?(function(){const st=pullBtnState('safmr');return '<span class="safmrhead">150% SAFMR<button class="urev hudbtn'+st.cls+'" id="pullSafmr"'+st.dis+' title="'+esc(st.why||'Re-pull 150% ceilings from HUD for this property’s ZIP')+'">⤓ HUD</button></span>';})():''}<span></span></div>`;
   return card(6,sectionPill(6),`<div class="reseff">${dateEffCell()}</div>${capNote()}<div class="ucards${hasProg('rcs')?'':' noprop'}">${UNITS.length?rgHead:''}${cards}</div><div class="addrow" id="addUnit">+ Add unit type</div>${_undoStack.length?(' <span class="addrow ghostlink" id="undoUnit">↩ Undo delete'+(_undoStack.length>1?(' ('+_undoStack.length+')'):'')+'</span><button class="undocommit" id="undoCommit" title="Keep deletions — dismiss undo">✓</button>'):''}<div class="partd">${lh}</div><div class="partd">${pd}</div>`);}
 
 const SAFMR_BR_KEY={'Studio':'efficiency','1BR':'br1','2BR':'br2','3BR':'br3','4BR':'br4'};
@@ -653,27 +667,41 @@ async function ensureHudSafmr(opts){opts=opts||{};const manual=!!opts.manual;
 function undoBits(fam){const st=fam==='LI'?_undoLI:_undoNR;if(!st.length)return '';const id=fam==='LI'?'undoNs8':'undoNonrev';return ' <span class="addrow ghostlink" id="'+id+'">↩ Undo delete'+(st.length>1?(' ('+st.length+')'):'')+'</span><button class="undocommit" id="'+id+'C" title="Keep deletions — dismiss undo">✓</button>';}
 function provColor(k){return cellColors(k)[0];}
 function boxStyle(k){const c=Array.isArray(k)?groupColors(k):cellColors(k);return 'color:'+c[0]+';border-color:'+c[0]+';background:'+c[1];}
-/* Same click-to-cycle affordance as the fuel chip, and it lives INSIDE the unit
-   type cell rather than taking a column of its own — that cell is already the
-   widest in the grid and the designation belongs to the type, not beside it. */
-/* "No designation" is a real answer, not an empty field. core.js keeps a saved
-   blank grey so an empty TEXT box can never claim to hold data — but a chip is
-   not a text box, and once you have saved the row it is on file like everything
-   else. Match what is stored and it reads blue. */
-function desigColors(k){const c=form[k];
-  if(c&&c.db_value!=null&&String(c.value==null?'':c.value)===String(c.db_value))return provColors('database',k);
-  return cellColors(k);}
-/* A click-to-cycle chip needed a legend to explain four bare letters, and made
-   you pass through two options to reach a third. Every other multi-option cell in
-   this form is a picker, so this is one too: the names sit in the menu where you
-   are already looking, the schedule's own designation is offered like any other
-   source, and the standalone key is no longer needed anywhere. */
-/* The unit type is ONE fact — the schedule states it as one string, "1 BR / 1 BA E".
-   We split it into three boxes to make it editable, then tried to attribute
-   provenance to each fragment, which is why the designation carried a badge and
-   the two boxes beside it did not. Provenance belongs to the fact: the group is
-   the schedule's when every part of it still is, and one edit anywhere makes the
-   whole type the user's. */
+/* The label sits under the type cell, in the type cell's own column, and costs
+   nothing vertically until it holds something — a property that labels nothing
+   reads exactly as it did before. It colours itself from its own key (rule 4)
+   and takes the same save/revert pair as every other cell in the row. */
+function labelLine(i){const k='units.'+i+'.label';const v=get(k)||'';
+  const c=cellColors(k);
+  const printed=[get('units.'+i+'.br'),get('units.'+i+'.ba')].filter(Boolean).join(' / ')+(v?' '+v:'');
+  const over=printed.length>LABEL_PRINT_MAX;
+  const rsv=rsBrBa(k);const fromRs=!!(v&&rsv&&String(rsv)===String(v));
+  /* The same menu every other cell in this form uses, not the browser's own.
+     A native datalist draws a black system triangle and a system popup, which
+     is a second dropdown grammar on one screen — and rule 1 applies here too:
+     the schedule and the RCS report are declared as sources whether or not
+     either has anything to offer, and render dimmed when they do not. The four
+     words below them are suggestions; any text is still valid. */
+  const rsRow=rsCsRow(k)||'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>';
+  const rcsRow='<div class="uaopt srcopt srcdim">\u2014<span class="uasub">RCS report \u00b7 not available</span></div>';
+  const hints=LABEL_HINTS.map(o=>'<div class="uaopt'+(o===v?' sel':'')+'" data-csopt="'+esc(o)+'" data-cskey="'+k+'">'+esc(o)+'</div>').join('');
+  return '<div class="ulabline" data-box="'+k+'" style="background:'+c[1]+';border-left-color:'+c[0]+'">'
+    +'<input class="ulab-in" data-k="'+k+'" value="'+esc(v)+'" placeholder="add a label" autocomplete="off" spellcheck="false">'
+    +(fromRs?'<span class="srctag">\u00b7 RS</span>':'')
+    +(over?'<span class="ulabwarn" title="'+esc('The schedule prints \u201c'+printed+'\u201d, which is wider than the box on the form.')+'">clips when printed</span>':'')
+    /* The pair sits IN the line, not under the row. The row's other pairs sit
+       below because their cells are narrow and the buttons squeezed them; this
+       line is full-width and fixed-height, so the pair costs it nothing and
+       lands under the field it acts on instead of adrift at the right. */
+    +ovIcons(k)
+    +'<div class="uadrop cs ulabdrop"><div class="uatrigger" tabindex="0" data-trigfor="'+k+'"><span class="cvx">\u25be</span></div>'
+    +'<div class="uamenu">'+rsRow+rcsRow+hints+'</div></div>'
+    +'</div>';}
+/* The unit type is ONE fact — the schedule states it as one string, "1 BR / 1 BA E" —
+   and the form splits it only to make it editable. Provenance belongs to the
+   fact: the group is the schedule's while every part of it still is, and one
+   edit anywhere makes the whole type the user's. The label is the rest of that
+   same string and answers for itself, on its own line, under the counts. */
 /* Every cell the schedule feeds says so, by the same rule: the figure the cell
    holds is still the figure the schedule printed. One function, so a new
    schedule-fed cell cannot quietly ship without its badge the way the unit
@@ -707,27 +735,7 @@ function typeFromRs(i){
   const same=k=>{const v=get(k),r=rsBrBa(k);const hv=v!==''&&v!=null,hr=r!=null&&r!=='';
     return hv===hr&&(!hv||String(v)===String(r));};
   if(rsUnit(i,'type')==null)return false;                       // no schedule row to claim it
-  return ['br','ba','desig'].every(p=>same('units.'+i+'.'+p));}
-function desigDrop(i){const k='units.'+i+'.desig';const v=get(k);const has=v!==''&&v!=null;
-  const c=desigColors(k);
-  const tint='background:linear-gradient('+c[0]+','+c[0]+') no-repeat left 4px center/3px 60%,'+c[1]+';border-radius:6px';
-  /* A dimmed row when nothing is parsed, not a missing one: every schedule-fed
-     cell in this form declares the schedule as a source whether or not one is
-     loaded, so you can see where the value would come from. */
-  const rsv=rsBrBa(k);const fromRs=!!(has&&rsv&&String(rsv)===String(v));   // the attached schedule prints this very designation
-  const menu=(rsCsRow(k)||'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>')
-    +DESIG.filter(d=>d[0]).map(d=>'<div class="uaopt'+((d[0]===v&&!fromRs)?' sel':'')+'" data-csopt="'+d[0]+'" data-cskey="'+k+'">'+d[0]+'<span class="uasub">'+esc(d[1])+'</span></div>').join('')
-    +(has?'':'<div class="uaopt sel" data-csopt="" data-cskey="'+k+'">\u2014<span class="uasub">No designation</span></div>');   // the ✕ says this once a designation exists
-  /* The ✕ that bedroom and bathroom carry — most unit types have no designation,
-     so clearing one should not mean hunting through the menu. It is suppressed
-     while the "· RS" badge shows: this cell is pinned to 74px, and label + badge
-     + ✕ + chevron needs 74.7px of a 55px content budget, which at 1200px cannot
-     be bought back by widening without clipping the bedroom and bathroom beside
-     it. A schedule-sourced designation is still clearable from the menu row. */
-  const clr=has?'<span class="csclear" data-csclear="'+k+'" title="Clear">\u2715</span>':'';   // the badge moved to the group, so the ✕ always fits now
-  return '<div class="uadrop cs dgdrop'+(has?' clearable':'')+'"><div class="uatrigger" tabindex="0" data-trigfor="'+k+'" style="'+tint+'" title="'+esc(has?desigName(v):'Designation')+'">'
-    +'<span class="ualab">'+(has?esc(v):'\u2014')+'</span>'+clr+'<span class="cvx">\u25be</span></div>'
-    +'<div class="uamenu">'+menu+'</div></div>';}
+  return ['br','ba','label'].every(p=>same('units.'+i+'.'+p));}
 function fuelChip(k,three){const v=get(k);const has=v!==''&&v!=null;const c=cellColors(k);const cls=three?'fuel3':'fuel';return '<span tabindex="0" class="'+cls+(has?'':' empty')+'" data-fuel'+(three?'3':'')+'="'+k+'" style="color:'+c[0]+';border-color:'+c[0]+';background:'+c[1]+'">'+(has?esc(v):'-')+'</span>';}
 function cbx(k,label){const on=get(k)==='1';return `<label class="cb"><input type="checkbox" data-cb="${k}" ${on?'checked':''}><span class="box" style="${boxStyle(k)}">${on?'✓':''}</span><span class="cbt">${esc(label)}</span>${ovIcons(k)}</label>`;}
 function pbUtil(i,label){const on=get('partb.utilities.'+i)==='1';return `<div class="cb utrow"><label class="cbmain"><input type="checkbox" data-cb="partb.utilities.${i}" ${on?'checked':''}><span class="box" style="${boxStyle('partb.utilities.'+i)}">${on?'✓':''}</span><span class="cbt ut">${label}</span></label>${fuelChip('partb.fuel.'+i,false)}${ovIcons(['partb.utilities.'+i,'partb.fuel.'+i])}</div>`;}
@@ -813,12 +821,12 @@ function rsSigInto(outp,partH){
 function rsPrin(i,f){try{const p=_rsUpload&&_rsUpload.parsed&&_rsUpload.parsed.principals;const r=p&&p[i];const v=r&&r[f];return (v==null||v==='')?null:String(v);}catch(e){return null;}}
 function rsUnit(i,f){try{const u=_rsUpload&&_rsUpload.parsed&&_rsUpload.parsed.units;const r=u&&u[i];const v=r&&r[f];return (v==null||v===''||v===0)?null:String(v);}catch(e){return null;}}
 function rsUnitBr(i){const t=rsUnit(i,'type');if(t==null)return null;const bb=rsParseUnitType(t);return bb.br||null;}
-function rsUnitDesig(i){const t=rsUnit(i,'type');if(t==null)return null;return rsParseUnitType(t).desig||null;}
+function rsUnitLabel(i){const t=rsUnit(i,'type');if(t==null)return null;return rsParseUnitType(t).label||null;}
 function rsFamRow(fam,i){try{const arr=_rsUpload&&_rsUpload.parsed&&_rsUpload.parsed[fam];return arr&&arr[i]||null;}catch(e){return null;}}
 function rsFamVal(fam,i,f){const r=rsFamRow(fam,i);const v=r&&r[f];return (v==null||v===''||v===0)?null:String(v);}
-function rsBrBa(k){let m=String(k||'').match(/^units\.(\d+)\.(br|ba|desig)$/);
+function rsBrBa(k){let m=String(k||'').match(/^units\.(\d+)\.(br|ba|label)$/);
   if(m){const t=rsUnit(+m[1],'type');if(t==null)return null;const bb=rsParseUnitType(t);
-    return (m[2]==='br'?bb.br:(m[2]==='ba'?bb.ba:bb.desig))||null;}
+    return (m[2]==='br'?bb.br:(m[2]==='ba'?bb.ba:bb.label))||null;}
   m=String(k||'').match(/^ns8\.(\d+)\.(br|ba)$/); // ns8 rows carry a combined "type" string, like Section 8 rows
   if(m){const t=rsFamVal('ns8',+m[1],'type');if(t==null)return null;const bb=rsParseUnitType(t);return (m[2]==='br'?bb.br:bb.ba)||null;}
   m=String(k||'').match(/^nonrev\.(\d+)\.(br|ba)$/); // Part D rows already carry br/ba split, no parsing needed
@@ -1051,13 +1059,20 @@ function rsParseUnitType(t){t=String(t||'');let br='',ba='';if(/studio|efficienc
      Hill, "1 Bedroom, Elderly" / "1 Bedroom, Family" at Willow Woods. A bare
      letter counts only at the very end of the string, so an F inside a word can
      never designate a row. */
-  let desig='';
-  if(/near[-\s]?elderly/i.test(t))desig='NE';
-  else if(/elderly/i.test(t))desig='E';
-  else if(/family/i.test(t))desig='F';
-  else if(/disabled|handicapped/i.test(t))desig='D';
-  else{const d=t.match(/[\s,\/-](NE|[EFD])\s*$/i);if(d)desig=d[1].toUpperCase();}
-  return {br:br,ba:ba,desig:desig};} // Part D's Type column is sometimes just the bedroom count with no BR/bath suffix
+  /* Whatever the column says beyond the counts IS the label, verbatim. Beacon
+     Hill keeps "E" and Willow Woods keeps "Elderly" — the two documents really
+     do say different things, and a filing that echoes its source is worth more
+     than one that normalises it. Bedrooms and baths are parsed exactly as
+     before: the SAFMR pull, the ceiling maths and the RCS row matching all key
+     off br, and none of that may move. */
+  let label=String(t)
+    .replace(/studio|efficiency/ig,'')
+    .replace(/\d+\s*(?:br\b|bedrooms?\b|beds?\b)/ig,'')
+    .replace(/\d+(?:\.\d+)?\s*(?:ba\b|bathrooms?\b|baths?\b)/ig,'')
+    .replace(/[\s,\/\u2013\u2014-]+/g,' ')
+    .trim();
+  if(/^\d+$/.test(label))label='';        // a bare number is the bedroom count, not a label
+  return {br:br,ba:ba,label:label};} // Part D's Type column is sometimes just the bedroom count with no BR/bath suffix
 function rsReadFields(pdfForm){
   const V=n=>{try{const v=pdfForm.getTextField(String(n)).getText();return v==null?'':String(v).trim();}catch(e){return '';}};
   const CB=n=>{try{return pdfForm.getCheckBox(String(n)).isChecked();}catch(e){return false;}};
@@ -1398,7 +1413,7 @@ function rsFillFromParsed(){const P=_rsUpload&&_rsUpload.parsed;if(!P)return;
       if(CHK[k]){form=store.editForm(form,k,P.partb[k]);mark(k);} // a definite on/off read: write it either way
       else setk(k,P.partb[k]);});} // write-ins / fuel: only write what was actually found
   P.principals.forEach((p,ix)=>{setk('principals.'+ix+'.name',p.name);setk('principals.'+ix+'.title',p.title);});
-  P.units.forEach((u,ix)=>{const bb=rsParseUnitType(u.type);setk('units.'+ix+'.br',bb.br);setk('units.'+ix+'.ba',bb.ba);setk('units.'+ix+'.desig',bb.desig);
+  P.units.forEach((u,ix)=>{const bb=rsParseUnitType(u.type);setk('units.'+ix+'.br',bb.br);setk('units.'+ix+'.ba',bb.ba);setk('units.'+ix+'.label',bb.label);
     setk('units.'+ix+'.num_units',u.count);setk('units.'+ix+'.current',u.rent);
     if(u.ua!==''&&u.ua>0){setk('units.'+ix+'.ua_exec',u.ua);if(!get('units.'+ix+'.ua_source')){srcSetSource('units.'+ix+'.ua_custom','exec');mark('units.'+ix+'.ua_source');}}});
   if(P.ns8&&P.ns8.length){form=store.editForm(form,'ns8.enabled','1');mark('ns8.enabled');
@@ -1423,10 +1438,14 @@ function renderSources(){
   if(_rsBusy)rs=`<div class="srcrow"><span class="spin" aria-hidden="true"></span><div><b>${esc(_rsBusy.name||'Rent schedule')}</b> <span class="parsed">${esc(_rsBusy.note||'reading\u2026')}</span><div class="sub">${esc(_rsBusy.sub||'Reading the schedule\u2019s form fields and printed text.')}</div></div></div>`;
   else if(!ru)rs=`<div class="srcrow"><span class="mut">○</span><div><b>Current executed rent schedule</b> <span class="missing">not uploaded</span><div class="sub">Fills the unit mix, rents, utility allowances, ownership entity and principals.</div></div><button class="btn sm" id="upRs">Upload PDF</button></div>`;
   else if(ru.kind==='fields'){const p=ru.parsed;rs=`<div class="srcrow"><span class="ok">✓</span><div><b>${esc(ru.name)}</b> <span class="parsed">${ru.at?"read "+esc(niceDate(ru.at)):"read"}</span><div class="sub">${ru.via==='ocr'?'Scanned — check the values against the document. ':''}Nothing is saved until you save.</div></div><button class="btn sm teal" id="rsApply">Fill form from RS</button> <button class="btn sm" id="upRs">Replace</button></div>`;}
-  else if(ru.kind==='text')rs=`<div class="srcrow"><span class="mut">△</span><div><b>${esc(ru.name)}</b> <span class="missing">could not be read</span><div class="sub">Enter the values below.</div></div><button class="btn sm" id="upRs">Replace</button></div>`;
-  else rs=`<div class="srcrow"><span class="mut">△</span><div><b>${esc(ru.name)}</b> <span class="missing">could not be read</span><div class="sub">Scanned, but the values could not be read. Enter them below.</div></div><button class="btn sm" id="upRs">Replace</button></div>`;
+  else if(ru.kind==='text')rs=`<div class="srcrow"><span class="mut">⚠</span><div><b>${esc(ru.name)}</b> <span class="missing">could not be read</span><div class="sub">Enter the values below.</div></div><button class="btn sm" id="upRs">Replace</button></div>`;
+  else rs=`<div class="srcrow"><span class="mut">⚠</span><div><b>${esc(ru.name)}</b> <span class="missing">could not be read</span><div class="sub">Scanned, but the values could not be read. Enter them below.</div></div><button class="btn sm" id="upRs">Replace</button></div>`;
   const foot=`<input type="file" id="rcsFile" accept="application/pdf,.pdf" style="display:none"><input type="file" id="rsFile" accept="application/pdf,.pdf" style="display:none">`;
-  return card(1,sectionPill(1),rcs+rs+foot);}
+  /* The executed rent schedule comes first: it is the document that fills the
+     form, and the one every package needs. The RCS study is second because it
+     is the package's own new evidence, and in an OCAF or UAF year there is no
+     study at all. */
+  return card(1,sectionPill(1),rs+rcs+foot);}
 
 function sectionKeys(n){if(n===10)return ['ocaf.g','ocaf.rate_type','ocaf.ds_annual','ocaf.ds_t12','ocaf.ds_f12','ocaf.factor_pub','ocaf.factor_custom','ocaf.factor_src'];
   if(n===11)return ['uaf.f_oil','uaf.f_gas','uaf.f_electric','uaf.f_water'].concat(UNITS.flatMap(i=>UAF_UTILS.map(u=>'units.'+i+'.uac_'+u[0])));
@@ -1683,7 +1702,7 @@ function _renderCommand(){const a=analysis();const pCur=a.ceil>0?clamp(a.cg/a.ce
   el('cc').innerHTML=`
    ${card1}
    <div class="ccard"><div class="cck">RECORD CHECKS</div><div class="chkgrid">
-     ${chk(nmOk?'ok':'warn','Property name',nmOk?esc(get('property.name')):'missing — Section 2')}${chk(s8Ok?'ok':'warn','Section 8 #',s8Ok?esc(get('property.s8')):'missing — Section 2')}${chk(fhaOk?'ok':'info','FHA #',fhaOk?esc(get('property.fha')):((get('property.fha')||'').trim()?'the schedule says “'+esc(get('property.fha'))+'” — no number to print':'none on file — fills page 1 of the rent schedule'))}${chk(sigOk?'ok':'warn','Signatory (Part H)',sigOk?(esc(get('sig.name'))+(get('sig.title')?' · '+esc(get('sig.title'))+(get('sig.principal')?' of the '+esc(get('sig.principal')):''):'')):'missing — Section 3')}
+     ${chk(nmOk?'ok':'warn','Property name',nmOk?esc(get('property.name')):('missing — '+secRef(2)))}${chk(s8Ok?'ok':'warn','Section 8 #',s8Ok?esc(get('property.s8')):('missing — '+secRef(2)))}${chk(fhaOk?'ok':'info','FHA #',fhaOk?esc(get('property.fha')):((get('property.fha')||'').trim()?'the schedule says “'+esc(get('property.fha'))+'” — no number to print':'none on file — fills page 1 of the rent schedule'))}${chk(sigOk?'ok':'warn','Signatory (Part H)',sigOk?(esc(get('sig.name'))+(get('sig.title')?' · '+esc(get('sig.title'))+(get('sig.principal')?' of the '+esc(get('sig.principal')):''):'')):('missing — '+secRef(3)))}
      ${chk(ua[0],'Utility allowance',ua[1])}${hasProg('rcs')?chk((a.safmrMissing||a.ceil<=0)?'warn':(a.safmrOver?'warn':(a.safmrConflict?'info':'ok')),'SAFMR (150% ceiling)',a.safmrMissing?'enter or pull SAFMR per unit type':(a.ceil<=0?(a.countsMissing&&a.safmrHave?'no ceiling yet — unit counts needed':'no ceiling yet'):(a.safmrOver?(a.safmrOver+' type'+(a.safmrOver>1?'s':'')+' over 150% SAFMR'):(a.safmrConflict?'HUD vs RCS differ — using HUD':(UNITS.every(i=>(get('units.'+i+'.safmr_source')||defSafmrSrc(i))==='hud')?'per unit type · HUD':'per unit type'))))):''}${(()=>{const c=rsCapacity();return c.msgs.length?chk('warn','Rent schedule capacity',esc(c.flags.join(' · '))):'';})()}${rcsChecks()}</div></div>
    ${pkgCard()}`;}
 function pkgCard(){
@@ -1783,14 +1802,14 @@ function renderBody(){syncReviewed();const _sy=window.scrollY;const _anchorSel=(
   wireBody();renderCommand();renderBar();renderRail();renderAttention();refreshFooter();
   if(_refocusSel&&!_mouseFocus){try{const _f=document.querySelector(_refocusSel);if(_f&&_f.focus){_f.focus({preventScroll:true});if(/^(INPUT|TEXTAREA)$/.test(_f.tagName)&&typeof _f.setSelectionRange==='function'){const _L=(_f.value||'').length;try{_f.setSelectionRange(_L,_L);}catch(_e){}}}}catch(e){}}_refocusSel=null;
   if(_anchorSel&&_anchorTop!=null){try{const _a2=document.querySelector(_anchorSel);if(_a2){const _nt=_a2.getBoundingClientRect().top;window.scrollTo(0,window.scrollY+(_nt-_anchorTop));}else window.scrollTo(0,_sy);}catch(e){try{window.scrollTo(0,_sy);}catch(_z){}}}else{try{window.scrollTo(0,_sy);}catch(e){}}}
-async function commitPending(){if(!_pending||!_pending.length)return;const keys=_pending;_pending=null;if(handleZeroUnitCommit(keys))return;for(const _pk of ['poc.phone','appr.phone'])if(keys.indexOf(_pk)>=0){const _d=(get(_pk)||'').replace(/\D/g,'');if(_d.length!==0&&_d.length!==10){setStatus('Enter a complete 10-digit phone before saving.');return;}}keys.forEach(k=>{const m=k.match(/^partb\.writein\.(e1|e2|e3|e4|e5|s1|s2|s3|s4|s5|s6)(\.on)?$/);if(m)clearUncheckedWriteins([m[1]]);});const _sk=[];keys.forEach(k=>{const gb=groupOf(k);(gb?ADDR_GROUPS[gb]:[k]).forEach(kk=>{if(_sk.indexOf(kk)<0)_sk.push(kk);});});try{form=await store.saveFields(form,_sk);}catch(e){saveFailed(e);return;}await refreshSnap();snapForm(_sk);_pendingSnap=null;clearUndoChain();_refocusSel=refocusSelForKey(keys[0]);renderBody();setStatus('Saved this field to the database.');}
+async function commitPending(){if(!_pending||!_pending.length)return;const keys=_pending;_pending=null;if(handleZeroUnitCommit(keys))return;for(const _pk of ['poc.phone','appr.phone'])if(keys.indexOf(_pk)>=0){const _d=(get(_pk)||'').replace(/\D/g,'');if(_d.length!==0&&_d.length!==10){setStatus('Enter a complete 10-digit phone before saving.');return;}}keys.forEach(k=>{const m=k.match(/^partb\.writein\.(e1|e2|e3|e4|e5|s1|s2|s3|s4|s5|s6)(\.on)?$/);if(m)clearUncheckedWriteins([m[1]]);});const _sk=[];keys.forEach(k=>{const gb=groupOf(k);(gb?ADDR_GROUPS[gb]:coupledKeys(k)).forEach(kk=>{if(_sk.indexOf(kk)<0)_sk.push(kk);});});try{form=await store.saveFields(form,_sk);}catch(e){saveFailed(e);return;}await refreshSnap();snapForm(_sk);_pendingSnap=null;clearUndoChain();_refocusSel=refocusSelForKey(keys[0]);renderBody();setStatus('Saved this field to the database.');}
 /* A cell's save/revert pair sits in one of three places: inside the cell for a
    roomy one (.ovic), beside it for a plain text field (.ovnote), or below the row
    under its own column for a unit row (.uracts). Escape and Enter have to reach
    all three, or the cells whose pair happens to sit elsewhere have no keyboard
    route to save or revert at all — which was every unit row once the pair moved
    out from inside the cell. */
-/* A three-part cell (bedroom / bath / designation) shares ONE data-box, so a
+/* A two-part cell (bedroom / bath) shares ONE data-box, so a
    lookup from the bath resolved to the bedroom's pair: Enter saved the wrong
    sub-cell and Escape reverted it. The trigger knows its own key — take it. */
 function cellActBtn(cell,sel,mode,key){if(!cell)return null;
@@ -1884,11 +1903,30 @@ function fieldKeys(k){if(k==='ca.name')return ['ca.prefix','ca.name'];const gb=g
    back and stranded the flag set — so the ⚠ conflict banner stayed hidden on a
    value nobody had approved, and the flag was the last thing holding the form
    dirty. Escape got this right; only the button missed it. */
-function coupledKeys(k){if(k.indexOf('units.')===0){if(k.slice(-10)==='.ua_custom')return [k,k.slice(0,-10)+'.ua_source',k.slice(0,-10)+'.ua_reviewed'];if(k.slice(-13)==='.safmr_custom')return [k,k.slice(0,-13)+'.safmr_source',k.slice(0,-13)+'.safmr_reviewed'];}if(k==='rent_schedule.date_eff_custom')return [k,'rent_schedule.date_eff_source'];if(k==='ocaf.factor_custom')return [k,'ocaf.factor_src'];return [k];}
+/* A cell answers the same set whichever of its identities you hand it.
+   The utility allowance and the 150% SAFMR each flip data-box between a
+   *_source and a *_custom key depending on mode (rule 9), so the cell reached
+   through the dropdown used to widen to itself alone — and the *_reviewed flag
+   the pick had just set was left behind. Enter then said "Saved this field to
+   the database" while the footer said "Unsaved changes", with nothing on screen
+   to save. Keyed off _custom the same press saved all three. */
+function coupledKeys(k){const m=k.match(/^(units\.\d+)\.(ua|safmr)_(custom|source|reviewed)$/);
+  if(m){const b=m[1]+'.'+m[2];return [k].concat([b+'_custom',b+'_source',b+'_reviewed'].filter(x=>x!==k));}
+  if(k==='rent_schedule.date_eff_custom')return [k,'rent_schedule.date_eff_source'];
+  if(k==='rent_schedule.date_eff_source')return [k,'rent_schedule.date_eff_custom'];
+  if(k==='ocaf.factor_custom')return [k,'ocaf.factor_src'];
+  if(k==='ocaf.factor_src')return [k,'ocaf.factor_custom'];
+  return [k];}
 function keysCanRevert(keys){return keys.some(k=>srcOf(k)==='overridden');}
 function keysNewDirty(keys){return !keysCanRevert(keys)&&keys.some(k=>(srcOf(k)==='new'||srcOf(k)==='this-cycle')&&String(get(k)==null?'':get(k)).trim()!=='');} // a parsed cell is unsaved too, so Enter and the tick must both reach it
 function keysCanSave(keys){return keysCanRevert(keys)||keysNewDirty(keys);}
-function refocusSelForKey(k){if(/^(check\.\d+|partb\.(equipment|utilities|services)\.\d+)$/.test(k))return '[data-cb="'+k+'"]';const w=k.match(/^(partb\.writein\.[a-z0-9]+)\.on$/);if(w)return '[data-wibox="'+w[1]+'"]';const gb=groupOf(k);if(gb)return '[data-box="'+gb+'"] input,[data-box="'+gb+'"] .uatrigger';return '[data-trigfor="'+k+'"],[data-box="'+k+'"] .uatrigger,[data-k="'+k+'"]';}
+function refocusSelForKey(k){if(/^(check\.\d+|partb\.(equipment|utilities|services)\.\d+)$/.test(k))return '[data-cb="'+k+'"]';const w=k.match(/^(partb\.writein\.[a-z0-9]+)\.on$/);if(w)return '[data-wibox="'+w[1]+'"]';const gb=groupOf(k);if(gb)return '[data-box="'+gb+'"] input,[data-box="'+gb+'"] .uatrigger';/* Name the whole cell, not one of its spellings. The allowance and the SAFMR
+     flip data-box between *_source and *_custom with the mode (rule 9), and
+     saving can change that mode — so a selector built from the key we started
+     with pointed at a box that had just stopped existing, and the caret fell to
+     <body>. coupledKeys knows both names; ask it. */
+  if(k.indexOf('tenant.mgmt')===0)return '[data-box="tenant.mgmt_address"] .uatrigger,[data-box="tenant.mgmt_address"] input,[data-box="tenant.mgmt"] input,[data-k="'+k+'"]';
+  return coupledKeys(k).map(function(x){return '[data-trigfor="'+x+'"],[data-box="'+x+'"] .uatrigger,[data-k="'+x+'"],[data-fuel="'+x+'"],[data-fuel3="'+x+'"],[data-wibox="'+x+'"],[data-cb="'+x+'"]';}).join(',');}
 function revertPending(){if(!_pending||!_pending.length)return false;const keys=_pending;const snap=_pendingSnap;_pending=null;_pendingSnap=null;let any=false;if(snap){any=restoreSnap(snap);undoDrop(snap);}else{keys.forEach(k=>{const gb=groupOf(k);if(revertKeys(gb?ADDR_GROUPS[gb]:coupledKeys(k)))any=true;});}if(any){refreshIfPrereq(keys);_refocusSel=refocusSelForKey(keys[0]);renderBody();}setStatus(undoMsg());return true;}
 function aggSrc(keys){if(keys.some(k=>srcOf(k)==='overridden'))return'overridden';if(keys.some(k=>srcOf(k)==='database'))return'database';if(keys.some(k=>srcOf(k)==='this-cycle'))return'this-cycle';return'new';}
 function groupOf(k){for(const b in ADDR_GROUPS){if(ADDR_GROUPS[b].indexOf(k)>=0)return b;}return null;}
@@ -2077,7 +2115,13 @@ function wireBody(){
   document.querySelectorAll('[data-wibox]').forEach(bx=>bx.addEventListener('click',e=>{e.preventDefault();const base=bx.getAttribute('data-wibox');if(!get(base))return;const on=get(base+'.on')==='1';_pendingSnap=snapPend([base+'.on']);form=store.editForm(form,base+'.on',on?'':'1');_pending=[base+'.on'];_refocusSel='[data-wibox="'+base+'"]';renderBody();}));
   document.querySelectorAll('button[data-rev]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();const _ks=b.getAttribute('data-rev').split(',');const _rv=[];_ks.forEach(k=>coupledKeys(k).forEach(x=>{if(_rv.indexOf(x)<0)_rv.push(x);}));revertKeys(_rv);refreshIfPrereq(_ks);renderBody();setStatus('Reverted to the on-file value.');}));
   document.querySelectorAll('button[data-revaddr]').forEach(b=>b.addEventListener('click',()=>{const _box=b.getAttribute('data-revaddr');const g=(ADDR_GROUPS[_box]||ADDR).slice();if(_box==='tenant.mgmt')g.push('tenant.mgmt_source');revertKeys(g);refreshIfPrereq(g);renderBody();setStatus('Address reverted.');}));
-  document.querySelectorAll('button[data-save1]').forEach(b=>b.addEventListener('click',async e=>{e.preventDefault();e.stopPropagation();const keys=[];b.getAttribute('data-save1').split(',').forEach(_k=>coupledKeys(_k).forEach(x=>{if(keys.indexOf(x)<0)keys.push(x);}));if(handleZeroUnitCommit(keys))return;for(const _pk of ['poc.phone','appr.phone'])if(keys.indexOf(_pk)>=0){const _d=(get(_pk)||'').replace(/\D/g,'');if(_d.length!==0&&_d.length!==10){setStatus('Enter a complete 10-digit phone before saving.');return;}}keys.forEach(k=>{const m=k.match(/^partb\.writein\.(e1|e2|e3|e4|e5|s1|s2|s3|s4|s5|s6)(\.on)?$/);if(m)clearUncheckedWriteins([m[1]]);});try{form=await store.saveFields(form,keys);}catch(e){saveFailed(e);return;}await refreshSnap();snapForm(keys);clearUndoChain();_pending=null;_pendingSnap=null;renderBody();setStatus('Saved just that field to the database.');}));
+  document.querySelectorAll('button[data-save1]').forEach(b=>b.addEventListener('click',async e=>{e.preventDefault();e.stopPropagation();const keys=[];b.getAttribute('data-save1').split(',').forEach(_k=>coupledKeys(_k).forEach(x=>{if(keys.indexOf(x)<0)keys.push(x);}));if(handleZeroUnitCommit(keys))return;for(const _pk of ['poc.phone','appr.phone'])if(keys.indexOf(_pk)>=0){const _d=(get(_pk)||'').replace(/\D/g,'');if(_d.length!==0&&_d.length!==10){setStatus('Enter a complete 10-digit phone before saving.');return;}}keys.forEach(k=>{const m=k.match(/^partb\.writein\.(e1|e2|e3|e4|e5|s1|s2|s3|s4|s5|s6)(\.on)?$/);if(m)clearUncheckedWriteins([m[1]]);});try{form=await store.saveFields(form,keys);}catch(e){saveFailed(e);return;}await refreshSnap();snapForm(keys);clearUndoChain();_pending=null;_pendingSnap=null;
+    /* Put the caret back where it was. commitPending has always done this; the
+       button never did, and Enter on a fuel chip, a write-in tick or a dropdown
+       routes THROUGH the button (cellActBtn -> click). So the save landed and
+       focus fell to <body>: no second Enter, no Escape, no Tab from where you
+       were — the same dead end that made Enter unreachable in the first place. */
+    _refocusSel=refocusSelForKey(keys[0]);renderBody();setStatus('Saved just that field to the database.');}));
   document.querySelectorAll('button[data-save1addr]').forEach(b=>b.addEventListener('click',async()=>{const _box=b.getAttribute('data-save1addr');const ks=(ADDR_GROUPS[_box]||ADDR).slice();if(_box==='tenant.mgmt')ks.push('tenant.mgmt_source');try{form=await store.saveFields(form,ks);}catch(e){saveFailed(e);return;}await refreshSnap();snapForm(ks);clearUndoChain();_pending=null;_pendingSnap=null;renderBody();setStatus('Saved the address to the database.');}));
   document.querySelectorAll('.uatrigger').forEach(t=>{const d=t.closest('.uadrop');if(!d)return;
     const tog=()=>{const open=d.classList.contains('open');document.querySelectorAll('.uadrop.open').forEach(x=>x.classList.remove('open'));if(!open)d.classList.add('open');};
@@ -2095,9 +2139,9 @@ function wireBody(){
     });});
   document.querySelectorAll('.uaopt').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();const i=o.getAttribute('data-uai');if(i===null)return;const v=o.getAttribute('data-uaopt');_pendingSnap=snapPend(['units.'+i+'.ua_source','units.'+i+'.ua_custom','units.'+i+'.ua_reviewed']);srcSetSource('units.'+i+'.ua_custom',v);if(uaConflict(i))form=store.editForm(form,'units.'+i+'.ua_reviewed','1');_pending=['units.'+i+'.ua_source'];_refocusSel='[data-box="units.'+i+'.ua_source"] .uatrigger';renderBody();setStatus('UA source set — conflict resolved.');}));document.querySelectorAll('[data-mgmt]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();_pendingSnap=snapPend(['tenant.mgmt_source']);form=store.editForm(form,'tenant.mgmt_source',o.getAttribute('data-mgmt'));_pending=['tenant.mgmt_source'];_refocusSel='[data-box="tenant.mgmt_address"] .uatrigger';renderBody();}));document.querySelectorAll('[data-csopt]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();const _ck=o.getAttribute('data-cskey');const _cb=o.closest('[data-box]');_pendingSnap=snapPend([_ck]);form=store.editForm(form,_ck,o.getAttribute('data-csopt'));_pending=[_ck];_refocusSel='[data-trigfor="'+_ck+'"]';renderBody();if(/\.br$/.test(_ck))scheduleHudRefresh();if(_ck==='property.addr_state'){scheduleHudRefresh();scheduleFactorRefresh();}}));document.querySelectorAll('[data-utgrp]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();
     const i=o.getAttribute('data-utgrp');const t=rsUnit(i,'type');if(t==null)return;
-    const bb=rsParseUnitType(t);const ks=['units.'+i+'.br','units.'+i+'.ba','units.'+i+'.desig'];
+    const bb=rsParseUnitType(t);const ks=['units.'+i+'.br','units.'+i+'.ba','units.'+i+'.label'];
     _pendingSnap=snapPend(ks);
-    form=store.editForm(form,ks[0],bb.br||'');form=store.editForm(form,ks[1],bb.ba||'');form=store.editForm(form,ks[2],bb.desig||'');
+    form=store.editForm(form,ks[0],bb.br||'');form=store.editForm(form,ks[1],bb.ba||'');form=store.editForm(form,ks[2],bb.label||'');
     ks.forEach(k=>{if(form[k])form[k].fromParse=true;});
     _pending=ks;_refocusSel='[data-box="units.'+i+'.br"] .utgrp .uatrigger';renderBody();scheduleHudRefresh();
     setStatus('Unit type taken from the executed rent schedule.');}));
@@ -2810,25 +2854,58 @@ function showPackageModal(nm,docs,combined,missingRcs,missingLh,capMsgs,blocked,
      stranded at the foot of the dialog in a second shade. */
   const extraWarn={};
   if(missingLh)extraWarn['Tenant notice']=[{label:'letterhead',sec:0}];
-  const lnk=(x,cls)=>'<button class="'+cls+'" data-goto="'+x.sec+'" data-gotok="'+esc(x.key||'')+'" title="Go to Section '+x.sec+'">'+esc(x.label)+'</button>';
+  const lnk=(x,cls)=>'<button class="'+cls+'" data-goto="'+x.sec+'" data-gotok="'+esc(x.key||'')+'" title="Go to '+esc(secRef(x.sec))+'">'+esc(x.label)+'</button>';
+  /* A field that blocks three documents used to be printed three times. True,
+     and it turned a six-row dialog into forty links on rows that grew to 156px
+     — so the one thing the dialog exists to say, which of the six you can take
+     away, was buried under the reasons you cannot. Each gap is now counted ONCE,
+     in one block below, and the row it blocks says only how many it is short.
+     All six rows stay 46px whatever is missing. */
+  const gapOf=lab=>{const b=blkBy[lab];
+    if(b)return (b.missing||[]);
+    return byLabel[lab]?[]:[{key:'',label:'the RCS report, uploaded in '+secRef(1),sec:1}];};
+  const sugOf=lab=>[].concat(((warnOf||{})[lab])||((blkBy[lab]||{}).warns)||[],extraWarn[lab]||[]);
   const rows=ORDER.map(o=>{const lab=o[0],hit=byLabel[lab];
-    const w=[].concat(((warnOf||{})[lab])||((blkBy[lab]||{}).warns)||[],extraWarn[lab]||[]);
-    const omits=w.length?'<div class="gline"><span class="glbl">suggested</span>'
-      +w.map(x=>x.sec?lnk(x,'gneed'):'<span class="gneed gneed-flat">'+esc(x.label)+'</span>').join('<span class="gsep">·</span>')+'</div>':'';
     /* The whole row is the download, not the word "Download": a 46px-tall row
-       whose only target was eight characters of text at the far right. The
-       suggested-fix links inside it stay their own buttons — their handler
-       stops propagation, so they never also download. */
+       whose only target was eight characters of text at the far right. */
     if(hit)return '<div class="gdoc gdoc-on" role="button" tabindex="0" data-dldoc="'+hit.i+'" title="Download '+esc(lab)+'"><span class="gtick">✓</span>'
-      +'<span class="gdoc-n">'+esc(lab)+'</span>'
-      +'<span class="gdoc-need">'+omits+'</span>'
+      +'<span class="gdoc-n">'+esc(lab)+'</span><span class="gdoc-need"></span>'
       +'<span class="gdoc-a">Download</span></div>';
-    const b=blkBy[lab];
-    const needs='<div class="gline"><span class="glbl">required</span>'
-      +(b?(b.missing||[]).map(x=>lnk(x,'gneed')).join('<span class="gsep">·</span>')
-         :'<button class="gneed" data-goto="1" title="Go to Section 1">the RCS report, uploaded in Section 1</button>')+'</div>';
+    const n=gapOf(lab).length;
     return '<div class="gdoc gdoc-off"><span class="gtick gtick-off">–</span>'
-      +'<span class="gdoc-n">'+esc(lab)+'</span><span class="gdoc-need">'+needs+omits+'</span></div>';}).join('');
+      +'<span class="gdoc-n">'+esc(lab)+'</span>'
+      +'<span class="gdoc-need"><span class="gshort">'+(n===1?'1 field':n+' fields')+' short</span></span></div>';}).join('');
+
+  /* One entry per distinct field, grouped by the section you would travel to and
+     named by the SAME id->title map the rail uses — never a hand-written table,
+     which is how "Go to Section 4" came to point at Section 5. */
+  const reqSeen=new Map(),sugSeen=new Map();
+  ORDER.forEach(o=>{const lab=o[0];
+    gapOf(lab).forEach(x=>{const id=x.sec+'|'+x.label;if(!reqSeen.has(id))reqSeen.set(id,x);});
+    sugOf(lab).forEach(x=>{const id=x.sec+'|'+x.label;if(!sugSeen.has(id))sugSeen.set(id,x);});});
+  const bySec=new Map();
+  [...reqSeen.values()].forEach(x=>{if(!bySec.has(x.sec))bySec.set(x.sec,[]);bySec.get(x.sec).push(x);});
+  const secGroups=[...bySec.entries()].sort((a,b)=>(_secPos[a[0]]||99)-(_secPos[b[0]]||99));
+  const nReq=reqSeen.size;
+  /* Rendered whenever there is ANYTHING to say. Gating it on nReq alone silently
+     dropped the caveats once every document was ready — which is exactly when a
+     reader is about to file them, and the only moment those lines matter. */
+  const nSug=sugSeen.size;
+  const missBlock=(nReq||nSug)?('<div class="missblk">'
+    +'<div class="misshead"><span class="misst">'+(nReq?'What’s missing':'Worth adding')+'</span><span class="missc">'
+      +(nReq?(nReq+' field'+(nReq===1?'':'s')+' · '+secGroups.length+' section'+(secGroups.length===1?'':'s'))
+            :(nSug+' suggestion'+(nSug===1?'':'s')))+'</span></div>'
+    +secGroups.map(g=>'<div class="missrow"><span class="missn">'+esc(SECTION_TITLES[g[0]]||secRef(g[0]))+'</span>'
+      +'<span class="missf">'+g[1].map(x=>lnk(x,'missb')).join('<span class="missdot">·</span>')+'</span></div>').join('')
+    /* Folded, because a suggestion blocks nothing. Spelling all twelve out
+       added 145px to a dialog that is already the tallest thing in the app —
+       and on a 900px screen the scrim neither scrolls nor lets you reach Close.
+       Open by default only when there is nothing else in the block to read. */
+    +(nSug?('<details class="missmore"'+(nReq?'':' open')+'><summary class="misssum">'
+      +(nReq?'Also suggested':'Suggested')+' \u00b7 '+nSug+'</summary><div class="missf missf-s">'
+      +[...sugSeen.values()].map(x=>x.sec?lnk(x,'missb missb-s'):'<span class="missb missb-s missb-flat">'+esc(x.label)+'</span>')
+        .join('<span class="missdot">·</span>')+'</div></details>'):'')
+    +'</div>'):'';
 
   const notes=[].concat(capMsgs||[]);
   const noteHtml=notes.length?'<div class="gnotes">'+notes.map(m=>'<div class="gnote">⚠ '+esc(m)+'</div>').join('')+'</div>':'';
@@ -2841,6 +2918,7 @@ function showPackageModal(nm,docs,combined,missingRcs,missingLh,capMsgs,blocked,
   modal('<div class="dlg-t">Package generated</div>'
     +'<div class="dlg-b">'+esc(nm)+' · '+(nGap?nReady+' of '+ORDER.length+' ready · <b style="color:#b45309">'+nGap+' need'+(nGap===1?'s':'')+' more information</b>':'all '+ORDER.length+' documents ready')+'</div>'
     +'<div class="gdocs">'+rows+'</div>'
+    +missBlock
     +noteHtml
     /* Everything you can leave with, at the end. The folder is the whole package
        as separate named files; the two beneath it are the single-file forms of
@@ -3136,6 +3214,74 @@ async function boot(){
   openMenu();
 }
 const SELFTEST=(typeof location!=='undefined')&&/[?&]selftest=1(&|$)/.test(location.search||'');
+/* A property worth testing against.
+
+   The stub record used to be a bare name, and the first-run migration rightly
+   refused to build a package for it ("real unit data = a record worth
+   migrating"). So every sweep drove a form whose controls existed but whose
+   conditional halves never ran: no unit rows past the first, no 150% analysis,
+   no rent arithmetic, and no package to hang a program off. A test property
+   that holds no data tests the empty case only, and says nothing about the one
+   Matt actually opens.
+
+   Six unit types across two buildings, a utility allowance conflict on one row
+   (exec 31 vs RCS 34) so the resolve path is reachable, and a SAFMR high enough
+   on 3BR to exercise the 150% ceiling. Runs once — if the record already holds
+   units, it is left alone, so a session's edits survive a reload. */
+async function selftestSeed(){
+  const ps=mpdb.listProperties();
+  const pid=ps.length?ps[0].id:(await mpdb.createProperty('Beacon Hill Apartments')).id;
+  /* Seed once per browser profile, not once per property: makeDb already ships a
+     demo record with a single unit row, so keying off "has any units" meant the
+     seed never ran at all. The marker also keeps a reload from wiping edits made
+     during a session, which is exactly what rule 19 measures. */
+  try{if(window.localStorage.getItem('rcs_selftest_seeded')==='1')return;}catch(e){}
+  const U=[
+    {br:'1BR',ba:'1BA',n:24,cur:1045,pro:1146,ua:31,uaR:34,safmr:1420,label:'Elderly'},
+    {br:'2BR',ba:'1BA',n:36,cur:1240,pro:1362,ua:38,safmr:1690,label:'Elderly'},
+    {br:'2BR',ba:'2BA',n:18,cur:1310,pro:1438,ua:38,safmr:1690,label:'Family'},
+    {br:'3BR',ba:'2BA',n:12,cur:1495,pro:1641,ua:47,safmr:2180,label:'Family'},
+    {br:'3BR',ba:'2.5BA',n:6,cur:1560,pro:1712,ua:47,safmr:2180,label:'Family'},
+    {br:'4BR',ba:'2BA',n:4,cur:1780,pro:1954,ua:55,safmr:2455,label:'Family'},
+  ];
+  const m={
+    'property.name':'Beacon Hill Apartments','property.alias':'Beacon Hill',
+    'property.addr_street':'1450 Woodward Avenue','property.addr_city':'Detroit',
+    'property.addr_state':'MI','property.addr_zip':'48226',
+    'property.fha':'044-35218','property.s8':'MI16-T851-004',
+    'property.total_units':String(U.reduce((a,u)=>a+u.n,0)),
+    'owner.entity_name':'Beacon Hill Preservation LP','owner.entity_type':'Limited Partnership',
+    'principals.0.name':'Dana Whitfield','principals.0.title':'Managing Member',
+    'poc.name':'Dana Whitfield','poc.email':'dwhitfield@relatedaffordable.com','poc.phone':'3135550142',
+    'ca.name':'Alicia Moreno','ca.prefix':'Ms.','ca.position':'Contract Specialist',
+    'ca.org':'Michigan State Housing Development Authority',
+    'ca.addr_street':'735 East Michigan Avenue','ca.addr_city':'Lansing','ca.addr_state':'MI','ca.addr_zip':'48912',
+    'appr.name':'Grant Sheridan','appr.firm':'Sheridan Valuation Group',
+    'appr.email':'gsheridan@sheridanvg.com','appr.phone':'3135550188',
+    'appr.addr_street':'220 Larned Street','appr.addr_city':'Detroit','appr.addr_state':'MI','appr.addr_zip':'48226',
+    'sig.name':'Dana Whitfield','sig.title':'Managing Member',
+    'tenant.sender_name':'Dana Whitfield','tenant.sender_title':'Managing Member',
+    'rent_schedule.date_rents_effective':'2026-03-01',
+    'ocaf.factor_pub':'1.042','ocaf.ds_annual':'412000','ocaf.ds_t12':'408500','ocaf.ds_f12':'415000',
+  };
+  U.forEach((u,i)=>{
+    m['units.'+i+'.br']=u.br; m['units.'+i+'.ba']=u.ba; m['units.'+i+'.label']=u.label;
+    m['units.'+i+'.num_units']=String(u.n);
+    m['units.'+i+'.current']=String(u.cur); m['units.'+i+'.proposed']=String(u.pro);
+    m['units.'+i+'.ua_exec']=String(u.ua);
+    if(u.uaR)m['units.'+i+'.ua_rcs']=String(u.uaR);       // one real conflict to resolve
+    m['units.'+i+'.safmr_hud']=String(u.safmr);
+  });
+  m['nonrev.0.br']='1BR'; m['nonrev.0.ba']='1BA'; m['nonrev.0.num_units']='1';
+  m['nonrev.0.rent']='0'; m['nonrev.0.use']='Manager\u2019s unit';
+  /* saveFlat stores CELLS and reads map[k].value — handed bare strings it wrote
+     every key as empty, which still created the keys, so six unit rows rendered
+     with nothing in them and the analysis read zero. */
+  const cells={};Object.keys(m).forEach(k=>{cells[k]={value:m[k]};});
+  await mpdb.saveFlat(pid,cells);
+  await mpdb.setActive(pid);
+  try{window.localStorage.setItem('rcs_selftest_seeded','1');}catch(e){}
+}
 window.addEventListener('DOMContentLoaded',async()=>{
   /* ?selftest=1 — a clickable form with no sign-in and no live data, so the
      things only a human could check (does Enter save? does the badge fit?) can
@@ -3147,6 +3293,7 @@ window.addEventListener('DOMContentLoaded',async()=>{
      here because no connection to it is ever opened. */
   if(SELFTEST){
     mpdb=await makeDb(localAdapter('rcs_selftest'));
+    await selftestSeed();
     await boot();
     document.title='SELFTEST — '+document.title;
     return;
@@ -3196,7 +3343,21 @@ function contactDialog(c){c=c||{};
   ['ccN','ccE','ccP'].forEach(id=>{const ff=el(id);if(ff&&ff.addEventListener)ff.addEventListener('keydown',ev=>{if(ev.key!=='Enter')return;ev.preventDefault();const d=(el('ccP').value||'').replace(/\D/g,'');if(d.length===0||d.length===10)el('dlgOk').click();});});
   el('dlgCancel').onclick=closeModal;
   el('dlgOk').onclick=async()=>{const patch={name:(el('ccN').value||'').trim(),email:(el('ccE').value||'').trim(),phone:(el('ccP').value||'').trim()};closeModal();try{if(c.id)await mpdb.updateContact(c.id,patch);else await mpdb.addContact(patch);renderContacts();}catch(e){saveFailedModal(e);}};}
-const __API={DESIG,desigName,rsParseUnitType,fmtPhone,fmtDate,sMoney,sPct,sK,analysis,uaResolvedOf,uaConflict,uaUnresolved,renderMenu,renderLauncher,openMenu,openForm,openLauncher,ringSvg,niceDate,isDirty,overrideCount,isStateKey,attnFlags,pbUtil,clearUncheckedWriteins,srcOf:(k)=>srcOf(k),__openForm:(pid)=>{activePid=pid;return openForm('RCS');},__openCycleForm:(pid,cid)=>{activePid=pid;return openCycleForm(cid);},__renderBody:()=>renderBody(),__docMissing:(id)=>docMissing(id).map(x=>x.label),__docWarns:(id)=>docWarns(id).map(x=>x.label),__edit:(k,v)=>{form=store.editForm(form,k,v);},getVal:(k)=>get(k),modeOf:(kk)=>modeOf(kk),fieldKeys:(k)=>fieldKeys(k),keysCanSave:(ks)=>keysCanSave(ks),keysCanRevert:(ks)=>keysCanRevert(ks),keysNewDirty:(ks)=>keysNewDirty(ks),__revert:(k)=>store.revertForm(form,k),coupledKeys:(k)=>coupledKeys(k),__firstPid:()=>{const ps=mpdb?mpdb.listProperties():[];return ps.length?ps[0].id:null;},__boxes:(i)=>({ua:uaBox(i),safmr:safmrBox(i)}),__saveField:async(k)=>{form=await store.saveField(form,k);},__set:(f,u)=>{form=f;UNITS=u;},desigColors:(k)=>desigColors(k),__cell:(k)=>form[k],__rsTextPageAt:(doc,i)=>rsTextPageAt(doc,i),
+const __API={LABEL_HINTS,rsParseUnitType,fmtPhone,fmtDate,sMoney,sPct,sK,analysis,uaResolvedOf,uaConflict,uaUnresolved,renderMenu,renderLauncher,openMenu,openForm,openLauncher,ringSvg,niceDate,isDirty,overrideCount,isStateKey,attnFlags,pbUtil,clearUncheckedWriteins,srcOf:(k)=>srcOf(k),__openForm:(pid)=>{activePid=pid;return openForm('RCS');},__openCycleForm:(pid,cid)=>{activePid=pid;return openCycleForm(cid);},__renderBody:()=>renderBody(),__docMissing:(id)=>docMissing(id).map(x=>x.label),__docWarns:(id)=>docWarns(id).map(x=>x.label),__edit:(k,v)=>{form=store.editForm(form,k,v);},getVal:(k)=>get(k),modeOf:(kk)=>modeOf(kk),fieldKeys:(k)=>fieldKeys(k),keysCanSave:(ks)=>keysCanSave(ks),keysCanRevert:(ks)=>keysCanRevert(ks),keysNewDirty:(ks)=>keysNewDirty(ks),__revert:(k)=>store.revertForm(form,k),coupledKeys:(k)=>coupledKeys(k),__firstPid:()=>{const ps=mpdb?mpdb.listProperties():[];return ps.length?ps[0].id:null;},__boxes:(i)=>({ua:uaBox(i),safmr:safmrBox(i)}),__saveField:async(k)=>{form=await store.saveField(form,k);},__set:(f,u)=>{form=f;UNITS=u;},__cell:(k)=>form[k],
+  /* The whole record, and the snapshot isDirty() measures against. The round-trip
+     sweep needs a key-by-key diff (FORM-RULES "Before you deliver" 6): isDirty()
+     compares VALUES ONLY, so a hidden side-effect key strands the form dirty with
+     nothing on screen and no way to name the culprit from outside. */
+  __form:()=>form, __formSnap:()=>FORMSNAP,
+  /* Packages carry the programs (rcs / ocaf / uaf), and the pills that toggle them
+     only render once a package is open — so a sweep across program combinations
+     needs the ids. */
+  __cids:()=>(mpdb?mpdb.listCycles(activePid):[]).map(c=>c.id),
+  /* The selftest property carries no unit data, so the first-run migration
+     rightly refuses to invent a package for it — and without a package there
+     are no program pills to drive. Make one. */
+  __newCycle:(o)=>mpdb.createCycle(activePid,Object.assign({full:true,programs:['rcs'],label:'TEST'},o||{})),
+  __progsOf:(cid)=>{const c=(mpdb?mpdb.listCycles(activePid):[]).find(x=>x.id===cid);return c?c.programs.slice():[];},
 __setRcsParsed:(rec)=>{_rcsUpload={name:'study.pdf',bytes:null,parsed:rec,at:''};},
 __rcsFill:()=>rcsFillFromParsed(),__rcsChecks:()=>rcsChecks(),__rcsTag:(k)=>rcsTag(k),__rcsFillKeys:()=>rcsFillKeys(),__rcsMatch:(i)=>rcsMatch(i),__rcsOf:(k)=>rcsOf(k),
   /* The undo run. __editCell is the text box's input handler in miniature —

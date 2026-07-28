@@ -131,6 +131,13 @@ a new suite needs registering (`deliver.sh` calls it).
 - **`app/full-mp/smoke_combined.js`** — headless render smoke of the assembled app: menu → launcher →
   form, the 150% analysis numbers, and dirty-tracking; 39 checks. The launcher phase covers the
   first-run migration that turns an existing record into package #1.
+- **`app/full-mp/test_browser.js`** — **the only suite that presses keys.** Builds its own bundle,
+  drives it in a real headless chromium through `?selftest=1`, and dispatches real trusted key
+  events over CDP (zero dependencies — node's own WebSocket). It covers the hole the other suites
+  cannot see: they prove `save()` saves, this proves a keystroke *reaches* it. 45 checks — Enter and
+  Escape on every kind of cell, the source dropdowns, the conflict buttons, the session boundary.
+  `--full` drives all ~110 controls instead of one per kind. Skips **loudly** (never as a pass) when
+  no chromium is installed.
 
 ⚠️ **Don't pipe a suite through `| tail`.** A pipeline's exit status is the LAST command's, so node's
 failure vanishes — that is half of why `test_interactions.js` sat broken for eleven days after the

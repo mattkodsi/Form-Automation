@@ -247,6 +247,8 @@ const addrLine=(street,city,state,zip)=>{
     /* The designation rides on the end of Column 1, the way the executed copies
        write it ("1 BR E"). Without it a property whose elderly and family rows
        carry different rents generated two rows that read identically. */
+    /* The third part is free text now, so this needs no new logic — it already
+       appends whatever string it is handed. Only its source changed. */
     const utype=(br,ba,dg)=>{const b=String(br||'').replace(/(\d+)\s*BR/i,'$1 BR').replace(/^\s*\/?\s*$/,'').trim();const a=String(ba||'').replace(/(\d+(?:\.\d+)?)\s*BA/i,'$1 BA').trim();const t=(b&&a)?(b+' / '+a):(b||a);const d=String(dg||'').trim();return t&&d?(t+' '+d):t;};
     // Part A layout: Section 8 rev rows, then a full-width "Non- Section 8
     // Rents" banner + the non-Section-8 rows, then a blank spacer row + the
@@ -293,7 +295,7 @@ const addrLine=(street,city,state,zip)=>{
         // Col.2 x Col.3 disagree with Col.4 on the face of the filing — and our own
         // reconciliation gate then rejected a schedule we had generated ourselves.
         const proR=Math.round(pro);
-        T(base, utype(br,ba,g('units.'+i+'.desig'))); T(base+1,n||''); T(base+2,hasP?money(proR):''); T(base+3,hasP?money(n*proR):''); T(base+4,uaHasG(rec,i)?money(ua):''); T(base+5,hasP?money(proR+ua):'');
+        T(base, utype(br,ba,g('units.'+i+'.label'))); T(base+1,n||''); T(base+2,hasP?money(proR):''); T(base+3,hasP?money(n*proR):''); T(base+4,uaHasG(rec,i)?money(ua):''); T(base+5,hasP?money(proR+ua):'');
         if(hasP){ptU+=n;ptC+=n*proR;} else ptU+=n; }
       else if(row[0]==='li'){ const n=nmv(g('ns8.'+i+'.num_units')),ar=g('ns8.'+i+'.avg_rent');
         T(base, utype(g('ns8.'+i+'.br'),g('ns8.'+i+'.ba'))); if(n)T(base+1,n); ptU+=n;

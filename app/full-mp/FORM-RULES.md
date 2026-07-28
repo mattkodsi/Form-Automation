@@ -229,10 +229,17 @@ which reads as a rendering glitch rather than a house style.
 Put the invariant in the function every path calls — `revertKeys`, `srcEditKey`,
 `cellActBtn` — never in one widget's click handler.
 
-**Why:** this has now failed three times. The phantom-dirty fix lived in the `.srcedit`
+**Why:** this has now failed four times. The phantom-dirty fix lived in the `.srcedit`
 handler and missed the return trip through the generic input. The "a revert is not a
 redo" fix lived in `[data-rev]`'s handler and missed the input's own Escape. If a
 behaviour is true of reverting, it goes in `revertKeys`.
+
+The fourth: **the ✓ button and Enter disagreed about what a cell is.** `[data-save1]`
+widened its keys through `coupledKeys`; `commitPending` — the path Enter takes —
+widened only through `groupOf`, so picking a source saved the source and left the
+`*_reviewed` flag beside it. The app said *"Saved this field to the database"* while the
+footer said *"Unsaved changes"*, with nothing on screen to save. The same press through
+the button was fine. **Two paths to one operation must widen by the same rule.**
 
 ## 18. A phone is saved only when complete
 
@@ -293,4 +300,10 @@ what it offered a moment ago.
    `#clNone` — make the change, take it back, confirm `isDirty()` is false, and diff
    `form` against `FORMSNAP` key by key. `isDirty()` compares VALUES ONLY across ALL
    keys, so one hidden side-effect key strands the form dirty with nothing on screen.
+
+   **This is now a loop, not a chore.** `node app/full-mp/test_browser.js` covers one
+   of every kind on every run; `--full` drives all ~110 controls. It builds its own
+   bundle and presses real keys, so it sees what a hand sweep across 200 controls never
+   could. A finding here belongs in that file as a check, not in a markdown list — the
+   last audit's 47 findings went stale the moment they were fixed.
 7. **Measure at 1200, 1280 and 1920**, from computed style — never from a class name.
