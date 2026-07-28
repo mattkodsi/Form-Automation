@@ -293,6 +293,10 @@ function ocrPlace(got,pg0,pg1,tpl,rects){
      the numbers did not reconcile" — only one of those is worth retrying. */
   if(!outp){OCR_WHY='The page was read and placed correctly, but the figures it produced did not reconcile (the unit counts or rents did not add up), so they were not applied.';return null;}
   if(s8)outp.scalars['property.s8']=s8;
+  /* Part F and Part G are on the second half. Without it the record is real and
+     incomplete, which is worth saying out loud — the alternative is a form that
+     reports the ownership entity as blank on the document. */
+  if(!B)outp.halfB=true;
   return outp;}   // rsPartB is told not to claim definite reads for a positional tier
 
 /* The test seam: canned Azure pages in, the same record out. */

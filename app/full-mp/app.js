@@ -1572,12 +1572,14 @@ async function rsReadTextTier(pages,bytes,onStep){ // flattened copy -> same par
   // reads fine over a certification page rendered as dozens of little images.
   // Rather than drop the entity, principals, signatory and HAP number, send just
   // that half to be OCR'd; the pages already read as text are not sent again.
+  let gotB=pg1>=0;
   if(pg1<0&&bytes&&typeof ocrHalf==='function'){
     const skip=[];pages.forEach((rs,i)=>{if(rs.length>=15)skip.push(i);});
     let add=null;try{add=await ocrHalf(bytes,1,skip,(i,n)=>onStep&&onStep(i,n,'fill'));}catch(e){}
-    if(add){Object.assign(F,add.F);if(!s8&&add.s8)s8=add.s8;}}
+    if(add){Object.assign(F,add.F);if(!s8&&add.s8)s8=add.s8;gotB=true;}}
   const outp=rsAssembleFields(n=>String(F[String(n)]||'').trim());
   if(outp&&s8)outp.scalars['property.s8']=s8;
+  if(outp&&!gotB)outp.halfB=true;
   return outp;}
 async function parseRsPdf(bytes,onStep){
   const doc=await window.PDFLib.PDFDocument.load(bytes,{ignoreEncryption:true,parseSpeed:Infinity});
@@ -1655,7 +1657,8 @@ function renderSources(){
   const ru=_rsUpload;let rs;
   if(_rsBusy)rs=`<div class="srcrow"><span class="spin" aria-hidden="true"></span><div><b>${esc(_rsBusy.name||'Rent schedule')}</b> <span class="parsed">${esc(_rsBusy.note||'reading\u2026')}</span><div class="sub">${esc(_rsBusy.sub||'Reading the schedule\u2019s form fields and printed text.')}</div></div></div>`;
   else if(!ru)rs=`<div class="srcrow"><span class="mut">○</span><div><b>Current executed rent schedule</b> <span class="missing">not uploaded</span><div class="sub">Fills the unit mix, rents, utility allowances, ownership entity and principals.</div></div><button class="btn sm" id="upRs">Upload PDF</button></div>`;
-  else if(ru.kind==='fields'){const p=ru.parsed;rs=`<div class="srcrow"><span class="ok">✓</span><div><b>${esc(ru.name)}</b> <span class="parsed">${ru.at?"read "+esc(niceDate(ru.at)):"read"}</span><div class="sub">${ru.via==='ocr'?'Scanned — check the values against the document. ':''}Nothing is saved until you save.</div></div><button class="btn sm teal" id="rsApply">Fill form from RS</button> <button class="btn sm" id="upRs">Replace</button></div>`;}
+  else if(ru.kind==='fields'){const p=ru.parsed;const _half=!!(p&&p.halfB);
+    rs=`<div class="srcrow"><span class="${_half?'warn':'ok'}">${_half?WARNICON:'✓'}</span><div><b>${esc(ru.name)}</b> <span class="${_half?'missing':'parsed'}">${_half?'front half read only':(ru.at?"read "+esc(niceDate(ru.at)):"read")}</span><div class="sub">${_half?'Part A came through; Parts F and G — the ownership entity, the principals and the signatory — did not. Replace with a clearer copy, or enter those by hand. ':(ru.via==='ocr'?'Scanned — check the values against the document. ':'')}Nothing is saved until you save.</div></div><button class="btn sm teal" id="rsApply">Fill form from RS</button> <button class="btn sm" id="upRs">Replace</button></div>`;}
   else if(ru.kind==='text')rs=`<div class="srcrow"><span class="warn">${WARNICON}</span><div><b>${esc(ru.name)}</b> <span class="missing">could not be read</span><div class="sub">${ru.why?esc(ru.why)+' Enter the values below.':'Enter the values below.'}</div></div><button class="btn sm" id="upRs">Replace</button></div>`;
   else rs=`<div class="srcrow"><span class="warn">${WARNICON}</span><div><b>${esc(ru.name)}</b> <span class="missing">could not be read</span><div class="sub">${ru.why?esc(ru.why)+' Enter the values below.':'Scanned, but the values could not be read. Enter them below.'}</div></div><button class="btn sm" id="upRs">Replace</button></div>`;
   const foot=`<input type="file" id="rcsFile" accept="application/pdf,.pdf" style="display:none"><input type="file" id="rsFile" accept="application/pdf,.pdf" style="display:none">`;
@@ -3175,16 +3178,27 @@ function gotoSection(n,key){
    says plainly when nothing but a person will ever fill it. */
 const RS_CARRIES=/^(units$|property\.(name|fha|s8)|owner\.entity|sig\.(name|title|principal)|principals\.|rent_schedule\.date_eff|units\.\d+\.(br|ba|label|num_units|current|ua_exec)|ns8\.|nonrev\.)/;
 const RCS_CARRIES=/^(appr\.|units\.\d+\.(proposed|ua_rcs|safmr_rcs|num_rcs|br_rcs|ba_rcs))/;
+/* Part F (ownership entity and type) and Part G (principals, signature) are
+   on the second half of HUD-92458. Everything else the schedule gives us —
+   the name, the FHA number, the effective date, the whole unit mix — is on
+   the first. */
+const RS_PAGE2=/^(owner\.entity|sig\.|principals\.)/;
 const whyShort=(k,own)=>{
   if(own)return own;      // an entry that already knows its own answer
   if(!k)return '';
   let v=null;try{v=rsVal(k);}catch(e){}
   try{if((v==null||v==='')&&rsOffers(k))v='\u2713';}catch(e){}
-  if(v!=null&&v!=='')return 'the rent schedule carries it \u2014 \u201cFill form from RS\u201d in '+secRef(1);
+  if(v!=null&&v!=='')return 'On the RS \u2014 press \u201cFill form from RS\u201d';
   let c=null;try{c=rcsOf(k);}catch(e){}
-  if(c!=null&&c!=='')return 'the study carries it \u2014 \u201cFill form from study\u201d in '+secRef(1);
-  if(RS_CARRIES.test(k))return _rsUpload?'the schedule that was read left it blank':'on the executed rent schedule \u2014 none uploaded yet';
-  if(RCS_CARRIES.test(k))return _rcsUpload?'the study that was read left it blank':'in the RCS study \u2014 none uploaded yet';
+  if(c!=null&&c!=='')return 'In the study \u2014 press \u201cFill form from study\u201d';
+  if(RS_CARRIES.test(k)){
+    if(!_rsUpload)return 'On the RS \u2014 none uploaded yet';
+    /* Parts F and G sit on the second half of the form. If that half was never
+       placed, the field is not blank on the document — we never read it. */
+    if(RS_PAGE2.test(k)&&_rsUpload.parsed&&_rsUpload.parsed.halfB)
+      return 'On the RS \u2014 its second half could not be read';
+    return 'Not filled by the RS \u2014 enter by hand';}
+  if(RCS_CARRIES.test(k))return _rcsUpload?'Not filled by the study \u2014 enter by hand':'In the study \u2014 none uploaded yet';
   /* The commonest answer by far, and printed on every line it turned the
      card into six copies of one sentence — which is how the dialog got too
      full in the first place. Silence here IS the answer: a field with no
@@ -3208,8 +3222,8 @@ const pop=(req,sug)=>{
   return '<span class="gpw"><button type="button" class="gshort'+(req.length?'':' gshort-s')+'" aria-haspopup="true">'
     +(req.length?((req.length===1?'1 field':req.length+' fields')+' short'):(sug.length+' suggested'))
     +'</button><div class="gpop"><div class="gpop-in">'
-    +(req.length?'<div class="gpop-h">Needed before it can be written</div><div class="gpop-l">'+req.map(x=>gpf(x,'')).join('')+'</div>':'')
-    +(sug.length?'<div class="gpop-h'+(req.length?' gpop-h2':'')+'">Worth adding</div><div class="gpop-l">'+sug.map(x=>gpf(x,' gpf-s')).join('')+'</div>':'')
+    +(req.length?'<div class="gpop-h">Required</div><div class="gpop-l">'+req.map(x=>gpf(x,'')).join('')+'</div>':'')
+    +(sug.length?'<div class="gpop-h'+(req.length?' gpop-h2':'')+'">Suggested</div><div class="gpop-l">'+sug.map(x=>gpf(x,' gpf-s')).join('')+'</div>':'')
     +'</div></div></span>';};
 
 /* One row per document: a tick and a download, or a dash and the count that
@@ -3239,17 +3253,27 @@ function wirePkgRows(docs){
     /* Measured with the card laid out. A hidden element has no height, and the
        press route adds .open only AFTER this runs — so measuring what is on
        screen at the time gave zero, and the flip never fired. */
+    inner.style.maxHeight='';
     let h=inner.offsetHeight;
     if(!h){const d=p.style.display;p.style.display='block';h=inner.offsetHeight;p.style.display=d;}
     const r=w.getBoundingClientRect();
-    /* Bounded by the top of the DOWNLOAD block, not the bottom of the dialog.
-       The dialog's bottom is below its own buttons, so a card that fits inside
-       the dialog can still land squarely on the primary action — which is how a
-       click at that button's centre came to fire a link inside the card. */
+    /* Downward is bounded by the top of the DOWNLOAD block, not the bottom of
+       the dialog: the dialog's bottom is below its own buttons, so a card can
+       fit inside the dialog and still land on the primary action. Upward is
+       bounded by the top of the window — flipping up was half an answer, and on
+       a short window the card then ran off the top behind the browser chrome,
+       which is worse than covering a button. */
     const act=document.getElementById('dlFolder')||document.querySelector('#dialog .gpair')||document.querySelector('#dialog .dlg-row');
     const dlg=document.getElementById('dialog');
-    const bound=act?act.getBoundingClientRect().top:(dlg?dlg.getBoundingClientRect().bottom:window.innerHeight);
-    if(r.bottom+h+10>Math.min(bound,window.innerHeight))p.classList.add('gpop-up');};
+    const floor=Math.min(act?act.getBoundingClientRect().top:(dlg?dlg.getBoundingClientRect().bottom:window.innerHeight),window.innerHeight);
+    const below=floor-r.bottom-10, above=r.top-10;
+    const up=h>below&&above>below;
+    if(up)p.classList.add('gpop-up');
+    /* Capped to the room on the side it took, so it is always whole on screen.
+       .gpop-in scrolls inside itself when a document is short of more fields
+       than the window has height for. */
+    const room=Math.max(120,Math.floor(up?above:below));
+    if(h>room)inner.style.maxHeight=room+'px';};
   document.querySelectorAll('.gpw').forEach(function(w){
     w.addEventListener('mouseenter',function(){placePop(w);});
     w.addEventListener('focusin',function(){placePop(w);});});
@@ -3281,7 +3305,7 @@ function showPackageModal(nm,docs,combined,missingRcs,missingLh,capMsgs,blocked,
      stranded at the foot of the dialog in a second shade. */
   const extraWarn={};
   if(missingLh)extraWarn['Tenant notice']=[{label:'A letterhead for the notice',sec:0,
-    why:'uploaded on the property page, not in the form \u2014 without one the notice prints a generated header'}];
+    why:'On the property page \u2014 without one the notice prints a generated header'}];
   /* A field that blocks three documents used to be printed three times. True,
      and it turned a six-row dialog into forty links on rows that grew to 156px
      — so the one thing the dialog exists to say, which of the six you can take
