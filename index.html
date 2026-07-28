@@ -5146,7 +5146,7 @@ function upsert(units,type,page,count){
     }
   }
   const p=parseType(type);
-  const u={type:p.type,br:p.br,ba:p.ba,count:'',sf:'',proposed:'',ua:'',safmr:'',safmr_base:'',psf:'',grid:false,page:page,alias:null};
+  const u={type:p.type,br:p.br,ba:p.ba,count:'',sf:'',proposed:'',ua:'',safmr:'',safmr_base:'',psf:'',grid:false,page:page,alias:null,safmr_derived:false};
   units.push(u);return u;
 }
 
@@ -5239,10 +5239,26 @@ async function readLetter(rd){
     const uniq=vals.filter(function(v,i){return vals.indexOf(v)===i;});
     if(uniq.length>1)warn.push('The study prints more than one market rent for '+u.type+': '+uniq.map(function(v){return '$'+v.toLocaleString('en-US');}).join(' and ')+'. The unit table’s figure was used.');
   });
-  /* The ceiling must be 1.5x the base the study itself printed. */
+  /* The 150% ceiling.
+
+     Where the study prints it (Belfry does, per unit type) it is read, and
+     checked against the SAFMR the same study printed — 1.5x, exactly, on all
+     nine unit types across five studies.
+
+     Where the study prints only a total (Cornerstone does) the per-type
+     ceiling is DERIVED from the base. That is not the parser inventing a
+     figure: 150% of SAFMR is arithmetic fixed by Chapter Nine, the app already
+     stores round(1.5 x base) for the HUD pull in safmr_hud, and Cornerstone
+     performs the same multiplication itself at the total level. The flag says
+     it was derived so the cell can be honest about where it came from. */
   units.forEach(function(u){
-    if(u.safmr!==''&&u.safmr_base!==''&&Math.abs(Math.round(u.safmr_base*1.5)-u.safmr)>2)
-      warn.push('For '+u.type+' the study’s 150% SAFMR ($'+u.safmr.toLocaleString('en-US')+') is not 1.5 times the SAFMR it prints ($'+u.safmr_base.toLocaleString('en-US')+').');
+    if(u.safmr!==''&&u.safmr_base!==''){
+      if(Math.abs(Math.round(u.safmr_base*1.5)-u.safmr)>2)
+        warn.push('For '+u.type+' the study’s 150% SAFMR ($'+u.safmr.toLocaleString('en-US')+') is not 1.5 times the SAFMR it prints ($'+u.safmr_base.toLocaleString('en-US')+').');
+    }else if(u.safmr===''&&u.safmr_base!==''&&u.safmr_base>0){
+      u.safmr=Math.round(u.safmr_base*1.5);
+      u.safmr_derived=true;
+    }
   });
   /* Fixed key order. The record is compared, stored and re-read, and a totals
      object whose keys arrive in whatever order the document printed them in

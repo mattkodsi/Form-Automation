@@ -16,7 +16,7 @@ const els={};
 global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>null,querySelectorAll:()=>[],createElement:()=>mk(),addEventListener(){},body:{classList:{toggle(){},contains(){return false;}}}};
 const fs=require('fs'),path=require('path'),os=require('os');
 
-const MIN_CHECKS=110;
+const MIN_CHECKS=140;
 let n=0,fails=0,verdict=null;
 const BAR='='.repeat(68);
 function fail(msg,err){
@@ -150,13 +150,13 @@ async function reader(file){
     name:'Crossroads of East Ravenswood',street:'1614 West Wilson Avenue',city:'Chicago',state:'IL',zip:'60640',
     appr:'CORNERSTONE VALUATION SERVICES',phone:'2624425492',email:'kyle@CornerstoneVS.com',
     tot:{grossRenewal:297773,grossSafmrBase:297780,grossSafmr150:446670,verdict:'pass'},
-    units:[['1 BR / 1 BA',31,818,1870,61,'',2040],['2 BR / 1 BA',66,927,2305,76,'',2300],
-           ['3 BR / 2 BA',21,928,2815,103,'',2960],['4 BR / 2 BA',6,1188,3150,98,'',3430]]},
+    units:[['1 BR / 1 BA',31,818,1870,61,3060,2040],['2 BR / 1 BA',66,927,2305,76,3450,2300],
+           ['3 BR / 2 BA',21,928,2815,103,4440,2960],['4 BR / 2 BA',6,1188,3150,98,5145,3430]],derived:true},
    {f:'cornerstone-golden-link.pdf',firm:'cornerstone',s8:'UT99T855002',
     name:'Golden Link Manor',street:'1132 24th Street',city:'Ogden',state:'UT',zip:'84401',
     appr:'CORNERSTONE VALUATION SERVICES',phone:'2624425492',email:'kyle@CornerstoneVS.com',
     tot:{grossRenewal:47400,grossSafmrBase:34500,grossSafmr150:51750,verdict:'pass'},
-    units:[['1 BR / 1 BA',30,537,1580,0,'',1150]]},
+    units:[['1 BR / 1 BA',30,537,1580,0,1725,1150]],derived:true},
   ];
   for(const E of EXPECT){
     const rd=await reader(path.join(FIX,E.f));
@@ -178,6 +178,9 @@ async function reader(file){
       const g=r.units[i]||{};
       eq(`${tag}: unit ${i+1} ${u[0]}`,[g.type,g.count,g.sf,g.proposed,g.ua,g.safmr,g.safmr_base],u);
     });
+    /* A ceiling the study printed is read; one it did not is derived from the
+       SAFMR it did print, and flagged as derived either way. */
+    r.units.forEach(function(g,i){eq(`${tag}: unit ${i+1} ceiling ${E.derived?'derived':'as printed'}`,!!g.safmr_derived,!!E.derived);});
     LE(`${tag}: pages read`,rd.hits,4);
   }
 
@@ -192,6 +195,11 @@ async function reader(file){
   const cvr=await R.readLetter(await reader(path.join(FIX,'belfry-colonial-village.pdf')));
   cvr.units.forEach(function(u,i){eq(`colonial-village: unit ${i+1} ceiling is 1.5x its base`,u.safmr,Math.round(u.safmr_base*1.5));});
   eq('a clean study warns about nothing',cvr.warnings,[]);
+  /* The derivation is only ever applied where the study is silent — never over
+     a figure it actually printed. */
+  cvr.units.forEach(function(u,i){eq(`colonial-village: unit ${i+1} ceiling was printed, not derived`,u.safmr_derived,false);});
+  const cr=await R.readLetter(await reader(path.join(FIX,'cornerstone-crossroads.pdf')));
+  cr.units.forEach(function(u,i){eq(`crossroads: unit ${i+1} derived ceiling is 1.5x its base`,u.safmr,Math.round(u.safmr_base*1.5));});
 
   /* Helpers that earned their own checks. */
   eq('a county belongs in no cell',R._splitCityStateZip('Cincinnati, Hamilton County, Ohio 45220'),{city:'Cincinnati',state:'OH',zip:'45220'});
