@@ -2884,10 +2884,14 @@ function renderMenu(){
   if(el('menuCount'))el('menuCount').textContent=all.length+(all.length===1?' property':' properties')+(all.length?(need?'  ·  '+need+' need'+(need===1?'s':'')+' review':'  ·  all complete'):'');
   const card=p=>{const pct=Math.round(p.completeness*100);
     const al=(p.alias||'').trim();const showAl=al&&al.toLowerCase()!==String(p.name||'').trim().toLowerCase();
-    return '<button class="pcard" data-open="'+p.id+'"><div class="pc-top"><div class="pc-name">'+esc(p.name)+(showAl?'<span class="pc-alias">&ldquo;'+esc(al)+'&rdquo;</span>':'')+'</div>'+ringSvg(pct)+'</div>'
+    /* The gallery is read by scanning it — six cards, and the eye is looking
+       for a name and a ring. A sentence under every one of them is a line of
+       small grey text per card that nobody reads six of. The caption still
+       says what the ring counts; it says it on hover, where a reader who
+       wants it asks for it. */
+    return '<button class="pcard" data-open="'+p.id+'"'+(p.caption?' title="'+esc(p.caption)+'"':'')+'><div class="pc-top"><div class="pc-name">'+esc(p.name)+(showAl?'<span class="pc-alias">&ldquo;'+esc(al)+'&rdquo;</span>':'')+'</div>'+ringSvg(pct)+'</div>'
       +'<div class="pc-meta">'+esc(p.fha)+(p.city_state?' &middot; '+esc(p.city_state):'')+'</div>'
-      /* The number alone never said what it was counting. */
-      +(p.caption?'<div class="pc-cap">'+esc(p.caption)+'</div>':'')+'<div class="pc-div"></div>'
+      +'<div class="pc-div"></div>'
       +'<div class="pc-foot"><span class="pc-units">'+p.total_units+' unit'+(p.total_units===1?'':'s')+(p.unit_types?' &middot; '+p.unit_types+' type'+(p.unit_types===1?'':'s'):'')+'</span><span class="pc-upd" title="'+esc(updTitle(p.updated_at))+'">Updated '+relTime(p.updated_at)+'</span></div></button>';};
   const newTile='<button class="pcard newcard" id="tileNew"><span class="plus">+</span><span>New property</span></button>';
   const empty='<div class="mempty">No properties match &ldquo;'+esc(q)+'&rdquo;. <span class="link" id="mClear">Clear search</span></div>';
