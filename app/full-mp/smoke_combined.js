@@ -181,13 +181,21 @@ const T=(label,v)=>eq(label,!!v,true);
   await app.__openCycleForm(pid,scid);
   const utc=els.sections.innerHTML.split('<div class="urow">')[1]||'';
   eq('the unit type carries exactly one RS badge', (utc.match(/utgrp"><span class="srctag rstag"/g)||[]).length, 1);
-  T('and the designation box no longer carries its own', !/dgdrop[\s\S]{0,400}?srctag/.test(utc));
-  /* The clear used to be suppressed whenever the badge showed: label + badge +
-     clear + chevron needed 74.7px of a 55px budget. With the badge moved to the
-     group, a schedule-sourced designation is clearable again. */
-  app.__editCell('units.0.desig','E'); app.__renderBody();
+  /* The same shape as the assertion the designation chip used to carry: the ONE
+     badge belongs to the group, and no sub-part of the type may grow a second.
+     The label line is the sub-part that could. */
+  T('and the label line carries none of its own', !/ulabline[\s\S]{0,300}?srctag/.test(utc));
+  /* The label replaced the designation chip. It is a text box on its own line
+     under the counts, so it clears the way every other text box does — by
+     emptying it — and it costs no height until it holds something. */
+  app.__editCell('units.0.label','Patio'); app.__renderBody();
   const utcD=els.sections.innerHTML.split('<div class="urow">')[1]||'';
-  T('a designation can be cleared from the cell itself', /dgdrop[\s\S]{0,300}?csclear/.test(utcD));
+  T('the label renders under the type cell', /ulabline[\s\S]{0,300}?ulab-in/.test(utcD));
+  T('and holds what was typed', /ulab-in[^>]*value="Patio"/.test(utcD));
+  app.__editCell('units.0.label',''); app.__renderBody();
+  const utcE=els.sections.innerHTML.split('<div class="urow">')[1]||'';
+  T('an empty label still renders its line, collapsed by CSS', /ulabline/.test(utcE));
+  T('and claims no value', !/ulab-in[^>]*value="[^"]+"/.test(utcE));
   app.__editCell('units.0.ba', ba0==='1BA'?'2BA':'1BA');
   app.__renderBody();
   const utc2=els.sections.innerHTML.split('<div class="urow">')[1]||'';

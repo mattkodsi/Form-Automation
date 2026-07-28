@@ -44,7 +44,7 @@ function makeSupabaseDb(client) {
   const PSCALAR_REV = {}; for (const k in PSCALAR) PSCALAR_REV[PSCALAR[k]] = k;
 
   const UCOL = {
-    br: 'bedrooms', ba: 'bathrooms', num_units: 'num_units',
+    br: 'bedrooms', ba: 'bathrooms', label: 'label', num_units: 'num_units',
     current: 'current_contract_rent', proposed: 'proposed_contract_rent',
     ua_exec: 'ua_from_exec_rs', ua_rcs: 'ua_from_rcs', ua_source: 'ua_source', ua_reviewed: 'ua_reviewed', ua_custom: 'ua_custom',
     num_rcs: 'num_units_rcs', br_rcs: 'bedrooms_rcs', ba_rcs: 'bathrooms_rcs', num_source: 'num_units_source', num_reviewed: 'num_units_reviewed',

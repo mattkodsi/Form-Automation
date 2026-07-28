@@ -24,7 +24,10 @@ global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>
 const cp=require('child_process'),os=require('os'),path=require('path'),fs=require('fs');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=135;                // the count this file is known to run to the end
+const MIN_CHECKS=133;   // 2026-07-27: the unit designation became a free-text label. The
+                        // chip needed checks the text box does not (four enum values, and a
+                        // saved blank that read "on file" where a text box reads new), so the
+                        // honest count fell by two. Lowered on purpose; never to go green.                // the count this file is known to run to the end
 let n=0,fails=0,verdict=null;
 const BAR='═'.repeat(68);
 function fail(msg,err){
@@ -104,79 +107,77 @@ const T=(label,v)=>eq(label,!!v,true);
   eq('br restored', app.getVal('units.0.br'), '1BR');
   eq('br src restored', app.srcOf('units.0.br'), 'database');
 
-  /* The designation picker beside BR/BA. "No designation" is a real answer, which
-     makes its saved blank behave unlike a saved-blank text box, and the schedule
-     carries a designation of its own that the picker offers as a source. */
-  console.log('\n─ unit designation: options, saved blank, Enter/Escape ─');
-  const DK='units.0.desig';
-  const chip=()=>app.desigColors(DK)[2];        // the provenance word the cell paints
-  eq('four designations plus a blank', app.DESIG.map(d=>d[0]), ['','F','E','D','NE']);
-  eq('F is Family',       app.desigName('F'),  'Family');
-  eq('NE is Near-elderly',app.desigName('NE'), 'Near-elderly');
-  eq('an unknown code names nothing', app.desigName('zz'), '');
-  /* The schedule prints the designation, and the picker offers it as a source, so
-     what we read out of Column 1 has to be right in both spellings the real
-     corpus uses — and a bare letter must only count at the end of the string. */
-  eq('reads "1 BR E"',            app.rsParseUnitType('1 BR E').desig,            'E');
-  eq('reads "1 BR F"',            app.rsParseUnitType('1 BR F').desig,            'F');
-  eq('reads "2 Bedroom, Elderly"',app.rsParseUnitType('2 Bedroom, Elderly').desig,'E');
-  eq('reads "3 Bedroom, Family"', app.rsParseUnitType('3 Bedroom, Family').desig, 'F');
-  eq('near-elderly beats elderly',app.rsParseUnitType('1 BR Near-Elderly').desig, 'NE');
-  eq('an undesignated row stays undesignated', app.rsParseUnitType('2 Bedroom').desig, '');
-  eq('a letter mid-word does not designate',   app.rsParseUnitType('2 BR Efficiency').desig, '');
-  eq('desig is its own cell (no address/write-in group)', app.fieldKeys(DK), [DK]);
-  eq('desig has no coupled source partner',              app.coupledKeys(DK), [DK]);
+  /* The unit label, under BR/BA. It replaced a four-option designation chip,
+     and the swap changes one behaviour on purpose: a chip that had been saved
+     blank still read "on file", because picking "no designation" is a real
+     answer. A TEXT box saved blank must NOT read on file — core.js keeps every
+     saved blank at source 'new' precisely so an empty box can never claim to
+     hold data. Same store, opposite reading, and the difference is the widget. */
+  console.log('\n─ unit label: free text, parsing, saved blank, Enter/Escape ─');
+  const LK='units.0.label';
+
+  /* Column 1 of Part A is one free-text column and the corpus proves it: the
+     old enum could match "E" and "Elderly" but threw "Patio" away, and two
+     Lansing Manor unit types then printed identically at different rents. */
+  eq('reads "1 BR E" verbatim',         app.rsParseUnitType('1 BR E').label,             'E');
+  eq('reads "1 BR F" verbatim',         app.rsParseUnitType('1 BR F').label,             'F');
+  eq('reads "2 Bedroom, Elderly"',      app.rsParseUnitType('2 Bedroom, Elderly').label, 'Elderly');
+  eq('reads "3 Bedroom, Family"',       app.rsParseUnitType('3 Bedroom, Family').label,  'Family');
+  eq('keeps a word no enum had',        app.rsParseUnitType('1Bedroom Patio').label,     'Patio');
+  eq('keeps a phrase',                  app.rsParseUnitType('2 BR / 1 BA Elderly with patio').label,'Elderly with patio');
+  eq('near-elderly survives whole',     app.rsParseUnitType('1 BR Near-Elderly').label,  'Near Elderly');
+  eq('an unlabelled row has no label',  app.rsParseUnitType('2 Bedroom').label,          '');
+  eq('counts alone leave nothing',      app.rsParseUnitType('1 BR / 1 BA').label,        '');
+  eq('a bare number is a count, not a label', app.rsParseUnitType('3').label,            '');
+  /* The counts must parse exactly as before — the SAFMR pull, the 150% ceiling
+     and the RCS row matching all key off br. */
+  eq('bedrooms still parse',            app.rsParseUnitType('2 Bedroom, Elderly').br,    '2BR');
+  eq('baths still parse',               app.rsParseUnitType('2 BR / 1.5 BA Family').ba,  '1.5BA');
+  eq('label does not disturb the count',app.rsParseUnitType('1Bedroom Patio').br,        '1BR');
+
+  eq('label is its own cell (no address/write-in group)', app.fieldKeys(LK), [LK]);
+  eq('label has no coupled source partner',               app.coupledKeys(LK), [LK]);
+
   // untouched: nothing typed, nothing stored — Enter and Esc are both no-ops
-  eq('untouched desig is blank', app.getVal(DK), '');
-  T('untouched desig not canSave',   !app.keysCanSave([DK]));
-  T('untouched desig not canRevert', !app.keysCanRevert([DK]));
-  eq('untouched desig reads New', chip(), 'New');
-  // one click = one step through DESIG; nothing is on file yet, so Esc clears rather than reverts
-  app.__edit(DK,'F');
-  eq('picking Family designates Family', app.getVal(DK), 'F');
-  T('first designation is new-dirty (Enter saves)', app.keysNewDirty([DK]));
-  T('first designation canSave',    app.keysCanSave([DK]));
-  T('first designation not canRevert (nothing on file)', !app.keysCanRevert([DK]));
-  await app.__saveField(DK);                    // Enter
-  eq('saved desig value', app.getVal(DK), 'F');
-  eq('saved desig src',   app.srcOf(DK), 'database');
-  eq('saved desig reads On file', chip(), 'On file');
-  T('saved desig is clean', !app.keysCanSave([DK]));
-  // pick a different designation → override, and Escape puts the saved one back
-  app.__edit(DK, 'E');
-  eq('picking past the saved value', app.getVal(DK), 'E');
-  T('changed desig is overridden', app.srcOf(DK)==='overridden');
-  T('changed desig canRevert', app.keysCanRevert([DK]));
-  eq('changed desig reads Overridden', chip(), 'Overridden');
-  app.__revert(DK);                             // Escape
-  eq('Escape restores saved desig', app.getVal(DK), 'F');
-  eq('Escape restores desig src',   app.srcOf(DK), 'database');
-  /* Picking "No designation" on a SAVED row is an override (amber, revertable),
-     not a blank field. */
-  app.__edit(DK, '');
-  eq('picked no designation', app.getVal(DK), '');
-  T('clearing a saved desig is an override', app.srcOf(DK)==='overridden');
-  T('cleared desig canRevert', app.keysCanRevert([DK]));
-  /* Saving "no designation". core.js keeps source 'new' for any saved blank so
-     an empty TEXT box can never paint blue — but a chip is not a text box, and
-     once the row is saved the answer is on file like any other. desigColors()
-     is what resolves that: db_value matches value, so the chip reads On file. */
-  await app.__saveField(DK);
-  eq('saved-blank desig value',    app.getVal(DK), '');
-  eq('saved-blank desig db_value', app.__cell(DK).db_value, '');
-  T('saved-blank desig: db_value matches value (it IS on file)', app.__cell(DK).db_value===app.getVal(DK));
-  eq('saved-blank desig keeps src new (core: blanks never paint blue)', app.srcOf(DK), 'new');
-  eq('saved-blank desig chip still reads On file', chip(), 'On file');
-  T('saved-blank desig is clean — Enter has nothing to save', !app.keysCanSave([DK]));
-  T('saved-blank desig has nothing to revert',                !app.keysCanRevert([DK]));
-  /* Designating a row that was saved blank. core.js treats a saved blank as
-     "nothing on file" for override purposes, so the store calls this new-dirty
-     (Enter saves, Escape clears the entry) — while the chip still paints amber,
-     because offFile() sees the value drift from the stored blank. */
-  app.__edit(DK,'D');
-  T('designating a saved-blank row is new-dirty', app.keysNewDirty([DK]));
-  T('designating a saved-blank row canSave',      app.keysCanSave([DK]));
-  eq('designating a saved-blank row still paints Overridden', chip(), 'Overridden');
+  eq('untouched label is blank', app.getVal(LK), '');
+  T('untouched label not canSave',   !app.keysCanSave([LK]));
+  T('untouched label not canRevert', !app.keysCanRevert([LK]));
+  eq('untouched label reads new', app.srcOf(LK), 'new');
+
+  app.__edit(LK,'Family');
+  eq('typing a label keeps it verbatim', app.getVal(LK), 'Family');
+  T('first label is new-dirty (Enter saves)', app.keysNewDirty([LK]));
+  T('first label canSave',    app.keysCanSave([LK]));
+  T('first label not canRevert (nothing on file)', !app.keysCanRevert([LK]));
+  await app.__saveField(LK);                    // Enter
+  eq('saved label value', app.getVal(LK), 'Family');
+  eq('saved label src',   app.srcOf(LK), 'database');
+  T('saved label is clean', !app.keysCanSave([LK]));
+
+  app.__edit(LK,'Elderly');
+  eq('typing past the saved value', app.getVal(LK), 'Elderly');
+  T('changed label is overridden', app.srcOf(LK)==='overridden');
+  T('changed label canRevert', app.keysCanRevert([LK]));
+  app.__revert(LK);                             // Escape
+  eq('Escape restores the saved label', app.getVal(LK), 'Family');
+  eq('Escape restores label src',       app.srcOf(LK), 'database');
+
+  // clearing a saved label is an override, exactly like any other text box
+  app.__edit(LK,'');
+  eq('cleared label', app.getVal(LK), '');
+  T('clearing a saved label is an override', app.srcOf(LK)==='overridden');
+  T('cleared label canRevert', app.keysCanRevert([LK]));
+
+  /* Saved blank — the behaviour that deliberately differs from the old chip. */
+  await app.__saveField(LK);
+  eq('saved-blank label value',    app.getVal(LK), '');
+  eq('saved-blank label db_value', app.__cell(LK).db_value, '');
+  eq('saved-blank label stays new — an empty box never paints blue', app.srcOf(LK), 'new');
+  T('saved-blank label is clean — Enter has nothing to save', !app.keysCanSave([LK]));
+  T('saved-blank label has nothing to revert',                !app.keysCanRevert([LK]));
+  app.__edit(LK,'Disabled');
+  T('labelling a saved-blank row is new-dirty', app.keysNewDirty([LK]));
+  T('labelling a saved-blank row canSave',      app.keysCanSave([LK]));
 
   console.log('\n─ money + address: edit→overridden→revert ─');
   eq('current seeded', app.getVal('units.0.current'), '1903');
@@ -237,7 +238,7 @@ const T=(label,v)=>eq(label,!!v,true);
     ['property.addr_city',   'Nowhere'],                     // address part
     ['units.0.ua_custom',    '9999'],                        // utility allowance
     ['units.0.safmr_custom', '1234'],                        // 150% SAFMR
-    ['units.0.desig',        flip('units.0.desig','NE','E')],// unit designation
+    ['units.0.label',        flip('units.0.label','Patio','Elderly')],// unit label (free text)
     ['sig.title',            'Zzz Title'],
     ['poc.email',            'zzz@example.test'],
     ['tenant.sender_name',   'Zzz Sender'],

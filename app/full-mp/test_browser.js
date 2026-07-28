@@ -35,7 +35,8 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=63;
+const MIN_CHECKS=62;   // 2026-07-27: the unit-type cell lost a divider with the designation,
+                       // so the pair of divider checks became one. Lowered on purpose.
 let n=0,fails=0,verdict=null;
 const BAR='═'.repeat(68);
 function fail(msg,err){
@@ -350,17 +351,21 @@ const FULL=process.argv.includes('--full');
     console.log('\n── the unit type cell ─────────────────────────────────');
     await openForm();
     await c.eval(`const t=window.__t;
-      t.__edit('units.0.br','1BR');t.__edit('units.0.ba','1BA');t.__edit('units.0.desig','E');
-      await t.__saveCell('units.0.br');await t.__saveCell('units.0.ba');await t.__saveCell('units.0.desig');
+      t.__edit('units.0.br','1BR');t.__edit('units.0.ba','1BA');t.__edit('units.0.label','Elderly');
+      await t.__saveCell('units.0.br');await t.__saveCell('units.0.ba');await t.__saveCell('units.0.label');
       t.__renderBody();return 1;`);
     await sleep(320);
     const barOf=async k=>c.eval(`const e=document.querySelector('#viewForm [data-trigfor="${k}"]');
       if(!e)return 'missing';return /linear-gradient/.test(getComputedStyle(e).backgroundImage)?'bar':'none';`);
     eq('settled: bedroom carries no bar',await barOf('units.0.br'),'none');
-    eq('settled: designation carries no bar',await barOf('units.0.desig'),'none');
-    await c.eval(`window.__t.__edit('units.0.desig','F');window.__t.__renderBody();return 1;`);
+    eq('settled: the label line reads on file',
+       await c.eval(`const e=document.querySelector('#viewForm [data-box="units.0.label"]');
+         return e?getComputedStyle(e).borderLeftColor:'missing';`),'rgb(37, 99, 235)');
+    await c.eval(`window.__t.__edit('units.0.label','Family');window.__t.__renderBody();return 1;`);
     await sleep(280);
-    eq('changed: the designation marks itself',await barOf('units.0.desig'),'bar');
+    eq('changed: the label line goes amber',
+       await c.eval(`const e=document.querySelector('#viewForm [data-box="units.0.label"]');
+         return e?getComputedStyle(e).borderLeftColor:'missing';`),'rgb(180, 83, 9)');
     eq('changed: bedroom still does not',await barOf('units.0.br'),'none');
 
     const dividers=await c.eval(`
@@ -374,9 +379,11 @@ const FULL=process.argv.includes('--full');
       const u=[...cell.querySelectorAll('.utdiv')].map(px);
       const a=[...addr.querySelectorAll('.adiv')].map(px);
       return {u,a};`);
-    eq('the unit cell draws two dividers',dividers.u.length,2);
-    eq('both identical to each other',dividers.u[0],dividers.u[1]);
-    eq('and to the rule the address uses',dividers.u[0],dividers.a[0]);
+    /* One divider now. It separated the bath from the designation and the
+       designation from the source picker; with the designation gone the second
+       rule went with it, and the survivor still has to match the address. */
+    eq('the unit cell draws one divider',dividers.u.length,1);
+    eq('and it matches the rule the address uses',dividers.u[0],dividers.a[0]);
 
     /* ─────────────────────────────────────────────────────────────────────
        7. The session boundary (rule 19). A defect that does not exist inside a
