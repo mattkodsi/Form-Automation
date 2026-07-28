@@ -35,7 +35,7 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=62;   // 2026-07-27: the unit-type cell lost a divider with the designation,
+const MIN_CHECKS=71;   // 2026-07-27: the unit-type cell lost a divider with the designation,
                        // so the pair of divider checks became one. Lowered on purpose.
 let n=0,fails=0,verdict=null;
 const BAR='═'.repeat(68);
@@ -203,6 +203,24 @@ const FULL=process.argv.includes('--full');
       await sleep(450);await c.eval(HELPERS);};
     await openForm();
     eq('a fresh form is not dirty',await c.eval('return window.__t.isDirty()'),false);
+
+    /* ── rsNum: a dot is not always a decimal point ─────────────────────────
+       Every figure below is read off White Oak Townhomes' own executed
+       schedule (FY2025), which types its thousands with dots. Read as decimals
+       they gave $1.15 rents, and the totals gate still passed them because the
+       whole page was wrong by the same factor. The last three hold the line the
+       rule must not cross: two decimal places is money, one is a number, and
+       neither is a grouping mark. */
+    const num=async v=>c.eval('return window.__t.rsNum('+JSON.stringify(v)+')');
+    eq('1.147 is eleven hundred and forty-seven',await num('1.147'),1147);
+    eq('36.704 likewise',await num('36.704'),36704);
+    eq('$83.135 likewise, dollar sign and all',await num('$83.135'),83135);
+    eq('$997.620 likewise',await num('$997.620'),997620);
+    eq('and the comma spelling still reads the same',await num('1,147'),1147);
+    eq('a plain figure is untouched',await num('161'),161);
+    eq('two decimal places stay a decimal',await num('1147.50'),1147.5);
+    eq('one decimal place stays a decimal',await num('1.5'),1.5);
+    eq('nothing reads as nothing',await num(''),'');
 
     /* ─────────────────────────────────────────────────────────────────────
        1. coupledKeys — a cell answers the same whichever identity you hand it.
