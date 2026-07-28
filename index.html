@@ -2237,8 +2237,8 @@ function unitCard(i,pos){const trash=UNITS.length>1?`<button class="trash" data-
      wider than its column, so no row changes shape when it is edited. */
   /* Always the pair. Offering save/revert on the pointer alone gave buttons that
      changed nothing you could see, because the figure lives in the other key. */
-  const uaKeys=['units.'+i+'.ua_custom','units.'+i+'.ua_source'];
-  const saKeys=['units.'+i+'.safmr_custom','units.'+i+'.safmr_source'];
+  const uaKeys=coupledKeys('units.'+i+'.ua_custom');
+  const saKeys=coupledKeys('units.'+i+'.safmr_custom');
   /* Each column carries its OWN cell, pair and note, stacked.
 
      They used to be three grids one under another — every cell, then every
@@ -3214,7 +3214,7 @@ function renderSources(){
   const rcs=_rcsBusy
     ?`<div class="srcrow"><span class="spin" aria-hidden="true"></span><div><b>${esc(_rcsBusy.name)}</b> <span class="parsed">reading…</span><div class="sub">Reading the appraiser’s transmittal letter.</div></div></div>`
     :up
-    ?`<div class="srcrow"><span class="ok">✓</span><div><b>${esc(up.name)}</b> <span class="parsed">${_rn?'read · '+esc(_rfirm||'study')+' · '+_rn+' unit type'+(_rn===1?'':'s'):'uploaded · not read'}</span><div class="sub">${_rn?'The values are ready to apply.':'The letter could not be read — enter the values by hand below.'}</div></div>${_rn?'<button class="btn sm teal" id="rcsApply">Fill form from the study</button>':''}<button class="btn sm" id="upRcs">Replace</button></div>`
+    ?`<div class="srcrow"><span class="ok">✓</span><div><b>${esc(up.name)}</b> <span class="parsed">${_rn?'read · '+esc(_rfirm||'study')+' · '+_rn+' unit type'+(_rn===1?'':'s'):'uploaded · not read'}</span><div class="sub">${_rn?'The values are ready to apply.':'The letter could not be read — enter the values by hand below.'}</div></div>${_rn?'<button class="btn sm teal" id="rcsApply">Fill form from study</button>':''}<button class="btn sm" id="upRcs">Replace</button></div>`
     :`<div class="srcrow${sl.need?'':' dim'}"><span class="mut">○</span><div><b>${esc(sl.title)}</b> <span class="${sl.need?'missing':'parsed'}">${sl.need?'not uploaded':'optional'}</span><div class="sub">${esc(sl.sub)}</div></div><button class="btn sm" id="upRcs">Upload PDF</button></div>`;
   const ru=_rsUpload;let rs;
   if(_rsBusy)rs=`<div class="srcrow"><span class="spin" aria-hidden="true"></span><div><b>${esc(_rsBusy.name||'Rent schedule')}</b> <span class="parsed">${esc(_rsBusy.note||'reading\u2026')}</span><div class="sub">${esc(_rsBusy.sub||'Reading the schedule\u2019s form fields and printed text.')}</div></div></div>`;
@@ -3696,8 +3696,17 @@ function fieldKeys(k){if(k==='ca.name')return ['ca.prefix','ca.name'];const gb=g
    the pick had just set was left behind. Enter then said "Saved this field to
    the database" while the footer said "Unsaved changes", with nothing on screen
    to save. Keyed off _custom the same press saved all three. */
+/* A source-backed cell is every key it shows, not only the ones you can type
+   into. The allowance paints itself from whichever key holds the FIGURE —
+   ua_exec when the schedule supplied it, ua_rcs when the study did — so a
+   parsed figure left the cell painted unsaved with its pair hidden: no tick to
+   save it, no arrow to put it back, and Enter and Escape reaching neither.
+   The figure keys belong to the cell, so they are coupled to it (rule 17: the
+   rule belongs to the operation, not to the button) and the pair is built from
+   this list rather than a second one that could drift from it. */
 function coupledKeys(k){const m=k.match(/^(units\.\d+)\.(ua|safmr)_(custom|source|reviewed)$/);
-  if(m){const b=m[1]+'.'+m[2];return [k].concat([b+'_custom',b+'_source',b+'_reviewed'].filter(x=>x!==k));}
+  if(m){const b=m[1]+'.'+m[2];const figs=m[2]==='ua'?[b+'_exec',b+'_rcs']:[b+'_rcs',b+'_hud'];
+    return [k].concat([b+'_custom',b+'_source',b+'_reviewed'].concat(figs).filter(x=>x!==k));}
   if(k==='rent_schedule.date_eff_custom')return [k,'rent_schedule.date_eff_source'];
   if(k==='rent_schedule.date_eff_source')return [k,'rent_schedule.date_eff_custom'];
   if(k==='ocaf.factor_custom')return [k,'ocaf.factor_src'];
@@ -4037,7 +4046,7 @@ function wireBody(){
       rcsRemember();renderBody();
       const nu=r&&r.units?r.units.length:0;
       setStatus(nu
-        ?('RCS study read \u2014 '+(r.firm==='belfry'?'Belfry Valuation':r.firm==='cornerstone'?'Cornerstone Valuation Services':'the study')+', '+nu+' unit type'+(nu===1?'':'s')+' from page'+(r.pages.length===1?' ':'s ')+r.pages.map(x=>x+1).join(' and ')+'. Use \u201cFill form from the study\u201d in '+secRef(1)+' to apply it.')
+        ?('RCS study read \u2014 '+(r.firm==='belfry'?'Belfry Valuation':r.firm==='cornerstone'?'Cornerstone Valuation Services':'the study')+', '+nu+' unit type'+(nu===1?'':'s')+' from page'+(r.pages.length===1?' ':'s ')+r.pages.map(x=>x+1).join(' and ')+'. Use \u201cFill form from study\u201d in '+secRef(1)+' to apply it.')
         :'The study was uploaded, but its letter could not be read \u2014 enter the values by hand below. It still goes in as document 04.');
     });};
   const rap=el('rcsApply');if(rap)rap.onclick=()=>rcsFillFromParsed();
