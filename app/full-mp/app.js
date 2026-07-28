@@ -229,11 +229,14 @@ function ovNoteAddr(box){const keys=addrKeys(box);const m=modeOf(keys);return `<
 /* claim = a value a source row prepended above this list already offers. Two rows
    showing the selected background for one answer reads as two answers, so the
    source row wins it — the same rule the designation's "· RS" badge reads. */
+/* A key inside a composite address gets no badge of its own: the address is
+   ONE cell with one note, one save and one badge at its right edge, and the
+   state is no more separately sourced than the street, the city or the ZIP. */
 function csDrop(key,options,ph,cls,clearable,tint,claim,subs){const cur=get(key);const has=cur!==''&&cur!=null;const lab=has?cur:(ph||'—');const _cl=(claim!=null&&claim!==''&&claim===cur);const menu=options.map(o=>'<div class="uaopt'+((o===cur&&!_cl)?' sel':'')+'" data-csopt="'+esc(o)+'" data-cskey="'+key+'">'+esc(o)+((subs&&subs[o])?'<span class="uasub">'+esc(subs[o])+'</span>':'')+'</div>').join('');/* Five of these cells offered a ✕ and three did not, with no visible rule —
      and all nine have always cleared from the keyboard with Backspace, so the
      mouse was the odd one out. One pattern: if it holds a value, it can be
      cleared where you are looking at it. */
-  const clr=has?'<span class="csclear" data-csclear="'+key+'" title="Clear">✕</span>':'';return '<div class="uadrop cs '+(cls||'')+(has?' clearable':'')+'"><div class="uatrigger" tabindex="0" data-trigfor="'+key+'"'+(tint?' style="'+tint+'"':'')+'><span class="ualab">'+esc(lab)+'</span>'+srcTags(key)+clr+'<span class="cvx">▾</span></div><div class="uamenu">'+menu+'</div></div>';}
+  const clr=(has&&clearable!==false)?'<span class="csclear" data-csclear="'+key+'" title="Clear">✕</span>':'';return '<div class="uadrop cs '+(cls||'')+(has?' clearable':'')+'"><div class="uatrigger" tabindex="0" data-trigfor="'+key+'"'+(tint?' style="'+tint+'"':'')+'><span class="ualab">'+esc(lab)+'</span>'+(groupOf(key)?'':srcTags(key))+clr+'<span class="cvx">▾</span></div><div class="uamenu">'+menu+'</div></div>';}
 function dateEffResolved(){const src=get('rent_schedule.date_eff_source')||(get('rent_schedule.date_eff_rs')?'rs':'custom');return src==='custom'?(get('rent_schedule.date_eff_custom')||get('rent_schedule.date_rents_effective')):get('rent_schedule.date_eff_rs');}
 function dateEffCell(){const rs=get('rent_schedule.date_eff_rs');const src=get('rent_schedule.date_eff_source')||(rs?'rs':'custom');
   /* Whichever key answers, it reaches the box in the form the reader types into
@@ -564,9 +567,9 @@ function numUnresolved(i){return numConflict(i)&&!numReviewedOf(i);}
    belongs to — see unitActs. Inside these cells the icon pair squeezed the
    controls it sat beside, and the row changed shape the moment it was edited. */
 function unitTypeCell(i){const brK='units.'+i+'.br',baK='units.'+i+'.ba';const conf=false;const c=groupColors([brK,baK]);
-  const withRs=(k,opts,ph)=>{const d=csDrop(k,opts,ph,'',!/\.br$/.test(k),(!conf&&partHot(k))?tintStyle(k):'',rsBrBa(k));const row=rsCsRow(k)||'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>';
+  const withRs=(k,opts,ph)=>{const d=csDrop(k,opts,ph,'',!/\.br$/.test(k)&&!modeOf(k),(!conf&&partHot(k))?tintStyle(k):'',rsBrBa(k));const row=rsCsRow(k)||'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>';
     return d.replace('<div class="uamenu">','<div class="uamenu">'+row);};
-  return `<div class="utwrap"><div class="rbox brba" data-box="${brK}" style="background:${c[1]};border-left-color:${c[0]}">${withRs(brK,BR_OPTS,'BR')}<span class="slash">/</span>${withRs(baK,BA_OPTS,'BA')}${ovIcons([brK,baK])}</div>`
+  return `<div class="utwrap"><div class="rbox brba" data-box="${brK}" style="background:${c[1]};border-left-color:${c[0]}">${withRs(brK,BR_OPTS,'BR')}${ovIcons(brK)}<span class="slash">/</span>${withRs(baK,BA_OPTS,'BA')}${ovIcons(baK)}</div>`
     +`${labelLine(i)}</div>`;}
 function unitCountCell(i){const k='units.'+i+'.num_units';const c=cellColors(k);const rv=rsUnit(i,'count');
   /* The study counts the units too, and had nowhere to be offered from — the
@@ -2064,12 +2067,16 @@ function _renderCommand(){const a=analysis();const pCur=a.ceil>0?clamp(a.cg/a.ce
    const _attn=_items.filter(x=>!/data-st="ok"/.test(x));
    const _ok=_items.filter(x=>/data-st="ok"/.test(x));
    const _n=_ok.length;
-   return '<div class="ccard chkcard"><div class="cck">RECORD CHECKS</div>'
-     +(_attn.length?'<div class="chkgrid">'+_attn.join('')+'</div>':'')
-     +(_n?('<div class="chkmore" tabindex="0">'
-        +'<div class="chksum"><span class="ok">\u2713</span> '+_n+' check'+(_n===1?'':'s')
-        +' agree'+(_attn.length?'':' \u2014 nothing to review')+'</div>'
-        +'<div class="chkall"><div class="chkgrid">'+_ok.join('')+'</div></div></div>'):'')
+   /* Inside the grid: an odd number of things wanting attention leaves a cell
+      empty, and this is what belongs in it. Two columns, so it lands bottom
+      right when the count is odd and starts a fresh row when it is even —
+      either way the card has no band of its own to carry. */
+   const _more=_n?('<div class="chkmore" tabindex="0">'
+        +'<div class="chksum"><span class="ok">\u2713</span> '+_n
+        +(_attn.length?' agree':' \u2014 all agree')+'</div>'
+        +'<div class="chkall"><div class="chkgrid">'+_ok.join('')+'</div></div></div>'):'';
+   return '<div class="ccard chkcard"><div class="cckrow"><div class="cck">RECORD CHECKS</div>'+_more+'</div>'
+     +(_attn.length?('<div class="chkgrid">'+_attn.join('')+'</div>'):'')
      +'</div>';})()}
    ${pkgCard()}`;}
 function pkgCard(){
@@ -2733,8 +2740,15 @@ function wireBody(){
    ONE current record per property; leaving the form asks to save or discard.
    The RCS form itself (everything above) is unchanged. */
 
-document.addEventListener('click',e=>{document.querySelectorAll('.uadrop.open').forEach(x=>x.classList.remove('open'));if(_pending&&!(e.target&&e.target.closest&&e.target.closest('.uaopt,[data-cb],.cb,[data-fuel],[data-fuel3],[data-wibox],[data-mgmt],[data-csopt],.uatrigger'))){_pending=null;_pendingSnap=null;}});
-document.addEventListener('keydown',e=>{const vis=v=>{const x=el('view'+v);return x&&x.style&&x.style.display!=='none';};if(e.key==='Tab'){_pending=null;_pendingSnap=null;_rsArm=false;return;}if(e.key==='Enter'){const ae=document.activeElement;const inText=!!ae&&/^(INPUT|TEXTAREA)$/.test(ae.tagName)&&ae.type!=='checkbox';
+document.addEventListener('click',e=>{document.querySelectorAll('.uadrop.open').forEach(x=>x.classList.remove('open'));
+  /* .gpw is the generate dialog's count, .chkmore the record-checks summary.
+     A press inside one is that card's own business; a press anywhere else ends
+     it, which is what a reader expects of anything they pinned open. */
+  if(!(e.target&&e.target.closest&&e.target.closest('.gpw,.chkmore')))
+    document.querySelectorAll('.gpw.open,.chkmore.open').forEach(x=>{x.classList.remove('open');if(x.blur)x.blur();});if(_pending&&!(e.target&&e.target.closest&&e.target.closest('.uaopt,[data-cb],.cb,[data-fuel],[data-fuel3],[data-wibox],[data-mgmt],[data-csopt],.uatrigger'))){_pending=null;_pendingSnap=null;}});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){const _p=document.querySelectorAll('.gpw.open,.chkmore.open');
+    if(_p.length){_p.forEach(x=>{x.classList.remove('open');if(x.blur)x.blur();});e.stopPropagation();return;}}const vis=v=>{const x=el('view'+v);return x&&x.style&&x.style.display!=='none';};if(e.key==='Tab'){_pending=null;_pendingSnap=null;_rsArm=false;return;}if(e.key==='Enter'){const ae=document.activeElement;const inText=!!ae&&/^(INPUT|TEXTAREA)$/.test(ae.tagName)&&ae.type!=='checkbox';
     if(_dlgEnter&&el('scrim')&&el('scrim').classList.contains('open')){e.preventDefault();_dlgEnter();return;}
     if(_rsArm&&!inText){const ra=el('rsApply');if(ra){e.preventDefault();_rsArm=false;ra.click();return;}}
     if(!inText&&_pending&&_pending.length){e.preventDefault();commitPending();}return;}if(e.key!=='Escape')return;if(el('scrim')&&el('scrim').classList&&el('scrim').classList.contains('open')){closeModal();_pending=null;_pendingSnap=null;return;}const openD=document.querySelector('.uadrop.open');if(openD){e.preventDefault();openD.classList.remove('open');return;}if(vis('Form')){if(_pending&&_pending.length){e.preventDefault();revertPending();return;}if(_undoChain.length&&undoStep()){e.preventDefault();return;}const ae=document.activeElement;const cell=(ae&&ae.closest)?ae.closest('[data-box],.cb,.wi'):null;if(cell){let _sel=null;if(ae.getAttribute){if(ae.getAttribute('data-k'))_sel='[data-k="'+ae.getAttribute('data-k')+'"]';else if(ae.getAttribute('data-cb'))_sel='[data-cb="'+ae.getAttribute('data-cb')+'"]';else if(ae.classList&&ae.classList.contains('uatrigger'))_sel=ae.getAttribute('data-trigfor')?('[data-trigfor="'+ae.getAttribute('data-trigfor')+'"]'):('[data-box="'+(cell.getAttribute('data-box')||'')+'"] .uatrigger');}_refocusSel=_sel;if(revertCellIfOver(cell,(ae.getAttribute&&ae.getAttribute('data-trigfor'))||null)){e.preventDefault();return;}_refocusSel=null;}requestExit();return;}if(vis('Launcher')||vis('Contacts')){openMenu();}});
@@ -3417,6 +3431,11 @@ function wirePkgRows(docs){
   document.querySelectorAll('.gpw').forEach(function(w){
     w.addEventListener('mouseenter',function(){placePop(w);});
     w.addEventListener('focusin',function(){placePop(w);});});
+  document.querySelectorAll('.chkmore').forEach(function(m){m.addEventListener('click',function(e){
+    e.stopPropagation();
+    const on=m.classList.contains('open');
+    document.querySelectorAll('.chkmore.open').forEach(function(x){x.classList.remove('open');});
+    if(!on)m.classList.add('open');else m.blur();});});
   document.querySelectorAll('.gpw>.gshort').forEach(function(b){b.addEventListener('click',function(e){
     e.preventDefault();e.stopPropagation();
     const w=b.parentElement;const on=w.classList.contains('open');
