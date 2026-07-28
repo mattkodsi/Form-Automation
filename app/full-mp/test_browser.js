@@ -35,7 +35,7 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=53;
+const MIN_CHECKS=59;
 let n=0,fails=0,verdict=null;
 const BAR='═'.repeat(68);
 function fail(msg,err){
@@ -438,7 +438,33 @@ const FULL=process.argv.includes('--full');
     await c.send('Emulation.clearDeviceMetricsOverride');
 
     /* ─────────────────────────────────────────────────────────────────────
-       10. Nothing threw along the way. */
+       10. Switching a cell to Custom must not fail the save. Only a row with no
+       RCS figure offers "Custom…" as its first unselected option, so with one
+       seeded unit row this never ran. On a real property it threw "Cannot read
+       properties of undefined (reading 'value')" and told the user the save had
+       FAILED: a group widened through coupledKeys names a *_custom and a
+       *_reviewed the user has never typed into, and save dereferenced them. */
+    console.log('\n── switching to Custom saves ──────────────────────────');
+    for(const row of [3,5]){
+      await openForm();
+      const picked=await c.eval(`
+        const box=document.querySelector('#viewForm [data-box="units.${row}.ua_source"],#viewForm [data-box="units.${row}.ua_custom"]');
+        if(!box)return null;const tr=box.querySelector('.uatrigger');if(!tr)return null;tr.click();
+        const o=[...box.querySelectorAll('.uaopt')].filter(x=>!x.classList.contains('sel')&&!x.classList.contains('srcdim'));
+        const hit=o.find(x=>/Custom/.test(x.textContent))||o[0];
+        if(!hit){tr.click();return null;}const t=hit.textContent.trim();hit.click();return t;`);
+      T(`unit row ${row}: a source can be picked`,picked);
+      await c.eval(`const box=document.querySelector('#viewForm [data-box="units.${row}.ua_source"],#viewForm [data-box="units.${row}.ua_custom"]');
+        const tr=box&&box.querySelector('.uatrigger');if(tr)tr.focus();return 1;`);
+      await c.key('Enter',{wait:380});
+      const st=await c.eval(`const s=document.getElementById('status');return s?s.textContent.trim():'';`);
+      eq(`unit row ${row}: the save does not fail`,/Save failed|Cannot read/.test(st),false);
+      eq(`unit row ${row}: and nothing is left unsaved`,
+         await c.eval(`return window.__b.dirtyKeys().filter(k=>k.indexOf('units.${row}.')===0)`),[]);
+    }
+
+    /* ─────────────────────────────────────────────────────────────────────
+       11. Nothing threw along the way. */
     console.log('\n── the console stayed quiet ───────────────────────────');
     eq('no console errors and no uncaught exceptions',c.logs.slice(0,3),[]);
 
