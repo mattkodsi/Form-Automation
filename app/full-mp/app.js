@@ -891,10 +891,26 @@ function rcsUnitVal(i,field){
   const m=rcsMatch(i);if(!m.u)return null;
   const v=m.u[field];return (v==null||v==='')?null:String(v);
 }
+/* A non-revenue unit is priced by its shape like any other: the appraiser
+   valued the unit, not what it is used for. Same ambiguity rule — two study
+   lines answering to one row fills nothing, and a non-revenue row carries no
+   unit count to break the tie with. */
+function rcsNonrevVal(i){
+  const p=_rcsUpload&&_rcsUpload.parsed;if(!p||!p.units)return null;
+  const br=String(get('nonrev.'+i+'.br')||''),ba=String(get('nonrev.'+i+'.ba')||'');
+  if(!br)return null;
+  const hit=p.units.filter(function(u){
+    if(String(u.br)+'BR'!==br)return false;
+    if(ba&&u.ba!==''&&String(u.ba)+'BA'!==ba)return false;
+    return true;});
+  if(hit.length!==1)return null;
+  const v=hit[0].proposed;return (v==null||v==='')?null:String(v);
+}
 function rcsOf(k){
   let m=k.match(/^units\.(\d+)\.proposed$/);   if(m)return rcsUnitVal(+m[1],'proposed');
   m=k.match(/^units\.(\d+)\.ua_rcs$/);         if(m)return rcsUnitVal(+m[1],'ua');
   m=k.match(/^units\.(\d+)\.safmr_rcs$/);      if(m)return rcsUnitVal(+m[1],'safmr');
+  m=k.match(/^nonrev\.(\d+)\.rent$/);          if(m)return rcsNonrevVal(+m[1]);
   return rcsVal(k);
 }
 /* FORM-RULES: every document-fed cell says so. This must cover every key
@@ -902,7 +918,7 @@ function rcsOf(k){
 function rcsTag(k){
   const v=get(k); if(v===''||v==null)return '';
   const r=rcsOf(k); if(r==null||r==='')return '';
-  const num=/^units\.\d+\.(proposed|ua_rcs|safmr_rcs)$/.test(k);
+  const num=/^(units\.\d+\.(proposed|ua_rcs|safmr_rcs)|nonrev\.\d+\.rent)$/.test(k);
   /* The study gives ten bare digits and the cell holds "(708) 500-2380". Compared
      as strings those differ, so the one cell whose value is reformatted on the
      way in would have shown no source tag at all. */
@@ -917,6 +933,7 @@ const RCS_SCALARS=['appr.firm','appr.name','appr.email','appr.phone','appr.addr_
 function rcsFillKeys(){
   const ks=RCS_SCALARS.slice();
   (UNITS||[]).forEach(function(i){['proposed','ua_rcs','safmr_rcs'].forEach(function(f){ks.push('units.'+i+'.'+f);});});
+  (NONREV||[]).forEach(function(i){ks.push('nonrev.'+i+'.rent');});
   return ks.filter(function(k){const r=rcsOf(k);return r!=null&&r!=='';});
 }
 function rcsFillFromParsed(){
@@ -942,6 +959,8 @@ function rcsFillFromParsed(){
     if(m.u.ua!=='')setk('units.'+i+'.ua_rcs',m.u.ua);
     if(m.u.safmr!=='')setk('units.'+i+'.safmr_rcs',m.u.safmr);
   });
+
+  (NONREV||[]).forEach(function(i){const v=rcsNonrevVal(i);if(v)setk('nonrev.'+i+'.rent',v);});
 
   deriveUnits();renderBody();scheduleHudRefresh();
   const n=rcsFillKeys().length;
