@@ -949,6 +949,73 @@ function rcsFillFromParsed(){
     +(ambiguous?' '+ambiguous+' unit row'+(ambiguous===1?'':'s')+' matched more than one line in the study and '+(ambiguous===1?'was':'were')+' left for you — the study prices them separately and the form cannot tell which is which.':'')
     +' Review the highlighted cells, then “Update property profile”.');
 }
+/* ===================== real cross-document checks =====================
+   These chips used to restate what was typed in, which reads as verification
+   the app never performed. With a study parsed there are two independent
+   records of the same facts, so they can finally be compared.
+
+   A check renders ONLY when both sides exist. One-sided silence is honest;
+   a green tick that compared nothing is not. */
+function rcsChecks(){
+  const P=_rcsUpload&&_rcsUpload.parsed;if(!P)return '';
+  const out=[];const M=v=>'$'+Number(v).toLocaleString('en-US');
+  const lab=i=>esc(get('units.'+i+'.br')||('row '+(i+1)));
+
+  /* The Section 8 number, across every document that carries one. Belfry
+     prints it under an "FHA Project No." label and Gates Manor's own grid
+     disagrees with its own letter, so this is not a formality. */
+  const N=v=>String(v).replace(/[^A-Za-z0-9]/g,'').toUpperCase();
+  const src=[['the study',rcsVal('property.s8')],['the schedule',rsVal('property.s8')],['on file',get('property.s8')]]
+    .filter(function(x){return x[1];});
+  if(src.length>1){
+    const agree=src.every(function(x){return N(x[1])===N(src[0][1]);});
+    out.push(chk(agree?'ok':'warn','Section 8 # across documents',
+      agree?('agrees · '+src.map(function(x){return x[0];}).join(', '))
+           :src.map(function(x){return esc(x[1])+' per '+x[0];}).join(' · ')));
+  }
+
+  /* Utility allowance: the study against the executed schedule. */
+  let same=0;const diff=[];
+  (UNITS||[]).forEach(function(i){
+    const r=numf(get('units.'+i+'.ua_rcs')),e=numf(get('units.'+i+'.ua_exec'));
+    if(r>0&&e>0){if(r===e)same++;else diff.push(lab(i)+' '+M(r)+' vs '+M(e));}});
+  if(same||diff.length)out.push(chk(diff.length?'warn':'ok','Utility allowance · study vs schedule',
+    diff.length?('differs — '+diff.join(' · ')):(same+' unit type'+(same===1?'':'s')+' agree')));
+
+  /* The 150% ceiling: the study against the HUD pull. */
+  let ssame=0;const sdiff=[];
+  (UNITS||[]).forEach(function(i){
+    const r=numf(get('units.'+i+'.safmr_rcs')),h=numf(get('units.'+i+'.safmr_hud'));
+    if(r>0&&h>0){if(r===h)ssame++;else sdiff.push(lab(i)+' '+M(r)+' vs '+M(h));}});
+  if(ssame||sdiff.length)out.push(chk(sdiff.length?'info':'ok','150% SAFMR · study vs HUD',
+    sdiff.length?('differs — '+sdiff.join(' · ')+' · the HUD pull is used')
+                :(ssame+' unit type'+(ssame===1?'':'s')+' agree')));
+
+  /* Unit counts: the study against the record. */
+  const cdiff=[];let csame=0;
+  (UNITS||[]).forEach(function(i){
+    const mt=rcsMatch(i);if(!mt.u||mt.u.count==='')return;
+    const n=numf(get('units.'+i+'.num_units'));if(!(n>0))return;
+    if(Number(mt.u.count)===n)csame++;else cdiff.push(lab(i)+' '+mt.u.count+' vs '+n);});
+  if(csame||cdiff.length)out.push(chk(cdiff.length?'warn':'ok','Unit counts · study vs record',
+    cdiff.length?('differs — '+cdiff.join(' · ')):(csame+' unit type'+(csame===1?'':'s')+' agree')));
+
+  /* The appraiser's own 150% conclusion against ours. Compared, never
+     substituted — and only when we have a ceiling of our own to compare with. */
+  if(P.totals&&P.totals.grossRenewal!=null&&P.totals.grossSafmr150!=null){
+    const a=analysis();
+    if(a&&a.ceil>0){
+      const theirs=P.totals.grossRenewal<P.totals.grossSafmr150;
+      out.push(chk(theirs===a.pass?'ok':'warn','150% test · study vs our figures',
+        'the study: '+M(P.totals.grossRenewal)+' against '+M(P.totals.grossSafmr150)
+        +' · ours: '+M(a.pg)+' against '+M(a.ceil)));
+    }
+  }
+
+  /* Anything the study could not say cleanly about itself. */
+  (P.warnings||[]).forEach(function(w){out.push(chk('info','The study',esc(w)));});
+  return out.join('');
+}
 /* The reading outlives the page that made it, exactly as the schedule's does. */
 function rcsRemember(){if(!(activeCid&&mpdb&&mpdb.setCycleRcs))return;const u=_rcsUpload;
   const doc=u?{name:u.name,at:u.at,parsed:u.parsed}:{};
@@ -1598,7 +1665,7 @@ function _renderCommand(){const a=analysis();const pCur=a.ceil>0?clamp(a.cg/a.ce
    ${card1}
    <div class="ccard"><div class="cck">RECORD CHECKS</div><div class="chkgrid">
      ${chk(nmOk?'ok':'warn','Property name',nmOk?esc(get('property.name')):'missing — Section 2')}${chk(s8Ok?'ok':'warn','Section 8 #',s8Ok?esc(get('property.s8')):'missing — Section 2')}${chk(fhaOk?'ok':'info','FHA #',fhaOk?esc(get('property.fha')):((get('property.fha')||'').trim()?'the schedule says “'+esc(get('property.fha'))+'” — no number to print':'none on file — fills page 1 of the rent schedule'))}${chk(sigOk?'ok':'warn','Signatory (Part H)',sigOk?(esc(get('sig.name'))+(get('sig.title')?' · '+esc(get('sig.title'))+(get('sig.principal')?' of the '+esc(get('sig.principal')):''):'')):'missing — Section 3')}
-     ${chk(ua[0],'Utility allowance',ua[1])}${hasProg('rcs')?chk((a.safmrMissing||a.ceil<=0)?'warn':(a.safmrOver?'warn':(a.safmrConflict?'info':'ok')),'SAFMR (150% ceiling)',a.safmrMissing?'enter or pull SAFMR per unit type':(a.ceil<=0?(a.countsMissing&&a.safmrHave?'no ceiling yet — unit counts needed':'no ceiling yet'):(a.safmrOver?(a.safmrOver+' type'+(a.safmrOver>1?'s':'')+' over 150% SAFMR'):(a.safmrConflict?'HUD vs RCS differ — using HUD':(UNITS.every(i=>(get('units.'+i+'.safmr_source')||defSafmrSrc(i))==='hud')?'per unit type · HUD':'per unit type'))))):''}${(()=>{const c=rsCapacity();return c.msgs.length?chk('warn','Rent schedule capacity',esc(c.flags.join(' · '))):'';})()}</div></div>
+     ${chk(ua[0],'Utility allowance',ua[1])}${hasProg('rcs')?chk((a.safmrMissing||a.ceil<=0)?'warn':(a.safmrOver?'warn':(a.safmrConflict?'info':'ok')),'SAFMR (150% ceiling)',a.safmrMissing?'enter or pull SAFMR per unit type':(a.ceil<=0?(a.countsMissing&&a.safmrHave?'no ceiling yet — unit counts needed':'no ceiling yet'):(a.safmrOver?(a.safmrOver+' type'+(a.safmrOver>1?'s':'')+' over 150% SAFMR'):(a.safmrConflict?'HUD vs RCS differ — using HUD':(UNITS.every(i=>(get('units.'+i+'.safmr_source')||defSafmrSrc(i))==='hud')?'per unit type · HUD':'per unit type'))))):''}${(()=>{const c=rsCapacity();return c.msgs.length?chk('warn','Rent schedule capacity',esc(c.flags.join(' · '))):'';})()}${rcsChecks()}</div></div>
    ${pkgCard()}`;}
 function pkgCard(){
   if(hasProg('rcs'))return `<div class="ccard"><div class="cck">THIS PACKAGE</div><div class="cctitle" style="font-size:15px">${_rcsUpload?'RCS report uploaded':'RCS report needed'}</div><div class="ccsub">${_rcsUpload?esc(_rcsUpload.name)+' — goes in as document 04':'Upload the completed RCS report in '+secRef(1)+' — it becomes document 04 of the package.'}</div>
@@ -3112,7 +3179,7 @@ function contactDialog(c){c=c||{};
   el('dlgOk').onclick=async()=>{const patch={name:(el('ccN').value||'').trim(),email:(el('ccE').value||'').trim(),phone:(el('ccP').value||'').trim()};closeModal();try{if(c.id)await mpdb.updateContact(c.id,patch);else await mpdb.addContact(patch);renderContacts();}catch(e){saveFailedModal(e);}};}
 const __API={DESIG,desigName,rsParseUnitType,fmtPhone,fmtDate,sMoney,sPct,sK,analysis,uaResolvedOf,uaConflict,uaUnresolved,renderMenu,renderLauncher,openMenu,openForm,openLauncher,ringSvg,niceDate,isDirty,overrideCount,isStateKey,attnFlags,pbUtil,clearUncheckedWriteins,srcOf:(k)=>srcOf(k),__openForm:(pid)=>{activePid=pid;return openForm('RCS');},__openCycleForm:(pid,cid)=>{activePid=pid;return openCycleForm(cid);},__renderBody:()=>renderBody(),__docMissing:(id)=>docMissing(id).map(x=>x.label),__docWarns:(id)=>docWarns(id).map(x=>x.label),__edit:(k,v)=>{form=store.editForm(form,k,v);},getVal:(k)=>get(k),modeOf:(kk)=>modeOf(kk),fieldKeys:(k)=>fieldKeys(k),keysCanSave:(ks)=>keysCanSave(ks),keysCanRevert:(ks)=>keysCanRevert(ks),keysNewDirty:(ks)=>keysNewDirty(ks),__revert:(k)=>store.revertForm(form,k),coupledKeys:(k)=>coupledKeys(k),__firstPid:()=>{const ps=mpdb?mpdb.listProperties():[];return ps.length?ps[0].id:null;},__boxes:(i)=>({ua:uaBox(i),safmr:safmrBox(i)}),__saveField:async(k)=>{form=await store.saveField(form,k);},__set:(f,u)=>{form=f;UNITS=u;},desigColors:(k)=>desigColors(k),__cell:(k)=>form[k],__rsTextPageAt:(doc,i)=>rsTextPageAt(doc,i),
 __setRcsParsed:(rec)=>{_rcsUpload={name:'study.pdf',bytes:null,parsed:rec,at:''};},
-__rcsFill:()=>rcsFillFromParsed(),__rcsTag:(k)=>rcsTag(k),__rcsFillKeys:()=>rcsFillKeys(),__rcsMatch:(i)=>rcsMatch(i),__rcsOf:(k)=>rcsOf(k),
+__rcsFill:()=>rcsFillFromParsed(),__rcsChecks:()=>rcsChecks(),__rcsTag:(k)=>rcsTag(k),__rcsFillKeys:()=>rcsFillKeys(),__rcsMatch:(i)=>rcsMatch(i),__rcsOf:(k)=>rcsOf(k),
   /* The undo run. __editCell is the text box's input handler in miniature —
      push the cell, then write it the way that handler does — so a suite can
      build a run of edits without synthesising DOM events. */

@@ -16,7 +16,7 @@ const els={};
 global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>null,querySelectorAll:()=>[],createElement:()=>mk(),addEventListener(){},body:{classList:{toggle(){},contains(){return false;}}}};
 const fs=require('fs'),path=require('path'),os=require('os');
 
-const MIN_CHECKS=170;
+const MIN_CHECKS=180;
 let n=0,fails=0,verdict=null;
 const BAR='='.repeat(68);
 function fail(msg,err){
@@ -271,6 +271,49 @@ async function reader(file){
   eq('the 68-unit row takes the 68-unit line',app.__rcsOf('units.0.proposed'),'1200');
   app.__edit('units.0.num_units','99');
   eq('a count matching neither line still fills nothing',app.__rcsOf('units.0.proposed'),null);
+
+
+  /* ============ cross-document checks ============ */
+  app.__setRcsParsed(cvRec);
+  app.__edit('units.0.br','2BR');app.__edit('units.0.ba','1BA');app.__edit('units.0.num_units','32');
+  app.__edit('units.1.br','3BR');app.__edit('units.1.ba','1BA');app.__edit('units.1.num_units','33');
+  app.__rcsFill();
+
+  /* both sides present and equal */
+  app.__edit('units.0.ua_exec','161');
+  let H=app.__rcsChecks();
+  T('the utility allowance is compared against the schedule',/Utility allowance/.test(H));
+  T('and reported as agreeing',/agree/.test(H));
+
+  /* both sides present and different */
+  app.__edit('units.0.ua_exec','150');
+  H=app.__rcsChecks();
+  T('a disagreement is flagged',/differs/.test(H));
+  T('and states both figures',/\$161/.test(H)&&/\$150/.test(H));
+
+  /* one side missing: the check must not render at all */
+  app.__edit('units.0.ua_exec','');
+  H=app.__rcsChecks();
+  eq('with nothing to compare against, no allowance check is shown',/Utility allowance/.test(H),false);
+
+  /* the section 8 number across sources */
+  H=app.__rcsChecks();
+  T('the section 8 number is compared across documents',/Section 8 # across documents/.test(H));
+
+  /* unit counts */
+  app.__edit('units.0.num_units','30');
+  H=app.__rcsChecks();
+  T('a unit-count mismatch is flagged',/Unit counts/.test(H)&&/differs/.test(H));
+  app.__edit('units.0.num_units','32');
+
+  /* a study that contradicts itself says so here too */
+  const fvRec=await R.readLetter(await reader(path.join(FIX,'belfry-fairview-homes.pdf')));
+  app.__setRcsParsed(fvRec);
+  T('the study’s own warnings surface as checks',/3BR\/1\.5BA/.test(app.__rcsChecks()));
+
+  /* no study at all: no checks, no claims */
+  app.__setRcsParsed(null);
+  eq('with no study there are no checks',app.__rcsChecks(),'');
 
   finish();
 })().catch(e=>{fail('the suite threw',e);process.exit(1);});
