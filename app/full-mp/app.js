@@ -502,7 +502,12 @@ function numUnresolved(i){return numConflict(i)&&!numReviewedOf(i);}
 function unitTypeCell(i){const brK='units.'+i+'.br',baK='units.'+i+'.ba';const conf=typeUnresolved(i);const c=conf?CLR.overridden:groupColors([brK,baK]);
   const withRs=(k,opts,ph)=>{const d=csDrop(k,opts,ph,'',!/\.br$/.test(k),(!conf&&partHot(k))?tintStyle(k):'',rsBrBa(k));const row=rsCsRow(k)||'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>';
     return d.replace('<div class="uamenu">','<div class="uamenu">'+row);};
-  return `<div class="utwrap"><div class="rbox brba" data-box="${brK}" style="background:${c[1]};border-left-color:${c[0]}">${withRs(brK,BR_OPTS,'BR')}<span class="slash">/</span>${withRs(baK,BA_OPTS,'BA')}</div>${labelLine(i)}</div>`;}
+  return `<div class="utwrap"><div class="rbox brba" data-box="${brK}" style="background:${c[1]};border-left-color:${c[0]}">${withRs(brK,BR_OPTS,'BR')}<span class="slash">/</span>${withRs(baK,BA_OPTS,'BA')}</div>`
+    /* Directly under the cell it acts on, and ABOVE the label line — the label
+       is a separate control with a separate pair, and one pair sitting between
+       the two read as belonging to whichever you looked at last. */
+    +`<div class="uracts ucolacts c1"><span class="ua-br">${ovIcons(brK)}</span><span class="ua-sl"></span><span class="ua-ba">${ovIcons(baK)}</span></div>`
+    +`${labelLine(i)}</div>`;}
 function unitCountCell(i){const k='units.'+i+'.num_units';const c=numUnresolved(i)?CLR.overridden:cellColors(k);const rv=rsUnit(i,'count');
   // The schedule is where this number comes from, so the cell says so whether or
   // not one is loaded right now — dimmed when there is nothing to pull, exactly as
@@ -559,17 +564,29 @@ function unitCard(i,pos){const trash=UNITS.length>1?`<button class="trash" data-
      changed nothing you could see, because the figure lives in the other key. */
   const uaKeys=['units.'+i+'.ua_custom','units.'+i+'.ua_source'];
   const saKeys=['units.'+i+'.safmr_custom','units.'+i+'.safmr_source'];
-  const actCols=[[1,'<span class="ua-br">'+ovIcons('units.'+i+'.br')+'</span><span class="ua-sl"></span>'
-                   +'<span class="ua-ba">'+ovIcons('units.'+i+'.ba')+'</span>'
-                   /* the label's pair lives in the label line itself — see labelLine */],
-                 [2,ovIcons('units.'+i+'.num_units')],[3,ovIcons('units.'+i+'.current')],
-                 [4,ovIcons('units.'+i+'.proposed')],[5,ovIcons(uaKeys)]];
-  if(hasProg('rcs'))actCols.push([6,ovIcons(saKeys)]);
-  const acts=`<div class="uracts${hasProg('rcs')?'':' noprop'}">`+actCols.map(a=>'<div style="grid-column:'+a[0]+'">'+a[1]+'</div>').join('')+'</div>';
-  const notes=[typeNote(i),numNote(i),uaNoteCell(i),hasProg('rcs')?safmrNote(i):''].filter(Boolean).join('');
+  /* Each column carries its OWN cell, pair and note, stacked.
 
-  const sub=((_c>0&&_p>0)||notes)?`<div class="urnotes"><div class="urnmetric">${metric}</div><div class="urnsub">${notes}</div></div>`:'';
-  return `<div class="urow"><div class="ucells">${unitTypeCell(i)}${unitCountCell(i)}${moneyBox('units.'+i+'.current',1)}${moneyBox('units.'+i+'.proposed',1)}${uaBox(i)}${hasProg('rcs')?safmrBox(i):''}<div class="urx">${trash}</div></div>${acts}${sub}</div>`;}
+     They used to be three grids one under another — every cell, then every
+     pair, then every note — so the height of the tallest column set where the
+     next band started for all of them. Column one is the tallest (it carries
+     the label line and now two pairs), which pushed the 150% SAFMR reading two
+     bands clear of the figure it describes, and left every pair floating a
+     label's height below the box it acts on. A column that grows now grows
+     alone. `.uracts` stays on each pair so cellActBtn still finds it (rule 10). */
+  const col=(cell,act,note)=>'<div class="ucol">'+cell+(act?'<div class="uracts ucolacts">'+act+'</div>':'')+(note||'')+'</div>';
+  const metricCell=metric?'<div class="urnmetric">'+metric+'</div>':'';
+  return '<div class="urow"><div class="ucells'+(hasProg('rcs')?'':' noprop')+'">'
+    /* column one's two pairs live inside the type cell, between the box and the
+       label line and beneath the label line — see unitTypeCell and labelLine. */
+    +col(unitTypeCell(i),'',typeNote(i))
+    +col(unitCountCell(i),ovIcons('units.'+i+'.num_units'),numNote(i))
+    +col(moneyBox('units.'+i+'.current',1),ovIcons('units.'+i+'.current'),'')
+    +col(moneyBox('units.'+i+'.proposed',1),ovIcons('units.'+i+'.proposed'),metricCell)
+    +col(uaBox(i),ovIcons(uaKeys),uaNoteCell(i))
+    +(hasProg('rcs')?col(safmrBox(i),ovIcons(saKeys),safmrNote(i)):'')
+    +'<div class="urx">'+trash+'</div>'
+    +'</div></div>';
+}
 function renderRents(){
   const cards=UNITS.map((i,pos)=>unitCard(i,pos)).join('');
   const nrOn=get('nonrev.enabled')==='1'||NONREV.length>0;
@@ -699,14 +716,14 @@ function labelLine(i){const k='units.'+i+'.label';const v=get(k)||'';
     +'<input class="ulab-in" data-k="'+k+'" value="'+esc(v)+'" placeholder="add a label" autocomplete="off" spellcheck="false">'
     +(fromRs?'<span class="srctag">\u00b7 RS</span>':'')
     +(over?'<span class="ulabwarn" title="'+esc('The schedule prints \u201c'+printed+'\u201d, which is wider than the box on the form.')+'">clips when printed</span>':'')
-    /* The pair sits IN the line, not under the row. The row's other pairs sit
-       below because their cells are narrow and the buttons squeezed them; this
-       line is full-width and fixed-height, so the pair costs it nothing and
-       lands under the field it acts on instead of adrift at the right. */
-    +ovIcons(k)
     +'<div class="uadrop cs ulabdrop"><div class="uatrigger" tabindex="0" data-trigfor="'+k+'"><span class="cvx">\u25be</span></div>'
     +'<div class="uamenu">'+rsRow+rcsRow+hints+'</div></div>'
-    +'</div>';}
+    +'</div>'
+    /* Under the line, not in it. Every other control in this row keeps its pair
+       directly beneath the box it acts on; the label sat with its pair inline
+       and so was the one control whose buttons meant something different from
+       everyone else's. */
+    +'<div class="uracts ucolacts c1lab">'+ovIcons(k)+'</div>';}
 /* The unit type is ONE fact — the schedule states it as one string, "1 BR / 1 BA E" —
    and the form splits it only to make it editable. Provenance belongs to the
    fact: the group is the schedule's while every part of it still is, and one
