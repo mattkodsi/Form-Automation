@@ -4744,6 +4744,35 @@ const DOC_REQS={
   schedule:[['property.name','property name',2],['property.fha','FHA number',2],
             ['owner.entity_name','ownership entity',2],
             ['sig.name','signatory name',3],['sig.title','signatory title',3]],
+  /* ── the OCAF / UAF year ────────────────────────────────────────────────
+     Audited the same way as the six above: against what gen.js ACTUALLY prints,
+     not against what seemed obvious. Every one of these carries a signature
+     block under a false-claims warning, so the signatory is required on each.
+
+     The published factor is required rather than suggested. Without it every
+     line from (N) to (R) prints a dash and Step 3 lists the CURRENT rents under
+     the heading "Adjusted contract rents" — a worksheet that looks complete and
+     says the rents are not changing. */
+  ocafws:[['property.name','property name',2],['property.s8','Section 8 number',2],
+          ['sig.name','signatory name',3],['sig.title','signatory title',3]],
+  exhibita:[['property.name','property name',2],['property.s8','Section 8 number',2],
+            ['sig.name','signatory name',3],['sig.title','signatory title',3]],
+  /* Written only for a floating rate, and its whole subject is the comparison —
+     with neither figure it certifies a determination it did not make. */
+  dsevid:[['property.name','property name',2],['property.s8','Section 8 number',2],
+          ['sig.name','signatory name',3],['sig.title','signatory title',3]],
+  uafcert:[['property.name','property name',2],['property.s8','Section 8 number',2],
+           ['sig.name','signatory name',3],['sig.title','signatory title',3]],
+  /* Served on residents under 24 CFR 245.420. The contract administrator is
+     named in five of its sentences, and it is signed by the sender. */
+  uanotice:[['property.name','property name',2],['ca.org','CA organization',4],
+            ['tenant.sender_name','tenant-notice sender name',9]],
+  /* Addressed to the CA by name, and headed by the ownership entity — which
+     printed "[Ownership Entity Name]" in the letterhead when we held none. */
+  tcert:[['property.name','property name',2],['property.s8','Section 8 number',2],
+         ['owner.entity_name','ownership entity',2],
+         ['ca.name','CA contact name',4],['ca.org','CA organization',4],
+         ['sig.name','signatory name',3],['sig.title','signatory title',3]],
   /* The property name is the notice's subject — it appears in six sentences. */
   notice:[['property.name','property name',2],
           ['ca.org','CA organization',4],['tenant.sender_name','tenant-notice sender name',9]],
@@ -4793,6 +4822,22 @@ function docMissing(id){const r=DOC_REQS[id]||[];
     if(!units)m.push({key:'units',label:'at least one unit type with a count',sec:6});
     // resolved across three keys (RS / custom / legacy), so not a plain lookup
     if(!String(dateEffResolved()||'').trim())m.push({key:'rent_schedule.date_eff_custom',label:'date the rents take effect',sec:6});}
+  /* Resolved values and row conditions, the same way the rent schedule's date
+     and unit mix are handled above: not a lookup, so not a plain key. */
+  if(id==='ocafws'||id==='exhibita'||id==='dsevid'){
+    if(!units)m.push({key:'units',label:'at least one unit type with a count',sec:6});
+    else if(!UNITS.some(i=>numf(get('units.'+i+'.current'))>0))m.push({key:'units.0.current',label:'current contract rents',sec:6});
+    if(id!=='dsevid'&&!(ocafFactorResolved()>0))m.push({key:'ocaf.factor_custom',label:'the published OCAF factor',sec:10});
+    if(id==='dsevid'&&!(numf(get('ocaf.ds_t12'))>0||numf(get('ocaf.ds_f12'))>0))
+      m.push({key:'ocaf.ds_t12',label:'a trailing-12 or forward-12 debt service figure',sec:10});
+    if(!String(dateEffResolved()||'').trim())m.push({key:'rent_schedule.date_eff_custom',label:'date the rents take effect',sec:6});}
+  if(id==='uafcert'||id==='uanotice'){
+    if(!UAF_UTILS.some(u=>numf(get('uaf.f_'+u[0]))>0))m.push({key:'uaf.f_electric',label:'at least one utility allowance factor',sec:11});
+    if(!uafAnalysis().any)m.push({key:'units.0.uac_electric',label:'the current allowance broken down by utility',sec:11});}
+  /* The notice exists to state the decrease. With none there is nothing to
+     serve, and its table prints a column of unchanged figures. */
+  if(id==='uanotice'&&!uafAnalysis().dec.length)
+    m.push({key:'',label:'a utility allowance that actually decreases',sec:11});
   if(id==='notice'){
     if(!units)m.push({key:'units',label:'at least one unit type with a count',sec:6});
     /* A notice served under 24 CFR 245 exists to state the increase. With no
@@ -4823,6 +4868,79 @@ function gotoSection(n,key){
   box.classList.add('gotohl');setTimeout(()=>box.classList.remove('gotohl'),1500);
   if(target)setTimeout(()=>{try{target.focus({preventScroll:true});}catch(e){}},420);
 }
+/* Shared by both package dialogs — the RCS one and the OCAF/UAF one — because
+   a reader should not have to learn two answers to the same question.
+
+   WHERE IT WAS SUPPOSED TO COME FROM, answered per field rather than in
+   general. "Ownership entity" still empty after reading a schedule that
+   carries it is a different problem from "CA organization", which no document
+   has ever carried — and the dialog presented both as the same blank, which is
+   how an afternoon went into asking why the sources had not filled cells the
+   sources do not hold. It names the source when one is loaded and has the
+   value, names the document when one would hold it but none is uploaded, and
+   says plainly when nothing but a person will ever fill it. */
+const RS_CARRIES=/^(units$|property\.(name|fha|s8)|owner\.entity|sig\.(name|title|principal)|principals\.|rent_schedule\.date_eff|units\.\d+\.(br|ba|label|num_units|current|ua_exec)|ns8\.|nonrev\.)/;
+const RCS_CARRIES=/^(appr\.|units\.\d+\.(proposed|ua_rcs|safmr_rcs|num_rcs|br_rcs|ba_rcs))/;
+const whyShort=k=>{
+  if(!k)return '';
+  let v=null;try{v=rsVal(k);}catch(e){}
+  try{if((v==null||v==='')&&rsOffers(k))v='\u2713';}catch(e){}
+  if(v!=null&&v!=='')return 'the rent schedule carries it \u2014 \u201cFill form from RS\u201d in '+secRef(1);
+  let c=null;try{c=rcsOf(k);}catch(e){}
+  if(c!=null&&c!=='')return 'the study carries it \u2014 \u201cFill form from study\u201d in '+secRef(1);
+  if(RS_CARRIES.test(k))return _rsUpload?'the schedule that was read left it blank':'on the executed rent schedule \u2014 none uploaded yet';
+  if(RCS_CARRIES.test(k))return _rcsUpload?'the study that was read left it blank':'in the RCS study \u2014 none uploaded yet';
+  /* The commonest answer by far, and printed on every line it turned the
+     card into six copies of one sentence — which is how the dialog got too
+     full in the first place. Silence here IS the answer: a field with no
+     note is a field only a person can fill, and the ones that DO carry a
+     note are the ones worth reading. */
+  return '';
+};
+const gpf=(x,cls)=>'<button class="gpf'+(cls||'')+'" data-goto="'+x.sec+'" data-gotok="'+esc(x.key||'')+'" title="Go to '+esc(secRef(x.sec))+'">'
+  +'<span class="gpf-n">'+esc(x.label)+'</span>'
+  +(function(){const w=whyShort(x.key)||(x.sec?(SECTION_TITLES[x.sec]||secRef(x.sec)):'');
+    return w?'<span class="gpf-w">'+esc(w)+'</span>':'';})()+'</button>';
+/* One popover per document, on the count itself. Six rows of fixed height say
+   which documents you can take away; what each one is short of is one hover
+   behind the number, where it does not have to compete with that answer. */
+const pop=(req,sug)=>{
+  if(!req.length&&!sug.length)return '';
+  return '<span class="gpw"><button type="button" class="gshort'+(req.length?'':' gshort-s')+'" aria-haspopup="true">'
+    +(req.length?((req.length===1?'1 field':req.length+' fields')+' short'):(sug.length+' suggested'))
+    +'</button><div class="gpop"><div class="gpop-in">'
+    +(req.length?'<div class="gpop-h">Needed before it can be written</div><div class="gpop-l">'+req.map(x=>gpf(x,'')).join('')+'</div>':'')
+    +(sug.length?'<div class="gpop-h'+(req.length?' gpop-h2':'')+'">Worth adding</div><div class="gpop-l">'+sug.map(x=>gpf(x,' gpf-s')).join('')+'</div>':'')
+    +'</div></div></span>';};
+
+/* One row per document: a tick and a download, or a dash and the count that
+   opens its list. Shared for the same reason the popover is. */
+function gdocRows(ORDER,byLabel,blkBy,warnOf,extraWarn,gapOf){
+  return ORDER.map(function(lab){const hit=byLabel[lab];
+    const req=hit?[]:(gapOf?gapOf(lab):((blkBy[lab]||{}).missing||[]));
+    const sug=[].concat(((warnOf||{})[lab])||((blkBy[lab]||{}).warns)||[],(extraWarn||{})[lab]||[]);
+    if(hit)return '<div class="gdoc gdoc-on" role="button" tabindex="0" data-dldoc="'+hit.i+'" title="Download '+esc(lab)+'"><span class="gtick">\u2713</span>'
+      +'<span class="gdoc-n">'+esc(lab)+'</span><span class="gdoc-need">'+pop([],sug)+'</span>'
+      +'<span class="gdoc-a">Download</span></div>';
+    return '<div class="gdoc gdoc-off"><span class="gtick gtick-off">\u2013</span>'
+      +'<span class="gdoc-n">'+esc(lab)+'</span>'
+      +'<span class="gdoc-need">'+pop(req,sug)+'</span></div>';}).join('');}
+/* The rows are download buttons and the counts sit inside them, so reaching for
+   a list used to download the document. Wired once, for both dialogs. */
+function wirePkgRows(docs){
+  document.querySelectorAll('[data-dldoc]').forEach(function(b){
+    const go=function(){const d=docs[+b.getAttribute('data-dldoc')];dlPdf(d.bytes,d.file+'.pdf');};
+    const inPop=function(e){return !!(e.target&&e.target.closest&&e.target.closest('.gpw'));};
+    b.onclick=function(e){if(inPop(e))return;go();};
+    b.onkeydown=function(e){if(inPop(e))return;if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();go();}};});
+  document.querySelectorAll('.gpw>.gshort').forEach(function(b){b.addEventListener('click',function(e){
+    e.preventDefault();e.stopPropagation();
+    const w=b.parentElement;const on=w.classList.contains('open');
+    document.querySelectorAll('.gpw.open').forEach(function(x){x.classList.remove('open');});
+    if(!on)w.classList.add('open');});});
+  document.querySelectorAll('[data-goto]').forEach(function(b){b.onclick=function(e){
+    e.preventDefault();e.stopPropagation();closeModal();
+    gotoSection(+b.getAttribute('data-goto'),b.getAttribute('data-gotok')||'');};});}
 function showPackageModal(nm,docs,combined,missingRcs,missingLh,capMsgs,blocked,warnOf){
   /* All six documents stay on the surface: which ones exist and which do not is
      the whole point of the dialog, and folding it away meant the only way to
@@ -4843,47 +4961,6 @@ function showPackageModal(nm,docs,combined,missingRcs,missingLh,capMsgs,blocked,
      stranded at the foot of the dialog in a second shade. */
   const extraWarn={};
   if(missingLh)extraWarn['Tenant notice']=[{label:'letterhead',sec:0}];
-  /* WHERE IT WAS SUPPOSED TO COME FROM, answered per field rather than in
-     general. "Ownership entity" still empty after reading a schedule that
-     carries it is a different problem from "CA organization", which no document
-     has ever carried — and the dialog presented both as the same blank, which is
-     how an afternoon went into asking why the sources had not filled cells the
-     sources do not hold. It names the source when one is loaded and has the
-     value, names the document when one would hold it but none is uploaded, and
-     says plainly when nothing but a person will ever fill it. */
-  const RS_CARRIES=/^(units$|property\.(name|fha|s8)|owner\.entity|sig\.(name|title|principal)|principals\.|rent_schedule\.date_eff|units\.\d+\.(br|ba|label|num_units|current|ua_exec)|ns8\.|nonrev\.)/;
-  const RCS_CARRIES=/^(appr\.|units\.\d+\.(proposed|ua_rcs|safmr_rcs|num_rcs|br_rcs|ba_rcs))/;
-  const whyShort=k=>{
-    if(!k)return '';
-    let v=null;try{v=rsVal(k);}catch(e){}
-    try{if((v==null||v==='')&&rsOffers(k))v='\u2713';}catch(e){}
-    if(v!=null&&v!=='')return 'the rent schedule carries it \u2014 \u201cFill form from RS\u201d in '+secRef(1);
-    let c=null;try{c=rcsOf(k);}catch(e){}
-    if(c!=null&&c!=='')return 'the study carries it \u2014 \u201cFill form from study\u201d in '+secRef(1);
-    if(RS_CARRIES.test(k))return _rsUpload?'the schedule that was read left it blank':'on the executed rent schedule \u2014 none uploaded yet';
-    if(RCS_CARRIES.test(k))return _rcsUpload?'the study that was read left it blank':'in the RCS study \u2014 none uploaded yet';
-    /* The commonest answer by far, and printed on every line it turned the
-       card into six copies of one sentence — which is how the dialog got too
-       full in the first place. Silence here IS the answer: a field with no
-       note is a field only a person can fill, and the ones that DO carry a
-       note are the ones worth reading. */
-    return '';
-  };
-  const gpf=(x,cls)=>'<button class="gpf'+(cls||'')+'" data-goto="'+x.sec+'" data-gotok="'+esc(x.key||'')+'" title="Go to '+esc(secRef(x.sec))+'">'
-    +'<span class="gpf-n">'+esc(x.label)+'</span>'
-    +(function(){const w=whyShort(x.key)||(x.sec?(SECTION_TITLES[x.sec]||secRef(x.sec)):'');
-      return w?'<span class="gpf-w">'+esc(w)+'</span>':'';})()+'</button>';
-  /* One popover per document, on the count itself. Six rows of fixed height say
-     which documents you can take away; what each one is short of is one hover
-     behind the number, where it does not have to compete with that answer. */
-  const pop=(req,sug)=>{
-    if(!req.length&&!sug.length)return '';
-    return '<span class="gpw"><button type="button" class="gshort'+(req.length?'':' gshort-s')+'" aria-haspopup="true">'
-      +(req.length?((req.length===1?'1 field':req.length+' fields')+' short'):(sug.length+' suggested'))
-      +'</button><div class="gpop"><div class="gpop-in">'
-      +(req.length?'<div class="gpop-h">Needed before it can be written</div><div class="gpop-l">'+req.map(x=>gpf(x,'')).join('')+'</div>':'')
-      +(sug.length?'<div class="gpop-h'+(req.length?' gpop-h2':'')+'">Worth adding</div><div class="gpop-l">'+sug.map(x=>gpf(x,' gpf-s')).join('')+'</div>':'')
-      +'</div></div></span>';};
   /* A field that blocks three documents used to be printed three times. True,
      and it turned a six-row dialog into forty links on rows that grew to 156px
      — so the one thing the dialog exists to say, which of the six you can take
@@ -4894,16 +4971,9 @@ function showPackageModal(nm,docs,combined,missingRcs,missingLh,capMsgs,blocked,
     if(b)return (b.missing||[]);
     return byLabel[lab]?[]:[{key:'',label:'the RCS report, uploaded in '+secRef(1),sec:1}];};
   const sugOf=lab=>[].concat(((warnOf||{})[lab])||((blkBy[lab]||{}).warns)||[],extraWarn[lab]||[]);
-  const rows=ORDER.map(o=>{const lab=o[0],hit=byLabel[lab];
-    /* The whole row is the download, not the word "Download": a 46px-tall row
-       whose only target was eight characters of text at the far right. */
-    const req=hit?[]:gapOf(lab), sug=sugOf(lab);
-    if(hit)return '<div class="gdoc gdoc-on" role="button" tabindex="0" data-dldoc="'+hit.i+'" title="Download '+esc(lab)+'"><span class="gtick">✓</span>'
-      +'<span class="gdoc-n">'+esc(lab)+'</span><span class="gdoc-need">'+pop([],sug)+'</span>'
-      +'<span class="gdoc-a">Download</span></div>';
-    return '<div class="gdoc gdoc-off"><span class="gtick gtick-off">–</span>'
-      +'<span class="gdoc-n">'+esc(lab)+'</span>'
-      +'<span class="gdoc-need">'+pop(req,sug)+'</span></div>';}).join('');
+  /* The whole row is the download, not the word "Download": a 46px-tall row
+     whose only target was eight characters of text at the far right. */
+  const rows=gdocRows(ORDER.map(o=>o[0]),byLabel,blkBy,warnOf,extraWarn,gapOf);
 
 
   const notes=[].concat(capMsgs||[]);
@@ -4930,20 +5000,9 @@ function showPackageModal(nm,docs,combined,missingRcs,missingLh,capMsgs,blocked,
   const cbn=el('dlCombined');if(cbn)cbn.onclick=()=>dlPdf(combined,nm+' - RCS Package.pdf');
   const xb=el('dlXlsx');if(xb)xb.onclick=()=>genRentAnalysis();
   const fb=el('dlFolder');if(fb)fb.onclick=()=>dlPackageFolder(nm,docs,combined);
-  document.querySelectorAll('[data-dldoc]').forEach(b=>{const go=()=>{const d=docs[+b.getAttribute('data-dldoc')];dlPdf(d.bytes,d.file+'.pdf');};
-    const inPop=e=>!!(e.target&&e.target.closest&&e.target.closest('.gpw'));
-    b.onclick=e=>{if(inPop(e))return;go();};
-    // a div carrying role="button" owes the keyboard both of a button's keys
-    b.onkeydown=e=>{if(inPop(e))return;if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();go();}};});
-  /* Hover opens it; a press pins it open, because a touch screen has no hover
-     and a keyboard reaches the chip before it reaches the list. :focus-within
-     covers the tab route, this covers the tap. */
-  document.querySelectorAll('.gpw>.gshort').forEach(b=>b.addEventListener('click',e=>{
-    e.preventDefault();e.stopPropagation();
-    const w=b.parentElement;const on=w.classList.contains('open');
-    document.querySelectorAll('.gpw.open').forEach(x=>x.classList.remove('open'));
-    if(!on)w.classList.add('open');}));
-  document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=e=>{e.preventDefault();e.stopPropagation();closeModal();gotoSection(+b.getAttribute('data-goto'),b.getAttribute('data-gotok')||'');});
+  /* Hover opens a count's list; a press pins it, because a touch screen has no
+     hover and a keyboard reaches the chip before it reaches the list. */
+  wirePkgRows(docs);
 }
 
 async function dlPackageFolder(nm,docs,combined){
@@ -5106,10 +5165,7 @@ async function measurePdfLetterheadDrop(bytes){ try{
 }catch(e){ return null; } }
 async function genOcafUafPackage(){
   if(!(window.RCSGen&&window.PDFLib)){setStatus('Generator still loading - try again in a moment.');return;}
-  const C=ocafCalc(),A=uafAnalysis();
-  if(hasProg('ocaf')&&!(C.R>0)){setStatus('The OCAF worksheet is incomplete — enter the factor and debt service in '+secRef(10)+' before generating.');return;}
-  if(hasProg('uaf')&&!A.any){setStatus('Enter the current UA components and factors in '+secRef(11)+' before generating.');return;}
-  if(!UNITS.some(i=>numf(get('units.'+i+'.num_units'))>0)){setStatus('Cannot generate with zero units — enter the unit mix in '+secRef(6)+'.');return;}
+  const A=uafAnalysis();
   const needsNotice=hasProg('uaf')&&A.dec.length>0;
   let hasLh=false;try{const L=(mpdb&&activePid)?mpdb.getLetterhead(activePid):null;hasLh=!!(L&&L.data);}catch(e){}
   if(needsNotice&&!hasLh){const alias=get('tenant.property_alias')||get('property.name')||'the property name';
@@ -5130,34 +5186,66 @@ async function __genOcafUafRun(){
       if(lh&&lh.pdf){const dr=await measurePdfLetterheadDrop(lh.pdf);if(dr)lh.drop=dr;} }catch(e){}
     const N=get('property.name')||'Property';
     const tag=cycleProgs().filter(p=>p!=='rcs').map(x=>PROG_NAMES[x]||x).join(' + ')||'OCAF';
-    const docs=[]; let dn=0; const pre=()=>{dn++;return ('0'+dn).slice(-2)+'. ';};
+    /* Blocked rather than written wrong — the same gate the RCS package has
+       had, and the reason it exists: a worksheet with no factor prints a dash
+       on every line from (N) to (R) and then lists the CURRENT rents under
+       "Adjusted contract rents". It looks finished. */
+    const docs=[],blocked=[],order=[];const warnOf={};
+    let dn=0; const pre=()=>{dn++;return ('0'+dn).slice(-2)+'. ';};
+    const add=async(id,label,base,make)=>{
+      order.push(label);
+      const m=docMissing(id),w=docWarns(id);
+      if(w.length)warnOf[label]=w;
+      if(m.length){blocked.push({label:label,missing:m,warns:w});return;}
+      docs.push({label:label,file:pre()+N+' - '+base,bytes:await make()});};
     if(hasProg('ocaf')){
-      docs.push({label:'OCAF worksheet (per HUD-9625)',file:pre()+N+' - OCAF Worksheet',bytes:await window.RCSGen.ocafWorksheet(rec)});
-      docs.push({label:'Revised Exhibit A',file:pre()+N+' - Revised Exhibit A',bytes:await window.RCSGen.exhibitA(rec)});
-      if(/floating/i.test(get('ocaf.rate_type')||''))docs.push({label:'Debt-service determination (T-12 / F-12)',file:pre()+N+' - Debt Service Determination',bytes:await window.RCSGen.dsEvidence(rec)});
+      await add('ocafws','OCAF worksheet (per HUD-9625)','OCAF Worksheet',()=>window.RCSGen.ocafWorksheet(rec));
+      await add('exhibita','Revised Exhibit A','Revised Exhibit A',()=>window.RCSGen.exhibitA(rec));
+      if(/floating/i.test(get('ocaf.rate_type')||''))
+        await add('dsevid','Debt-service determination (T-12 / F-12)','Debt Service Determination',()=>window.RCSGen.dsEvidence(rec));
     }
-    if(hasProg('uaf'))docs.push({label:'UAF certification / breakdown',file:pre()+N+' - UAF Certification',bytes:await window.RCSGen.uafCert(rec)});
-    if(T.rentSchedule)docs.push({label:'Revised rent schedule'+(hasProg('ocaf')&&hasProg('uaf')?' (merged OCAF + UAF)':''),file:pre()+N+' - Revised Rent Schedule',bytes:await window.RCSGen.fillRentSchedule(b64ToBytes(T.rentSchedule),rec)});
-    if(hasProg('uaf')&&A.dec.length){
-      docs.push({label:'30-day tenant notice (UA decrease)',file:pre()+N+' - UA Decrease Tenant Notice',bytes:await window.RCSGen.uaTenantNotice(rec,lh,logo)});
-      docs.push({label:'Tenant-comment certification',file:pre()+N+' - Tenant Comment Certification',bytes:await window.RCSGen.tenantCommentCert(rec)});
+    if(hasProg('uaf'))await add('uafcert','UAF certification / breakdown','UAF Certification',()=>window.RCSGen.uafCert(rec));
+    if(T.rentSchedule)await add('schedule','Revised rent schedule'+(hasProg('ocaf')&&hasProg('uaf')?' (merged OCAF + UAF)':''),'Revised Rent Schedule',()=>window.RCSGen.fillRentSchedule(b64ToBytes(T.rentSchedule),rec));
+    /* Offered whenever the package is a UAF one. Gated on A.dec.length alone it
+       simply was not there when there was no decrease — which is right — but it
+       was also not there when the allowances had not been entered yet, and
+       nothing said so. docMissing('uanotice') says which of the two it is. */
+    if(hasProg('uaf')){
+      await add('uanotice','30-day tenant notice (UA decrease)','UA Decrease Tenant Notice',()=>window.RCSGen.uaTenantNotice(rec,lh,logo));
+      await add('tcert','Tenant-comment certification','Tenant Comment Certification',()=>window.RCSGen.tenantCommentCert(rec));
     }
-    if(_rcsUpload)docs.push({label:'CA package (uploaded)',file:pre()+N+' - CA Package (as received)',bytes:_rcsUpload.bytes});
-    const combined=await combinePdfs(docs.map(d=>d.bytes));
+    if(_rcsUpload){order.push('CA package (uploaded)');docs.push({label:'CA package (uploaded)',file:pre()+N+' - CA Package (as received)',bytes:_rcsUpload.bytes});}
+    const combined=docs.length?await combinePdfs(docs.map(d=>d.bytes)):null;
     const warns=[];
     if(hasProg('ocaf')&&!_rcsUpload)warns.push('The CA’s auto-OCAF package isn’t uploaded — add it in '+secRef(1)+' for the file.');
     if(needsDerivedRents(C))warns.push('Proposed rents were derived from the worksheet (×'+C.R.toFixed(3)+') — use “Apply as proposed rents” + “Update property profile” to save them.');
     if(hasProg('uaf')&&A.mismatch.length)warns.push(A.mismatch.length+' unit type'+(A.mismatch.length>1?'s':'')+': UA components don’t total the current UA.');
-    showOcafUafModal(N,tag,docs,combined,warns);
+    showOcafUafModal(N,tag,docs,combined,warns,blocked,warnOf,order);
     try{ if(activeCid&&mpdb)await mpdb.setCycleGenerated(activeCid,docs.map(d=>d.label)); }catch(e){}
-    setStatus('Package generated - '+docs.length+' documents.');
+    setStatus('Package generated \u2014 '+docs.length+' document'+(docs.length===1?'':'s')+(blocked.length?', '+blocked.length+' still missing information.':'.'));
   }catch(e){ setStatus('Generation failed: '+((e&&e.message)||e)); }
 }
 function needsDerivedRents(C){return hasProg('ocaf')&&C.R>0&&UNITS.some(i=>numf(get('units.'+i+'.current'))>0&&!(numf(get('units.'+i+'.proposed'))>0));}
-function showOcafUafModal(nm,tag,docs,combined,warns){
-  const rows=docs.map((d,i)=>'<button class="btn sm" data-dldoc="'+i+'" style="justify-content:flex-start">'+esc(d.label)+'</button>').join('');
-  const w=(warns||[]).map(m=>'<div class="sub" style="color:#b45309;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="'+esc(m)+'">⚠ '+esc(m)+'</div>').join('');
-  modal('<div class="dlg-t">Package generated</div><div class="dlg-b">'+esc(nm)+' — '+esc(tag)+' package, '+docs.length+' documents. Download the combined file, or any individual document.</div><div style="display:flex;flex-direction:column;gap:7px;margin-top:14px"><button class="btn p" id="dlCombined">Combined package (PDF)</button>'+rows+w+'<button class="btn p" id="dlFolder" style="margin-top:11px;display:inline-flex;align-items:center;justify-content:center;gap:8px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> Download the '+esc(tag)+' Package folder</button></div><div class="dlg-row"><span class="dlg-sp"></span><button class="btn" id="dlgCancel">Close</button></div>');
+function showOcafUafModal(nm,tag,docs,combined,warns,blocked,warnOf,order){
+  /* The same six-row shape the RCS package uses, for the same reason: which
+     documents you can take away is the dialog's subject, and what each one is
+     short of belongs one hover behind its count rather than in a list beneath. */
+  const byLabel={};docs.forEach((d,i)=>{byLabel[d.label]={doc:d,i:i};});
+  const blkBy={};(blocked||[]).forEach(b=>{blkBy[b.label]=b;});
+  const ORDER=(order&&order.length)?order:docs.map(d=>d.label);
+  const nReady=ORDER.filter(l=>byLabel[l]).length,nGap=ORDER.length-nReady;
+  const rows=gdocRows(ORDER,byLabel,blkBy,warnOf,null,null);
+  const noteHtml=(warns||[]).length?'<div class="gnotes">'+warns.map(m=>'<div class="gnote">\u26a0 '+esc(m)+'</div>').join('')+'</div>':'';
+  const folderIcon='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>';
+  const pdfIcon='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto"><path d="M8 3h7l5 5v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M15 3v5h5"/><path d="M4 7v12a2 2 0 0 0 2 2h10" opacity=".45"/></svg>';
+  modal('<div class="dlg-t">Package generated</div>'
+    +'<div class="dlg-b">'+esc(nm)+' \u00b7 '+esc(tag)+' \u00b7 '+(nGap?nReady+' of '+ORDER.length+' ready \u00b7 <b style="color:#b45309">'+nGap+' need'+(nGap===1?'s':'')+' more information</b>':'all '+ORDER.length+' documents ready')+'</div>'
+    +'<div class="gdocs">'+rows+'</div>'
+    +noteHtml
+    +(nReady?('<button class="gprim" id="dlFolder">'+folderIcon+'<span><span class="gprim-t">Download the '+esc(tag)+' Package folder</span>'
+      +'<span class="gprim-s">'+(nReady+1)+' files \u2014 '+(nReady===1?'the document':'each of the '+nReady+' documents')+' and the combined PDF</span></span></button>'
+      +'<div class="gpair"><button class="btn gsub" id="dlCombined">'+pdfIcon+esc(tag)+' Package PDF</button></div>'):'')
+    +'<div class="dlg-row"><span class="dlg-sp"></span><button class="btn" id="dlgCancel">Close</button></div>','pkg');
   el('dlgCancel').onclick=closeModal;
   const cbn=el('dlCombined');if(cbn)cbn.onclick=()=>dlPdf(combined,nm+' - '+tag+' Package.pdf');
   const fb=el('dlFolder');if(fb)fb.onclick=()=>{
@@ -5168,7 +5256,7 @@ function showOcafUafModal(nm,tag,docs,combined,warns){
       dlFile(window.RCSXlsx.makeZip(files),nm+' - '+tag+' Package.zip','application/zip');
       setStatus(tag+' Package folder downloaded.');
     }catch(e){setStatus('Folder download failed: '+((e&&e.message)||e));}};
-  document.querySelectorAll('[data-dldoc]').forEach(b=>b.onclick=()=>{const d=docs[+b.getAttribute('data-dldoc')];dlPdf(d.bytes,d.file+'.pdf');});
+  wirePkgRows(docs);
 }
 async function __genPackageRun(){
   const T=window.RCSTemplates||{};
@@ -5189,7 +5277,7 @@ async function __genPackageRun(){
     if(_rcsUpload)docs.push({label:'RCS report',file:'04. '+N+' - RCS Report',bytes:_rcsUpload.bytes});
     if(T.rentSchedule)await add('schedule','Draft rent schedule','05. '+N+' - Draft Rent Schedule',()=>window.RCSGen.fillRentSchedule(b64ToBytes(T.rentSchedule),rec));
     await add('notice','Tenant notice','06. '+N+' - RCS Tenant Notice',()=>window.RCSGen.tenantNotice(rec,lh,logo));
-    const combined=await combinePdfs(docs.map(d=>d.bytes));
+    const combined=docs.length?await combinePdfs(docs.map(d=>d.bytes)):null;
     let _lhOk=false;try{const L2=(mpdb&&activePid)?mpdb.getLetterhead(activePid):null;_lhOk=!!(L2&&L2.data);}catch(e){}
     showPackageModal(get('property.name')||'Property',docs,combined,!_rcsUpload,!_lhOk,rsCapacity().msgs,blocked,warnOf);
     try{ if(activeCid&&mpdb)await mpdb.setCycleGenerated(activeCid,docs.map(d=>d.label)); }catch(e){}
