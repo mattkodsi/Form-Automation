@@ -162,16 +162,26 @@ is a PBV, which gets neither an RCS nor an OCAF (Matt, 2026-07-28).
 keying off the contract type misjudges all of them. Compare case-insensitively:
 the export contains both `EXPIRES` and `Expires`.
 
-**Skip the row, not the property.** `EXPIRES` is usually terminal, but not always:
-Bastrop Oak Grove (90030) runs OCAF · OCAF · OCAF · EXPIRES 2029 · OCAF 2030 · …
-· EXPIRES 2034 · OCAF …, marking the end of each five-year option term while the
-contract continues. 129 properties mix startable and non-startable rows. So the
-target is the earliest future *startable* row, skipping past the others.
+**Skip the row, not the property.** Bastrop Oak Grove (90030) runs OCAF · OCAF ·
+OCAF · EXPIRES 2029 · OCAF 2030 · … · EXPIRES 2034 · OCAF …, marking the end of
+each five-year option term while the contract continues. 129 properties mix
+startable and non-startable rows. The target is the earliest future *startable*
+row, skipping past the others.
 
-**228 of 249 properties have a future OCAF or RCS.** The remaining 21 never
-produce a package. They appear only under All properties, labelled with why, and
-are excluded from the workflow views — a PBV is still someone's property, it just
-isn't this app's work.
+**`EXPIRES` is never terminal.** We hope and assume the contract renews (Matt,
+2026-07-28). A schedule that runs out at an `EXPIRES` row has reached the
+*tracker's horizon*, not the property's end — the app must never render that as
+finished, retired, or done. Fox Hill (90063) is the live case: OCAF 04/01/2026,
+then EXPIRES 04/01/2027 and nothing after. It stays in the portfolio, awaiting its
+next schedule. This is not an edge case waiting to happen: **125 of the 229
+in-scope properties end on an `EXPIRES` row** within the current export, so the
+opposite assumption would retire over half the portfolio as the calendar advances.
+
+**Scope: the 229 properties that have an OCAF or RCS in any year.** The other 20
+never do — pure PBV and expiring-only schedules — and are **excluded entirely**,
+not listed with an explanation. This app is for properties with OCAFs and RCSs
+(Matt, 2026-07-28). Of the 229, 228 have a future startable row today; Fox Hill is
+the one that does not, and it stays.
 
 **Six properties carry concurrent renewal streams.** Luther Towers (90111) has 41
 rows and up to three renewals in a single year, each with its own date and
@@ -241,9 +251,10 @@ action.
 | Ragged CSV row | Skipped, counted, reported in the import summary |
 | Duplicate property name on create | Rejected at the data layer, not just the dialog |
 | No name chosen yet | Prompted on first load; "All" until chosen |
-| `Increase Type` is EXPIRES / Request | Skipped when picking the target; property shown under All properties with the reason |
+| `Increase Type` is EXPIRES / Request | Row skipped when picking the target |
 | Unknown `Increase Type` (new value) | Displayed verbatim, action disabled with a reason — never silently dropped |
-| Property has no future startable row | Excluded from workflow views (21 of 249 today) |
+| Property never has an OCAF or RCS | Excluded from the app entirely (20 of 249 today) |
+| Schedule runs out at an EXPIRES row | Property stays, awaiting its next schedule. Never rendered as finished (125 of 229 today) |
 
 ---
 
@@ -252,9 +263,17 @@ action.
 Extends the existing suites; each raises its own `MIN_CHECKS`.
 
 - **`test_hap.js` (new)** — parser and derivation against the real CSV, held to the
-  corpus the way `test_rcs.js` holds the study reader. Must cover every hazard
-  above: the Mad River inversion, the ragged row, `HCV1`, the case-variant
-  `Expires`, duplicate property+year.
+  corpus the way `test_rcs.js` holds the study reader. Named cases, each a real
+  property in the export, so a regression names itself:
+  - **Mad River Manor** — `due` after `effective`; must never render a negative countdown
+  - **Woodland Hills (79610)** — ragged row; skipped and counted, not thrown
+  - **`HCV1`** — a non-numeric property code survives round-tripping as a string
+  - **Bastrop Oak Grove (90030)** — intermediate `EXPIRES` skipped, OCAF 2030 found
+  - **Fox Hill (90063)** — schedule ends at `EXPIRES`; property stays, is not finished
+  - **Luther Towers (90111)** — three renewals in one year, each its own target
+  - **Southeast Towers (75494)** — never startable; excluded entirely
+  - **case-variant `Expires`** — matched, not dropped
+  - counts hold: 249 total, 229 in scope, 228 with a future startable row
 - **`test_db.js`** — `hap_schedule` storage, the code join, target selection.
   Parity between `db.js` and `db.supabase.js` per CLAUDE.md.
 - **`smoke_combined.js`** — menu renders bands from a fixture; counts per band.
