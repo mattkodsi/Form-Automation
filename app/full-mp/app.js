@@ -2951,6 +2951,74 @@ async function boot(){
   openMenu();
 }
 const SELFTEST=(typeof location!=='undefined')&&/[?&]selftest=1(&|$)/.test(location.search||'');
+/* A property worth testing against.
+
+   The stub record used to be a bare name, and the first-run migration rightly
+   refused to build a package for it ("real unit data = a record worth
+   migrating"). So every sweep drove a form whose controls existed but whose
+   conditional halves never ran: no unit rows past the first, no 150% analysis,
+   no rent arithmetic, and no package to hang a program off. A test property
+   that holds no data tests the empty case only, and says nothing about the one
+   Matt actually opens.
+
+   Six unit types across two buildings, a utility allowance conflict on one row
+   (exec 31 vs RCS 34) so the resolve path is reachable, and a SAFMR high enough
+   on 3BR to exercise the 150% ceiling. Runs once — if the record already holds
+   units, it is left alone, so a session's edits survive a reload. */
+async function selftestSeed(){
+  const ps=mpdb.listProperties();
+  const pid=ps.length?ps[0].id:(await mpdb.createProperty('Beacon Hill Apartments')).id;
+  /* Seed once per browser profile, not once per property: makeDb already ships a
+     demo record with a single unit row, so keying off "has any units" meant the
+     seed never ran at all. The marker also keeps a reload from wiping edits made
+     during a session, which is exactly what rule 19 measures. */
+  try{if(window.localStorage.getItem('rcs_selftest_seeded')==='1')return;}catch(e){}
+  const U=[
+    {br:'1BR',ba:'1BA',n:24,cur:1045,pro:1146,ua:31,uaR:34,safmr:1420,desig:'E'},
+    {br:'2BR',ba:'1BA',n:36,cur:1240,pro:1362,ua:38,safmr:1690,desig:'E'},
+    {br:'2BR',ba:'2BA',n:18,cur:1310,pro:1438,ua:38,safmr:1690,desig:'F'},
+    {br:'3BR',ba:'2BA',n:12,cur:1495,pro:1641,ua:47,safmr:2180,desig:'F'},
+    {br:'3BR',ba:'2.5BA',n:6,cur:1560,pro:1712,ua:47,safmr:2180,desig:'F'},
+    {br:'4BR',ba:'2BA',n:4,cur:1780,pro:1954,ua:55,safmr:2455,desig:'F'},
+  ];
+  const m={
+    'property.name':'Beacon Hill Apartments','property.alias':'Beacon Hill',
+    'property.addr_street':'1450 Woodward Avenue','property.addr_city':'Detroit',
+    'property.addr_state':'MI','property.addr_zip':'48226',
+    'property.fha':'044-35218','property.s8':'MI16-T851-004',
+    'property.total_units':String(U.reduce((a,u)=>a+u.n,0)),
+    'owner.entity_name':'Beacon Hill Preservation LP','owner.entity_type':'Limited Partnership',
+    'principals.0.name':'Dana Whitfield','principals.0.title':'Managing Member',
+    'poc.name':'Dana Whitfield','poc.email':'dwhitfield@relatedaffordable.com','poc.phone':'3135550142',
+    'ca.name':'Alicia Moreno','ca.prefix':'Ms.','ca.position':'Contract Specialist',
+    'ca.org':'Michigan State Housing Development Authority',
+    'ca.addr_street':'735 East Michigan Avenue','ca.addr_city':'Lansing','ca.addr_state':'MI','ca.addr_zip':'48912',
+    'appr.name':'Grant Sheridan','appr.firm':'Sheridan Valuation Group',
+    'appr.email':'gsheridan@sheridanvg.com','appr.phone':'3135550188',
+    'appr.addr_street':'220 Larned Street','appr.addr_city':'Detroit','appr.addr_state':'MI','appr.addr_zip':'48226',
+    'sig.name':'Dana Whitfield','sig.title':'Managing Member',
+    'tenant.sender_name':'Dana Whitfield','tenant.sender_title':'Managing Member',
+    'rent_schedule.date_rents_effective':'2026-03-01',
+    'ocaf.factor_pub':'1.042','ocaf.ds_annual':'412000','ocaf.ds_t12':'408500','ocaf.ds_f12':'415000',
+  };
+  U.forEach((u,i)=>{
+    m['units.'+i+'.br']=u.br; m['units.'+i+'.ba']=u.ba; m['units.'+i+'.desig']=u.desig;
+    m['units.'+i+'.num_units']=String(u.n);
+    m['units.'+i+'.current']=String(u.cur); m['units.'+i+'.proposed']=String(u.pro);
+    m['units.'+i+'.ua_exec']=String(u.ua);
+    if(u.uaR)m['units.'+i+'.ua_rcs']=String(u.uaR);       // one real conflict to resolve
+    m['units.'+i+'.safmr_hud']=String(u.safmr);
+  });
+  m['nonrev.0.br']='1BR'; m['nonrev.0.ba']='1BA'; m['nonrev.0.num_units']='1';
+  m['nonrev.0.rent']='0'; m['nonrev.0.use']='Manager\u2019s unit';
+  /* saveFlat stores CELLS and reads map[k].value — handed bare strings it wrote
+     every key as empty, which still created the keys, so six unit rows rendered
+     with nothing in them and the analysis read zero. */
+  const cells={};Object.keys(m).forEach(k=>{cells[k]={value:m[k]};});
+  await mpdb.saveFlat(pid,cells);
+  await mpdb.setActive(pid);
+  try{window.localStorage.setItem('rcs_selftest_seeded','1');}catch(e){}
+}
 window.addEventListener('DOMContentLoaded',async()=>{
   /* ?selftest=1 — a clickable form with no sign-in and no live data, so the
      things only a human could check (does Enter save? does the badge fit?) can
@@ -2962,6 +3030,7 @@ window.addEventListener('DOMContentLoaded',async()=>{
      here because no connection to it is ever opened. */
   if(SELFTEST){
     mpdb=await makeDb(localAdapter('rcs_selftest'));
+    await selftestSeed();
     await boot();
     document.title='SELFTEST — '+document.title;
     return;

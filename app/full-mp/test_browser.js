@@ -366,8 +366,13 @@ const FULL=process.argv.includes('--full');
     const dividers=await c.eval(`
       const px=e=>{const r=e.getBoundingClientRect();const s=getComputedStyle(e);
         return [+r.width.toFixed(2),+r.height.toFixed(2),s.backgroundColor];};
-      const u=[...document.querySelectorAll('#viewForm .rbox.brba .utdiv')].map(px);
-      const a=[...document.querySelectorAll('#viewForm .fbox.addr .adiv')].map(px);
+      /* ONE cell, not every unit row — the seeded property has six, and counting
+         them all made this assert 12 and read as a defect the moment the test
+         record grew up. */
+      const cell=document.querySelector('#viewForm .rbox.brba');
+      const addr=document.querySelector('#viewForm .fbox.addr');
+      const u=[...cell.querySelectorAll('.utdiv')].map(px);
+      const a=[...addr.querySelectorAll('.adiv')].map(px);
       return {u,a};`);
     eq('the unit cell draws two dividers',dividers.u.length,2);
     eq('both identical to each other',dividers.u[0],dividers.u[1]);
