@@ -134,8 +134,9 @@ a new suite needs registering (`deliver.sh` calls it).
 - **`app/full-mp/test_browser.js`** — **the only suite that presses keys.** Builds its own bundle,
   drives it in a real headless chromium through `?selftest=1`, and dispatches real trusted key
   events over CDP (zero dependencies — node's own WebSocket). It covers the hole the other suites
-  cannot see: they prove `save()` saves, this proves a keystroke *reaches* it. 45 checks — Enter and
-  Escape on every kind of cell, the source dropdowns, the conflict buttons, the session boundary.
+  cannot see: they prove `save()` saves, this proves a keystroke *reaches* it. 91 checks — Enter and
+  Escape on every kind of cell, the source dropdowns, the conflict buttons, the session boundary,
+  and tier 3 end to end on `fixture_rs_scan.json` — read pristine, and read nudged half a point.
   `--full` drives all ~110 controls instead of one per kind. Skips **loudly** (never as a pass) when
   no chromium is installed.
 
