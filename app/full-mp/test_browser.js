@@ -35,7 +35,7 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=98;   // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
+const MIN_CHECKS=111;   // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
                        // pristine (three seeds, two checks each). 2026-07-27: the unit-type cell
                        // lost a divider with the designation, so the pair of divider checks
                        // became one. Lowered on purpose.
@@ -295,11 +295,45 @@ const FULL=process.argv.includes('--full');
           datePairOnScreen:vis(dateOv)};`);
       T('the parsed effective date has a save control on screen',cov.datePairOnScreen);
       eq('and it covers the figure the schedule actually wrote',cov.dateCovered,true);
-      /* nonrev.enabled is the one known exception and has its own task: the Part D
-         flag turns itself on and strands the form dirty with nothing to press.
-         Named here so the day it is fixed this check tightens to []. */
-      eq('nothing else the parse touched is left unsaveable',
-         cov.naked.filter(k=>k!=='nonrev.enabled'),[]);
+      /* This once carried an exception for nonrev.enabled — the Part D flag turned
+         itself on and stranded the form dirty with nothing on screen to press.
+         Coupling the flag to the rows it governs closed it, so the rule is now
+         stated without one: after a parse, NOTHING is left that cannot be saved. */
+      eq('nothing the parse touched is left unsaveable',cov.naked,[]);
+
+      /* Part D has no unit-count column on the schedule, so the 1 is derived
+         rather than read — and derived is still parsed. Left unmarked it wore the
+         grey of a cell nobody had touched, and its box was the one cell in the row
+         with no dropdown at all, which reads as an oversight rather than an answer. */
+      /* The seeded property already carries a Part D row, and a parse that writes
+         the value already on file is correctly 'database' — which is not the state
+         Matt met. Delete the row first, so the parse re-creates it from nothing:
+         that is the property with no Part D on file, where the derived count had
+         neither a colour nor a way to be saved. */
+      await c.eval('document.querySelector(\'[data-delnonrev="0"]\').click();return 1');
+      await sleep(200);
+      await c.eval('window.__t.__rsFill();return 1');
+      await sleep(300);
+      const partd=await c.eval(`
+        const f=window.__t.__form();
+        const box=document.querySelector('[data-box="nonrev.0.num_units"]');
+        return {src:(f['nonrev.0.num_units']||{}).source,val:(f['nonrev.0.num_units']||{}).value,
+          hasPick:!!(box&&box.querySelector('.uadrop')),
+          flagCovered:[...document.querySelectorAll('[data-save1]')]
+            .some(b=>b.getAttribute('data-save1').split(',').indexOf('nonrev.enabled')>=0)};`);
+      eq('the Part D count the parse derived reads as parsed',[partd.val,partd.src],['1','this-cycle']);
+      T('and its cell says where it could not have come from',partd.hasPick);
+      T('the Part D flag rides with the rows it governs',partd.flagCovered);
+
+      /* rsYearOn advances the parsed date by a year on purpose: the uploaded
+         schedule is the one in force and this package renews it. The figure was
+         right and the badge was wrong — "from RS" on a date the RS never printed,
+         on the cell that decides which year the renewal is filed for. */
+      const badge=await c.eval(`
+        const b=document.querySelector('[data-box="rent_schedule.date_eff_source"] .srctag');
+        return b?b.textContent.trim():null;`);
+      T('the date badge does not claim the schedule printed it',
+        !!badge&&!/from RS/.test(badge)&&/year/.test(badge));
     }
 
     const scan=JSON.parse(fs.readFileSync(path.join(__dirname,'fixture_rs_scan.json'),'utf8'));
@@ -644,6 +678,62 @@ const FULL=process.argv.includes('--full');
 
     /* ─────────────────────────────────────────────────────────────────────
        11. Nothing threw along the way. */
+    /* ── what each document is short of ─────────────────────────────────────
+       The dialog used to print every gap twice: once as a count on the row it
+       blocked, and again in a table underneath grouped by section — which on a
+       six-document package with a half-filled form was the tallest thing in the
+       app. The count is now the control: hovering it opens that document's own
+       list, and each field in it is the jump to the cell that fixes it.
+
+       Reloading first because generating writes to the record, and because this
+       has to run against a form nobody has been editing. */
+    console.log('\n── what each document is short of ─────────────────────');
+    await c.reload();
+    await c.eval(HELPERS);
+    await c.eval('await window.__t.__openForm('+JSON.stringify(pid)+');return 1');
+    await sleep(300);
+    // real gaps, in two different sections, so the card has something to group
+    await c.eval("['ca.name','ca.org','poc.name'].forEach(k=>window.__t.__edit(k,''));window.__t.__renderBody();return 1");
+    await c.eval("document.getElementById('bGenerate').click();return 1");
+    await sleep(700);
+    await c.eval("const b=document.getElementById('dlgOk');if(b)b.click();return 1");   // no letterhead: generate anyway
+    for(let i=0;i<100;i++){const n=await c.eval("return document.querySelectorAll('.gdoc').length");if(n)break;await sleep(250);}
+    const G=await c.eval(`
+      const rows=[...document.querySelectorAll('.gdoc')];
+      const chips=[...document.querySelectorAll('.gpw>.gshort')];
+      const w=chips.length?chips[0].parentElement:null;
+      if(w)w.classList.add('open');
+      const pop=w?w.querySelector('.gpop-in'):null;
+      const r=pop?pop.getBoundingClientRect():null;
+      return {n:rows.length,
+        heights:[...new Set(rows.map(x=>Math.round(x.getBoundingClientRect().height)))],
+        oldBlocks:document.querySelectorAll('.missblk').length,
+        chip:chips.length?chips[0].textContent:'',
+        popShown:!!(r&&r.width>50&&r.height>20),
+        popOnScreen:!!(r&&r.left>=0&&r.right<=window.innerWidth&&r.top>=0),
+        fields:pop?pop.querySelectorAll('.gpf').length:0,
+        jumps:pop?pop.querySelectorAll('.gpf[data-goto]').length:0};`);
+    eq('all six documents are listed',G.n,6);
+    eq('and every row is one height, whatever it is short of',G.heights.length,1);
+    eq('the two list blocks beneath them are gone',G.oldBlocks,0);
+    T('a blocked row states a count',/\d+ field/.test(G.chip));
+    T('opening the count shows that document\u2019s own list',G.popShown);
+    T('and the list stays on screen',G.popOnScreen);
+    T('every field in it is a jump to the cell that fixes it',G.fields>0&&G.fields===G.jumps);
+    /* The ready rows are themselves download buttons. A count inside one used to
+       be a click on the row, so reaching for the list downloaded the document. */
+    const readyChip=await c.eval(`
+      const b=document.querySelector('.gdoc-on .gpw>.gshort');
+      if(!b)return 'none';
+      b.click();
+      return document.getElementById('scrim').classList.contains('open')?'stayed':'downloaded';`);
+    T('a count inside a download row is not the download',readyChip!=='downloaded');
+    const jumped=await c.eval(`
+      const b=document.querySelector('.gpw .gpop .gpf');if(!b)return null;
+      b.click();
+      return {open:document.getElementById('scrim').classList.contains('open')};`);
+    eq('pressing a field closes the dialog and travels to it',jumped&&jumped.open,false);
+
     console.log('\n── the console stayed quiet ───────────────────────────');
     eq('no console errors and no uncaught exceptions',c.logs.slice(0,3),[]);
 

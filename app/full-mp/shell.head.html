@@ -150,7 +150,12 @@ body.scrolled #ccbar{transform:translateY(0);opacity:1}
    pair and note began, which put the 150% SAFMR reading two bands below the
    figure it describes. */
 .ucol{display:flex;flex-direction:column;min-width:0;gap:5px}
-.ucells .uracts.ucolacts{display:flex;grid-template-columns:none;gap:6px;margin:0;align-items:center;min-width:0}
+.ucells .uracts.ucolacts{display:flex;flex-wrap:wrap;grid-template-columns:none;gap:6px;margin:0;align-items:center;min-width:0}
+/* The increase sits beside the save/revert pair and drops to its own line only
+   when the column cannot hold both. Wrapping the ITEM, not the text: the figure
+   reads left to right or not at all, so it keeps nowrap and flex moves it. */
+.ucells .ucolacts .urnmetric{flex:1 1 auto;min-width:0;text-align:right}
+.ucells .ucolacts .ovic+.urnmetric{text-align:right}
 .ucells .uracts.ucolacts:empty{display:none}
 /* Column one mirrors its cell's box the way the old acts grid did — a 4px left
    border and a 1px right one — so bed lands under bed and bath under bath at
@@ -187,32 +192,36 @@ button.gdoc{justify-content:space-between}
 .gdoc-off .gdoc-n{font-weight:600}
 .gdoc-need{font-size:13px;color:#b45309;flex:1 1 auto;text-align:right;line-height:1.7}
 /* A blocked row states a count, so the six rows are one height whatever is
-   missing — the dialog's subject is which of the six you can take away. */
-.gshort{font-size:12.5px;color:#a3adbe;white-space:nowrap}
-/* Every gap once, grouped by the section you would go to. Always in the same
-   place, so the dialog has ONE shape however much is outstanding. */
-.missblk{margin-top:14px;border:1px solid #eceff5;border-radius:10px;padding:11px 14px 12px;background:#fbfcfd}
-.misshead{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:7px}
-.misst{font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#a3adbe}
-.missc{font-size:11.5px;color:#a3adbe}
-.missrow{display:grid;grid-template-columns:158px 1fr;gap:12px;align-items:baseline;padding:3.5px 0;font-size:13px}
-.missn{color:#8791a5;font-size:12px;font-weight:600}
-.missf{line-height:1.6}
-.missb{background:none;border:none;padding:0;font:inherit;font-size:13px;color:#b45309;cursor:pointer;text-decoration:none;text-align:left}
-.missb:hover{text-decoration:underline;text-underline-offset:2px}
-.missb:focus-visible{outline:2px solid #0f766e;outline-offset:2px;border-radius:3px}
-.missb-s{color:#a3855e}
-.missb-flat{cursor:default}
-.missb-flat:hover{text-decoration:none}
-.missdot{color:#d8c3a8;margin:0 6px}
-.misssug{border-top:1px solid #eef1f6;margin-top:5px;padding-top:7px}
-.missmore{border-top:1px solid #eef1f6;margin-top:6px;padding-top:5px}
-.misssum{list-style:none;cursor:pointer;font-size:12px;font-weight:600;color:#8791a5;padding:2px 0}
-.misssum::-webkit-details-marker{display:none}
-.misssum:before{content:'\25b8';display:inline-block;width:13px;color:#c3cbd9}
-.missmore[open] .misssum:before{content:'\25be'}
-.misssum:focus-visible{outline:2px solid #0f766e;outline-offset:2px;border-radius:3px}
-.missf-s{padding:4px 0 2px 13px;line-height:1.6}
+   missing — the dialog's subject is which of the six you can take away. What
+   each row is short of now lives one hover behind that count, per document:
+   the answer sits beside the question instead of in a table underneath it, and
+   a field blocking three documents is named on each of the three, which is what
+   is actually true of it. */
+/* font:inherit brings the row's 1.7 line-height with it, which made a
+   blocked row 2.3px taller than a ready one — six rows that were one height
+   became two. Stated here so the chip sits inside the row rather than setting it. */
+.gshort{font:inherit;font-size:12.5px;line-height:1.35;color:#a3adbe;white-space:nowrap;background:none;border:none;padding:2px 0;cursor:help;border-bottom:1px dotted #c9d1de}
+.gshort-s{color:#c3cbd9}
+.gshort:hover,.gshort:focus-visible{color:#5b6577;border-bottom-color:#8791a5}
+.gshort:focus-visible{outline:2px solid #0f766e;outline-offset:3px;border-radius:3px}
+.gpw{position:relative;display:inline-block}
+/* The gap between the chip and the card is INSIDE the popover, as padding, not
+   a margin: a real gap drops the hover on the way down and the card closes
+   under the pointer that is travelling to it. */
+.gpop{display:none;position:absolute;right:0;top:100%;padding-top:7px;z-index:40;width:330px;max-width:78vw;text-align:left;cursor:default}
+.gpw:hover .gpop,.gpw:focus-within .gpop,.gpw.open .gpop{display:block}
+.gpop-in{background:#fff;border:1px solid #d3dae6;border-radius:11px;box-shadow:0 14px 34px rgba(20,40,80,.17);padding:9px 6px 7px}
+.gpop-h{font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#a3adbe;padding:0 9px 5px}
+.gpop-h2{border-top:1px solid #eef1f6;margin-top:5px;padding-top:8px}
+.gpop-l{display:flex;flex-direction:column}
+.gpf{display:block;width:100%;background:none;border:none;font:inherit;text-align:left;padding:5px 9px 6px;border-radius:7px;cursor:pointer}
+.gpf:hover{background:#f6f7f9}
+.gpf:focus-visible{outline:2px solid #0f766e;outline-offset:-2px}
+.gpf-n{display:block;font-size:12.5px;font-weight:650;color:#b45309}
+/* Where the value was supposed to come from. It is the line that stops the
+   dialog reading as an accusation and starts it reading as an instruction. */
+.gpf-w{display:block;font-size:11px;color:#8791a5;margin-top:1px;line-height:1.35}
+.gpf-s .gpf-n{color:#a3855e;font-weight:600}
 
 .cbody{padding:16px} .cols{display:grid;grid-template-columns:calc(50% - 23px) 1fr;gap:13px 12px}
 .field{margin-bottom:6px} .fpair{display:flex;gap:10px} .fpair>.field{flex:1 1 0;min-width:0} .etpair>.field:first-child{flex:0 1 38%} .sigpair>.field{flex:1 1 0} .sigpair .ofthe{flex:0 0 auto;align-self:flex-start;padding:28px 1px 0;font-size:12px;font-weight:600;color:#5b6577} .prinrow{display:flex;gap:12px;align-items:flex-start;margin-bottom:6px} .prinrow .field{flex:1 1 0;min-width:0;margin-bottom:0} .prinrow .urx{flex:0 0 22px;padding-top:8px} .prinhead{display:flex;gap:12px;font-size:11px;color:#5b6577;font-weight:600;margin:8px 0 4px} .prinhead span{flex:1 1 0} .prinhead span:last-child{flex:0 0 22px} .flabel{font-size:11px;color:#5b6577;margin-bottom:4px;font-weight:600}

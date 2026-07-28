@@ -125,24 +125,32 @@ Run them all with **`bash app/full-mp/run_tests.sh`** — one command, one exit 
 a new suite needs registering (`deliver.sh` calls it).
 
 - **`app/full-mp/test_db.js`** — data layer incl. the cycle + directory surface (which cycle is
-  dominant, what carries into a new one, what writes back to the template); 93 checks.
+  dominant, what carries into a new one, what writes back to the template); 112 checks.
 - **`app/full-mp/test_interactions.js`** — save/revert/group + esc/enter decision logic against the real
-  store, incl. the unit designation chip; 82 checks (self-contained; builds its own bundle).
+  store, incl. the unit designation chip; 144 checks (self-contained; builds its own bundle).
 - **`app/full-mp/smoke_combined.js`** — headless render smoke of the assembled app: menu → launcher →
-  form, the 150% analysis numbers, and dirty-tracking; 39 checks. The launcher phase covers the
+  form, the 150% analysis numbers, and dirty-tracking; 85 checks. The launcher phase covers the
   first-run migration that turns an existing record into package #1.
 - **`app/full-mp/test_browser.js`** — **the only suite that presses keys.** Builds its own bundle,
   drives it in a real headless chromium through `?selftest=1`, and dispatches real trusted key
   events over CDP (zero dependencies — node's own WebSocket). It covers the hole the other suites
-  cannot see: they prove `save()` saves, this proves a keystroke *reaches* it. 91 checks — Enter and
+  cannot see: they prove `save()` saves, this proves a keystroke *reaches* it. 111 checks — Enter and
   Escape on every kind of cell, the source dropdowns, the conflict buttons, the session boundary,
   and tier 3 end to end on `fixture_rs_scan.json` — read pristine, and read nudged half a point.
   `--full` drives all ~110 controls instead of one per kind. Skips **loudly** (never as a pass) when
   no chromium is installed.
+- **`app/full-mp/test_rcs.js`** — the RCS study reader against the real corpus: nine studies from four
+  firms, trimmed to the pages that carry the numbers; 221 checks. The largest suite, and the one that
+  guards every figure the appraiser supplies.
+- **`app/full-mp/test_gen.js`** — record → PDF bytes: what each generated document actually prints,
+  and what it refuses to print rather than print wrong; 23 checks.
+
+**683 checks across six suites** (112 · 144 · 85 · 23 · 221 · 111) as of 2026-07-28. These numbers go
+stale the moment a suite grows — `MIN_CHECKS` in each file is the binding floor; this list is a map.
 
 ⚠️ **Don't pipe a suite through `| tail`.** A pipeline's exit status is the LAST command's, so node's
 failure vanishes — that is half of why `test_interactions.js` sat broken for eleven days after the
-Supabase migration (the other half: `deliver.sh` never ran it). All three suites now print their verdict
+Supabase migration (the other half: `deliver.sh` never ran it). All six suites now print their verdict
 as the last line so a pipe at least *shows* the failure, and each asserts a minimum check count
 (`MIN_CHECKS`) so dying partway can't read as a pass. **Adding checks? Raise `MIN_CHECKS`.**
 
