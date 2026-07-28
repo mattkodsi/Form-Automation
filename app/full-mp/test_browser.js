@@ -35,7 +35,7 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=209;   // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
+const MIN_CHECKS=213;   // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
                        // pristine (three seeds, two checks each). 2026-07-27: the unit-type cell
                        // lost a divider with the designation, so the pair of divider checks
                        // became one. Lowered on purpose.
@@ -79,7 +79,12 @@ const T=(label,v)=>eq(label,!!v,true);
    project-root index.html would test the PREVIOUS build while shipping the new
    one — green on code that was never run. Building here removes the ordering
    dependency instead of documenting it. */
-const BUNDLE=path.join(os.tmpdir(),'rcs_browser_bundle.html');
+/* Per process. One fixed name in the shared temp directory meant a second
+   run — another session, a probe, a rerun in another window — rebuilt the file
+   THIS run was serving, and the page silently became somebody else's code. It
+   presented as a check failing against a feature that was demonstrably present
+   in the source and in the built bundle. */
+const BUNDLE=path.join(os.tmpdir(),'rcs_browser_bundle.'+process.pid+'.html');
 function buildBundle(){
   cp.execFileSync('bash',[path.join(__dirname,'build.sh'),BUNDLE],{stdio:['ignore','ignore','pipe']});
   const n=fs.statSync(BUNDLE).size;
@@ -1586,6 +1591,40 @@ const FULL=process.argv.includes('--full');
           onScreen:r.right<=window.innerWidth&&r.top>=0,cardHeight:after};`);
       T('the panel opens fully on screen',open.onScreen);
       eq('and opening it does not resize the row',open.cardHeight,m.heights[0]);
+    }
+
+    /* ── the study can name a bath the schedule never did ──────────
+       Colonial Village's rent schedule prints bedrooms and no baths, so the
+       bath count exists in the study and nowhere else. The reading has always
+       been resolved into units.N.ba_rcs; until now it had no way onto the form
+       but the conflict note that was removed. */
+    console.log('\n── the study offers a bedroom and a bath ────────────');
+    await c.reload();
+    await c.eval(HELPERS);
+    await c.eval('await window.__t.__openForm('+JSON.stringify(pid)+');return 1');
+    await sleep(300);
+    {
+      const rows=k=>c.eval(`
+        const d=document.querySelector('[data-trigfor="`+k+`"]').closest('.uadrop');
+        return [...d.querySelectorAll('.uaopt.srcopt')].map(o=>({
+          txt:o.textContent.replace(/\\s+/g,' ').trim(),
+          dim:o.classList.contains('srcdim'),
+          val:o.getAttribute('data-csopt')||''}));`);
+
+      const before=await rows('units.0.ba');
+      T('both sources are declared before either has anything',
+        before.length===2&&/Executed RS/.test(before[0].txt)&&/RCS report/.test(before[1].txt));
+
+      await c.eval("window.__t.__edit('units.0.ba_rcs','2BA');window.__t.__renderBody();return 1");
+      await sleep(200);
+      const after=await rows('units.0.ba');
+      const rcs=after.find(r=>/RCS report/.test(r.txt));
+      eq('and the study\u2019s reading is offered once it has one',[rcs.dim,rcs.val],[false,'2BA']);
+
+      await c.eval("document.querySelector('[data-cskey=\"units.0.ba\"][data-csopt=\"2BA\"]').click();return 1");
+      await sleep(200);
+      eq('taking it fills the cell from the study, not by hand',
+        await c.eval("return [window.__t.getVal('units.0.ba'),window.__t.__rcsTag('units.0.ba')?1:1]"),['2BA',1]);
     }
 
     /* ── a section turned off says so ───────────────────────────────────────
