@@ -168,7 +168,7 @@ a new suite needs registering (`deliver.sh` calls it).
   they arrive — renamed columns, ISO dates, Excel serials, a promise, a bare array — and that when we
   cannot, `diagnose()` says why instead of showing an empty list.
 
-**1000 checks across seven suites** (143 · 144 · 85 · 33 · 245 · 124 · 226) as of 2026-07-28. These
+**1027 checks across seven suites** (162 · 144 · 85 · 33 · 245 · 124 · 234) as of 2026-07-28. These
 numbers go stale the moment a suite grows — `MIN_CHECKS` in each file is the binding floor; this list
 is a map.
 
