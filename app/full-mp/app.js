@@ -1379,20 +1379,42 @@ function rsAssembleFields(V){
 // two letters then alphanumerics, and it MUST carry a digit: without that last
 // requirement the label's own word "CONTRACT" parses as a contract number
 const RS_S8=/^[A-Z]{2}(?=[0-9A-Z]*[0-9])[0-9A-Z]{5,12}$/;
+/* How much a scan may wander and still be read. A page is de-skewed by
+   registration before it gets here, so what is left is per-word jitter: OCR
+   corner estimates, descenders dropping a word's box below its neighbours', and
+   the fit's own residual. RS_LINE is the widest such wander two words on ONE
+   printed line may show; it stays well under Part I's ~11.9pt row pitch so the
+   value line beneath the label can never be swallowed into it. RS_BAND is how
+   far below the label the written number may sit — one row, with most of a
+   second row's slack. */
+const RS_LINE=5, RS_BAND=20;
 function rsLines(runs,tol){ // positioned runs -> one entry per printed line
   const rs=runs.slice().sort((a,b)=>b.y-a.y||a.x-b.x),out=[];
   rs.forEach(r=>{const L=out[out.length-1];
-    if(L&&Math.abs(L.y-r.y)<=tol){L.t+=' '+String(r.s);L.x=Math.min(L.x,r.x);}
-    else out.push({y:r.y,x:r.x,t:String(r.s)});});
+    if(L&&Math.abs(L.y-r.y)<=tol){L.r.push(r);L.x=Math.min(L.x,r.x);}
+    else out.push({y:r.y,x:r.x,r:[r]});});
+  /* A line reads LEFT TO RIGHT, not in whatever order the y-sort left it in.
+     Joining in sort order made the line's text depend on hairline differences in
+     word height: on the fixture scan "HAP" sat 0.034pt above "Contract", and
+     that 0.034pt — a two-thousandth of an inch — was the entire margin by which
+     the label read "HAP Contract Number" rather than "Number Contract HAP".
+     Rounding the fixture's polygons to a thousandth of an inch swapped them and
+     the contract number stopped being found; a real scan wanders far more than
+     that. Sorting each line by x removes the dependency instead of widening it. */
+  out.forEach(L=>{L.t=L.r.slice().sort((a,b)=>a.x-b.x).map(r=>String(r.s)).join(' ');});
   return out;}
 function rsFindS8(runs){
   if(!runs||!runs.length)return '';
   // the label arrives as one run from a PDF and as three words from OCR, so match
   // it on the joined line rather than on any single run
-  const lab=rsLines(runs,3).find(L=>/HAP\s*Contract\s*Number/i.test(L.t));
+  const lab=rsLines(runs,RS_LINE).find(L=>/HAP\s*Contract\s*Number/i.test(L.t));
   if(!lab)return '';
-  const band=runs.filter(r=>r.y>lab.y-20&&r.y<lab.y-0.5&&r.x>=lab.x-8&&r.x<lab.x+460);
-  for(const L of rsLines(band,3)){
+  /* Drop the label's own words by identity rather than by sitting half a point
+     clear of them: at RS_LINE the label line is up to RS_LINE points deep, so a
+     y-only cut either keeps its lower words or eats the value along with them. */
+  const own=new Set(lab.r);
+  const band=runs.filter(r=>!own.has(r)&&r.y>lab.y-RS_BAND&&r.y<lab.y&&r.x>=lab.x-12&&r.x<lab.x+460);
+  for(const L of rsLines(band,RS_LINE)){
     const whole=L.t.replace(/\s+/g,'').toUpperCase();   // a number split across runs
     if(RS_S8.test(whole))return whole;
     for(const tok of L.t.toUpperCase().split(/\s+/))if(RS_S8.test(tok))return tok;}
