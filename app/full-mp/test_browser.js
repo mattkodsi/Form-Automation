@@ -35,7 +35,7 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=59;
+const MIN_CHECKS=63;
 let n=0,fails=0,verdict=null;
 const BAR='═'.repeat(68);
 function fail(msg,err){
@@ -410,6 +410,27 @@ const FULL=process.argv.includes('--full');
       await c.eval(`document.querySelectorAll('#viewForm ${K.sel}')[0].focus();return 1`);
       await c.key('Enter',{wait:340});
       eq(`${K.name}: the caret stays in the form after Enter`,
+         await c.eval(`const a=document.activeElement,v=document.getElementById('viewForm');
+           if(!a||a===document.body)return '(body)';return (v&&v.contains(a))?'in the form':'outside';`),
+         'in the form');
+    }
+
+    /* The cells that flip data-box with their mode (rule 9) lose the caret the
+       same way, one layer along: the refocus selector named the spelling we
+       started with, and saving had just swapped the cell to the other one. */
+    for(const D of [{box:'rent_schedule.date_eff_source',name:'rents-effective date'},
+                    {box:'tenant.mgmt_address',name:'management address'}]){
+      await openForm();
+      const picked=await c.eval(`
+        const b=document.querySelector('#viewForm [data-box="${D.box}"]');if(!b)return null;
+        const tr=b.querySelector('.uatrigger');if(!tr)return null;tr.click();
+        const o=[...b.querySelectorAll('.uaopt')].filter(x=>!x.classList.contains('sel')&&!x.classList.contains('srcdim'));
+        if(!o.length){tr.click();return null;}const t=o[0].textContent.trim().slice(0,24);o[0].click();return t;`);
+      T(`${D.name}: a mode can be picked`,picked);
+      await c.eval(`const b=document.querySelector('#viewForm [data-box="${D.box}"]');
+        const tr=b&&b.querySelector('.uatrigger');if(tr)tr.focus();return 1;`);
+      await c.key('Enter',{wait:380});
+      eq(`${D.name}: the caret survives the mode change`,
          await c.eval(`const a=document.activeElement,v=document.getElementById('viewForm');
            if(!a||a===document.body)return '(body)';return (v&&v.contains(a))?'in the form':'outside';`),
          'in the form');
