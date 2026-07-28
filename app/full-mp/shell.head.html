@@ -58,9 +58,12 @@ body.scrolled #ccbar{transform:translateY(0);opacity:1}
 .pkhead{margin-top:10px;color:#33405c}
 /* The tail of a long gap list, behind its own count. Hover to look, press to
    pin — the same grammar as the record checks' panel. */
-.gpmore{position:relative;display:inline-block;margin-top:5px;outline:none}
+/* Each disclosure owns a LINE. Both were inline-block, so a card short enough
+   to overflow BOTH lists ran them together: "and 7 more10 more, not required".
+   The label inside stays inline-block so the dotted rule hugs the words. */
+.gpmore{position:relative;display:block;margin-top:6px;outline:none}
 .gpmore-l{margin-top:9px}
-.gpmore-t{font-size:11px;color:#7c86a2;border-bottom:1px dotted #b9c2d4;cursor:default}
+.gpmore-t{display:inline-block;font-size:11px;color:#7c86a2;border-bottom:1px dotted #b9c2d4;cursor:default}
 .gpmore:hover .gpmore-t,.gpmore:focus-visible .gpmore-t{color:#33405c;border-bottom-color:#8791a5}
 .gpall{display:none;position:absolute;left:0;top:100%;margin-top:6px;width:min(330px,74vw);z-index:35;background:#fff;border:1px solid #d3dae6;border-radius:11px;box-shadow:0 14px 34px rgba(20,40,80,.17);padding:10px 13px 11px}
 .gpmore:hover .gpall,.gpmore.open .gpall{display:block}

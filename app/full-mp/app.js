@@ -2222,7 +2222,12 @@ function pkgCard(){
       +(rest.length?('<div class="gpmore" tabindex="0"><span class="gpmore-t">and '+rest.length+' more</span>'
         +'<div class="gpall"><div class="gpf-wrap">'+rest.map(x=>gpf(x,cls)).join('')+'</div></div></div>'):'');};
   return '<div class="ccard"><div class="cck">THIS PACKAGE</div>'
-    +'<div class="cctitle pkhead1" style="font-size:15px">'+ringSvg(S.pct,26)+'<span>'+head+'</span></div>'
+    /* The ring counted percent and the headline counts documents, so the card
+       showed "5" beside "0 of 6 ready to generate" — two scales on one line,
+       read as a contradiction. The sentence is the useful one: it names the
+       unit, and the list underneath is already the detail. The percentage is
+       kept in the title for anyone who wants it. */
+    +'<div class="cctitle" style="font-size:15px" title="'+esc(S.pct+'% complete')+'">'+head+'</div>'
     +'<div class="pksrc">'+srcRow('Executed rent schedule',_rsUpload?_rsUpload.name:'',_rsUpload?'':'not uploaded yet',!!_rsUpload)+second+'</div>'
     +'<div class="drafts">'+rows+'</div>'
     +gap(S.blockers,'','Needed to generate')
