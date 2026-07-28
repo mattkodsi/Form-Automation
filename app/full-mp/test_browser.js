@@ -35,7 +35,7 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=213;   // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
+const MIN_CHECKS=216;   // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
                        // pristine (three seeds, two checks each). 2026-07-27: the unit-type cell
                        // lost a divider with the designation, so the pair of divider checks
                        // became one. Lowered on purpose.
@@ -1574,6 +1574,17 @@ const FULL=process.argv.includes('--full');
           summary:(document.querySelector('.chksum')||{}).textContent||'',
           hidden:panel?getComputedStyle(panel).display:'(no panel)'};`);
       eq('the three cards are one height',m.heights.length,1);
+
+      /* The line under each source document used to be written before you
+         pressed anything and never changed — so the one place that should
+         confirm a fill happened read the same whether it had or not. */
+      {
+        const tiles=await c.eval("return {n:document.querySelectorAll('.srcgrid .srcrow').length,heights:[...new Set([...document.querySelectorAll('.srcgrid .srcrow')].map(x=>Math.round(x.getBoundingClientRect().height)))],sub:document.querySelector('.srcrow .sfsub').textContent.trim(),over:[...document.querySelectorAll('.srcrow')].flatMap(t=>{const r=t.getBoundingClientRect();return [...t.querySelectorAll('*')].filter(e=>{const b=e.getBoundingClientRect();return b.width&&(b.right>r.right+1||b.left<r.left-1)}).map(e=>String(e.className))})}");
+        eq('the two source documents are tiles of one height',[tiles.n,tiles.heights.length],[2,1]);
+        eq('and nothing spills out of either',tiles.over,[]);
+        T('the line under the schedule reports the fill it just did',
+          /Filled \d+ values? \u2014 \d+ still to save\.|Filled \d+ values?, all saved\./.test(tiles.sub));
+      }
       T('the checks that agree are not on the card',m.behind>0);
       T('and the ones that want a person are',m.onCard>0);
       /* "RECORD CHECKS · 10 agree" — the card's title already says what they
