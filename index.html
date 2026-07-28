@@ -150,7 +150,12 @@ body.scrolled #ccbar{transform:translateY(0);opacity:1}
    pair and note began, which put the 150% SAFMR reading two bands below the
    figure it describes. */
 .ucol{display:flex;flex-direction:column;min-width:0;gap:5px}
-.ucells .uracts.ucolacts{display:flex;grid-template-columns:none;gap:6px;margin:0;align-items:center;min-width:0}
+.ucells .uracts.ucolacts{display:flex;flex-wrap:wrap;grid-template-columns:none;gap:6px;margin:0;align-items:center;min-width:0}
+/* The increase sits beside the save/revert pair and drops to its own line only
+   when the column cannot hold both. Wrapping the ITEM, not the text: the figure
+   reads left to right or not at all, so it keeps nowrap and flex moves it. */
+.ucells .ucolacts .urnmetric{flex:1 1 auto;min-width:0;text-align:right}
+.ucells .ucolacts .ovic+.urnmetric{text-align:right}
 .ucells .uracts.ucolacts:empty{display:none}
 /* Column one mirrors its cell's box the way the old acts grid did — a 4px left
    border and a 1px right one — so bed lands under bed and bath under bath at
@@ -187,32 +192,36 @@ button.gdoc{justify-content:space-between}
 .gdoc-off .gdoc-n{font-weight:600}
 .gdoc-need{font-size:13px;color:#b45309;flex:1 1 auto;text-align:right;line-height:1.7}
 /* A blocked row states a count, so the six rows are one height whatever is
-   missing — the dialog's subject is which of the six you can take away. */
-.gshort{font-size:12.5px;color:#a3adbe;white-space:nowrap}
-/* Every gap once, grouped by the section you would go to. Always in the same
-   place, so the dialog has ONE shape however much is outstanding. */
-.missblk{margin-top:14px;border:1px solid #eceff5;border-radius:10px;padding:11px 14px 12px;background:#fbfcfd}
-.misshead{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:7px}
-.misst{font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#a3adbe}
-.missc{font-size:11.5px;color:#a3adbe}
-.missrow{display:grid;grid-template-columns:158px 1fr;gap:12px;align-items:baseline;padding:3.5px 0;font-size:13px}
-.missn{color:#8791a5;font-size:12px;font-weight:600}
-.missf{line-height:1.6}
-.missb{background:none;border:none;padding:0;font:inherit;font-size:13px;color:#b45309;cursor:pointer;text-decoration:none;text-align:left}
-.missb:hover{text-decoration:underline;text-underline-offset:2px}
-.missb:focus-visible{outline:2px solid #0f766e;outline-offset:2px;border-radius:3px}
-.missb-s{color:#a3855e}
-.missb-flat{cursor:default}
-.missb-flat:hover{text-decoration:none}
-.missdot{color:#d8c3a8;margin:0 6px}
-.misssug{border-top:1px solid #eef1f6;margin-top:5px;padding-top:7px}
-.missmore{border-top:1px solid #eef1f6;margin-top:6px;padding-top:5px}
-.misssum{list-style:none;cursor:pointer;font-size:12px;font-weight:600;color:#8791a5;padding:2px 0}
-.misssum::-webkit-details-marker{display:none}
-.misssum:before{content:'\25b8';display:inline-block;width:13px;color:#c3cbd9}
-.missmore[open] .misssum:before{content:'\25be'}
-.misssum:focus-visible{outline:2px solid #0f766e;outline-offset:2px;border-radius:3px}
-.missf-s{padding:4px 0 2px 13px;line-height:1.6}
+   missing — the dialog's subject is which of the six you can take away. What
+   each row is short of now lives one hover behind that count, per document:
+   the answer sits beside the question instead of in a table underneath it, and
+   a field blocking three documents is named on each of the three, which is what
+   is actually true of it. */
+/* font:inherit brings the row's 1.7 line-height with it, which made a
+   blocked row 2.3px taller than a ready one — six rows that were one height
+   became two. Stated here so the chip sits inside the row rather than setting it. */
+.gshort{font:inherit;font-size:12.5px;line-height:1.35;color:#a3adbe;white-space:nowrap;background:none;border:none;padding:2px 0;cursor:help;border-bottom:1px dotted #c9d1de}
+.gshort-s{color:#c3cbd9}
+.gshort:hover,.gshort:focus-visible{color:#5b6577;border-bottom-color:#8791a5}
+.gshort:focus-visible{outline:2px solid #0f766e;outline-offset:3px;border-radius:3px}
+.gpw{position:relative;display:inline-block}
+/* The gap between the chip and the card is INSIDE the popover, as padding, not
+   a margin: a real gap drops the hover on the way down and the card closes
+   under the pointer that is travelling to it. */
+.gpop{display:none;position:absolute;right:0;top:100%;padding-top:7px;z-index:40;width:330px;max-width:78vw;text-align:left;cursor:default}
+.gpw:hover .gpop,.gpw:focus-within .gpop,.gpw.open .gpop{display:block}
+.gpop-in{background:#fff;border:1px solid #d3dae6;border-radius:11px;box-shadow:0 14px 34px rgba(20,40,80,.17);padding:9px 6px 7px}
+.gpop-h{font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#a3adbe;padding:0 9px 5px}
+.gpop-h2{border-top:1px solid #eef1f6;margin-top:5px;padding-top:8px}
+.gpop-l{display:flex;flex-direction:column}
+.gpf{display:block;width:100%;background:none;border:none;font:inherit;text-align:left;padding:5px 9px 6px;border-radius:7px;cursor:pointer}
+.gpf:hover{background:#f6f7f9}
+.gpf:focus-visible{outline:2px solid #0f766e;outline-offset:-2px}
+.gpf-n{display:block;font-size:12.5px;font-weight:650;color:#b45309}
+/* Where the value was supposed to come from. It is the line that stops the
+   dialog reading as an accusation and starts it reading as an instruction. */
+.gpf-w{display:block;font-size:11px;color:#8791a5;margin-top:1px;line-height:1.35}
+.gpf-s .gpf-n{color:#a3855e;font-weight:600}
 
 .cbody{padding:16px} .cols{display:grid;grid-template-columns:calc(50% - 23px) 1fr;gap:13px 12px}
 .field{margin-bottom:6px} .fpair{display:flex;gap:10px} .fpair>.field{flex:1 1 0;min-width:0} .etpair>.field:first-child{flex:0 1 38%} .sigpair>.field{flex:1 1 0} .sigpair .ofthe{flex:0 0 auto;align-self:flex-start;padding:28px 1px 0;font-size:12px;font-weight:600;color:#5b6577} .prinrow{display:flex;gap:12px;align-items:flex-start;margin-bottom:6px} .prinrow .field{flex:1 1 0;min-width:0;margin-bottom:0} .prinrow .urx{flex:0 0 22px;padding-top:8px} .prinhead{display:flex;gap:12px;font-size:11px;color:#5b6577;font-weight:600;margin:8px 0 4px} .prinhead span{flex:1 1 0} .prinhead span:last-child{flex:0 0 22px} .flabel{font-size:11px;color:#5b6577;margin-bottom:4px;font-weight:600}
@@ -1918,8 +1927,8 @@ function csDrop(key,options,ph,cls,clearable,tint,claim){const cur=get(key);cons
   const clr=has?'<span class="csclear" data-csclear="'+key+'" title="Clear">✕</span>':'';return '<div class="uadrop cs '+(cls||'')+(has?' clearable':'')+'"><div class="uatrigger" tabindex="0" data-trigfor="'+key+'"'+(tint?' style="'+tint+'"':'')+'><span class="ualab">'+esc(lab)+'</span>'+clr+'<span class="cvx">▾</span></div><div class="uamenu">'+menu+'</div></div>';}
 function dateEffResolved(){const src=get('rent_schedule.date_eff_source')||(get('rent_schedule.date_eff_rs')?'rs':'custom');return src==='custom'?(get('rent_schedule.date_eff_custom')||get('rent_schedule.date_rents_effective')):get('rent_schedule.date_eff_rs');}
 function dateEffCell(){const rs=get('rent_schedule.date_eff_rs');const src=get('rent_schedule.date_eff_source')||(rs?'rs':'custom');const custom=get('rent_schedule.date_eff_custom')||get('rent_schedule.date_rents_effective');
-  const rsLab=rs?(fmtDate(rs)+' · from RS'):'— · no RS date parsed';
-  const lab=(src==='custom')?('<input class="uac-in dateeff-in" data-date="1" data-k="rent_schedule.date_eff_custom" value="'+esc(custom)+'" placeholder="mm/dd/yyyy" autocomplete="off">'):(rs?('<input class="uac-in srcedit" data-srcedit="dateeff" data-date="1" value="'+esc(fmtDate(rs))+'"><span class="srctag">· from RS</span>'):('<span class="ualab">'+esc(rsLab)+'</span>'));
+  const rsLab=rs?(fmtDate(rs)+' · a year after the RS'):'— · no RS date parsed';
+  const lab=(src==='custom')?('<input class="uac-in dateeff-in" data-date="1" data-k="rent_schedule.date_eff_custom" value="'+esc(custom)+'" placeholder="mm/dd/yyyy" autocomplete="off">'):(rs?('<input class="uac-in srcedit" data-srcedit="dateeff" data-date="1" value="'+esc(fmtDate(rs))+'"><span class="srctag long">· a year after the RS</span>'):('<span class="ualab">'+esc(rsLab)+'</span>'));
   let state,c;if(src==='custom'){c=modeOf(['rent_schedule.date_eff_custom','rent_schedule.date_eff_source'])==='over'?provColors('overridden','rent_schedule.date_eff_source'):cellColors('rent_schedule.date_eff_custom');}else{state=rs?srcOf('rent_schedule.date_eff_rs'):'new';c=provColors(state,'rent_schedule.date_eff_source');}
   const boxKey=(src==='custom')?'rent_schedule.date_eff_custom':'rent_schedule.date_eff_source';
   const menu='<div class="uamenu">'+srcOptRow('data-deffopt="rs"',rs?esc(fmtDate(rs)):'','A year after the executed RS',src==='rs')+'<div class="uaopt'+(src==='custom'?' sel':'')+'" data-deffopt="custom">Custom…</div></div>';
@@ -2157,7 +2166,12 @@ function numBox(k,ph,noIcons){const c=boxColor(k);
   const _cnt=SRC_COUNT.test(k);
   const _mc=k.match(/^ns8\.(\d+)\.num_units$/),_mu=k.match(/^nonrev\.(\d+)\.use$/);
   const _rv=_mc?rsFamVal('ns8',+_mc[1],'count'):(_mu?rsFamVal('nonrev',+_mu[1],'use'):null);
-  const _rsCell=!!(_mc||_mu);   // non-Section-8 counts and Part D uses come off the schedule too
+  /* Part D has no unit-count column on the schedule — each row is one named
+     space — so this cell can never be sourced from it. It still shows the
+     dimmed row rather than nothing at all: a cell with no dropdown reads as an
+     oversight, and "not available" is a shorter answer than wondering. */
+  const _mn=k.match(/^nonrev\.(\d+)\.num_units$/);
+  const _rsCell=!!(_mc||_mu||_mn);   // non-Section-8 counts and Part D uses come off the schedule too
   return `<div class="rbox" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><input type="text"${_cnt?' data-money="1"':''} data-k="${k}" value="${esc(_cnt?fmtMoney(get(k)):get(k))}" placeholder="${esc(ph||'')}">${rsTag(k)}${_rv!=null?srcPick(k,[{tag:'Executed RS',val:_rv}]):(_rsCell?dimPick('Executed RS'):'')}${noIcons?'':ovIcons(k)}</div>`;}
 function brbaBox(brK,baK){const c=groupColors([brK,baK]);
   const withRs=(k,opts,ph)=>{const d=csDrop(k,opts,ph,'',true,partHot(k)?tintStyle(k):'',rsBrBa(k));
@@ -2246,7 +2260,7 @@ function capNote(){const c=rsCapacity();if(!c.msgs.length)return '';return '<div
 function refreshFlags(){document.querySelectorAll('[data-pill]').forEach(p=>{const n=+p.getAttribute('data-pill');const st=sectionStatus(n);p.className='pill '+(st==='warn'?'warn':'ok');p.textContent=st==='warn'?'review':'confirmed';});renderRail();renderAttention();}
 function unitCard(i,pos){const trash=UNITS.length>1?`<button class="trash" data-delunit="${i}" title="Delete this unit type">✕</button>`:'';
   const _c=numf(get('units.'+i+'.current')),_p=numf(get('units.'+i+'.proposed'));const _d=_p-_c,_pc=_c>0?Math.round(_d/_c*100):0;
-  const metric=(_c>0&&_p>0)?`<span class="ucmetric" data-metric="${i}" style="color:${_d>=0?'#166534':'#b91c1c'}">${sMoney(_d)} / unit · ${sPct(_pc)}</span>`:`<span class="ucmetric" data-metric="${i}"></span>`;
+  const metric=(_c>0&&_p>0)?`<span class="ucmetric" data-metric="${i}" style="color:${_d>=0?'#166534':'#b91c1c'}">${sMoney(_d)} · ${sPct(_pc)}</span>`:`<span class="ucmetric" data-metric="${i}"></span>`;
   /* The compact .ovic pair inside the cell squeezed the bed/bath dropdowns from
      96px to 70px the moment it appeared, so a row changed shape once edited and
      "2BR" collided with its own clear icon. Roomy cells put save/revert in the
@@ -2275,7 +2289,11 @@ function unitCard(i,pos){const trash=UNITS.length>1?`<button class="trash" data-
     +col(unitTypeCell(i),'',typeNote(i))
     +col(unitCountCell(i),ovIcons('units.'+i+'.num_units'),numNote(i))
     +col(moneyBox('units.'+i+'.current',1),ovIcons('units.'+i+'.current'),'')
-    +col(moneyBox('units.'+i+'.proposed',1),ovIcons('units.'+i+'.proposed'),metricCell)
+    /* The increase belongs beside the buttons that commit it, not a line
+       below them: it is what you read to decide whether to press the tick. It
+       shares the act row and wraps to its own line only when the column is too
+       narrow to hold both — which is the layout it used to have unconditionally. */
+    +col(moneyBox('units.'+i+'.proposed',1),ovIcons('units.'+i+'.proposed')+metricCell,'')
     +col(uaBox(i),ovIcons(uaKeys),uaNoteCell(i))
     +(hasProg('rcs')?col(safmrBox(i),ovIcons(saKeys),safmrNote(i)):'')
     +'<div class="urx">'+trash+'</div>'
@@ -2287,7 +2305,7 @@ function renderRents(){
   let pd=`<div class="pdhead"><label class="ns8flag"><input type="checkbox" id="nonrevToggle"${nrOn?' checked':''}><span>This property has non-revenue units (Part D)</span></label>${nrOn?' <span class="sub">manager’s unit, model, etc. — excluded from rent totals</span>':''}</div>`;
   if(nrOn){
     if(NONREV.length){const _np=hasProg('rcs')?'':' noprop',_xc=hasProg('rcs')?7:6;
-    pd+=`<div class="rgh${_np}"><span style="grid-column:1">Unit type</span><span style="grid-column:2">Units</span><span style="grid-column:3">Contract rent</span><span style="grid-column:4/6">Use</span></div>`+NONREV.map(i=>`<div class="pdrow${_np}"><div style="grid-column:1">${brbaBox('nonrev.'+i+'.br','nonrev.'+i+'.ba')}</div><div style="grid-column:2">${numBox('nonrev.'+i+'.num_units','',1)}</div><div style="grid-column:3">${moneyBox('nonrev.'+i+'.rent',1)}</div><div style="grid-column:4/6">${numBox('nonrev.'+i+'.use',"e.g. Manager’s unit",1)}</div><div class="urx" style="grid-column:${_xc}"><button class="trash" data-delnonrev="${i}" title="Delete">✕</button></div><div class="uracts${_np}"><div style="grid-column:1"><span class="ua-br">${ovIcons('nonrev.'+i+'.br')}</span><span class="ua-sl"></span><span class="ua-ba">${ovIcons('nonrev.'+i+'.ba')}</span></div><div style="grid-column:2">${ovIcons('nonrev.'+i+'.num_units')}</div><div style="grid-column:3">${ovIcons('nonrev.'+i+'.rent')}</div><div style="grid-column:4/6">${ovIcons('nonrev.'+i+'.use')}</div></div></div>`).join('');}
+    pd+=`<div class="rgh${_np}"><span style="grid-column:1">Unit type</span><span style="grid-column:2">Units</span><span style="grid-column:3">Contract rent</span><span style="grid-column:4/6">Use</span></div>`+NONREV.map(i=>`<div class="pdrow${_np}"><div style="grid-column:1">${brbaBox('nonrev.'+i+'.br','nonrev.'+i+'.ba')}</div><div style="grid-column:2">${numBox('nonrev.'+i+'.num_units','',1)}</div><div style="grid-column:3">${moneyBox('nonrev.'+i+'.rent',1)}</div><div style="grid-column:4/6">${numBox('nonrev.'+i+'.use',"e.g. Manager’s unit",1)}</div><div class="urx" style="grid-column:${_xc}"><button class="trash" data-delnonrev="${i}" title="Delete">✕</button></div><div class="uracts${_np}"><div style="grid-column:1"><span class="ua-br">${ovIcons('nonrev.'+i+'.br')}</span><span class="ua-sl"></span><span class="ua-ba">${ovIcons('nonrev.'+i+'.ba')}</span></div><div style="grid-column:2">${ovIcons(coupledKeys('nonrev.'+i+'.num_units'))}</div><div style="grid-column:3">${ovIcons('nonrev.'+i+'.rent')}</div><div style="grid-column:4/6">${ovIcons('nonrev.'+i+'.use')}</div></div></div>`).join('');}
     pd+=`<div class="addrow" id="addNonrev">+ Add non-revenue unit</div>`;
   }
   pd+=undoBits('NR');
@@ -2295,7 +2313,7 @@ function renderRents(){
   let lh=`<div class="pdhead"><label class="ns8flag"><input type="checkbox" id="ns8Toggle"${lhOn?' checked':''}><span>This property has non-Section 8 revenue producing units</span></label>${lhOn?' <span class="sub">entered as unit type and average rent, as shown on the rent schedule</span>':''}</div>`;
   if(lhOn){
     if(NS8.length){const _np2=hasProg('rcs')?'':' noprop',_xc2=hasProg('rcs')?7:6;
-    lh+=`<div class="rgh${_np2}"><span style="grid-column:1">Unit type</span><span style="grid-column:2">Units</span><span style="grid-column:3">Average unit rent</span></div>`+NS8.map(i=>`<div class="pdrow${_np2}"><div style="grid-column:1">${brbaBox('ns8.'+i+'.br','ns8.'+i+'.ba')}</div><div style="grid-column:2">${numBox('ns8.'+i+'.num_units','',1)}</div><div style="grid-column:3">${moneyBox('ns8.'+i+'.avg_rent',1)}</div><div class="urx" style="grid-column:${_xc2}"><button class="trash" data-delns8="${i}" title="Delete">✕</button></div><div class="uracts${_np2}"><div style="grid-column:1"><span class="ua-br">${ovIcons('ns8.'+i+'.br')}</span><span class="ua-sl"></span><span class="ua-ba">${ovIcons('ns8.'+i+'.ba')}</span></div><div style="grid-column:2">${ovIcons('ns8.'+i+'.num_units')}</div><div style="grid-column:3">${ovIcons('ns8.'+i+'.avg_rent')}</div></div></div>`).join('');}
+    lh+=`<div class="rgh${_np2}"><span style="grid-column:1">Unit type</span><span style="grid-column:2">Units</span><span style="grid-column:3">Average unit rent</span></div>`+NS8.map(i=>`<div class="pdrow${_np2}"><div style="grid-column:1">${brbaBox('ns8.'+i+'.br','ns8.'+i+'.ba')}</div><div style="grid-column:2">${numBox('ns8.'+i+'.num_units','',1)}</div><div style="grid-column:3">${moneyBox('ns8.'+i+'.avg_rent',1)}</div><div class="urx" style="grid-column:${_xc2}"><button class="trash" data-delns8="${i}" title="Delete">✕</button></div><div class="uracts${_np2}"><div style="grid-column:1"><span class="ua-br">${ovIcons('ns8.'+i+'.br')}</span><span class="ua-sl"></span><span class="ua-ba">${ovIcons('ns8.'+i+'.ba')}</span></div><div style="grid-column:2">${ovIcons(coupledKeys('ns8.'+i+'.num_units'))}</div><div style="grid-column:3">${ovIcons('ns8.'+i+'.avg_rent')}</div></div></div>`).join('');}
     lh+=`<div class="addrow" id="addNs8">+ Add non-Section 8 unit type</div>`;
   }
   lh+=undoBits('LI');
@@ -3275,7 +3293,12 @@ function rsFillFromParsed(){const P=_rsUpload&&_rsUpload.parsed;if(!P)return;
   if(P.nonrev&&P.nonrev.length){form=store.editForm(form,'nonrev.enabled','1');mark('nonrev.enabled');
     P.nonrev.forEach((u,ix)=>{setk('nonrev.'+ix+'.use',u.use);setk('nonrev.'+ix+'.br',u.br);setk('nonrev.'+ix+'.ba',u.ba);
       if(u.rent!==''&&u.rent>0)setk('nonrev.'+ix+'.rent',u.rent);
-      if(get('nonrev.'+ix+'.num_units')==='')form=store.editForm(form,'nonrev.'+ix+'.num_units','1');});} // Part D has no unit-count field on the schedule itself (each row is one named space) — default to 1, left editable and unmarked since it is not literally read from the document
+      /* Part D has no unit-count field on the schedule (each row is one named
+         space), so 1 is derived rather than read — and derived is still parsed,
+         the same way the effective date is derived by adding a year. Marked, it
+         paints as this-cycle and its pair can save it; unmarked it wore the grey
+         of an untouched cell and could not be saved at all. */
+      if(get('nonrev.'+ix+'.num_units')===''){form=store.editForm(form,'nonrev.'+ix+'.num_units','1');mark('nonrev.'+ix+'.num_units');}});}
   deriveUnits();renderBody();scheduleHudRefresh();scheduleFactorRefresh();
   setStatus('Form filled from the executed rent schedule \u2014 review the highlighted values, then \u201cUpdate property profile\u201d.');}
 function renderSources(){
@@ -3787,6 +3810,9 @@ function coupledKeys(k){const m=k.match(/^(units\.\d+)\.(ua|safmr)_(custom|sourc
      one state with no button. */
   if(/^rent_schedule\.date_eff_(custom|source|rs)$/.test(k))
     return [k].concat(['rent_schedule.date_eff_custom','rent_schedule.date_eff_source','rent_schedule.date_eff_rs'].filter(x=>x!==k));
+  const _fam=k.match(/^(nonrev|ns8)\.\d+\.[a-z_]+$/);
+  if(_fam&&get(_fam[1]+'.enabled')==='1'&&srcOf(_fam[1]+'.enabled')!=='database')
+    return [k,_fam[1]+'.enabled'];
   if(k==='ocaf.factor_custom')return [k,'ocaf.factor_src'];
   if(k==='ocaf.factor_src')return [k,'ocaf.factor_custom'];
   return [k];}
@@ -3963,7 +3989,7 @@ function wireBody(){
         renderBody();return;}
       if(k==='property.name'&&el('hdrProp'))el('hdrProp').textContent=(v||'(unnamed property)');if(k==='property.addr_zip')scheduleHudRefresh();
       if(wion){const on=v.length>0;form=store.editForm(form,wion,on?'1':'');const cbEl=inp.closest('.cb');if(cbEl){cbEl.classList.remove('empty','unchecked','checked');cbEl.classList.add(!v?'empty':(on?'checked':'unchecked'));const bx=cbEl.querySelector('.box');if(bx){bx.textContent=on?'✓':'';bx.style.color=provColor(wion);}}}else if(inp.getAttribute('data-util')){if(v===''){form=store.editForm(form,k+'.on','');form=store.editForm(form,k+'.fuel','');}const cbEl=inp.closest('.cb');const stillOn=v!==''&&get(k+'.on')==='1';if(cbEl){cbEl.classList.remove('empty','unchecked','checked');cbEl.classList.add(!v?'empty':(stillOn?'checked':'unchecked'));const bx=cbEl.querySelector('.box');if(bx){bx.textContent=stillOn?'✓':'';bx.style.color=provColor(k+'.on');}const f3=cbEl.querySelector('[data-fuel3]');if(f3){const fk=k+'.fuel',fv=get(fk),fhas=fv!==''&&fv!=null,fc=CLR[fhas?srcOf(fk):'new']||CLR.new;f3.textContent=fhas?fv:'-';f3.style.color=fc[0];f3.style.borderColor=fc[0];f3.style.background=fc[1];}}}
-      paintCell(k);refreshFlags();if(/^principals\.\d+\.(name|title)$/.test(k))refreshPrincipalOpts();if(/^units\.|^nonrev\./.test(k)){renderCommand();renderBar();const mm=k.match(/^units\.(\d+)\.(current|proposed)$/);if(mm){const ui=mm[1],me=document.querySelector('[data-metric="'+ui+'"]');if(me){const cc=numf(get('units.'+ui+'.current')),pp=numf(get('units.'+ui+'.proposed'));if(cc>0&&pp>0){me.textContent=sMoney(pp-cc)+' / unit · '+sPct(Math.round((pp-cc)/cc*100));me.style.color=(pp-cc)>=0?'#166534':'#b91c1c';}else me.textContent='';}}}refreshOcafLines(k);refreshUafLines(k);if(/^property\.addr_|^rent_schedule\.date_eff/.test(k)){scheduleHudRefresh();scheduleFactorRefresh();}setStatus('Editing — on-file changes show Overridden until you Update or Revert.');});inp.addEventListener('keydown',async e=>{if(e.key!=='Enter'&&e.key!=='Escape')return;const _keys=fieldKeys(k);if(_pending&&_pending.length&&_pending.indexOf(k)>=0){e.preventDefault();e.stopPropagation();if(e.key==='Escape')revertPending();else commitPending();return;}if(e.key==='Escape'){
+      paintCell(k);refreshFlags();if(/^principals\.\d+\.(name|title)$/.test(k))refreshPrincipalOpts();if(/^units\.|^nonrev\./.test(k)){renderCommand();renderBar();const mm=k.match(/^units\.(\d+)\.(current|proposed)$/);if(mm){const ui=mm[1],me=document.querySelector('[data-metric="'+ui+'"]');if(me){const cc=numf(get('units.'+ui+'.current')),pp=numf(get('units.'+ui+'.proposed'));if(cc>0&&pp>0){me.textContent=sMoney(pp-cc)+' · '+sPct(Math.round((pp-cc)/cc*100));me.style.color=(pp-cc)>=0?'#166534':'#b91c1c';}else me.textContent='';}}}refreshOcafLines(k);refreshUafLines(k);if(/^property\.addr_|^rent_schedule\.date_eff/.test(k)){scheduleHudRefresh();scheduleFactorRefresh();}setStatus('Editing — on-file changes show Overridden until you Update or Revert.');});inp.addEventListener('keydown',async e=>{if(e.key!=='Enter'&&e.key!=='Escape')return;const _keys=fieldKeys(k);if(_pending&&_pending.length&&_pending.indexOf(k)>=0){e.preventDefault();e.stopPropagation();if(e.key==='Escape')revertPending();else commitPending();return;}if(e.key==='Escape'){
       /* Expand to the coupled pair before deciding. Typing in a UA / SAFMR / date
          cell writes a *_custom key that has never held anything, so judged on that
          key alone there is nothing to revert — and Escape fell through to "clear
@@ -4727,7 +4753,47 @@ function showPackageModal(nm,docs,combined,missingRcs,missingLh,capMsgs,blocked,
      stranded at the foot of the dialog in a second shade. */
   const extraWarn={};
   if(missingLh)extraWarn['Tenant notice']=[{label:'letterhead',sec:0}];
-  const lnk=(x,cls)=>'<button class="'+cls+'" data-goto="'+x.sec+'" data-gotok="'+esc(x.key||'')+'" title="Go to '+esc(secRef(x.sec))+'">'+esc(x.label)+'</button>';
+  /* WHERE IT WAS SUPPOSED TO COME FROM, answered per field rather than in
+     general. "Ownership entity" still empty after reading a schedule that
+     carries it is a different problem from "CA organization", which no document
+     has ever carried — and the dialog presented both as the same blank, which is
+     how an afternoon went into asking why the sources had not filled cells the
+     sources do not hold. It names the source when one is loaded and has the
+     value, names the document when one would hold it but none is uploaded, and
+     says plainly when nothing but a person will ever fill it. */
+  const RS_CARRIES=/^(units$|property\.(name|fha|s8)|owner\.entity|sig\.(name|title|principal)|principals\.|rent_schedule\.date_eff|units\.\d+\.(br|ba|label|num_units|current|ua_exec)|ns8\.|nonrev\.)/;
+  const RCS_CARRIES=/^(appr\.|units\.\d+\.(proposed|ua_rcs|safmr_rcs|num_rcs|br_rcs|ba_rcs))/;
+  const whyShort=k=>{
+    if(!k)return '';
+    let v=null;try{v=rsVal(k);}catch(e){}
+    try{if((v==null||v==='')&&rsOffers(k))v='\u2713';}catch(e){}
+    if(v!=null&&v!=='')return 'the rent schedule carries it \u2014 \u201cFill form from RS\u201d in '+secRef(1);
+    let c=null;try{c=rcsOf(k);}catch(e){}
+    if(c!=null&&c!=='')return 'the study carries it \u2014 \u201cFill form from study\u201d in '+secRef(1);
+    if(RS_CARRIES.test(k))return _rsUpload?'the schedule that was read left it blank':'on the executed rent schedule \u2014 none uploaded yet';
+    if(RCS_CARRIES.test(k))return _rcsUpload?'the study that was read left it blank':'in the RCS study \u2014 none uploaded yet';
+    /* The commonest answer by far, and printed on every line it turned the
+       card into six copies of one sentence — which is how the dialog got too
+       full in the first place. Silence here IS the answer: a field with no
+       note is a field only a person can fill, and the ones that DO carry a
+       note are the ones worth reading. */
+    return '';
+  };
+  const gpf=(x,cls)=>'<button class="gpf'+(cls||'')+'" data-goto="'+x.sec+'" data-gotok="'+esc(x.key||'')+'" title="Go to '+esc(secRef(x.sec))+'">'
+    +'<span class="gpf-n">'+esc(x.label)+'</span>'
+    +(function(){const w=whyShort(x.key)||(x.sec?(SECTION_TITLES[x.sec]||secRef(x.sec)):'');
+      return w?'<span class="gpf-w">'+esc(w)+'</span>':'';})()+'</button>';
+  /* One popover per document, on the count itself. Six rows of fixed height say
+     which documents you can take away; what each one is short of is one hover
+     behind the number, where it does not have to compete with that answer. */
+  const pop=(req,sug)=>{
+    if(!req.length&&!sug.length)return '';
+    return '<span class="gpw"><button type="button" class="gshort'+(req.length?'':' gshort-s')+'" aria-haspopup="true">'
+      +(req.length?((req.length===1?'1 field':req.length+' fields')+' short'):(sug.length+' suggested'))
+      +'</button><div class="gpop"><div class="gpop-in">'
+      +(req.length?'<div class="gpop-h">Needed before it can be written</div><div class="gpop-l">'+req.map(x=>gpf(x,'')).join('')+'</div>':'')
+      +(sug.length?'<div class="gpop-h'+(req.length?' gpop-h2':'')+'">Worth adding</div><div class="gpop-l">'+sug.map(x=>gpf(x,' gpf-s')).join('')+'</div>':'')
+      +'</div></div></span>';};
   /* A field that blocks three documents used to be printed three times. True,
      and it turned a six-row dialog into forty links on rows that grew to 156px
      — so the one thing the dialog exists to say, which of the six you can take
@@ -4741,44 +4807,14 @@ function showPackageModal(nm,docs,combined,missingRcs,missingLh,capMsgs,blocked,
   const rows=ORDER.map(o=>{const lab=o[0],hit=byLabel[lab];
     /* The whole row is the download, not the word "Download": a 46px-tall row
        whose only target was eight characters of text at the far right. */
+    const req=hit?[]:gapOf(lab), sug=sugOf(lab);
     if(hit)return '<div class="gdoc gdoc-on" role="button" tabindex="0" data-dldoc="'+hit.i+'" title="Download '+esc(lab)+'"><span class="gtick">✓</span>'
-      +'<span class="gdoc-n">'+esc(lab)+'</span><span class="gdoc-need"></span>'
+      +'<span class="gdoc-n">'+esc(lab)+'</span><span class="gdoc-need">'+pop([],sug)+'</span>'
       +'<span class="gdoc-a">Download</span></div>';
-    const n=gapOf(lab).length;
     return '<div class="gdoc gdoc-off"><span class="gtick gtick-off">–</span>'
       +'<span class="gdoc-n">'+esc(lab)+'</span>'
-      +'<span class="gdoc-need"><span class="gshort">'+(n===1?'1 field':n+' fields')+' short</span></span></div>';}).join('');
+      +'<span class="gdoc-need">'+pop(req,sug)+'</span></div>';}).join('');
 
-  /* One entry per distinct field, grouped by the section you would travel to and
-     named by the SAME id->title map the rail uses — never a hand-written table,
-     which is how "Go to Section 4" came to point at Section 5. */
-  const reqSeen=new Map(),sugSeen=new Map();
-  ORDER.forEach(o=>{const lab=o[0];
-    gapOf(lab).forEach(x=>{const id=x.sec+'|'+x.label;if(!reqSeen.has(id))reqSeen.set(id,x);});
-    sugOf(lab).forEach(x=>{const id=x.sec+'|'+x.label;if(!sugSeen.has(id))sugSeen.set(id,x);});});
-  const bySec=new Map();
-  [...reqSeen.values()].forEach(x=>{if(!bySec.has(x.sec))bySec.set(x.sec,[]);bySec.get(x.sec).push(x);});
-  const secGroups=[...bySec.entries()].sort((a,b)=>(_secPos[a[0]]||99)-(_secPos[b[0]]||99));
-  const nReq=reqSeen.size;
-  /* Rendered whenever there is ANYTHING to say. Gating it on nReq alone silently
-     dropped the caveats once every document was ready — which is exactly when a
-     reader is about to file them, and the only moment those lines matter. */
-  const nSug=sugSeen.size;
-  const missBlock=(nReq||nSug)?('<div class="missblk">'
-    +'<div class="misshead"><span class="misst">'+(nReq?'What’s missing':'Worth adding')+'</span><span class="missc">'
-      +(nReq?(nReq+' field'+(nReq===1?'':'s')+' · '+secGroups.length+' section'+(secGroups.length===1?'':'s'))
-            :(nSug+' suggestion'+(nSug===1?'':'s')))+'</span></div>'
-    +secGroups.map(g=>'<div class="missrow"><span class="missn">'+esc(SECTION_TITLES[g[0]]||secRef(g[0]))+'</span>'
-      +'<span class="missf">'+g[1].map(x=>lnk(x,'missb')).join('<span class="missdot">·</span>')+'</span></div>').join('')
-    /* Folded, because a suggestion blocks nothing. Spelling all twelve out
-       added 145px to a dialog that is already the tallest thing in the app —
-       and on a 900px screen the scrim neither scrolls nor lets you reach Close.
-       Open by default only when there is nothing else in the block to read. */
-    +(nSug?('<details class="missmore"'+(nReq?'':' open')+'><summary class="misssum">'
-      +(nReq?'Also suggested':'Suggested')+' \u00b7 '+nSug+'</summary><div class="missf missf-s">'
-      +[...sugSeen.values()].map(x=>x.sec?lnk(x,'missb missb-s'):'<span class="missb missb-s missb-flat">'+esc(x.label)+'</span>')
-        .join('<span class="missdot">·</span>')+'</div></details>'):'')
-    +'</div>'):'';
 
   const notes=[].concat(capMsgs||[]);
   const noteHtml=notes.length?'<div class="gnotes">'+notes.map(m=>'<div class="gnote">⚠ '+esc(m)+'</div>').join('')+'</div>':'';
@@ -4791,7 +4827,6 @@ function showPackageModal(nm,docs,combined,missingRcs,missingLh,capMsgs,blocked,
   modal('<div class="dlg-t">Package generated</div>'
     +'<div class="dlg-b">'+esc(nm)+' · '+(nGap?nReady+' of '+ORDER.length+' ready · <b style="color:#b45309">'+nGap+' need'+(nGap===1?'s':'')+' more information</b>':'all '+ORDER.length+' documents ready')+'</div>'
     +'<div class="gdocs">'+rows+'</div>'
-    +missBlock
     +noteHtml
     /* Everything you can leave with, at the end. The folder is the whole package
        as separate named files; the two beneath it are the single-file forms of
@@ -4806,9 +4841,18 @@ function showPackageModal(nm,docs,combined,missingRcs,missingLh,capMsgs,blocked,
   const xb=el('dlXlsx');if(xb)xb.onclick=()=>genRentAnalysis();
   const fb=el('dlFolder');if(fb)fb.onclick=()=>dlPackageFolder(nm,docs,combined);
   document.querySelectorAll('[data-dldoc]').forEach(b=>{const go=()=>{const d=docs[+b.getAttribute('data-dldoc')];dlPdf(d.bytes,d.file+'.pdf');};
-    b.onclick=go;
+    const inPop=e=>!!(e.target&&e.target.closest&&e.target.closest('.gpw'));
+    b.onclick=e=>{if(inPop(e))return;go();};
     // a div carrying role="button" owes the keyboard both of a button's keys
-    b.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();go();}};});
+    b.onkeydown=e=>{if(inPop(e))return;if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();go();}};});
+  /* Hover opens it; a press pins it open, because a touch screen has no hover
+     and a keyboard reaches the chip before it reaches the list. :focus-within
+     covers the tab route, this covers the tap. */
+  document.querySelectorAll('.gpw>.gshort').forEach(b=>b.addEventListener('click',e=>{
+    e.preventDefault();e.stopPropagation();
+    const w=b.parentElement;const on=w.classList.contains('open');
+    document.querySelectorAll('.gpw.open').forEach(x=>x.classList.remove('open'));
+    if(!on)w.classList.add('open');}));
   document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=e=>{e.preventDefault();e.stopPropagation();closeModal();gotoSection(+b.getAttribute('data-goto'),b.getAttribute('data-gotok')||'');});
 }
 
