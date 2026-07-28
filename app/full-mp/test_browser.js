@@ -35,7 +35,7 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=173;   // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
+const MIN_CHECKS=180;   // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
                        // pristine (three seeds, two checks each). 2026-07-27: the unit-type cell
                        // lost a divider with the designation, so the pair of divider checks
                        // became one. Lowered on purpose.
@@ -1316,6 +1316,51 @@ const FULL=process.argv.includes('--full');
          the distinction the reader needs, and the one that was missing. */
       T('a page-one field that really is blank says that instead',
         /Not filled by the RS/.test(why['FHA number']||''));
+    }
+
+    /* ── the study's addressee is the point of contact ──────────────────────
+       Every study in the corpus is addressed to a person above the subject
+       block — "Mr. Matthew Kim", "Ms. Claire Beatty". The reader always found
+       it and always threw it away, on the reasoning that whoever ORDERED the
+       study need not be the package's contact. It is: that person is the
+       portfolio manager the contract administrator writes back to.
+
+       Matched by NAME to the saved contacts, so the email and phone come with
+       it. What must NOT happen is a guess — a bare initial claiming a surname. */
+    console.log('\n── the study says who to contact ─────────────────────');
+    await c.reload();
+    await c.eval(HELPERS);
+    await c.eval('await window.__t.__openForm('+JSON.stringify(pid)+');return 1');
+    await sleep(300);
+    {
+      const feed=async nm=>await c.eval(
+        "window.__t.__setRcsParsed({scalars:{'_poc_name':"+JSON.stringify(nm)+"},units:[],firm:'belfry'});"
+        +"['poc.name','poc.email','poc.phone'].forEach(k=>window.__t.__edit(k,''));"
+        +"window.__t.__rcsFill();window.__t.__renderBody();"
+        +"return {name:window.__t.getVal('poc.name'),email:window.__t.getVal('poc.email'),phone:window.__t.getVal('poc.phone')};");
+
+      const exact=await feed('Ms. Claire Beatty');
+      eq('the addressee fills the contact it names, in full',
+         [exact.name,exact.email],['Claire Beatty','cbeatty@related.com']);
+      T('including the phone',/\d/.test(exact.phone||''));
+
+      const mid=await feed('Ms. Claire A. Beatty');
+      eq('a middle initial does not stop it matching',mid.email,'cbeatty@related.com');
+
+      /* The one thing a matcher must not do. */
+      const init=await feed('Ms. C. Beatty');
+      eq('a bare initial never claims a surname',[init.name,init.email],['C. Beatty','']);
+
+      const unknown=await feed('Mr. Aaron Stark');
+      eq('an addressee nobody has saved fills the name alone',
+         [unknown.name,unknown.email],['Aaron Stark','']);
+
+      const other=await feed('Ms. Claire Beattie');
+      eq('and a different surname is a different person',other.email,'');
+
+      await feed('Ms. Claire Beatty');
+      T('the cell offers the study as a source of its own',
+        await c.eval("return [...document.querySelectorAll('[data-pocrcs]')].some(x=>/Claire Beatty/.test(x.innerText))"));
     }
 
     console.log('\n── the console stayed quiet ───────────────────────────');

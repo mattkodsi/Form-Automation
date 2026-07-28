@@ -2007,7 +2007,10 @@ function pocSaveKeys(){return (form['poc.name']&&form['poc.name'].fromPick)?POC_
 function pocNote(){const m=modeOf('poc.name');const j=pocSaveKeys().join(',');return `<div class="ovnote" data-ov="poc.name" data-mode="${m}" style="display:${m?'flex':'none'}"><span class="om-over">${overText(['poc.name'])}</span><span class="om-new">new — not saved yet</span><span class="om-cycle">parsed — not saved yet</span><button class="revert" data-rev="${j}">↺ revert</button><button class="save1" data-save1="${j}">✓ save this field</button></div>`;}
 function pocCell(){const k='poc.name';const contacts=(mpdb?mpdb.listContacts():[]);const cur=get(k);const c=cellColors(k);
   const nvp=raVal('poc.name');
-  const navRow=(nvp?'<div class="uaopt srcopt" data-pocra="1">'+esc(nvp)+'<span class="uasub">Related Affordable</span></div>':'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">Related Affordable \u00b7 not available</span></div>')+'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">RCS report \u00b7 not available</span></div>';
+  const _rp=rcsOf('poc.name');
+  const navRow=(nvp?'<div class="uaopt srcopt" data-pocra="1">'+esc(nvp)+'<span class="uasub">Related Affordable</span></div>':'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">Related Affordable \u00b7 not available</span></div>')
+    +(_rp?('<div class="uaopt srcopt'+(String(_rp)===String(cur)?' sel':'')+'" data-pocrcs="1">'+esc(_rp)+'<span class="uasub">RCS report \u00b7 addressed to</span></div>')
+        :'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">RCS report \u00b7 not available</span></div>');
   const menu='<div class="uamenu">'+navRow+contacts.map(ct=>'<div class="uaopt" data-pocopt="'+esc(ct.id)+'">'+esc(ct.name)+(ct.email?'<span class="uasub">'+esc(ct.email)+'</span>':'')+'</div>').join('')+'</div>';
   const pick='<div class="uadrop pocpick"><div class="uatrigger" tabindex="0" title="Pick a saved contact"><span class="cvx">&#9662;</span></div>'+menu+'</div>';
   return `<div class="field"><div class="flabel">Point of contact</div><div class="fbox poccell" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><input class="pocname-in" data-k="poc.name" value="${esc(cur)}" placeholder="Type a name, or pick a saved contact" autocomplete="off">${pick}</div>${pocNote()}</div>`;}
@@ -2685,6 +2688,30 @@ async function parseRcsPdf(bytes){
   try{return await window.RCSParse.readLetter(rd);}catch(e){return null;}
 }
 function rcsVal(k){try{const p=_rcsUpload&&_rcsUpload.parsed;const v=p&&p.scalars?p.scalars[k]:null;return (v==null||v==='')?null:String(v);}catch(e){return null;}}
+/* The study is addressed to a person: "Mr. Matthew Kim" above the subject
+   block. That person is the portfolio manager the contract administrator writes
+   back to — the package's point of contact. */
+function rcsPocName(){const v=rcsVal('_poc_name');if(!v)return null;
+  return String(v).replace(/^\s*(mr|mrs|ms|miss|dr|mx)\.?\s+/i,'').replace(/[.,:;]+$/,'').trim()||null;}
+function nameParts(x){
+  const t=String(x||'').replace(/^\s*(mr|mrs|ms|miss|dr|mx)\.?\s+/i,'').replace(/[.,]+$/,'').trim().split(/\s+/).filter(Boolean);
+  if(!t.length)return null;
+  const nm=v=>String(v).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z]/g,'');
+  return {first:nm(t[0]),last:nm(t[t.length-1])};}
+/* Same surname, and first names that agree as far as the shorter one goes.
+   Two characters minimum: "M." must not claim every Kim in the book. */
+function pocMatchRcs(){
+  const name=rcsPocName();
+  if(!name)return {name:null,contact:null,many:false};
+  const a=nameParts(name);
+  if(!a||!a.last)return {name:name,contact:null,many:false};
+  let list=[];try{list=(mpdb&&mpdb.listContacts)?mpdb.listContacts():[];}catch(e){}
+  const hits=list.filter(ct=>{const b=nameParts(ct&&ct.name);
+    if(!b||!b.last||b.last!==a.last)return false;
+    if(b.first===a.first)return true;
+    const n=Math.min(a.first.length,b.first.length);
+    return n>=2&&a.first.slice(0,n)===b.first.slice(0,n);});
+  return {name:name,contact:hits.length===1?hits[0]:null,many:hits.length>1};}
 
 /* Match a form row to a study line on bedrooms and baths — never on position,
    which would put a 2BR rent on a 3BR row.
@@ -2767,6 +2794,13 @@ function rsOffers(k){
   return rsVal(k)!=null;
 }
 function rcsOf(k){
+  if(k==='poc.name'||k==='poc.email'||k==='poc.phone'){
+    const p=pocMatchRcs();
+    if(!p.name)return null;
+    if(k==='poc.name')return p.contact?p.contact.name:p.name;
+    if(!p.contact)return null;                       // no contact, no details to offer
+    if(k==='poc.email')return p.contact.email||null;
+    return p.contact.phone?fmtPhone(p.contact.phone):null;}
   let m=k.match(/^units\.(\d+)\.proposed$/);   if(m)return rcsUnitVal(+m[1],'proposed');
   m=k.match(/^units\.(\d+)\.ua_rcs$/);         if(m)return rcsUnitVal(+m[1],'ua');
   m=k.match(/^units\.(\d+)\.safmr_rcs$/);      if(m)return rcsUnitVal(+m[1],'safmr');
@@ -2796,7 +2830,7 @@ function rcsTag(k){
 const RCS_SCALARS=['appr.firm','appr.name','appr.email','appr.phone','appr.addr_street','appr.addr_city','appr.addr_state','appr.addr_zip',
                    'property.name','property.addr_street','property.addr_city','property.addr_state','property.addr_zip','property.s8'];
 function rcsFillKeys(){
-  const ks=RCS_SCALARS.slice();
+  const ks=RCS_SCALARS.concat(['poc.name','poc.email','poc.phone']);
   (UNITS||[]).forEach(function(i){['proposed','ua_rcs','safmr_rcs','br_rcs','ba_rcs','num_rcs'].forEach(function(f){ks.push('units.'+i+'.'+f);});});
   (NONREV||[]).forEach(function(i){ks.push('nonrev.'+i+'.rent');});
   /* A key the schedule answers for is not one the study fills, so it is not one
@@ -2812,12 +2846,22 @@ function rcsFillFromParsed(){
   const setk=(k,v)=>{if(rsOffers(k))return;put(k,v);};      // RS > RCS — see rsOffers
 
   /* The study carries none of these, so none is ever sourced from it: the FHA
-     number, the ownership entity, the signatory, current rents, the rents
-     effective date, the contract administrator. The addressee is whoever
-     ORDERED the study, which is not necessarily the package's contact, so it
-     is offered as a source row and never written here. */
+     effective date, the contract administrator.
+
+     The addressee IS written, and is handled below rather than here: it is a
+     person's name, not a scalar, and it is worth more once matched against the
+     contact list. */
   RCS_SCALARS.forEach(function(k){if(k!=='appr.phone')setk(k,P.scalars[k]);});
   if(P.scalars['appr.phone'])setk('appr.phone',fmtPhone(P.scalars['appr.phone']));
+  /* The addressee, and the contact it names. Where the name matches exactly one
+     saved contact the email and phone come with it; where it matches none, or
+     more than one, only the name is written — the study told us who, not how to
+     reach them. */
+  { const pm=pocMatchRcs();
+    if(pm.name){
+      setk('poc.name',pm.contact?pm.contact.name:pm.name);
+      if(pm.contact){setk('poc.email',pm.contact.email);
+        if(pm.contact.phone)setk('poc.phone',fmtPhone(pm.contact.phone));}} }
 
   let ambiguous=0;
   const claimed=new Set(),ambig=new Set();
@@ -4217,6 +4261,13 @@ function wireBody(){
     _pending=[k];_refocusSel='[data-k="'+k+'"]';renderBody();setStatus('Pulled from '+_tg+'.');}));
   document.querySelectorAll('[data-srcgrp]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();const box=o.getAttribute('data-srcgrp');const r=SRCGROUP[box]()[+o.getAttribute('data-srcgix')];if(!r||!r.apply)return;const keys=Object.keys(r.apply);_pendingSnap=snapPend(keys);keys.forEach(k=>{form=store.editForm(form,k,r.apply[k]);});_pending=keys.slice();_refocusSel='[data-box="'+box+'"] input';renderBody();setStatus('Address pulled from '+r.tag+'.');}));
   document.querySelectorAll('[data-pocra]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();const nm=raVal('poc.name');if(!nm)return;const saved=(mpdb?mpdb.listContacts():[]).find(x=>((x.name||'').trim().toLowerCase()===nm.trim().toLowerCase()));const c={name:nm,email:raVal('poc.email')||(saved&&saved.email)||'',phone:raVal('poc.phone')||(saved&&saved.phone)||''};_pendingSnap=snapPend(['poc.name','poc.email','poc.phone']);pocSelectContact(c);_pending=['poc.name','poc.email','poc.phone'];_refocusSel='[data-box="poc.name"] .pocname-in';renderBody();setStatus('POC pulled from Related Affordable.');}));
+  document.querySelectorAll('[data-pocrcs]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();
+    const pm=pocMatchRcs();if(!pm.name)return;
+    _pendingSnap=snapPend(POC_PICK_KEYS);
+    if(pm.contact)pocSelectContact(pm.contact);
+    else form=store.editForm(form,'poc.name',pm.name);
+    _pending=POC_PICK_KEYS.slice();_refocusSel='[data-box="poc.name"] .pocname-in';
+    renderBody();setStatus(pm.contact?'Point of contact taken from the study\u2019s addressee.':'Point of contact taken from the study \u2014 no saved contact of that name, so the email and phone are still to enter.');}));
   document.querySelectorAll('[data-pocopt]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();const ct=mpdb.listContacts().find(x=>x.id===o.getAttribute('data-pocopt'));_pendingSnap=snapPend(['poc.name','poc.email','poc.phone']);if(ct)pocSelectContact(ct);_pending=['poc.name','poc.email','poc.phone'];_refocusSel='[data-box="poc.name"] .pocname-in';renderBody();}));
   document.querySelectorAll('[data-dirid]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();const fk=o.getAttribute('data-dirfor');const P=DIR_PICK[fk];const ct=dirList(P.kind).find(x=>x.id===o.getAttribute('data-dirid'));_pendingSnap=snapPend(P.keys);if(ct)P.apply(ct);_pending=P.keys.slice();_refocusSel='[data-box="'+fk+'"] .pocname-in';renderBody();}));
   document.querySelectorAll('[data-deffopt]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();_pendingSnap=snapPend(['rent_schedule.date_eff_custom','rent_schedule.date_eff_source']);srcSetSource('rent_schedule.date_eff_custom',o.getAttribute('data-deffopt'));_pending=['rent_schedule.date_eff_source'];_refocusSel='[data-box="rent_schedule.date_eff_source"] .uatrigger';renderBody();scheduleHudRefresh();scheduleFactorRefresh();}));
@@ -4918,7 +4969,7 @@ function gotoSection(n,key){
    value, names the document when one would hold it but none is uploaded, and
    says plainly when nothing but a person will ever fill it. */
 const RS_CARRIES=/^(units$|property\.(name|fha|s8)|owner\.entity|sig\.(name|title|principal)|principals\.|rent_schedule\.date_eff|units\.\d+\.(br|ba|label|num_units|current|ua_exec)|ns8\.|nonrev\.)/;
-const RCS_CARRIES=/^(appr\.|units\.\d+\.(proposed|ua_rcs|safmr_rcs|num_rcs|br_rcs|ba_rcs))/;
+const RCS_CARRIES=/^(appr\.|poc\.|units\.\d+\.(proposed|ua_rcs|safmr_rcs|num_rcs|br_rcs|ba_rcs))/;
 /* Part F (ownership entity and type) and Part G (principals, signature) are
    on the second half of HUD-92458. Everything else the schedule gives us —
    the name, the FHA number, the effective date, the whole unit mix — is on

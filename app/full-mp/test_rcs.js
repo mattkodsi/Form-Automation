@@ -16,7 +16,7 @@ const els={};
 global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>null,querySelectorAll:()=>[],createElement:()=>mk(),addEventListener(){},body:{classList:{toggle(){},contains(){return false;}}}};
 const fs=require('fs'),path=require('path'),os=require('os');
 
-const MIN_CHECKS=230;
+const MIN_CHECKS=237;
 let n=0,fails=0,verdict=null;
 const BAR='='.repeat(68);
 function fail(msg,err){
@@ -171,7 +171,11 @@ async function reader(file){
     eq(`${tag}: appraiser firm`,S['appr.firm'],E.appr);
     eq(`${tag}: appraiser phone and e-mail`,[S['appr.phone'],S['appr.email']],[E.phone,E.email]);
     if(E.who)eq(`${tag}: appraiser name`,S['appr.name'],E.who);
-    eq(`${tag}: the addressee never becomes the contact`,S['poc.name'],undefined);
+    /* The parser keeps the addressee out of the scalar map — it travels as
+       _poc_name and is matched against the saved contacts before anything is
+       written, so that the email and phone can come with it. */
+    eq(`${tag}: the addressee is not a plain scalar`,S['poc.name'],undefined);
+    T(`${tag}: but the addressee was read`,!!S['_poc_name']);
     eq(`${tag}: totals`,r.totals,E.tot);
     eq(`${tag}: unit count`,r.units.length,E.units.length);
     E.units.forEach(function(u,i){
@@ -221,11 +225,16 @@ async function reader(file){
   app.__edit('units.0.br','2BR');app.__edit('units.0.ba','1BA');
   app.__edit('units.1.br','3BR');app.__edit('units.1.ba','1BA');
   /* These already hold the property's stored values. The point is not that they
-     are empty — it is that reading a study never disturbs them. */
+     are empty — it is that reading a study never disturbs them.
+
+     poc.name came OFF this list on 2026-07-28: the study is addressed to a
+     person, and that person is the portfolio manager the contract administrator
+     writes back to. The study does now fill it, which is checked below. */
   const untouched={};
-  ['poc.name','sig.name','units.0.current','property.fha','owner.entity_name']
+  ['sig.name','units.0.current','property.fha','owner.entity_name']
     .forEach(function(k){untouched[k]=app.getVal(k);});
   app.__rcsFill();
+  eq('the study fills the point of contact from its addressee',app.getVal('poc.name'),'Matthew Kim');
 
   eq('market rent landed on row 0',app.getVal('units.0.proposed'),'1850');
   eq('market rent landed on row 1',app.getVal('units.1.proposed'),'2400');
