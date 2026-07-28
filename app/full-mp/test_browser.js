@@ -35,7 +35,7 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=198;   // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
+const MIN_CHECKS=205;   // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
                        // pristine (three seeds, two checks each). 2026-07-27: the unit-type cell
                        // lost a divider with the designation, so the pair of divider checks
                        // became one. Lowered on purpose.
@@ -1504,6 +1504,46 @@ const FULL=process.argv.includes('--full');
         return {br:g('units.0.br'),ba:g('units.0.ba'),label:g('units.0.label')};`);
       T('the bedroom cell says the schedule gave it',!!brba.br&&brba.br.tag);
       T('and the value beside it is not squeezed',!!brba.br&&!brba.br.clipped);
+    }
+
+    /* ── the record checks card keeps its row in line ───────────────────────
+       Nine checks, most of which say "agree", made this the tallest card in the
+       row and dragged the other two out of line with it. What wants a person
+       stays on the card; what agrees collapses to a count and opens OVER the
+       card, so nothing below it moves. */
+    console.log('\n── the record checks fit their card ──────────────────');
+    await c.reload();
+    await c.eval(HELPERS);
+    await c.eval('await window.__t.__openForm('+JSON.stringify(pid)+');return 1');
+    await sleep(300);
+    {
+      const _r=await c.eval('return await window.__t.ocrMapPages('+JSON.stringify(JSON.parse(fs.readFileSync(path.join(__dirname,'fixture_rs_scan.json'),'utf8')))+')');
+      await c.eval('window.__t.__setRsParsed('+JSON.stringify(_r)+');window.__t.__rsFill();window.__t.__renderBody();return 1');
+      await sleep(500);
+      const m=await c.eval(`
+        const cards=[...document.querySelectorAll('#cc .ccard')].map(x=>Math.round(x.getBoundingClientRect().height));
+        const panel=document.querySelector('.chkall');
+        const onCard=document.querySelectorAll('.chkcard>.chkgrid>.chk').length;
+        const behind=panel?panel.querySelectorAll('.chk').length:0;
+        return {heights:[...new Set(cards)],n:cards.length,onCard,behind,
+          summary:(document.querySelector('.chksum')||{}).textContent||'',
+          hidden:panel?getComputedStyle(panel).display:'(no panel)'};`);
+      eq('the three cards are one height',m.heights.length,1);
+      T('the checks that agree are not on the card',m.behind>0);
+      T('and the ones that want a person are',m.onCard>0);
+      T('the count says how many are folded away',/\d+ check/.test(m.summary));
+      eq('and they stay folded until asked for',m.hidden,'none');
+
+      /* Opened over the card, so the row does not move when it is read. */
+      const open=await c.eval(`
+        const p=document.querySelector('.chkall');p.style.display='block';
+        const r=p.getBoundingClientRect(),card=p.closest('.ccard').getBoundingClientRect();
+        const after=Math.round(document.querySelector('#cc .ccard').getBoundingClientRect().height);
+        p.style.display='';
+        return {inside:r.left>=card.left-1&&r.right<=card.right+1,
+          onScreen:r.right<=window.innerWidth&&r.top>=0,cardHeight:after};`);
+      T('the panel stays within the card it belongs to',open.inside&&open.onScreen);
+      eq('and opening it does not resize the row',open.cardHeight,m.heights[0]);
     }
 
     console.log('\n── the console stayed quiet ───────────────────────────');
