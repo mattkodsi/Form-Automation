@@ -35,7 +35,7 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=141;   // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
+const MIN_CHECKS=148;   // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
                        // pristine (three seeds, two checks each). 2026-07-27: the unit-type cell
                        // lost a divider with the designation, so the pair of divider checks
                        // became one. Lowered on purpose.
@@ -1050,6 +1050,56 @@ const FULL=process.argv.includes('--full');
         return {want:want.length,missing};`);
       T('the study fills cells the form can name',r.want>0);
       eq('and every one of them says the study filled it',r.missing,[]);
+    }
+
+    /* ── the OCAF / UAF package states its own requirements ─────────────────
+       It had none. Every document was written whatever the form held — a
+       worksheet with no factor prints a dash from line (N) to line (R) and then
+       lists the CURRENT rents under "Adjusted contract rents" — and three
+       all-or-nothing guards refused the WHOLE package for one program's
+       shortfall, answering with a status line. An OCAF factor nobody had
+       entered blocked the utility-allowance certification; a missing utility
+       breakdown blocked the OCAF worksheet. Neither needs what the other lacked. */
+    console.log('\n── the OCAF / UAF package says what it is short of ────');
+    await c.reload();
+    await c.eval(HELPERS);
+    {
+      const cid=await c.eval('await window.__t.__openForm('+JSON.stringify(pid)+');'
+        +"const cy=await window.__t.__newCycle({programs:['ocaf','uaf'],label:'GEN'});"
+        +'return (cy&&(cy.cid||cy.id))||cy;');
+      await c.eval('await window.__t.__openCycleForm('+JSON.stringify(pid)+','+JSON.stringify(cid)+');return 1');
+      await sleep(400);
+      /* The seeded property carries an OCAF factor and its debt service, and no
+         utility-allowance components at all — so this is exactly the split the
+         old guards could not express. */
+      const miss=await c.eval(`
+        const o={};['ocafws','exhibita','uafcert','uanotice']
+          .forEach(id=>o[id]=window.__t.__docMissing(id));return o;`);
+      eq('the OCAF worksheet has everything it needs',miss.ocafws,[]);
+      T('and the utility-allowance certification does not',
+        miss.uafcert.indexOf('at least one utility allowance factor')>=0);
+
+      await c.eval("document.getElementById('bGenerate').click();return 1");
+      await sleep(900);
+      await c.eval("const b=document.getElementById('dlgOk');if(b)b.click();return 1");
+      for(let i=0;i<100;i++){const n=await c.eval("return document.querySelectorAll('.gdoc').length");if(n)break;await sleep(250);}
+      const G=await c.eval(`
+        const rows=[...document.querySelectorAll('.gdoc')];
+        const w=[...document.querySelectorAll('.gpw')];if(w.length)w[0].classList.add('open');
+        const pop=w.length?w[0].querySelector('.gpop-in'):null;
+        return {n:rows.length,
+          ready:rows.filter(r=>r.classList.contains('gdoc-on')).map(r=>r.querySelector('.gdoc-n').textContent),
+          short:rows.filter(r=>r.classList.contains('gdoc-off')).map(r=>r.querySelector('.gdoc-n').textContent),
+          heights:[...new Set(rows.map(r=>Math.round(r.getBoundingClientRect().height)))],
+          firstList:pop?[...pop.querySelectorAll('.gpf-n')].map(x=>x.textContent):[]};`);
+      T('the package generates rather than refusing outright',G.ready.length>0);
+      T('and the OCAF documents are among what it wrote',
+        G.ready.some(l=>/OCAF worksheet/.test(l))&&G.ready.some(l=>/Exhibit A/.test(l)));
+      T('while the utility-allowance ones say they are short',
+        G.short.some(l=>/UAF certification/.test(l)));
+      eq('every row is one height here too',G.heights.length,1);
+      T('and the card names the factor it is waiting for',
+        G.firstList.some(x=>/utility allowance factor/.test(x)));
     }
 
     console.log('\n── the console stayed quiet ───────────────────────────');
