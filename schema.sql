@@ -1,5 +1,11 @@
--- RCS Package Automation — database schema (exported from the live Supabase
--- project on 2026-07-15; matches db.supabase.js's column maps exactly).
+-- RCS Package Automation — database schema.
+--
+-- Exported from the live Supabase project 2026-07-15; the `cycle` table below
+-- was added 2026-07-27 from the live schema after this file was found to be a
+-- whole table out of date. THAT STALENESS HID A BUG: db.js maps
+-- 'units.{i}.desig' to unit_type.designation, a column that has never existed,
+-- and nobody could see it because the file everyone reads did not list the
+-- real columns. If you add a column, add it here in the same commit.
 --
 -- Design notes for porters:
 --  * Money/count columns are INTEGER and date columns are TEXT deliberately:
@@ -87,6 +93,23 @@ create index property_owner_idx on public.property(owner_id);
 -- Section 8 revenue unit rows (flat keys units.{i}.*). flat_index mirrors the
 -- UI's array index. *_rcs / *_source / *_reviewed columns support the parsed-
 -- document conflict-resolution flow (RS vs RCS values).
+-- One renewal cycle (package) per property per year. Added after the 2026-07-15
+-- export; transcribed from the live schema 2026-07-27.
+create table public.cycle (
+  id              uuid primary key default gen_random_uuid(),
+  owner_id        uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  property_id     uuid not null references public.property(id) on delete cascade,
+  programs        text not null,                      -- 'rcs' | 'ocaf' | 'uaf' | 'bbra', comma-joined
+  label           text,
+  effective_date  text,                               -- text, like every other date here
+  cells           jsonb not null default '{}'::jsonb, -- the per-cycle cell store
+  generated       jsonb not null default '{}'::jsonb,
+  rs_doc          jsonb not null default '{}'::jsonb, -- the executed rent schedule's PARSED reading, never its bytes
+  rcs_doc         jsonb not null default '{}'::jsonb, -- the RCS study's parsed reading, likewise
+  created_at      timestamptz not null default now(),
+  updated_at      timestamptz not null default now()
+);
+
 create table public.unit_type (
   id                      uuid primary key default gen_random_uuid(),
   owner_id                uuid not null default auth.uid() references auth.users(id) on delete cascade,
