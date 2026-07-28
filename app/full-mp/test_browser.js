@@ -35,7 +35,7 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=165;   // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
+const MIN_CHECKS=173;   // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
                        // pristine (three seeds, two checks each). 2026-07-27: the unit-type cell
                        // lost a divider with the designation, so the pair of divider checks
                        // became one. Lowered on purpose.
@@ -1268,6 +1268,54 @@ const FULL=process.argv.includes('--full');
       await sleep(250);
       eq('and a real date draws no warning',
         await c.eval("return [...document.querySelectorAll('#viewForm .ucnote.warn')].filter(x=>/not a date/.test(x.textContent)).length"),0);
+    }
+
+    /* ── a schedule read from the front only ────────────────────────────────
+       Part A is page 1; the ownership entity, the entity type, the principals
+       roster and the signature block are Parts F and G, on page 2. When the
+       second half cannot be placed the parse still SUCCEEDS — the unit mix, the
+       rents and the allowances all come through and the row says "read" — and
+       those four come back empty. The dialog could only say the schedule had
+       left them blank, which is a different thing and sends the reader to the
+       wrong document. Driven by feeding the real scan its first page only. */
+    console.log('\n── a schedule read from the front only ───────────────');
+    await c.reload();
+    await c.eval(HELPERS);
+    await c.eval('await window.__t.__openForm('+JSON.stringify(pid)+');return 1');
+    await sleep(300);
+    {
+      const scan2=JSON.parse(fs.readFileSync(path.join(__dirname,'fixture_rs_scan.json'),'utf8'));
+      const front=await c.eval('return await window.__t.ocrMapPages('+JSON.stringify([scan2[0]])+')');
+      T('page one alone still parses',!!front);
+      eq('and says the second half never arrived',front&&front.halfB,true);
+      T('the unit mix came through anyway',!!front&&front.units.length>0);
+      eq('while Part F did not',front&&front.scalars['owner.entity_name'],undefined);
+
+      await c.eval("const f=window.__t.__form();Object.keys(f).forEach(k=>window.__t.__edit(k,''));return 1");
+      await c.eval('window.__t.__setRsParsed('+JSON.stringify(front)+');window.__t.__rsFill();window.__t.__renderBody();return 1');
+      await sleep(400);
+      T('the source row says so rather than reporting a clean read',
+        await c.eval("return [...document.querySelectorAll('.srcrow')].some(x=>/front half read only/.test(x.innerText))"));
+
+      await c.eval("document.getElementById('bGenerate').click();return 1");
+      await sleep(900);
+      await c.eval("const b=document.getElementById('dlgOk');if(b)b.click();return 1");
+      for(let i=0;i<100;i++){const n=await c.eval("return document.querySelectorAll('.gdoc').length");if(n)break;await sleep(250);}
+      await sleep(300);
+      const why=await c.eval(`
+        [...document.querySelectorAll('.gpw')].forEach(x=>x.classList.add('open'));
+        const o={};
+        document.querySelectorAll('.gpf').forEach(b=>{
+          o[b.querySelector('.gpf-n').textContent]=(b.querySelector('.gpf-w')||{}).textContent||'';});
+        return o;`);
+      T('a Part G field blames the half, not the document',
+        /second half could not be read/.test(why['signatory name']||''));
+      T('…and so does Part F',
+        /second half could not be read/.test(why['ownership entity']||''));
+      /* The FHA number is on page ONE and is genuinely blank on this schedule —
+         the distinction the reader needs, and the one that was missing. */
+      T('a page-one field that really is blank says that instead',
+        /Not filled by the RS/.test(why['FHA number']||''));
     }
 
     console.log('\n── the console stayed quiet ───────────────────────────');
