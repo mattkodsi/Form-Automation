@@ -1923,7 +1923,7 @@ function dateEffCell(){const rs=get('rent_schedule.date_eff_rs');const src=get('
   let state,c;if(src==='custom'){c=modeOf(['rent_schedule.date_eff_custom','rent_schedule.date_eff_source'])==='over'?provColors('overridden','rent_schedule.date_eff_source'):cellColors('rent_schedule.date_eff_custom');}else{state=rs?srcOf('rent_schedule.date_eff_rs'):'new';c=provColors(state,'rent_schedule.date_eff_source');}
   const boxKey=(src==='custom')?'rent_schedule.date_eff_custom':'rent_schedule.date_eff_source';
   const menu='<div class="uamenu">'+srcOptRow('data-deffopt="rs"',rs?esc(fmtDate(rs)):'','A year after the executed RS',src==='rs')+'<div class="uaopt'+(src==='custom'?' sel':'')+'" data-deffopt="custom">Custom…</div></div>';
-  return `<div class="field"><div class="flabel">Date rents will be effective</div><div class="fbox uacell" data-box="${boxKey}" style="background:${c[1]};border-left-color:${c[0]}"><div class="uadrop" style="flex:1;min-width:0"><div class="uatrigger" tabindex="0">${lab}<span class="cvx">▾</span></div>${menu}</div>${src==='custom'?ovIcons(['rent_schedule.date_eff_custom','rent_schedule.date_eff_source']):''}</div></div>`;}
+  return `<div class="field"><div class="flabel">Date rents will be effective</div><div class="fbox uacell" data-box="${boxKey}" style="background:${c[1]};border-left-color:${c[0]}"><div class="uadrop" style="flex:1;min-width:0"><div class="uatrigger" tabindex="0">${lab}<span class="cvx">▾</span></div>${menu}</div>${ovIcons(['rent_schedule.date_eff_custom','rent_schedule.date_eff_source','rent_schedule.date_eff_rs'])}</div></div>`;}
 const POC_PICK_KEYS=['poc.name','poc.email','poc.phone'];
 function pocSelectContact(ct){form=store.editForm(form,'poc.name',ct.name||'');form=store.editForm(form,'poc.email',ct.email||'');form=store.editForm(form,'poc.phone',fmtPhone(ct.phone||''));
   POC_PICK_KEYS.forEach(k=>{if(form[k])form[k].fromPick=true;});}
@@ -3778,8 +3778,15 @@ function fieldKeys(k){if(k==='ca.name')return ['ca.prefix','ca.name'];const gb=g
 function coupledKeys(k){const m=k.match(/^(units\.\d+)\.(ua|safmr)_(custom|source|reviewed)$/);
   if(m){const b=m[1]+'.'+m[2];const figs=m[2]==='ua'?[b+'_exec',b+'_rcs']:[b+'_rcs',b+'_hud'];
     return [k].concat([b+'_custom',b+'_source',b+'_reviewed'].concat(figs).filter(x=>x!==k));}
-  if(k==='rent_schedule.date_eff_custom')return [k,'rent_schedule.date_eff_source'];
-  if(k==='rent_schedule.date_eff_source')return [k,'rent_schedule.date_eff_custom'];
+  /* The date the schedule wrote is the third cell of the source-backed shape,
+     after the utility allowance and the 150% ceiling: the figure lives in
+     date_eff_rs while the pair was keyed to custom+source alone. A parsed date
+     therefore painted itself green, correctly, and offered nothing to press —
+     and the cell went further and rendered the pair ONLY when the date had been
+     typed by hand, so the one state that always has something to save was the
+     one state with no button. */
+  if(/^rent_schedule\.date_eff_(custom|source|rs)$/.test(k))
+    return [k].concat(['rent_schedule.date_eff_custom','rent_schedule.date_eff_source','rent_schedule.date_eff_rs'].filter(x=>x!==k));
   if(k==='ocaf.factor_custom')return [k,'ocaf.factor_src'];
   if(k==='ocaf.factor_src')return [k,'ocaf.factor_custom'];
   return [k];}
