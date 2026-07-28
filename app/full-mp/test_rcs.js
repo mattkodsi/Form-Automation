@@ -16,7 +16,7 @@ const els={};
 global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>null,querySelectorAll:()=>[],createElement:()=>mk(),addEventListener(){},body:{classList:{toggle(){},contains(){return false;}}}};
 const fs=require('fs'),path=require('path'),os=require('os');
 
-const MIN_CHECKS=184;
+const MIN_CHECKS=207;
 let n=0,fails=0,verdict=null;
 const BAR='='.repeat(68);
 function fail(msg,err){
@@ -328,6 +328,85 @@ async function reader(file){
   app.__setRcsParsed(lnRec);
   app.__edit('nonrev.0.br','1BR');app.__edit('nonrev.0.ba','1BA');
   eq('an ambiguous non-revenue row fills nothing',app.__rcsOf('nonrev.0.rent'),null);
+
+  /* ============ the study's own unit type, and lines with no row ============
+     The form has carried units.i.br_rcs / ba_rcs / num_rcs — and the whole
+     conflict machinery reading them (typeConflict, numConflict, the review
+     buttons) — since before this reader existed. Nothing ever wrote them, so
+     the study's own account of the unit mix was parsed and dropped. It states
+     bedrooms, baths and a unit count on every line it prices; those are the
+     cross-document comparison the record-checks card promised.
+
+     Writing them is also what makes creating rows safe. A row the study adds
+     carries the study's shape alongside the form's, so if the executed
+     schedule later overwrites the row by position, the two disagree ON THE
+     ROW and the existing conflict UI says so — instead of a 3BR rent sitting
+     silently on a 2BR row. */
+  await app.__openForm(app.__firstPid());          // the stored record: one row, 1BR/1BA
+  app.__setRcsParsed(cvRec);
+  app.__edit('units.0.br','2BR');app.__edit('units.0.ba','1BA');app.__edit('units.0.num_units','32');
+  app.__rcsFill();
+  eq('the study records the type it priced',app.getVal('units.0.br_rcs'),'2BR');
+  eq('and the bathrooms with it',app.getVal('units.0.ba_rcs'),'1BA');
+  eq('and how many units it priced',app.getVal('units.0.num_rcs'),'32');
+  T('the recorded type says the study supplied it',app.__rcsTag('units.0.br_rcs').indexOf('RCS')>=0);
+  T('and so does the recorded count',app.__rcsTag('units.0.num_rcs').indexOf('RCS')>=0);
+  eq('all three are declared as keys the fill writes',
+    ['units.0.br_rcs','units.0.ba_rcs','units.0.num_rcs'].every(function(k){return app.__rcsFillKeys().indexOf(k)>=0;}),true);
+
+  /* Colonial Village prices 2BR and 3BR. A form holding neither had nowhere to
+     put either, and said nothing about it — the bug that started this. */
+  await app.__openForm(app.__firstPid());
+  app.__setRcsParsed(cvRec);
+  eq('the stored record starts with one row, of neither priced type',
+    [app.__UNITS().length,app.getVal('units.0.br')],[1,'1BR']);
+  app.__rcsFill();
+  eq('both priced lines now have a row',app.__UNITS().length,3);
+  eq('the added row describes the study’s line',
+    [app.getVal('units.1.br'),app.getVal('units.1.ba'),app.getVal('units.1.num_units')],['2BR','1BA','32']);
+  eq('and carries its rent, allowance and ceiling',
+    [app.getVal('units.1.proposed'),app.getVal('units.1.ua_rcs'),app.getVal('units.1.safmr_rcs')],['1850','161','2085']);
+  eq('the second line got its own row',
+    [app.getVal('units.2.br'),app.getVal('units.2.num_units'),app.getVal('units.2.proposed')],['3BR','33','2400']);
+  eq('the row that was already there is left alone',app.getVal('units.0.br'),'1BR');
+  T('an added row says the study put it there',app.__rcsTag('units.2.br_rcs').indexOf('RCS')>=0);
+  app.__rcsFill();
+  eq('filling a second time adds nothing further',app.__UNITS().length,3);
+
+  /* Lansing prices two 1BR/1BA lines. One 1BR row with no count answers to
+     both, so neither may be invented as a row: the form would gain two rows
+     describing units it already has one row for. */
+  await app.__openForm(app.__firstPid());
+  app.__setRcsParsed(lnRec);
+  app.__edit('units.0.br','1BR');app.__edit('units.0.ba','1BA');app.__edit('units.0.num_units','');
+  const wasProposed=app.getVal('units.0.proposed');   // the stored record's own figure, not the study's
+  app.__rcsFill();
+  eq('an ambiguous line is never invented as a row',app.__UNITS().length,1);
+  eq('and the row it could not decide is left as it was',app.getVal('units.0.proposed'),wasProposed);
+  eq('neither study line is offered to it',app.__rcsOf('units.0.proposed'),null);
+
+  /* The same two lines, against a form with no 1BR row at all. Nothing is
+     ambiguous now — no row is asking for them — so both are real rows, and the
+     count each carries is what tells them apart afterwards. */
+  await app.__openForm(app.__firstPid());
+  app.__setRcsParsed(lnRec);
+  app.__edit('units.0.br','3BR');
+  app.__rcsFill();
+  eq('two lines of one shape become two rows',app.__UNITS().length,3);
+  eq('each keeps its own count',[app.getVal('units.1.num_units'),app.getVal('units.2.num_units')],['32','68']);
+  eq('and the count tells their rents apart',
+    [app.getVal('units.1.proposed'),app.getVal('units.2.proposed')],['1190','1200']);
+
+  /* A non-revenue rent is filled from the study, so the study belongs in the
+     cell's source menu. It offered "Executed RS" alone — a menu naming the one
+     document that had not supplied the number sitting in the cell. */
+  await app.__openForm(app.__firstPid());
+  app.__setRcsParsed(cvRec);
+  app.__edit('nonrev.0.br','2BR');app.__edit('nonrev.0.ba','1BA');
+  const rows=app.__moneySrcRows('nonrev.0.rent').map(function(r){return r.tag;});
+  eq('a non-revenue rent offers both documents as sources',rows,['Executed RS','RCS report']);
+  eq('and the study’s figure is the one on offer',
+    app.__moneySrcRows('nonrev.0.rent').filter(function(r){return r.tag==='RCS report';})[0].val,'1850');
 
   finish();
 })().catch(e=>{fail('the suite threw',e);process.exit(1);});
