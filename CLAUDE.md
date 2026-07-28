@@ -19,8 +19,9 @@ renewal package as review-ready drafts. See `RCS Renewal Automation - Project Pl
 **the deliverable** Matt double-clicks — a complete standalone browser app.
 
 It is **built, not hand-written.** `app/full-mp/build.sh` concatenates the modular
-source — `shell.head.html` + `lib/pdf-lib.min.js` + `core.js` + `score.js` + `db.js` + `app.js`
-+ `gen.js` + `templates.js` + `shell.tail.html` — into that one HTML. So:
+source — `shell.head.html` + `lib/pdf-lib.min.js` + `lib/supabase.min.js` + `config.js` + `core.js`
++ `score.js` + `db.js` + `db.supabase.js` + `app.js` + `ocr.js` + `rcs.js` + `hap.js` + `gen.js`
++ `xlsx.js` + `templates.js` + `shell.tail.html` — into that one HTML. So:
 
 - the **HTML is the bundle** (what runs in the browser);
 - **`app/full-mp/` is the editable source** of that bundle.
@@ -156,8 +157,20 @@ a new suite needs registering (`deliver.sh` calls it).
 - **`app/full-mp/test_gen.js`** — record → PDF bytes: what each generated document actually prints,
   and what it refuses to print rather than print wrong; 33 checks.
 
-**864 checks across six suites** (138 · 144 · 85 · 33 · 245 · 219) as of 2026-07-28. These numbers go
-stale the moment a suite grows — `MIN_CHECKS` in each file is the binding floor; this list is a map.
+- **`app/full-mp/test_hap.js`** — the HAP tracker seam (`hap.js`) against the real 2853-row export in
+  `_archive/hap-fixtures/`: tolerant column matching, six date formats, and every hazard the live data
+  carries — each named for the property that carries it, so a failure says which real case broke. Mad
+  River Manor's due date that falls after the increase it precedes; Woodland Hills' row short of
+  fields; the property code `HCV1`, which is not a number; Bastrop Oak Grove's option term ending
+  mid-schedule; Fox Hill's schedule that simply stops; Luther Towers' three renewals in one year;
+  124 checks. **The tolerance checks are the point:** the integration happens on Kinley's machine
+  against a container nobody here has seen, so the suite proves we take his rows in whatever shape
+  they arrive — renamed columns, ISO dates, Excel serials, a promise, a bare array — and that when we
+  cannot, `diagnose()` says why instead of showing an empty list.
+
+**1000 checks across seven suites** (143 · 144 · 85 · 33 · 245 · 124 · 226) as of 2026-07-28. These
+numbers go stale the moment a suite grows — `MIN_CHECKS` in each file is the binding floor; this list
+is a map.
 
 ⚠️ **Don't pipe a suite through `| tail`.** A pipeline's exit status is the LAST command's, so node's
 failure vanishes — that is half of why `test_interactions.js` sat broken for eleven days after the
