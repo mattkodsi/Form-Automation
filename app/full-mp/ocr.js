@@ -266,6 +266,15 @@ async function ocrParseRs(bytes,onStep){ // scan -> the tier-1 parsed shape, or 
        placeholder here. */
     got.push(pg);txt.push(pg.words.map(w=>w.s).join(' '));
     const c=rsClassifyPages(txt);pg0=c.pg0;pg1=c.pg1;}
+  return ocrPlace(got,pg0,pg1,tpl,rects);}
+
+/* Everything after the network: which half is which, where each page sits on the
+   blank form, and whether the figures survive the totals gate. Split out of
+   ocrParseRs so a suite can replay a REAL Azure response off disk — the whole of
+   tier 3 apart from the request itself, exercised with no network, no session
+   and no Azure bill. Every bug this session has been on this side of the wire
+   and none of it was reachable from a test. */
+function ocrPlace(got,pg0,pg1,tpl,rects){
   if(pg0<0){
     if(!OCR_WHY)OCR_WHY='The scan read '+got.length+' page'+(got.length===1?'':'s')+', but none of them looked like Part A of form HUD-92458.';
     return null;}
@@ -283,3 +292,15 @@ async function ocrParseRs(bytes,onStep){ // scan -> the tier-1 parsed shape, or 
   if(!outp){OCR_WHY='The page was read and placed correctly, but the figures it produced did not reconcile (the unit counts or rents did not add up), so they were not applied.';return null;}
   if(s8)outp.scalars['property.s8']=s8;
   return outp;}   // rsPartB is told not to claim definite reads for a positional tier
+
+/* The test seam: canned Azure pages in, the same record out. */
+async function ocrMapPages(pgs){
+  OCR_WHY='';
+  const tpl=await ocrTemplate();if(!tpl){OCR_WHY='The blank HUD-92458 template could not be opened.';return null;}
+  const rects=await rsFieldRects();if(!Object.keys(rects).length){OCR_WHY='The blank form\u2019s field positions could not be read.';return null;}
+  const got=[],txt=[];let pg0=-1,pg1=-1;
+  for(let i=0;i<pgs.length&&(pg0<0||pg1<0);i++){
+    const pg=pgs[i];if(!pg||!pg.words||!pg.words.length)continue;
+    got.push(pg);txt.push(pg.words.map(w=>w.s).join(' '));
+    const c=rsClassifyPages(txt);pg0=c.pg0;pg1=c.pg1;}
+  return ocrPlace(got,pg0,pg1,tpl,rects);}

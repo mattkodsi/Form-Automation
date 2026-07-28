@@ -35,7 +35,7 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=71;   // 2026-07-27: the unit-type cell lost a divider with the designation,
+const MIN_CHECKS=85;   // 2026-07-27: the unit-type cell lost a divider with the designation,
                        // so the pair of divider checks became one. Lowered on purpose.
 let n=0,fails=0,verdict=null;
 const BAR='═'.repeat(68);
@@ -221,6 +221,41 @@ const FULL=process.argv.includes('--full');
     eq('two decimal places stay a decimal',await num('1147.50'),1147.5);
     eq('one decimal place stays a decimal',await num('1.5'),1.5);
     eq('nothing reads as nothing',await num(''),'');
+
+    /* ── tier 3, end to end, with no network ────────────────────────────────
+       fixture_rs_scan.json is Azure Document Intelligence's ACTUAL answer for
+       pages 1 and 2 of White Oak Townhomes' executed FY2025 schedule — a
+       DocuSign-flattened copy with no form fields and no readable text layer,
+       the exact document that reported "could not be read". Captured once and
+       kept, so everything after the request — which half is which, where each
+       page sits on the blank form, and whether the figures survive the totals
+       gate — is exercised on every run, for free.
+       Every expectation below was read off the rendered page, not off the
+       parser's output. Against the pre-fix rsNum this whole block returns null
+       with "the figures did not reconcile"; that is what it is here to catch. */
+    const scan=JSON.parse(fs.readFileSync(path.join(__dirname,'fixture_rs_scan.json'),'utf8'));
+    const rec=await c.eval('return await window.__t.ocrMapPages('+JSON.stringify(scan)+')');
+    T('a flattened scan parses at all',!!rec);
+    if(rec){
+      eq('the project name, slash and all',rec.scalars['property.name'],'Colonial Village/White Oak Townhomes');
+      eq('the rents-effective date',rec.scalars['rs_date'],'2025-10-01');
+      eq('the HAP contract number, which no field on this form carries',rec.scalars['property.s8'],'OH10M000236');
+      eq('the ownership entity',rec.scalars['owner.entity_name'],'Colonial Village Preservation, L.P');
+      eq('and its type, from a drawn tick',rec.scalars['owner.entity_type'],'Limited Partnership');
+      eq('the signatory',[rec.scalars['sig.name'],rec.scalars['sig.title']],['David Pearson','VP']);
+      eq('two unit types',rec.units.length,2);
+      eq('2 Bedroom: 32 units at $1,147, $161 allowance',
+         [rec.units[0].type,rec.units[0].count,rec.units[0].rent,rec.units[0].ua],['2 Bedroom',32,1147,161]);
+      eq('3 Bedroom: 33 units at $1,407, $171 allowance',
+         [rec.units[1].type,rec.units[1].count,rec.units[1].rent,rec.units[1].ua],['3 Bedroom',33,1407,171]);
+      eq('the non-revenue leasing office',[rec.nonrev[0].use,rec.nonrev[0].rent],['Leasing Office',1147]);
+      eq('one principal',rec.principals.length,1);
+      eq('the write-ins came across',
+         [rec.partb['partb.writein.e1'],rec.partb['partb.writein.e2'],rec.partb['partb.writein.s1']],
+         ['Shades','W/D Hookups','Security']);
+      eq('and the fuel letters',
+         [rec.partb['partb.fuel.0'],rec.partb['partb.fuel.1']],['G','E']);
+    }
 
     /* ─────────────────────────────────────────────────────────────────────
        1. coupledKeys — a cell answers the same whichever identity you hand it.
