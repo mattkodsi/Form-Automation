@@ -24,7 +24,7 @@ global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>
 const cp=require('child_process'),os=require('os'),path=require('path'),fs=require('fs');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=133;   // 2026-07-27: the unit designation became a free-text label. The
+const MIN_CHECKS=143;   // 2026-07-27: the unit designation became a free-text label. The
                         // chip needed checks the text box does not (four enum values, and a
                         // saved blank that read "on file" where a text box reads new), so the
                         // honest count fell by two. Lowered on purpose; never to go green.                // the count this file is known to run to the end
@@ -205,8 +205,11 @@ const T=(label,v)=>eq(label,!!v,true);
      and the flag that silenced the conflict warning. Leaving the flag out is how
      the revert button put a figure back while the ⚠ banner stayed hidden on a
      value nobody had approved — and stranded the form dirty on the flag alone. */
-  eq('coupledKeys ua_custom', app.coupledKeys('units.0.ua_custom'), ['units.0.ua_custom','units.0.ua_source','units.0.ua_reviewed']);
-  eq('coupledKeys safmr_custom', app.coupledKeys('units.0.safmr_custom'), ['units.0.safmr_custom','units.0.safmr_source','units.0.safmr_reviewed']);
+  /* The figure keys are part of the cell too — a parsed allowance lives in
+     ua_exec/ua_rcs, and a cell whose pair could not see them painted unsaved
+     with no way to save it. */
+  eq('coupledKeys ua_custom', app.coupledKeys('units.0.ua_custom'), ['units.0.ua_custom','units.0.ua_source','units.0.ua_reviewed','units.0.ua_exec','units.0.ua_rcs']);
+  eq('coupledKeys safmr_custom', app.coupledKeys('units.0.safmr_custom'), ['units.0.safmr_custom','units.0.safmr_source','units.0.safmr_reviewed','units.0.safmr_rcs','units.0.safmr_hud']);
   eq('coupledKeys date_eff', app.coupledKeys('rent_schedule.date_eff_custom'), ['rent_schedule.date_eff_custom','rent_schedule.date_eff_source']);
   eq('coupledKeys plain unchanged', app.coupledKeys('property.name'), ['property.name']);
   // mgmt: save a custom address (with its source), then "use property address" must read as OVERRIDE (orange)
@@ -403,6 +406,32 @@ const T=(label,v)=>eq(label,!!v,true);
   T('and offers a save', app.keysCanSave(TRIO));
   await app.__saveCell(UAK);
   T('which commits', settled());
+
+  console.log('\n─ a figure a document wrote is part of the cell that shows it ─');
+  /* The allowance cell paints itself from whichever key holds the FIGURE —
+     ua_exec when the schedule supplied it, ua_rcs when the study did — while
+     its pair watched only the override and the pointer. So a parsed allowance
+     painted as unsaved and offered no way to save it: the cell knew, the
+     buttons did not. The pair and the colour have to read the same cell. */
+  await app.__openForm(app.__firstPid());
+  app.__clearUndo();
+  const UAF='units.0.ua_exec', SAF='units.0.safmr_rcs';
+  const uaCell=app.coupledKeys('units.0.ua_custom');
+  T('the allowance cell includes the schedule’s figure', uaCell.indexOf(UAF)>=0);
+  T('and the study’s figure', uaCell.indexOf('units.0.ua_rcs')>=0);
+  app.__edit(UAF,'161');
+  T('a parsed allowance shows its pair', app.modeOf(uaCell)!=='');
+  T('and can be saved from it', app.keysCanSave(uaCell));
+  await app.__saveCell(UAF);
+  eq('saving it commits the figure', app.getVal(UAF), '161');
+  T('and the pair stands down afterwards', app.modeOf(uaCell)==='');
+
+  const saCell=app.coupledKeys('units.0.safmr_custom');
+  T('the ceiling cell includes the study’s figure', saCell.indexOf(SAF)>=0);
+  T('and the HUD pull', saCell.indexOf('units.0.safmr_hud')>=0);
+  app.__edit(SAF,'2085');
+  T('a parsed ceiling shows its pair', app.modeOf(saCell)!=='');
+  T('and can be saved from it', app.keysCanSave(saCell));
 
   finish();
 })().catch(e=>fail('the suite threw before reaching its verdict',e));
