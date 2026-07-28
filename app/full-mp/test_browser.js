@@ -35,7 +35,7 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=188;   // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
+const MIN_CHECKS=194;   // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
                        // pristine (three seeds, two checks each). 2026-07-27: the unit-type cell
                        // lost a divider with the designation, so the pair of divider checks
                        // became one. Lowered on purpose.
@@ -1399,6 +1399,58 @@ const FULL=process.argv.includes('--full');
          belongs, because there was no picker. */
       const em=await look('poc.email');
       T('and the point-of-contact email’s picker sits at the cell edge',!!em&&em.gap<=2);
+    }
+
+    /* ── the signatory, the principal, and the separator ────────────────────
+       DIR_SRCROW carried an "Executed RS" row for sig.name from the day it was
+       written and nothing ever drew it, because sig.name was not in DIR_PICK —
+       so the cell showed a badge with no picker beside it, and the saved
+       signatory in the contact directory was unreachable from the form. */
+    console.log('\n── the signatory and the principal ───────────────────');
+    await c.reload();
+    await c.eval(HELPERS);
+    await c.eval('await window.__t.__openForm('+JSON.stringify(pid)+');return 1');
+    await sleep(300);
+    {
+      await c.eval("window.__t.__setRsParsed({scalars:{'sig.name':'David Pearson','sig.title':'Vice President','sig.principal':'General Partner'},units:[],ns8:[],principals:[],nonrev:[]});"
+        +"window.__t.__edit('principals.0.name','Colonial Village Preservation GP, LLC');"
+        +"window.__t.__edit('principals.0.title','General Partner');"
+        +"window.__t.__edit('sig.principal','General Partner');"
+        +"window.__t.__renderBody();return 1");
+      await sleep(400);
+      const sig=await c.eval(`
+        const b=document.querySelector('[data-box="sig.name"]');if(!b)return null;
+        const br=b.getBoundingClientRect(),tr=b.querySelector('.uatrigger');
+        return {picker:!!tr,gap:tr?Math.round(br.right-tr.getBoundingClientRect().right):null,
+          rows:[...b.querySelectorAll('.uaopt')].map(o=>o.innerText.replace(/\\s+/g,' ').trim())};`);
+      T('the signatory cell has a picker, at the cell edge',!!sig&&sig.picker&&sig.gap<=2);
+      T('and the schedule is one of the things it offers',
+        !!sig&&sig.rows.some(r=>/David Pearson/.test(r)&&/Executed RS/.test(r)));
+
+      /* One principal on file makes a one-row menu. Without the name under it,
+         that row repeats the box and says nothing. */
+      const pr=await c.eval(`
+        const b=document.querySelector('[data-box="sig.principal"]');if(!b)return null;
+        return [...b.querySelectorAll('.uaopt')].map(o=>({t:o.textContent.trim(),
+          sub:(o.querySelector('.uasub')||{}).textContent||''}));`);
+      T('the principal row names whose role it is',
+        !!pr&&pr.some(x=>/General Partner/.test(x.t)&&/Preservation GP/.test(x.sub)));
+    }
+
+    /* The separator holds a badge off a value that has run up against it, which
+       happens in the unit-mix rows and nowhere else. */
+    {
+      const _r=await c.eval('return await window.__t.ocrMapPages('+JSON.stringify(JSON.parse(fs.readFileSync(path.join(__dirname,'fixture_rs_scan.json'),'utf8')))+')');
+      await c.eval('window.__t.__setRsParsed('+JSON.stringify(_r)+');window.__t.__rsFill();return 1');
+      await sleep(500);
+      const dots=await c.eval(`
+        const g=sel=>{const e=document.querySelector(sel);
+          return e?{text:e.textContent,before:getComputedStyle(e,'::before').content}:null;};
+        return {row:g('.ucells .rbox .srctag.rstag'),cell:g('.fbox .srctag.rstag')};`);
+      T('the badge itself carries no dot',
+        !!dots.row&&dots.row.text==='RS'&&!!dots.cell&&dots.cell.text==='RS');
+      T('a narrow unit-mix cell puts one back',!!dots.row&&/·/.test(dots.row.before));
+      T('and a full-width cell does not',!!dots.cell&&dots.cell.before==='none');
     }
 
     console.log('\n── the console stayed quiet ───────────────────────────');
