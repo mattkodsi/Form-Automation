@@ -473,7 +473,7 @@ function numUnresolved(i){return numConflict(i)&&!numReviewedOf(i);}
 /* Every save/revert in a unit row now sits BELOW the row, under the column it
    belongs to — see unitActs. Inside these cells the icon pair squeezed the
    controls it sat beside, and the row changed shape the moment it was edited. */
-function unitTypeCell(i){const brK='units.'+i+'.br',baK='units.'+i+'.ba';const conf=typeUnresolved(i);const c=conf?CLR.overridden:groupColors([brK,baK]);
+function unitTypeCell(i){const brK='units.'+i+'.br',baK='units.'+i+'.ba',dgK='units.'+i+'.desig';const conf=typeUnresolved(i);const c=conf?CLR.overridden:groupColors([brK,baK,dgK]);
   const withRs=(k,opts,ph)=>{const d=csDrop(k,opts,ph,'',!/\.br$/.test(k),(!conf&&partHot(k))?tintStyle(k):'',rsBrBa(k));const row=rsCsRow(k)||'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>';
     return d.replace('<div class="uamenu">','<div class="uamenu">'+row);};
   return `<div class="rbox brba" data-box="${brK}" style="background:${c[1]};border-left-color:${c[0]}">${withRs(brK,BR_OPTS,'BR')}<span class="slash">/</span>${withRs(baK,BA_OPTS,'BA')}${desigDrop(i)}<span class="utdiv"></span>${utGroupPick(i)}</div>`;}
@@ -709,7 +709,10 @@ function typeFromRs(i){
   return ['br','ba','desig'].every(p=>same('units.'+i+'.'+p));}
 function desigDrop(i){const k='units.'+i+'.desig';const v=get(k);const has=v!==''&&v!=null;
   const c=desigColors(k);
-  const tint='background:linear-gradient('+c[0]+','+c[0]+') no-repeat left 4px center/3px 60%,'+c[1]+';border-radius:6px';
+  /* Only while this part is hot, exactly as bedroom and bathroom do. A bar that
+     is always on cannot mean "this one is unsettled", and at 3px in a saturated
+     provenance colour it reads as a heavy divider between BA and the letter. */
+  const tint=partHot(k)?('background:linear-gradient('+c[0]+','+c[0]+') no-repeat left 4px center/3px 60%,'+c[1]+';border-radius:6px'):'';
   /* A dimmed row when nothing is parsed, not a missing one: every schedule-fed
      cell in this form declares the schedule as a source whether or not one is
      loaded, so you can see where the value would come from. */
@@ -1459,7 +1462,7 @@ function _renderCommand(){const a=analysis();const pCur=a.ceil>0?clamp(a.cg/a.ce
   el('cc').innerHTML=`
    ${card1}
    <div class="ccard"><div class="cck">RECORD CHECKS</div><div class="chkgrid">
-     ${chk(nmOk?'ok':'warn','Property name',nmOk?esc(get('property.name')):'missing — Section 2')}${chk(s8Ok?'ok':'warn','Section 8 #',s8Ok?esc(get('property.s8')):'missing — Section 2')}${chk(fhaOk?'ok':'info','FHA #',fhaOk?esc(get('property.fha')):((get('property.fha')||'').trim()?'the schedule says “'+esc(get('property.fha'))+'” — no number to print':'none on file — fills page 1 of the rent schedule'))}${chk(sigOk?'ok':'warn','Signatory (Part H)',sigOk?(esc(get('sig.name'))+(get('sig.title')?' · '+esc(get('sig.title'))+(get('sig.principal')?' of the '+esc(get('sig.principal')):''):'')):'missing — Section 3')}
+     ${chk(nmOk?'ok':'warn','Property name',nmOk?esc(get('property.name')):('missing — '+secRef(2)))}${chk(s8Ok?'ok':'warn','Section 8 #',s8Ok?esc(get('property.s8')):('missing — '+secRef(2)))}${chk(fhaOk?'ok':'info','FHA #',fhaOk?esc(get('property.fha')):((get('property.fha')||'').trim()?'the schedule says “'+esc(get('property.fha'))+'” — no number to print':'none on file — fills page 1 of the rent schedule'))}${chk(sigOk?'ok':'warn','Signatory (Part H)',sigOk?(esc(get('sig.name'))+(get('sig.title')?' · '+esc(get('sig.title'))+(get('sig.principal')?' of the '+esc(get('sig.principal')):''):'')):('missing — '+secRef(3)))}
      ${chk(ua[0],'Utility allowance',ua[1])}${hasProg('rcs')?chk((a.safmrMissing||a.ceil<=0)?'warn':(a.safmrOver?'warn':(a.safmrConflict?'info':'ok')),'SAFMR (150% ceiling)',a.safmrMissing?'enter or pull SAFMR per unit type':(a.ceil<=0?(a.countsMissing&&a.safmrHave?'no ceiling yet — unit counts needed':'no ceiling yet'):(a.safmrOver?(a.safmrOver+' type'+(a.safmrOver>1?'s':'')+' over 150% SAFMR'):(a.safmrConflict?'HUD vs RCS differ — using HUD':(UNITS.every(i=>(get('units.'+i+'.safmr_source')||defSafmrSrc(i))==='hud')?'per unit type · HUD':'per unit type'))))):''}${(()=>{const c=rsCapacity();return c.msgs.length?chk('warn','Rent schedule capacity',esc(c.flags.join(' · '))):'';})()}</div></div>
    ${pkgCard()}`;}
 function pkgCard(){
@@ -2573,25 +2576,58 @@ function showPackageModal(nm,docs,combined,missingRcs,missingLh,capMsgs,blocked,
      stranded at the foot of the dialog in a second shade. */
   const extraWarn={};
   if(missingLh)extraWarn['Tenant notice']=[{label:'letterhead',sec:0}];
-  const lnk=(x,cls)=>'<button class="'+cls+'" data-goto="'+x.sec+'" data-gotok="'+esc(x.key||'')+'" title="Go to Section '+x.sec+'">'+esc(x.label)+'</button>';
+  const lnk=(x,cls)=>'<button class="'+cls+'" data-goto="'+x.sec+'" data-gotok="'+esc(x.key||'')+'" title="Go to '+esc(secRef(x.sec))+'">'+esc(x.label)+'</button>';
+  /* A field that blocks three documents used to be printed three times. True,
+     and it turned a six-row dialog into forty links on rows that grew to 156px
+     — so the one thing the dialog exists to say, which of the six you can take
+     away, was buried under the reasons you cannot. Each gap is now counted ONCE,
+     in one block below, and the row it blocks says only how many it is short.
+     All six rows stay 46px whatever is missing. */
+  const gapOf=lab=>{const b=blkBy[lab];
+    if(b)return (b.missing||[]);
+    return byLabel[lab]?[]:[{key:'',label:'the RCS report, uploaded in '+secRef(1),sec:1}];};
+  const sugOf=lab=>[].concat(((warnOf||{})[lab])||((blkBy[lab]||{}).warns)||[],extraWarn[lab]||[]);
   const rows=ORDER.map(o=>{const lab=o[0],hit=byLabel[lab];
-    const w=[].concat(((warnOf||{})[lab])||((blkBy[lab]||{}).warns)||[],extraWarn[lab]||[]);
-    const omits=w.length?'<div class="gline"><span class="glbl">suggested</span>'
-      +w.map(x=>x.sec?lnk(x,'gneed'):'<span class="gneed gneed-flat">'+esc(x.label)+'</span>').join('<span class="gsep">·</span>')+'</div>':'';
     /* The whole row is the download, not the word "Download": a 46px-tall row
-       whose only target was eight characters of text at the far right. The
-       suggested-fix links inside it stay their own buttons — their handler
-       stops propagation, so they never also download. */
+       whose only target was eight characters of text at the far right. */
     if(hit)return '<div class="gdoc gdoc-on" role="button" tabindex="0" data-dldoc="'+hit.i+'" title="Download '+esc(lab)+'"><span class="gtick">✓</span>'
-      +'<span class="gdoc-n">'+esc(lab)+'</span>'
-      +'<span class="gdoc-need">'+omits+'</span>'
+      +'<span class="gdoc-n">'+esc(lab)+'</span><span class="gdoc-need"></span>'
       +'<span class="gdoc-a">Download</span></div>';
-    const b=blkBy[lab];
-    const needs='<div class="gline"><span class="glbl">required</span>'
-      +(b?(b.missing||[]).map(x=>lnk(x,'gneed')).join('<span class="gsep">·</span>')
-         :'<button class="gneed" data-goto="1" title="Go to Section 1">the RCS report, uploaded in Section 1</button>')+'</div>';
+    const n=gapOf(lab).length;
     return '<div class="gdoc gdoc-off"><span class="gtick gtick-off">–</span>'
-      +'<span class="gdoc-n">'+esc(lab)+'</span><span class="gdoc-need">'+needs+omits+'</span></div>';}).join('');
+      +'<span class="gdoc-n">'+esc(lab)+'</span>'
+      +'<span class="gdoc-need"><span class="gshort">'+(n===1?'1 field':n+' fields')+' short</span></span></div>';}).join('');
+
+  /* One entry per distinct field, grouped by the section you would travel to and
+     named by the SAME id->title map the rail uses — never a hand-written table,
+     which is how "Go to Section 4" came to point at Section 5. */
+  const reqSeen=new Map(),sugSeen=new Map();
+  ORDER.forEach(o=>{const lab=o[0];
+    gapOf(lab).forEach(x=>{const id=x.sec+'|'+x.label;if(!reqSeen.has(id))reqSeen.set(id,x);});
+    sugOf(lab).forEach(x=>{const id=x.sec+'|'+x.label;if(!sugSeen.has(id))sugSeen.set(id,x);});});
+  const bySec=new Map();
+  [...reqSeen.values()].forEach(x=>{if(!bySec.has(x.sec))bySec.set(x.sec,[]);bySec.get(x.sec).push(x);});
+  const secGroups=[...bySec.entries()].sort((a,b)=>(_secPos[a[0]]||99)-(_secPos[b[0]]||99));
+  const nReq=reqSeen.size;
+  /* Rendered whenever there is ANYTHING to say. Gating it on nReq alone silently
+     dropped the caveats once every document was ready — which is exactly when a
+     reader is about to file them, and the only moment those lines matter. */
+  const nSug=sugSeen.size;
+  const missBlock=(nReq||nSug)?('<div class="missblk">'
+    +'<div class="misshead"><span class="misst">'+(nReq?'What’s missing':'Worth adding')+'</span><span class="missc">'
+      +(nReq?(nReq+' field'+(nReq===1?'':'s')+' · '+secGroups.length+' section'+(secGroups.length===1?'':'s'))
+            :(nSug+' suggestion'+(nSug===1?'':'s')))+'</span></div>'
+    +secGroups.map(g=>'<div class="missrow"><span class="missn">'+esc(SECTION_TITLES[g[0]]||secRef(g[0]))+'</span>'
+      +'<span class="missf">'+g[1].map(x=>lnk(x,'missb')).join('<span class="missdot">·</span>')+'</span></div>').join('')
+    /* Folded, because a suggestion blocks nothing. Spelling all twelve out
+       added 145px to a dialog that is already the tallest thing in the app —
+       and on a 900px screen the scrim neither scrolls nor lets you reach Close.
+       Open by default only when there is nothing else in the block to read. */
+    +(nSug?('<details class="missmore"'+(nReq?'':' open')+'><summary class="misssum">'
+      +(nReq?'Also suggested':'Suggested')+' \u00b7 '+nSug+'</summary><div class="missf missf-s">'
+      +[...sugSeen.values()].map(x=>x.sec?lnk(x,'missb missb-s'):'<span class="missb missb-s missb-flat">'+esc(x.label)+'</span>')
+        .join('<span class="missdot">·</span>')+'</div></details>'):'')
+    +'</div>'):'';
 
   const notes=[].concat(capMsgs||[]);
   const noteHtml=notes.length?'<div class="gnotes">'+notes.map(m=>'<div class="gnote">⚠ '+esc(m)+'</div>').join('')+'</div>':'';
@@ -2604,6 +2640,7 @@ function showPackageModal(nm,docs,combined,missingRcs,missingLh,capMsgs,blocked,
   modal('<div class="dlg-t">Package generated</div>'
     +'<div class="dlg-b">'+esc(nm)+' · '+(nGap?nReady+' of '+ORDER.length+' ready · <b style="color:#b45309">'+nGap+' need'+(nGap===1?'s':'')+' more information</b>':'all '+ORDER.length+' documents ready')+'</div>'
     +'<div class="gdocs">'+rows+'</div>'
+    +missBlock
     +noteHtml
     /* Everything you can leave with, at the end. The folder is the whole package
        as separate named files; the two beneath it are the single-file forms of

@@ -157,6 +157,33 @@ button.gdoc{justify-content:space-between}
 .gdoc-off{background:#f6f7f9;border:1px dashed #d7deea;color:#8791a5;cursor:default}
 .gdoc-off .gdoc-n{font-weight:600}
 .gdoc-need{font-size:13px;color:#b45309;flex:1 1 auto;text-align:right;line-height:1.7}
+/* A blocked row states a count, so the six rows are one height whatever is
+   missing — the dialog's subject is which of the six you can take away. */
+.gshort{font-size:12.5px;color:#a3adbe;white-space:nowrap}
+/* Every gap once, grouped by the section you would go to. Always in the same
+   place, so the dialog has ONE shape however much is outstanding. */
+.missblk{margin-top:14px;border:1px solid #eceff5;border-radius:10px;padding:11px 14px 12px;background:#fbfcfd}
+.misshead{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:7px}
+.misst{font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#a3adbe}
+.missc{font-size:11.5px;color:#a3adbe}
+.missrow{display:grid;grid-template-columns:158px 1fr;gap:12px;align-items:baseline;padding:3.5px 0;font-size:13px}
+.missn{color:#8791a5;font-size:12px;font-weight:600}
+.missf{line-height:1.6}
+.missb{background:none;border:none;padding:0;font:inherit;font-size:13px;color:#b45309;cursor:pointer;text-decoration:none;text-align:left}
+.missb:hover{text-decoration:underline;text-underline-offset:2px}
+.missb:focus-visible{outline:2px solid #0f766e;outline-offset:2px;border-radius:3px}
+.missb-s{color:#a3855e}
+.missb-flat{cursor:default}
+.missb-flat:hover{text-decoration:none}
+.missdot{color:#d8c3a8;margin:0 6px}
+.misssug{border-top:1px solid #eef1f6;margin-top:5px;padding-top:7px}
+.missmore{border-top:1px solid #eef1f6;margin-top:6px;padding-top:5px}
+.misssum{list-style:none;cursor:pointer;font-size:12px;font-weight:600;color:#8791a5;padding:2px 0}
+.misssum::-webkit-details-marker{display:none}
+.misssum:before{content:'\25b8';display:inline-block;width:13px;color:#c3cbd9}
+.missmore[open] .misssum:before{content:'\25be'}
+.misssum:focus-visible{outline:2px solid #0f766e;outline-offset:2px;border-radius:3px}
+.missf-s{padding:4px 0 2px 13px;line-height:1.6}
 
 .cbody{padding:16px} .cols{display:grid;grid-template-columns:calc(50% - 23px) 1fr;gap:13px 12px}
 .field{margin-bottom:6px} .fpair{display:flex;gap:10px} .fpair>.field{flex:1 1 0;min-width:0} .etpair>.field:first-child{flex:0 1 38%} .sigpair>.field{flex:1 1 0} .sigpair .ofthe{flex:0 0 auto;align-self:flex-start;padding:28px 1px 0;font-size:12px;font-weight:600;color:#5b6577} .prinrow{display:flex;gap:12px;align-items:flex-start;margin-bottom:6px} .prinrow .field{flex:1 1 0;min-width:0;margin-bottom:0} .prinrow .urx{flex:0 0 22px;padding-top:8px} .prinhead{display:flex;gap:12px;font-size:11px;color:#5b6577;font-weight:600;margin:8px 0 4px} .prinhead span{flex:1 1 0} .prinhead span:last-child{flex:0 0 22px} .flabel{font-size:11px;color:#5b6577;margin-bottom:4px;font-weight:600}
@@ -182,7 +209,7 @@ button.gdoc{justify-content:space-between}
    the new badge left the utility-allowance and SAFMR ones still collapsing. */
 /* Parts, boundary, whole — the divider is what stops the group badge reading as
    the designation's, which is how the first attempt failed. */
-.utdiv{flex:0 0 auto;width:1px;align-self:stretch;margin:7px 7px;background:#c7d2e4}
+.utdiv{flex:0 0 auto;width:1px;height:20px;margin:0 7px;background:#e0e5ee}
 .utgrp{flex:0 0 auto;display:flex;align-items:center;gap:3px}
 .utgrp .srctag{margin-left:0}
 .utsrc{align-self:center;margin-left:2px}
@@ -208,7 +235,7 @@ button.gdoc{justify-content:space-between}
 .footer{display:flex;gap:12px;align-items:center;justify-content:center;margin-top:4px;position:sticky;bottom:0;background:#eef1f7;padding:12px 10px;box-shadow:0 -6px 16px rgba(20,40,80,.08);border-radius:8px 8px 0 0;z-index:15} .footer.rest{border-radius:8px} .footer .fsp{display:none} .unsaved{display:none;position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#b45309;font-weight:700;font-size:12.5px;align-items:center;gap:6px} .unsaved.on{display:inline-flex}
 table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;border:1px solid #e6ebf3;border-radius:10px;overflow:hidden} th,td{text-align:left;padding:9px 13px;border-bottom:1px solid #eef1f6} th{font-size:10px;letter-spacing:.4px;color:#8791a5;text-transform:uppercase}
 @media(max-width:1050px){.cc{grid-template-columns:1fr}.layout{grid-template-columns:1fr}.rail{position:static;max-height:none}}
-.ovic{display:inline-flex;gap:3px;margin-left:6px;margin-right:5px;flex:0 0 auto;align-items:center} .cb .ovic{margin-left:4px} .miniic{border:1px solid #d8b483;background:#fbf1e6;color:#b45309;border-radius:4px;cursor:pointer;font-size:11px;line-height:1;padding:3px 5px} .miniic.sv{border-color:#9cc3a8;background:#eefaf1;color:#166534}.lcmain{display:flex;flex-direction:column;gap:3px;min-width:0} .rmetric{font-size:11.5px;color:#166534;font-weight:600}.ualab{display:inline-flex;align-items:center;gap:2px;min-width:0;overflow:hidden;white-space:nowrap;flex:1} .rbox input.uac-in,.uac-in{border:none;background:transparent;font:inherit;flex:1 1 34px;min-width:34px;width:34px;height:20px;line-height:20px;outline:none;border-bottom:1px dashed #b6bfd0;color:#1f2937;padding:0 2px} .srcedit{border-bottom-color:#c3cbd9} .mgmtcell .uadrop{flex:1;min-width:0} .mgmtcell .uatrigger{padding:0 11px} .mgmt-in{border:none;background:transparent;font:inherit;flex:1;height:20px;line-height:20px;outline:none;min-width:0} .srctag{color:#8791a5;font-size:10.5px;margin-left:6px;flex:0 0 auto;white-space:nowrap} .srctag.long{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis} .mgmtprop{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.urev.sv{border-color:#9cc3a8;background:#eefaf1;color:#166534}.uadrop.cs{position:relative} .brba .uadrop.cs{flex:1;min-width:0} .uadrop.cs.csnarrow{flex:0 0 auto} .uadrop.cs .uatrigger{padding:0 10px} .uadrop.cs.csnarrow .uatrigger{padding:0 8px;gap:4px} .fbox>.uadrop.cs.csnarrow{border-right:1px solid #e0e5ee;min-width:56px} .brba .uadrop.cs .uatrigger{padding:0 8px}.uasub{display:block;font-size:11px;color:#7c86a2;white-space:nowrap;margin-top:1px;overflow:hidden;text-overflow:ellipsis}
+.ovic{display:inline-flex;gap:3px;margin-left:6px;margin-right:5px;flex:0 0 auto;align-items:center} .cb .ovic{margin-left:4px} .miniic{border:1px solid #d8b483;background:#fbf1e6;color:#b45309;border-radius:4px;cursor:pointer;font-size:11px;line-height:1;padding:3px 5px} .miniic.sv{border-color:#9cc3a8;background:#eefaf1;color:#166534}.lcmain{display:flex;flex-direction:column;gap:3px;min-width:0} .rmetric{font-size:11.5px;color:#166534;font-weight:600}.ualab{display:inline-flex;align-items:center;gap:2px;min-width:0;overflow:hidden;white-space:nowrap;flex:1} .rbox input.uac-in,.uac-in{border:none;background:transparent;font:inherit;flex:1 1 34px;min-width:34px;width:34px;height:20px;line-height:20px;outline:none;border-bottom:1px dashed #b6bfd0;color:#1f2937;padding:0 2px} .srcedit{border-bottom-color:#c3cbd9} .mgmtcell .uadrop{flex:1;min-width:0} .mgmtcell .uatrigger{padding:0 11px} .mgmt-in{border:none;background:transparent;font:inherit;flex:1;height:20px;line-height:20px;outline:none;min-width:0} .srctag{color:#8791a5;font-size:10.5px;margin-left:6px;flex:0 0 auto;white-space:nowrap} .srctag.long{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis} .mgmtprop{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.urev.sv{border-color:#9cc3a8;background:#eefaf1;color:#166534}.uadrop.cs{position:relative} .brba .uadrop.cs{flex:1;min-width:0} .uadrop.cs.csnarrow{flex:0 0 auto} .uadrop.cs .uatrigger{padding:0 10px} .uadrop.cs.csnarrow .uatrigger{padding:0 8px;gap:4px} .fbox>.uadrop.cs.csnarrow{border-right:1px solid #e0e5ee;min-width:56px} .fbox>.uadrop.cs.csnarrow:has(+.adiv){border-right:none} .brba .uadrop.cs .uatrigger{padding:0 8px}.uasub{display:block;font-size:11px;color:#7c86a2;white-space:nowrap;margin-top:1px;overflow:hidden;text-overflow:ellipsis}
 .hdrmid{display:flex;align-items:center;gap:18px;margin-left:auto;margin-right:22px}
 .hprop{font-size:14px;font-weight:700;color:#fff;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .hcyc{display:flex;align-items:center;gap:7px;font-size:10.5px;color:#9fb2cc;text-transform:uppercase;letter-spacing:.6px}
@@ -354,10 +381,10 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;borde
 .progcard.soon .pg-name{color:#9aa4b8;font-size:11px}
 .soonchip{font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#8791a5;background:#eceff5;border-radius:20px;padding:3px 9px}
 .hprogram{font-size:10px;color:#cdd9ea;text-transform:uppercase;letter-spacing:.7px;font-weight:700;border:1px solid rgba(255,255,255,.24);border-radius:20px;padding:3px 10px}
-.scrim{position:fixed;inset:0;background:rgba(17,25,40,.46);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;z-index:100}
+.scrim{position:fixed;inset:0;background:rgba(17,25,40,.46);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);display:none;align-items:flex-start;justify-content:center;overflow:auto;padding:16px;z-index:100}
 .scrim.open{display:flex}
 .dialog.pkg{width:660px}
-.dialog{background:#fff;border-radius:15px;padding:24px 26px;width:454px;max-width:calc(100vw - 32px);box-shadow:0 24px 70px rgba(15,30,60,.34);animation:pop .16s ease}
+.dialog{margin:auto;background:#fff;border-radius:15px;padding:24px 26px;width:454px;max-width:calc(100vw - 32px);box-shadow:0 24px 70px rgba(15,30,60,.34);animation:pop .16s ease}
 @keyframes pop{from{transform:translateY(7px) scale(.985);opacity:.5}to{transform:none;opacity:1}}
 .dlg-t{font-size:17px;font-weight:800;color:#1e3a5f}
 .dlg-b{font-size:13px;color:#5b6577;line-height:1.6;margin-top:9px}
