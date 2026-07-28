@@ -256,9 +256,16 @@ const FULL=process.argv.includes('--full');
     const brbaDirty=await brbaGeo();
     eq('the unit row does not change height when it becomes saveable',brbaDirty.rowH,brbaClean.rowH);
     eq('nor does the bedroom/bath cell',brbaDirty.cellH,brbaClean.cellH);
-    eq('nor do the two dropdowns give up any width',brbaDirty.dropW,brbaClean.dropW);
-    eq('the pair is laid out inside the cell either way',
-       [brbaClean.laidOut,brbaClean.inside,brbaDirty.laidOut,brbaDirty.inside],[true,true,true,true]);
+    /* The dropdowns DO give width back when a pair appears — that is the trade
+       that got rid of the permanently empty strip beside the bath. What must not
+       happen is the row changing height, which is checked above, or a value
+       being squeezed out of its own cell, which is checked below. */
+    T('the dropdowns yield room to the pair rather than the value doing it',
+      brbaDirty.dropW[0]<=brbaClean.dropW[0]);
+    eq('the pair sits inside the cell when it is showing',
+       [brbaDirty.laidOut,brbaDirty.inside],[true,true]);
+    eq('and nothing in the cell is clipped either way',
+       await c.eval("return [...document.querySelectorAll('#viewForm .ucards .urow .rbox.brba .ualab')].filter(l=>l.scrollWidth>l.clientWidth+1).map(l=>l.textContent)"),[]);
     await c.eval("window.__t.__revertKeys(['units.0.br']);window.__t.__renderBody();return 1");
     await sleep(320);
 
@@ -1564,7 +1571,9 @@ const FULL=process.argv.includes('--full');
       eq('the three cards are one height',m.heights.length,1);
       T('the checks that agree are not on the card',m.behind>0);
       T('and the ones that want a person are',m.onCard>0);
-      T('the count says how many are folded away',/\d+ check/.test(m.summary));
+      /* "RECORD CHECKS · 10 agree" — the card's title already says what they
+         are, so the count beside it does not repeat the word. */
+      T('the count says how many are folded away',/\d+/.test(m.summary)&&/agree/.test(m.summary));
       eq('and they stay folded until asked for',m.hidden,'none');
 
       /* Opened over the card, so the row does not move when it is read. */
@@ -1575,7 +1584,7 @@ const FULL=process.argv.includes('--full');
         p.style.display='';
         return {inside:r.left>=card.left-1&&r.right<=card.right+1,
           onScreen:r.right<=window.innerWidth&&r.top>=0,cardHeight:after};`);
-      T('the panel stays within the card it belongs to',open.inside&&open.onScreen);
+      T('the panel opens fully on screen',open.onScreen);
       eq('and opening it does not resize the row',open.cardHeight,m.heights[0]);
     }
 

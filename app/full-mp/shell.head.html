@@ -29,13 +29,21 @@ body.scrolled #ccbar{transform:translateY(0);opacity:1}
    what agrees collapses to a count and opens over the card on hover, so nothing
    below it moves. */
 .chkcard{position:relative}
-.chkmore{margin-top:9px;padding-top:8px;border-top:1px solid #eef1f6;outline:none}
-.chkgrid+.chkmore{margin-top:10px}
+/* A grid cell of its own, sharing the rhythm of the checks beside it, rather
+   than a band ruled off underneath them. */
+/* Title on the left, the count of what agrees on the right, on one line — and
+   the panel hangs off THAT rather than off the bottom of a card stretched to
+   match its neighbours, which is what opened it an inch below the text. */
+.cckrow{display:flex;align-items:baseline;justify-content:space-between;gap:12px;position:relative}
+.cckrow .cck{margin:0}
+.chkmore{outline:none;flex:0 0 auto}
 .chksum{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:#7c86a2;cursor:help;border-bottom:1px dotted #c9d1de;padding-bottom:1px}
 .chksum .ok{color:#166534;font-weight:800}
 .chkmore:hover .chksum,.chkmore:focus-visible .chksum{color:#33405c;border-bottom-color:#8791a5}
-.chkall{display:none;position:absolute;left:10px;right:10px;top:100%;margin-top:4px;z-index:35;background:#fff;border:1px solid #d3dae6;border-radius:11px;box-shadow:0 14px 34px rgba(20,40,80,.17);padding:11px 15px 12px}
-.chkmore:hover .chkall,.chkmore:focus-within .chkall{display:block}
+.chkall{display:none;position:absolute;right:0;top:100%;margin-top:7px;width:min(430px,78vw);z-index:35;background:#fff;border:1px solid #d3dae6;border-radius:11px;box-shadow:0 14px 34px rgba(20,40,80,.17);padding:11px 15px 12px}
+/* Hover to look, press to pin. focus-within is gone: it kept the card open
+   after a press with nothing that would let go of it. */
+.chkmore:hover .chkall,.chkmore.open .chkall{display:block}
 .chk{display:flex;gap:8px;align-items:flex-start;margin:6px 0} .chk .ok{color:#166534;font-weight:800} .chk .warn{color:#b45309;font-weight:800} .chk .info{color:#2563eb;font-weight:800} .chk b{font-size:12px} .chk .sub{color:#7c86a2;font-size:10.5px}
 .drafts{display:grid;grid-template-columns:1fr 1fr;gap:2px 12px;font-size:11.5px;color:#33405c;margin-top:4px} .wb{margin-top:8px;font-size:10.5px;color:#4c51bf;background:#f0f0fb;border-radius:6px;padding:6px 8px;text-align:center;font-weight:600}
 .attn{background:#fdf6e7;border:1px solid #ecd9a6;border-radius:9px;padding:9px 14px;margin-bottom:12px;color:#8a5a12} .attn .sub{color:#a9803a;font-size:12px}
@@ -197,12 +205,14 @@ body.scrolled #ccbar{transform:translateY(0);opacity:1}
    the buttons hide, the same trick the write-ins already use. One pair for the
    two controls, because the box is already coloured, resolved and saved as one
    group. */
-.rbox.brba > .ovic{display:inline-flex!important;flex:0 0 auto;margin:0 5px 0 3px;gap:3px}
-.rbox.brba > .ovic .rv,.rbox.brba > .ovic .sv{display:inline-flex!important;visibility:hidden}
-.rbox.brba > .ovic[data-mode="over"] .rv,
-.rbox.brba > .ovic[data-mode="over"] .sv,
-.rbox.brba > .ovic[data-mode="cycle"] .sv,
-.rbox.brba > .ovic[data-mode="new"] .sv{visibility:visible}
+/* The bedroom and the bath each carry their own pair now, so the slot is no
+   longer held open: two reserved slots would be twice the dead space, and the
+   strip to the right of the bath was already the widest thing in the cell that
+   showed nothing. The pair takes its room from the ✕ it replaces — see
+   unitTypeCell, where a cell with a pair stops offering one — so the dropdowns
+   keep the width they are read in either way. */
+.rbox.brba > .ovic{flex:0 0 auto;margin:0 3px;gap:3px}
+.rbox.brba > .ovic .rv,.rbox.brba > .ovic .sv{display:inline-flex}
 .urnov .ovnote{margin:0}
 .rgh .hsub{display:inline;margin-left:7px;font-size:9px;font-weight:600;font-style:normal;color:#9aa4b5;letter-spacing:.2px;text-transform:none}
 .liftnote{font-size:11px;color:#64748b;margin-top:4px;line-height:1.45}
@@ -310,7 +320,12 @@ button.gdoc{justify-content:space-between}
 /* min-height, so a row whose text wraps to one line and a row whose text wraps
    to two put their buttons at the same distance from the row's own top edge —
    the buttons are what the eye tracks down the column, and they were stepping. */
-.srcrow{display:flex;align-items:center;gap:12px;padding:9px 0;min-height:47px;border-bottom:1px solid #f0f2f7;box-sizing:border-box}
+.srcrow{display:grid;grid-template-columns:17px minmax(0,1fr) 172px 96px;justify-content:start;align-items:center;gap:0 12px;padding:9px 0;min-height:47px;border-bottom:1px solid #f0f2f7;box-sizing:border-box}
+/* The text column stops growing well before the card's edge: the buttons are
+   meant to sit at a settled distance in from the right, not jammed against it.
+   A row with one button (Upload PDF, or Replace on a copy that could not be
+   read) lands it in the action column, beside the others. */
+.srcrow{grid-template-columns:17px minmax(0,560px) 172px 96px}
 /* A separator BETWEEN rows, never under the last one: the trailing rule fenced
    off nothing and left a band of empty card below it. :last-of-type, not
    :last-child — the hidden file inputs follow the rows. */
@@ -335,7 +350,7 @@ button.gdoc{justify-content:space-between}
      below reasons that "the buttons are what the eye tracks down the column" —
      they were columned vertically and never horizontally, because each row's
      text block sized to its own sentence, a 155px step between them. */
-  .srcrow>div{flex:1;min-width:0;max-width:640px} .srcrow .ok{color:#166534;font-weight:800} .srcrow .mut{color:#9aa4b8;font-weight:800} .srcrow.dim{opacity:.8} .missing{color:#8791a5;font-weight:700;font-size:11px} .srcrow .sub{color:#7c86a2;font-size:11px} .parsed{color:#0f766e;font-weight:700;font-size:11px} .srcrow b{font-size:13.5px} .srcrow button{margin-left:8px;flex:0 0 auto}
+  .srcrow>div{min-width:0} .srcrow .ok{color:#166534;font-weight:800} .srcrow .mut{color:#9aa4b8;font-weight:800} .srcrow.dim{opacity:.8} .missing{color:#8791a5;font-weight:700;font-size:11px} .srcrow .sub{color:#7c86a2;font-size:11px} .parsed{color:#0f766e;font-weight:700;font-size:11px} .srcrow b{font-size:13.5px} .srcrow button{margin-left:0;width:100%;flex:0 0 auto}
 .srcfoot{display:flex;align-items:center;gap:12px;margin-top:11px} .srcfoot .sub{color:#7c86a2;font-size:11.5px} .ph{margin-top:9px;font-size:11.5px;color:#98a2b3;font-style:italic;background:#f8fafc;border-radius:6px;padding:7px 9px}
 .footer{display:flex;gap:12px;align-items:center;justify-content:center;margin-top:4px;position:sticky;bottom:0;background:#eef1f7;padding:12px 10px;box-shadow:0 -6px 16px rgba(20,40,80,.08);border-radius:8px 8px 0 0;z-index:15} .footer.rest{border-radius:8px} .footer .fsp{display:none} .unsaved{display:none;position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#b45309;font-weight:700;font-size:12.5px;align-items:center;gap:6px} .unsaved.on{display:inline-flex}
 table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;border:1px solid #e6ebf3;border-radius:10px;overflow:hidden} th,td{text-align:left;padding:9px 13px;border-bottom:1px solid #eef1f6} th{font-size:10px;letter-spacing:.4px;color:#8791a5;text-transform:uppercase}
@@ -349,6 +364,12 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;borde
    character street is the part that carries the meaning, so the chrome around
    the two-letter state and the five-digit ZIP gives its padding up first. */
 @media (max-width:1260px){
+  /* Every column is already carrying its own value at this width, so widening
+     one only moves the clipping to another. The room comes out of the chrome in
+     the bedroom/bath cell instead: its badge gives up the separator it earned in
+     a roomier row, and the pair tightens its margins. */
+  .ucells .rbox.brba .srctag.rstag::before,.ucells .rbox.brba .srctag.rcstag::before{content:none}
+  .ucells .rbox.brba > .ovic{margin:0 1px}
   .fbox.addr .uadrop.cs.csnarrow .uatrigger,.fbox.mgmtcell .uadrop.cs.csnarrow .uatrigger{padding:0 4px;gap:2px}
   .fbox.addr input,.fbox.mgmtcell input{padding-left:7px;padding-right:2px}
 } .mgmtcell .uadrop{flex:1;min-width:0} .mgmtcell .uatrigger{padding:0 11px} .mgmt-in{border:none;background:transparent;font:inherit;flex:1;height:20px;line-height:20px;outline:none;min-width:0} /* The badge sat wherever the input stopped growing, which in a full-width cell

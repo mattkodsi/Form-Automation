@@ -29,13 +29,21 @@ body.scrolled #ccbar{transform:translateY(0);opacity:1}
    what agrees collapses to a count and opens over the card on hover, so nothing
    below it moves. */
 .chkcard{position:relative}
-.chkmore{margin-top:9px;padding-top:8px;border-top:1px solid #eef1f6;outline:none}
-.chkgrid+.chkmore{margin-top:10px}
+/* A grid cell of its own, sharing the rhythm of the checks beside it, rather
+   than a band ruled off underneath them. */
+/* Title on the left, the count of what agrees on the right, on one line — and
+   the panel hangs off THAT rather than off the bottom of a card stretched to
+   match its neighbours, which is what opened it an inch below the text. */
+.cckrow{display:flex;align-items:baseline;justify-content:space-between;gap:12px;position:relative}
+.cckrow .cck{margin:0}
+.chkmore{outline:none;flex:0 0 auto}
 .chksum{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:#7c86a2;cursor:help;border-bottom:1px dotted #c9d1de;padding-bottom:1px}
 .chksum .ok{color:#166534;font-weight:800}
 .chkmore:hover .chksum,.chkmore:focus-visible .chksum{color:#33405c;border-bottom-color:#8791a5}
-.chkall{display:none;position:absolute;left:10px;right:10px;top:100%;margin-top:4px;z-index:35;background:#fff;border:1px solid #d3dae6;border-radius:11px;box-shadow:0 14px 34px rgba(20,40,80,.17);padding:11px 15px 12px}
-.chkmore:hover .chkall,.chkmore:focus-within .chkall{display:block}
+.chkall{display:none;position:absolute;right:0;top:100%;margin-top:7px;width:min(430px,78vw);z-index:35;background:#fff;border:1px solid #d3dae6;border-radius:11px;box-shadow:0 14px 34px rgba(20,40,80,.17);padding:11px 15px 12px}
+/* Hover to look, press to pin. focus-within is gone: it kept the card open
+   after a press with nothing that would let go of it. */
+.chkmore:hover .chkall,.chkmore.open .chkall{display:block}
 .chk{display:flex;gap:8px;align-items:flex-start;margin:6px 0} .chk .ok{color:#166534;font-weight:800} .chk .warn{color:#b45309;font-weight:800} .chk .info{color:#2563eb;font-weight:800} .chk b{font-size:12px} .chk .sub{color:#7c86a2;font-size:10.5px}
 .drafts{display:grid;grid-template-columns:1fr 1fr;gap:2px 12px;font-size:11.5px;color:#33405c;margin-top:4px} .wb{margin-top:8px;font-size:10.5px;color:#4c51bf;background:#f0f0fb;border-radius:6px;padding:6px 8px;text-align:center;font-weight:600}
 .attn{background:#fdf6e7;border:1px solid #ecd9a6;border-radius:9px;padding:9px 14px;margin-bottom:12px;color:#8a5a12} .attn .sub{color:#a9803a;font-size:12px}
@@ -197,12 +205,14 @@ body.scrolled #ccbar{transform:translateY(0);opacity:1}
    the buttons hide, the same trick the write-ins already use. One pair for the
    two controls, because the box is already coloured, resolved and saved as one
    group. */
-.rbox.brba > .ovic{display:inline-flex!important;flex:0 0 auto;margin:0 5px 0 3px;gap:3px}
-.rbox.brba > .ovic .rv,.rbox.brba > .ovic .sv{display:inline-flex!important;visibility:hidden}
-.rbox.brba > .ovic[data-mode="over"] .rv,
-.rbox.brba > .ovic[data-mode="over"] .sv,
-.rbox.brba > .ovic[data-mode="cycle"] .sv,
-.rbox.brba > .ovic[data-mode="new"] .sv{visibility:visible}
+/* The bedroom and the bath each carry their own pair now, so the slot is no
+   longer held open: two reserved slots would be twice the dead space, and the
+   strip to the right of the bath was already the widest thing in the cell that
+   showed nothing. The pair takes its room from the ✕ it replaces — see
+   unitTypeCell, where a cell with a pair stops offering one — so the dropdowns
+   keep the width they are read in either way. */
+.rbox.brba > .ovic{flex:0 0 auto;margin:0 3px;gap:3px}
+.rbox.brba > .ovic .rv,.rbox.brba > .ovic .sv{display:inline-flex}
 .urnov .ovnote{margin:0}
 .rgh .hsub{display:inline;margin-left:7px;font-size:9px;font-weight:600;font-style:normal;color:#9aa4b5;letter-spacing:.2px;text-transform:none}
 .liftnote{font-size:11px;color:#64748b;margin-top:4px;line-height:1.45}
@@ -310,7 +320,12 @@ button.gdoc{justify-content:space-between}
 /* min-height, so a row whose text wraps to one line and a row whose text wraps
    to two put their buttons at the same distance from the row's own top edge —
    the buttons are what the eye tracks down the column, and they were stepping. */
-.srcrow{display:flex;align-items:center;gap:12px;padding:9px 0;min-height:47px;border-bottom:1px solid #f0f2f7;box-sizing:border-box}
+.srcrow{display:grid;grid-template-columns:17px minmax(0,1fr) 172px 96px;justify-content:start;align-items:center;gap:0 12px;padding:9px 0;min-height:47px;border-bottom:1px solid #f0f2f7;box-sizing:border-box}
+/* The text column stops growing well before the card's edge: the buttons are
+   meant to sit at a settled distance in from the right, not jammed against it.
+   A row with one button (Upload PDF, or Replace on a copy that could not be
+   read) lands it in the action column, beside the others. */
+.srcrow{grid-template-columns:17px minmax(0,560px) 172px 96px}
 /* A separator BETWEEN rows, never under the last one: the trailing rule fenced
    off nothing and left a band of empty card below it. :last-of-type, not
    :last-child — the hidden file inputs follow the rows. */
@@ -335,7 +350,7 @@ button.gdoc{justify-content:space-between}
      below reasons that "the buttons are what the eye tracks down the column" —
      they were columned vertically and never horizontally, because each row's
      text block sized to its own sentence, a 155px step between them. */
-  .srcrow>div{flex:1;min-width:0;max-width:640px} .srcrow .ok{color:#166534;font-weight:800} .srcrow .mut{color:#9aa4b8;font-weight:800} .srcrow.dim{opacity:.8} .missing{color:#8791a5;font-weight:700;font-size:11px} .srcrow .sub{color:#7c86a2;font-size:11px} .parsed{color:#0f766e;font-weight:700;font-size:11px} .srcrow b{font-size:13.5px} .srcrow button{margin-left:8px;flex:0 0 auto}
+  .srcrow>div{min-width:0} .srcrow .ok{color:#166534;font-weight:800} .srcrow .mut{color:#9aa4b8;font-weight:800} .srcrow.dim{opacity:.8} .missing{color:#8791a5;font-weight:700;font-size:11px} .srcrow .sub{color:#7c86a2;font-size:11px} .parsed{color:#0f766e;font-weight:700;font-size:11px} .srcrow b{font-size:13.5px} .srcrow button{margin-left:0;width:100%;flex:0 0 auto}
 .srcfoot{display:flex;align-items:center;gap:12px;margin-top:11px} .srcfoot .sub{color:#7c86a2;font-size:11.5px} .ph{margin-top:9px;font-size:11.5px;color:#98a2b3;font-style:italic;background:#f8fafc;border-radius:6px;padding:7px 9px}
 .footer{display:flex;gap:12px;align-items:center;justify-content:center;margin-top:4px;position:sticky;bottom:0;background:#eef1f7;padding:12px 10px;box-shadow:0 -6px 16px rgba(20,40,80,.08);border-radius:8px 8px 0 0;z-index:15} .footer.rest{border-radius:8px} .footer .fsp{display:none} .unsaved{display:none;position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#b45309;font-weight:700;font-size:12.5px;align-items:center;gap:6px} .unsaved.on{display:inline-flex}
 table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;border:1px solid #e6ebf3;border-radius:10px;overflow:hidden} th,td{text-align:left;padding:9px 13px;border-bottom:1px solid #eef1f6} th{font-size:10px;letter-spacing:.4px;color:#8791a5;text-transform:uppercase}
@@ -349,6 +364,12 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;borde
    character street is the part that carries the meaning, so the chrome around
    the two-letter state and the five-digit ZIP gives its padding up first. */
 @media (max-width:1260px){
+  /* Every column is already carrying its own value at this width, so widening
+     one only moves the clipping to another. The room comes out of the chrome in
+     the bedroom/bath cell instead: its badge gives up the separator it earned in
+     a roomier row, and the pair tightens its margins. */
+  .ucells .rbox.brba .srctag.rstag::before,.ucells .rbox.brba .srctag.rcstag::before{content:none}
+  .ucells .rbox.brba > .ovic{margin:0 1px}
   .fbox.addr .uadrop.cs.csnarrow .uatrigger,.fbox.mgmtcell .uadrop.cs.csnarrow .uatrigger{padding:0 4px;gap:2px}
   .fbox.addr input,.fbox.mgmtcell input{padding-left:7px;padding-right:2px}
 } .mgmtcell .uadrop{flex:1;min-width:0} .mgmtcell .uatrigger{padding:0 11px} .mgmt-in{border:none;background:transparent;font:inherit;flex:1;height:20px;line-height:20px;outline:none;min-width:0} /* The badge sat wherever the input stopped growing, which in a full-width cell
@@ -2004,11 +2025,14 @@ function ovNoteAddr(box){const keys=addrKeys(box);const m=modeOf(keys);return `<
 /* claim = a value a source row prepended above this list already offers. Two rows
    showing the selected background for one answer reads as two answers, so the
    source row wins it — the same rule the designation's "· RS" badge reads. */
+/* A key inside a composite address gets no badge of its own: the address is
+   ONE cell with one note, one save and one badge at its right edge, and the
+   state is no more separately sourced than the street, the city or the ZIP. */
 function csDrop(key,options,ph,cls,clearable,tint,claim,subs){const cur=get(key);const has=cur!==''&&cur!=null;const lab=has?cur:(ph||'—');const _cl=(claim!=null&&claim!==''&&claim===cur);const menu=options.map(o=>'<div class="uaopt'+((o===cur&&!_cl)?' sel':'')+'" data-csopt="'+esc(o)+'" data-cskey="'+key+'">'+esc(o)+((subs&&subs[o])?'<span class="uasub">'+esc(subs[o])+'</span>':'')+'</div>').join('');/* Five of these cells offered a ✕ and three did not, with no visible rule —
      and all nine have always cleared from the keyboard with Backspace, so the
      mouse was the odd one out. One pattern: if it holds a value, it can be
      cleared where you are looking at it. */
-  const clr=has?'<span class="csclear" data-csclear="'+key+'" title="Clear">✕</span>':'';return '<div class="uadrop cs '+(cls||'')+(has?' clearable':'')+'"><div class="uatrigger" tabindex="0" data-trigfor="'+key+'"'+(tint?' style="'+tint+'"':'')+'><span class="ualab">'+esc(lab)+'</span>'+srcTags(key)+clr+'<span class="cvx">▾</span></div><div class="uamenu">'+menu+'</div></div>';}
+  const clr=(has&&clearable!==false)?'<span class="csclear" data-csclear="'+key+'" title="Clear">✕</span>':'';return '<div class="uadrop cs '+(cls||'')+(has?' clearable':'')+'"><div class="uatrigger" tabindex="0" data-trigfor="'+key+'"'+(tint?' style="'+tint+'"':'')+'><span class="ualab">'+esc(lab)+'</span>'+(groupOf(key)?'':srcTags(key))+clr+'<span class="cvx">▾</span></div><div class="uamenu">'+menu+'</div></div>';}
 function dateEffResolved(){const src=get('rent_schedule.date_eff_source')||(get('rent_schedule.date_eff_rs')?'rs':'custom');return src==='custom'?(get('rent_schedule.date_eff_custom')||get('rent_schedule.date_rents_effective')):get('rent_schedule.date_eff_rs');}
 function dateEffCell(){const rs=get('rent_schedule.date_eff_rs');const src=get('rent_schedule.date_eff_source')||(rs?'rs':'custom');
   /* Whichever key answers, it reaches the box in the form the reader types into
@@ -2339,9 +2363,9 @@ function numUnresolved(i){return numConflict(i)&&!numReviewedOf(i);}
    belongs to — see unitActs. Inside these cells the icon pair squeezed the
    controls it sat beside, and the row changed shape the moment it was edited. */
 function unitTypeCell(i){const brK='units.'+i+'.br',baK='units.'+i+'.ba';const conf=false;const c=groupColors([brK,baK]);
-  const withRs=(k,opts,ph)=>{const d=csDrop(k,opts,ph,'',!/\.br$/.test(k),(!conf&&partHot(k))?tintStyle(k):'',rsBrBa(k));const row=rsCsRow(k)||'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>';
+  const withRs=(k,opts,ph)=>{const d=csDrop(k,opts,ph,'',!/\.br$/.test(k)&&!modeOf(k),(!conf&&partHot(k))?tintStyle(k):'',rsBrBa(k));const row=rsCsRow(k)||'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>';
     return d.replace('<div class="uamenu">','<div class="uamenu">'+row);};
-  return `<div class="utwrap"><div class="rbox brba" data-box="${brK}" style="background:${c[1]};border-left-color:${c[0]}">${withRs(brK,BR_OPTS,'BR')}<span class="slash">/</span>${withRs(baK,BA_OPTS,'BA')}${ovIcons([brK,baK])}</div>`
+  return `<div class="utwrap"><div class="rbox brba" data-box="${brK}" style="background:${c[1]};border-left-color:${c[0]}">${withRs(brK,BR_OPTS,'BR')}${ovIcons(brK)}<span class="slash">/</span>${withRs(baK,BA_OPTS,'BA')}${ovIcons(baK)}</div>`
     +`${labelLine(i)}</div>`;}
 function unitCountCell(i){const k='units.'+i+'.num_units';const c=cellColors(k);const rv=rsUnit(i,'count');
   /* The study counts the units too, and had nowhere to be offered from — the
@@ -3839,12 +3863,16 @@ function _renderCommand(){const a=analysis();const pCur=a.ceil>0?clamp(a.cg/a.ce
    const _attn=_items.filter(x=>!/data-st="ok"/.test(x));
    const _ok=_items.filter(x=>/data-st="ok"/.test(x));
    const _n=_ok.length;
-   return '<div class="ccard chkcard"><div class="cck">RECORD CHECKS</div>'
-     +(_attn.length?'<div class="chkgrid">'+_attn.join('')+'</div>':'')
-     +(_n?('<div class="chkmore" tabindex="0">'
-        +'<div class="chksum"><span class="ok">\u2713</span> '+_n+' check'+(_n===1?'':'s')
-        +' agree'+(_attn.length?'':' \u2014 nothing to review')+'</div>'
-        +'<div class="chkall"><div class="chkgrid">'+_ok.join('')+'</div></div></div>'):'')
+   /* Inside the grid: an odd number of things wanting attention leaves a cell
+      empty, and this is what belongs in it. Two columns, so it lands bottom
+      right when the count is odd and starts a fresh row when it is even —
+      either way the card has no band of its own to carry. */
+   const _more=_n?('<div class="chkmore" tabindex="0">'
+        +'<div class="chksum"><span class="ok">\u2713</span> '+_n
+        +(_attn.length?' agree':' \u2014 all agree')+'</div>'
+        +'<div class="chkall"><div class="chkgrid">'+_ok.join('')+'</div></div></div>'):'';
+   return '<div class="ccard chkcard"><div class="cckrow"><div class="cck">RECORD CHECKS</div>'+_more+'</div>'
+     +(_attn.length?('<div class="chkgrid">'+_attn.join('')+'</div>'):'')
      +'</div>';})()}
    ${pkgCard()}`;}
 function pkgCard(){
@@ -4508,8 +4536,15 @@ function wireBody(){
    ONE current record per property; leaving the form asks to save or discard.
    The RCS form itself (everything above) is unchanged. */
 
-document.addEventListener('click',e=>{document.querySelectorAll('.uadrop.open').forEach(x=>x.classList.remove('open'));if(_pending&&!(e.target&&e.target.closest&&e.target.closest('.uaopt,[data-cb],.cb,[data-fuel],[data-fuel3],[data-wibox],[data-mgmt],[data-csopt],.uatrigger'))){_pending=null;_pendingSnap=null;}});
-document.addEventListener('keydown',e=>{const vis=v=>{const x=el('view'+v);return x&&x.style&&x.style.display!=='none';};if(e.key==='Tab'){_pending=null;_pendingSnap=null;_rsArm=false;return;}if(e.key==='Enter'){const ae=document.activeElement;const inText=!!ae&&/^(INPUT|TEXTAREA)$/.test(ae.tagName)&&ae.type!=='checkbox';
+document.addEventListener('click',e=>{document.querySelectorAll('.uadrop.open').forEach(x=>x.classList.remove('open'));
+  /* .gpw is the generate dialog's count, .chkmore the record-checks summary.
+     A press inside one is that card's own business; a press anywhere else ends
+     it, which is what a reader expects of anything they pinned open. */
+  if(!(e.target&&e.target.closest&&e.target.closest('.gpw,.chkmore')))
+    document.querySelectorAll('.gpw.open,.chkmore.open').forEach(x=>{x.classList.remove('open');if(x.blur)x.blur();});if(_pending&&!(e.target&&e.target.closest&&e.target.closest('.uaopt,[data-cb],.cb,[data-fuel],[data-fuel3],[data-wibox],[data-mgmt],[data-csopt],.uatrigger'))){_pending=null;_pendingSnap=null;}});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){const _p=document.querySelectorAll('.gpw.open,.chkmore.open');
+    if(_p.length){_p.forEach(x=>{x.classList.remove('open');if(x.blur)x.blur();});e.stopPropagation();return;}}const vis=v=>{const x=el('view'+v);return x&&x.style&&x.style.display!=='none';};if(e.key==='Tab'){_pending=null;_pendingSnap=null;_rsArm=false;return;}if(e.key==='Enter'){const ae=document.activeElement;const inText=!!ae&&/^(INPUT|TEXTAREA)$/.test(ae.tagName)&&ae.type!=='checkbox';
     if(_dlgEnter&&el('scrim')&&el('scrim').classList.contains('open')){e.preventDefault();_dlgEnter();return;}
     if(_rsArm&&!inText){const ra=el('rsApply');if(ra){e.preventDefault();_rsArm=false;ra.click();return;}}
     if(!inText&&_pending&&_pending.length){e.preventDefault();commitPending();}return;}if(e.key!=='Escape')return;if(el('scrim')&&el('scrim').classList&&el('scrim').classList.contains('open')){closeModal();_pending=null;_pendingSnap=null;return;}const openD=document.querySelector('.uadrop.open');if(openD){e.preventDefault();openD.classList.remove('open');return;}if(vis('Form')){if(_pending&&_pending.length){e.preventDefault();revertPending();return;}if(_undoChain.length&&undoStep()){e.preventDefault();return;}const ae=document.activeElement;const cell=(ae&&ae.closest)?ae.closest('[data-box],.cb,.wi'):null;if(cell){let _sel=null;if(ae.getAttribute){if(ae.getAttribute('data-k'))_sel='[data-k="'+ae.getAttribute('data-k')+'"]';else if(ae.getAttribute('data-cb'))_sel='[data-cb="'+ae.getAttribute('data-cb')+'"]';else if(ae.classList&&ae.classList.contains('uatrigger'))_sel=ae.getAttribute('data-trigfor')?('[data-trigfor="'+ae.getAttribute('data-trigfor')+'"]'):('[data-box="'+(cell.getAttribute('data-box')||'')+'"] .uatrigger');}_refocusSel=_sel;if(revertCellIfOver(cell,(ae.getAttribute&&ae.getAttribute('data-trigfor'))||null)){e.preventDefault();return;}_refocusSel=null;}requestExit();return;}if(vis('Launcher')||vis('Contacts')){openMenu();}});
@@ -5192,6 +5227,11 @@ function wirePkgRows(docs){
   document.querySelectorAll('.gpw').forEach(function(w){
     w.addEventListener('mouseenter',function(){placePop(w);});
     w.addEventListener('focusin',function(){placePop(w);});});
+  document.querySelectorAll('.chkmore').forEach(function(m){m.addEventListener('click',function(e){
+    e.stopPropagation();
+    const on=m.classList.contains('open');
+    document.querySelectorAll('.chkmore.open').forEach(function(x){x.classList.remove('open');});
+    if(!on)m.classList.add('open');else m.blur();});});
   document.querySelectorAll('.gpw>.gshort').forEach(function(b){b.addEventListener('click',function(e){
     e.preventDefault();e.stopPropagation();
     const w=b.parentElement;const on=w.classList.contains('open');
