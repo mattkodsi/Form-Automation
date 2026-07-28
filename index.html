@@ -5338,9 +5338,19 @@ function show(v){['Auth','Menu','Launcher','Form','Contacts'].forEach(V=>{const 
    lightness dips through the yellows around 55°, where a hue at a constant
    lightness goes pale enough on white to stop reading as a colour at all. */
 function ringColor(pct){const p=Math.max(0,Math.min(100,pct))/100;
-  const h=Math.round(p*145);
+  /* Squared, not linear. A straight walk from red to green put 65 at a hue of
+     94 degrees — full green for a package that cannot generate four of its six
+     documents. The curve holds the low half in red and orange, spends the
+     middle in amber, and only turns green as the score approaches complete,
+     which is the only place green means anything. */
+  const h=Math.round(145*p*p);
   const sat=Math.round(72-p*14);
-  const lig=Math.round(46-Math.max(0,1-Math.abs(h-55)/38)*8);
+  /* The hue barely moves across the bottom third — a 10 and a 25 are both
+     "nothing usable yet" — so the lightness carries the change there: deep at
+     the empty end, brighter as it fills. The dip through the yellows near 55
+     stays; a hue held at one lightness goes pale enough on white to stop
+     reading as a colour at all. */
+  const lig=Math.round(40+p*8-Math.max(0,1-Math.abs(h-55)/38)*7);
   return 'hsl('+h+','+sat+'%,'+lig+'%)';}
 function ringSvg(pct,size){size=size||36;const r=size/2-3;const c=2*Math.PI*r;const off=c*(1-Math.max(0,Math.min(100,pct))/100);const col=ringColor(pct);
   return '<svg class="ringsvg" width="'+size+'" height="'+size+'" viewBox="0 0 '+size+' '+size+'"><circle cx="'+size/2+'" cy="'+size/2+'" r="'+r+'" fill="none" stroke="#e9edf4" stroke-width="3.4"/><circle cx="'+size/2+'" cy="'+size/2+'" r="'+r+'" fill="none" stroke="'+col+'" stroke-width="3.4" stroke-linecap="round" stroke-dasharray="'+c.toFixed(1)+'" stroke-dashoffset="'+off.toFixed(1)+'" transform="rotate(-90 '+size/2+' '+size/2+')"/><text x="50%" y="53%" dominant-baseline="middle" text-anchor="middle" font-size="'+(size<44?10:12.5)+'" font-weight="700" fill="#33405c">'+pct+'</text></svg>';}
