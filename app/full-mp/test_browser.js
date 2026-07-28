@@ -35,7 +35,7 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=116;   // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
+const MIN_CHECKS=141;   // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
                        // pristine (three seeds, two checks each). 2026-07-27: the unit-type cell
                        // lost a divider with the designation, so the pair of divider checks
                        // became one. Lowered on purpose.
@@ -786,6 +786,270 @@ const FULL=process.argv.includes('--full');
       eq('and it covers every key the pull wrote',cov.ocaf,[]);
       eq('the utility factors carry their fiscal year, state and publication date',cov.uaf,[]);
       eq('and a pull leaves nothing that cannot be saved',cov.naked,[]);
+    }
+
+    /* ── six the audit found, each one reproduced before it was fixed ───────
+       These are not variations on a theme; they are six different ways for the
+       form to act on something other than what the reader is looking at. */
+    console.log('\n── acting on the cell you are looking at ──────────────');
+    await c.reload();
+    await c.eval(HELPERS);
+    await c.eval('await window.__t.__openForm('+JSON.stringify(pid)+');return 1');
+    await sleep(300);
+
+    /* Escape spent the snapshot the PREVIOUS widget had left behind, because
+       four conflict-resolve handlers set _pending and never _pendingSnap and
+       each stops propagation, so nothing cleared the stale one. Untick a
+       checklist item, approve a utility allowance two sections away, press
+       Escape — and the checkbox came back while the approval stood. */
+    {
+      const r=await c.eval(`
+        /* Seed the conflict. Earlier sections of this suite save as they go, so by
+           here the seeded property's own conflicts may be resolved and on file —
+           the check would then pass by finding nothing to press. */
+        window.__t.__edit('units.0.ua_exec','31');
+        window.__t.__edit('units.0.ua_rcs','34');
+        window.__t.__edit('units.0.ua_reviewed','');
+        window.__t.__editCell('check.0','');
+        window.__t.__renderBody();
+        const b=document.querySelector('[data-uaok]');
+        if(!b)return null;
+        const i=b.getAttribute('data-uaok');
+        b.click();
+        const rev=window.__t.getVal('units.'+i+'.ua_reviewed');
+        window.__t.__undoStep();
+        return {approved:rev,after:window.__t.getVal('units.'+i+'.ua_reviewed'),
+          chk:window.__t.getVal('check.0')};`);
+      T('a utility-allowance conflict can be approved',!!r&&r.approved==='1');
+      eq('and Escape reverts THAT approval',r&&r.after,'');
+      eq('and leaves the unrelated cell alone',r&&r.chk,'');
+    }
+
+    /* The delete stripped the row's keys; an undo entry from earlier typing in
+       that row still held them, so one Escape put the keys back without the row.
+       The prune sweep walks UNITS and could not see them, and deriveUnits() ran
+       after the sweep — turning the orphans back into a row that saved holding
+       one rent and no bedrooms, bath or count. */
+    await c.reload();
+    await c.eval(HELPERS);
+    await c.eval('await window.__t.__openForm('+JSON.stringify(pid)+');return 1');
+    await sleep(300);
+    {
+      const r=await c.eval(`
+        const U=window.__t.__UNITS();const last=U[U.length-1];
+        window.__t.__editCell('units.'+last+'.current','1780');
+        window.__t.__renderBody();
+        const t=document.querySelector('[data-delunit="'+last+'"]');
+        if(!t)return null;
+        t.click();
+        window.__t.__undoStep();
+        const f=window.__t.__form();
+        return {last,rows:window.__t.__UNITS(),
+          orphans:Object.keys(f).filter(k=>k.indexOf('units.'+last+'.')===0)};`);
+      T('a unit row can be deleted',!!r&&r.rows.indexOf(r.last)<0);
+      eq('and Escape after it leaves no keys behind',r&&r.orphans,[]);
+      await c.eval("document.getElementById('bSave').click();return 1");
+      await sleep(900);
+      await c.eval("const b=document.getElementById('dlgOk');if(b)b.click();return 1");
+      await sleep(900);
+      const rows=await c.eval('return window.__t.__UNITS()');
+      eq('and the save does not bring the row back',rows.indexOf(r&&r.last),-1);
+    }
+
+    /* The legacy rents-effective key is stored ISO and reached the box raw,
+       under an mm/dd/yyyy placeholder. The box carries data-date, so the first
+       keystroke reformatted 2026-03-01 to 20/26/0301 — and effYear() takes the
+       first four digits it finds, so 0301 became the year the SAFMR and factor
+       pulls asked HUD about. */
+    await c.reload();
+    await c.eval(HELPERS);
+    await c.eval('await window.__t.__openForm('+JSON.stringify(pid)+');return 1');
+    await sleep(300);
+    {
+      const shown=await c.eval(`
+        window.__t.__edit('rent_schedule.date_eff_custom','');
+        window.__t.__edit('rent_schedule.date_eff_rs','');
+        window.__t.__edit('rent_schedule.date_eff_source','custom');
+        window.__t.__edit('rent_schedule.date_rents_effective','2026-03-01');
+        window.__t.__renderBody();
+        const inp=document.querySelector('.dateeff-in');
+        return inp?inp.value:'(no box)';`);
+      eq('a date from the legacy key reaches the box as a date',shown,'03/01/2026');
+    }
+
+    /* Both the save and the revert button already acted on tenant.mgmt_source;
+       only the note's VISIBILITY was computed without it. So "Different
+       address…" left the pointer overridden, the footer lit, the note hidden,
+       and nothing on screen or in the attention list naming the key. */
+    {
+      const r=await c.eval(`
+        /* Whichever mode is NOT current: an earlier section of this suite picks a
+           mode too, and which one survived to here is not this check's business. */
+        const cur=window.__t.getVal('tenant.mgmt_source')||'property';
+        const o=document.querySelector('[data-mgmt="'+(cur==='custom'?'property':'custom')+'"]');
+        if(!o)return null;
+        o.click();
+        /* The two modes render different chrome — custom draws the address note,
+           property draws the pointer's own pair — so ask the question that holds
+           for both: is there anything on screen that would save this key? */
+        const vis=el=>{if(!el||!el.offsetParent)return false;const r=el.getBoundingClientRect();
+          if(r.width<1||r.height<1)return false;const cs=getComputedStyle(el);
+          return cs.visibility!=='hidden'&&cs.display!=='none'&&+cs.opacity>0.01;};
+        let covers=false;
+        document.querySelectorAll('[data-save1]').forEach(b=>{if(vis(b)&&b.getAttribute('data-save1').split(',').indexOf('tenant.mgmt_source')>=0)covers=true;});
+        document.querySelectorAll('[data-save1addr]').forEach(b=>{if(vis(b)&&b.getAttribute('data-save1addr')==='tenant.mgmt')covers=true;});
+        return {src:window.__t.srcOf('tenant.mgmt_source'),dirty:window.__t.isDirty(),save:covers};`);
+      T('choosing a different management address changes the pointer',!!r&&(r.src==='overridden'||r.src==='new'||r.src==='this-cycle'));
+      T('and the change is one the form knows is unsaved',!!r&&r.dirty);
+      T('with a control on screen that would save it',!!r&&r.save);
+    }
+
+    /* A composite cell registers its note under the CELL's identity —
+       "property.addr", "ca.prefix,ca.name" — while the dropdown inside carries
+       the one key it edits. Compared as exact strings those never matched, so
+       Enter opened the menu instead of saving: a keyboard revert with no
+       keyboard save, which is the asymmetry rule 7 forbids. */
+    await c.reload();
+    await c.eval(HELPERS);
+    await c.eval('await window.__t.__openForm('+JSON.stringify(pid)+');return 1');
+    await sleep(300);
+    {
+      await c.eval("window.__t.__editCell('property.addr_street','12 Test Way');window.__t.__renderBody();return 1");
+      await sleep(200);
+      const there=await c.eval("return !!document.querySelector('[data-trigfor=\"property.addr_state\"]')");
+      T('the address carries a state dropdown',there);
+      await c.eval('document.querySelector(\'[data-trigfor="property.addr_state"]\').focus();return 1');
+      await c.key('Enter');
+      await sleep(700);
+      eq('and Enter on it saves the address instead of opening the menu',
+         await c.eval('return window.__t.isDirty()'),false);
+    }
+
+    /* "Specify entity type" renders only while the type IS Other, and nothing
+       cleared it on the way out — so the record kept an answer to a question
+       nobody was asking, with no cell and no way to reach it. */
+    {
+      const r=await c.eval(`
+        window.__t.__edit('owner.entity_type','Other (specify)');
+        window.__t.__edit('owner.entity_type_other','Delaware series LLC');
+        window.__t.__renderBody();
+        const o=[...document.querySelectorAll('[data-cskey="owner.entity_type"]')]
+          .find(x=>x.getAttribute('data-csopt')==='Limited Partnership');
+        if(!o)return null;
+        o.click();
+        return {type:window.__t.getVal('owner.entity_type'),other:window.__t.getVal('owner.entity_type_other')};`);
+      eq('choosing a named entity type takes',r&&r.type,'Limited Partnership');
+      eq('and clears the one that had been specified',r&&r.other,'');
+    }
+
+    /* ── the form tells you it is unsaved, in the moment ────────────────────
+       refreshFooter() was reachable only from renderBody(), and typing does not
+       re-render — deliberately, because re-rendering under the caret loses it.
+       So "● Unsaved changes" appeared only when some later action happened to
+       re-render, and collapsing the section you had just typed in took the
+       cell's own ✓ off screen with it: an unsaved edit and no indicator at all. */
+    console.log('\n── the footer answers while you type ──────────────────');
+    await c.reload();
+    await c.eval(HELPERS);
+    await c.eval('await window.__t.__openForm('+JSON.stringify(pid)+');return 1');
+    await sleep(300);
+    {
+      const tag=()=>c.eval("const u=document.getElementById('unsavedTag');return {dirty:window.__t.isDirty(),on:!!(u&&u.classList.contains('on'))}");
+      const t0=await tag();
+      eq('a form nobody has touched shows no unsaved tag',[t0.dirty,t0.on],[false,false]);
+      await c.eval('document.querySelector(\'[data-k="property.name"]\').focus();return 1');
+      await c.type('X');
+      await sleep(250);
+      const t1=await tag();
+      eq('one keystroke lights it, without waiting for a re-render',[t1.dirty,t1.on],[true,true]);
+      await c.eval("document.querySelectorAll('#sections .chead')[1].click();return 1");
+      await sleep(200);
+      const t2=await tag();
+      eq('and collapsing the section it is in does not put it out',[t2.dirty,t2.on],[true,true]);
+    }
+
+    /* An unticked box saved to the record is on file and empty ON PURPOSE, and
+       provColors already knows how to say that — but only from db_value:''. A
+       save wrote source:'new', so the tick went grey ("nothing on file") until
+       openForm ran fixSavedToggles and turned it blue. Same data, two colours,
+       and the only way to see the true one was to leave the form and come back. */
+    console.log('\n── a tick saved off is still a tick on file ───────────');
+    await c.reload();
+    await c.eval(HELPERS);
+    await c.eval('await window.__t.__openForm('+JSON.stringify(pid)+');return 1');
+    await sleep(300);
+    {
+      await c.eval("window.__t.__edit('check.0','');window.__t.__renderBody();return 1");
+      await sleep(200);
+      const pressed=await c.eval(`
+        const b=[...document.querySelectorAll('[data-save1]')]
+          .find(x=>x.getAttribute('data-save1').split(',').indexOf('check.0')>=0);
+        if(b)b.click();return !!b;`);
+      T('an unticked box has a save control',pressed);
+      await sleep(900);
+      const now=await c.eval("return {src:window.__t.srcOf('check.0'),dirty:window.__t.isDirty()}");
+      eq('and once saved it reads as on file, not as untouched',now.src,'database');
+      await c.eval('await window.__t.__openForm('+JSON.stringify(pid)+');return 1');
+      await sleep(400);
+      eq('which is what it still reads after leaving and coming back',
+         await c.eval("return window.__t.srcOf('check.0')"),'database');
+    }
+
+    /* The geometry check further up measures whether a BOX spills its parent.
+       It never measured whether the TEXT fits the box, and it never ran after a
+       parse — so the schedule could fill the form with $1,147 and the cell could
+       render "$ 1,14" at the two commonest widths in this office, with every
+       check green. scrollWidth > clientWidth is the question that was missing. */
+    console.log('\n── the figures fit their boxes, after a parse ─────────');
+    {
+      const _rec2=await c.eval('return await window.__t.ocrMapPages('+JSON.stringify(JSON.parse(fs.readFileSync(path.join(__dirname,'fixture_rs_scan.json'),'utf8')))+')');
+      await c.eval('window.__t.__setRsParsed('+JSON.stringify(_rec2)+');window.__t.__rsFill();return 1');
+      await sleep(400);
+      for(const w of [1200,1280,1920]){
+        await c.send('Emulation.setDeviceMetricsOverride',{width:w,height:1000,deviceScaleFactor:1,mobile:false});
+        await sleep(300);
+        await c.eval('window.__t.__renderBody();return 1');
+        await sleep(300);
+        const clipped=await c.eval(`
+          const out=[];
+          document.querySelectorAll('#viewForm input').forEach(i=>{
+            if(!i.offsetParent||!i.value)return;
+            const d=i.scrollWidth-i.clientWidth;
+            if(d>1)out.push((i.getAttribute('data-k')||i.className)+' "'+i.value+'" short by '+d);});
+          return out;`);
+        eq(w+'px: no value is rendered cut off',clipped,[]);
+      }
+      await c.send('Emulation.clearDeviceMetricsOverride');
+    }
+
+    /* rcsTag carried the comment "every document-fed cell says so" and a suite
+       that asserted the FUNCTION. The renderers never called it: the appraiser
+       block filled from the study and the form could not say where it came
+       from. Assert what is on screen, not what could be computed. */
+    console.log('\n── the study says so where it filled ─────────────────');
+    await c.reload();
+    await c.eval(HELPERS);
+    await c.eval('await window.__t.__openForm('+JSON.stringify(pid)+');return 1');
+    await sleep(300);
+    {
+      const study={scalars:{'appr.firm':'Belfry Valuation Group, LLC','appr.name':'Marcus Feldman',
+        'appr.email':'mfeldman@belfryvaluation.com','appr.phone':'7085002380',
+        'appr.addr_street':'900 Skokie Blvd','appr.addr_city':'Northbrook','appr.addr_state':'IL','appr.addr_zip':'60062'},
+        units:[],firm:'belfry'};
+      await c.eval('window.__t.__setRcsParsed('+JSON.stringify(study)+');window.__t.__rcsFill();window.__t.__renderBody();return 1');
+      await sleep(400);
+      const r=await c.eval(`
+        const want=window.__t.__rcsFillKeys().filter(k=>window.__t.__rcsTag(k));
+        const missing=want.filter(k=>{
+          const box=document.querySelector('[data-box="'+k+'"]');
+          if(box)return !box.querySelector('.rcstag');
+          // the composite address is one box carrying one badge for its four keys
+          const grp=k.replace(/_(street|city|state|zip)$/,'');
+          const g=document.querySelector('[data-box="'+grp+'"]');
+          return !(g&&g.querySelector('.rcstag'));});
+        return {want:want.length,missing};`);
+      T('the study fills cells the form can name',r.want>0);
+      eq('and every one of them says the study filled it',r.missing,[]);
     }
 
     console.log('\n── the console stayed quiet ───────────────────────────');
