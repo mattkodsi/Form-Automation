@@ -5,7 +5,11 @@
    it. Untrimmed on purpose: the hazards this suite exists to catch are things
    nobody would think to put in a hand-made fixture. A due date falling after the
    increase it precedes. A row a few fields short. A property code that is not a
-   number. Three renewals in one year. A schedule that stops.
+   number. Three renewals in one year. A schedule that stops — and, added
+   2026-07-28, the difference between a schedule that stops because the contract
+   expires (Burt Farms I, and 124 others) and one that stops because it has not
+   been extended (Fox Hill, Sandwich Manor, Country Club Heights). The original
+   design said the first case did not exist; the export says it is the common one.
 
    EVERY HAZARD HAS A PROPERTY'S NAME ON IT. When one of these fails it should
    say which real case broke, not that assertion 41 returned false.
@@ -20,7 +24,7 @@
 
 const fs = require('fs'), path = require('path');
 
-const MIN_CHECKS = 124;
+const MIN_CHECKS = 189;   // 2026-07-28: +62 for the primary action, incl. the terminal-EXPIRES rule
 let n = 0, fails = 0, verdict = null;
 const BAR = '='.repeat(68);
 function fail(msg, err) {
@@ -182,6 +186,181 @@ const TODAY = '2026-07-28';           // the export's date; every expectation be
   eq('none of them is startable', req.filter(r => r.startable).length, 0);
   T('and they are not all PBV, so contract type would have misjudged them',
     new Set(req.map(r => r.contractType)).size > 1);
+
+  /* ---- 5b. the primary action ------------------------------------------
+     What one property's button does, held to the same corpus. Every case below
+     is a real property, so a failure names which one broke. */
+  console.log('\n-- typeKind: a known non-event is not an unknown one --');
+  eq('OCAF is startable', H.typeKind('OCAF'), 'startable');
+  eq('RCS is startable', H.typeKind('rcs'), 'startable');
+  eq('EXPIRES is a known skip', H.typeKind('EXPIRES'), 'skip');
+  eq('so is the case variant the export also carries', H.typeKind('Expires'), 'skip');
+  eq('Request is a known skip', H.typeKind('Request'), 'skip');
+  /* Blank falls to unknown on purpose. The export has none - the one malformed
+     row is dropped for its date, not its type - so this fires on nothing today
+     and is news the day it fires. */
+  eq('a blank type is unknown, not a skip', H.typeKind(''), 'unknown');
+  eq('and so is a type nobody has seen', H.typeKind('Budget Based'), 'unknown');
+
+  console.log('\n-- the ordinary case: a package waiting to be started --');
+  const aStart = H.actionFor(rows, '90030', [], TODAY);
+  eq('Bastrop Oak Grove has one to start', aStart.kind, 'start');
+  eq('the tracker names the program', aStart.type, 'OCAF');
+  eq('and the year', aStart.year, '2027');
+  eq('the effective date is the row\'s own', aStart.effective, '2027-01-01');
+  eq('the package is pre-programmed from it', aStart.programs, ['ocaf']);
+  eq('and pre-labelled by its year', aStart.label, '2027');
+  eq('the button is live', aStart.disabled, false);
+  eq('a property that never has an OCAF or RCS offers nothing',
+    H.actionFor(rows, '75494', [], TODAY).kind, 'none');
+  eq('and says why', H.actionFor(rows, '75494', [], TODAY).reasonCode, 'out-of-scope');
+
+  console.log('\n-- Bastrop Oak Grove: the mid-schedule EXPIRES is stepped over --');
+  const bMid = H.actionFor(rows, '90030', [], '2028-06-01');
+  eq('the 2029 EXPIRES does not become the action', bMid.kind, 'start');
+  eq('the 2030 OCAF does', bMid.year, '2030');
+  T('and the property is never treated as expiring there', bMid.kind !== 'expiring');
+
+  /* THE CORRECTION, measured. The original design said EXPIRES is never
+     terminal. It is: 125 in-scope properties end on one, and the row's date
+     matches the Contract Exp column on 122 of them. Only three run two years or
+     more beyond, and those are a gap in the schedule rather than an ending. */
+  console.log('\n-- a schedule that ENDS on an EXPIRES is the contract expiring --');
+  const codes = Object.keys(H.inScope(rows));
+  const lastOf = c => { const rs = rows.filter(r => r.code === c); return rs[rs.length - 1]; };
+  const terminal = codes.filter(c => lastOf(c).type === 'EXPIRES');
+  eq('125 of the 229 end on one', terminal.length, 125);
+  const beyondOf = c => { const l = lastOf(c); return l.contractExp ? H.daysBetween(l.effective, l.contractExp) : null; };
+  eq('120 of those have a contract ending with them, not after them',
+    terminal.filter(c => { const d = beyondOf(c); return d != null && d < 730; }).length, 120);
+  /* Two carry no contract expiration at all - Westwood Village and Van Nuys - so
+     the EXPIRES row is the only evidence there is, and it says the contract
+     ends. Reading them as gaps would invent a renewal out of a missing field. */
+  const noExp = terminal.filter(c => beyondOf(c) === null);
+  eq('two of them have no contract record to compare against', noExp.length, 2);
+  eq('and they are read as expiring, not as gaps',
+    noExp.map(c => H.actionFor(rows, c, [], '2040-12-31').kind), ['expiring', 'expiring']);
+  /* Named, so a regression says which property. Burt Farms I expires four days
+     before its contract record does. */
+  const burt = rows.filter(r => r.name === 'Burt Farms I');
+  T('Burt Farms I is in the export', burt.length > 0);
+  eq('its last row is an EXPIRES', burt[burt.length - 1].type, 'EXPIRES');
+  T('dated within days of its contract expiration',
+    Math.abs(H.daysBetween(burt[burt.length - 1].effective, burt[burt.length - 1].contractExp)) < 30);
+  const aBurt = H.actionFor(rows, burt[0].code, [], '2039-01-01');   // past its last startable row
+  eq('so the action states the expiry rather than inventing a renewal', aBurt.kind, 'expiring');
+  eq('and says which fact it is reporting', aBurt.reasonCode, 'contract-expires');
+  eq('it offers no target year', aBurt.year, '');
+  eq('and nothing to press', aBurt.disabled, true);
+  /* The other half of the rule, and the more important one: reporting the expiry
+     is not the same as retiring the property. The tracker records a date, not an
+     outcome - whether the contract renews is a business fact it does not hold. */
+  eq('the property is still in scope', H.inScope(rows)[burt[0].code], 1);
+  T('and is not rendered as finished, done or viewable',
+    aBurt.kind !== 'view' && aBurt.kind !== 'done' && aBurt.kind !== 'none');
+  eq('the expiry date it reports is the row\'s own', aBurt.effective, burt[burt.length - 1].effective);
+
+  console.log('\n-- Fox Hill: a gap in the schedule, not an expiry --');
+  /* The property the original design generalised from, and one of only three
+     where that generalisation holds: its schedule stops at an EXPIRES in 2027
+     while the contract record runs to 2045. */
+  const aFox = H.actionFor(rows, '90063', [], TODAY);
+  eq('Fox Hill is a gap', aFox.kind, 'gap');
+  eq('named as one', aFox.reasonCode, 'schedule-gap');
+  eq('the schedule stops here', aFox.effective, '2027-04-01');
+  eq('while the contract runs on', aFox.contractExp, '2045-02-28');
+  eq('so it stays startable', aFox.disabled, false);
+  T('and is not reported as expiring', aFox.kind !== 'expiring');
+  const gaps = codes.filter(c => H.actionFor(rows, c, [], '2040-12-31').kind === 'gap');
+  eq('exactly three properties in the export are gaps', gaps.length, 3);
+  eq('and they are these three', gaps.map(c => rows.find(r => r.code === c).name).sort(),
+    ['Country Club Heights', 'Fox Hill', 'Sandwich Manor']);
+
+  console.log('\n-- the portfolio today --');
+  const kinds = {};
+  codes.forEach(c => { const k = H.actionFor(rows, c, [], TODAY).kind; kinds[k] = (kinds[k] || 0) + 1; });
+  eq('228 have a package to start, and Fox Hill is the gap', kinds, { start: 228, gap: 1 });
+  /* The check that catches a new Increase Type appearing in a future export:
+     nothing today is unsupported, so anything that becomes so is news. */
+  eq('nothing in the export is an unrecognised type', kinds.unsupported || 0, 0);
+
+  console.log('\n-- Luther Towers: two renewals in one year, same program --');
+  /* The only property of the 249 where year+program cannot identify a package -
+     OCAF 2026-09-01 and OCAF 2026-12-06, same label, same program. Without the
+     concurrency guard, generating the December package would mark the September
+     one done, and its deadline has already passed. */
+  const lTgt = H.actionFor(rows, '90111', [], TODAY);
+  eq('the target is the September row', lTgt.effective, '2026-09-01');
+  const cDec = { id: 'c1', programs: ['ocaf'], label: '2026', effective_date: '2026-12-06', generated: {} };
+  const cSep = { id: 'c2', programs: ['ocaf'], label: '2026', effective_date: '2026-09-01', generated: {} };
+  eq('the December package does not answer for the September one',
+    H.actionFor(rows, '90111', [cDec], TODAY).kind, 'start');
+  eq('the September one does', H.actionFor(rows, '90111', [cSep], TODAY).kind, 'continue');
+  eq('by id', H.actionFor(rows, '90111', [cSep], TODAY).cid, 'c2');
+  eq('with both present, the right one still wins',
+    H.actionFor(rows, '90111', [cDec, cSep], TODAY).cid, 'c2');
+
+  console.log('\n-- matching a package to the renewal it belongs to --');
+  /* A package created by hand before this feature has a label and no effective
+     date. Where the year holds only one startable row, the label is enough. */
+  const byLabel = { id: 'x', programs: ['ocaf'], label: '2027', effective_date: '', generated: {} };
+  eq('a package with only a label still matches', H.actionFor(rows, '90030', [byLabel], TODAY).kind, 'continue');
+  eq('by id', H.actionFor(rows, '90030', [byLabel], TODAY).cid, 'x');
+  /* Never cycles[0] or the dominant one: listCycles sorts the dominant first,
+     and the dominant cycle is the latest-effective, not the one due next. */
+  const far = { id: 'far', programs: ['ocaf'], label: '2031', effective_date: '2031-01-01', generated: {} };
+  eq('a package for a different year does not answer for this one',
+    H.actionFor(rows, '90030', [far], TODAY).kind, 'start');
+  const rcsTgt = rows.find(r => r.startable && r.type === 'RCS' && r.effective >= TODAY);
+  const wrongProg = { id: 'w', programs: ['ocaf'], label: rcsTgt.effective.slice(0, 4), effective_date: rcsTgt.effective, generated: {} };
+  eq('an OCAF package does not answer for an RCS year',
+    H.actionFor(rows, rcsTgt.code, [{ id: 'w', programs: ['ocaf'], label: wrongProg.label, effective_date: '', generated: {} }], TODAY).kind, 'start');
+  const withUaf = { id: 'u', programs: ['ocaf', 'uaf'], label: '2027', effective_date: '2027-01-01', generated: {} };
+  eq('a package carrying UAF alongside OCAF still matches the OCAF year',
+    H.actionFor(rows, '90030', [withUaf], TODAY).cid, 'u');
+
+  console.log('\n-- a generated package is viewable, and does not skip ahead --');
+  const gen = { id: 'g', programs: ['ocaf'], label: '2027', effective_date: '2027-01-01', generated: { at: '2026-07-01T10:00:00Z', docs: ['cover'] } };
+  const aGen = H.actionFor(rows, '90030', [gen], TODAY);
+  eq('a generated package reads as viewable', aGen.kind, 'view');
+  eq('pointing at itself', aGen.cid, 'g');
+  /* Packages are generated ~120 days BEFORE their effective date, so advancing
+     to the next target would print "Start 2028 OCAF" above a deadline line
+     counting down to 2027. targetFor moves on by itself once the date passes. */
+  eq('and it still names the year it is for, not the next one', aGen.year, '2027');
+
+  console.log('\n-- an increase type nobody has seen stops the action --');
+  const oddSoon = H.normalize(raw.concat([{
+    'Property Code': '90030', 'Property Name': 'Bastrop Oak Grove', 'Increase Type': 'Budget Based',
+    'Rent Increase': '10/01/2026', 'Due to HUD': '06/01/2026',
+  }]), { leadDays: 120 }).rows;
+  const aOdd = H.actionFor(oddSoon, '90030', [], TODAY);
+  eq('an unrecognised type ahead of the target blocks it', aOdd.kind, 'unsupported');
+  /* Asserted as the exact string so nobody "tidies" it: the failure table says
+     displayed verbatim, never silently dropped. */
+  eq('and is carried verbatim', aOdd.type, 'BUDGET BASED');
+  eq('the button is dead', aOdd.disabled, true);
+  eq('and says why', aOdd.reasonCode, 'unknown-type');
+  /* A row with no increase type at all. 'Displayed verbatim' has nothing to
+     display, and the two ways of vanishing the design forbids are both easy to
+     hit here: the button read Start 2027 \u201c\u201d and the pill did not render.
+     Named for Bastrop because Bastrop is the property carrying the case. */
+  const blankSoon = H.normalize(raw.concat([{
+    'Property Code': '90030', 'Property Name': 'Bastrop Oak Grove', 'Increase Type': '',
+    'Rent Increase': '10/01/2026', 'Due to HUD': '06/01/2026',
+  }]), { leadDays: 120 }).rows;
+  const aBlank = H.actionFor(blankSoon, '90030', [], TODAY);
+  eq('a row stating no increase type blocks the action too', aBlank.kind, 'unsupported');
+  eq('and does not invent one', aBlank.type, '');
+  eq('the button is dead', aBlank.disabled, true);
+
+  const oddLate = H.normalize(raw.concat([{
+    'Property Code': '90030', 'Property Name': 'Bastrop Oak Grove', 'Increase Type': 'Budget Based',
+    'Rent Increase': '01/01/2032', 'Due to HUD': '09/01/2031',
+  }]), { leadDays: 120 }).rows;
+  const aLate = H.actionFor(oddLate, '90030', [], TODAY);
+  eq('the same row years away blocks nothing', aLate.kind, 'start');
+  eq('and the 2027 OCAF is still the action', aLate.year, '2027');
 
   /* ---- 6. deadlines and bands ------------------------------------------ */
   console.log('\n-- deadlines and bands --');

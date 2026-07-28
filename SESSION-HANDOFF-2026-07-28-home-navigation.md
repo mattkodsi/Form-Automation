@@ -42,7 +42,7 @@ All from `_archive/hap-fixtures/hap-tracker-2026-07-28.csv`, 2853 rows, parsed.
 **The tracker never knows progress.** Every workflow column is empty, so the app's
 own cycle state is the only source of how far along anything is.
 
-**`EXPIRES` is never terminal.** It marks the end of an option term and the
+**`EXPIRES` is terminal for 125 of the 229, and not for 4 — corrected 2026-07-28, see the design.** A terminal EXPIRES matches the `Contract Exp` column in 107 of 125 cases, so it is the contract expiring rather than an option term. What the rest of this paragraph says is true only of the four mid-schedule cases: It marks the end of an option term and the
 assumption is the contract renews. 125 of the 229 in-scope properties end on one
 inside this export, so reading it as an ending would retire over half the
 portfolio as the calendar advances. Bastrop Oak Grove (90030) runs OCAF · OCAF ·

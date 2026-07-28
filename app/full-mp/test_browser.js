@@ -35,7 +35,9 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=241;   // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
+const MIN_CHECKS=295;   // 2026-07-28: +19 — the primary action, pressed on a real card.
+                       // 2026-07-28: +35 — the home page's filter rail, driven by real clicks.
+                       // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
                        // pristine (three seeds, two checks each). 2026-07-27: the unit-type cell
                        // lost a divider with the designation, so the pair of divider checks
                        // became one. Lowered on purpose.
@@ -1823,6 +1825,184 @@ const FULL=process.argv.includes('--full');
       T('taking the suggestion closes the dialog and leaves the save to him',
         !after.open&&/save again/i.test(after.status));
       eq('with the offered name now in the cell',after.name,dlg.suggested);
+    }
+
+    /* ─────────────────────────────────────────────────────────────────────
+       The primary action, pressed. This is the only suite that would catch a
+       nested button, because it reads the DOM the parser actually built rather
+       than the string we emitted — and <button> inside <button> is re-parented
+       silently, so every innerHTML assertion elsewhere would still pass.
+
+       Selftest Gardens is seeded into the tracker with NO record behind it, so
+       one click has to run openHapProperty → createProperty → the dialog →
+       createCycle, which is the whole path that matters. */
+    console.log('\n── the primary action ─────────────────────────────────');
+    {
+      await c.eval('window.__t.openMenu();return 1');await sleep(250);
+      const st=await c.eval(`
+        const card=[...document.querySelectorAll('#menuGrid .pcard')]
+          .find(x=>/Selftest Gardens/.test(x.textContent))||null;
+        return card?{found:1,
+          buttons:card.querySelectorAll('button').length,
+          nested:!!card.querySelector('button button'),
+          label:(card.querySelector('[data-pact]')||{}).textContent||'',
+          body:!!card.querySelector('.pc-body'),
+          tag:card.tagName}:{found:0};`);
+      T('the tracker property has a card',st.found===1);
+      eq('which is a container, not a button',st.tag,'DIV');
+      eq('holding exactly two buttons',st.buttons,2);
+      /* The parser-level proof. Emitting a nested button looks identical in a
+         string and is a different tree in the browser. */
+      eq('and neither is inside the other',await c.eval('return document.querySelector("#menuGrid .pcard button button")===null'),true);
+      T('the card body is its own button',st.body);
+      eq('the action names the year and program the tracker gave',st.label,'Start 2030 OCAF');
+
+      /* Both halves must be tab-reachable — that is the reason for two siblings
+         rather than a span with a click handler. */
+      eq('both halves take focus',await c.eval(`
+        const card=[...document.querySelectorAll('#menuGrid .pcard')].find(x=>/Selftest Gardens/.test(x.textContent));
+        const bs=[...card.querySelectorAll('button')];
+        return bs.filter(b=>{b.focus();return document.activeElement===b;}).length;`),2);
+
+      await c.eval('document.querySelector(\'[data-pact="ST001"]\').click();return 1');
+      await sleep(500);
+      const dlg=await c.eval('return {open:document.getElementById("scrim").classList.contains("open"),'
+        +'ocaf:!!(document.getElementById("cyOCAF")||{}).checked,'
+        +'rcs:!!(document.getElementById("cyRCS")||{}).checked,'
+        +'uaf:!!(document.getElementById("cyUAF")||{}).checked,'
+        +'eff:(document.getElementById("cyEff")||{}).value||"",'
+        +'note:(document.querySelector("#dialog .lh-note")||{}).textContent||""};');
+      T('pressing Start opens the new-package dialog',dlg.open);
+      /* Pre-filled, not silent. createCycle records an effective date as
+         date_eff_source='custom' — "the user typed this" — so starting silently
+         would have the app assert a hand-entered date nobody ever saw. */
+      T('with the tracker\'s program pre-selected',dlg.ocaf&&!dlg.rcs);
+      eq('and its date pre-filled and visible',dlg.eff,'01/01/2030');
+      T('and the schedule named as where that came from',/renewal schedule/i.test(dlg.note));
+      /* The tracker's Next UA Baseline column is empty on all 2853 rows, so it
+         has no opinion about utility allowances and we do not invent one. */
+      T('UAF is not pre-ticked — the tracker says nothing about it',!dlg.uaf);
+
+      await c.eval('document.getElementById("dlgOk").click();return 1');
+      await sleep(700);
+      const cy=await c.eval('return (window.__t.__cycles()||[]).map(c=>({e:c.effective_date,p:c.programs}))');
+      eq('confirming creates the package the tracker described',cy,[{e:'2030-01-01',p:['ocaf']}]);
+
+      /* Starting it moves the property out of Coming up and into In flight —
+         the rail's whole argument, seen from the other end. */
+      await c.eval('window.__t.openMenu();window.__t.__setMenuView("coming");return 1');await sleep(300);
+      T('the property has left the view it was waiting in',
+        !(await c.eval('return /Selftest Gardens/.test(document.getElementById("menuGrid").innerHTML)')));
+      await c.eval('window.__t.__setMenuView("flight");return 1');await sleep(200);
+      eq('and its card, now in flight, offers to continue it',
+        await c.eval(`const card=[...document.querySelectorAll('#menuGrid .pcard')].find(x=>/Selftest Gardens/.test(x.textContent));
+          return card?((card.querySelector('[data-pact]')||{}).textContent||''):'(no card)';`),'Continue 2030 OCAF');
+
+      /* Continue goes all the way through: record, then the package the tracker
+         named, then the form open on it. Checking only the label would leave the
+         branch that opens it untested. */
+      await c.eval(`[...document.querySelectorAll('#menuGrid [data-pact]')]
+        .find(b=>/Continue/.test(b.textContent)).click();return 1`);
+      await sleep(900);
+      eq('pressing Continue opens the form on that package',
+        await c.eval(`return {shown:document.getElementById('viewForm').style.display==='',
+          prop:(document.getElementById('hdrProp')||{}).textContent,
+          prog:(document.getElementById('hdrProgram')||{}).textContent};`),
+        {shown:true,prop:'Selftest Gardens',prog:'OCAF Package'});
+
+      /* The launcher's strip and the card's button are one derivation, so they
+         cannot disagree about what the action is. */
+      const nu=await c.eval(`const pid=mpdb.propByRaCode('ST001');window.__t.openLauncher(pid);
+        await new Promise(r=>setTimeout(r,120));
+        return {strip:/NEXT RENEWAL/.test(document.getElementById('launcherBody').innerHTML),
+                label:(document.getElementById('nuGo')||{}).textContent||'',
+                newcy:!!document.getElementById('bNewCycle')};`);
+      T('the property profile shows the next renewal',nu.strip);
+      eq('and its button says what the card says',nu.label,'Continue 2030 OCAF');
+      T('while "+ Start new package" survives beside it',nu.newcy);
+    }
+
+    /* ─────────────────────────────────────────────────────────────────────
+       The home page's filter rail. Every other suite renders it; this one
+       CLICKS it, which is the only way to know a rail row reaches the render it
+       claims to drive. The rail is rebuilt on every render, so its handlers are
+       wired inside renderMenu rather than once at boot — exactly the shape that
+       goes stale silently if it is ever moved back.
+
+       Dates are built from the browser's own clock. The data layer's today()
+       has no override hook in either adapter, so a hardcoded fixture changes
+       band as the calendar advances. */
+    console.log('\n── the filter rail ────────────────────────────────────');
+    {
+      const DAY=86400000, T0=Date.now();
+      const us=n=>{const d=new Date(T0+n*DAY);return (d.getUTCMonth()+1)+'/'+d.getUTCDate()+'/'+d.getUTCFullYear();};
+      const trow=(code,name,type,dueIn)=>({'Property Code':code,'Property Name':name,'Portfolio Mgr':'Claire Beatty',
+        'Increase Type':type,'Rent Increase':us(dueIn+122),'Due to HUD':us(dueIn)});
+      const rows=[trow('B001','Rail Overdue','RCS',-10),trow('B002','Rail Now','OCAF',10),
+                  trow('B003','Rail Soon','OCAF',60),trow('B004','Rail Later','OCAF',200)];
+      await c.eval('await window.__t.__seedHap('+JSON.stringify(rows)+');window.__t.openMenu();return 1');
+      await sleep(250);
+      const railN=await c.eval('return document.querySelectorAll("#menuRail [data-view]").length');
+      eq('the rail draws six views and a Programs group of two',railN,8);
+      T('nothing undefined reached the rail',
+        !(await c.eval('return /undefined/.test(document.getElementById("menuRail").innerHTML)')));
+
+      /* Clicking each row: the click reaches the state, exactly one row reads as
+         current, and the badge on it equals the cards actually drawn. The last
+         is the check a pure unit test cannot make — it is two renderers being
+         asked the same question. */
+      const views=await c.eval('return [...document.querySelectorAll("#menuRail [data-view]")].map(b=>b.getAttribute("data-view"))');
+      for(const v of views){
+        await c.eval('document.querySelector(\'#menuRail [data-view="'+v+'"]\').click();return 1');
+        await sleep(140);
+        const st=await c.eval('return {view:window.__t.__menuView(),'
+          +'on:document.querySelectorAll("#menuRail .mr-row.on").length,'
+          +'badge:+(document.querySelector(\'#menuRail [data-view="'+v+'"] .mr-n\').textContent||0),'
+          +'cards:document.querySelectorAll("#menuGrid .pcard:not(.newcard)").length,'
+          +'lede:(document.getElementById("menuLede").textContent||"").length};');
+        eq('clicking "'+v+'" selects it, alone',[st.view,st.on],[v,1]);
+        eq('and its badge equals the cards drawn for it',st.cards,st.badge);
+        T('and the view explains itself above the grid',st.lede>20);
+      }
+
+      /* A zero-count row stays on the rail, dimmed and still clickable: a rail
+         whose rows come and go means the row you clicked yesterday is not where
+         it was, and "Needs you · 0" is the best news the page can give. */
+      await c.eval('document.querySelector(\'#menuRail [data-view="done"]\').click();return 1');
+      await sleep(140);
+      const z=await c.eval('return {zero:document.querySelector(\'#menuRail [data-view="done"]\').classList.contains("zero"),'
+        +'on:document.querySelector(\'#menuRail [data-view="done"]\').classList.contains("on"),'
+        +'empty:document.querySelectorAll("#menuGrid .mempty").length,'
+        +'clear:/Clear search/.test(document.getElementById("menuGrid").innerHTML),'
+        +'cards:document.querySelectorAll("#menuGrid .pcard:not(.newcard)").length};');
+      T('an empty view is dimmed but still selectable',z.zero&&z.on);
+      eq('and draws no cards',z.cards,0);
+      eq('it explains itself in a panel of its own',z.empty,1);
+      T('which is not the search-miss panel — there is nothing to clear',!z.clear);
+
+      /* Search is a find-within. It forces All so a name is never hidden by the
+         filter, without overwriting the view you were in. */
+      await c.eval('document.querySelector(\'#menuRail [data-view="coming"]\').click();return 1');
+      await sleep(140);
+      await c.eval('const s=document.getElementById("menuSearch");s.focus();s.value="";return 1');
+      await c.type('Overdue');
+      await sleep(220);
+      const s1=await c.eval('return {view:window.__t.__menuView(),'
+        +'found:/Rail Overdue/.test(document.getElementById("menuGrid").innerHTML)};');
+      T('typing a name finds a property outside the current view',s1.found);
+      eq('and leaves the chosen view alone',s1.view,'coming');
+      await c.eval('const s=document.getElementById("menuSearch");s.value="";s.dispatchEvent(new Event("input"));return 1');
+      await sleep(200);
+      const s2=await c.eval('return {view:window.__t.__menuView(),'
+        +'on:(document.querySelector("#menuRail .mr-row.on")||{}).getAttribute("data-view")};');
+      eq('clearing the box returns you where you were',[s2.view,s2.on],['coming','coming']);
+
+      /* Mine and All are a different question, so the rail re-resolves rather
+         than stranding you in a view emptied by the lens. */
+      await c.eval('document.querySelector(\'[data-lens="all"]\').click();return 1');
+      await sleep(200);
+      eq('switching the lens re-resolves the view',
+        await c.eval('return window.__t.__menuView()'),'needs');
     }
 
     console.log('\n── the console stayed quiet ───────────────────────────');

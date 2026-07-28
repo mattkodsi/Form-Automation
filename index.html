@@ -558,8 +558,17 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;borde
 .searchbox input{font:inherit;font-size:13px;padding:9px 14px 9px 35px;border:1px solid #d3dae6;border-radius:9px;background:#fff;width:252px;outline:none;color:#1f2937;transition:border-color .15s,box-shadow .15s}
 .searchbox input:focus{border-color:#1e3a5f;box-shadow:0 0 0 3px rgba(30,58,95,.10)}
 .mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(302px,1fr));gap:16px}
-.pcard{text-align:left;font:inherit;background:#fff;border:1px solid #e6ebf3;border-radius:14px;padding:18px 18px 15px;cursor:pointer;display:flex;flex-direction:column;transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease;min-height:134px}
+/* The card is a container now, not a button — the primary action is a real
+   sibling button inside it, and a button nested in a button is re-parented by
+   the parser. text-align / font / padding / cursor moved to .pc-body with the
+   click target; the box, the min-height and the hover lift stay here so hovering
+   anywhere, the action button included, still lifts the whole card. */
+.pcard{background:#fff;border:1px solid #e6ebf3;border-radius:14px;cursor:default;display:flex;flex-direction:column;transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease;min-height:134px}
 .pcard:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(30,58,95,.12);border-color:#c7d2e6}
+.pc-body{flex:1;display:flex;flex-direction:column;width:100%;text-align:left;font:inherit;background:none;border:0;padding:18px 18px 12px;cursor:pointer;border-radius:14px 14px 0 0}
+.pc-body:focus-visible{outline:2px solid #1e3a5f;outline-offset:-2px}
+.pc-act{padding:0 18px 15px}
+.pc-act .btn{width:100%;padding:7px 10px}
 .pc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
 .pc-name{font-size:15.5px;font-weight:700;color:#1f2937;line-height:1.32} .pc-alias{font-size:12px;font-weight:400;color:#8791a5;margin-left:7px}
 .pc-meta{font-size:12px;color:#7c86a2;margin-top:6px}
@@ -569,7 +578,9 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;borde
 .pc-units{font-size:12px;color:#33405c;font-weight:600}
 .pc-upd{font-size:11px;color:#9aa4b8}
 .ringsvg{flex:0 0 auto}
-.newcard{align-items:center;justify-content:center;gap:10px;flex-direction:row;border:1.5px dashed #c2ccdd;background:transparent;color:#1e3a5f;font-weight:700;font-size:13.5px;min-height:134px}
+/* #tileNew is still a <button> wearing .pcard — a class, not an element — so it
+   has to bring back the padding and text metrics .pcard just gave to .pc-body. */
+.newcard{align-items:center;justify-content:center;gap:10px;flex-direction:row;border:1.5px dashed #c2ccdd;background:transparent;color:#1e3a5f;font:inherit;font-weight:700;font-size:13.5px;padding:18px;cursor:pointer;min-height:134px}
 .newcard:hover{background:#f4f8fc;border-color:#1e3a5f;box-shadow:none;transform:translateY(-2px)}
 .newcard .plus{width:27px;height:27px;border-radius:50%;background:#1e3a5f;color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;line-height:1}
 .mempty{grid-column:1/-1;background:#fff;border:1px dashed #cbd5e1;border-radius:14px;padding:32px;text-align:center;color:#6b7280}
@@ -728,8 +739,45 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;borde
 .pc-due.over{color:#b91c1c}.pc-due.now{color:#b45309}.pc-due.ok{color:#7c86a2}
 .pc-prog{font-size:8.5px;font-weight:800;letter-spacing:.4px;padding:2px 6px;border-radius:4px;text-transform:uppercase;background:#e8effa;color:#1e3a5f}
 .pc-prog.ocaf{background:#eef7ee;color:#15803d}
+/* An increase type we do not recognise must not render in .pc-prog's blue,
+   which already means RCS. An indicator computes; it never asserts. */
+.pc-prog.unk{background:#f1f3f7;color:#5b6577}
+/* the tracker's next renewal, on the property's own page */
+.nextup{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#f7f9fc;border:1px solid #e6ebf3;border-radius:10px;padding:12px 14px;margin-bottom:12px}
+.nu-l{min-width:0}
+.nu-k{font-size:10.5px;font-weight:800;letter-spacing:.5px;color:#8791a5}
+.nu-v{font-size:13.5px;font-weight:700;color:#1f2937;margin-top:3px}
+.nextup .btn{flex:0 0 auto}
 .pc-new{opacity:.72}
 .mgroup{grid-column:1/-1;font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:#7c86a2;margin:14px 0 -4px}
+/* ---- the filter rail: named views, one at a time --------------------- */
+/* minmax(0,1fr) on the second column is load-bearing: without it the auto-fill
+   card grid refuses to shrink below its track size and the page scrolls
+   sideways. */
+.mbody{display:grid;grid-template-columns:196px minmax(0,1fr);gap:26px;align-items:start}
+/* No tracker, no rail, no gutter for one. */
+.mbody.norail{grid-template-columns:minmax(0,1fr);gap:0}
+.mmain{min-width:0}
+.mrail{position:sticky;top:22px;display:flex;flex-direction:column;gap:2px}
+.mr-g+.mr-g{margin-top:16px}
+.mr-gt{font-size:10px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:#9aa4b8;padding:0 10px;margin-bottom:6px}
+.mr-row{display:flex;align-items:center;gap:8px;width:100%;text-align:left;font:inherit;font-size:13px;font-weight:600;color:#5b6577;background:none;border:none;border-radius:9px;padding:8px 10px;cursor:pointer}
+.mr-row:hover{background:#eef2f8;color:#1e3a5f}
+.mr-row.on{background:#1e3a5f;color:#fff}
+.mr-row.zero{color:#a8b0c0}
+.mr-row.zero.on{color:#fff}
+.mr-t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mr-n{font-size:11.5px;font-weight:700;font-variant-numeric:tabular-nums;color:#7c86a2}
+.mr-row.on .mr-n{color:#cdd9ea}
+.mr-row.zero .mr-n{color:#c2c9d6}
+.mr-late{width:6px;height:6px;border-radius:50%;background:#b91c1c;flex:0 0 auto}
+.mlede{font-size:12px;color:#7c86a2;margin:-4px 0 14px;line-height:1.5}
+@media(max-width:900px){
+ .mbody{grid-template-columns:minmax(0,1fr)}
+ .mrail{position:static;flex-direction:row;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:6px}
+ .mr-g{display:flex;gap:6px}.mr-g+.mr-g{margin-top:0}.mr-gt{display:none}
+ .mr-row{width:auto;white-space:nowrap;border:1px solid #e0e5ee;background:#fff}
+}
 .ns8flag{display:inline-flex;align-items:center;gap:8px;cursor:pointer;line-height:1.35;vertical-align:middle} .ns8flag input{accent-color:#1e3a5f;width:14px;height:14px;margin:0;flex:0 0 auto} .partd .rgh{margin-top:12px}
 .safmrhead{display:inline-flex;align-items:center;gap:6px} .rgh .hudbtn,.ocpull .hudbtn{font-size:9.5px;padding:2px 7px;letter-spacing:0;text-transform:none;font-weight:700;white-space:nowrap;color:#b45309} .rgh .hudbtn.off,.ocpull .hudbtn.off{opacity:.55;cursor:default;color:#8791a5;border-color:#d7deea;background:#f1f4f9} .rgh .hudbtn.done,.ocpull .hudbtn.done{color:#166534;border-color:#9cc3a8;background:#eefaf1}
 </style></head>
@@ -752,9 +800,12 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;borde
    <div class="mwrap">
      <div class="mhead">
        <div><h2 class="mtitle">Properties</h2><div class="msub" id="menuCount"></div></div>
-       <div class="mtools"><div class="segmented" id="lensSeg"><button class="seg-b on" data-lens="mine">Mine</button><button class="seg-b" data-lens="all">All</button></div><div class="segmented" id="sortSeg"><button class="seg-b on" data-sort="name">Name</button><button class="seg-b" data-sort="updated">Recently saved</button></div><div class="searchbox"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9aa4b8" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2" stroke-linecap="round"/></svg><input id="menuSearch" placeholder="Search by name or FHA #" autocomplete="off"></div><button class="btn p" id="bNewProperty">+ New property</button></div>
+       <div class="mtools"><div class="segmented" id="lensSeg"><button class="seg-b on" data-lens="mine">Mine</button><button class="seg-b" data-lens="all">All</button></div><div class="searchbox"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9aa4b8" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2" stroke-linecap="round"/></svg><input id="menuSearch" placeholder="Search by name or FHA #" autocomplete="off"></div><button class="btn p" id="bNewProperty">+ New property</button></div>
      </div>
-     <div class="mgrid" id="menuGrid"></div>
+     <div class="mbody" id="menuBody">
+       <nav class="mrail" id="menuRail"></nav>
+       <div class="mmain"><div class="mlede" id="menuLede"></div><div class="mgrid" id="menuGrid"></div></div>
+     </div>
    </div>
  </div>
  <!-- ===================== PROPERTY LAUNCHER ===================== -->
@@ -5338,7 +5389,13 @@ function syncFooterRest(){const f=document.querySelector('#viewForm .footer');if
 window.addEventListener('scroll',syncFooterRest,{passive:true});
 window.addEventListener('resize',syncFooterRest);
 
-let activeProgram='RCS';let sortMode='name';let menuLens='mine';let pmName='';
+/* menuView: which rail view the home page is showing. Empty means "not chosen
+   yet", which renderMenu resolves to the first non-empty view and writes back —
+   so the app opens on whatever is actually actionable. The Name / Recently
+   saved sort is gone with sortMode: every rail view is a deadline question, so
+   order inside one is by deadline, and a control that fights that is a control
+   that hides the late one. */
+let activeProgram='RCS';let menuView='';let menuLens='mine';let pmName='';
 function show(v){['Auth','Menu','Launcher','Form','Contacts'].forEach(V=>{const e=el('view'+V);if(e)e.style.display=(v===V)?'':'none';});window.scrollTo(0,0);}
 
 /* ---- small helpers for the menu -------------------------------------- */
@@ -5419,6 +5476,9 @@ function hapAll(){
   }catch(e){return null;}
 }
 let _hapCache=null;
+/* The counts the last render put on the rail. A suite asserts the badge and the
+   grid agree without having to scrape two DOMs for one number. */
+let _menuCounts={};
 
 /* One card's worth of fact per tracker property, merged with the app record if
    one exists yet. */
@@ -5428,25 +5488,220 @@ function hapProperties(){
   const today=mpdb&&mpdb.today?mpdb.today():new Date().toISOString().slice(0,10);
   const scope=H.inScope(rows),byCode={};
   rows.forEach(r=>{if(scope[r.code]&&!byCode[r.code])byCode[r.code]=r;});
+  /* Hoisted out of the map below. listProperties() runs packageScore() for every
+     property it returns, so calling it once per tracker code was 229 full score
+     computations per render on the real portfolio. */
+  const byId={};(mpdb.listProperties()||[]).forEach(r=>{byId[r.id]=r;});
   return Object.keys(byCode).map(code=>{
     const any=byCode[code],t=H.targetFor(rows,code,today);
     const pid=(mpdb&&mpdb.propByRaCode)?mpdb.propByRaCode(code):null;
-    const rec=pid?(mpdb.listProperties()||[]).find(p=>p.id===pid):null;
+    const rec=pid?(byId[pid]||null):null;
+    /* Only when a record exists. Most tracker properties have none yet, so this
+       is a handful of listCycles calls per render rather than 229 — and each one
+       runs dominantCycleId plus a sort. */
+    const act=H.actionFor(rows,code,pid?(mpdb.listCycles(pid)||[]):[],today);
+    /* The row the CARD is about. Normally the target — but where an unrecognised
+       increase type sits in front of the target, the card must be about THAT
+       row, or the three parts of it describe three different renewals: a pill
+       reading OCAF, a countdown to an OCAF two years out, and a button naming a
+       type due in ten weeks. The unreadable row is the next event, so it is the
+       one the card counts down to. */
+    const d=(act.kind==='unsupported')?{type:act.type,effective:act.effective,deadline:act.deadline}
+           :(t?{type:t.type,effective:t.effective,deadline:t.deadline}:null);
     return {
       id:pid||('hap:'+code), code:code, hap:true, started:!!pid,
       name:(rec&&rec.name)||any.name, alias:(rec&&rec.alias)||'',
       fha:(rec&&rec.fha)||'—', city_state:(rec&&rec.city_state)||'',
       total_units:(rec&&rec.total_units)||0, unit_types:(rec&&rec.unit_types)||0,
       completeness:rec?rec.completeness:0, updated_at:(rec&&rec.updated_at)||'',
-      pm:any.pm, program:t?t.type:'', deadline:t?t.deadline:'',
-      effective:t?t.effective:'', band:t?H.bandOf(t.deadline,today):'undated',
-      status:H.statusFor(rows,code,today), days:t?H.daysBetween(today,t.deadline):null,
+      /* Carried, not recomputed. Without these two the profile chip and the
+         card's hover caption were dead on every scheduled property — the chip
+         showed on records with no tracker code and nowhere else, which read as
+         "only uncoded records have gaps". */
+      profile:(rec&&rec.profile)||null, caption:(rec&&rec.caption)||'',
+      /* The pill shows an unrecognised increase type verbatim rather than going
+         blank: "displayed verbatim, never silently dropped" applies to the pill
+         as much as to the button. */
+      pm:any.pm, program:d?d.type:'', deadline:d?d.deadline:'',
+      effective:d?d.effective:'', band:d?H.bandOf(d.deadline,today):'undated',
+      status:H.statusFor(rows,code,today), days:d?H.daysBetween(today,d.deadline):null,
+      action:act,
     };
   });
 }
 
+/* The launcher's action and the card's action are the same fact, so they are the
+   same derivation. Two renderers computing one answer separately is how one of
+   them ends up wrong and only the second is ever seen (FORM-RULES 13). */
+function hapForPid(pid){return hapProperties().find(x=>x.id===pid)||null;}
+
+/* The words for it. Copy lives here, not in hap.js: a data module that owns
+   prose is a data module nobody can restyle. */
+function actionLabel(a){
+  if(!a)return '';
+  if(a.kind==='start')      return 'Start '+a.year+' '+a.type;
+  if(a.kind==='continue')   return 'Continue '+a.year+' '+a.type;
+  if(a.kind==='view')       return 'View '+a.year+' package';
+  if(a.kind==='awaiting'||a.kind==='gap') return 'Start a package';
+  /* The unrecognised type goes in the button text, in quotation marks, so
+     verbatim-ness is visible on the card and not only in a tooltip. */
+  if(a.kind==='unsupported')
+    return String(a.type||'').trim()
+      ? ('Start '+a.year+' “'+a.type+'”')
+      /* A blank type is not a new value to show verbatim — there is nothing to
+         show. Naming the absence is the honest form of the same rule. */
+      : ('The '+a.year+' row states no increase type');
+  return '';                                  // 'expiring' and 'none' offer nothing to press
+}
+function actionReason(a){
+  if(!a)return '';
+  if(a.kind==='unsupported'&&!String(a.type||'').trim())
+    return 'The renewal schedule has a row effective '+fmtDateLong(a.effective)
+      +' with no increase type on it. Until the schedule says what kind of increase it is, '
+      +'there is nothing to start from it.';
+  if(a.kind==='unsupported')
+    return 'The renewal schedule calls the next increase “'+a.type+'”, effective '
+      +fmtDateLong(a.effective)+'. This app builds OCAF and RCS packages, so there is nothing '
+      +'to start from that row.';
+  /* Stated as the fact it is. The tracker records a date, not an outcome: it
+     does not know whether the contract renews, so neither do we, and neither
+     "finished" nor "awaiting the next schedule" would be honest. */
+  if(a.kind==='expiring')
+    return 'The renewal schedule ends here: the HAP contract expires '+fmtDateLong(a.effective)
+      +(a.contractExp&&a.contractExp!==a.effective?' (the contract record says '+fmtDateLong(a.contractExp)+')':'')
+      +'. There is no further OCAF or RCS scheduled, so there is nothing to start. If the '
+      +'contract is renewed, the schedule will carry it again.';
+  if(a.kind==='gap')
+    return 'The renewal schedule stops at an option-term expiry on '+fmtDateLong(a.effective)
+      +', but the contract runs to '+fmtDateLong(a.contractExp)+' — so this is a gap in the '
+      +'schedule rather than a contract ending. Starting a package here asks you for the '
+      +'program and the effective date.';
+  if(a.kind==='awaiting')
+    return 'The renewal schedule has no further OCAF or RCS for this property, and does not '
+      +'end on a contract expiry — it simply stops. Starting a package here asks you for '
+      +'the program and the effective date.';
+  if(a.kind==='view')return 'This package has been generated. Opening it reopens the form.';
+  return '';
+}
+/* Text only — no chevron, no arrow glyph, no icon. smoke_combined.js asserts no
+   <svg> appears anywhere inside #menuGrid; that check is what keeps the
+   completion ring off a property card, and an arrow here would fail it with a
+   message about rings. A record with no tracker row gets no button at all: it
+   already sits under its own "Not in the renewal schedule" heading, and its
+   action is #bNewCycle on the launcher. */
+function actionBtnHtml(p){
+  const a=p.hap&&p.action;if(!a||a.kind==='none')return '';
+  const lab=actionLabel(a);if(!lab)return '';
+  const why=actionReason(a);
+  /* The reason hangs on the WRAPPER. A disabled <button> swallows its own
+     tooltip in Firefox and Safari, and "disabled, with a reason" is the one
+     branch the design demands a reason for — so on two of three browsers the
+     reason was unreachable exactly where it mattered. */
+  return '<div class="pc-act"'+(why?' title="'+esc(why)+'"':'')+'><button class="btn sm p pc-go" data-pact="'+esc(p.code)+'"'
+    +(a.disabled?' disabled':'')+'>'+esc(lab)+'</button></div>';
+}
+
+/* ---- the filter rail: named views over one portfolio ------------------
+   Six rows, then a Programs group. Every property lands in exactly ONE of the
+   first five, so the counts sum to "All properties" — which is why viewOf()
+   below is evaluated once per property per render and its answer stored, rather
+   than the predicate being asked again by whatever needs it next. A rail whose
+   badge says 6 above a grid of 5 cards is the same defect as a ring and a
+   document list disagreeing about one number. */
+const MENU_VIEWS=[
+ {k:'needs',  t:'Needs you'},
+ {k:'coming', t:'Coming up'},
+ {k:'flight', t:'In flight'},
+ {k:'done',   t:'Done for the year'},
+ {k:'undated',t:'Undated'},
+ {k:'all',    t:'All properties'},
+];
+const MENU_PROG_VIEWS=[{k:'rcs',t:'RCS years'},{k:'ocaf',t:'OCAF years'}];
+function _bandNow(){return (window.RCSHap&&window.RCSHap._bandDays&&window.RCSHap._bandDays.now)||30;}
+/* The words live here, not in a click handler (FORM-RULES 17): the lede under
+   the heading and the copy shown when a view is empty are two halves of one
+   explanation and must be edited together. Every empty state names the next
+   place to look, because a chosen view that later empties STAYS chosen — which
+   is the point, but reads as a bug to anyone who has not been told. */
+function menuViewCopy(k){
+  const N=_bandNow();
+  const M={
+   needs:{lede:'Due in the next '+N+' days, or already late — and no package started yet. Earliest first.',
+          empty:'Nothing is due in the next '+N+' days. Coming up has what is next.'},
+   coming:{lede:'Due more than '+N+' days out, with no package started yet. Earliest first.',
+          empty:'Nothing further out is waiting on you.'},
+   flight:{lede:'A package is already open for the renewal that is next due. Earliest first.',
+          empty:'No package is open. Start one from Needs you or Coming up.'},
+   done:{lede:'This renewal’s package has been generated. Nothing further is owed until the next one comes due.',
+          empty:'No package has been generated for a current renewal yet.'},
+   /* Three reasons, not two. The schedule can end on the contract's own expiry,
+      it can simply stop, or the record can carry no tracker code at all — and a
+      lede that named only the last two read as though an expiring contract were
+      a data problem. */
+   undated:{lede:'No renewal scheduled — the schedule ends at a contract expiry, it stops without one, or the record is not in the schedule at all.',
+          empty:'Every property has a date.'},
+   all:{lede:'Every property: those in the schedule by deadline, then the records the schedule does not carry.',
+          empty:'No properties yet.'},
+   rcs:{lede:'Properties whose next renewal sets rents from a market study. Earliest first.',
+          empty:'No market resets are next up.'},
+   ocaf:{lede:'Properties whose next renewal applies HUD’s published operating-cost factor. Earliest first.',
+          empty:'No factor adjustments are next up.'},
+  };
+  return M[k]||M.all;
+}
+
+/* First match wins, in rail order.
+
+   In flight and Done for the year come from `action`, NOT from a second look at
+   the property's cycles. Matching a package to the renewal it belongs to is one
+   rule — exact effective date first, year+program as a fallback, suppressed
+   where a year holds two startable rows of the same program — and it lives in
+   hap.js where the real corpus can hold it to account. A copy here would be a
+   second implementation that drifts: the first draft of it had neither the exact
+   match nor the concurrency guard, so on Luther Towers the rail and the button
+   would have disagreed about whether the September package existed.
+
+   Undated is disjoint from the rest for free: deadline is computed from
+   effective whenever due is missing, so an undated property is one with no row
+   to be about — awaiting, a gap, or an expiring contract — and none of those can
+   have a matching package. */
+function viewOf(p){
+  if(!p.hap)return 'undated';                          // no tracker code: no deadline to have
+  const a=p.action||{};
+  if(a.kind==='continue')return 'flight';
+  if(a.kind==='view')return 'done';
+  if(!p.deadline)return 'undated';
+  return (p.band==='overdue'||p.band==='now')?'needs':'coming';
+}
+function railHtml(counts,late,view){
+  const row=v=>{const C=menuViewCopy(v.k);
+    return '<button class="mr-row'+(v.k===view?' on':'')+(counts[v.k]?'':' zero')+'" data-view="'+v.k+'"'
+    +(v.k===view?' aria-current="true"':'')+' title="'+esc(C.lede)+'">'
+    +'<span class="mr-t">'+esc(v.t)+'</span>'
+    /* Only In flight can carry this. The partition puts local progress above the
+       deadline, so a package that is late but started sits here rather than in
+       Needs you — without the dot it would be invisible. Coming up cannot hold a
+       late one by construction, and Done owes nothing. */
+    +(late[v.k]?'<span class="mr-late" title="'+late[v.k]+' of these is already late or due within '+_bandNow()+' days"></span>':'')
+    +'<span class="mr-n">'+counts[v.k]+'</span></button>';};
+  return '<div class="mr-g">'+MENU_VIEWS.map(row).join('')+'</div>'
+    +'<div class="mr-g"><div class="mr-gt">Programs</div>'+MENU_PROG_VIEWS.map(row).join('')+'</div>';
+}
+
 /* The deadline, said the way a person would say it. */
 function dueLine(p){
+  const a=p.action;
+  /* "Awaiting the next schedule" once covered every property with no future
+     startable row. It asserts a next schedule, and for the 125 whose schedule
+     ends on their contract's own expiry there is no evidence of one — so each
+     of the three shapes says only what the tracker actually holds. */
+  /* Neutral, not amber. Amber on this line means "due within 30 days"; a
+     contract expiry is a fact about the contract, not a countdown, and painting
+     every one of them amber regardless of when it falls would be an indicator
+     asserting rather than computing (FORM-RULES 15). What says there is nothing
+     to do here is the absence of an action button. */
+  if(a&&a.kind==='expiring')return '<div class="pc-due ok">Contract expires '+esc(fmtDateShort(a.effective))+'</div>';
+  if(a&&a.kind==='gap')return '<div class="pc-due ok">No renewal scheduled after '+esc(fmtDateShort(a.effective))+'</div>';
   if(p.status==='awaiting-schedule')return '<div class="pc-due ok">Awaiting the next schedule</div>';
   if(!p.deadline)return '<div class="pc-due ok">No date scheduled</div>';
   const d=p.days;
@@ -5500,6 +5755,28 @@ async function openHapProperty(code){
     catch(e){saveFailedModal(e);return;}
   }
   if(pid)openLauncher(pid);
+  return pid;                    // callers chain a package action onto the record it just made
+}
+/* The card's one action. Every branch goes through the record first, because a
+   tracker property has no pid until somebody opens it, and every step after this
+   one — the dialog, the cycle, the form — is keyed on activePid. Cancelling the
+   dialog therefore leaves you on the launcher, which is somewhere sensible. */
+async function primaryActionClick(code){
+  const p=hapProperties().find(x=>x.code===code);if(!p)return;
+  const a=p.action;
+  /* Belt and braces on top of the disabled attribute — a disabled <button>
+     fires no click, but the rule reads at the decision site instead of having
+     to be inferred from markup. */
+  if(!a||a.disabled)return;
+  const pid=await openHapProperty(code);if(!pid)return;
+  if(a.kind==='view'||a.kind==='continue'){
+    if(a.cid){await openCycleForm(a.cid);return;}
+    /* the cycle vanished between render and click — fall through to the dialog
+       rather than open nothing */
+  }
+  if(a.kind==='start')
+    return newCycleDialog({program:(a.programs[0]||''),effective:a.effective,type:a.type,deadline:a.deadline});
+  return newCycleDialog();       // awaiting / gap: the schedule has nothing to prefill, so ask
 }
 function renderMenu(){
   const q=((el('menuSearch')&&el('menuSearch').value)||'').toLowerCase();
@@ -5507,25 +5784,69 @@ function renderMenu(){
   const lensed=hp.filter(p=>menuLens==='all'||!pmName||p.pm===pmName);
   const orphans=(mpdb.listProperties()||[]).filter(p=>!hp.some(h=>h.id===p.id));
   const all=hp.length?lensed.concat(orphans.map(p=>Object.assign({},p,{hap:false}))):(mpdb.listProperties()||[]);
-  const props=all.filter(p=>!q||(p.name+' '+(p.alias||'')+' '+p.fha+' '+(p.city_state||'')).toLowerCase().indexOf(q)>=0);if(sortMode==='updated'){const idn=x=>parseInt(String(x).replace(/\D/g,''),10)||0;props.sort((a,b)=>String(b.updated_at||'').localeCompare(String(a.updated_at||''))||(idn(b.id)-idn(a.id)));}else if(q){const _sc=p=>{const nm=String(p.name||'').toLowerCase();if(nm.startsWith(q))return 0;if(nm.split(/\s+/).some(w=>w.startsWith(q)))return 1;if(nm.indexOf(q)>=0)return 2;const al=String(p.alias||'').toLowerCase();if(al.startsWith(q)||al.split(/\s+/).some(w=>w.startsWith(q)))return 3;return 4;};props.sort((a,b)=>_sc(a)-_sc(b)||String(a.name||'').localeCompare(String(b.name||'')));}
-  const need=all.filter(p=>p.completeness<1).length;
+  /* The rail is conditional on the tracker having supplied properties. With
+     none \u2014 ?selftest=1, the node harnesses, any pre-tracker deployment, and the
+     RA port, whose build does not concatenate hap.js at all \u2014 the page keeps the
+     flat grid it had. That is what stops an empty rail rendering where there are
+     no bands to sort into. */
+  const hasRail=hp.length>0;
+  /* ONE pass. Every count and every card filter reads p._view; the predicate is
+     never asked a second time. Counted over the lensed set but BEFORE the search
+     query: the lens changes whose work it is, so a manager reading "12" must
+     find 12 cards, while search is a find-within and a rail that renumbers under
+     the cursor as you type is a moving target. */
+  const counts={},late={};
+  MENU_VIEWS.concat(MENU_PROG_VIEWS).forEach(v=>{counts[v.k]=0;late[v.k]=0;});
+  if(hasRail)all.forEach(p=>{p._view=viewOf(p);counts[p._view]++;counts.all++;
+    if(p.program==='RCS')counts.rcs++;else if(p.program==='OCAF')counts.ocaf++;
+    if(p._view==='flight'&&(p.band==='overdue'||p.band==='now'))late.flight++;});
+  /* Resolved only while unset. A view chosen explicitly and then emptied STAYS
+     chosen and shows its empty state \u2014 finishing the last item in Needs you
+     should show you an empty Needs you, not teleport you somewhere else. */
+  if(hasRail&&!menuView)menuView=(MENU_VIEWS.find(v=>counts[v.k])||{k:'all'}).k;
+  /* Searching forces All without overwriting the stored view, so clearing the
+     box returns you where you were and "I know it exists, where is it?" cannot
+     happen inside a filtered view. */
+  const view=q?'all':menuView;
+  const inView=p=>!hasRail||view==='all'||(view==='rcs'?p.program==='RCS':view==='ocaf'?p.program==='OCAF':p._view===view);
+  const props=all.filter(inView).filter(p=>!q||(p.name+' '+(p.alias||'')+' '+p.fha+' '+(p.city_state||'')).toLowerCase().indexOf(q)>=0);
+  if(q){const _sc=p=>{const nm=String(p.name||'').toLowerCase();if(nm.startsWith(q))return 0;if(nm.split(/\s+/).some(w=>w.startsWith(q)))return 1;if(nm.indexOf(q)>=0)return 2;const al=String(p.alias||'').toLowerCase();if(al.startsWith(q)||al.split(/\s+/).some(w=>w.startsWith(q)))return 3;return 4;};props.sort((a,b)=>_sc(a)-_sc(b)||String(a.name||'').localeCompare(String(b.name||'')));}
+  else if(hasRail)props.sort((a,b)=>String(a.deadline||'9999-99-99').localeCompare(String(b.deadline||'9999-99-99'))||String(a.name||'').localeCompare(String(b.name||'')));
+  _menuCounts=counts;
   if(el('menuCount')){
     /* A record with no tracker code is assigned to nobody, so counting it among
        the properties assigned to you overstates your own workload. */
     const tracked=all.filter(p=>p.hap),other=all.length-tracked.length;
-    const hot=tracked.filter(p=>p.band==='overdue'||p.band==='now').length;
     const bits=[];
-    if(hot)bits.push(hot+' need'+(hot===1?'s':'')+' attention now');
-    if(hp.length){
+    if(hasRail){
+      /* Scope only. "Needs you" in the rail is the count of what wants doing,
+         and it is NOT the same number as overdue+now \u2014 the ones already in
+         flight are excluded from it. Printing both under one name is how two
+         numbers end up disagreeing in public. */
       bits.push(tracked.length+(tracked.length===1?' property':' properties')+(menuLens==='mine'&&pmName?' assigned to you':''));
       if(menuLens==='mine'&&pmName)bits.push(hp.length+' in the portfolio');
       if(other)bits.push(other+' not in the schedule');
     }else{
+      const need=all.filter(p=>p.completeness<1).length;
       bits.push(all.length+(all.length===1?' property':' properties'));
       if(need)bits.push(need+' need'+(need===1?'s':'')+' review');
     }
     el('menuCount').textContent=bits.join('  \u00b7  ');
   }
+  if(el('menuRail'))el('menuRail').innerHTML=hasRail?railHtml(counts,late,view):'';
+  /* Emptying the rail does not collapse the column it sits in. Without this the
+     no-tracker fallback — the path that is supposed to look like the old flat
+     grid — draws every card behind 222px of nothing. */
+  if(el('menuBody'))el('menuBody').classList.toggle('norail',!hasRail);
+  if(el('menuLede'))el('menuLede').textContent=hasRail?menuViewCopy(view).lede:'';
+  /* The card is a CONTAINER holding two sibling buttons, not a button with
+     another inside it. A <button> nested in a <button> is invalid: the parser
+     closes the outer element and re-parents the inner one as a sibling, so the
+     card loses its bottom half in a real browser while every innerHTML-regex
+     assertion still sees exactly what was emitted. Siblings also mean no
+     stopPropagation anywhere — and a stopPropagation guarding against a DOM
+     shape is the first thing to break when the shape changes — and both halves
+     are tab-reachable. */
   const card=p=>{const pct=Math.round(p.completeness*100);
     const al=(p.alias||'').trim();const showAl=al&&al.toLowerCase()!==String(p.name||'').trim().toLowerCase();
     /* The gallery is read by scanning it — six cards, and the eye is looking
@@ -5533,24 +5854,45 @@ function renderMenu(){
        small grey text per card that nobody reads six of. The caption still
        says what the ring counts; it says it on hover, where a reader who
        wants it asks for it. */
-    return '<button class="pcard" data-open="'+p.id+'"'+(p.caption?' title="'+esc(p.caption)+'"':'')+'><div class="pc-top"><div class="pc-name">'+esc(p.name)+(showAl?'<span class="pc-alias">&ldquo;'+esc(al)+'&rdquo;</span>':'')+'</div>'+profileChip(p)+'</div>'
+    /* A row with no type still gets a pill — saying so. Rendering nothing put
+       the card's most important fact (we cannot read this row) nowhere. */
+    const _pg=p.hap?(String(p.program||'').trim()||(p.action&&p.action.kind==='unsupported'?'no type stated':'')):'';
+    const prog=_pg?('<span class="pc-prog'+(_pg==='OCAF'?' ocaf':_pg==='RCS'?'':' unk')+'">'+esc(_pg)+'</span>'):'';
+    const body='<button class="pc-body" data-open="'+p.id+'"'+(p.caption?' title="'+esc(p.caption)+'"':'')+'><div class="pc-top"><div class="pc-name">'+esc(p.name)+(showAl?'<span class="pc-alias">&ldquo;'+esc(al)+'&rdquo;</span>':'')+'</div>'+profileChip(p)+'</div>'
       +'<div class="pc-meta">'+(p.hap?(esc(p.pm||'Unassigned')+(p.city_state?' &middot; '+esc(p.city_state):'')):(esc(p.fha)+(p.city_state?' &middot; '+esc(p.city_state):'')))+'</div>'
       +(p.hap?dueLine(p):'')
       +'<div class="pc-div"></div>'
-      +'<div class="pc-foot">'+(p.hap&&p.program?'<span class="pc-prog'+(p.program==='OCAF'?' ocaf':'')+'">'+esc(p.program)+'</span>':'')
+      +'<div class="pc-foot">'+prog
       +'<span class="pc-units">'+(p.hap&&!p.started?'Not started':(p.total_units+' unit'+(p.total_units===1?'':'s')+(p.unit_types?' &middot; '+p.unit_types+' type'+(p.unit_types===1?'':'s'):'')))+'</span>'
-      +(p.hap&&!p.started?'':'<span class="pc-upd" title="'+esc(updTitle(p.updated_at))+'">Updated '+relTime(p.updated_at)+'</span>')+'</div></button>';};
+      +(p.hap&&!p.started?'':'<span class="pc-upd" title="'+esc(updTitle(p.updated_at))+'">Updated '+relTime(p.updated_at)+'</span>')+'</div></button>';
+    return '<div class="pcard">'+body+actionBtnHtml(p)+'</div>';};
+  /* A "+ New property" tile sitting inside "Needs you" would imply it belongs to
+     that band. #bNewProperty in the toolbar is always there, so the tile appears
+     only where it means what it looks like. */
   const newTile='<button class="pcard newcard" id="tileNew"><span class="plus">+</span><span>New property</span></button>';
   const empty='<div class="mempty">No properties match &ldquo;'+esc(q)+'&rdquo;. <span class="link" id="mClear">Clear search</span></div>';
+  const viewEmpty='<div class="mempty">'+esc(menuViewCopy(view).empty)+'</div>';
   /* Two populations, and they must be told apart on sight: mixed together, a
      record with no renewal date reads as a property with nothing due. */
   const _tr=props.filter(p=>p.hap),_or=props.filter(p=>!p.hap);
   const _body=(_tr.length?_tr.map(card).join(''):'')
     +((_or.length&&_tr.length)?'<div class="mgroup">Not in the renewal schedule</div>':'')
     +(_or.length?_or.map(card).join(''):'');
-  el('menuGrid').innerHTML=_body+(q&&!props.length?empty:'')+(q?'':newTile);
+  el('menuGrid').innerHTML=_body+(q&&!props.length?empty:'')
+    +((hasRail&&!q&&!props.length)?viewEmpty:'')
+    +((!q&&(!hasRail||view==='all'))?newTile:'');
   document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>{const v=b.getAttribute('data-open');
     if(v.indexOf('hap:')===0)openHapProperty(v.slice(4));else openLauncher(v);});
+  /* No e.stopPropagation(): the two buttons are siblings, and adding one would
+     be a lie about the structure. */
+  document.querySelectorAll('[data-pact]').forEach(b=>b.onclick=()=>primaryActionClick(b.getAttribute('data-pact')));
+  /* Wired here rather than in boot(): the rail is rebuilt on every render, so a
+     one-time wiring would go stale on the first click. Clearing the search is
+     deliberate — search forces the All view, and a stale query would silently
+     override the row just clicked. */
+  document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{
+    menuView=b.getAttribute('data-view');
+    if(el('menuSearch'))el('menuSearch').value='';renderMenu();});
   const tn=el('tileNew');if(tn)tn.onclick=createProperty;
   const mc=el('mClear');if(mc)mc.onclick=()=>{if(el('menuSearch'))el('menuSearch').value='';renderMenu();};
 }
@@ -5635,6 +5977,32 @@ function cyclePane(c){
               :'<div class="aff-top"><span class="aff-k">UAF</span><span class="aff-pass over">UA components not entered \u2014 open the package</span></div>';}
   return '<div class="aff">'+rows+'</div>';
 }
+/* The tracker's answer to "what is next here", on the property's own page. It
+   goes through hapForPid -> hapProperties -> actionFor, the same derivation the
+   card uses, so the two cannot disagree about what the button says.
+
+   The reason sentence is shown as prose here, not only as a title: the card has
+   no room for it, the profile does, and an unrecognised increase type or an
+   expiring contract is exactly the thing that needs reading properly. */
+function nextUpHtml(){
+  const p=hapForPid(activePid);if(!p||!p.action||p.action.kind==='none')return '';
+  const a=p.action,lab=actionLabel(a),why=actionReason(a);
+  /* One fact line, then the deadline underneath it — and the deadline line only
+     where there IS a renewal to count down to. Printing both for an expiring
+     contract said "Contract expires March 17, 2025" twice, one line under the
+     other, because .nu-v and dueLine were both answering "what is next". */
+  const scheduled=!!(a.effective&&a.year);
+  const v=scheduled?esc(a.type+' · effective '+fmtDateLong(a.effective))
+    :a.kind==='expiring'?esc('Contract expires '+fmtDateLong(a.effective))
+    :a.kind==='gap'?esc('No renewal scheduled after '+fmtDateLong(a.effective))
+    :'Not scheduled';
+  return '<div class="nextup"><div class="nu-l">'
+    +'<div class="nu-k">NEXT RENEWAL</div>'
+    +'<div class="nu-v">'+v+'</div>'
+    +(scheduled?dueLine(p):'')
+    +(why?'<div class="lh-note">'+esc(why)+'</div>':'')+'</div>'
+    +(lab?'<button class="btn p" id="nuGo"'+(a.disabled?' disabled':'')+'>'+esc(lab)+'</button>':'')+'</div>';
+}
 function cyclesHtml(){
   const cs=mpdb.listCycles(activePid);
   const btn='<button class="btn p" id="bNewCycle" style="margin-bottom:10px">+ Start new package</button>';
@@ -5650,7 +6018,10 @@ function cyclesHtml(){
   }).join('');
 }
 function wireCycles(){
-  const b=el('bNewCycle');if(b)b.onclick=newCycleDialog;
+  /* Wrapped, not passed by reference: newCycleDialog now takes a prefill, and a
+     bare handler would hand it the click event. */
+  const b=el('bNewCycle');if(b)b.onclick=()=>newCycleDialog();
+  const nu=el('nuGo');if(nu)nu.onclick=()=>{const h=hapForPid(activePid);if(h)primaryActionClick(h.code);};
   document.querySelectorAll('[data-cyopen]').forEach(x=>x.onclick=()=>openCycleForm(x.getAttribute('data-cyopen')));
   document.querySelectorAll('[data-cydel]').forEach(x=>x.onclick=(e)=>{e.stopPropagation();const id=x.getAttribute('data-cydel');
     dialogConfirm('Delete package','This permanently removes the package and its saved data. The property record is untouched.','Delete',true,async()=>{try{await mpdb.deleteCycle(id);renderLauncher();}catch(e){saveFailedModal(e);}});});
@@ -5669,7 +6040,26 @@ function bootstrapFirstCycle(p){
     .then(()=>{if(activePid===pid)renderLauncher();})
     .catch(e=>saveFailedModal(e));
 }
-function newCycleDialog(){
+/* `pre` is the tracker's answer, handed in by the card's Start button:
+   {program, effective, type, deadline}. It PRE-FILLS this dialog rather than
+   bypassing it.
+
+   Why a dialog and not a silent createCycle. createCycle writes
+   rent_schedule.date_eff_source='custom' and date_eff_custom=<date> for any
+   effective_date it is given (db.js / db.supabase.js), and 'custom' means "the
+   user typed this". Starting silently would therefore have the app assert a
+   hand-entered date for a value nobody ever saw — the silent overwrite the
+   design's Provenance section forbids, dressed up as a feature — and would make
+   a second path to package creation, which FORM-RULES 17 says has already failed
+   four times. One confirming click, on a dialog that shows the date and names
+   where it came from, is what is honest under the cell model as it stands. The
+   real fix is a rent_schedule.date_eff_hap source row with its own dropdown
+   entry, provenance colour and _reviewed grammar; that is its own unit of work.
+
+   UAF is deliberately not pre-ticked: the tracker's Next UA Baseline column is
+   empty on all 2853 rows, so it has no opinion about utility allowances and
+   asserting one would be inventing data. */
+function newCycleDialog(pre){
   let effPh='';try{const _cys=(mpdb.listCycles(activePid)||[]).filter(c=>c.effective_date);
     if(_cys.length){const d=String(_cys.map(c=>String(c.effective_date)).sort().pop());const m=d.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m)effPh=m[2]+'/'+m[3]+'/'+((+m[1])+1);}}catch(e){}
   /* Two cards for one question. A year sets its rents by a market study or by
@@ -5683,15 +6073,18 @@ function newCycleDialog(){
     +'<span class="cyc-s">'+sub+'</span></label>';
   modal('<div class="dlg-t">Start new package</div>'
     +'<div class="dlg-sub">'+esc((((mpdb.listProperties()||[]).find(p=>p.id===activePid))||{}).name||'')+(effPh?(' \u00b7 the next one after '+esc(String(effPh).slice(-4))):'')+'</div>'
+    +((pre&&pre.effective)?'<div class="lh-note" style="margin:-4px 0 12px">'+esc('The renewal schedule has this as an '+(pre.type||'')+' effective '+fmtDateLong(pre.effective)+'.')+'</div>':'')
     +'<div class="dlg-field"><label>How are the rents being set?</label>'
     +'<div class="cypgs">'+card('cyRCS','RCS','Market reset','A rent comparability study sets the rents. Every fifth year.')
                             +card('cyOCAF','OCAF','Factor adjustment','HUD\u2019s published operating-cost factor sets the rents.')+'</div></div>'
     +'<div class="dlg-field"><label class="cyaddl">And alongside it</label>'
     +'<label class="cyopt cyadd"><input type="checkbox" id="cyUAF"> <span><b>UAF</b> \u2014 revise the utility allowances in the same package</span></label></div>'
-    +'<div class="dlg-field"><label>Rents effective (mm/dd/yyyy)</label><input id="cyEff" autocomplete="off" value="'+esc(effPh)+'" placeholder="'+esc(effPh)+'"></div>'
+    +'<div class="dlg-field"><label>Rents effective (mm/dd/yyyy)</label><input id="cyEff" autocomplete="off" value="'+esc((pre&&pre.effective)?fmtDate(pre.effective):effPh)+'" placeholder="'+esc(effPh)+'"></div>'
     +'<div class="autherr" id="cyErr"></div>'
     +'<div class="dlg-row"><button class="btn" id="dlgCancel">Cancel</button><span class="dlg-sp"></span><button class="btn p" id="dlgOk">Create</button></div>');
   const rcs=el('cyRCS'),ocaf=el('cyOCAF'),uaf=el('cyUAF'),err=el('cyErr');
+  if(pre&&pre.program==='ocaf'&&ocaf)ocaf.checked=true;
+  else if(pre&&pre.program==='rcs'&&rcs)rcs.checked=true;
   const ce=el('cyEff');if(ce)ce.addEventListener('input',()=>{ce.value=fmtDateInput(ce.value);});
   _dlgEnter=()=>{const ok=el('dlgOk');if(ok)ok.click();};
   /* One radio group. The exclusion is the control's own, not a pair of
@@ -5736,7 +6129,7 @@ function renderLauncher(){
       +(p.entity?'<div class="lh-entity">'+esc(p.entity)+'</div>':'')+'</div>'
       +'<div class="lh-right"><div class="lh-tools"><button class="txtbtn" id="pRename">Rename</button><span class="dotsep">&middot;</span><button class="txtbtn del" id="pDelete">Delete</button></div><div class="lh-prof">'+(profileChip(p)||'<span class="pchip ok">Profile complete</span>')+'</div></div></div>'
     +'<div class="lsec"><div class="lsec-t">Property letterhead</div>'+letter+'<div class="lh-note">The uploaded letterhead appears on the tenant notice. All other letterheads are built into the document templates.</div><input type="file" id="lhFile" accept="image/*,.pdf,application/pdf" style="display:none"></div>'
-    +'<div class="lsec"><div class="lsec-t">Packages</div>'+cyclesHtml()+'<div class="progrow" style="margin-top:10px">'+soon('BBRA','Budget-Based Rent Adjustment')+'</div></div>';
+    +'<div class="lsec"><div class="lsec-t">Packages</div>'+nextUpHtml()+cyclesHtml()+'<div class="progrow" style="margin-top:10px">'+soon('BBRA','Budget-Based Rent Adjustment')+'</div></div>';
   wireCycles();
   bootstrapFirstCycle(p);
   el('pRename').onclick=async()=>{
@@ -6450,8 +6843,11 @@ async function boot(){
   const bn=el('bNewProperty');if(bn)bn.onclick=createProperty;
   const who=el('menuWho');if(who)who.onclick=pickWhoDialog;
   document.querySelectorAll('[data-lens]').forEach(b=>b.onclick=()=>{menuLens=b.getAttribute('data-lens');
-    document.querySelectorAll('[data-lens]').forEach(x=>x.classList.toggle('on',x===b));renderMenu();});
-  document.querySelectorAll('[data-sort]').forEach(b=>b.onclick=()=>{sortMode=b.getAttribute('data-sort');document.querySelectorAll('[data-sort]').forEach(x=>x.classList.toggle('on',x===b));renderMenu();});
+    document.querySelectorAll('[data-lens]').forEach(x=>x.classList.toggle('on',x===b));
+    /* Mine and All are different questions, and the first non-empty view for one
+       is rarely the first for the other — so the rail re-resolves rather than
+       landing you in a view that is empty only because the lens moved. */
+    menuView='';renderMenu();});
   const be=el('bExit');if(be)be.onclick=requestExit;
   wireHome();
   const _revertToSaved=async()=>{form=await store.fillForm();await refreshSnap();fixSavedToggles();deriveUnits();snapForm();renderBody();setStatus('Reverted to the last saved record.');};
@@ -6481,7 +6877,11 @@ const SELFTEST=(typeof location!=='undefined')&&/[?&]selftest=1(&|$)/.test(locat
    units, it is left alone, so a session's edits survive a reload. */
 async function selftestSeed(){
   const ps=mpdb.listProperties();
-  const pid=ps.length?ps[0].id:(await mpdb.createProperty('Beacon Hill Apartments')).id;
+  /* .pid, not .id: createProperty returns {pid} in all three adapters. The bug
+     was dormant only because makeDb always seeds a demo property, so this branch
+     never ran — and adding a coded property to the seed below is exactly the
+     change that would have woken it. */
+  const pid=ps.length?ps[0].id:(await mpdb.createProperty('Beacon Hill Apartments')).pid;
   /* Seed once per browser profile, not once per property: makeDb already ships a
      demo record with a single unit row, so keying off "has any units" meant the
      seed never ran at all. The marker also keeps a reload from wiping edits made
@@ -6531,6 +6931,13 @@ async function selftestSeed(){
   const cells={};Object.keys(m).forEach(k=>{cells[k]={value:m[k]};});
   await mpdb.saveFlat(pid,cells);
   await mpdb.setActive(pid);
+  /* One tracker property, deliberately with NO record behind it: pressing Start
+     on its card has to run openHapProperty -> createProperty -> the dialog ->
+     createCycle, and that whole sequence is what the browser suite drives. */
+  try{await mpdb._setHapRows([
+    {'Property Code':'ST001','Property Name':'Selftest Gardens','Portfolio Mgr':'Claire Beatty',
+     'Increase Type':'OCAF','Rent Increase':'01/01/2030','Due to HUD':'09/01/2029'},
+  ]);}catch(e){}
   try{window.localStorage.setItem('rcs_selftest_seeded','1');}catch(e){}
 }
 window.addEventListener('DOMContentLoaded',async()=>{
@@ -6641,7 +7048,18 @@ __rcsFill:()=>rcsFillFromParsed(),/* The same door for the rent schedule. Fillin
      to start without it — which left this suite calling openForm() against a null
      mpdb and dying before its first assertion. Give it the local adapter instead
      of loosening the real boot. */
-  __localDb:async()=>{mpdb=await makeDb(localAdapter('rcs_test'));return mpdb;}};
+  __localDb:async()=>{mpdb=await makeDb(localAdapter('rcs_test'));return mpdb;},
+  /* The home page's rail. __seedHap clears _hapCache because that cache keys on
+     ROW COUNT alone — reseeding a different tracker with the same number of rows
+     would otherwise serve the old bands, which is harmless in production (the
+     table is read once at boot) and silently wrong in any suite that seeds
+     twice. */
+  __db:()=>mpdb,
+  __seedHap:async(rows)=>{_hapCache=null;await mpdb._setHapRows(rows);},
+  __menuView:()=>menuView,
+  __setMenuView:(v)=>{menuView=v;renderMenu();},
+  __menuCounts:()=>Object.assign({},_menuCounts),
+  __hapProps:()=>hapProperties()};
 if(typeof module!=='undefined')module.exports=__API;
 if(SELFTEST)window.__t=__API;   // browser gets the identical surface, flag-gated
 /* ============ Tier 3: a scanned schedule, read by OCR ============
@@ -7484,6 +7902,20 @@ window.RCSParse={norm:norm,lines:lines,money:money,dec:dec,pageKey:pageKey,
   const STARTABLE = { OCAF: 1, RCS: 1 };
   const isStartable = t => !!STARTABLE[String(t || '').trim().toUpperCase()];
 
+  /* EXPIRES and Request are known non-events: an option term ending, and a PBV.
+     Stepping over them is correct. A type we have never seen is NOT the same
+     thing — it may be the very work that is due — so it stops the action and is
+     shown verbatim rather than skipped, per the design's failure table. A blank
+     type falls here too, deliberately: today's export has none, and one
+     appearing tomorrow is news, not noise. */
+  const KNOWN_SKIP = { EXPIRES: 1, REQUEST: 1 };
+  function typeKind(t) {
+    const u = String(t == null ? '' : t).trim().toUpperCase();
+    if (STARTABLE[u]) return 'startable';
+    if (KNOWN_SKIP[u]) return 'skip';
+    return 'unknown';
+  }
+
   /* Matched by meaning, not spelling. Exact normalized hits are silent; a
      substring fallback is allowed but always reported, so an integration never
      depends on a guess nobody saw. */
@@ -7643,10 +8075,131 @@ window.RCSParse={norm:norm,lines:lines,money:money,dec:dec,pageKey:pageKey,
     return targetFor(rows, code, todayISO) ? 'scheduled' : 'awaiting-schedule';
   }
 
+  /* ---- the primary action ----------------------------------------------
+     What one property's button does. Compares the tracker's next startable row
+     against the packages that exist locally. Facts only — the words are app.js's,
+     because a data module that owns copy is a data module nobody can restyle.
+
+     It lives here and not in app.js so it can be held to the real 2853-row
+     corpus in node, where Bastrop, Fox Hill and Luther Towers already are; and
+     because a second copy in app.js would be one rule with two implementations,
+     which is the shape CLAUDE.md's parity warning is about. hap.js stays
+     read-only: cycles arrive as an argument. */
+
+  /* A TERMINAL `EXPIRES` IS THE CONTRACT EXPIRING, NOT THE TRACKER'S HORIZON.
+     The original design said EXPIRES is never terminal and the contract always
+     renews. Measured against the export, that is wrong as a blanket rule:
+
+       · a mid-schedule EXPIRES — one with a startable row after it — is an
+         option-term boundary and occurs on exactly four properties (Crossroads
+         of Shoreview 75948, Roosevelt 90020, Bastrop Oak Grove 90030, Luther
+         Towers 90111). There the contract carries on and the row is stepped over.
+       · a schedule that ENDS on an EXPIRES is 125 properties, and its date
+         matches the Contract Exp column: 122 of the 125 agree within a year
+         either way. Burt Farms expires 2029-06-26 against a contract ending
+         2029-06-30; Greenacres 2027-10-01 against 2027-09-30.
+       · the horizon theory fails on the distribution besides. Properties whose
+         last row is startable pile up at the export's edge — 99 of 103 in 2039
+         or 2040 — while terminal-EXPIRES years spread evenly from 2027 to 2040.
+         The tracker stops on purpose.
+
+     Three properties are the exception, their contract running two years or more
+     past the EXPIRES row: Sandwich Manor (75444), Country Club Heights (79612)
+     and Fox Hill (90063) — the one the original design generalised from. That is
+     a gap in the schedule, not an expiry, and it is said differently.
+
+     Either way the property STAYS listed and is never rendered finished or
+     retired: the tracker records a date, not an outcome, and whether a contract
+     renews is a business fact it does not hold. */
+  const GAP_DAYS = 730;
+
+  function actionFor(rows, code, cycles, todayISO) {
+    const t = todayISO || isoOf(new Date());
+    const out = {
+      kind: 'none', type: '', year: '', effective: '', deadline: '', contractExp: '',
+      cid: null, programs: [], label: '', disabled: true, reasonCode: '',
+    };
+    if (!inScope(rows)[code]) { out.reasonCode = 'out-of-scope'; return out; }
+
+    const mine = rows.filter(r => r.code === code)
+      .sort((a, b) => (a.effective < b.effective ? -1 : a.effective > b.effective ? 1 : 0));
+    const future = mine.filter(r => r.effective >= t);
+    const target = future.find(r => typeKind(r.type) === 'startable') || null;
+    const blocker = future.find(r => typeKind(r.type) === 'unknown') || null;
+
+    /* An unrecognised type only blocks when it comes FIRST. A property with an
+       OCAF in 2027 and something strange in 2032 still starts its 2027 OCAF. */
+    if (blocker && (!target || blocker.effective < target.effective)) {
+      return Object.assign(out, {
+        kind: 'unsupported', type: blocker.type, year: blocker.effective.slice(0, 4),
+        effective: blocker.effective, deadline: blocker.deadline,
+        disabled: true, reasonCode: 'unknown-type',
+      });
+    }
+
+    if (!target) {
+      const last = mine[mine.length - 1] || null;
+      if (last && String(last.type).trim().toUpperCase() === 'EXPIRES') {
+        const beyond = last.contractExp ? daysBetween(last.effective, last.contractExp) : null;
+        if (beyond != null && beyond >= GAP_DAYS)
+          return Object.assign(out, {
+            kind: 'gap', type: last.type, effective: last.effective,
+            contractExp: last.contractExp, disabled: false, reasonCode: 'schedule-gap',
+          });
+        return Object.assign(out, {
+          kind: 'expiring', type: last.type, effective: last.effective,
+          contractExp: last.contractExp, disabled: true, reasonCode: 'contract-expires',
+        });
+      }
+      /* The schedule simply runs out — on a startable row, or on a PBV request.
+         That IS the tracker's horizon, and the contract is assumed to carry on. */
+      return Object.assign(out, { kind: 'awaiting', disabled: false, reasonCode: 'no-future-row' });
+    }
+
+    const year = target.effective.slice(0, 4);
+    const prog = target.type.toLowerCase();
+    const base = {
+      type: target.type, year, effective: target.effective, deadline: target.deadline,
+      programs: [prog], label: year, disabled: false, reasonCode: '',
+    };
+
+    /* Two startable rows in one calendar year means year+program cannot identify
+       a package. Luther Towers (90111) is the only one of the 249 with that
+       shape — OCAF 2026-09-01 and OCAF 2026-12-06, same label, same program — so
+       the loose match is switched off for exactly it, and the September package
+       cannot be mistaken for the December one. */
+    const concurrent = future.filter(r => typeKind(r.type) === 'startable'
+      && r.effective.slice(0, 4) === year).length > 1;
+    const cyISO = c => String((c && c.effective_date) || '').slice(0, 10);
+    const cyYear = c => cyISO(c).slice(0, 4) || (String((c && c.label) || '').match(/\d{4}/) || [''])[0];
+    const list = Array.isArray(cycles) ? cycles : [];
+    /* Never cycles[0] or c.dominant: listCycles sorts the dominant one first,
+       and the dominant cycle is the latest-effective, which for a property being
+       worked a year ahead is not the one the target names. */
+    const match = list.find(c => cyISO(c) === target.effective)
+      || (concurrent ? null
+        : list.find(c => (c.programs || []).indexOf(prog) >= 0 && cyYear(c) === year))
+      || null;
+
+    if (!match) return Object.assign(out, base, { kind: 'start' });
+    const gen = !!(match.generated && match.generated.at);
+    /* A generated package does NOT advance to the next target. Packages are
+       generated ~120 days before their effective date, so the current target is
+       normally still in the future when its package is done — advancing would
+       put "Start 2028 OCAF" directly beneath a deadline line reading "Due Sep 1
+       · 34 days left", one card describing two renewals. targetFor moves on by
+       itself once the date passes. */
+    return Object.assign(out, base, { kind: gen ? 'view' : 'continue', cid: match.id });
+  }
+
+  /* Exported, because the home page explains these bands in prose ("due in the
+     next 30 days") and prose that restates a constant is a second copy of it.
+     The rail reads _bandDays rather than writing 30 again. */
+  const BAND_DAYS = { now: 30, soon: 90 };
   const BANDS = [
     ['overdue', d => d < 0],
-    ['now', d => d <= 30],
-    ['soon', d => d <= 90],
+    ['now', d => d <= BAND_DAYS.now],
+    ['soon', d => d <= BAND_DAYS.soon],
     ['later', () => true],
   ];
   function bandOf(deadlineISO, todayISO) {
@@ -7726,8 +8279,8 @@ window.RCSParse={norm:norm,lines:lines,money:money,dec:dec,pageKey:pageKey,
   const API = {
     parseCSV, normalize, mapColumns, diagnose, read,
     targetFor, statusFor, inScope, bandOf, managers, codesOf,
-    isStartable, toISO, addDays, daysBetween,
-    _cols: COLS, _required: REQUIRED,
+    isStartable, typeKind, actionFor, toISO, addDays, daysBetween,
+    _cols: COLS, _required: REQUIRED, _bandDays: BAND_DAYS, _gapDays: GAP_DAYS,
   };
   if (typeof window !== 'undefined') window.RCSHap = API;
   if (typeof module !== 'undefined' && module.exports) module.exports = API;

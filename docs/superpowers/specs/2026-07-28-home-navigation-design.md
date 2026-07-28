@@ -168,14 +168,36 @@ each five-year option term while the contract continues. 129 properties mix
 startable and non-startable rows. The target is the earliest future *startable*
 row, skipping past the others.
 
-**`EXPIRES` is never terminal.** We hope and assume the contract renews (Matt,
-2026-07-28). A schedule that runs out at an `EXPIRES` row has reached the
-*tracker's horizon*, not the property's end — the app must never render that as
-finished, retired, or done. Fox Hill (90063) is the live case: OCAF 04/01/2026,
-then EXPIRES 04/01/2027 and nothing after. It stays in the portfolio, awaiting its
-next schedule. This is not an edge case waiting to happen: **125 of the 229
-in-scope properties end on an `EXPIRES` row** within the current export, so the
-opposite assumption would retire over half the portfolio as the calendar advances.
+**`EXPIRES` means two different things, and the difference is measurable.**
+*Corrected 2026-07-28 against the full export. The paragraph this replaces said it
+is never terminal — true of four properties, false of 125.*
+
+**Mid-schedule `EXPIRES` — a row with a startable row after it — is an option-term
+boundary and the contract continues. Skip the row.** That is **4 properties, 6
+rows**: Crossroads of Shoreview (75948), Roosevelt Apartments (90020), Bastrop Oak
+Grove (90030), Luther Towers (90111).
+
+**Terminal `EXPIRES` — the schedule ends on it — is the contract expiration.** 125
+properties, and the row’s date matches the `Contract Exp` column: **107 of 125 agree
+within a year**, 13 have a contract that expired even earlier, and only 3 run 2+
+years beyond. Burt Farms 2029-06-26 / 2029-06-30. Greenacres 2027-10-01 /
+2027-09-30. Victory-Fiedler 2027-08-15 / 2027-08-14. The same date, give or take a
+day.
+
+**The "tracker’s horizon" reading fails on the distribution.** Properties whose last
+row *is* startable pile up at the edge of the file — 48 end in 2039, 51 in 2040,
+**99 of 104**. Terminal-`EXPIRES` years spread evenly from 2027 to 2040. The tracker
+is stopping deliberately, not running out of foresight.
+
+**Fox Hill (90063) is one of three exceptions, not the rule** — and the earlier
+version of this section generalised from it. Its schedule ends `EXPIRES` 04/01/2027
+while its contract runs to 2045-02-28. That is a **gap in the schedule**, and the
+app now says so distinctly.
+
+So: reflect the tracker, invent nothing in either direction. A terminal `EXPIRES`
+states the expiry as a fact, offers no target and no action, and the property stays
+listed — never rendered finished or retired, because the tracker records a date and
+not an outcome, and never handed an invented next renewal either.
 
 **Scope: the 229 properties that have an OCAF or RCS in any year.** The other 20
 never do — pure PBV and expiring-only schedules — and are **excluded entirely**,

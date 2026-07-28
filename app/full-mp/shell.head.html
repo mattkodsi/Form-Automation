@@ -558,8 +558,17 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;borde
 .searchbox input{font:inherit;font-size:13px;padding:9px 14px 9px 35px;border:1px solid #d3dae6;border-radius:9px;background:#fff;width:252px;outline:none;color:#1f2937;transition:border-color .15s,box-shadow .15s}
 .searchbox input:focus{border-color:#1e3a5f;box-shadow:0 0 0 3px rgba(30,58,95,.10)}
 .mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(302px,1fr));gap:16px}
-.pcard{text-align:left;font:inherit;background:#fff;border:1px solid #e6ebf3;border-radius:14px;padding:18px 18px 15px;cursor:pointer;display:flex;flex-direction:column;transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease;min-height:134px}
+/* The card is a container now, not a button — the primary action is a real
+   sibling button inside it, and a button nested in a button is re-parented by
+   the parser. text-align / font / padding / cursor moved to .pc-body with the
+   click target; the box, the min-height and the hover lift stay here so hovering
+   anywhere, the action button included, still lifts the whole card. */
+.pcard{background:#fff;border:1px solid #e6ebf3;border-radius:14px;cursor:default;display:flex;flex-direction:column;transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease;min-height:134px}
 .pcard:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(30,58,95,.12);border-color:#c7d2e6}
+.pc-body{flex:1;display:flex;flex-direction:column;width:100%;text-align:left;font:inherit;background:none;border:0;padding:18px 18px 12px;cursor:pointer;border-radius:14px 14px 0 0}
+.pc-body:focus-visible{outline:2px solid #1e3a5f;outline-offset:-2px}
+.pc-act{padding:0 18px 15px}
+.pc-act .btn{width:100%;padding:7px 10px}
 .pc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
 .pc-name{font-size:15.5px;font-weight:700;color:#1f2937;line-height:1.32} .pc-alias{font-size:12px;font-weight:400;color:#8791a5;margin-left:7px}
 .pc-meta{font-size:12px;color:#7c86a2;margin-top:6px}
@@ -569,7 +578,9 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;borde
 .pc-units{font-size:12px;color:#33405c;font-weight:600}
 .pc-upd{font-size:11px;color:#9aa4b8}
 .ringsvg{flex:0 0 auto}
-.newcard{align-items:center;justify-content:center;gap:10px;flex-direction:row;border:1.5px dashed #c2ccdd;background:transparent;color:#1e3a5f;font-weight:700;font-size:13.5px;min-height:134px}
+/* #tileNew is still a <button> wearing .pcard — a class, not an element — so it
+   has to bring back the padding and text metrics .pcard just gave to .pc-body. */
+.newcard{align-items:center;justify-content:center;gap:10px;flex-direction:row;border:1.5px dashed #c2ccdd;background:transparent;color:#1e3a5f;font:inherit;font-weight:700;font-size:13.5px;padding:18px;cursor:pointer;min-height:134px}
 .newcard:hover{background:#f4f8fc;border-color:#1e3a5f;box-shadow:none;transform:translateY(-2px)}
 .newcard .plus{width:27px;height:27px;border-radius:50%;background:#1e3a5f;color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;line-height:1}
 .mempty{grid-column:1/-1;background:#fff;border:1px dashed #cbd5e1;border-radius:14px;padding:32px;text-align:center;color:#6b7280}
@@ -728,8 +739,45 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;borde
 .pc-due.over{color:#b91c1c}.pc-due.now{color:#b45309}.pc-due.ok{color:#7c86a2}
 .pc-prog{font-size:8.5px;font-weight:800;letter-spacing:.4px;padding:2px 6px;border-radius:4px;text-transform:uppercase;background:#e8effa;color:#1e3a5f}
 .pc-prog.ocaf{background:#eef7ee;color:#15803d}
+/* An increase type we do not recognise must not render in .pc-prog's blue,
+   which already means RCS. An indicator computes; it never asserts. */
+.pc-prog.unk{background:#f1f3f7;color:#5b6577}
+/* the tracker's next renewal, on the property's own page */
+.nextup{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#f7f9fc;border:1px solid #e6ebf3;border-radius:10px;padding:12px 14px;margin-bottom:12px}
+.nu-l{min-width:0}
+.nu-k{font-size:10.5px;font-weight:800;letter-spacing:.5px;color:#8791a5}
+.nu-v{font-size:13.5px;font-weight:700;color:#1f2937;margin-top:3px}
+.nextup .btn{flex:0 0 auto}
 .pc-new{opacity:.72}
 .mgroup{grid-column:1/-1;font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:#7c86a2;margin:14px 0 -4px}
+/* ---- the filter rail: named views, one at a time --------------------- */
+/* minmax(0,1fr) on the second column is load-bearing: without it the auto-fill
+   card grid refuses to shrink below its track size and the page scrolls
+   sideways. */
+.mbody{display:grid;grid-template-columns:196px minmax(0,1fr);gap:26px;align-items:start}
+/* No tracker, no rail, no gutter for one. */
+.mbody.norail{grid-template-columns:minmax(0,1fr);gap:0}
+.mmain{min-width:0}
+.mrail{position:sticky;top:22px;display:flex;flex-direction:column;gap:2px}
+.mr-g+.mr-g{margin-top:16px}
+.mr-gt{font-size:10px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:#9aa4b8;padding:0 10px;margin-bottom:6px}
+.mr-row{display:flex;align-items:center;gap:8px;width:100%;text-align:left;font:inherit;font-size:13px;font-weight:600;color:#5b6577;background:none;border:none;border-radius:9px;padding:8px 10px;cursor:pointer}
+.mr-row:hover{background:#eef2f8;color:#1e3a5f}
+.mr-row.on{background:#1e3a5f;color:#fff}
+.mr-row.zero{color:#a8b0c0}
+.mr-row.zero.on{color:#fff}
+.mr-t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mr-n{font-size:11.5px;font-weight:700;font-variant-numeric:tabular-nums;color:#7c86a2}
+.mr-row.on .mr-n{color:#cdd9ea}
+.mr-row.zero .mr-n{color:#c2c9d6}
+.mr-late{width:6px;height:6px;border-radius:50%;background:#b91c1c;flex:0 0 auto}
+.mlede{font-size:12px;color:#7c86a2;margin:-4px 0 14px;line-height:1.5}
+@media(max-width:900px){
+ .mbody{grid-template-columns:minmax(0,1fr)}
+ .mrail{position:static;flex-direction:row;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:6px}
+ .mr-g{display:flex;gap:6px}.mr-g+.mr-g{margin-top:0}.mr-gt{display:none}
+ .mr-row{width:auto;white-space:nowrap;border:1px solid #e0e5ee;background:#fff}
+}
 .ns8flag{display:inline-flex;align-items:center;gap:8px;cursor:pointer;line-height:1.35;vertical-align:middle} .ns8flag input{accent-color:#1e3a5f;width:14px;height:14px;margin:0;flex:0 0 auto} .partd .rgh{margin-top:12px}
 .safmrhead{display:inline-flex;align-items:center;gap:6px} .rgh .hudbtn,.ocpull .hudbtn{font-size:9.5px;padding:2px 7px;letter-spacing:0;text-transform:none;font-weight:700;white-space:nowrap;color:#b45309} .rgh .hudbtn.off,.ocpull .hudbtn.off{opacity:.55;cursor:default;color:#8791a5;border-color:#d7deea;background:#f1f4f9} .rgh .hudbtn.done,.ocpull .hudbtn.done{color:#166534;border-color:#9cc3a8;background:#eefaf1}
 </style></head>
@@ -752,9 +800,12 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;borde
    <div class="mwrap">
      <div class="mhead">
        <div><h2 class="mtitle">Properties</h2><div class="msub" id="menuCount"></div></div>
-       <div class="mtools"><div class="segmented" id="lensSeg"><button class="seg-b on" data-lens="mine">Mine</button><button class="seg-b" data-lens="all">All</button></div><div class="segmented" id="sortSeg"><button class="seg-b on" data-sort="name">Name</button><button class="seg-b" data-sort="updated">Recently saved</button></div><div class="searchbox"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9aa4b8" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2" stroke-linecap="round"/></svg><input id="menuSearch" placeholder="Search by name or FHA #" autocomplete="off"></div><button class="btn p" id="bNewProperty">+ New property</button></div>
+       <div class="mtools"><div class="segmented" id="lensSeg"><button class="seg-b on" data-lens="mine">Mine</button><button class="seg-b" data-lens="all">All</button></div><div class="searchbox"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9aa4b8" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2" stroke-linecap="round"/></svg><input id="menuSearch" placeholder="Search by name or FHA #" autocomplete="off"></div><button class="btn p" id="bNewProperty">+ New property</button></div>
      </div>
-     <div class="mgrid" id="menuGrid"></div>
+     <div class="mbody" id="menuBody">
+       <nav class="mrail" id="menuRail"></nav>
+       <div class="mmain"><div class="mlede" id="menuLede"></div><div class="mgrid" id="menuGrid"></div></div>
+     </div>
    </div>
  </div>
  <!-- ===================== PROPERTY LAUNCHER ===================== -->
