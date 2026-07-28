@@ -16,7 +16,7 @@ const els={};
 global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>null,querySelectorAll:()=>[],createElement:()=>mk(),addEventListener(){},body:{classList:{toggle(){},contains(){return false;}}}};
 const fs=require('fs'),path=require('path'),os=require('os');
 
-const MIN_CHECKS=165;
+const MIN_CHECKS=170;
 let n=0,fails=0,verdict=null;
 const BAR='='.repeat(68);
 function fail(msg,err){
@@ -255,10 +255,22 @@ async function reader(file){
   const lnRec=await R.readLetter(await reader(path.join(FIX,'belfry-lansing-manor.pdf')));
   app.__setRcsParsed(lnRec);
   app.__edit('units.0.br','1BR');app.__edit('units.0.ba','1BA');
+  app.__edit('units.0.num_units','');
   const m=app.__rcsMatch(0);
-  eq('an ambiguous unit row is recognised as ambiguous',m.many,true);
-  eq('and it yields no value',app.__rcsOf('units.0.proposed'),null);
+  eq('with no unit count there is nothing to tell them apart',m.many,true);
+  eq('and no value is offered',app.__rcsOf('units.0.proposed'),null);
   eq('so nothing is silently guessed',m.u,null);
+
+  /* But the rent schedule writes those rows as "1Bedroom" (32 units) and
+     "1Bedroom Patio" (68). The word Patio is lost turning that into bedrooms
+     and baths — the COUNT is not, and the study states it too. */
+  app.__edit('units.0.num_units','32');
+  eq('the 32-unit row takes the 32-unit line',app.__rcsOf('units.0.proposed'),'1190');
+  eq('and it was the count that decided it',app.__rcsMatch(0).by,'count');
+  app.__edit('units.0.num_units','68');
+  eq('the 68-unit row takes the 68-unit line',app.__rcsOf('units.0.proposed'),'1200');
+  app.__edit('units.0.num_units','99');
+  eq('a count matching neither line still fills nothing',app.__rcsOf('units.0.proposed'),null);
 
   finish();
 })().catch(e=>{fail('the suite threw',e);process.exit(1);});
