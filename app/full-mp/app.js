@@ -548,10 +548,24 @@ function rsCapacity(){
   const R=UNITS.filter(i=>numf(get('units.'+i+'.num_units'))||numf(get('units.'+i+'.proposed'))||get('units.'+i+'.br')||get('units.'+i+'.ba')).length;
   const L=get('ns8.enabled')==='1'?NS8.filter(i=>get('ns8.'+i+'.br')||get('ns8.'+i+'.ba')||get('ns8.'+i+'.avg_rent')||numf(get('ns8.'+i+'.num_units'))>0).length:0;
   const N=NONREV.filter(i=>get('nonrev.'+i+'.use')||get('nonrev.'+i+'.br')||get('nonrev.'+i+'.ba')||get('nonrev.'+i+'.rent')||numf(get('nonrev.'+i+'.num_units'))>0).length;
-  const cut=Math.max(0,R+(L?1+L:0)-11);
+  /* Part A's eleven rows are filled by the ladder gen.js actually walks: the
+     Section 8 rows, then — when there are non-Section 8 units — a banner row and
+     those rows, then a blank spacer and the non-revenue rows. Over eleven it
+     drops the spacer, then drops the non-revenue rows from Part A, and only then
+     truncates. This counted the first two of those three and never the
+     non-revenue rows, so ten unit types plus two non-revenue rows overflowed in
+     silence: the form reported no capacity problem, and the generated schedule
+     printed a Total Units that was short by those units. Mirror the ladder. */
+  const _rows=(spacer,withNr)=>R+(L?1+L:0)+((withNr&&N)?((spacer?1:0)+N):0);
+  let _len=_rows(true,true),nrOffA=false;
+  if(_len>11)_len=_rows(false,true);
+  if(_len>11){_len=_rows(false,false);nrOffA=N>0;}
+  const cut=Math.max(0,_len-11);
   const nrOver=Math.max(0,N-5);
   const msgs=[],flags=[];
-  if(cut){msgs.push('Too many unit types \u2014 rent schedule Part A holds 11 rows'+(L?(' and your '+R+' Section 8 + banner + '+L+' non-Section 8 rows need '+(R+1+L)):'')+'. The last '+cut+' row'+(cut>1?'s':'')+' will be left off the generated rent schedule.');
+  if(nrOffA){msgs.push('Rent schedule Part A holds 11 rows and your unit types fill them, so the '+N+' non-revenue row'+(N===1?'':'s')+' will be left off Part A. They still print in Part D \u2014 but the generated form\u2019s Total Units then counts only the rows on the page.');
+    flags.push(N+' non-revenue row'+(N===1?'':'s')+' pushed off rent schedule Part A');}
+  if(cut){msgs.push('Too many unit types \u2014 rent schedule Part A holds 11 rows'+(L?(' and your '+R+' Section 8 + banner + '+L+' non-Section 8 rows need '+(R+1+L)):'')+'. The last '+cut+' row'+(cut>1?'s':'')+' will be left off the generated rent schedule, and its totals will cover only the rows that printed.');
     flags.push(cut+' unit-type row'+(cut>1?'s':'')+' over the rent schedule\u2019s 11-row limit');}
   if(nrOver){msgs.push('Rent schedule Part D holds 5 non-revenue rows \u2014 the last '+nrOver+' will be left off (and out of the Part D rent total).');
     flags.push(nrOver+' non-revenue unit'+(nrOver>1?'s':'')+' over Part D\u2019s 5 rows');}

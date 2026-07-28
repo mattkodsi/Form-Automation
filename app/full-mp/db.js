@@ -413,11 +413,11 @@ async function makeDb(adapter, opts) {
       return { name: dv(p, 'assets.letterhead_name'), thumb: dv(p, 'assets.letterhead_thumb'), data: dv(p, 'assets.letterhead_data') };
     },
     listContacts() { return (D.meta.contacts || []).slice().sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''))); },
-    addContact(c) { D.meta.contacts = D.meta.contacts || []; const id = nid('k'); D.meta.contacts.push({ id, name: (c && c.name) || '', email: (c && c.email) || '', phone: (c && c.phone) || '' }); persist(); return id; },
+    async addContact(c) { D.meta.contacts = D.meta.contacts || []; const id = nid('k'); D.meta.contacts.push({ id, name: (c && c.name) || '', email: (c && c.email) || '', phone: (c && c.phone) || '' }); await persist(); return id; },
     updateContact(id, patch) { const c = (D.meta.contacts || []).find(x => x.id === id); if (c) Object.assign(c, patch || {}); return persist(); },
     deleteContact(id) { D.meta.contacts = (D.meta.contacts || []).filter(x => x.id !== id); return persist(); },
     listDir(kind) { return (D.dir || []).filter(c => c.kind === kind).sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''))); },
-    addDir(kind, c) { D.dir = D.dir || []; const id = nid('d'); const rec = { id, kind }; DIRF.forEach(f => rec[f] = (c && c[f]) || ''); D.dir.push(rec); persist(); return id; },
+    async addDir(kind, c) { D.dir = D.dir || []; const id = nid('d'); const rec = { id, kind }; DIRF.forEach(f => rec[f] = (c && c[f]) || ''); D.dir.push(rec); await persist(); return id; },
     updateDir(id, patch) { const c = (D.dir || []).find(x => x.id === id); if (c) Object.assign(c, patch || {}); return persist(); },
     deleteDir(id) { D.dir = (D.dir || []).filter(x => x.id !== id); return persist(); },
     /* ---- cycle surface (mirrors db.supabase.js) ---- */

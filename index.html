@@ -671,8 +671,12 @@ function makeStore(adapter, FIELDS) {
     emptyForm(){ const f={}; for(const {key} of FIELDS) f[key]=blank(); return f; },
     async fillForm(){ const db=await adapter.getDb(); const f=this.emptyForm();
       for(const key of Object.keys(db)){ const r=db[key]; if(!r||r.value==null) continue;
-        // A record saved blank keeps db_value:'' so a later entry reads as an
-        // override (and revert restores the saved blank), not first-time data.
+        // A record saved blank keeps db_value:'' so the cell can still say it is
+        // ON FILE and empty on purpose (provColors reads exactly that pair) rather
+        // than looking like a cell nobody has reached. Entering into it is still
+        // NEW data, not an override — see editForm below, and note that a full
+        // save writes every key including the empty ones, so the other reading
+        // would turn the whole form amber the first time anyone typed in it.
         if(r.value==='') f[key]={value:'',source:'new',saved_at:r.saved_at,prior_value:null,prior_source:null,db_value:''};
         else f[key]={value:r.value,source:'database',saved_at:r.saved_at,prior_value:null,prior_source:null,db_value:r.value}; }
       return f; },
@@ -1124,11 +1128,11 @@ async function makeDb(adapter, opts) {
       return { name: dv(p, 'assets.letterhead_name'), thumb: dv(p, 'assets.letterhead_thumb'), data: dv(p, 'assets.letterhead_data') };
     },
     listContacts() { return (D.meta.contacts || []).slice().sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''))); },
-    addContact(c) { D.meta.contacts = D.meta.contacts || []; const id = nid('k'); D.meta.contacts.push({ id, name: (c && c.name) || '', email: (c && c.email) || '', phone: (c && c.phone) || '' }); persist(); return id; },
+    async addContact(c) { D.meta.contacts = D.meta.contacts || []; const id = nid('k'); D.meta.contacts.push({ id, name: (c && c.name) || '', email: (c && c.email) || '', phone: (c && c.phone) || '' }); await persist(); return id; },
     updateContact(id, patch) { const c = (D.meta.contacts || []).find(x => x.id === id); if (c) Object.assign(c, patch || {}); return persist(); },
     deleteContact(id) { D.meta.contacts = (D.meta.contacts || []).filter(x => x.id !== id); return persist(); },
     listDir(kind) { return (D.dir || []).filter(c => c.kind === kind).sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''))); },
-    addDir(kind, c) { D.dir = D.dir || []; const id = nid('d'); const rec = { id, kind }; DIRF.forEach(f => rec[f] = (c && c[f]) || ''); D.dir.push(rec); persist(); return id; },
+    async addDir(kind, c) { D.dir = D.dir || []; const id = nid('d'); const rec = { id, kind }; DIRF.forEach(f => rec[f] = (c && c[f]) || ''); D.dir.push(rec); await persist(); return id; },
     updateDir(id, patch) { const c = (D.dir || []).find(x => x.id === id); if (c) Object.assign(c, patch || {}); return persist(); },
     deleteDir(id) { D.dir = (D.dir || []).filter(x => x.id !== id); return persist(); },
     /* ---- cycle surface (mirrors db.supabase.js) ---- */
@@ -1289,7 +1293,7 @@ function makeSupabaseDb(client) {
   const toInt = v => { if (v == null || String(v).trim() === '') return null; const n = Math.round(num(v)); return isNaN(n) ? null : n; };
 
   /* ---- in-memory mirror -------------------------------------------------- */
-  let D = { props: {}, contacts: [], dir: [], activePid: null };
+  let D = { props: {}, contacts: [], dir: [], activePid: null, cycles: {} };
 
   const place = (p, key, raw, sa) => {
     const cell = { value: (raw == null ? '' : String(raw)), source: 'database', saved_at: sa };
@@ -1605,10 +1609,15 @@ function makeSupabaseDb(client) {
         const r = await client.from('app_contact').delete().eq('id', id); if (r.error) throw r.error;
       },
       async clearAll() {
+        /* Cycles are deleted FIRST: they carry a foreign key to property, and
+           leaving them behind left rows in the table that nothing could reach —
+           while the in-memory shape lost its cycles map entirely, so the next
+           createCycle threw on an undefined. */
+        await client.from('cycle').delete().not('id', 'is', null);
         await client.from('property').delete().not('id', 'is', null);
         await client.from('pm_contact').delete().not('id', 'is', null);
         await client.from('app_contact').delete().not('id', 'is', null);
-        D = { props: {}, contacts: [], dir: [], activePid: null };
+        D = { props: {}, contacts: [], dir: [], activePid: null, cycles: {} };
       },
       /* ---- cycle surface ---- */
       listCycles(pid) {
@@ -2247,10 +2256,24 @@ function rsCapacity(){
   const R=UNITS.filter(i=>numf(get('units.'+i+'.num_units'))||numf(get('units.'+i+'.proposed'))||get('units.'+i+'.br')||get('units.'+i+'.ba')).length;
   const L=get('ns8.enabled')==='1'?NS8.filter(i=>get('ns8.'+i+'.br')||get('ns8.'+i+'.ba')||get('ns8.'+i+'.avg_rent')||numf(get('ns8.'+i+'.num_units'))>0).length:0;
   const N=NONREV.filter(i=>get('nonrev.'+i+'.use')||get('nonrev.'+i+'.br')||get('nonrev.'+i+'.ba')||get('nonrev.'+i+'.rent')||numf(get('nonrev.'+i+'.num_units'))>0).length;
-  const cut=Math.max(0,R+(L?1+L:0)-11);
+  /* Part A's eleven rows are filled by the ladder gen.js actually walks: the
+     Section 8 rows, then — when there are non-Section 8 units — a banner row and
+     those rows, then a blank spacer and the non-revenue rows. Over eleven it
+     drops the spacer, then drops the non-revenue rows from Part A, and only then
+     truncates. This counted the first two of those three and never the
+     non-revenue rows, so ten unit types plus two non-revenue rows overflowed in
+     silence: the form reported no capacity problem, and the generated schedule
+     printed a Total Units that was short by those units. Mirror the ladder. */
+  const _rows=(spacer,withNr)=>R+(L?1+L:0)+((withNr&&N)?((spacer?1:0)+N):0);
+  let _len=_rows(true,true),nrOffA=false;
+  if(_len>11)_len=_rows(false,true);
+  if(_len>11){_len=_rows(false,false);nrOffA=N>0;}
+  const cut=Math.max(0,_len-11);
   const nrOver=Math.max(0,N-5);
   const msgs=[],flags=[];
-  if(cut){msgs.push('Too many unit types \u2014 rent schedule Part A holds 11 rows'+(L?(' and your '+R+' Section 8 + banner + '+L+' non-Section 8 rows need '+(R+1+L)):'')+'. The last '+cut+' row'+(cut>1?'s':'')+' will be left off the generated rent schedule.');
+  if(nrOffA){msgs.push('Rent schedule Part A holds 11 rows and your unit types fill them, so the '+N+' non-revenue row'+(N===1?'':'s')+' will be left off Part A. They still print in Part D \u2014 but the generated form\u2019s Total Units then counts only the rows on the page.');
+    flags.push(N+' non-revenue row'+(N===1?'':'s')+' pushed off rent schedule Part A');}
+  if(cut){msgs.push('Too many unit types \u2014 rent schedule Part A holds 11 rows'+(L?(' and your '+R+' Section 8 + banner + '+L+' non-Section 8 rows need '+(R+1+L)):'')+'. The last '+cut+' row'+(cut>1?'s':'')+' will be left off the generated rent schedule, and its totals will cover only the rows that printed.');
     flags.push(cut+' unit-type row'+(cut>1?'s':'')+' over the rent schedule\u2019s 11-row limit');}
   if(nrOver){msgs.push('Rent schedule Part D holds 5 non-revenue rows \u2014 the last '+nrOver+' will be left off (and out of the Part D rent total).');
     flags.push(nrOver+' non-revenue unit'+(nrOver>1?'s':'')+' over Part D\u2019s 5 rows');}
@@ -5438,7 +5461,9 @@ function ocrRegister(words,anchors){ // -> transform onto the template, or null
     const f2=ocrFit(k2);if(!f2)break;f=f2;}
   // decline rather than misplace: an implausible size, more than ~5deg of skew,
   // or a fit the anchors themselves do not sit on is not worth filling a form from
-  if(f.a<0.8||f.a>1.25||Math.abs(f.s/f.a)>0.09||f.resid>OCR_MAXRESID)return null;
+  if(f.a<0.8||f.a>1.25){OCR_WHY='The page was read, but it sits at '+Math.round(f.a*100)+'% of the blank form\u2019s size, which is too far off to place values onto it.';return null;}
+  if(Math.abs(f.s/f.a)>0.09){OCR_WHY='The page was read, but it is skewed on the page (about '+Math.round(Math.atan(f.s/f.a)*180/Math.PI)+'\u00b0), which is too far off to place values onto it.';return null;}
+  if(f.resid>OCR_MAXRESID){OCR_WHY='The page was read and squared with the blank form, but the printed labels do not sit where the form puts them (they are out by about '+f.resid.toFixed(1)+' points), so the values could not be placed with confidence.';return null;}
   return f;}
 
 function ocrDropLabels(words,labels,f){ // the form's own printed text is not an entered value
@@ -5781,6 +5806,7 @@ function s8From(t){
   if(!m)return '';
   const v=m[1].replace(/[^A-Za-z0-9]/g,'').toUpperCase();
   if(!v||/^N.?A$/i.test(v)||v.length<5)return '';
+  if(!/[0-9]/.test(v))return '';   // "RENEWAL", "RENTS", "ADMINISTRATOR" — the words after the label, not the number
   return v;
 }
 
@@ -5810,7 +5836,9 @@ function readSender(txt,S,window){
   const joined=txt.join('\n');
   const em=joined.match(/[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}/);
   if(em)S['appr.email']=em[0];
-  const ph=joined.match(/\(?(\d{3})\)?[\s.\-]*(\d{3})[\s.\-]*(\d{4})/);
+  const ph=joined.match(/(?:phone|telephone|tel|cell|mobile|direct|office|fax|\bp\b|\bt\b)\s*[:.]?\s*\(?(\d{3})\)?[\s.\-]*(\d{3})[\s.\-]*(\d{4})/i)
+    || joined.match(/(?:^|[^\d\-.])\((\d{3})\)\s*[\s.\-]?(\d{3})[\s.\-]?(\d{4})(?!\d)/)
+    || joined.match(/(?:^|[^\d\-.])(\d{3})[\s.\-](\d{3})[\s.\-](\d{4})(?!\d)/);
   if(ph)S['appr.phone']=ph[1]+ph[2]+ph[3];
 }
 
@@ -6053,7 +6081,7 @@ async function readLetter(rd){
 
 window.RCSParse={norm:norm,lines:lines,money:money,dec:dec,pageKey:pageKey,
   findLetter:findLetter,readLetter:readLetter,parseType:parseType,
-  _splitCityStateZip:splitCityStateZip,_isoDate:isoDate,_s8From:s8From,_detectFirm:detectFirm,
+  _splitCityStateZip:splitCityStateZip,_isoDate:isoDate,_s8From:s8From,_detectFirm:detectFirm,_readSender:readSender,
   _caps:{scan:LETTER_SCAN_CAP,tail:LETTER_TAIL},_probeOrder:probeOrder};
 })();
 /* gen.js — RCS package generation. PURE: record -> PDF bytes. Browser: window.PDFLib. */
@@ -6069,7 +6097,7 @@ window.RCSParse={norm:norm,lines:lines,money:money,dec:dec,pageKey:pageKey,
 /* Dates are stamped in New York, not UTC. toISOString() rolls over at 7 or 8pm
    Eastern, so a package generated in the evening was dated tomorrow — and the
    tenant notice's date is what starts the 30-day comment clock. */
-const ET_TODAY=()=>{try{return new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());}catch(e){return ET_TODAY();}};
+const ET_TODAY=()=>{try{return new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());}catch(e){return new Date().toISOString().slice(0,10);}};
 /* Join only the parts that exist. Concatenating street, city, state and zip with
    hard commas printed "at the Management Office, , , ," on any property whose
    address is half entered — on a notice served on residents. */
@@ -6210,7 +6238,7 @@ const addrLine=(street,city,state,zip)=>{
     let _cbMissed=0;
     for(let i=0;i<17;i++){ try{ const cb=form.getCheckBox('Check Box'+(i+1)); if(String(rec['check.'+i]||'')==='1')cb.check(); else cb.uncheck(); }catch(e){ _cbMissed++; } }
     if(_cbMissed>8) throw new Error('Checklist template mismatch: '+_cbMissed+' of 17 boxes could not be set — do not file the result.');
-    try{ const pg=doc.getPages()[0]; const {rgb}=PL(); pg.drawRectangle({x:107,y:123,width:156,height:22,color:rgb(1,1,1)}); const sline=(t.sig_name+', '+t.sig_title).replace(/, $/,''); if(sline)pg.drawText(sline,{x:109,y:129,size:11,font:times,color:rgb(0.11,0.13,0.17)}); }catch(e){}
+    try{ const pg=doc.getPages()[0]; const {rgb}=PL(); pg.drawRectangle({x:107,y:123,width:156,height:22,color:rgb(1,1,1)}); const sline=[t.sig_name,t.sig_title].filter(Boolean).join(', '); if(sline)pg.drawText(sline,{x:109,y:129,size:11,font:times,color:rgb(0.11,0.13,0.17)}); }catch(e){}
     return await doc.save({objectsPerTick:Infinity});
   }
 
@@ -6411,7 +6439,7 @@ const addrLine=(street,city,state,zip)=>{
     if(g('owner.entity_type')==='Other (specify)'){ C(204); T(205,g('owner.entity_type_other')); }
     const nrIdx=[...new Set(Object.keys(rec).map(k=>(k.match(/^nonrev\.(\d+)\./)||[])[1]).filter(x=>x!=null))].sort((a,b)=>a-b);
     const dUse=[159,162,165,168,171],dType=[160,163,166,169,172],dRent=[161,164,167,170,173]; let dr=0,trl=0;
-    nrIdx.forEach(i=>{ if(dr>4)return; const use=g('nonrev.'+i+'.use'),br=g('nonrev.'+i+'.br'),ba=g('nonrev.'+i+'.ba'),rent=g('nonrev.'+i+'.rent'); if(!(use||br||ba||rent||nmv(g('nonrev.'+i+'.num_units'))))return; T(dUse[dr],use); T(dType[dr],(String(br).replace(/(\d+)\s*BR/i,'$1 BR')+(ba?'/'+ba:'')).replace(/^\//,'')); T(dRent[dr],(rent!==''&&rent!=null)?money(rent):''); trl+=nmv(rent); dr++; });
+    nrIdx.forEach(i=>{ if(dr>4)return; const use=g('nonrev.'+i+'.use'),br=g('nonrev.'+i+'.br'),ba=g('nonrev.'+i+'.ba'),rent=g('nonrev.'+i+'.rent'); if(!(use||br||ba||rent||nmv(g('nonrev.'+i+'.num_units'))))return; T(dUse[dr],use); T(dType[dr],(String(br).replace(/(\d+)\s*BR/i,'$1 BR')+(ba?'/'+ba:'')).replace(/^\//,'')); T(dRent[dr],(rent!==''&&rent!=null)?money(rent):''); trl+=nmv(rent)*(nmv(g('nonrev.'+i+'.num_units'))||1); dr++; });
     T(174, dr?money(trl):'');
     // Part G: the principals roster fills the name (left) / title (right) rows in order
     { const gL=[206,208,210,212,214,216,218,220,222,224,226], gR=[207,209,211,213,215,217,219,221,223,225,227];
@@ -6420,7 +6448,7 @@ const addrLine=(street,city,state,zip)=>{
       if(!pr && g('owner.gp')){ T(206,g('owner.gp')); T(207,'General Partner'); } // no roster on file yet: the General Partner row
     }
     try{ form.getTextField('x12').setText(''); }catch(e){}
-    T(228,(g('sig.name')+', '+sigTitle(g('sig.title'),g('sig.principal'))).replace(/, $/,''));
+    T(228,[g('sig.name'),sigTitle(g('sig.title'),g('sig.principal'))].filter(Boolean).join(', '));
     /* HUD's template computes 41 of its own fields — gross rents, the column
        extensions, every total — and orders them with /CO. Those actions used to
        be deleted here, so a schedule generated without proposed rents printed
@@ -6472,11 +6500,18 @@ const addrLine=(street,city,state,zip)=>{
   function uafCalcRec(rec){
     const g=k=>rec[k]!=null?String(rec[k]):'';
     const rows=idxOf(rec,'units').map(i=>{
-      const parts=UAF_UTILS_G.map(x=>{const cur=nmv2(g('units.'+i+'.uac_'+x[0]));const f=nmv2(g('uaf.f_'+x[0]));const raw=(cur>0&&f>0)?cur*f:0;return{u:x[0],label:x[1],cur,f,raw,rounded:raw?Math.round(raw):0};});
+      const parts=UAF_UTILS_G.map(x=>{const cur=nmv2(g('units.'+i+'.uac_'+x[0]));const f=nmv2(g('uaf.f_'+x[0]));
+        /* No factor is not a factor of zero. Carried forward unchanged, the
+           total moves only by the utilities that were actually adjusted. */
+        const raw=cur>0?(f>0?cur*f:cur):0;
+        return{u:x[0],label:x[1],cur,f,raw,rounded:raw?Math.round(raw):0,nofac:cur>0&&!(f>0)};});
       const curSum=parts.reduce((s,p)=>s+p.cur,0),newSum=parts.reduce((s,p)=>s+p.rounded,0);
       return {i,br:g('units.'+i+'.br'),ba:g('units.'+i+'.ba'),n:nmv2(g('units.'+i+'.num_units')),parts,curSum,newSum};
     }).filter(r=>r.curSum>0);
     return {rows,dec:rows.filter(r=>r.newSum>0&&r.newSum<r.curSum),
+      /* Named so a caller can say so rather than let the reader assume every
+         line was factored. */
+      nofac:UAF_UTILS_G.map(x=>x[0]).filter(u=>rows.some(r=>r.parts.some(p=>p.u===u&&p.nofac))),
       factors:UAF_UTILS_G.map(x=>({u:x[0],label:x[1],f:nmv2(g('uaf.f_'+x[0]))})).filter(x=>x.f>0),
       fy:g('uaf.factor_fy'),pub:g('uaf.factor_pubdate'),state:g('property.addr_state')};
   }

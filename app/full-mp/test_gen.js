@@ -10,7 +10,7 @@ new Function('window',fs.readFileSync(D+'templates.js','utf8'))(global.window);
 const TPL=global.window.RCSTemplates;
 const G=require(D+'gen.js');
 
-const MIN_CHECKS=21;                 // the count this file is known to run to the end
+const MIN_CHECKS=32;                 // the count this file is known to run to the end
 let n=0,fails=0,verdict=null;
 const BAR='═'.repeat(68);
 function fail(msg,err){
@@ -133,6 +133,56 @@ function record(extra){
   const wsTxt=Buffer.from(ws).toString('latin1');
   T('the worksheet generated', ws&&ws.length>1000);
   eq('and no line reads $0.00', /\$0\.00/.test(wsTxt), false);
+
+  console.log('\n─ figures and names that reach a federal form ─');
+  /* Field 174 is captioned "Total Rent Loss Due to Non-Revenue Units". It summed
+     the rent of ONE unit, so two model units at $1,200 reported a $1,200 loss. */
+  { const r=record({'nonrev.0.use':'Model unit','nonrev.0.br':'2BR','nonrev.0.ba':'1BA',
+      'nonrev.0.num_units':'2','nonrev.0.rent':'1200'});
+    const by=await G.fillRentSchedule(rsBytes,r);
+    const f=(await PDFDocument.load(by)).getForm();
+    const V=id=>{try{return f.getTextField(String(id)).getText()||'';}catch(e){return '(no field '+id+')';}};
+    eq('Part D reports the rent lost by every non-revenue unit',V(174),'2,400');
+    /* Its Part A row is wherever the plan put it — after the two Section 8 rows
+       and the blank spacer — so find it by what it says, not by counting. */
+    let nrRow=-1;for(let r=0;r<11;r++)if(V(7+r*8)==='Model unit')nrRow=r;
+    eq('and Part A carries the count with it',nrRow<0?'(row not found)':V(7+nrRow*8+1),'2'); }
+
+  /* .replace(/, $/,'') strips a trailing comma, so an empty TITLE was handled and
+     an empty NAME was not: Part G read ", Vice President of the General Partner". */
+  { const r=record({'sig.name':'','sig.title':'Vice President','sig.principal':'General Partner'});
+    const by=await G.fillRentSchedule(rsBytes,r);
+    const f=(await PDFDocument.load(by)).getForm();
+    const s=f.getTextField('228').getText()||'';
+    eq('a blank signatory prints no leading comma',s,'Vice President of the General Partner'); }
+  { const r=record({'sig.name':'Jane Owner','sig.title':'','sig.principal':''});
+    const by=await G.fillRentSchedule(rsBytes,r);
+    const f=(await PDFDocument.load(by)).getForm();
+    eq('and a signatory with no title prints no trailing one',f.getTextField('228').getText()||'','Jane Owner'); }
+
+  console.log('\n─ an unfactored utility is not a utility worth zero ─');
+  /* $50 electric at 1.02 plus $30 gas with NO factor produced 80 -> 51. That
+     reads as a decrease, prints "Present $80 / Proposed $51" on a notice served
+     on residents, and fires the 24 CFR 245.420 decrease certification — over a
+     utility that was simply never factored. */
+  { const u=G.uafCalcRec(record({'units.0.uac_electric':'50','units.0.uac_gas':'30',
+      'uaf.f_electric':'1.02','units.1.uac_electric':'50','uaf.f_gas':''}));
+    const row=u.rows.find(r=>r.i==='0')||u.rows[0];
+    eq('the current allowance is the sum of both utilities',row.curSum,80);
+    eq('and the new one carries the unfactored utility forward',row.newSum,81);
+    eq('so nothing reads as a decrease',u.dec.length,0);
+    eq('and the record names what was carried',u.nofac,['gas']); }
+
+  console.log('\n─ the date never calls itself ─');
+  /* The catch called ET_TODAY, so a throwing Intl took every document down with
+     a stack overflow instead of degrading to an ISO date. */
+  { const real=global.Intl;
+    global.Intl={DateTimeFormat:function(){throw new Error('no Intl here');}};
+    let out=null,threw=null;
+    try{ out=G.resolve(record()).date; }catch(e){ threw=e; }
+    global.Intl=real;
+    T('a broken Intl does not take generation down',!threw);
+    T('and the date falls back to a real one',/^[A-Z][a-z]+ \d{1,2}, \d{4}$/.test(String(out||''))); }
 
   finish();
 })().catch(e=>fail('the suite threw before reaching its verdict',e));

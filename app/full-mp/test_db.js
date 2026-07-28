@@ -4,8 +4,8 @@
    non-zero code, the verdict is the LAST line printed so a piped run still
    shows it, and MIN_CHECKS catches a run that dies partway — a short count is
    a failure, not a pass. Adding checks? Raise MIN_CHECKS. */
-const { makeDb, memoryAdapter, isPerCycleKey, migrate, computeAnalysis, computeSalutation } = require('./db.js');
-const MIN_CHECKS = 112;
+const { makeDb, memoryAdapter, isPerCycleKey, migrate, computeAnalysis, computeSalutation, CROSSWALK } = require('./db.js');
+const MIN_CHECKS = 114;
 let fails = 0, n = 0, verdict = null;
 const BAR = '═'.repeat(68);
 function fail(msg, err) {
@@ -216,9 +216,14 @@ function jsonAdapter() { let s = null; return { get: async () => (s ? JSON.parse
   ok('while keeping the unit row it was told to keep', cdb.getFlat(cpid)['units.0.num_units'].value, '51');
 
   console.log('\n─ 8e · DIRECTORY ─');
-  const d1 = cdb.addDir('appraiser', { name: 'Zeta Appraisal', email: 'z@example.com' });
-  cdb.addDir('appraiser', { name: 'Alpha Appraisal' });
-  cdb.addDir('ca', { name: 'Some CA' });
+  /* Awaited, because the real backend answers with a promise of the id and the
+     stand-in must answer the same way — a test that read the id straight out
+     would pass here and fail against Supabase, which is the fiction the parity
+     rule exists to prevent. */
+  const d1 = await cdb.addDir('appraiser', { name: 'Zeta Appraisal', email: 'z@example.com' });
+  await cdb.addDir('appraiser', { name: 'Alpha Appraisal' });
+  await cdb.addDir('ca', { name: 'Some CA' });
+  ok('adding a directory entry answers with an id, as the backend does', typeof d1, 'string');
   ok('directory filters by kind', cdb.listDir('appraiser').length, 2);
   ok('and sorts by name', cdb.listDir('appraiser')[0].name, 'Alpha Appraisal');
   ok('a directory record carries the full field set', cdb.listDir('appraiser').find(c => c.id === d1).email, 'z@example.com');
@@ -281,6 +286,36 @@ function jsonAdapter() { let s = null; return { get: async () => (s ? JSON.parse
     ok('every column written to '+t+' exists in schema.sql',
        cols.filter(function(c){return !tables[t].has(c);}),[]);
   });
+})();
+
+/* ── the other direction: a key with nowhere to land ─────────────────────────
+   schemaParity above asks whether every column we WRITE exists. This asks
+   whether every key we can SAVE has a column — the failure that runs the other
+   way, and the quieter one, because an unmapped key is not an error at the
+   backend: the upsert simply succeeds without it.
+
+   Prompted by an audit that found twenty flat keys surviving in this stand-in
+   and vanishing through db.supabase.js (units.N.uac_*, the ocaf.* set, the
+   uaf.* set). All twenty turned out to be PER-CYCLE keys, which belong in the
+   cycle's own JSONB and are not lost — but nothing was checking, and a new
+   DURABLE key with no column would be accepted here, accepted by Postgres, and
+   simply never stored. That is the shape of a defect nobody sees for months. */
+(function keyHomeParity(){
+  const _fs=require('fs'),_p=require('path'),_d=__dirname;
+  const sup=_fs.readFileSync(_p.join(_d,'db.supabase.js'),'utf8');
+  const between=(start)=>{const i=sup.indexOf(start);return i<0?'':sup.slice(i,sup.indexOf('};',i));};
+  const PS=new Set((between("const PSCALAR").match(/'([^']+)'\s*:/g)||[]).map(x=>x.replace(/'|\s*:/g,'')));
+  const cols=(start)=>new Set((between(start).match(/(\w+)\s*:/g)||[]).map(x=>x.replace(/\s*:/,'')));
+  const UC=cols("const UCOL"), NR=cols("const NRCOL");
+  const homeless=Object.keys(CROSSWALK).filter(function(k){
+    if(isPerCycleKey(k))return false;                 // lives in cycle.cells, which is JSONB
+    if(PS.has(k))return false;
+    var m=k.match(/^units\.\{i\}\.(\w+)$/);        if(m&&UC.has(m[1]))return false;
+    m=k.match(/^nonrev\.\{i\}\.(\w+)$/);           if(m&&NR.has(m[1]))return false;
+    // ns8 rows, principals, Part B and the checklist have their own tables or JSONB
+    if(/^(ns8|principals|partb|check)\./.test(k))return false;
+    return true;});
+  ok('every durable flat key has somewhere in the backend to land', homeless, []);
 })();
 
 finish();

@@ -166,6 +166,7 @@ function s8From(t){
   if(!m)return '';
   const v=m[1].replace(/[^A-Za-z0-9]/g,'').toUpperCase();
   if(!v||/^N.?A$/i.test(v)||v.length<5)return '';
+  if(!/[0-9]/.test(v))return '';   // "RENEWAL", "RENTS", "ADMINISTRATOR" — the words after the label, not the number
   return v;
 }
 
@@ -195,7 +196,9 @@ function readSender(txt,S,window){
   const joined=txt.join('\n');
   const em=joined.match(/[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}/);
   if(em)S['appr.email']=em[0];
-  const ph=joined.match(/\(?(\d{3})\)?[\s.\-]*(\d{3})[\s.\-]*(\d{4})/);
+  const ph=joined.match(/(?:phone|telephone|tel|cell|mobile|direct|office|fax|\bp\b|\bt\b)\s*[:.]?\s*\(?(\d{3})\)?[\s.\-]*(\d{3})[\s.\-]*(\d{4})/i)
+    || joined.match(/(?:^|[^\d\-.])\((\d{3})\)\s*[\s.\-]?(\d{3})[\s.\-]?(\d{4})(?!\d)/)
+    || joined.match(/(?:^|[^\d\-.])(\d{3})[\s.\-](\d{3})[\s.\-](\d{4})(?!\d)/);
   if(ph)S['appr.phone']=ph[1]+ph[2]+ph[3];
 }
 
@@ -438,6 +441,6 @@ async function readLetter(rd){
 
 window.RCSParse={norm:norm,lines:lines,money:money,dec:dec,pageKey:pageKey,
   findLetter:findLetter,readLetter:readLetter,parseType:parseType,
-  _splitCityStateZip:splitCityStateZip,_isoDate:isoDate,_s8From:s8From,_detectFirm:detectFirm,
+  _splitCityStateZip:splitCityStateZip,_isoDate:isoDate,_s8From:s8From,_detectFirm:detectFirm,_readSender:readSender,
   _caps:{scan:LETTER_SCAN_CAP,tail:LETTER_TAIL},_probeOrder:probeOrder};
 })();

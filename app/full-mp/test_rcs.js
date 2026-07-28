@@ -16,7 +16,7 @@ const els={};
 global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>null,querySelectorAll:()=>[],createElement:()=>mk(),addEventListener(){},body:{classList:{toggle(){},contains(){return false;}}}};
 const fs=require('fs'),path=require('path'),os=require('os');
 
-const MIN_CHECKS=221;
+const MIN_CHECKS=230;
 let n=0,fails=0,verdict=null;
 const BAR='='.repeat(68);
 function fail(msg,err){
@@ -476,6 +476,29 @@ async function reader(file){
     T('row '+i+' knows its own bedrooms',app.getVal('units.'+i+'.br')!=='');
     T('row '+i+' knows how many units it has',app.getVal('units.'+i+'.num_units')!=='');
   });
+
+  console.log('\n\u2500 the label is not the value \u2500');
+  /* "number|no|#" is optional in the label and the value only had to be five
+     alphanumerics, so the WORDS AFTER the label became the contract number and
+     printed as the Section 8 Number on every document in the package. */
+  eq('a renewal heading is not a contract number',R._s8From('Section 8 Contract Renewal \u2014 Fifth Year'),'');
+  eq('nor is an effective-date sentence',R._s8From('Section 8 Contract rents effective September 1, 2026'),'');
+  eq('nor the name of an administrator',R._s8From('Section 8 contract administrator National Housing Compliance'),'');
+  eq('and a real one still reads',R._s8From('Section 8 Contract Number: OH10M000236'),'OH10M000236');
+  eq('including the FHA-labelled spelling the firms use',R._s8From('FHA Project No. 044-35218'),'04435218');
+
+  console.log('\n\u2500 a phone number looks like a phone number \u2500');
+  /* Any ten digits anywhere on the page became the number HUD is told to call
+     in item 8 of the owner's letter — and when one was missing, the whole title
+     page was swept, the page densest in stray numbers. */
+  { const S={};R._readSender(['Smith & Co Valuation','HUD Project No. 042-44119','Loan 1234567890'],S);
+    eq('a loan number is not a telephone number',S['appr.phone'],undefined); }
+  { const S={};R._readSender(['Smith & Co Valuation','(708) 500-2380'],S);
+    eq('a parenthesised area code is',S['appr.phone'],'7085002380'); }
+  { const S={};R._readSender(['Smith & Co Valuation','708.500.2380'],S);
+    eq('and a dotted one',S['appr.phone'],'7085002380'); }
+  { const S={};R._readSender(['Smith & Co Valuation','Phone: 7085002380'],S);
+    eq('and a bare run that something calls a phone',S['appr.phone'],'7085002380'); }
 
   finish();
 })().catch(e=>{fail('the suite threw',e);process.exit(1);});
