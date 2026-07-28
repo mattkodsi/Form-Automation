@@ -3540,7 +3540,13 @@ const __API={LABEL_HINTS,rsParseUnitType,rsNum,ocrMapPages:(p)=>ocrMapPages(p),o
   __newCycle:(o)=>mpdb.createCycle(activePid,Object.assign({full:true,programs:['rcs'],label:'TEST'},o||{})),
   __progsOf:(cid)=>{const c=(mpdb?mpdb.listCycles(activePid):[]).find(x=>x.id===cid);return c?c.programs.slice():[];},
 __setRcsParsed:(rec)=>{_rcsUpload={name:'study.pdf',bytes:null,parsed:rec,at:''};},
-__rcsFill:()=>rcsFillFromParsed(),__setRsParsed:(rec)=>{_rsUpload=rec?{name:'schedule.pdf',bytes:null,parsed:rec,at:''}:null;},__UNITS:()=>UNITS.slice(),__moneySrcRows:(k)=>moneySrcRows(k),__rcsChecks:()=>rcsChecks(),__rcsTag:(k)=>rcsTag(k),__rcsFillKeys:()=>rcsFillKeys(),__rcsMatch:(i)=>rcsMatch(i),__rcsOf:(k)=>rcsOf(k),
+__rcsFill:()=>rcsFillFromParsed(),/* The same door for the rent schedule. Filling FROM a parse is the state where
+     the save affordances have to be right — every cell it touches is unsaved by
+     definition — and it was the one state no suite could set up. Passing null
+     clears the reading, which is how a test says "no schedule was ever read".
+     kind:'fields' matches what parseRsPdf returns for a readable copy. */
+  __setRsParsed:(rec)=>{_rsUpload=rec?{name:'rs.pdf',bytes:null,kind:'fields',parsed:rec,at:''}:null;},
+  __rsFill:()=>rsFillFromParsed(),__UNITS:()=>UNITS.slice(),__moneySrcRows:(k)=>moneySrcRows(k),__rcsChecks:()=>rcsChecks(),__rcsTag:(k)=>rcsTag(k),__rcsFillKeys:()=>rcsFillKeys(),__rcsMatch:(i)=>rcsMatch(i),__rcsOf:(k)=>rcsOf(k),
   /* The undo run. __editCell is the text box's input handler in miniature —
      push the cell, then write it the way that handler does — so a suite can
      build a run of edits without synthesising DOM events. */
