@@ -16,7 +16,7 @@ const els={};
 global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>null,querySelectorAll:()=>[],createElement:()=>mk(),addEventListener(){},body:{classList:{toggle(){},contains(){return false;}}}};
 const fs=require('fs'),path=require('path'),os=require('os');
 
-const MIN_CHECKS=212;
+const MIN_CHECKS=221;
 let n=0,fails=0,verdict=null;
 const BAR='='.repeat(68);
 function fail(msg,err){
@@ -429,6 +429,53 @@ async function reader(file){
   app.__rcsFill();
   eq('a row holding a count of yours is left alone',app.getVal('units.0.num_units'),'12');
   eq('and the study builds its own rows below it',app.__UNITS().length,3);
+
+  /* ============ the schedule outranks the study ============
+     Both documents answer for some of the same cells. The executed schedule is
+     the contract; the study is an appraisal of it. So where they overlap the
+     schedule wins, and filling from the study must leave those cells alone.
+
+     Part D is where this bit: the schedule states what the manager's unit
+     actually rents for and the study states what such a unit is worth, and the
+     study was writing its market rent over the contract rent. */
+  await app.__openForm(app.__firstPid());
+  app.__setRsParsed({scalars:{'property.name':'Colonial Village/White Oak','property.s8':'OH10M000236'},
+                     units:[{type:'2 Bedroom',count:32,rent:1147,ua:160}],
+                     nonrev:[{use:'Leasing Office',br:'2BR',ba:'',rent:1147}]});
+  app.__edit('nonrev.0.br','2BR');app.__edit('nonrev.0.ba','1BA');
+  app.__edit('nonrev.0.rent','1147');
+  app.__edit('property.name','Colonial Village/White Oak');
+  app.__setRcsParsed(cvRec);
+  app.__rcsFill();
+  eq('the schedule’s Part D contract rent survives a study fill',app.getVal('nonrev.0.rent'),'1147');
+  eq('and the name the schedule gave stands',app.getVal('property.name'),'Colonial Village/White Oak');
+  T('the study is not offered as that rent’s source either',app.__rcsFillKeys().indexOf('nonrev.0.rent')<0);
+
+  /* With no schedule read, there is nothing to outrank — the study still fills. */
+  await app.__openForm(app.__firstPid());
+  app.__setRsParsed(null);
+  app.__edit('nonrev.0.br','2BR');app.__edit('nonrev.0.ba','1BA');
+  app.__setRcsParsed(cvRec);
+  app.__rcsFill();
+  eq('with no schedule the study still supplies the rent',app.getVal('nonrev.0.rent'),'1850');
+
+  /* A row the study INVENTS is a row the schedule did not account for, so the
+     schedule cannot outrank it — even when the schedule's own list happens to
+     be long enough to reach that row's number. Precedence is about a cell both
+     documents describe, not about an index that collides. */
+  await app.__openForm(app.__firstPid());
+  app.__setRsParsed({scalars:{},units:[{type:'1 Bedroom',count:51,rent:900,ua:100},
+                                       {type:'1 Bedroom',count:20,rent:950,ua:100},
+                                       {type:'1 Bedroom',count:10,rent:975,ua:100}]});
+  app.__edit('units.0.br','1BR');app.__edit('units.0.ba','1BA');app.__edit('units.0.num_units','51');
+  app.__setRcsParsed(cvRec);
+  app.__rcsFill();
+  const made=app.__UNITS().filter(function(i){return app.getVal('units.'+i+'.br')==='2BR'||app.getVal('units.'+i+'.br')==='3BR';});
+  eq('the study still builds both rows the form lacked',made.length,2);
+  made.forEach(function(i){
+    T('row '+i+' knows its own bedrooms',app.getVal('units.'+i+'.br')!=='');
+    T('row '+i+' knows how many units it has',app.getVal('units.'+i+'.num_units')!=='');
+  });
 
   finish();
 })().catch(e=>{fail('the suite threw',e);process.exit(1);});

@@ -2646,6 +2646,25 @@ function rcsNonrevVal(i){
   if(hit.length!==1)return null;
   const v=hit[0].proposed;return (v==null||v==='')?null:String(v);
 }
+/* RS > RCS. Both documents answer for some of the same cells, and where they
+   overlap the executed schedule wins: it is the contract, the study is an
+   appraisal of it. Part D is where this bit — the schedule states what the
+   manager's unit actually rents for, the study states what such a unit is
+   worth, and the study was writing its market rent over the contract rent.
+
+   "Offers" means the schedule's own reading, not the cell: a value the reading
+   supplies outranks the study whether or not it has been written yet, so the
+   order the two documents happen to be uploaded in cannot change the result. */
+function rsOffers(k){
+  let m=String(k||'').match(/^units\.(\d+)\.(br|ba|label)$/);
+  if(m)return rsBrBa(k)!=null;
+  m=String(k||'').match(/^units\.(\d+)\.(num_units|current)$/);
+  if(m)return rsUnit(+m[1],m[2]==='num_units'?'count':'rent')!=null;
+  m=String(k||'').match(/^(nonrev|ns8)\.(\d+)\.(rent|avg_rent|use|br|ba|num_units)$/);
+  if(m){const f=(m[3]==='avg_rent')?'rent':(m[3]==='num_units'?'count':m[3]);
+    return rsFamVal(m[1],+m[2],f)!=null;}
+  return rsVal(k)!=null;
+}
 function rcsOf(k){
   let m=k.match(/^units\.(\d+)\.proposed$/);   if(m)return rcsUnitVal(+m[1],'proposed');
   m=k.match(/^units\.(\d+)\.ua_rcs$/);         if(m)return rcsUnitVal(+m[1],'ua');
@@ -2679,13 +2698,17 @@ function rcsFillKeys(){
   const ks=RCS_SCALARS.slice();
   (UNITS||[]).forEach(function(i){['proposed','ua_rcs','safmr_rcs','br_rcs','ba_rcs','num_rcs'].forEach(function(f){ks.push('units.'+i+'.'+f);});});
   (NONREV||[]).forEach(function(i){ks.push('nonrev.'+i+'.rent');});
-  return ks.filter(function(k){const r=rcsOf(k);return r!=null&&r!=='';});
+  /* A key the schedule answers for is not one the study fills, so it is not one
+     the study may claim a source badge on either (rule 15: an indicator
+     computes, it never asserts). */
+  return ks.filter(function(k){if(rsOffers(k))return false;const r=rcsOf(k);return r!=null&&r!=='';});
 }
 function rcsFillFromParsed(){
   const P=_rcsUpload&&_rcsUpload.parsed;if(!P)return;
   deriveUnits();          // a row added since the last render is still a row to fill
   const mark=k=>{markCycle(k);if(form[k])form[k].fromParse=true;};
-  const setk=(k,v)=>{if(v!=null&&v!==''){form=store.editForm(form,k,String(v));mark(k);}};
+  const put=(k,v)=>{if(v!=null&&v!==''){form=store.editForm(form,k,String(v));mark(k);}};
+  const setk=(k,v)=>{if(rsOffers(k))return;put(k,v);};      // RS > RCS — see rsOffers
 
   /* The study carries none of these, so none is ever sourced from it: the FHA
      number, the ownership entity, the signatory, current rents, the rents
@@ -2737,13 +2760,19 @@ function rcsFillFromParsed(){
     const reuse=spare.length?spare.shift():-1;
     const ni=reuse>=0?reuse:((UNITS.length?Math.max.apply(null,UNITS):-1)+1);
     const _a=rcsBaOf(u);
-    setk('units.'+ni+'.br',_b);if(_a)setk('units.'+ni+'.ba',_a);
-    if(u.count!=='')setk('units.'+ni+'.num_units',u.count);
-    setk('units.'+ni+'.br_rcs',_b);if(_a)setk('units.'+ni+'.ba_rcs',_a);
-    if(u.count!=='')setk('units.'+ni+'.num_rcs',u.count);
-    if(u.proposed!=='')setk('units.'+ni+'.proposed',u.proposed);
-    if(u.ua!=='')setk('units.'+ni+'.ua_rcs',u.ua);
-    if(u.safmr!=='')setk('units.'+ni+'.safmr_rcs',u.safmr);
+    /* put, not setk: a row the study is INVENTING is one the schedule did not
+       account for, so the schedule cannot outrank it. Going through setk here
+       meant a schedule whose own list merely reached this row's number blocked
+       the new row's bedrooms and count — building a row that knew nothing about
+       itself. Precedence is about a cell both documents describe, not about an
+       index that collides. The schedule still wins the moment it fills. */
+    put('units.'+ni+'.br',_b);if(_a)put('units.'+ni+'.ba',_a);
+    if(u.count!=='')put('units.'+ni+'.num_units',u.count);
+    put('units.'+ni+'.br_rcs',_b);if(_a)put('units.'+ni+'.ba_rcs',_a);
+    if(u.count!=='')put('units.'+ni+'.num_rcs',u.count);
+    if(u.proposed!=='')put('units.'+ni+'.proposed',u.proposed);
+    if(u.ua!=='')put('units.'+ni+'.ua_rcs',u.ua);
+    if(u.safmr!=='')put('units.'+ni+'.safmr_rcs',u.safmr);
     if(reuse<0)UNITS.push(ni);added.push(u.type||_b);
   });
 
@@ -5201,7 +5230,7 @@ const __API={LABEL_HINTS,rsParseUnitType,rsNum,ocrMapPages:(p)=>ocrMapPages(p),o
   __newCycle:(o)=>mpdb.createCycle(activePid,Object.assign({full:true,programs:['rcs'],label:'TEST'},o||{})),
   __progsOf:(cid)=>{const c=(mpdb?mpdb.listCycles(activePid):[]).find(x=>x.id===cid);return c?c.programs.slice():[];},
 __setRcsParsed:(rec)=>{_rcsUpload={name:'study.pdf',bytes:null,parsed:rec,at:''};},
-__rcsFill:()=>rcsFillFromParsed(),__UNITS:()=>UNITS.slice(),__moneySrcRows:(k)=>moneySrcRows(k),__rcsChecks:()=>rcsChecks(),__rcsTag:(k)=>rcsTag(k),__rcsFillKeys:()=>rcsFillKeys(),__rcsMatch:(i)=>rcsMatch(i),__rcsOf:(k)=>rcsOf(k),
+__rcsFill:()=>rcsFillFromParsed(),__setRsParsed:(rec)=>{_rsUpload=rec?{name:'schedule.pdf',bytes:null,parsed:rec,at:''}:null;},__UNITS:()=>UNITS.slice(),__moneySrcRows:(k)=>moneySrcRows(k),__rcsChecks:()=>rcsChecks(),__rcsTag:(k)=>rcsTag(k),__rcsFillKeys:()=>rcsFillKeys(),__rcsMatch:(i)=>rcsMatch(i),__rcsOf:(k)=>rcsOf(k),
   /* The undo run. __editCell is the text box's input handler in miniature —
      push the cell, then write it the way that handler does — so a suite can
      build a run of edits without synthesising DOM events. */
