@@ -110,7 +110,10 @@ body.scrolled #ccbar{transform:translateY(0);opacity:1}
    radius is set inline by tintStyle(), hence the override. */
 .ucards .urow .rbox.brba .uatrigger,.pdrow .rbox.brba .uatrigger{border-radius:0!important}
 .ucards .urow .rbox.brba .uadrop:first-child .uatrigger,.pdrow .rbox.brba .uadrop:first-child .uatrigger{border-radius:6px 0 0 6px!important}
-.ucards .urow .rbox.brba .dgdrop .uatrigger,.pdrow .rbox.brba .uadrop:last-child .uatrigger{border-radius:0 6px 6px 0!important}
+/* :last-of-type, not :last-child — the icon pair now sits after the bath
+   dropdown, so last-child stopped matching it and the box lost its right
+   corner. The pair is a span, so the last DIV is still the bath. */
+.ucards .urow .rbox.brba .uadrop:last-of-type .uatrigger,.pdrow .rbox.brba .uadrop:last-of-type .uatrigger{border-radius:0 6px 6px 0!important}
 .homebtn{cursor:pointer;border-radius:8px;transition:opacity .12s}
 .homebtn:hover{opacity:.82}
 .homebtn:focus-visible{outline:2px solid #7aa7ff;outline-offset:3px}
@@ -156,6 +159,18 @@ body.scrolled #ccbar{transform:translateY(0);opacity:1}
 .ucells .uracts.ucolacts.c1lab{padding-left:8px}
 .ucol .ucnote,.ucol .urnmetric{min-width:0}
 .uracts .ovic{margin:0}
+/* The bedroom/bath pair sits INSIDE its box. It was outside because it appeared
+   the moment you edited and squeezed the two dropdowns beside it, so the row
+   changed shape as you used it — so the slot is ALWAYS laid out here and only
+   the buttons hide, the same trick the write-ins already use. One pair for the
+   two controls, because the box is already coloured, resolved and saved as one
+   group. */
+.rbox.brba > .ovic{display:inline-flex!important;flex:0 0 auto;margin:0 5px 0 3px;gap:3px}
+.rbox.brba > .ovic .rv,.rbox.brba > .ovic .sv{display:inline-flex!important;visibility:hidden}
+.rbox.brba > .ovic[data-mode="over"] .rv,
+.rbox.brba > .ovic[data-mode="over"] .sv,
+.rbox.brba > .ovic[data-mode="cycle"] .sv,
+.rbox.brba > .ovic[data-mode="new"] .sv{visibility:visible}
 .urnov .ovnote{margin:0}
 .rgh .hsub{display:inline;margin-left:7px;font-size:9px;font-weight:600;font-style:normal;color:#9aa4b5;letter-spacing:.2px;text-transform:none}
 .liftnote{font-size:11px;color:#64748b;margin-top:4px;line-height:1.45}
