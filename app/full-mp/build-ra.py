@@ -134,6 +134,7 @@ app = patch(app,
      here because no connection to it is ever opened. */
   if(SELFTEST){
     mpdb=await makeDb(localAdapter('rcs_selftest'));
+    await selftestSeed();
     await boot();
     document.title='SELFTEST — '+document.title;
     return;
