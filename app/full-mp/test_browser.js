@@ -443,6 +443,13 @@ const FULL=process.argv.includes('--full');
     const S0=await scoreNow();
     eq('the package and its menu row report the same number',[S0.form,S0.row],[S0.form,S0.form]);
     eq('and the number is a multiple of 5',S0.form%5,0);
+    /* One amber for everything short of complete told the reader nothing at a
+       glance, which is the only way the gallery is read. */
+    {
+      const hues=await c.eval("return [0,30,70,100].map(p=>{const t=window.__t.ringSvg(p,36);const i=t.indexOf('hsl(');return i<0?-1:parseInt(t.slice(i+4),10)})");
+      T('the ring runs red to green rather than one colour for every score',
+        hues[0]<20&&hues[3]>130&&hues[0]<hues[1]&&hues[1]<hues[2]&&hues[2]<hues[3]);
+    }
     eq('the caption counts documents, not fields',S0.caption,S0.ready+' of '+S0.total+' documents ready');
     /* The card is the surface the reader actually meets. Drawn from the score
        or drawn from anything else is the whole distinction — pkgCard used to

@@ -67,7 +67,7 @@ function makeSupabaseDb(client) {
   const toInt = v => { if (v == null || String(v).trim() === '') return null; const n = Math.round(num(v)); return isNaN(n) ? null : n; };
 
   /* ---- in-memory mirror -------------------------------------------------- */
-  let D = { props: {}, contacts: [], dir: [], activePid: null, cycles: {} };
+  let D = { props: {}, contacts: [], dir: [], activePid: null, cycles: {}, hap: [], hapError: '', pmName: '' };
 
   const place = (p, key, raw, sa) => {
     const cell = { value: (raw == null ? '' : String(raw)), source: 'database', saved_at: sa };
@@ -75,7 +75,7 @@ function makeSupabaseDb(client) {
   };
 
   async function load() {
-    const [pr, ur, nr, li, ct, dr, cy] = await Promise.all([
+    const [pr, ur, nr, li, ct, dr, cy, hp, au] = await Promise.all([
       client.from('property').select('*'),
       client.from('unit_type').select('*'),
       client.from('nonrev_unit').select('*'),
@@ -83,9 +83,18 @@ function makeSupabaseDb(client) {
       client.from('pm_contact').select('*'),
       client.from('app_contact').select('*'),
       client.from('cycle').select('*'),
+      client.from('hap_schedule').select('*'),
+      client.from('app_user').select('*'),
     ]);
     for (const q of [pr, ur, nr, li, ct, dr, cy]) if (q && q.error) throw q.error;
-    D = { props: {}, contacts: [], dir: [], activePid: null, cycles: {} };
+    D = { props: {}, contacts: [], dir: [], activePid: null, cycles: {}, hap: [], hapError: '', pmName: '' };
+    /* The tracker and the identity row are not load-bearing. A deployment
+       without them still opens every form, so a failure here is recorded and
+       shown on the home page rather than thrown — the app must not refuse to
+       start because a reference table is missing. */
+    D.hapError = (hp && hp.error) ? String(hp.error.message || hp.error) : '';
+    D.hap = (hp && !hp.error && hp.data) ? hp.data : [];
+    D.pmName = (au && !au.error && au.data && au.data[0]) ? (au.data[0].pm_name || '') : '';
     ((cy && cy.data) || []).forEach(c => { D.cycles[c.id] = { id: c.id, property_id: c.property_id, programs: c.programs || '', label: c.label || '', effective_date: c.effective_date || '', cells: c.cells || {}, generated: c.generated || {}, rs_doc: c.rs_doc || {}, rcs_doc: c.rcs_doc || {}, created_at: c.created_at || '', updated_at: c.updated_at || c.created_at || '' }; });
     (pr.data || []).forEach(r => {
       const sa = String(r.updated_at || '').slice(0, 10);
@@ -382,13 +391,14 @@ function makeSupabaseDb(client) {
       },
       getActive() { return { pid: D.activePid }; },
       setActive(pid) { if (D.props[pid]) D.activePid = pid; return Promise.resolve(); },
-      createProperty(name) {
+      createProperty(name, raMasterId) {
         assertNameFree(name);
         const pid = uuid();
         D.props[pid] = { id: pid, created_at: today(), updated_at: now(), durable: {}, percycle: {} };
         if (name) D.props[pid].durable['property.name'] = { value: String(name), source: 'database', saved_at: today() };
+        if (raMasterId) D.props[pid].ra_property_code = String(raMasterId);
         D.activePid = pid;
-        enqueue(pid, () => client.from('property').upsert({ id: pid, name: name || null }).then(r => { if (r.error) throw r.error; }));
+        enqueue(pid, () => client.from('property').upsert({ id: pid, name: name || null, ra_property_code: raMasterId ? String(raMasterId) : null }).then(r => { if (r.error) throw r.error; }));
         return { pid };
       },
       renameProperty(pid, name) {
@@ -487,7 +497,7 @@ function makeSupabaseDb(client) {
         await client.from('property').delete().not('id', 'is', null);
         await client.from('pm_contact').delete().not('id', 'is', null);
         await client.from('app_contact').delete().not('id', 'is', null);
-        D = { props: {}, contacts: [], dir: [], activePid: null, cycles: {} };
+        D = { props: {}, contacts: [], dir: [], activePid: null, cycles: {}, hap: D.hap, hapError: D.hapError, pmName: D.pmName };
       },
       /* ---- cycle surface ---- */
       listCycles(pid) {
@@ -572,6 +582,24 @@ function makeSupabaseDb(client) {
       getCycleRcs(cid) { const c = D.cycles[cid]; return (c && c.rcs_doc) || {}; },
       setCycleRcs(cid, doc) { const c = D.cycles[cid]; if (!c) return Promise.resolve(); c.rcs_doc = doc || {}; c.updated_at = now(); return enqueue('cy' + cid, () => pushCycle(cid)); },
       setCycleGenerated(cid, docs) { const c = D.cycles[cid]; if (!c) return Promise.resolve(); c.generated = { at: now(), docs: docs || [] }; c.updated_at = now(); return enqueue('cy' + cid, () => pushCycle(cid)); },
+      /* ---- the HAP tracker + who is using the app -------------------- */
+      hapRows: () => (D.hap || []).slice(),
+      hapError: () => D.hapError || '',
+      getPmName: () => D.pmName || '',
+      async setPmName(name) {
+        D.pmName = String(name || '');
+        const u = await client.auth.getUser();
+        const uid = u && u.data && u.data.user && u.data.user.id;
+        if (!uid) throw new Error('not signed in');
+        const r = await client.from('app_user').upsert({ owner_id: uid, pm_name: D.pmName, updated_at: now() });
+        if (r.error) throw r.error;
+      },
+      propByRaCode(code) {
+        const c = String(code == null ? '' : code);
+        if (!c) return null;
+        for (const id in D.props) if (String(D.props[id].ra_property_code || '') === c) return id;
+        return null;
+      },
       computeAnalysis, computeSalutation,
     };
   })();

@@ -211,6 +211,7 @@ async function makeDb(adapter, opts) {
   if (_needSeed) D = freshDb();
   else migrate(D);
   if (!D.meta) D.meta = { seq: 0, activePid: null }; if (!D.meta.contacts) D.meta.contacts = [];
+  if (!D.meta.hap) D.meta.hap = []; if (D.meta.pmName == null) D.meta.pmName = '';
   if (!D.cycles) D.cycles = {}; if (!D.dir) D.dir = [];   // a blob written before cycles existed
 
   function nid(pre) { D.meta.seq = (D.meta.seq || 0) + 1; return pre + D.meta.seq; }
@@ -218,12 +219,13 @@ async function makeDb(adapter, opts) {
   const touch = pid => { if (D.props[pid]) D.props[pid].updated_at = now(); };
   const cell = v => ({ value: (v == null ? '' : String(v)), source: 'database', saved_at: today() });
 
-  function _createProperty(name) {
+  function _createProperty(name, raMasterId) {
     const pid = nid('p');
     D.props[pid] = { id: pid, created_at: today(), updated_at: now(), durable: {}, percycle: {} };
     if (name) D.props[pid].durable['property.name'] = cell(name);
     // New-property checklist default is applied at the FORM layer (app.js applyChecklistDefaults)
     // as source 'new' (gray/unsaved), NOT seeded here as 'database' (which would render blue).
+    if (raMasterId) D.props[pid].ra_property_code = String(raMasterId);
     D.meta.activePid = pid;
     return { pid };
   }
@@ -470,7 +472,7 @@ async function makeDb(adapter, opts) {
     listProperties, propertyAnalysis,
     getActive() { return { pid: D.meta.activePid }; },
     setActive(pid) { if (D.props[pid]) D.meta.activePid = pid; return Promise.resolve(); }, // pointer only; nav must not write (real saves persist it)
-    createProperty(name) { assertNameFree(name); const r = _createProperty(name || ''); persist(); return r; },
+    createProperty(name, raMasterId) { assertNameFree(name); const r = _createProperty(name || '', raMasterId); persist(); return r; },
     renameProperty(pid, name) { const p = D.props[pid]; if (!p) return; assertNameFree(name, pid); p.durable['property.name'] = cell(name); touch(pid); return persist(); },
     deleteProperty(pid) {
       delete D.props[pid];
@@ -586,6 +588,18 @@ async function makeDb(adapter, opts) {
     setCycleRcs(cid, doc) { const c = D.cycles[cid]; if (!c) return Promise.resolve(); c.rcs_doc = doc || {}; c.updated_at = now(); return persist(); },
     setCycleGenerated(cid, docs) { const c = D.cycles[cid]; if (!c) return Promise.resolve(); c.generated = { at: now(), docs: docs || [] }; c.updated_at = now(); return persist(); },
     clearAll() { D = freshDb(); seedGates(); return persist(); },
+    /* ---- the HAP tracker + who is using the app (parity with db.supabase.js) */
+    hapRows: () => (D.meta.hap || []).slice(),
+    hapError: () => '',
+    getPmName: () => D.meta.pmName || '',
+    async setPmName(name) { D.meta.pmName = String(name || ''); await persist(); },
+    _setHapRows(rows) { D.meta.hap = Array.isArray(rows) ? rows.slice() : []; return persist(); },  // test seam; the real backend reads a table
+    propByRaCode(code) {
+      const c = String(code == null ? '' : code);
+      if (!c) return null;
+      for (const id in D.props) if (String(D.props[id].ra_property_code || '') === c) return id;
+      return null;
+    },
     computeAnalysis, computeSalutation,
   };
 }
