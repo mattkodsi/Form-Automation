@@ -58,9 +58,12 @@ body.scrolled #ccbar{transform:translateY(0);opacity:1}
 .pkhead{margin-top:10px;color:#33405c}
 /* The tail of a long gap list, behind its own count. Hover to look, press to
    pin — the same grammar as the record checks' panel. */
-.gpmore{position:relative;display:inline-block;margin-top:5px;outline:none}
+/* Each disclosure owns a LINE. Both were inline-block, so a card short enough
+   to overflow BOTH lists ran them together: "and 7 more10 more, not required".
+   The label inside stays inline-block so the dotted rule hugs the words. */
+.gpmore{position:relative;display:block;margin-top:6px;outline:none}
 .gpmore-l{margin-top:9px}
-.gpmore-t{font-size:11px;color:#7c86a2;border-bottom:1px dotted #b9c2d4;cursor:default}
+.gpmore-t{display:inline-block;font-size:11px;color:#7c86a2;border-bottom:1px dotted #b9c2d4;cursor:default}
 .gpmore:hover .gpmore-t,.gpmore:focus-visible .gpmore-t{color:#33405c;border-bottom-color:#8791a5}
 .gpall{display:none;position:absolute;left:0;top:100%;margin-top:6px;width:min(330px,74vw);z-index:35;background:#fff;border:1px solid #d3dae6;border-radius:11px;box-shadow:0 14px 34px rgba(20,40,80,.17);padding:10px 13px 11px}
 .gpmore:hover .gpall,.gpmore.open .gpall{display:block}
@@ -4710,7 +4713,12 @@ function pkgCard(){
       +(rest.length?('<div class="gpmore" tabindex="0"><span class="gpmore-t">and '+rest.length+' more</span>'
         +'<div class="gpall"><div class="gpf-wrap">'+rest.map(x=>gpf(x,cls)).join('')+'</div></div></div>'):'');};
   return '<div class="ccard"><div class="cck">THIS PACKAGE</div>'
-    +'<div class="cctitle pkhead1" style="font-size:15px">'+ringSvg(S.pct,26)+'<span>'+head+'</span></div>'
+    /* The ring counted percent and the headline counts documents, so the card
+       showed "5" beside "0 of 6 ready to generate" — two scales on one line,
+       read as a contradiction. The sentence is the useful one: it names the
+       unit, and the list underneath is already the detail. The percentage is
+       kept in the title for anyone who wants it. */
+    +'<div class="cctitle" style="font-size:15px" title="'+esc(S.pct+'% complete')+'">'+head+'</div>'
     +'<div class="pksrc">'+srcRow('Executed rent schedule',_rsUpload?_rsUpload.name:'',_rsUpload?'':'not uploaded yet',!!_rsUpload)+second+'</div>'
     +'<div class="drafts">'+rows+'</div>'
     +gap(S.blockers,'','Needed to generate')
