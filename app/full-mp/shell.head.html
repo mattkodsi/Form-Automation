@@ -449,6 +449,14 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;borde
    right-aligning parked the tick a whole column-gap past the end of its line,
    close enough to the next column's checkboxes to read as one of them. */
 .wi .ovic{display:inline-flex!important;min-width:52px;justify-content:flex-start;gap:3px;margin-left:4px;flex:0 0 auto}
+/* A tick's pair keeps its place whether or not it is showing, so touching a
+   checkbox never moves the row it is in. The write-ins have always done this;
+   the plain checkboxes never did. */
+.cb>.ovic{display:inline-flex!important;min-width:52px;justify-content:flex-start;gap:3px;margin-left:4px;flex:0 0 auto}
+.cb>.ovic .miniic{visibility:hidden}
+.cb>.ovic[data-mode="over"] .miniic{visibility:visible}
+.cb>.ovic[data-mode="cycle"] .rv,.cb>.ovic[data-mode="new"] .rv{display:none!important}
+.cb>.ovic[data-mode="cycle"] .sv,.cb>.ovic[data-mode="new"] .sv{visibility:visible}
 .wi .ovic .miniic{visibility:hidden}
 .wi .ovic[data-mode="over"] .miniic{visibility:visible}
 .wi .ovic[data-mode="cycle"] .rv{display:none!important}

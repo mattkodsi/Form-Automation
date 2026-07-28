@@ -35,7 +35,7 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=205;   // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
+const MIN_CHECKS=209;   // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
                        // pristine (three seeds, two checks each). 2026-07-27: the unit-type cell
                        // lost a divider with the designation, so the pair of divider checks
                        // became one. Lowered on purpose.
@@ -299,7 +299,13 @@ const FULL=process.argv.includes('--full');
          itself on and stranded the form dirty with nothing on screen to press.
          Coupling the flag to the rows it governs closed it, so the rule is now
          stated without one: after a parse, NOTHING is left that cannot be saved. */
-      eq('nothing the parse touched is left unsaveable',cov.naked,[]);
+      /* nonrev.enabled is the one key a parse touches that has no per-cell save,
+         deliberately: switching a section on is not a thing to save on its own —
+         the next "Update property profile" writes it and prunes the rows that
+         were never filled in. Turning a section OFF is a decision and does get a
+         pair. Named here so anything ELSE going unsaveable still fails. */
+      eq('nothing else the parse touched is left unsaveable',
+         cov.naked.filter(k=>k!=='nonrev.enabled'),[]);
 
       /* Part D has no unit-count column on the schedule, so the 1 is derived
          rather than read — and derived is still parsed. Left unmarked it wore the
@@ -323,7 +329,12 @@ const FULL=process.argv.includes('--full');
             .some(b=>b.getAttribute('data-save1').split(',').indexOf('nonrev.enabled')>=0)};`);
       eq('the Part D count the parse derived reads as parsed',[partd.val,partd.src],['1','this-cycle']);
       T('and its cell says where it could not have come from',partd.hasPick);
-      T('the Part D flag rides with the rows it governs',partd.flagCovered);
+      /* Was: the flag coupled to every row key, so ticking a section put a save
+         pair on four blank cells. Ticking a section on asks nothing of the
+         record — leave the rows empty and the next save drops both. Turning one
+         OFF that holds values is a decision, and keeps its pair; that is checked
+         in "a section turned off says so" below. */
+      eq('ticking a section on puts no pair on its empty row',partd.flagCovered,false);
 
       /* rsYearOn advances the parsed date by a year on purpose: the uploaded
          schedule is the one in force and this package renews it. The figure was
@@ -506,28 +517,46 @@ const FULL=process.argv.includes('--full');
          await c.eval(`return window.__b.diff(${JSON.stringify(base)},window.__b.full())`),[]);
     }
 
-    /* ─────────────────────────────────────────────────────────────────────
-       5. The conflict buttons — AUDIT-BACKLOG §E, "verified only in source,
-       never reached in a browser", because the seeded record has no conflict.
-       Synthesise one. Rule 14: the flag must not outlive the condition. */
-    console.log('\n── the conflict buttons, reached at last ──────────────');
-    for(const C of [
-      {name:'unit type', btn:'[data-typ]', seed:`window.__t.__edit('units.0.br_rcs','3BR');window.__t.__edit('units.0.ba_rcs','2BA');`, flag:'units.0.type_reviewed'},
-      {name:'unit count',btn:'[data-num]', seed:`window.__t.__edit('units.0.num_rcs','77');`, flag:'units.0.num_reviewed'},
-    ]){
-      await openForm();
-      await c.eval(`${C.seed}window.__t.__renderBody();return 1;`);
-      await sleep(280);
-      const btns=await c.eval(`return [...document.querySelectorAll('#viewForm ${C.btn}')].map(b=>b.textContent.trim())`);
-      eq(`${C.name}: the conflict renders both ways out`,btns.length,2);
-      await c.eval(`const b=[...document.querySelectorAll('#viewForm ${C.btn}')].find(x=>x.getAttribute('${C.btn.slice(1,-1)}')==='rcs')
-        ||document.querySelector('#viewForm ${C.btn}');b.click();return 1;`);
-      await sleep(250);
-      eq(`${C.name}: resolving it clears the conflict`,
-         await c.eval(`return document.querySelectorAll('#viewForm ${C.btn}').length`),0);
-      eq(`${C.name}: and the flag does not outlive it`,
-         await c.eval(`return window.__t.getVal('${C.flag}')||''`),'');
+    /* ──────────────────────────────────────────────────────
+       5. A difference between the documents is not a blockage.
+
+       There used to be a pair of buttons here — "keep RS" / "use RCS" — that a
+       reader had to press before a cell whose two sources disagreed could be
+       saved at all. It was the wrong premise: the number a reader types IS the
+       answer, and the study's number belongs in the cell's own dropdown to be
+       pulled if it is wanted. Typing over a count that the study reads
+       differently now saves like any other cell, and the study's figure is one
+       of the things the cell offers. */
+    console.log('\n── a difference is not a blockage ─────────────────────');
+    await openForm();
+    await c.eval("window.__t.__edit('units.0.num_rcs','77');window.__t.__renderBody();return 1;");
+    await sleep(280);
+    eq('a count the study reads differently offers no modal choice',
+       await c.eval("return document.querySelectorAll('#viewForm [data-num],#viewForm [data-typ]').length"),0);
+    await c.eval("const i=document.querySelector('[data-k=\"units.0.num_units\"]');i.focus();i.value='';return 1");
+    await c.type('3');
+    await sleep(200);
+    await c.key('Enter');
+    await sleep(800);
+    {
+      const cell=await c.eval(`
+        const b=document.querySelector('[data-box="units.0.num_units"]');
+        const cs=getComputedStyle(b);
+        return {v:window.__t.getVal('units.0.num_units'),src:window.__t.srcOf('units.0.num_units'),
+          border:cs.borderLeftColor,tag:(b.querySelector('.srctag')||{}).textContent||null};`);
+      eq('typing over it and pressing Enter saves it',[cell.v,cell.src],['3','database']);
+      eq('the cell reads as on file',cell.border,'rgb(37, 99, 235)');
+      eq('and stops claiming the schedule gave it',cell.tag,null);
     }
+    /* And the study's own count, which had nowhere to be offered from while the
+       buttons existed. */
+    await openForm();
+    await c.eval(`window.__t.__setRcsParsed({scalars:{},units:[{type:'1 Bedroom',br:1,ba:1,count:19,rent:'',ua:'',proposed:'',safmr:''}],firm:'belfry'});
+      window.__t.__edit('units.0.br','1BR');window.__t.__edit('units.0.ba','1BA');
+      window.__t.__renderBody();return 1;`);
+    await sleep(300);
+    T('the count cell offers the study as well as the schedule',
+      await c.eval("return [...document.querySelectorAll('[data-box=\"units.0.num_units\"] .uaopt')].some(o=>/RCS report/.test(o.innerText)&&/19/.test(o.innerText))"));
 
     /* ─────────────────────────────────────────────────────────────────────
        6. The unit-type cell's sub-cells. A sub-value marks itself; the cell's
@@ -1187,7 +1216,11 @@ const FULL=process.argv.includes('--full');
         return {inRows:[...document.querySelectorAll('.pdrow')].reduce((n,r)=>n+[...r.querySelectorAll('.ovic')].filter(vis).length,0),
           onFlag:[...document.querySelectorAll('[data-ovic="ns8.enabled"]')].filter(vis).length};`);
       eq('switching a section on offers nothing to save in its empty row',ns8&&ns8.inRows,0);
-      eq('and the flag itself carries the pair, beside its own checkbox',ns8&&ns8.onFlag,1);
+      /* Nor on the flag. Switching a section ON asks nothing of the record —
+         leave the rows empty and the next save drops both them and the flag.
+         Turning one OFF that holds values is a decision, and that one keeps its
+         pair; it is checked in 'a section turned off says so' below. */
+      eq('and none on the flag either, for merely switching it on',ns8&&ns8.onFlag,0);
     }
 
     /* The card opened downward and never flipped. On the last row it landed over
@@ -1544,6 +1577,42 @@ const FULL=process.argv.includes('--full');
           onScreen:r.right<=window.innerWidth&&r.top>=0,cardHeight:after};`);
       T('the panel stays within the card it belongs to',open.inside&&open.onScreen);
       eq('and opening it does not resize the row',open.cardHeight,m.heights[0]);
+    }
+
+    /* ── a section turned off says so ───────────────────────────────────────
+       Reproduced before it was fixed: press "Turn off" on a Part D that holds a
+       row, and the flag went blank while the box stayed ticked and the row
+       stayed on screen — so the dialog came back on the next click, for ever.
+       "On" was ALSO true whenever rows existed, and the rows are deliberately
+       kept so re-ticking restores them. Blank now means nobody has said; '0'
+       means off. */
+    console.log('\n── a section turned off says so ──────────────────────');
+    await c.reload();
+    await c.eval(HELPERS);
+    await c.eval('await window.__t.__openForm('+JSON.stringify(pid)+');return 1');
+    await sleep(300);
+    {
+      const _r=await c.eval('return await window.__t.ocrMapPages('+JSON.stringify(JSON.parse(fs.readFileSync(path.join(__dirname,'fixture_rs_scan.json'),'utf8')))+')');
+      await c.eval('window.__t.__setRsParsed('+JSON.stringify(_r)+');window.__t.__rsFill();window.__t.__renderBody();return 1');
+      await sleep(500);
+      T('the schedule brought a non-revenue row with it',
+        await c.eval("return document.querySelectorAll('.pdrow').length>0"));
+      await c.eval("const t=document.getElementById('nonrevToggle');t.checked=false;t.onchange();return 1");
+      await sleep(400);
+      T('turning it off asks first, because the row holds values',
+        await c.eval("return document.getElementById('scrim').classList.contains('open')"));
+      await c.eval("const b=document.getElementById('dlgOk');if(b)b.click();return 1");
+      await sleep(400);
+      const off=await c.eval(`
+        const vis=el=>{if(!el||!el.offsetParent)return false;const r=el.getBoundingClientRect();return r.width>0&&r.height>0;};
+        return {flag:window.__t.getVal('nonrev.enabled'),
+          checked:(document.getElementById('nonrevToggle')||{}).checked,
+          rows:document.querySelectorAll('.pdrow').length,
+          pair:[...document.querySelectorAll('[data-ovic="nonrev.enabled"]')].filter(vis).length};`);
+      eq('and then it is actually off',[off.checked,off.rows],[false,0]);
+      eq('with the flag saying so rather than saying nothing',off.flag,'0');
+      /* The one direction that IS a decision worth saving on its own. */
+      eq('and a pair to save that decision',off.pair,1);
     }
 
     console.log('\n── the console stayed quiet ───────────────────────────');

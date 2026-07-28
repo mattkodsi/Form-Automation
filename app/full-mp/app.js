@@ -563,21 +563,28 @@ function numUnresolved(i){return numConflict(i)&&!numReviewedOf(i);}
 /* Every save/revert in a unit row now sits BELOW the row, under the column it
    belongs to — see unitActs. Inside these cells the icon pair squeezed the
    controls it sat beside, and the row changed shape the moment it was edited. */
-function unitTypeCell(i){const brK='units.'+i+'.br',baK='units.'+i+'.ba';const conf=typeUnresolved(i);const c=conf?CLR.overridden:groupColors([brK,baK]);
+function unitTypeCell(i){const brK='units.'+i+'.br',baK='units.'+i+'.ba';const conf=false;const c=groupColors([brK,baK]);
   const withRs=(k,opts,ph)=>{const d=csDrop(k,opts,ph,'',!/\.br$/.test(k),(!conf&&partHot(k))?tintStyle(k):'',rsBrBa(k));const row=rsCsRow(k)||'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>';
     return d.replace('<div class="uamenu">','<div class="uamenu">'+row);};
   return `<div class="utwrap"><div class="rbox brba" data-box="${brK}" style="background:${c[1]};border-left-color:${c[0]}">${withRs(brK,BR_OPTS,'BR')}<span class="slash">/</span>${withRs(baK,BA_OPTS,'BA')}${ovIcons([brK,baK])}</div>`
     +`${labelLine(i)}</div>`;}
-function unitCountCell(i){const k='units.'+i+'.num_units';const c=numUnresolved(i)?CLR.overridden:cellColors(k);const rv=rsUnit(i,'count');
+function unitCountCell(i){const k='units.'+i+'.num_units';const c=cellColors(k);const rv=rsUnit(i,'count');
+  /* The study counts the units too, and had nowhere to be offered from — the
+     only way to take its number was the conflict buttons that are now gone. */
+  const cv=rcsUnitVal(i,'count');
   // The schedule is where this number comes from, so the cell says so whether or
   // not one is loaded right now — dimmed when there is nothing to pull, exactly as
   // the rent beside it does. Rendering nothing left the column looking as though
   // it had no source at all the moment the upload went out of session.
-  return `<div class="rbox" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><input type="text" data-money="1" data-k="${k}" value="${esc(fmtMoney(get(k)))}">${rsTag(k)}${rv!=null?srcPick(k,[{tag:'Executed RS',val:rv}]):dimPick('Executed RS')}</div>`;}
-function typeNote(i){if(!typeConflict(i))return '';const br=get('units.'+i+'.br'),ba=get('units.'+i+'.ba'),brR=get('units.'+i+'.br_rcs')||br,baR=get('units.'+i+'.ba_rcs')||ba;
+  return `<div class="rbox" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><input type="text" data-money="1" data-k="${k}" value="${esc(fmtMoney(get(k)))}">${srcTags(k)}${(rv!=null||cv!=null)?srcPick(k,[{tag:'Executed RS',val:rv},{tag:'RCS report',val:cv}]):dimPick('Executed RS')}</div>`;}
+/* The study's reading lives in the cell's dropdown now; a difference is not a
+   thing to be resolved before the row can be saved. */
+function typeNote(i){return '';}
+function _typeNoteUnused(i){if(!typeConflict(i))return '';const br=get('units.'+i+'.br'),ba=get('units.'+i+'.ba'),brR=get('units.'+i+'.br_rcs')||br,baR=get('units.'+i+'.ba_rcs')||ba;
   if(typeUnresolved(i))return '<div class="ucnote warn">⚠ RS '+br+'/'+ba+' · RCS '+brR+'/'+baR+' <span class="pick"><button class="urev" data-typ="rs" data-ci="'+i+'">keep RS</button><button class="urev sv" data-typ="rcs" data-ci="'+i+'">use RCS</button></span></div>';
   return '<div class="ucnote ok">✓ RS · '+br+'/'+ba+'</div>';}
-function numNote(i){if(!numConflict(i))return '';const n=get('units.'+i+'.num_units'),nR=get('units.'+i+'.num_rcs');
+function numNote(i){return '';}
+function _numNoteUnused(i){if(!numConflict(i))return '';const n=get('units.'+i+'.num_units'),nR=get('units.'+i+'.num_rcs');
   if(numUnresolved(i))return '<div class="ucnote warn">⚠ RS '+n+' · RCS '+nR+' <span class="pick"><button class="urev" data-num="rs" data-ci="'+i+'">keep RS</button><button class="urev sv" data-num="rcs" data-ci="'+i+'">use RCS</button></span></div>';
   return '<div class="ucnote ok">✓ RS · '+n+'</div>';}
 function safmrBox(i){const src=get('units.'+i+'.safmr_source')||defSafmrSrc(i),hud=get('units.'+i+'.safmr_hud'),rcs=get('units.'+i+'.safmr_rcs'),custom=get('units.'+i+'.safmr_custom');
@@ -675,8 +682,13 @@ function unitCard(i,pos){const trash=UNITS.length>1?`<button class="trash" data-
 }
 function renderRents(){
   const cards=UNITS.map((i,pos)=>unitCard(i,pos)).join('');
-  const nrOn=get('nonrev.enabled')==='1'||NONREV.length>0;
-  let pd=`<div class="pdhead"><label class="ns8flag"><input type="checkbox" id="nonrevToggle"${nrOn?' checked':''}><span>This property has non-revenue units (Part D)</span></label>${nrOn?ovIcons('nonrev.enabled'):''}${nrOn?' <span class="sub">manager’s unit, model, etc. — excluded from rent totals</span>':''}</div>`;
+  /* '1' on, '0' off, '' nobody has said — and only the last of those falls back
+     to "there are rows", for records saved before the flag existed. While blank
+     and "rows exist" meant the same thing, turning the section off could not
+     take: the rows are kept on purpose so re-ticking restores them, so the
+     section switched itself back on and the dialog repeated. */
+  const nrOn=get('nonrev.enabled')==='1'||(get('nonrev.enabled')===''&&NONREV.length>0);
+  let pd=`<div class="pdhead"><label class="ns8flag"><input type="checkbox" id="nonrevToggle"${nrOn?' checked':''}><span>This property has non-revenue units (Part D)</span></label>${(!nrOn&&NONREV.some(i=>nonrevHasData(i)||numf(get('nonrev.'+i+'.num_units'))>0))?ovIcons('nonrev.enabled'):''}${nrOn?' <span class="sub">manager’s unit, model, etc. — excluded from rent totals</span>':''}</div>`;
   if(nrOn){
     if(NONREV.length){const _np=hasProg('rcs')?'':' noprop',_xc=hasProg('rcs')?7:6;
     pd+=`<div class="rgh${_np}"><span style="grid-column:1">Unit type</span><span style="grid-column:2">Units</span><span style="grid-column:3">Contract rent</span><span style="grid-column:4/6">Use</span></div>`+NONREV.map(i=>`<div class="pdrow${_np}"><div style="grid-column:1">${brbaBox('nonrev.'+i+'.br','nonrev.'+i+'.ba')}</div><div style="grid-column:2">${numBox('nonrev.'+i+'.num_units','',1)}</div><div style="grid-column:3">${moneyBox('nonrev.'+i+'.rent',1)}</div><div style="grid-column:4/6">${numBox('nonrev.'+i+'.use',"e.g. Manager’s unit",1)}</div><div class="urx" style="grid-column:${_xc}"><button class="trash" data-delnonrev="${i}" title="Delete">✕</button></div><div class="uracts${_np}"><div style="grid-column:1"><span class="ua-br">${ovIcons('nonrev.'+i+'.br')}</span><span class="ua-sl"></span><span class="ua-ba">${ovIcons('nonrev.'+i+'.ba')}</span></div><div style="grid-column:2">${ovIcons('nonrev.'+i+'.num_units')}</div><div style="grid-column:3">${ovIcons('nonrev.'+i+'.rent')}</div><div style="grid-column:4/6">${ovIcons('nonrev.'+i+'.use')}</div></div></div>`).join('');}
@@ -684,7 +696,7 @@ function renderRents(){
   }
   pd+=undoBits('NR');
   const lhOn=get('ns8.enabled')==='1';
-  let lh=`<div class="pdhead"><label class="ns8flag"><input type="checkbox" id="ns8Toggle"${lhOn?' checked':''}><span>This property has non-Section 8 revenue producing units</span></label>${lhOn?ovIcons('ns8.enabled'):''}${lhOn?' <span class="sub">entered as unit type and average rent, as shown on the rent schedule</span>':''}</div>`;
+  let lh=`<div class="pdhead"><label class="ns8flag"><input type="checkbox" id="ns8Toggle"${lhOn?' checked':''}><span>This property has non-Section 8 revenue producing units</span></label>${(!lhOn&&NS8.some(i=>ns8HasData(i)||numf(get('ns8.'+i+'.num_units'))>0))?ovIcons('ns8.enabled'):''}${lhOn?' <span class="sub">entered as unit type and average rent, as shown on the rent schedule</span>':''}</div>`;
   if(lhOn){
     if(NS8.length){const _np2=hasProg('rcs')?'':' noprop',_xc2=hasProg('rcs')?7:6;
     lh+=`<div class="rgh${_np2}"><span style="grid-column:1">Unit type</span><span style="grid-column:2">Units</span><span style="grid-column:3">Average unit rent</span></div>`+NS8.map(i=>`<div class="pdrow${_np2}"><div style="grid-column:1">${brbaBox('ns8.'+i+'.br','ns8.'+i+'.ba')}</div><div style="grid-column:2">${numBox('ns8.'+i+'.num_units','',1)}</div><div style="grid-column:3">${moneyBox('ns8.'+i+'.avg_rent',1)}</div><div class="urx" style="grid-column:${_xc2}"><button class="trash" data-delns8="${i}" title="Delete">✕</button></div><div class="uracts${_np2}"><div style="grid-column:1"><span class="ua-br">${ovIcons('ns8.'+i+'.br')}</span><span class="ua-sl"></span><span class="ua-ba">${ovIcons('ns8.'+i+'.ba')}</span></div><div style="grid-column:2">${ovIcons('ns8.'+i+'.num_units')}</div><div style="grid-column:3">${ovIcons('ns8.'+i+'.avg_rent')}</div></div></div>`).join('');}
@@ -1788,7 +1800,7 @@ function sectionEmpty(n){const ks=sectionKeys(n);if(!ks.length)return false;
 function sectionStatus(n){if(n!==1&&sectionEmpty(n))return 'empty';
   if(n===1)return _rcsUpload?'ok':((hasProg('rcs')||hasProg('ocaf'))?'warn':'ok');
   if(n===10){if(sectionKeys(10).some(k=>srcOf(k)==='overridden'))return'warn';const C=ocafCalc();return(C.F>0&&C.R>0)?'ok':'warn';}
-  if(n===11){if(sectionKeys(11).some(k=>srcOf(k)==='overridden'))return'warn';const A=uafAnalysis();if(A.mismatch.length)return'warn';const hasF=UAF_UTILS.some(u=>numf(get('uaf.f_'+u[0]))>0);return(hasF&&A.any)?'ok':'warn';}const over=sectionKeys(n).some(k=>srcOf(k)==='overridden');if(n===6&&(UNITS.some(uaUnresolved)||UNITS.some(typeUnresolved)||UNITS.some(numUnresolved)||UNITS.some(i=>srcOf('units.'+i+'.ua_source')==='overridden')||(hasProg('rcs')&&(UNITS.some(safmrUnresolved)||UNITS.some(i=>srcOf('units.'+i+'.safmr_source')==='overridden')||UNITS.some(overCeiling)))||rsCapacity().msgs.length>0))return'warn';return over?'warn':'ok';}
+  if(n===11){if(sectionKeys(11).some(k=>srcOf(k)==='overridden'))return'warn';const A=uafAnalysis();if(A.mismatch.length)return'warn';const hasF=UAF_UTILS.some(u=>numf(get('uaf.f_'+u[0]))>0);return(hasF&&A.any)?'ok':'warn';}const over=sectionKeys(n).some(k=>srcOf(k)==='overridden');if(n===6&&(UNITS.some(uaUnresolved)||UNITS.some(i=>srcOf('units.'+i+'.ua_source')==='overridden')||(hasProg('rcs')&&(UNITS.some(safmrUnresolved)||UNITS.some(i=>srcOf('units.'+i+'.safmr_source')==='overridden')||UNITS.some(overCeiling)))||rsCapacity().msgs.length>0))return'warn';return over?'warn':'ok';}
 function sectionPill(n){const st=sectionStatus(n);
   if(st==='empty')return '<span class="pill empty" data-pill="'+n+'">not started</span>';
   return st==='warn'?'<span class="pill warn" data-pill="'+n+'">review</span>':'<span class="pill ok" data-pill="'+n+'">confirmed</span>';}
@@ -2113,7 +2125,7 @@ function overrideCount(){const grouped=new Set();for(const b in ADDR_GROUPS)ADDR
 function gaugeSegs(pCur,pPro){const down=pPro<pCur;
   return '<div class="seg dark" style="width:'+pCur+'%"></div>'
     +'<div class="seg light'+(down?' over':'')+'" style="left:'+(down?0:pCur)+'%;width:'+(down?pPro:pPro-pCur)+'%"></div>';}
-function attnFlags(){const f=[];const u=UNITS.filter(uaUnresolved).length;if(u)f.push(u+' UA conflict'+(u>1?'s':'')+' to resolve');const sf=hasProg('rcs')?UNITS.filter(safmrUnresolved).length:0;if(sf)f.push(sf+' SAFMR conflict'+(sf>1?'s':'')+' to resolve');const tc=UNITS.filter(i=>typeUnresolved(i)||numUnresolved(i)).length;if(tc)f.push(tc+' unit type/count conflict'+(tc>1?'s':'')+' to resolve');const A=analysis();if(hasProg('rcs')){if(A.safmrMissing)f.push(hudBlockerText()?('To pull SAFMRs, '+hudBlockerText()):'SAFMR needed for the 150% test');if(!A.safmrMissing&&A.countsMissing&&A.safmrHave)f.push('Unit counts are needed for the 150% test ('+secRef(6)+')');if(A.safmrOver)f.push(A.safmrOver+' unit type'+(A.safmrOver>1?'s':'')+' over 150% SAFMR');}rsCapacity().flags.forEach(x=>f.push(x));const ov=overrideCount();if(ov)f.push(ov+' unsaved override'+(ov>1?'s':''));if(srcOf('nonrev.enabled')==='overridden')f.push('Non-revenue units turned '+(get('nonrev.enabled')==='1'?'on':'off')+' \u2014 saves with your next \u201cUpdate property profile\u201d');if(srcOf('ns8.enabled')==='overridden')f.push('Non-Section 8 units turned '+(get('ns8.enabled')==='1'?'on':'off')+' \u2014 saves with your next \u201cUpdate property profile\u201d');if(!_rcsUpload&&(hasProg('rcs')||hasProg('ocaf')))f.push((hasProg('rcs')?'The completed RCS report isn’t uploaded':'The CA’s auto-OCAF package isn’t uploaded')+' ('+secRef(1)+')');
+function attnFlags(){const f=[];const u=UNITS.filter(uaUnresolved).length;if(u)f.push(u+' UA conflict'+(u>1?'s':'')+' to resolve');const sf=hasProg('rcs')?UNITS.filter(safmrUnresolved).length:0;if(sf)f.push(sf+' SAFMR conflict'+(sf>1?'s':'')+' to resolve');const A=analysis();if(hasProg('rcs')){if(A.safmrMissing)f.push(hudBlockerText()?('To pull SAFMRs, '+hudBlockerText()):'SAFMR needed for the 150% test');if(!A.safmrMissing&&A.countsMissing&&A.safmrHave)f.push('Unit counts are needed for the 150% test ('+secRef(6)+')');if(A.safmrOver)f.push(A.safmrOver+' unit type'+(A.safmrOver>1?'s':'')+' over 150% SAFMR');}rsCapacity().flags.forEach(x=>f.push(x));const ov=overrideCount();if(ov)f.push(ov+' unsaved override'+(ov>1?'s':''));if(srcOf('nonrev.enabled')==='overridden')f.push('Non-revenue units turned '+(get('nonrev.enabled')==='1'?'on':'off')+' \u2014 saves with your next \u201cUpdate property profile\u201d');if(srcOf('ns8.enabled')==='overridden')f.push('Non-Section 8 units turned '+(get('ns8.enabled')==='1'?'on':'off')+' \u2014 saves with your next \u201cUpdate property profile\u201d');if(!_rcsUpload&&(hasProg('rcs')||hasProg('ocaf')))f.push((hasProg('rcs')?'The completed RCS report isn’t uploaded':'The CA’s auto-OCAF package isn’t uploaded')+' ('+secRef(1)+')');
   if(hasProg('ocaf')){if(!(ocafFactorResolved()>0))f.push('OCAF factor needed — pull or enter it ('+secRef(10)+')');if(!(ocafK()>0))f.push('Annual debt service needed for the OCAF worksheet ('+secRef(10)+')');}
   if(hasProg('uaf')){const UA=uafAnalysis();const hasF=UAF_UTILS.some(u=>numf(get('uaf.f_'+u[0]))>0);
     if(!hasF)f.push('UAF factors needed — pull or enter them ('+secRef(11)+')');
@@ -2628,7 +2640,7 @@ function wireBody(){
   const nt=el('nonrevToggle');if(nt)nt.onchange=()=>{
     if(!nt.checked&&NONREV.some(i=>nonrevHasData(i)||numf(get('nonrev.'+i+'.num_units'))>0)){
       nt.checked=true;
-      dialogConfirm('Turn off non-revenue units?','The section still holds '+NONREV.length+' row'+(NONREV.length>1?'s':'')+' with values. Turned off, the rows are left out of every generated document, and your next \u201cUpdate property profile\u201d removes them for good \u2014 re-check the box before saving to bring them back.','Turn off',true,()=>{form=store.editForm(form,'nonrev.enabled','');renderBody();setStatus('Non-revenue units off \u2014 the hidden rows are removed on your next Update property profile.');});
+      dialogConfirm('Turn off non-revenue units?','The section still holds '+NONREV.length+' row'+(NONREV.length>1?'s':'')+' with values. Turned off, the rows are left out of every generated document, and your next \u201cUpdate property profile\u201d removes them for good \u2014 re-check the box before saving to bring them back.','Turn off',true,()=>{form=store.editForm(form,'nonrev.enabled','0');renderBody();setStatus('Non-revenue units off \u2014 the hidden rows are removed on your next Update property profile.');});
       return;}
     if(!nt.checked){NONREV.forEach(i=>Object.keys(form).forEach(k=>{if(k.indexOf('nonrev.'+i+'.')===0)delete form[k];}));NONREV=[];}
     form=store.editForm(form,'nonrev.enabled',nt.checked?'1':'');
@@ -2638,7 +2650,7 @@ function wireBody(){
     if(!lt.checked&&NS8.some(i=>numf(get('ns8.'+i+'.num_units'))>0)){lt.checked=true;setStatus('Delete the non-Section 8 rows first to turn this section off.');return;}
     if(!lt.checked&&NS8.some(ns8HasData)){
       lt.checked=true;
-      dialogConfirm('Turn off non-Section 8 units?','The section still holds '+NS8.length+' row'+(NS8.length>1?'s':'')+' with values. Turned off, the rows are left out of every generated document, and your next \u201cUpdate property profile\u201d removes them for good \u2014 re-check the box before saving to bring them back.','Turn off',true,()=>{form=store.editForm(form,'ns8.enabled','');renderBody();setStatus('Non-Section 8 units off \u2014 the hidden rows are removed on your next Update property profile.');});
+      dialogConfirm('Turn off non-Section 8 units?','The section still holds '+NS8.length+' row'+(NS8.length>1?'s':'')+' with values. Turned off, the rows are left out of every generated document, and your next \u201cUpdate property profile\u201d removes them for good \u2014 re-check the box before saving to bring them back.','Turn off',true,()=>{form=store.editForm(form,'ns8.enabled','0');renderBody();setStatus('Non-Section 8 units off \u2014 the hidden rows are removed on your next Update property profile.');});
       return;}
     form=store.editForm(form,'ns8.enabled',lt.checked?'1':'');
     if(lt.checked&&!NS8.length){_undoLI=[];form=store.editForm(form,'ns8.0.br','');NS8=[0];}
