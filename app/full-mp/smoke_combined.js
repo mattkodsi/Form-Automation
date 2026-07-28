@@ -180,7 +180,11 @@ const T=(label,v)=>eq(label,!!v,true);
       units:[{type:br0+' / '+ba0,count:1027,rent:1027,ua:75}]}});
   await app.__openCycleForm(pid,scid);
   const utc=els.sections.innerHTML.split('<div class="urow">')[1]||'';
-  eq('the unit type carries exactly one RS badge', (utc.match(/utgrp"><span class="srctag rstag"/g)||[]).length, 1);
+  /* The whole-cell picker is gone: bedroom and bath are two independent cells
+     again, each declaring the schedule as its own source. */
+  T('no whole-cell picker on the type', !/utgrp/.test(utc));
+  T('bedroom is its own control', /data-trigfor="units\.0\.br"/.test(utc));
+  T('bathroom is its own control',  /data-trigfor="units\.0\.ba"/.test(utc));
   /* The same shape as the assertion the designation chip used to carry: the ONE
      badge belongs to the group, and no sub-part of the type may grow a second.
      The label line is the sub-part that could. */

@@ -379,11 +379,12 @@ const FULL=process.argv.includes('--full');
       const u=[...cell.querySelectorAll('.utdiv')].map(px);
       const a=[...addr.querySelectorAll('.adiv')].map(px);
       return {u,a};`);
-    /* One divider now. It separated the bath from the designation and the
-       designation from the source picker; with the designation gone the second
-       rule went with it, and the survivor still has to match the address. */
-    eq('the unit cell draws one divider',dividers.u.length,1);
-    eq('and it matches the rule the address uses',dividers.u[0],dividers.a[0]);
+    /* No dividers left in the type cell. Both rules existed to fence off things
+       that are gone — the designation and the whole-cell picker — and bedroom
+       and bath have always been separated by their own slash. The address still
+       draws its own, which is what keeps that rule honest. */
+    eq('the type cell draws no divider',dividers.u.length,0);
+    eq('the address still draws its own',dividers.a.length>0,true);
 
     /* ─────────────────────────────────────────────────────────────────────
        7. The session boundary (rule 19). A defect that does not exist inside a
