@@ -35,7 +35,7 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=226;   // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
+const MIN_CHECKS=234;   // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
                        // pristine (three seeds, two checks each). 2026-07-27: the unit-type cell
                        // lost a divider with the designation, so the pair of divider checks
                        // became one. Lowered on purpose.
@@ -1730,6 +1730,56 @@ const FULL=process.argv.includes('--full');
       eq('with the flag saying so rather than saying nothing',off.flag,'0');
       /* The one direction that IS a decision worth saving on its own. */
       eq('and a pair to save that decision',off.pair,1);
+    }
+
+    /* ── one property, one name ────────────────────────────────────────────
+       The dialog has refused a duplicate name since 2026-07-24, and the live
+       record grew three "Beacon Hill"s and three "Colonial Village"s anyway:
+       the refusal lived in the dialog, so a rename, a save of property.name, or
+       anything holding mpdb walked straight past it. The rule now lives in the
+       data layer.
+
+       Driven here because the Node suite can only prove the layer throws. What
+       a machine could not otherwise tell you is that the person typing the name
+       still ends where they always did — on the profile they meant, with a
+       sentence — rather than on a thrown error nobody catches. */
+    console.log('\n── one property, one name ────────────────────────────');
+    {
+      await c.reload(); await c.eval(HELPERS); await sleep(400);
+      const names=async()=>c.eval('return (mpdb.listProperties()||[]).map(p=>p.name);');
+      /* Its own name, seeded through the data layer. Colliding with whatever an
+         earlier section left first in the registry made this depend on their
+         order, and on one of them not having left it unnamed. */
+      const NM='Cedar Crest Commons';
+      await c.eval('mpdb.createProperty('+JSON.stringify(NM)+');return 1');
+      const n0=await names();
+      T('a name nobody holds creates a property',n0.indexOf(NM)>=0);
+
+      /* Whoever asks, and however they spell it. */
+      eq('the data layer refuses a duplicate, dialog or no dialog',
+         await c.eval('try{mpdb.createProperty('+JSON.stringify(NM)+');return "CREATED";}catch(e){return e.code||"?";}'),
+         'DUP_PROPERTY_NAME');
+      eq('and the registry did not grow',(await names()).length,n0.length);
+      eq('case is not a difference',
+         await c.eval('try{mpdb.createProperty('+JSON.stringify(NM.toUpperCase())+');return "CREATED";}catch(e){return e.code||"?";}'),
+         'DUP_PROPERTY_NAME');
+
+      /* The courtesy, unchanged: same name in, existing profile out. Guarded so
+         a build without the helper fails these checks rather than the run. */
+      await c.eval('if(typeof createPropNamed==="function")createPropNamed('+JSON.stringify(NM.toLowerCase())+',"");return 1');
+      await sleep(400);
+      const land=await c.eval('return {launcher:(document.getElementById("viewLauncher")||{style:{}}).style.display,'
+        +'name:(document.querySelector(".lh-name")||{}).textContent||"",'
+        +'status:(document.getElementById("status")||{}).textContent||"",'
+        +'count:(mpdb.listProperties()||[]).length};');
+      eq('a name already taken makes no second property',land.count,n0.length);
+      T('and lands on the profile that holds it',land.launcher===''&&land.name.indexOf(NM)>=0);
+      T('saying so, rather than failing',/already exists/.test(land.status));
+
+      /* And a name nobody holds still creates one. */
+      await c.eval('if(typeof createPropNamed==="function")createPropNamed("Willow Woods Phase II","");return 1');
+      await sleep(400);
+      eq('a free name still creates',(await names()).length,n0.length+1);
     }
 
     console.log('\n── the console stayed quiet ───────────────────────────');

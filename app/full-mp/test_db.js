@@ -5,7 +5,7 @@
    shows it, and MIN_CHECKS catches a run that dies partway — a short count is
    a failure, not a pass. Adding checks? Raise MIN_CHECKS. */
 const { makeDb, memoryAdapter, isPerCycleKey, migrate, computeAnalysis, computeSalutation, CROSSWALK } = require('./db.js');
-const MIN_CHECKS = 143;
+const MIN_CHECKS = 162;
 let fails = 0, n = 0, verdict = null;
 const BAR = '═'.repeat(68);
 function fail(msg, err) {
@@ -410,6 +410,56 @@ function jsonAdapter() { let s = null; return { get: async () => (s ? JSON.parse
      SC.packageDocs({ programs: ['uaf'], uafDec: 2 }).map(d => d.id)],
     [['uafcert', 'schedule'], ['uafcert', 'schedule', 'uanotice', 'tcert']]);
 })();
+
+  /* ─ 10 · ONE PROPERTY, ONE NAME ──────────────────────────────────────────
+     The dialog has refused a duplicate name since 2026-07-24, and the live
+     record grew three "Beacon Hill"s and three "Colonial Village"s anyway. A
+     check that lives in a dialog only covers the callers who came through that
+     dialog: a rename, a save of property.name (which is what applying an
+     executed schedule's parse does), and anything holding mpdb directly all
+     walked past it. So the rule moved into the data layer, and this section is
+     what keeps it there. */
+  console.log('\n─ 10 · ONE PROPERTY, ONE NAME ─');
+  const ndb = await makeDb(memoryAdapter());
+  ndb.createProperty('Colonial Village');
+  const nBefore = ndb.listProperties().length;
+  const grab = fn => { try { fn(); return null; } catch (e) { return e; } };
+
+  const dup = grab(() => ndb.createProperty('Colonial Village'));
+  truthy('a second property of the same name is refused', dup);
+  ok('and says why in a code a caller can branch on', dup && dup.code, 'DUP_PROPERTY_NAME');
+  ok('and points at the property already holding the name',
+    dup && (ndb.listProperties().find(p => p.id === dup.pid) || {}).name, 'Colonial Village');
+  ok('the registry did not grow', ndb.listProperties().length, nBefore);
+
+  ok('case is not a difference', grab(() => ndb.createProperty('colonial VILLAGE')).code, 'DUP_PROPERTY_NAME');
+  ok('nor is surrounding space', grab(() => ndb.createProperty('  Colonial Village ')).code, 'DUP_PROPERTY_NAME');
+  ok('the seeded property is protected too', grab(() => ndb.createProperty('Gates Manor Apartments')).code, 'DUP_PROPERTY_NAME');
+
+  ok('a name nobody holds still creates', grab(() => ndb.createProperty('Beacon Hill')), null);
+  ok('and that name is taken from then on', grab(() => ndb.createProperty('Beacon Hill')).code, 'DUP_PROPERTY_NAME');
+  ok('two names, two properties', ndb.listProperties().length, nBefore + 1);
+
+  /* A property with no name collides with nothing — there is no name yet for
+     anything to be the same as. It gets one later, through the form, and THAT
+     is the route still open: renameProperty and saveFlat do not check. Asserted
+     here so the hole is recorded rather than assumed shut. */
+  ok('an unnamed property is allowed', grab(() => ndb.createProperty('')), null);
+  ok('and so is a second one', grab(() => ndb.createProperty('   ')), null);
+  await ndb.renameProperty(ndb.listProperties().find(p => p.name === 'Beacon Hill').id, 'Colonial Village');
+  ok('KNOWN GAP: a rename can still make a twin', ndb.listProperties().filter(p => p.name === 'Colonial Village').length, 2);
+
+  /* API PARITY (CLAUDE.md): db.js is the harness's stand-in, db.supabase.js is
+     what actually runs, db.cosmos.js is what the RA port runs. A guard in one
+     of the three is a guard in none of them. */
+  { const _fs = require('fs'), _p = require('path'), _d = __dirname;
+    ['db.js', 'db.supabase.js', 'db.cosmos.js'].forEach(f => {
+      const src = _fs.readFileSync(_p.join(_d, f), 'utf8');
+      truthy(f + ' defines the guard', /const assertNameFree/.test(src));
+      truthy(f + ' runs it on createProperty',
+        /createProperty\(name(?:, raMasterId)?\)\s*\{\s*assertNameFree\(name\)/.test(src));
+    });
+  }
 
 finish();
 })().catch(e => fail('the suite threw before reaching its verdict', e));

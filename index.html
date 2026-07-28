@@ -1447,6 +1447,32 @@ async function makeDb(adapter, opts) {
 
   /* ---- property registry ------------------------------------------------ */
   const dv = (p, k) => (p.durable[k] && p.durable[k].value !== '' ? p.durable[k].value : '');
+
+  /* One property, one name — enforced here, where every caller passes.
+
+     The dialog has asked existingPropByName() since 2026-07-24 and opens the
+     twin rather than making a second one. But a courtesy only guards the path
+     that remembers it, and three routes never did: creating a property with no
+     name and naming it afterwards, renaming one onto a name already taken, and
+     a plain save of property.name — which is exactly what applying an executed
+     schedule's parse does. The live record grew three "Beacon Hill"s and three
+     "Colonial Village"s with that dialog check in place the whole time.
+
+     So the rule lives in the data layer and the dialog keeps the courtesy:
+     callers that ask first still open the existing profile and never see this
+     throw. Case- and space-insensitive, because "Beacon Hill" and "beacon
+     hill " are the same building. */
+  const nameKey = s => String(s == null ? '' : s).trim().toLowerCase();
+  const propByName = (name, skipPid) => {
+    const k = nameKey(name); if (!k) return null;
+    for (const id in D.props) { if (id === skipPid) continue; if (nameKey(dv(D.props[id], 'property.name')) === k) return D.props[id]; }
+    return null;
+  };
+  const assertNameFree = (name, skipPid) => {
+    const clash = propByName(name, skipPid); if (!clash) return;
+    const e = new Error('A property named \u201c' + String(name).trim() + '\u201d already exists.');
+    e.code = 'DUP_PROPERTY_NAME'; e.pid = clash.id; throw e;
+  };
   /* The ring is the DOMINANT PACKAGE's score — see score.js. It used to be ten
      durable keys, counted, which is why a property could read 100% with the
      draft rent schedule and the tenant notice unbuildable: those ten were never
@@ -1620,7 +1646,7 @@ async function makeDb(adapter, opts) {
     listProperties, propertyAnalysis,
     getActive() { return { pid: D.meta.activePid }; },
     setActive(pid) { if (D.props[pid]) D.meta.activePid = pid; return Promise.resolve(); }, // pointer only; nav must not write (real saves persist it)
-    createProperty(name) { const r = _createProperty(name || ''); persist(); return r; },
+    createProperty(name) { assertNameFree(name); const r = _createProperty(name || ''); persist(); return r; },
     renameProperty(pid, name) { const p = D.props[pid]; if (!p) return; p.durable['property.name'] = cell(name); touch(pid); return persist(); },
     deleteProperty(pid) {
       delete D.props[pid];
@@ -1954,6 +1980,32 @@ function makeSupabaseDb(client) {
 
   /* ---- registry helpers (mirror db.js) ----------------------------------- */
   const dv = (p, k) => (p.durable[k] && p.durable[k].value !== '' ? p.durable[k].value : '');
+
+  /* One property, one name — enforced here, where every caller passes.
+
+     The dialog has asked existingPropByName() since 2026-07-24 and opens the
+     twin rather than making a second one. But a courtesy only guards the path
+     that remembers it, and three routes never did: creating a property with no
+     name and naming it afterwards, renaming one onto a name already taken, and
+     a plain save of property.name — which is exactly what applying an executed
+     schedule's parse does. The live record grew three "Beacon Hill"s and three
+     "Colonial Village"s with that dialog check in place the whole time.
+
+     So the rule lives in the data layer and the dialog keeps the courtesy:
+     callers that ask first still open the existing profile and never see this
+     throw. Case- and space-insensitive, because "Beacon Hill" and "beacon
+     hill " are the same building. */
+  const nameKey = s => String(s == null ? '' : s).trim().toLowerCase();
+  const propByName = (name, skipPid) => {
+    const k = nameKey(name); if (!k) return null;
+    for (const id in D.props) { if (id === skipPid) continue; if (nameKey(dv(D.props[id], 'property.name')) === k) return D.props[id]; }
+    return null;
+  };
+  const assertNameFree = (name, skipPid) => {
+    const clash = propByName(name, skipPid); if (!clash) return;
+    const e = new Error('A property named \u201c' + String(name).trim() + '\u201d already exists.');
+    e.code = 'DUP_PROPERTY_NAME'; e.pid = clash.id; throw e;
+  };
   /* The ring is the DOMINANT PACKAGE's score — see score.js. It used to be ten
      durable keys, counted, which is why a property could read 100% with the
      draft rent schedule and the tenant notice unbuildable: those ten were never
@@ -2113,6 +2165,7 @@ function makeSupabaseDb(client) {
       getActive() { return { pid: D.activePid }; },
       setActive(pid) { if (D.props[pid]) D.activePid = pid; return Promise.resolve(); },
       createProperty(name) {
+        assertNameFree(name);
         const pid = uuid();
         D.props[pid] = { id: pid, created_at: today(), updated_at: now(), durable: {}, percycle: {} };
         if (name) D.props[pid].durable['property.name'] = { value: String(name), source: 'database', saved_at: today() };
@@ -5202,9 +5255,25 @@ function renderMenu(){
   const mc=el('mClear');if(mc)mc.onclick=()=>{if(el('menuSearch'))el('menuSearch').value='';renderMenu();};
 }
 function existingPropByName(nm){nm=String(nm||'').trim().toLowerCase();if(!nm)return null;try{return (mpdb.listProperties()||[]).find(p=>String(p.name||'').trim().toLowerCase()===nm)||null;}catch(e){return null;}}
+/* Naming a property something already taken opens that property instead of
+   making a twin of it. That is a courtesy, and it always was: the rule itself
+   now lives in the data layer (assertNameFree in db.js / db.supabase.js /
+   db.cosmos.js), because a check that only runs in this dialog only covers the
+   people who came through this dialog. Both readings end in the same place —
+   the profile you meant — so the catch says what the pre-check says. */
+function createPropNamed(v,pickedId){
+  const ex=existingPropByName(v);
+  if(ex){openLauncher(ex.id);setStatus('\u201c'+v+'\u201d already exists \u2014 opened its profile.');return;}
+  let r;
+  try{r=mpdb.createProperty(v,pickedId||'');}
+  catch(e){
+    if(e&&e.code==='DUP_PROPERTY_NAME'&&e.pid){openLauncher(e.pid);setStatus('\u201c'+v+'\u201d already exists \u2014 opened its profile.');return;}
+    saveFailedModal(e);return;}
+  openLauncher(r.pid);
+}
 function createProperty(){
   const props=raProps();
-  if(!props.length){dialogInput('New property','Property name','','Create',nm=>{const v=(nm||'').trim();const ex=existingPropByName(v);if(ex){openLauncher(ex.id);setStatus('\u201c'+v+'\u201d already exists \u2014 opened its profile.');return;}const r=mpdb.createProperty(v);openLauncher(r.pid);});return;}
+  if(!props.length){dialogInput('New property','Property name','','Create',nm=>{createPropNamed((nm||'').trim(),'');});return;}
   const rows=props.map(p=>'<div class="uaopt" data-raprop="'+esc(p.name)+'" data-rapid="'+esc(p.id==null?'':String(p.id))+'" style="padding:9px 12px;cursor:pointer">'+esc(p.name)+'<span class="uasub">Related Affordable</span></div>').join('');
   modal('<div class="dlg-t">New property</div><div class="dlg-field"><label>Property name</label><input id="dlgIn" autocomplete="off" placeholder="Type a name, or pick a Related Affordable property"></div>'
     +'<div style="margin:10px 0 4px;font-size:11px;font-weight:700;letter-spacing:.4px;color:#8791a5">RELATED AFFORDABLE PROPERTIES \u2014 TYPE ABOVE TO FILTER</div>'
@@ -5222,11 +5291,10 @@ function createProperty(){
   inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();el('dlgOk').click();}else if(e.key==='Escape')closeModal();});
   el('dlgCancel').onclick=closeModal;
   el('dlgOk').onclick=()=>{const v=(el('dlgIn').value||'').trim();closeModal();
-    const ex=existingPropByName(v);if(ex){openLauncher(ex.id);setStatus('\u201c'+v+'\u201d already exists \u2014 opened its profile.');return;}
     /* pickedId = the picked RA master-registry id. The Supabase adapter ignores
        the 2nd arg today; the RA port's createProperty(name, raMasterId) uses it
        for the read-only prefill. */
-    const r=mpdb.createProperty(v,pickedId);openLauncher(r.pid);};
+    createPropNamed(v,pickedId);};
 }
 
 /* ---- LAUNCHER: property summary + program picker --------------------- */
