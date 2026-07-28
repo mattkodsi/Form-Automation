@@ -100,7 +100,12 @@ async function findLetter(rd){
     if(TOC.test(k))continue;                                       // a contents page lists the letter's own heading
     if(LETTER_HEAD.test(k)||LETTER_TABLE.test(k)){head=i;break;}   // stop the moment it is found
   }
-  if(head<0)return {pages:[],runs:runs,read:read,found:false};
+  /* Nothing found is two different situations. A copy that carried no text at
+     all on any page opened will never read, whatever we do to it; a copy full
+     of text with no letter in it is most likely the wrong file. The caller has
+     to be able to say which. */
+  if(head<0)return {pages:[],runs:runs,read:read,found:false,
+    textless:Object.keys(runs).every(function(i){return !runs[i]||!runs[i].length;})};
   /* The tail must carry TABLES, not merely the heading again. The 60-page
      renewal package puts its table of contents two pages after the letter, and
      that page prints "MARKET RENTAL ANALYSIS ....... 17" as an entry — enough
@@ -372,7 +377,10 @@ async function readLetter(rd){
   const found=await findLetter(rd);
   out.pages=found.pages;out.read=found.read;
   if(!found.found){
-    warn.push('No appraiser’s transmittal letter was found in this document, so nothing was read from it.');
+    out.textless=!!found.textless;
+    warn.push(out.textless
+      ?'This copy has no readable text, so nothing could be read from it.'
+      :'No appraiser’s transmittal letter was found in this document, so nothing was read from it.');
     return out;
   }
   const perPage=found.pages.map(function(i){return {pi:i,txt:lines(found.runs[i]).map(function(l){return l.text;})};});
