@@ -35,7 +35,7 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=95;   // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
+const MIN_CHECKS=98;   // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
                        // pristine (three seeds, two checks each). 2026-07-27: the unit-type cell
                        // lost a divider with the designation, so the pair of divider checks
                        // became one. Lowered on purpose.
@@ -261,6 +261,46 @@ const FULL=process.argv.includes('--full');
        [brbaClean.laidOut,brbaClean.inside,brbaDirty.laidOut,brbaDirty.inside],[true,true,true,true]);
     await c.eval("window.__t.__revertKeys(['units.0.br']);window.__t.__renderBody();return 1");
     await sleep(320);
+
+    /* ── after a parse, every changed cell can be acted on ──────────────────
+       The general rule, checked against the real document rather than one cell
+       at a time: fill the form from the fixture, then ask of every key the parse
+       touched whether a save control a user could actually PRESS covers it.
+       The effective date failed this twice — once because its pair was keyed to
+       custom+source while the figure lives in date_eff_rs, and once because the
+       cell rendered the pair only when the date had been typed by hand, so the
+       one state that always has something to save was the one state with no
+       button. Both were invisible to every other suite. */
+    {
+      const _rec=await c.eval('return await window.__t.ocrMapPages('+JSON.stringify(JSON.parse(fs.readFileSync(path.join(__dirname,'fixture_rs_scan.json'),'utf8')))+')');
+      await c.eval('window.__t.__setRsParsed('+JSON.stringify(_rec)+');window.__t.__rsFill();window.__t.__renderBody();return 1');
+      await sleep(500);
+      const cov=await c.eval(`
+        const f=window.__t.__form(), snap=window.__t.__formSnap()||{};
+        const val=o=>o&&o.value!=null?String(o.value):'';
+        const dirty=[];
+        new Set([...Object.keys(f),...Object.keys(snap)]).forEach(k=>{
+          const a=val(f[k]), b=val(snap[k]), src=f[k]&&f[k].source;
+          if(a!==b||((src==='new'||src==='this-cycle'||src==='overridden')&&a!==''))dirty.push(k);});
+        const vis=el=>{ if(!el||!el.offsetParent)return false;
+          const r=el.getBoundingClientRect(); if(r.width<1||r.height<1)return false;
+          const cs=getComputedStyle(el);
+          return cs.visibility!=='hidden'&&cs.display!=='none'&&+cs.opacity>0.01; };
+        const covered=new Set();
+        document.querySelectorAll('[data-save1]').forEach(b=>{ if(!vis(b))return;
+          b.getAttribute('data-save1').split(',').forEach(k=>covered.add(k)); });
+        const dateOv=document.querySelector('[data-ovic*="date_eff"]');
+        return {naked:dirty.filter(k=>!covered.has(k)),
+          dateCovered:covered.has('rent_schedule.date_eff_rs'),
+          datePairOnScreen:vis(dateOv)};`);
+      T('the parsed effective date has a save control on screen',cov.datePairOnScreen);
+      eq('and it covers the figure the schedule actually wrote',cov.dateCovered,true);
+      /* nonrev.enabled is the one known exception and has its own task: the Part D
+         flag turns itself on and strands the form dirty with nothing to press.
+         Named here so the day it is fixed this check tightens to []. */
+      eq('nothing else the parse touched is left unsaveable',
+         cov.naked.filter(k=>k!=='nonrev.enabled'),[]);
+    }
 
     const scan=JSON.parse(fs.readFileSync(path.join(__dirname,'fixture_rs_scan.json'),'utf8'));
     const rec=await c.eval('return await window.__t.ocrMapPages('+JSON.stringify(scan)+')');

@@ -24,7 +24,7 @@ global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>
 const cp=require('child_process'),os=require('os'),path=require('path'),fs=require('fs');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=143;   // 2026-07-27: the unit designation became a free-text label. The
+const MIN_CHECKS=144;   // 2026-07-27: the unit designation became a free-text label. The
                         // chip needed checks the text box does not (four enum values, and a
                         // saved blank that read "on file" where a text box reads new), so the
                         // honest count fell by two. Lowered on purpose; never to go green.                // the count this file is known to run to the end
@@ -210,7 +210,13 @@ const T=(label,v)=>eq(label,!!v,true);
      with no way to save it. */
   eq('coupledKeys ua_custom', app.coupledKeys('units.0.ua_custom'), ['units.0.ua_custom','units.0.ua_source','units.0.ua_reviewed','units.0.ua_exec','units.0.ua_rcs']);
   eq('coupledKeys safmr_custom', app.coupledKeys('units.0.safmr_custom'), ['units.0.safmr_custom','units.0.safmr_source','units.0.safmr_reviewed','units.0.safmr_rcs','units.0.safmr_hud']);
-  eq('coupledKeys date_eff', app.coupledKeys('rent_schedule.date_eff_custom'), ['rent_schedule.date_eff_custom','rent_schedule.date_eff_source']);
+  /* Widened deliberately, not silenced: the utility allowance and the 150%
+     ceiling already couple to the figure their source writes, and the effective
+     date is the third cell of that shape. Keyed to custom+source alone, a date
+     parsed off the schedule had its figure in date_eff_rs and therefore nothing
+     to save — it painted itself green and offered no button. */
+  eq('coupledKeys date_eff', app.coupledKeys('rent_schedule.date_eff_custom'), ['rent_schedule.date_eff_custom','rent_schedule.date_eff_source','rent_schedule.date_eff_rs']);
+  eq('coupledKeys date_eff, reached by its figure', app.coupledKeys('rent_schedule.date_eff_rs'), ['rent_schedule.date_eff_rs','rent_schedule.date_eff_custom','rent_schedule.date_eff_source']);
   eq('coupledKeys plain unchanged', app.coupledKeys('property.name'), ['property.name']);
   // mgmt: save a custom address (with its source), then "use property address" must read as OVERRIDE (orange)
   app.__edit('tenant.mgmt_source','custom'); app.__edit('tenant.mgmt_street','123 Main St');
