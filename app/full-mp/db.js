@@ -487,6 +487,8 @@ async function makeDb(adapter, opts) {
        that uses it a fiction. */
     getCycleRs(cid) { const c = D.cycles[cid]; return (c && c.rs_doc) || {}; },
     setCycleRs(cid, doc) { const c = D.cycles[cid]; if (!c) return Promise.resolve(); c.rs_doc = doc || {}; c.updated_at = now(); return persist(); },
+    getCycleRcs(cid) { const c = D.cycles[cid]; return (c && c.rcs_doc) || {}; },
+    setCycleRcs(cid, doc) { const c = D.cycles[cid]; if (!c) return Promise.resolve(); c.rcs_doc = doc || {}; c.updated_at = now(); return persist(); },
     setCycleGenerated(cid, docs) { const c = D.cycles[cid]; if (!c) return Promise.resolve(); c.generated = { at: now(), docs: docs || [] }; c.updated_at = now(); return persist(); },
     clearAll() { D = freshDb(); seedGates(); return persist(); },
     computeAnalysis, computeSalutation,

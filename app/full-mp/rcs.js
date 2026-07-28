@@ -60,8 +60,6 @@ function pageKey(runs){return lines(runs).map(function(l){return norm(l.text);})
 const LETTER_HEAD=/marketrentalanalysis|rerentcomparabilitystudy/;
 /* The tables, which may sit on the letter's first page or its second. */
 const LETTER_TABLE=/estimatesofmarketrent|grossrenewalpotentialcalculation|grossrentpotentialcalculation|totalgrossrenewalrent|150ofsafmrgrossrent|safmrgrossrent/;
-/* A grid names itself twice over: the HUD form title and the subject's FHA cell. */
-const GRID=/rentcomparabilitygrid/;
 /* A contents page prints every section heading in the document, the letter's
    included. It is never itself a letter page. */
 const TOC=/tableofcontents/;
@@ -117,20 +115,6 @@ async function findLetter(rd){
   }
   return {pages:pages,runs:runs,read:read,found:true};
 }
-
-/* Grids are scattered through the body and are corroboration, not the source —
-   so they are never read unless asked for, and even then only the pages that
-   are grids. `limit` caps how many are taken (one per unit type is plenty). */
-async function findGrids(rd,limit){
-  const runs={},read=[],pages=[];
-  limit=limit||8;
-  for(let i=0;i<rd.pageCount&&pages.length<limit;i++){
-    const r=await rd.getPage(i);read.push(i);
-    if(GRID.test(pageKey(r))){pages.push(i);runs[i]=r;}
-  }
-  return {pages:pages,runs:runs,read:read};
-}
-
 
 /* ============================ reading it ============================ */
 
@@ -453,7 +437,7 @@ async function readLetter(rd){
 }
 
 window.RCSParse={norm:norm,lines:lines,money:money,dec:dec,pageKey:pageKey,
-  findLetter:findLetter,findGrids:findGrids,readLetter:readLetter,parseType:parseType,
+  findLetter:findLetter,readLetter:readLetter,parseType:parseType,
   _splitCityStateZip:splitCityStateZip,_isoDate:isoDate,_s8From:s8From,_detectFirm:detectFirm,
   _caps:{scan:LETTER_SCAN_CAP,tail:LETTER_TAIL},_probeOrder:probeOrder};
 })();

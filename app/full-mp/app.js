@@ -64,7 +64,7 @@ const ALL_KEYS=Object.keys(SEED).map(k=>({key:k}));
 let mpdb=null, activePid=null, activeCid=null, _cyFresh=null;
 const bridge={getDb:async()=>mpdb?(activeCid?mpdb.getFlatCycle(activeCid):mpdb.getFlat(activePid)):{},saveDb:async(m)=>{_cyFresh=null;return activeCid?mpdb.saveFlatCycle(activeCid,m):mpdb.saveFlat(activePid,m);},clearDb:async()=>{}};
 const store=makeStore(bridge,ALL_KEYS);
-let form=store.emptyForm(); let UNITS=[0]; let NONREV=[]; let NS8=[]; let PRINCIPALS=[0]; let _undoStack=[]; let _undoNR=[]; let _undoLI=[]; let _undoPR=[]; let _pending=null,_refocusSel=null,_pendingSnap=null; let _rcsUpload=null; let _rsUpload=null; let _rsArm=false;let _rsBusy=null;   // while set, the upload row shows what is being read
+let form=store.emptyForm(); let UNITS=[0]; let NONREV=[]; let NS8=[]; let PRINCIPALS=[0]; let _undoStack=[]; let _undoNR=[]; let _undoLI=[]; let _undoPR=[]; let _pending=null,_refocusSel=null,_pendingSnap=null; let _rcsUpload=null; let _rcsBusy=null; let _rsUpload=null; let _rsArm=false;let _rsBusy=null;   // while set, the upload row shows what is being read
 let _dlgEnter=null;                  // while a dialog is open, Enter presses its primary button
 
 const CLR={database:['#2563eb','#e8f0fe','On file'],'this-cycle':['#0f766e','#e9f5f2','API / this package'],overridden:['#b45309','#fbf1e6','Overridden'],'auto-calculated':['#2563eb','#e8f0fe','Auto-calc'],'new':['#64748b','#f6f7f9','New']};
@@ -307,22 +307,23 @@ function srcPick(k,rows){
 }
 /* Per-cell source rows in precedence order (spec \u00a73). val:null renders dim. */
 const SRCPICK_ROWS={
- 'property.name':()=>[{tag:'Executed RS',val:rsVal('property.name')},{tag:'Related Affordable',val:raVal('property.name')},{tag:'RCS report',val:null}],
+ 'property.name':()=>[{tag:'Executed RS',val:rsVal('property.name')},{tag:'Related Affordable',val:raVal('property.name')},{tag:'RCS report',val:rcsVal('property.name')}],
  'property.fha':()=>[{tag:'Executed RS',val:rsVal('property.fha')},{tag:'Related Affordable',val:raVal('property.fha')}],
- 'property.s8':()=>[{tag:'Executed RS',val:rsVal('property.s8')},{tag:'RCS report',val:null}],
+ 'property.s8':()=>[{tag:'Executed RS',val:rsVal('property.s8')},{tag:'RCS report',val:rcsVal('property.s8')}],
  'owner.entity_type_other':()=>[{tag:'Executed RS',val:rsVal('owner.entity_type_other')}],
  'owner.entity_name':()=>[{tag:'Executed RS',val:rsVal('owner.entity_name')},{tag:'Related Affordable',val:raVal('owner.entity_name')}],
  'sig.title':()=>[{tag:'Executed RS',val:rsVal('sig.title')}],
- 'appr.firm':()=>[{tag:'RCS report',val:null}],
- 'appr.email':()=>[{tag:'RCS report',val:null}],
- 'appr.phone':()=>[{tag:'RCS report',val:null}],
+ 'appr.firm':()=>[{tag:'RCS report',val:rcsVal('appr.firm')}],
+ 'appr.email':()=>[{tag:'RCS report',val:rcsVal('appr.email')}],
+ 'appr.phone':()=>[{tag:'RCS report',val:rcsVal('appr.phone')?fmtPhone(rcsVal('appr.phone')):null}],
  'tenant.sender_name':()=>[{tag:'Related Affordable',val:raVal('tenant.sender_name')}],
 };
 /* Address groups: one dropdown pulls the whole street/city/state/zip group. */
 const SRCGROUP={
  'property.addr':()=>{const st=raVal('property.addr_street'),ci=raVal('property.addr_city'),sa=raVal('property.addr_state'),zp=raVal('property.addr_zip');
-   return [{tag:'Related Affordable',apply:(st||ci||sa||zp)?{'property.addr_street':st||'','property.addr_city':ci||'','property.addr_state':sa||'','property.addr_zip':zp||''}:null},{tag:'RCS report',apply:null}];},
- 'appr.addr':()=>[{tag:'RCS report',apply:null}],
+   return [{tag:'Related Affordable',apply:(st||ci||sa||zp)?{'property.addr_street':st||'','property.addr_city':ci||'','property.addr_state':sa||'','property.addr_zip':zp||''}:null},{tag:'RCS report',apply:(function(){const cs=rcsVal('property.addr_street'),cc=rcsVal('property.addr_city'),ct=rcsVal('property.addr_state'),cz=rcsVal('property.addr_zip');return (cs||cc||ct||cz)?{'property.addr_street':cs||'','property.addr_city':cc||'','property.addr_state':ct||'','property.addr_zip':cz||''}:null;})()}];},
+ 'appr.addr':()=>{const s=rcsVal('appr.addr_street'),c=rcsVal('appr.addr_city'),t=rcsVal('appr.addr_state'),z=rcsVal('appr.addr_zip');
+   return [{tag:'RCS report',apply:(s||c||t||z)?{'appr.addr_street':s||'','appr.addr_city':c||'','appr.addr_state':t||'','appr.addr_zip':z||''}:null}];},
 };
 function srcGroupPick(box){const rows=SRCGROUP[box]().map((r,ix)=> r.apply
   ?'<div class="uaopt srcopt" data-srcgrp="'+box+'" data-srcgix="'+ix+'">'+esc(r.apply[Object.keys(r.apply)[0]])+'\u2026<span class="uasub">'+esc(r.tag)+'</span></div>'
@@ -333,7 +334,7 @@ function srcGroupPick(box){const rows=SRCGROUP[box]().map((r,ix)=> r.apply
    unconditionally as "not available" — so the signatory's name sat dim while
    the parser had had the answer since the upload, and the title beside it
    offered the same value live. */
-const DIR_SRCROW={'appr.name':{tag:'RCS report',val:()=>null},'sig.name':{tag:'Executed RS',val:()=>rsVal('sig.name')}};
+const DIR_SRCROW={'appr.name':{tag:'RCS report',val:()=>rcsVal('appr.name')},'sig.name':{tag:'Executed RS',val:()=>rsVal('sig.name')}};
 function moneySrcTag(k){if(/^units\.\d+\.current$/.test(k))return 'Executed RS';if(/^units\.\d+\.proposed$/.test(k))return 'RCS report';if(/^(nonrev|ns8)\.\d+\.(rent|avg_rent)$/.test(k))return 'Executed RS';return null;}
 function dimPick(tag){return '<div class="uadrop pocpick"><div class="uatrigger" tabindex="0" title="Source"><span class="cvx">&#9662;</span></div><div class="uamenu"><div class="uaopt srcopt srcdim">\u2014<span class="uasub">'+esc(tag)+' \u00b7 not available</span></div></div></div>';}
 /* ================== end external-source dropdowns ================== */
@@ -430,10 +431,10 @@ function provColors(state,key){const c=CLR[state]||CLR.new;
 function cellColors(k){return (srcOf(k)!=='overridden'&&offFile(k))?provColors('overridden',k):provColors(srcOf(k),k);}
 function boxColor(k){return cellColors(k);}
 function moneyBox(k,noIcons){const c=boxColor(k);const _mt=moneySrcTag(k);
-  const _m=k.match(/^units\.(\d+)\.current$/),_mn=k.match(/^nonrev\.(\d+)\.rent$/),_ml=k.match(/^ns8\.(\d+)\.avg_rent$/);
-  const _rv=_m?rsUnit(+_m[1],'rent'):(_mn?rsFamVal('nonrev',+_mn[1],'rent'):(_ml?rsFamVal('ns8',+_ml[1],'rent'):null));
+  const _m=k.match(/^units\.(\d+)\.current$/),_mn=k.match(/^nonrev\.(\d+)\.rent$/),_ml=k.match(/^ns8\.(\d+)\.avg_rent$/),_mp=k.match(/^units\.(\d+)\.proposed$/);
+  const _rv=_m?rsUnit(+_m[1],'rent'):(_mn?rsFamVal('nonrev',+_mn[1],'rent'):(_ml?rsFamVal('ns8',+_ml[1],'rent'):(_mp?rcsUnitVal(+_mp[1],'proposed'):null)));
   const pick=_mt?(_rv!=null?srcPick(k,[{tag:_mt,val:_rv}]):dimPick(_mt)):'';
-  return `<div class="rbox money" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><span class="cur">$</span><input type="text" data-money="1" data-k="${k}" value="${esc(fmtMoney(get(k)))}">${rsTag(k)}${pick}${noIcons?'':ovIcons(k)}</div>`;}
+  return `<div class="rbox money" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><span class="cur">$</span><input type="text" data-money="1" data-k="${k}" value="${esc(fmtMoney(get(k)))}">${rsTag(k)}${rcsTag(k)}${pick}${noIcons?'':ovIcons(k)}</div>`;}
 function numBox(k,ph,noIcons){const c=boxColor(k);
   /* Counts are numbers and get separators like every other number (rule 16).
      NOT via a blanket data-money: this same box renders Part D's "use" text and
@@ -841,6 +842,108 @@ function rsRecall(){if(!(activeCid&&mpdb&&mpdb.getCycleRs))return null;
   let d=null;try{d=mpdb.getCycleRs(activeCid);}catch(e){return null;}
   if(!d||!d.name)return null;
   return {name:d.name,bytes:null,kind:d.kind||'scan',via:d.via,parsed:d.parsed||null,at:d.at||'',stored:true};}
+/* ===================== the RCS study, read =====================
+   The reader is in rcs.js and is pure. This is the app side of it: pull the
+   pages it asks for, keep the reading with the package, and answer the source
+   dropdowns. It mirrors the rs* family above, function for function. */
+async function parseRcsPdf(bytes){
+  if(!(window.PDFLib&&window.RCSParse))return null;
+  let doc=null;
+  try{doc=await window.PDFLib.PDFDocument.load(bytes,{ignoreEncryption:true,throwOnInvalidObject:false});}catch(e){return null;}
+  const rd={pageCount:doc.getPageCount(),getPage:function(i){return rsTextPageAt(doc,i);}};
+  try{return await window.RCSParse.readLetter(rd);}catch(e){return null;}
+}
+function rcsVal(k){try{const p=_rcsUpload&&_rcsUpload.parsed;const v=p&&p.scalars?p.scalars[k]:null;return (v==null||v==='')?null:String(v);}catch(e){return null;}}
+
+/* Match a form row to a study line on bedrooms and baths — never on position,
+   which would put a 2BR rent on a 3BR row.
+
+   When TWO study lines answer to one form row the answer is not "pick one".
+   Sample Property prices "1BR/1BA without patio" at $1,190 and "1BR/1BA with
+   patio" at $1,200: same bedrooms, same baths, different rents, and nothing on
+   the form says which row is which. So an ambiguous match fills nothing and
+   says so. */
+function rcsMatch(i){
+  const p=_rcsUpload&&_rcsUpload.parsed;if(!p||!p.units)return {u:null,many:false};
+  const br=String(get('units.'+i+'.br')||''),ba=String(get('units.'+i+'.ba')||'');
+  if(!br)return {u:null,many:false};
+  const hit=p.units.filter(function(u){
+    if(String(u.br)+'BR'!==br)return false;
+    if(ba&&u.ba!==''&&String(u.ba)+'BA'!==ba)return false;
+    return true;});
+  if(hit.length>1)return {u:null,many:true,types:hit.map(function(u){return u.type;})};
+  return {u:hit[0]||null,many:false};
+}
+function rcsUnitVal(i,field){
+  const m=rcsMatch(i);if(!m.u)return null;
+  const v=m.u[field];return (v==null||v==='')?null:String(v);
+}
+function rcsOf(k){
+  let m=k.match(/^units\.(\d+)\.proposed$/);   if(m)return rcsUnitVal(+m[1],'proposed');
+  m=k.match(/^units\.(\d+)\.ua_rcs$/);         if(m)return rcsUnitVal(+m[1],'ua');
+  m=k.match(/^units\.(\d+)\.safmr_rcs$/);      if(m)return rcsUnitVal(+m[1],'safmr');
+  return rcsVal(k);
+}
+/* FORM-RULES: every document-fed cell says so. This must cover every key
+   rcsFillFromParsed writes — the suite asserts exactly that. */
+function rcsTag(k){
+  const v=get(k); if(v===''||v==null)return '';
+  const r=rcsOf(k); if(r==null||r==='')return '';
+  const num=/^units\.\d+\.(proposed|ua_rcs|safmr_rcs)$/.test(k);
+  /* The study gives ten bare digits and the cell holds "(708) 500-2380". Compared
+     as strings those differ, so the one cell whose value is reformatted on the
+     way in would have shown no source tag at all. */
+  const same=num?(numf(v)===numf(r))
+    :(k==='appr.phone'?String(v).replace(/\D/g,'')===String(r).replace(/\D/g,'')
+    :String(v)===String(r));
+  return same?'<span class="srctag rcstag">· RCS</span>':'';
+}
+/* Declared, not inferred, so the suite can assert rcsTag covers every one. */
+const RCS_SCALARS=['appr.firm','appr.name','appr.email','appr.phone','appr.addr_street','appr.addr_city','appr.addr_state','appr.addr_zip',
+                   'property.name','property.addr_street','property.addr_city','property.addr_state','property.addr_zip','property.s8'];
+function rcsFillKeys(){
+  const ks=RCS_SCALARS.slice();
+  (UNITS||[]).forEach(function(i){['proposed','ua_rcs','safmr_rcs'].forEach(function(f){ks.push('units.'+i+'.'+f);});});
+  return ks.filter(function(k){const r=rcsOf(k);return r!=null&&r!=='';});
+}
+function rcsFillFromParsed(){
+  const P=_rcsUpload&&_rcsUpload.parsed;if(!P)return;
+  deriveUnits();          // a row added since the last render is still a row to fill
+  const mark=k=>{markCycle(k);if(form[k])form[k].fromParse=true;};
+  const setk=(k,v)=>{if(v!=null&&v!==''){form=store.editForm(form,k,String(v));mark(k);}};
+
+  /* The study carries none of these, so none is ever sourced from it: the FHA
+     number, the ownership entity, the signatory, current rents, the rents
+     effective date, the contract administrator. The addressee is whoever
+     ORDERED the study, which is not necessarily the package's contact, so it
+     is offered as a source row and never written here. */
+  RCS_SCALARS.forEach(function(k){if(k!=='appr.phone')setk(k,P.scalars[k]);});
+  if(P.scalars['appr.phone'])setk('appr.phone',fmtPhone(P.scalars['appr.phone']));
+
+  let ambiguous=0;
+  (UNITS||[]).forEach(function(i){
+    const m=rcsMatch(i);
+    if(m.many){ambiguous++;return;}
+    if(!m.u)return;
+    if(m.u.proposed!=='')setk('units.'+i+'.proposed',m.u.proposed);
+    if(m.u.ua!=='')setk('units.'+i+'.ua_rcs',m.u.ua);
+    if(m.u.safmr!=='')setk('units.'+i+'.safmr_rcs',m.u.safmr);
+  });
+
+  deriveUnits();renderBody();scheduleHudRefresh();
+  const n=rcsFillKeys().length;
+  setStatus('Form filled from the RCS study — '+n+' value'+(n===1?'':'s')+' marked “RCS report”.'
+    +(ambiguous?' '+ambiguous+' unit row'+(ambiguous===1?'':'s')+' matched more than one line in the study and '+(ambiguous===1?'was':'were')+' left for you — the study prices them separately and the form cannot tell which is which.':'')
+    +' Review the highlighted cells, then “Update property profile”.');
+}
+/* The reading outlives the page that made it, exactly as the schedule's does. */
+function rcsRemember(){if(!(activeCid&&mpdb&&mpdb.setCycleRcs))return;const u=_rcsUpload;
+  const doc=u?{name:u.name,at:u.at,parsed:u.parsed}:{};
+  try{Promise.resolve(mpdb.setCycleRcs(activeCid,doc)).catch(()=>{});}catch(e){}}
+function rcsRecall(){if(!(activeCid&&mpdb&&mpdb.getCycleRcs))return null;
+  let d=null;try{d=mpdb.getCycleRcs(activeCid);}catch(e){return null;}
+  if(!d||!d.name)return null;
+  return {name:d.name,bytes:null,parsed:d.parsed||null,at:d.at||'',stored:true};}
 function rsNum(v){v=String(v==null?'':v).replace(/[^0-9.\-]/g,'');const n=parseFloat(v);return isFinite(n)?n:'';}
 function rsDateISO(v){v=String(v||'').trim();let m=v.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);if(m)return m[3]+'-'+('0'+m[1]).slice(-2)+'-'+('0'+m[2]).slice(-2);m=v.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m)return v.slice(0,10);const MN={january:1,february:2,march:3,april:4,may:5,june:6,july:7,august:8,september:9,october:10,november:11,december:12};m=v.toLowerCase().match(/([a-z]+)\s+(\d{1,2}),?\s+(\d{4})/);if(m&&MN[m[1]])return m[3]+'-'+('0'+MN[m[1]]).slice(-2)+'-'+('0'+m[2]).slice(-2);return '';}
 function rsYearOn(iso){const m=String(iso||'').match(/^(\d{4})-(\d{2})-(\d{2})/);return m?((+m[1])+1)+'-'+m[2]+'-'+m[3]:'';}   // the uploaded schedule is the one in force; this package renews it
@@ -1210,8 +1313,12 @@ function rsFillFromParsed(){const P=_rsUpload&&_rsUpload.parsed;if(!P)return;
   setStatus('Form filled from the executed rent schedule \u2014 review the highlighted values, then \u201cUpdate property profile\u201d.');}
 function renderSources(){
   const up=_rcsUpload;const sl=srcDocLabel();
-  const rcs=up
-    ?`<div class="srcrow"><span class="ok">✓</span><div><b>${esc(up.name)}</b> <span class="parsed">uploaded · this session</span><div class="sub">Automatic parsing is not yet available — review each section below.</div></div><button class="btn sm" id="upRcs">Replace</button></div>`
+  const _rp=up&&up.parsed,_rn=(_rp&&_rp.units)?_rp.units.length:0;
+  const _rfirm=_rp&&_rp.firm==='belfry'?'Belfry Valuation':(_rp&&_rp.firm==='cornerstone'?'Cornerstone Valuation Services':null);
+  const rcs=_rcsBusy
+    ?`<div class="srcrow"><span class="spin" aria-hidden="true"></span><div><b>${esc(_rcsBusy.name)}</b> <span class="parsed">reading…</span><div class="sub">Reading the appraiser’s transmittal letter.</div></div></div>`
+    :up
+    ?`<div class="srcrow"><span class="ok">✓</span><div><b>${esc(up.name)}</b> <span class="parsed">${_rn?'read · '+esc(_rfirm||'study')+' · '+_rn+' unit type'+(_rn===1?'':'s'):'uploaded · not read'}</span><div class="sub">${_rn?'The values are ready to apply.':'The letter could not be read — enter the values by hand below.'}</div></div>${_rn?'<button class="btn sm" id="rcsApply">Fill form from the study</button>':''}<button class="btn sm" id="upRcs">Replace</button></div>`
     :`<div class="srcrow${sl.need?'':' dim'}"><span class="mut">○</span><div><b>${esc(sl.title)}</b> <span class="${sl.need?'missing':'parsed'}">${sl.need?'not uploaded':'optional'}</span><div class="sub">${esc(sl.sub)}</div></div><button class="btn sm" id="upRcs">Upload PDF</button></div>`;
   const ru=_rsUpload;let rs;
   if(_rsBusy)rs=`<div class="srcrow"><span class="spin" aria-hidden="true"></span><div><b>${esc(_rsBusy.name||'Rent schedule')}</b> <span class="parsed">${esc(_rsBusy.note||'reading\u2026')}</span><div class="sub">${esc(_rsBusy.sub||'Reading the schedule\u2019s form fields and printed text.')}</div></div></div>`;
@@ -1989,9 +2096,22 @@ function wireBody(){
   const phs=el('pullSafmr');if(phs)phs.onclick=()=>{ensureHudSafmr({manual:true});};
   const upR=el('upRcs');if(upR)upR.onclick=()=>{const f=el('rcsFile');if(f)f.click();};
   const rf=el('rcsFile');if(rf)rf.onchange=()=>{const f=rf.files&&rf.files[0];if(!f)return;
-    f.arrayBuffer().then(buf=>{const b=new Uint8Array(buf);
+    if(_rcsBusy){setStatus('Still reading the last study \u2014 one moment.');rf.value='';return;}
+    f.arrayBuffer().then(async buf=>{const b=new Uint8Array(buf);
       if(!(b.length>4&&b[0]===0x25&&b[1]===0x50&&b[2]===0x44&&b[3]===0x46)){setStatus('That file isn\u2019t a PDF \u2014 upload the completed RCS report as a PDF.');rf.value='';return;}
-      _rcsUpload={name:f.name,bytes:b};rf.value='';renderBody();setStatus('RCS report uploaded \u2014 it goes in as document 04 when you generate the package.');});};
+      /* A 52-page valuation report is not a 3-page form. Reading it is fast
+         because only the letter is read, but the row still says so rather than
+         sitting unchanged while it happens. */
+      _rcsBusy={name:f.name};renderBody();setStatus('Reading the RCS study\u2026');
+      let r=null;try{r=await parseRcsPdf(b);}catch(e){r=null;}finally{_rcsBusy=null;}
+      _rcsUpload={name:f.name,bytes:b,parsed:r,at:new Date().toISOString()};rf.value='';
+      rcsRemember();renderBody();
+      const nu=r&&r.units?r.units.length:0;
+      setStatus(nu
+        ?('RCS study read \u2014 '+(r.firm==='belfry'?'Belfry Valuation':r.firm==='cornerstone'?'Cornerstone Valuation Services':'the study')+', '+nu+' unit type'+(nu===1?'':'s')+' from page'+(r.pages.length===1?' ':'s ')+r.pages.map(x=>x+1).join(' and ')+'. Use \u201cFill form from the study\u201d in '+secRef(1)+' to apply it.')
+        :'The study was uploaded, but its letter could not be read \u2014 enter the values by hand below. It still goes in as document 04.');
+    });};
+  const rap=el('rcsApply');if(rap)rap.onclick=()=>rcsFillFromParsed();
   const upS=el('upRs');if(upS)upS.onclick=()=>{const f=el('rsFile');if(f)f.click();};
   const sf=el('rsFile');if(sf)sf.onchange=()=>{const f=sf.files&&sf.files[0];if(!f)return;
     if(_rsBusy){setStatus('Still reading the last rent schedule \u2014 one moment.');sf.value='';return;} // OCR takes seconds; a second upload mid-flight would race the first
@@ -2254,7 +2374,7 @@ async function openCycleForm(cid){
   const cy=mpdb.listCycles(activePid).find(c=>c.id===cid);
   activeProgram=cy?cy.programs.map(x=>PROG_NAMES[x]||x).join(' + '):'RCS';
   _undoStack=[];_undoNR=[];_undoLI=[];_undoPR=[];_undoChain=[];_rcsUpload=null;_rsUpload=null;_rsArm=false;
-  await mpdb.setActive(activePid);_rsUpload=rsRecall();await refreshSnap();form=await store.fillForm();
+  await mpdb.setActive(activePid);_rsUpload=rsRecall();_rcsUpload=rcsRecall();await refreshSnap();form=await store.fillForm();
   fixSavedToggles();applyChecklistDefaults();deriveUnits();snapForm();renderFormHeader();renderBody();
   show('Form');window.scrollTo(0,0);
   if(cy&&cy.dominant&&cy.programs.indexOf('rcs')>=0)ensureHudSafmr({});   // auto-pull: dominant RCS cycles only
@@ -2977,7 +3097,9 @@ function contactDialog(c){c=c||{};
   ['ccN','ccE','ccP'].forEach(id=>{const ff=el(id);if(ff&&ff.addEventListener)ff.addEventListener('keydown',ev=>{if(ev.key!=='Enter')return;ev.preventDefault();const d=(el('ccP').value||'').replace(/\D/g,'');if(d.length===0||d.length===10)el('dlgOk').click();});});
   el('dlgCancel').onclick=closeModal;
   el('dlgOk').onclick=async()=>{const patch={name:(el('ccN').value||'').trim(),email:(el('ccE').value||'').trim(),phone:(el('ccP').value||'').trim()};closeModal();try{if(c.id)await mpdb.updateContact(c.id,patch);else await mpdb.addContact(patch);renderContacts();}catch(e){saveFailedModal(e);}};}
-const __API={DESIG,desigName,rsParseUnitType,fmtPhone,fmtDate,sMoney,sPct,sK,analysis,uaResolvedOf,uaConflict,uaUnresolved,renderMenu,renderLauncher,openMenu,openForm,openLauncher,ringSvg,niceDate,isDirty,overrideCount,isStateKey,attnFlags,pbUtil,clearUncheckedWriteins,srcOf:(k)=>srcOf(k),__openForm:(pid)=>{activePid=pid;return openForm('RCS');},__openCycleForm:(pid,cid)=>{activePid=pid;return openCycleForm(cid);},__renderBody:()=>renderBody(),__docMissing:(id)=>docMissing(id).map(x=>x.label),__docWarns:(id)=>docWarns(id).map(x=>x.label),__edit:(k,v)=>{form=store.editForm(form,k,v);},getVal:(k)=>get(k),modeOf:(kk)=>modeOf(kk),fieldKeys:(k)=>fieldKeys(k),keysCanSave:(ks)=>keysCanSave(ks),keysCanRevert:(ks)=>keysCanRevert(ks),keysNewDirty:(ks)=>keysNewDirty(ks),__revert:(k)=>store.revertForm(form,k),coupledKeys:(k)=>coupledKeys(k),__firstPid:()=>{const ps=mpdb?mpdb.listProperties():[];return ps.length?ps[0].id:null;},__boxes:(i)=>({ua:uaBox(i),safmr:safmrBox(i)}),__saveField:async(k)=>{form=await store.saveField(form,k);},__set:(f,u)=>{form=f;UNITS=u;},desigColors:(k)=>desigColors(k),__cell:(k)=>form[k],
+const __API={DESIG,desigName,rsParseUnitType,fmtPhone,fmtDate,sMoney,sPct,sK,analysis,uaResolvedOf,uaConflict,uaUnresolved,renderMenu,renderLauncher,openMenu,openForm,openLauncher,ringSvg,niceDate,isDirty,overrideCount,isStateKey,attnFlags,pbUtil,clearUncheckedWriteins,srcOf:(k)=>srcOf(k),__openForm:(pid)=>{activePid=pid;return openForm('RCS');},__openCycleForm:(pid,cid)=>{activePid=pid;return openCycleForm(cid);},__renderBody:()=>renderBody(),__docMissing:(id)=>docMissing(id).map(x=>x.label),__docWarns:(id)=>docWarns(id).map(x=>x.label),__edit:(k,v)=>{form=store.editForm(form,k,v);},getVal:(k)=>get(k),modeOf:(kk)=>modeOf(kk),fieldKeys:(k)=>fieldKeys(k),keysCanSave:(ks)=>keysCanSave(ks),keysCanRevert:(ks)=>keysCanRevert(ks),keysNewDirty:(ks)=>keysNewDirty(ks),__revert:(k)=>store.revertForm(form,k),coupledKeys:(k)=>coupledKeys(k),__firstPid:()=>{const ps=mpdb?mpdb.listProperties():[];return ps.length?ps[0].id:null;},__boxes:(i)=>({ua:uaBox(i),safmr:safmrBox(i)}),__saveField:async(k)=>{form=await store.saveField(form,k);},__set:(f,u)=>{form=f;UNITS=u;},desigColors:(k)=>desigColors(k),__cell:(k)=>form[k],__rsTextPageAt:(doc,i)=>rsTextPageAt(doc,i),
+__setRcsParsed:(rec)=>{_rcsUpload={name:'study.pdf',bytes:null,parsed:rec,at:''};},
+__rcsFill:()=>rcsFillFromParsed(),__rcsTag:(k)=>rcsTag(k),__rcsFillKeys:()=>rcsFillKeys(),__rcsMatch:(i)=>rcsMatch(i),__rcsOf:(k)=>rcsOf(k),
   /* The undo run. __editCell is the text box's input handler in miniature —
      push the cell, then write it the way that handler does — so a suite can
      build a run of edits without synthesising DOM events. */
