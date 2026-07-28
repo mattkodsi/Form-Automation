@@ -568,7 +568,7 @@ function numUnresolved(i){return numConflict(i)&&!numReviewedOf(i);}
    controls it sat beside, and the row changed shape the moment it was edited. */
 function unitTypeCell(i){const brK='units.'+i+'.br',baK='units.'+i+'.ba';const conf=false;const c=groupColors([brK,baK]);
   const withRs=(k,opts,ph)=>{const d=csDrop(k,opts,ph,'',!/\.br$/.test(k)&&!modeOf(k),(!conf&&partHot(k))?tintStyle(k):'',rsBrBa(k));const row=rsCsRow(k)||'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>';
-    return d.replace('<div class="uamenu">','<div class="uamenu">'+row);};
+    return d.replace('<div class="uamenu">','<div class="uamenu">'+row+rcsCsRow(k));};
   return `<div class="utwrap"><div class="rbox brba" data-box="${brK}" style="background:${c[1]};border-left-color:${c[0]}">${withRs(brK,BR_OPTS,'BR')}${ovIcons(brK)}<span class="slash">/</span>${withRs(baK,BA_OPTS,'BA')}${ovIcons(baK)}</div>`
     +`${labelLine(i)}</div>`;}
 function unitCountCell(i){const k='units.'+i+'.num_units';const c=cellColors(k);const rv=rsUnit(i,'count');
@@ -818,14 +818,10 @@ function labelLine(i){const k='units.'+i+'.label';const v=get(k)||'';
     +'<input class="ulab-in" data-k="'+k+'" value="'+esc(v)+'" placeholder="add a label" autocomplete="off" spellcheck="false">'
     +(fromRs?'<span class="srctag">\u00b7 RS</span>':'')
     +(over?'<span class="ulabwarn" title="'+esc('The schedule prints \u201c'+printed+'\u201d, which is wider than the box on the form.')+'">clips when printed</span>':'')
+    +ovIcons(k)
     +'<div class="uadrop cs ulabdrop"><div class="uatrigger" tabindex="0" data-trigfor="'+k+'"><span class="cvx">\u25be</span></div>'
     +'<div class="uamenu">'+rsRow+rcsRow+hints+'</div></div>'
-    +'</div>'
-    /* Under the line, not in it. Every other control in this row keeps its pair
-       directly beneath the box it acts on; the label sat with its pair inline
-       and so was the one control whose buttons meant something different from
-       everyone else's. */
-    +'<div class="uracts ucolacts c1lab">'+ovIcons(k)+'</div>';}
+    +'</div>';}
 /* The unit type is ONE fact — the schedule states it as one string, "1 BR / 1 BA E" —
    and the form splits it only to make it editable. Provenance belongs to the
    fact: the group is the schedule's while every part of it still is, and one
@@ -975,6 +971,13 @@ function rsBrBa(k){let m=String(k||'').match(/^units\.(\d+)\.(br|ba|label)$/);
   return null;}
 function rsCsRow(k){const v=rsBrBa(k);   // the schedule's own unit type, offered like any other source
   return v?('<div class="uaopt srcopt'+((String(get(k)==null?'':get(k))===String(v))?' sel':'')+'" data-cskey="'+k+'" data-csopt="'+esc(v)+'">'+esc(v)+'<span class="uasub">Executed RS</span></div>'):'';}
+function rcsBrBa(k){const m=String(k||'').match(/^units\.(\d+)\.(br|ba)$/);
+  if(!m)return null;const sk='units.'+m[1]+'.'+m[2]+'_rcs';
+  const st=get(sk);if(st!==''&&st!=null)return String(st);
+  const lv=rcsOf(sk);return (lv==null||lv==='')?null:String(lv);}
+function rcsCsRow(k){const v=rcsBrBa(k);
+  return v?('<div class="uaopt srcopt'+((String(get(k)==null?'':get(k))===String(v))?' sel':'')+'" data-cskey="'+k+'" data-csopt="'+esc(v)+'">'+esc(v)+'<span class="uasub">RCS report</span></div>')
+          :'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">RCS report \u00b7 not available</span></div>';}
 function rsVal(k){try{const p=_rsUpload&&_rsUpload.parsed;const v=p&&p.scalars?p.scalars[k]:null;return (v==null||v==='')?null:String(v);}catch(e){return null;}}
 /* The reading outlives the page that made it. _rsUpload was a plain variable
    set on upload and cleared on every form open, so every source row that reads
@@ -2080,21 +2083,38 @@ function _renderCommand(){const a=analysis();const pCur=a.ceil>0?clamp(a.cg/a.ce
      +'</div>';})()}
    ${pkgCard()}`;}
 function pkgCard(){
-  if(hasProg('rcs'))return `<div class="ccard"><div class="cck">THIS PACKAGE</div><div class="cctitle" style="font-size:15px">${_rcsUpload?'RCS report uploaded':'RCS report needed'}</div><div class="ccsub">${_rcsUpload?esc(_rcsUpload.name)+' — goes in as document 04':'Upload the completed RCS report in '+secRef(1)+' — it becomes document 04 of the package.'}</div>
-     <div class="ccsub" style="margin-top:7px;color:#33405c"><b>The 6-document package</b></div><div class="drafts">${(function(){
+  /* A row for a document the package is BUILT from, as against one it
+     produces. Both sources are named whether or not either is loaded — the
+     same rule the cells follow — so an absent schedule reads as a thing not
+     done yet rather than a thing that does not exist. */
+  const srcRow=(name,file,note,have)=>'<div class="pksrcrow'+(have?'':' off')+'">'
+    +'<i class="dtick'+(have?'':' pend')+'">'+(have?'\u2713':'\u25cb')+'</i>'
+    +'<span class="pksrcn">'+esc(name)+'</span>'
+    +'<span class="pksrcf" title="'+esc(file||note)+'">'+esc(file||note)+'</span></div>';
+  if(hasProg('rcs')){
       /* Ask the same question the generate dialog asks. These ticks were hardcoded
          to 1 for five of the six, so the card claimed five documents were ready on
          a property that could produce two — and it was the first thing you saw. */
       const L=[['Cover letter (CA)','cover'],['Owner cover letter','owner'],['Owner’s checklist','checklist'],
-               ['RCS report (uploaded PDF)','rcs'],['Draft rent schedule','schedule'],['Tenant notice','notice']];
-      return L.map(d=>{const miss=d[1]==='rcs'?(_rcsUpload?[]:[{label:'no study uploaded yet'}]):docMissing(d[1]);
-        const ok=!miss.length;
-        /* One signal per state, not two: a tick marks ready, grey marks not. A
-           hollow circle on a greyed row said the same thing twice. The tick slot
-           is still reserved when empty so both columns stay aligned. */
-        return '<span'+(ok?'':' class="draft-off" title="Needs '+esc(miss.map(x=>x.label).join(', '))+'"')+'><i class="dtick">'+(ok?'✓':'')+'</i>'+d[0]+'</span>';}).join('');
-    })()}</div>
-     <div class="wb">Documents are generated from the form exactly as shown. Save with “Update property profile” before generating.</div></div>`;
+               ['RCS report','rcs'],['Draft rent schedule','schedule'],['Tenant notice','notice']];
+      /* "(uploaded PDF)" wrapped to a second line and lifted the row beside it,
+         which is most of what made this card look untidy. The source row above
+         already says the study is a file you supplied. */
+      const st=L.map(d=>{const miss=d[1]==='rcs'?(_rcsUpload?[]:[{label:'no study uploaded yet'}]):docMissing(d[1]);
+        return {label:d[0],miss:miss,ok:!miss.length};});
+      const ready=st.filter(x=>x.ok).length;
+      /* A hollow ring rather than an empty slot: grey text alone left the reader
+         to notice an absence, and an absence is the thing hardest to notice. */
+      const list=st.map(x=>'<span'+(x.ok?'':' class="draft-off" title="Needs '+esc(x.miss.map(m=>m.label).join(', '))+'"')
+        +'><i class="dtick'+(x.ok?'':' pend')+'">'+(x.ok?'\u2713':'\u25cb')+'</i>'+x.label+'</span>').join('');
+      /* The headline answers the card's own question. It used to repeat the
+         study's source row, which the reader had already read one line down. */
+      const head=ready===6?'All six documents ready':(ready+' of 6 ready to generate');
+      return `<div class="ccard"><div class="cck">THIS PACKAGE</div><div class="cctitle" style="font-size:15px">${head}</div>
+     <div class="pksrc">${srcRow('Executed rent schedule',_rsUpload?_rsUpload.name:'',_rsUpload?'':'not uploaded yet',!!_rsUpload)
+       +srcRow('RCS report',_rcsUpload?_rcsUpload.name:'',_rcsUpload?'':'not uploaded yet — it is document 04',!!_rcsUpload)}</div>
+     <div class="ccsub pkhead"><b>The 6-document package</b></div><div class="drafts">${list}</div>
+     <div class="wb">Documents are generated from the form exactly as shown. Save with “Update property profile” before generating.</div></div>`;}
   const docs=[];
   if(hasProg('ocaf'))docs.push('9625 worksheet (Q = P)','Corrected auto-OCAF letter — election box 1','Revised Exhibit A','Debt-service evidence');
   if(hasProg('uaf')){docs.push('UAF certification / breakdown');if(uafAnalysis().dec.length)docs.push('30-day tenant notice (UA decrease)','Tenant-comment certification');}

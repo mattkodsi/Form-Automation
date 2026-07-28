@@ -45,7 +45,21 @@ body.scrolled #ccbar{transform:translateY(0);opacity:1}
    after a press with nothing that would let go of it. */
 .chkmore:hover .chkall,.chkmore.open .chkall{display:block}
 .chk{display:flex;gap:8px;align-items:flex-start;margin:6px 0} .chk .ok{color:#166534;font-weight:800} .chk .warn{color:#b45309;font-weight:800} .chk .info{color:#2563eb;font-weight:800} .chk b{font-size:12px} .chk .sub{color:#7c86a2;font-size:10.5px}
-.drafts{display:grid;grid-template-columns:1fr 1fr;gap:2px 12px;font-size:11.5px;color:#33405c;margin-top:4px} .wb{margin-top:8px;font-size:10.5px;color:#4c51bf;background:#f0f0fb;border-radius:6px;padding:6px 8px;text-align:center;font-weight:600}
+/* The two documents the package is built from, above the six it produces.
+   A filename is as long as somebody made it, so it ends in an ellipsis and
+   carries the whole of itself in its tooltip rather than taking a second line
+   and lifting everything under it. */
+.pksrc{margin:8px 0 0;border:1px solid #e8ecf4;border-radius:7px;background:#fbfcfe;padding:1px 9px}
+.pksrcrow{display:grid;grid-template-columns:15px auto minmax(0,1fr);align-items:baseline;gap:0 7px;font-size:11.5px;color:#33405c;padding:5px 0}
+.pksrcrow+.pksrcrow{border-top:1px solid #eef1f7}
+.pksrcn{font-weight:600;white-space:nowrap}
+.pksrcf{color:#6b7280;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pksrcrow.off .pksrcn{color:#8791a5;font-weight:500}
+.pkhead{margin-top:10px;color:#33405c}
+/* Two columns of six short labels, each on ONE line: the tick has a column of
+   its own so a label that does wrap wraps under itself and not under the tick. */
+.drafts{display:grid;grid-template-columns:1fr 1fr;gap:5px 14px;font-size:11.5px;color:#33405c;margin-top:5px;line-height:1.3}
+.drafts>span{display:grid;grid-template-columns:15px minmax(0,1fr);align-items:baseline} .wb{margin-top:8px;font-size:10.5px;color:#4c51bf;background:#f0f0fb;border-radius:6px;padding:6px 8px;text-align:center;font-weight:600}
 .attn{background:#fdf6e7;border:1px solid #ecd9a6;border-radius:9px;padding:9px 14px;margin-bottom:12px;color:#8a5a12} .attn .sub{color:#a9803a;font-size:12px}
 .layout{display:grid;grid-template-columns:212px minmax(0,1fr);gap:20px;align-items:start}
 .rail{position:sticky;top:14px;align-self:start;max-height:calc(100vh - 28px);overflow:auto;transition:top .2s} body.scrolled .rail{top:56px}
@@ -90,7 +104,8 @@ body.scrolled #ccbar{transform:translateY(0);opacity:1}
 /* needs / omits: same amber, told apart by the word rather than a second hue */
 .gline{display:flex;align-items:baseline;justify-content:flex-end;flex-wrap:wrap;gap:0 2px;line-height:1.7}
 .gline+.gline{margin-top:1px}
-.draft-off{color:#9aa4b5} .dtick{display:inline-block;width:13px;font-style:normal}
+.draft-off{color:#9aa4b5} .dtick{display:inline-block;width:13px;font-style:normal;color:#15803d}
+.dtick.pend{color:#c2c9d6}
 /* Reads as a sibling of the bed/bath dropdowns, not a control competing with them. */
 /* Every property below was previously packed into one `font:` shorthand ending in
    `inherit` — not a legal font-family there, so the browser discarded the WHOLE
@@ -181,7 +196,7 @@ body.scrolled #ccbar{transform:translateY(0);opacity:1}
    border and a 1px right one — so bed lands under bed and bath under bath at
    any width (rule 11: watch flex growth, not media queries). */
 .ucells .uracts.ucolacts.c1{gap:0;box-sizing:border-box;border-left:4px solid transparent;border-right:1px solid transparent}
-.ucells .uracts.ucolacts.c1lab{padding-left:8px}
+.ulabline .ovic .urev{width:19px;height:19px;font-size:11px}
 .ucol .ucnote,.ucol .urnmetric{min-width:0}
 .uracts .ovic{margin:0}
 /* Below ~1300px the unit-mix columns are too narrow to carry a roomy cell's
@@ -402,7 +417,8 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;borde
    the cell becomes saveable. */
 .ulabline .ovic{margin:0 2px 0 0;flex:0 0 auto}
 .ulabdrop{flex:0 0 22px;position:relative}
-.ulabdrop .uatrigger{padding:0;justify-content:center;min-height:24px;border:none;background:transparent}
+.ulabdrop .uatrigger{padding:0;justify-content:center;height:20px;min-height:0;border:none;background:transparent;border-radius:4px;outline:none}
+.ulabdrop .uatrigger:focus-visible{box-shadow:0 0 0 2px rgba(30,58,95,.35)}
 .ulabdrop .uamenu{right:0;left:auto;min-width:190px}
 .ulab-in::placeholder{color:#9aa3b5;font-style:italic}
 .ulabwarn{font-size:10.5px;color:#b45309;flex:0 0 auto;white-space:nowrap;cursor:help}
