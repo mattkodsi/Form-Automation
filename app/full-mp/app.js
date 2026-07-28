@@ -1676,7 +1676,7 @@ function coupledKeys(k){const m=k.match(/^(units\.\d+)\.(ua|safmr)_(custom|sourc
 function keysCanRevert(keys){return keys.some(k=>srcOf(k)==='overridden');}
 function keysNewDirty(keys){return !keysCanRevert(keys)&&keys.some(k=>(srcOf(k)==='new'||srcOf(k)==='this-cycle')&&String(get(k)==null?'':get(k)).trim()!=='');} // a parsed cell is unsaved too, so Enter and the tick must both reach it
 function keysCanSave(keys){return keysCanRevert(keys)||keysNewDirty(keys);}
-function refocusSelForKey(k){if(/^(check\.\d+|partb\.(equipment|utilities|services)\.\d+)$/.test(k))return '[data-cb="'+k+'"]';const w=k.match(/^(partb\.writein\.[a-z0-9]+)\.on$/);if(w)return '[data-wibox="'+w[1]+'"]';const gb=groupOf(k);if(gb)return '[data-box="'+gb+'"] input,[data-box="'+gb+'"] .uatrigger';return '[data-trigfor="'+k+'"],[data-box="'+k+'"] .uatrigger,[data-k="'+k+'"]';}
+function refocusSelForKey(k){if(/^(check\.\d+|partb\.(equipment|utilities|services)\.\d+)$/.test(k))return '[data-cb="'+k+'"]';const w=k.match(/^(partb\.writein\.[a-z0-9]+)\.on$/);if(w)return '[data-wibox="'+w[1]+'"]';const gb=groupOf(k);if(gb)return '[data-box="'+gb+'"] input,[data-box="'+gb+'"] .uatrigger';return '[data-trigfor="'+k+'"],[data-box="'+k+'"] .uatrigger,[data-k="'+k+'"],[data-fuel="'+k+'"],[data-fuel3="'+k+'"],[data-wibox="'+k+'"],[data-cb="'+k+'"]';}
 function revertPending(){if(!_pending||!_pending.length)return false;const keys=_pending;const snap=_pendingSnap;_pending=null;_pendingSnap=null;let any=false;if(snap){any=restoreSnap(snap);undoDrop(snap);}else{keys.forEach(k=>{const gb=groupOf(k);if(revertKeys(gb?ADDR_GROUPS[gb]:coupledKeys(k)))any=true;});}if(any){refreshIfPrereq(keys);_refocusSel=refocusSelForKey(keys[0]);renderBody();}setStatus(undoMsg());return true;}
 function aggSrc(keys){if(keys.some(k=>srcOf(k)==='overridden'))return'overridden';if(keys.some(k=>srcOf(k)==='database'))return'database';if(keys.some(k=>srcOf(k)==='this-cycle'))return'this-cycle';return'new';}
 function groupOf(k){for(const b in ADDR_GROUPS){if(ADDR_GROUPS[b].indexOf(k)>=0)return b;}return null;}
@@ -1865,7 +1865,13 @@ function wireBody(){
   document.querySelectorAll('[data-wibox]').forEach(bx=>bx.addEventListener('click',e=>{e.preventDefault();const base=bx.getAttribute('data-wibox');if(!get(base))return;const on=get(base+'.on')==='1';_pendingSnap=snapPend([base+'.on']);form=store.editForm(form,base+'.on',on?'':'1');_pending=[base+'.on'];_refocusSel='[data-wibox="'+base+'"]';renderBody();}));
   document.querySelectorAll('button[data-rev]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();const _ks=b.getAttribute('data-rev').split(',');const _rv=[];_ks.forEach(k=>coupledKeys(k).forEach(x=>{if(_rv.indexOf(x)<0)_rv.push(x);}));revertKeys(_rv);refreshIfPrereq(_ks);renderBody();setStatus('Reverted to the on-file value.');}));
   document.querySelectorAll('button[data-revaddr]').forEach(b=>b.addEventListener('click',()=>{const _box=b.getAttribute('data-revaddr');const g=(ADDR_GROUPS[_box]||ADDR).slice();if(_box==='tenant.mgmt')g.push('tenant.mgmt_source');revertKeys(g);refreshIfPrereq(g);renderBody();setStatus('Address reverted.');}));
-  document.querySelectorAll('button[data-save1]').forEach(b=>b.addEventListener('click',async e=>{e.preventDefault();e.stopPropagation();const keys=[];b.getAttribute('data-save1').split(',').forEach(_k=>coupledKeys(_k).forEach(x=>{if(keys.indexOf(x)<0)keys.push(x);}));if(handleZeroUnitCommit(keys))return;for(const _pk of ['poc.phone','appr.phone'])if(keys.indexOf(_pk)>=0){const _d=(get(_pk)||'').replace(/\D/g,'');if(_d.length!==0&&_d.length!==10){setStatus('Enter a complete 10-digit phone before saving.');return;}}keys.forEach(k=>{const m=k.match(/^partb\.writein\.(e1|e2|e3|e4|e5|s1|s2|s3|s4|s5|s6)(\.on)?$/);if(m)clearUncheckedWriteins([m[1]]);});try{form=await store.saveFields(form,keys);}catch(e){saveFailed(e);return;}await refreshSnap();snapForm(keys);clearUndoChain();_pending=null;_pendingSnap=null;renderBody();setStatus('Saved just that field to the database.');}));
+  document.querySelectorAll('button[data-save1]').forEach(b=>b.addEventListener('click',async e=>{e.preventDefault();e.stopPropagation();const keys=[];b.getAttribute('data-save1').split(',').forEach(_k=>coupledKeys(_k).forEach(x=>{if(keys.indexOf(x)<0)keys.push(x);}));if(handleZeroUnitCommit(keys))return;for(const _pk of ['poc.phone','appr.phone'])if(keys.indexOf(_pk)>=0){const _d=(get(_pk)||'').replace(/\D/g,'');if(_d.length!==0&&_d.length!==10){setStatus('Enter a complete 10-digit phone before saving.');return;}}keys.forEach(k=>{const m=k.match(/^partb\.writein\.(e1|e2|e3|e4|e5|s1|s2|s3|s4|s5|s6)(\.on)?$/);if(m)clearUncheckedWriteins([m[1]]);});try{form=await store.saveFields(form,keys);}catch(e){saveFailed(e);return;}await refreshSnap();snapForm(keys);clearUndoChain();_pending=null;_pendingSnap=null;
+    /* Put the caret back where it was. commitPending has always done this; the
+       button never did, and Enter on a fuel chip, a write-in tick or a dropdown
+       routes THROUGH the button (cellActBtn -> click). So the save landed and
+       focus fell to <body>: no second Enter, no Escape, no Tab from where you
+       were — the same dead end that made Enter unreachable in the first place. */
+    _refocusSel=refocusSelForKey(keys[0]);renderBody();setStatus('Saved just that field to the database.');}));
   document.querySelectorAll('button[data-save1addr]').forEach(b=>b.addEventListener('click',async()=>{const _box=b.getAttribute('data-save1addr');const ks=(ADDR_GROUPS[_box]||ADDR).slice();if(_box==='tenant.mgmt')ks.push('tenant.mgmt_source');try{form=await store.saveFields(form,ks);}catch(e){saveFailed(e);return;}await refreshSnap();snapForm(ks);clearUndoChain();_pending=null;_pendingSnap=null;renderBody();setStatus('Saved the address to the database.');}));
   document.querySelectorAll('.uatrigger').forEach(t=>{const d=t.closest('.uadrop');if(!d)return;
     const tog=()=>{const open=d.classList.contains('open');document.querySelectorAll('.uadrop.open').forEach(x=>x.classList.remove('open'));if(!open)d.classList.add('open');};
@@ -3011,6 +3017,15 @@ const __API={DESIG,desigName,rsParseUnitType,fmtPhone,fmtDate,sMoney,sPct,sK,ana
      compares VALUES ONLY, so a hidden side-effect key strands the form dirty with
      nothing on screen and no way to name the culprit from outside. */
   __form:()=>form, __formSnap:()=>FORMSNAP,
+  /* Packages carry the programs (rcs / ocaf / uaf), and the pills that toggle them
+     only render once a package is open — so a sweep across program combinations
+     needs the ids. */
+  __cids:()=>(mpdb?mpdb.listCycles(activePid):[]).map(c=>c.id),
+  /* The selftest property carries no unit data, so the first-run migration
+     rightly refuses to invent a package for it — and without a package there
+     are no program pills to drive. Make one. */
+  __newCycle:(o)=>mpdb.createCycle(activePid,Object.assign({full:true,programs:['rcs'],label:'TEST'},o||{})),
+  __progsOf:(cid)=>{const c=(mpdb?mpdb.listCycles(activePid):[]).find(x=>x.id===cid);return c?c.programs.slice():[];},
   /* The undo run. __editCell is the text box's input handler in miniature —
      push the cell, then write it the way that handler does — so a suite can
      build a run of edits without synthesising DOM events. */

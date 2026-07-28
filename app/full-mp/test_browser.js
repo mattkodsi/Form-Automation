@@ -35,7 +35,7 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=45;
+const MIN_CHECKS=53;
 let n=0,fails=0,verdict=null;
 const BAR='═'.repeat(68);
 function fail(msg,err){
@@ -393,7 +393,47 @@ const FULL=process.argv.includes('--full');
     eq('and the form is not dirty after one',await c.eval('return window.__t.isDirty()'),false);
 
     /* ─────────────────────────────────────────────────────────────────────
-       8. Nothing threw along the way. */
+       8. Focus survives a save. Enter on a fuel chip or a write-in tick routes
+       through the ✓ button (cellActBtn -> click), and that handler never put the
+       caret back the way commitPending does — so the save landed and focus fell
+       to <body>: no second Enter, no Escape, no Tab from where you were. */
+    console.log('\n── the caret survives a save ──────────────────────────');
+    for(const K of [{sel:'[data-fuel]',name:'fuel chip'},{sel:'[data-wibox]',name:'write-in tick'}]){
+      await openForm();
+      await c.eval(`document.querySelectorAll('#viewForm ${K.sel}')[0].click();return 1`);
+      await sleep(160);
+      await c.eval(`document.querySelectorAll('#viewForm ${K.sel}')[0].focus();return 1`);
+      await c.key('Enter',{wait:340});
+      eq(`${K.name}: the caret stays in the form after Enter`,
+         await c.eval(`const a=document.activeElement,v=document.getElementById('viewForm');
+           if(!a||a===document.body)return '(body)';return (v&&v.contains(a))?'in the form':'outside';`),
+         'in the form');
+    }
+
+    /* ─────────────────────────────────────────────────────────────────────
+       9. Geometry, from computed style, at the three widths. An <input> carries
+       an intrinsic ~20-character minimum and a 1fr track will not shrink below
+       its content, so the address street box held the main column wider than the
+       viewport and the whole page scrolled sideways at 1200. */
+    console.log('\n── it fits, measured ──────────────────────────────────');
+    await openForm();
+    for(const w of [1200,1280,1920]){
+      await c.send('Emulation.setDeviceMetricsOverride',{width:w,height:900,deviceScaleFactor:1,mobile:false});
+      await sleep(420);
+      const g=await c.eval(`
+        const de=document.documentElement;const over=[];
+        document.querySelectorAll('#viewForm .rbox,#viewForm .fbox').forEach(cell=>{
+          const r=cell.getBoundingClientRect();if(!(r.width>0))return;
+          [...cell.children].forEach(k=>{const q=k.getBoundingClientRect();
+            if(q.width>0&&(q.right>r.right+0.5||q.left<r.left-0.5))over.push(cell.className);});});
+        return {sideways:de.scrollWidth>de.clientWidth+1,over:over.length};`);
+      eq(`${w}px: the page does not scroll sideways`,g.sideways,false);
+      eq(`${w}px: nothing spills out of its cell`,g.over,0);
+    }
+    await c.send('Emulation.clearDeviceMetricsOverride');
+
+    /* ─────────────────────────────────────────────────────────────────────
+       10. Nothing threw along the way. */
     console.log('\n── the console stayed quiet ───────────────────────────');
     eq('no console errors and no uncaught exceptions',c.logs.slice(0,3),[]);
 
