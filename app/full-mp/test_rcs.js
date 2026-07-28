@@ -50,6 +50,9 @@ global.window.PDFLib=global.window.PDFLib||globalThis.PDFLib;
    built. The other three suites were given a pid in 155174e's wake; this one was
    missed, and it fails the most quietly of the four. */
 const _b=path.join(os.tmpdir(),'rcs_parse_test.'+process.pid+'.js');
+/* And take it with us. force:true so a run that died before writing exits quietly,
+   try/catch so cleanup can never be what fails an otherwise-green run. */
+process.on('exit',()=>{try{fs.rmSync(_b,{force:true});}catch(e){}});
 fs.writeFileSync(_b,'function ocrHalf(b,p,skip){(globalThis.__HALF=globalThis.__HALF||[]).push({p:p,skip:(skip||[]).slice()});return Promise.resolve(null);}\n'
   +['templates.js','core.js','db.js','app.js','rcs.js'].map(x=>fs.readFileSync(path.join(_d,x),'utf8')).join('\n')
   +'\nif(typeof module!=="undefined")Object.assign(module.exports,{__rsTextPageAt:rsTextPageAt,__rsTextPages:rsTextPages,__rsReadTextTier:rsReadTextTier});\n');

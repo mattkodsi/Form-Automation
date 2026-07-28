@@ -85,6 +85,12 @@ const T=(label,v)=>eq(label,!!v,true);
    presented as a check failing against a feature that was demonstrably present
    in the source and in the built bundle. */
 const BUNDLE=path.join(os.tmpdir(),'rcs_browser_bundle.'+process.pid+'.html');
+/* The pid above keeps parallel worktrees off each other's bundle (610fe58); it does
+   not clean up after itself, and a few hundred of these had piled up in the temp
+   directory. Take ours with us. force:true so a run that never got as far as
+   writing the file still exits quietly, and the try/catch so cleanup can never be
+   the thing that fails an otherwise-green run. */
+process.on('exit',()=>{try{fs.rmSync(BUNDLE,{force:true});}catch(e){}});
 function buildBundle(){
   cp.execFileSync('bash',[path.join(__dirname,'build.sh'),BUNDLE],{stdio:['ignore','ignore','pipe']});
   const n=fs.statSync(BUNDLE).size;
@@ -147,6 +153,10 @@ async function withApp(fn,{width=1280,height=900}={}){
   const port=srv.address().port;
   const dp=await new Promise(r=>{const t=net.createServer();t.listen(0,'127.0.0.1',()=>{const p=t.address().port;t.close(()=>r(p));});});
   const ud=fs.mkdtempSync(path.join(os.tmpdir(),'rcs-cdp-'));
+  /* A chromium profile is a directory, and one per run had been accumulating
+     since the suite was written. Both exits below own it: the devtools-never-
+     answered throw leaves the try/finally unentered. */
+  const rmUd=()=>{try{fs.rmSync(ud,{recursive:true,force:true});}catch(e){}};
   const proc=cp.spawn(bin,['--headless=new','--remote-debugging-port='+dp,'--user-data-dir='+ud,
     '--no-first-run','--no-default-browser-check','--disable-gpu','--window-size='+width+','+height,'about:blank'],
     {stdio:['ignore','ignore','pipe']});
@@ -155,7 +165,7 @@ async function withApp(fn,{width=1280,height=900}={}){
     let b='';r.on('data',d=>b+=d);r.on('end',()=>{try{res(JSON.parse(b));}catch(e){rej(e);}});}).on('error',rej);});
   let list=null;
   for(let i=0;i<120;i++){try{list=await getj('/json/list');if(list.some(t=>t.type==='page'))break;}catch(e){}await sleep(150);}
-  if(!list){proc.kill();srv.close();throw new Error('devtools never answered\n'+buf);}
+  if(!list){proc.kill();srv.close();rmUd();throw new Error('devtools never answered\n'+buf);}
   const ws=new WebSocket(list.find(t=>t.type==='page').webSocketDebuggerUrl);
   await new Promise((res,rej)=>{ws.addEventListener('open',res);ws.addEventListener('error',rej);});
   const c=new CDP(ws);
@@ -168,7 +178,7 @@ async function withApp(fn,{width=1280,height=900}={}){
     throw new Error('the app never booted under ?selftest=1');};
   await c.reload();
   try{return await fn(c);}
-  finally{try{ws.close();}catch(e){}proc.kill();srv.close();}
+  finally{try{ws.close();}catch(e){}proc.kill();srv.close();rmUd();}
 }
 
 /* ── page-side helpers, installed once ──────────────────────────────────── */

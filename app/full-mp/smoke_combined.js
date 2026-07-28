@@ -43,6 +43,12 @@ process.on('unhandledRejection',e=>{fail('unhandled rejection — an async throw
 process.on('uncaughtException',e=>{fail('uncaught exception',e);process.exit(1);});
 
 const _d=__dirname,_b=path.join(os.tmpdir(),'rcs_combined_smoke.'+process.pid+'.js');
+/* The pid above keeps parallel worktrees off each other's bundle (610fe58); it does
+   not clean up after itself, and a few hundred of these had piled up in the temp
+   directory. Take ours with us. force:true so a run that never got as far as
+   writing the file still exits quietly, and the try/catch so cleanup can never be
+   the thing that fails an otherwise-green run. */
+process.on('exit',()=>{try{fs.rmSync(_b,{force:true});}catch(e){}});
 fs.writeFileSync(_b,['core.js','db.js','app.js'].map(x=>fs.readFileSync(path.join(_d,x),'utf8')).join('\n'));
 const app=require(_b);
 const eq=(label,got,want)=>{n++;const p=JSON.stringify(got)===JSON.stringify(want);if(!p){fails++;console.log(`  ✗ ${label}: got ${JSON.stringify(got)} want ${JSON.stringify(want)}`);}else console.log(`  ✓ ${label}`);};
