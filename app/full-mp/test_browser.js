@@ -35,8 +35,10 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=85;   // 2026-07-27: the unit-type cell lost a divider with the designation,
-                       // so the pair of divider checks became one. Lowered on purpose.
+const MIN_CHECKS=91;   // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
+                       // pristine (three seeds, two checks each). 2026-07-27: the unit-type cell
+                       // lost a divider with the designation, so the pair of divider checks
+                       // became one. Lowered on purpose.
 let n=0,fails=0,verdict=null;
 const BAR='═'.repeat(68);
 function fail(msg,err){
@@ -255,6 +257,34 @@ const FULL=process.argv.includes('--full');
          ['Shades','W/D Hookups','Security']);
       eq('and the fuel letters',
          [rec.partb['partb.fuel.0'],rec.partb['partb.fuel.1']],['G','E']);
+    }
+
+    /* ── the same scan, nudged ──────────────────────────────────────────────
+       Every expectation above rests on word polygons captured at Azure's full
+       precision, and rsFindS8 used to depend on that precision: rounding this
+       fixture's polygons to a thousandth of an inch lost the HAP number and
+       changed nothing else in the record. Two words of one printed line were
+       joined in HEIGHT order, and "HAP" outranked "Contract" by 0.034pt — a
+       two-thousandth of an inch was the entire margin by which the label read as
+       a label. A sheet on a scanner glass moves orders of magnitude more than
+       that. So the fixture is also read nudged: every word and every tick
+       displaced by up to half a point, a different direction each, deterministic
+       per seed so a failure can be re-run. Against the pre-fix rsFindS8 all
+       three seeds come back with no number at all; that is what this catches. */
+    const mulberry32=a=>()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);
+      t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};
+    const nudge=(pgs,pt,seed)=>{const rnd=mulberry32(seed),inch=pt/72;   // the fixture measures in inches
+      const move=o=>{const dx=(rnd()*2-1)*inch,dy=(rnd()*2-1)*inch;
+        return Object.assign({},o,{poly:o.poly.map((v,i)=>i%2?v+dy:v+dx)});};
+      return pgs.map(pg=>Object.assign({},pg,
+        {words:(pg.words||[]).map(move),marks:(pg.marks||[]).map(move)}));};
+    for(const seed of [1,2,3]){
+      const j=await c.eval('return await window.__t.ocrMapPages('+JSON.stringify(nudge(scan,0.5,seed))+')');
+      eq(`nudged half a point (seed ${seed}): the HAP number still reads`,
+         (j&&j.scalars['property.s8'])||null,'OH10M000236');
+      eq(`nudged half a point (seed ${seed}): and the page reads as it did`,
+         j&&j.units?[j.scalars['rs_date'],j.units.length,j.units[0].rent,j.units[1].rent]:null,
+         ['2025-10-01',2,1147,1407]);
     }
 
     /* ─────────────────────────────────────────────────────────────────────
