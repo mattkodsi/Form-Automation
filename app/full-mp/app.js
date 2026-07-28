@@ -963,15 +963,23 @@ async function rsRuns(txt,ctx){ // content stream -> ctx.runs [{s,x,y,d}] in pag
     }
     nums=[];}
   return ctx.runs;}
+/* One page's runs. Split out of rsTextPages so a reader can pull ONE page and
+   stop: an RCS study runs to 115 pages, and interpreting every one of them to
+   find a two-page letter is work nobody needs. It also decides what a scan
+   would cost — the OCR tier bills per page, so it must never be handed a whole
+   report when three pages carry the answer. */
+async function rsTextPageAt(doc,i){const pgs=doc.getPages();if(i<0||i>=pgs.length)return [];
+  const pg=pgs[i],runs=[];
+  let res=null;try{res=pg.node.Resources();}catch(e){}
+  let cs=null;try{cs=pg.node.Contents();}catch(e){}
+  let txt='';
+  if(cs&&cs.size&&cs.lookup){for(let k=0;k<cs.size();k++)txt+=(await rsStreamText(cs.lookup(k)))+'\n';}
+  else if(cs)txt=await rsStreamText(cs);
+  try{await rsRuns(txt,{res:res,ctm:[1,0,0,1,0,0],depth:0,runs:runs,seen:new Set()});}catch(e){}
+  return runs;}
 async function rsTextPages(doc){const out=[]; // one run list per page, in page order
-  for(const pg of doc.getPages()){const runs=[];
-    let res=null;try{res=pg.node.Resources();}catch(e){}
-    let cs=null;try{cs=pg.node.Contents();}catch(e){}
-    let txt='';
-    if(cs&&cs.size&&cs.lookup){for(let i=0;i<cs.size();i++)txt+=(await rsStreamText(cs.lookup(i)))+'\n';}
-    else if(cs)txt=await rsStreamText(cs);
-    try{await rsRuns(txt,{res:res,ctm:[1,0,0,1,0,0],depth:0,runs:runs,seen:new Set()});}catch(e){}
-    out.push(runs);}
+  const n=doc.getPages().length;
+  for(let i=0;i<n;i++)out.push(await rsTextPageAt(doc,i));
   return out;}
 let _rsRectCache=null;
 async function rsFieldRects(){ // field id -> {pg,x,y,w,h} from our own template
