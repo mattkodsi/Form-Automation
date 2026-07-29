@@ -831,3 +831,62 @@ preferring that pull over the study's own printed table.
 **This is now the top of the queue.** Every finding in this register that rests on a single
 driven run is weaker than it looked, and any property whose schedule "could not be read"
 should be re-driven before its rows are trusted.
+
+---
+
+# The analysis workbook — two defects, and one claim withdrawn
+
+## WITHDRAWN · "the workbook is missing formulas" is a harness artifact
+
+Two agents reported that `M9`, `L10`, `M10` and `V10` hold a literal `0` with no
+formula. They do have formulas — **shared** ones:
+
+```
+<c r="V9" s="36"><f t="shared" ref="V9:V14" si="2">U9*C9</f><v>0</v></c>
+<c r="V10" s="36"><f t="shared" si="2"/><v>0</v></c>
+```
+
+`V9` is the master and `V10` inherits it by `si`. A reader that does not resolve shared
+formulas sees an empty `<f/>` and reports the cell as a bare zero. Same class as the
+withdrawn `OakCenter1`: **the tool doing the looking was the thing at fault.**
+Do not "fix" these cells.
+
+## M28 · The workbook shipped a stale answer to the 150% test — FIXED
+
+All **116** of the template's formula cells carry the cached value the blank was saved
+with: zeros, `#DIV/0!`, and a `Below 150%?` of **NO**. `fullCalcOnLoad` makes Excel
+recompute on open, which is why this went unnoticed — but anything that reads the stored
+value sees the stale one: a preview pane, Numbers, Google Sheets, a reader script, or a
+person who glances at the file without opening it in Excel. **Eight properties shipped a
+workbook saying NO about a package that passes.**
+
+The cached values are now stripped from every formula cell, along with the `t="str"`/`t="e"`
+attributes that describe them. The formula stays; the answer is only ever one that was
+actually computed. An empty cell is an honest "not calculated yet"; a cached NO is a claim.
+A guard throws if the template ever ships with nothing to clear, so this cannot silently
+regress.
+
+## M29 · The SAFMR column printed a rounding remainder — FIXED
+
+`xlsx.js` wrote `safmr150 / 1.5` into a column headed SAFMR. The app stores the **ceiling**,
+already rounded, so dividing it back does not recover the base — it recovers the remainder.
+A HUD base of 4,413 becomes a ceiling of 6,620, and 6,620 / 1.5 printed
+**4413.3333333333335**. Rounding the quotient returns the published integer exactly,
+because the ceiling was `round(base × 1.5)` to begin with.
+
+This is the printing half of the SAFMR problem. The other half — `defSafmrSrc` preferring
+the HUD pull over the study's own printed table — is unfixed, and there are now two
+independent reasons to change it: the team used the study's figure on every property
+audited, and **the pull returns different numbers on different runs** (see M27).
+
+**The workbook had no tests at all.** It has nine now, driving the real template through
+node (which has had `DecompressionStream`, `Blob` and `atob` since v18).
+
+## A flaky delivery gate, recorded so it is not mistaken for a defect
+
+`deliver.sh` refused to ship once with `✗ FAILED SUITE(S): test_crypto.js`, minutes after
+that same suite had printed `ALL 81 CRYPTO CHECKS PASSED` inside `run_tests.sh`. Run alone
+it exits 0; the delivery succeeded unchanged on retry. The failing run overlapped several
+headless chromium instances and a subagent fleet, so contention is the likely cause. It
+matters because an unattended loop reads that gate as authority — **a single red delivery
+is worth one retry before it is believed.**

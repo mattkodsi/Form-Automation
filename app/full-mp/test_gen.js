@@ -9,8 +9,11 @@ global.PDFLib=require(D+'lib/pdf-lib.min.js');
 new Function('window',fs.readFileSync(D+'templates.js','utf8'))(global.window);
 const TPL=global.window.RCSTemplates;
 const G=require(D+'gen.js');
+/* xlsx.js is an IIFE that hangs itself on window, like templates.js. It needs
+   DecompressionStream, Blob and atob, all of which node has had since 18. */
+new Function('window',fs.readFileSync(D+'xlsx.js','utf8'))(global.window);
 
-const MIN_CHECKS=49;                 // the count this file is known to run to the end
+const MIN_CHECKS=58;                 // the count this file is known to run to the end
 let n=0,fails=0,verdict=null;
 const BAR='═'.repeat(68);
 function fail(msg,err){
@@ -268,6 +271,40 @@ function record(extra){
     const f=(await PDFDocument.load(by)).getForm();
     const V=id=>{try{return f.getTextField(String(id)).getText()||'';}catch(e){return null;}};
     eq('an explicit choice of the prior schedule is honoured',V(7+4),'42'); }
+
+  /* ── the analysis workbook, which had no tests at all ──────────────────────
+     Eight properties shipped a workbook whose "Below 150%?" cell read NO about a
+     package that passes. The template's 116 formula cells each carry the cached
+     value the blank was saved with -- zeros, #DIV/0!, and that NO -- and
+     fullCalcOnLoad only helps a reader who opens it in Excel. And the SAFMR
+     column printed 4413.3333333333335 because the app stores the ceiling and the
+     column wanted the base. */
+  console.log('\n─ the analysis workbook ─');
+  { const wbBytes=await window.RCSXlsx.rentAnalysis({propertyName:'Test Gardens',apprFirm:'Belfry Valuation, LLC',
+      rows:[{type:'1BR/1BA',units:90,cur:1368,pro:2000,ua:70,safmr150:2250},
+            {type:'2BR/1BA TH',units:25,cur:1675,pro:2400,ua:86,safmr150:6620}]});
+    T('a workbook is produced',wbBytes&&wbBytes.length>3000);
+    /* unpack it the same way the app packs it */
+    const ents=[];{const u8=wbBytes;const dv=new DataView(u8.buffer,u8.byteOffset,u8.byteLength);
+      let i=0;while(i<u8.length-4){ if(dv.getUint32(i,true)===0x04034b50){
+        const nl=dv.getUint16(i+26,true),el=dv.getUint16(i+28,true),csz=dv.getUint32(i+18,true);
+        const nm=new TextDecoder().decode(u8.subarray(i+30,i+30+nl));
+        const ds=i+30+nl+el; ents.push({nm,data:u8.subarray(ds,ds+csz)}); i=ds+csz; } else i++; }}
+    const sheetEnt=ents.find(e=>e.nm==='xl/worksheets/sheet1.xml');
+    T('the sheet is in the archive',!!sheetEnt);
+    const sheet=new TextDecoder().decode(sheetEnt.data);
+    const cells=sheet.match(/<c\b[^>]*>[\s\S]*?<\/c>/g)||[];
+    const withF=cells.filter(c=>c.indexOf('<f')>=0);
+    T('the formulas are still there',withF.length>100);
+    eq('and not one of them ships a cached answer',withF.filter(c=>/<v>/.test(c)).length,0);
+    T('so nothing can read a stale verdict',sheet.indexOf('>NO<')<0);
+    const cellOf=r=>{const m=sheet.match(new RegExp('<c r="'+r+'"[^>]*>([\\s\\S]*?)</c>'));return m?m[1]:null;};
+    eq('the SAFMR column carries the base, rounded',cellOf('T9'),'<v>1500</v>');
+    /* 6620 is round(4413 x 1.5); dividing back and rounding returns 4413 exactly,
+       which is the integer HUD published. Unrounded it printed 4413.3333333333335. */
+    eq('and recovers an odd ceiling exactly',cellOf('T10'),'<v>4413</v>');
+    eq('the unit rows carry their rents',cellOf('E9'),'<v>2000</v>');
+    eq('and their allowances',cellOf('P10'),'<v>86</v>'); }
 
   finish();
 })().catch(e=>fail('the suite threw before reaching its verdict',e));
