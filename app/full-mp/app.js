@@ -1035,6 +1035,22 @@ function rsRecall(){if(!(activeCid&&mpdb&&mpdb.getCycleRs))return null;
   let d=null;try{d=mpdb.getCycleRs(activeCid);}catch(e){return null;}
   if(!d||!d.name)return null;
   return {name:d.name,bytes:null,kind:d.kind||'scan',via:d.via,parsed:d.parsed||null,at:d.at||'',stored:true};}
+/* A permissions-locked PDF needs no password to open -- Preview shows one
+   instantly -- but pdf-lib has no decryption at all, and ignoreEncryption does
+   not skip encryption, it defers the failure to the page tree. So a study that
+   a human can plainly read arrived here as "Expected instance of e". Six of the
+   portfolio's properties file their studies this way, Sample Property's current
+   cycle among them. Unlock before anything tries to read, and fall back to the
+   original bytes rather than fail the upload: a file we cannot unlock is no
+   worse off than before. */
+async function unlockPdf(bytes){
+  try{
+    const D=window.RCSPdfDecrypt;
+    if(!D||!D.isEncrypted(bytes))return bytes;
+    const r=await D.decrypt(bytes);
+    return (r&&r.ok&&r.bytes&&r.bytes.length)?r.bytes:bytes;
+  }catch(e){return bytes;}
+}
 /* ===================== the RCS study, read =====================
    The reader is in rcs.js and is pure. This is the app side of it: pull the
    pages it asks for, keep the reading with the package, and answer the source
@@ -2788,8 +2804,9 @@ function wireBody(){
   const upR=el('upRcs');if(upR)upR.onclick=()=>{const f=el('rcsFile');if(f)f.click();};
   const rf=el('rcsFile');if(rf)rf.onchange=()=>{const f=rf.files&&rf.files[0];if(!f)return;
     if(_rcsBusy){setStatus('Still reading the last study \u2014 one moment.');rf.value='';return;}
-    f.arrayBuffer().then(async buf=>{const b=new Uint8Array(buf);
+    f.arrayBuffer().then(async buf=>{let b=new Uint8Array(buf);
       if(!(b.length>4&&b[0]===0x25&&b[1]===0x50&&b[2]===0x44&&b[3]===0x46)){setStatus('That file isn\u2019t a PDF \u2014 upload the completed RCS report as a PDF.');rf.value='';return;}
+      b=await unlockPdf(b);
       /* A 52-page valuation report is not a 3-page form. Reading it is fast
          because only the letter is read, but the row still says so rather than
          sitting unchanged while it happens. */
@@ -2808,8 +2825,9 @@ function wireBody(){
   const upS=el('upRs');if(upS)upS.onclick=()=>{const f=el('rsFile');if(f)f.click();};
   const sf=el('rsFile');if(sf)sf.onchange=()=>{const f=sf.files&&sf.files[0];if(!f)return;
     if(_rsBusy){setStatus('Still reading the last rent schedule \u2014 one moment.');sf.value='';return;} // OCR takes seconds; a second upload mid-flight would race the first
-    f.arrayBuffer().then(async buf=>{const b=new Uint8Array(buf);
+    f.arrayBuffer().then(async buf=>{let b=new Uint8Array(buf);
       if(!(b.length>4&&b[0]===0x25&&b[1]===0x50&&b[2]===0x44&&b[3]===0x46)){setStatus('That file isn\u2019t a PDF \u2014 upload the executed rent schedule as a PDF.');sf.value='';return;}
+      b=await unlockPdf(b);
       setStatus('Reading the rent schedule\u2026');
       // Tiers 1 and 2 are instant, so the row would flick past; OCR takes seconds
       // per page, and without a visible row the upload line just sat there
