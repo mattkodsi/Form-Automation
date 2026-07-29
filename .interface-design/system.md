@@ -81,9 +81,7 @@ the absence of a system. Everything below collapses into one `:root` block.
   --stamp:#9c2b18;  --stamp-wash:#f7ece8;   /* received-stamp ink — owed now */
   --ledger:#1f5480;                          /* columnar-pad blue — coming up */
   --filed:#2f6a45;                           /* safety-paper green — done */
-  --chrome:#101d2b;                          /* the masthead — dark in both themes */
-  --on-chrome:#fff; --on-chrome-wash:rgba(255,255,255,.10);
-  --on-chrome-line:rgba(255,255,255,.26);    /* so no call site hardcodes a white */
+  --chrome:#101d2b;                          /* the masthead */
   --btn:#101d2b; --btn-hover:#1f5480; --btn-ink:#fff;
   --r-ctl:4px; --r-card:8px;                 /* + 999px for pills. Three, not twenty. */
   --ease:cubic-bezier(.23,1,.32,1);
@@ -167,16 +165,8 @@ Plex must ship as base64 `woff2` subsets inside the bundle (~40 KB for two faces
 page→card step is a real ~10% lightness jump (not the current 4%), which is what fixes
 the washed-out look on a large monitor; `--rule` defines edges; nothing lifts.
 
-**Spacing base 4px, and it is enforced, not aspirational.** A deslop pass found eleven
-off-grid values (5, 7, 9, 11, 18, 22, 26, 33…) in a file whose own system declared a 4px
-base. Card padding 24px, symmetrical. Table cells 12px 16px. Section gap 64px, group gap
-16px — breathe unevenly: things sharing a deadline group tight, things that don't are set
-apart.
-
-**Cursors do not lie.** `cursor:pointer` on a `<tr>` that nothing handles is a promise the
-page cannot keep, and it let me justify a 33px control by claiming "the row is the target."
-Either the row is a real control with keyboard access, or the button is the target and it
-meets 40px. Never the appearance of the first with the mechanics of neither.
+Spacing base 4px. Card padding 18px. Section gap 44px, group gap 12–14px — breathe
+unevenly: things sharing a deadline group tight, things that don't are set apart.
 
 ## Component values
 
