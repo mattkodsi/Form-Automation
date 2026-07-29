@@ -10,7 +10,7 @@ new Function('window',fs.readFileSync(D+'templates.js','utf8'))(global.window);
 const TPL=global.window.RCSTemplates;
 const G=require(D+'gen.js');
 
-const MIN_CHECKS=32;                 // the count this file is known to run to the end
+const MIN_CHECKS=44;                 // the count this file is known to run to the end
 let n=0,fails=0,verdict=null;
 const BAR='═'.repeat(68);
 function fail(msg,err){
@@ -144,9 +144,12 @@ function record(extra){
     const V=id=>{try{return f.getTextField(String(id)).getText()||'';}catch(e){return '(no field '+id+')';}};
     eq('Part D reports the rent lost by every non-revenue unit',V(174),'2,400');
     /* Its Part A row is wherever the plan put it — after the two Section 8 rows
-       and the blank spacer — so find it by what it says, not by counting. */
-    let nrRow=-1;for(let r=0;r<11;r++)if(V(7+r*8)==='Model unit')nrRow=r;
-    eq('and Part A carries the count with it',nrRow<0?'(row not found)':V(7+nrRow*8+1),'2'); }
+       and the blank spacer — so find it by what it says, not by counting.
+       Column 1 says the unit TYPE now, not the use, and this record's type is
+       shared with a Section 8 row, so the count is what tells them apart. */
+    let nrRow=-1;for(let r=0;r<11;r++)if(V(7+r*8)==='2 BR / 1 BA'&&V(7+r*8+1)==='2')nrRow=r;
+    eq('and Part A carries the count with it',nrRow<0?'(row not found)':V(7+nrRow*8+1),'2');
+    eq('and column 1 does not repeat the use',V(7+(nrRow<0?0:nrRow)*8),'2 BR / 1 BA'); }
 
   /* .replace(/, $/,'') strips a trailing comma, so an empty TITLE was handled and
      an empty NAME was not: Part G read ", Vice President of the General Partner". */
@@ -154,7 +157,7 @@ function record(extra){
     const by=await G.fillRentSchedule(rsBytes,r);
     const f=(await PDFDocument.load(by)).getForm();
     const s=f.getTextField('228').getText()||'';
-    eq('a blank signatory prints no leading comma',s,'Vice President of the General Partner'); }
+    eq('a blank signatory prints no leading comma',s,'Vice President of General Partner'); }
   { const r=record({'sig.name':'Jane Owner','sig.title':'','sig.principal':''});
     const by=await G.fillRentSchedule(rsBytes,r);
     const f=(await PDFDocument.load(by)).getForm();
@@ -183,6 +186,59 @@ function record(extra){
     global.Intl=real;
     T('a broken Intl does not take generation down',!threw);
     T('and the date falls back to a real one',/^[A-Z][a-z]+ \d{1,2}, \d{4}$/.test(String(out||''))); }
+
+  console.log('\n─ Part H says it the way the owner signs it ─');
+  /* Ebony Gardens, Circle Park, Oak Center and Morh Housing all printed
+     "Vice President of the General Partner". Every prior executed schedule and
+     every filed checklist in the corpus writes "of General Partner" or "of GP".
+     The article was ours, and Part H is a signature block. */
+  { const r=record({'sig.name':'David Pearson','sig.title':'Vice President','sig.principal':'General Partner'});
+    const by=await G.fillRentSchedule(rsBytes,r);
+    const f=(await PDFDocument.load(by)).getForm();
+    eq('no inserted article in Part H',f.getTextField('228').getText()||'','David Pearson, Vice President of General Partner'); }
+  { const r=record({'sig.name':'David Pearson','sig.title':'VP','sig.principal':'GP'});
+    eq('and the short form the schedules use survives too',
+       G.resolve(r).sig_title,'VP of GP'); }
+
+  console.log('\n─ an unsigned checklist does not claim a signing date ─');
+  /* The date prints under a blank signature rule. Falling back to today stamped
+     the generation date on a document nobody had signed — four properties in
+     wave 1 printed "July 29, 2026" beside an empty line. */
+  eq('no date until someone sets one',G.resolve(record()).sign_date,'');
+  eq('and a date that IS set still prints',
+     G.resolve(record({'checklist.sign_date':'2025-10-30'})).sign_date,'October 30, 2025');
+
+  console.log('\n─ a non-revenue unit is a unit type, not a use ─');
+  /* Oak Center printed "Manager's Unit" in Column 1 where the executed copy
+     prints "3 Bedroom", and never printed the row's $1,728 at all: its monthly
+     potential footed 277,700 against the filed 279,428. Ebony wrote
+     "Superintendent" into the same cell. The use has its own column in Part D. */
+  { const r=record({'nonrev.0.use':"Manager's Unit",'nonrev.0.br':'3BR','nonrev.0.ba':'1BA',
+      'nonrev.0.num_units':'1','nonrev.0.rent':'1728',
+      'units.0.proposed':'900','units.1.proposed':'1100'});
+    const by=await G.fillRentSchedule(rsBytes,r);
+    const f=(await PDFDocument.load(by)).getForm();
+    const V=id=>{try{return f.getTextField(String(id)).getText()||'';}catch(e){return '(no field '+id+')';}};
+    const base=7+2*8;                       // two S8 rows, then a spacer, then the non-rev row
+    const base2=7+3*8;
+    const row=[V(base),V(base2)].find(x=>/BR|Manager/.test(x))===V(base)?base:base2;
+    eq('column 1 carries the unit type',V(row),'3 BR / 1 BA');
+    eq('and the row prints its rent',V(row+2),'1,728');
+    eq('and extends it',V(row+3),'1,728');
+    eq('and grosses it',V(row+5),'1,728');
+    eq('so the monthly potential counts it',V('95'),(10*900+6*1100+1728).toLocaleString('en-US'));
+    eq('and the unit count counts it',V('94a'),'17');
+    eq('while Part D still names the use',V(159),"Manager's Unit"); }
+  /* A non-revenue unit with no rent of its own must not invent one — Ebony's
+     rents at $0 and the filed schedule prints nothing in Col. 3. */
+  { const r=record({'nonrev.0.use':'Superintendent','nonrev.0.br':'2BR','nonrev.0.ba':'1BA',
+      'nonrev.0.num_units':'1','units.0.proposed':'900','units.1.proposed':'1100'});
+    const by=await G.fillRentSchedule(rsBytes,r);
+    const f=(await PDFDocument.load(by)).getForm();
+    const V=id=>{try{return f.getTextField(String(id)).getText()||'';}catch(e){return null;}};
+    const row=/BR/.test(V(7+2*8))?7+2*8:7+3*8;
+    eq('a non-revenue row with no rent prints none',V(row+2),'');
+    eq('and adds nothing to the potential',V('95'),(10*900+6*1100).toLocaleString('en-US')); }
 
   finish();
 })().catch(e=>fail('the suite threw before reaching its verdict',e));
