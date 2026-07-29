@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Home — redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:ital,wght@0,500;0,600;1,600&display=swap" rel="stylesheet">
+<style>
+  /* ============================================================
+     Tokens named for the world this product lives in:
+     a housing-authority file room. Paper, ink, stamp, rule.
+     ============================================================ */
+  :root{
+    /* paper */
+    --paper:#d8dde4;        /* the desk */
+    --card:#ffffff;         /* a document on it */
+    --sunk:#eef1f5;         /* a ruled band / an inset control */
+
+    /* ink — four levels, not two */
+    --ink:#101822;          /* signature ink */
+    --ink-2:#41505f;        /* typed body */
+    --ink-3:#6a7b8c;        /* carbon copy */
+    --ink-4:#93a2b1;        /* pencil note */
+
+    /* rules */
+    --rule:#c2cbd6;         /* the ruled edge */
+    --rule-soft:#e4e9ef;    /* the faint line between rows */
+
+    /* the three things color is allowed to mean */
+    --stamp:#9c2b18;        /* received-stamp ink — this is owed now */
+    --stamp-wash:#f7ece8;
+    --ledger:#1f5480;       /* the blue rule of a columnar pad — coming up */
+    --filed:#2f6a45;        /* safety-paper green — done */
+
+    --chrome:#101d2b;       /* the masthead */
+
+    --r-ctl:4px; --r-card:8px;
+    --ease:cubic-bezier(.23,1,.32,1);
+  }
+  html[data-t="night"]{
+    --paper:#0a0e14; --card:#161c25; --sunk:#11161e;
+    --ink:#eef2f7; --ink-2:#a9b6c4; --ink-3:#7d8b9b; --ink-4:#5d6b7b;
+    --rule:rgba(255,255,255,.11); --rule-soft:rgba(255,255,255,.06);
+    --stamp:#e8836d; --stamp-wash:#2a1710;
+    --ledger:#5b9dd4; --filed:#4fb383;
+    --chrome:#080c11;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-font-smoothing:antialiased}
+  body{background:var(--paper);color:var(--ink);
+       font-family:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+       font-size:13.5px;line-height:1.5;font-variant-numeric:tabular-nums}
+  button{font:inherit;cursor:pointer;transition:background .14s var(--ease),
+         border-color .14s var(--ease),color .14s var(--ease),transform .1s var(--ease)}
+  button:active{transform:scale(.975)}
+  :focus-visible{outline:2px solid var(--ledger);outline-offset:2px;border-radius:var(--r-ctl)}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;transform:none!important}}
+
+  /* ---------------- masthead ---------------- */
+  header{background:var(--chrome);color:#fff;padding:0 40px;height:56px;
+         display:flex;align-items:center;justify-content:space-between}
+  .bd{display:flex;align-items:baseline;gap:11px}
+  .bd b{font-family:'IBM Plex Serif',Georgia,serif;font-size:16px;font-weight:600;letter-spacing:-.005em}
+  .bd span{font-size:10px;letter-spacing:.17em;text-transform:uppercase;opacity:.5;font-weight:600}
+  .hr{display:flex;align-items:center;gap:24px;font-size:13px}
+  .hr a{color:#fff;opacity:.72;text-decoration:none;transition:opacity .14s var(--ease)}
+  .hr a:hover{opacity:1}
+  .tog{display:flex;border:1px solid rgba(255,255,255,.24);border-radius:999px;overflow:hidden}
+  .tog button{background:none;border:none;color:#fff;opacity:.55;font-size:11.5px;padding:4px 12px}
+  .tog button[aria-pressed="true"]{background:rgba(255,255,255,.15);opacity:1;font-weight:600}
+  .tog button:hover{opacity:.9}
+
+  main{max-width:1480px;margin:0 auto;padding:40px 40px 72px}
+
+  /* ------- the statement, set in the voice of the form ------- */
+  .lede{display:flex;justify-content:space-between;align-items:flex-end;gap:48px;margin-bottom:34px}
+  h1{font-family:'IBM Plex Serif',Georgia,serif;font-size:34px;font-weight:600;
+     letter-spacing:-.018em;line-height:1.12;text-wrap:balance}
+  h1 em{font-style:italic;color:var(--stamp)}
+  .lede p{font-size:13.5px;color:var(--ink-2);margin-top:11px;max-width:54ch;text-wrap:pretty}
+  .find{position:relative;flex:0 0 300px}
+  .find input{width:100%;background:var(--sunk);border:1px solid var(--rule);
+              border-radius:var(--r-ctl);padding:11px 12px 11px 33px;font:inherit;font-size:13px;color:var(--ink)}
+  .find input:focus{outline:none;border-color:var(--ledger);background:var(--card)}
+  .find svg{position:absolute;left:11px;top:10.5px;color:var(--ink-4)}
+  .find input::placeholder{color:var(--ink-4)}
+
+  /* ---------------- section marks ---------------- */
+  .sect{display:flex;align-items:baseline;gap:12px;margin:0 0 14px}
+  .sect h2{font-size:11px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3)}
+  .sect span{font-size:12.5px;color:var(--ink-4)}
+
+  /* ------ live work — the signature rule, at card scale ------ */
+  /* breathe unevenly: the three sharing a deadline group tight,
+     the one that doesn't is set apart rather than lined up with them */
+  .live{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:44px}
+  .job.next{margin-left:18px}
+  .job{background:var(--card);border:1px solid var(--rule);border-left:3px solid var(--stamp);
+       border-radius:var(--r-card);padding:18px 19px 17px;display:flex;flex-direction:column;
+       transition:border-color .14s var(--ease)}
+  .job.next{border-left-color:var(--ledger)}
+  .job .when{font-size:10.5px;font-weight:600;letter-spacing:.11em;text-transform:uppercase;color:var(--stamp)}
+  .job.next .when{color:var(--ink-3)}
+  .job h3{font-family:'IBM Plex Serif',Georgia,serif;font-size:19px;font-weight:600;
+          letter-spacing:-.01em;margin:8px 0 5px;line-height:1.2}
+  .job .meta{font-size:12.5px;color:var(--ink-3);line-height:1.55;flex:1}
+  .job .meta b{color:var(--ink-2);font-weight:500}
+  /* one button token, flipped per theme — so .quiet stays quiet in both */
+  :root{--btn:#101d2b; --btn-hover:#1f5480; --btn-ink:#fff}
+  html[data-t="night"]{--btn:#2d6ca8; --btn-hover:#3d81c2; --btn-ink:#fff}
+  /* not a full-width slab — a slab out-shouts the headline (squint test) */
+  .go{margin-top:16px;align-self:flex-start;background:var(--btn);color:var(--btn-ink);
+      border:1px solid var(--btn);border-radius:var(--r-ctl);padding:8px 15px;
+      font-size:12.5px;font-weight:600;min-height:34px}
+  .go:hover{background:var(--btn-hover);border-color:var(--btn-hover)}
+  .go.quiet{background:transparent;color:var(--ink-2);border-color:var(--rule)}
+  .go.quiet:hover{background:var(--sunk);border-color:var(--ledger);color:var(--ledger)}
+  .go:disabled{background:transparent;border-color:var(--rule-soft);color:var(--ink-4);
+               cursor:not-allowed;transform:none}
+
+  /* -------- the portfolio, set like the schedule it writes -------- */
+  .ledger-box{background:var(--card);border:1px solid var(--rule);border-radius:var(--r-card);overflow:hidden}
+  table{width:100%;border-collapse:collapse}
+  thead th{background:var(--sunk);font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
+           color:var(--ink-3);text-align:left;padding:10px 18px;border-bottom:1px solid var(--rule)}
+  thead th.r,tbody td.r{text-align:right}
+  tbody td{padding:11px 18px;border-bottom:1px solid var(--rule-soft);font-size:13px;color:var(--ink-3)}
+  tbody tr:last-child td{border-bottom:none}
+  tbody tr{border-left:3px solid transparent;transition:background .12s var(--ease)}
+  tbody tr.soon{border-left-color:var(--ledger)}
+  tbody tr:hover{background:var(--sunk)}
+  tbody td.nm{color:var(--ink);font-weight:500}
+  tbody td.due{color:var(--ink-2);font-weight:500}
+  .prog{font-size:10.5px;font-weight:600;letter-spacing:.09em;color:var(--ink-4)}
+  .mini{background:transparent;border:1px solid transparent;color:var(--ink-4);
+        border-radius:var(--r-ctl);padding:7px 13px;font-size:11.5px;font-weight:600;min-height:32px}
+  tbody tr:hover .mini{border-color:var(--rule);color:var(--ledger)}
+  .mini:hover{background:var(--card);border-color:var(--ledger)!important}
+  .grpr td{background:var(--sunk);font-family:'IBM Plex Serif',Georgia,serif;font-size:12px;
+           font-weight:600;font-style:italic;color:var(--ink-3);padding:7px 18px;letter-spacing:0}
+  .foot{padding:13px 18px;font-size:12.5px;color:var(--ink-4);border-top:1px solid var(--rule-soft)}
+  .foot button{background:none;border:none;color:var(--ledger);font-size:12.5px;font-weight:600;padding:0}
+  .foot button:hover{text-decoration:underline}
+</style></head>
+<body>
+
+<header>
+  <div class="bd"><b>Section 8 Rent Adjustments</b><span>Related Affordable</span></div>
+  <div class="hr">
+    <div class="tog">
+      <button aria-pressed="true" onclick="T('day',this)">Day</button>
+      <button aria-pressed="false" onclick="T('night',this)">Night</button>
+    </div>
+    <a href="#">Contacts</a><a href="#">New property</a><a href="#"><b>Claire Beatty</b></a>
+  </div>
+</header>
+
+<main>
+  <div class="lede">
+    <div>
+      <h1>Three packages<br><em>due this week.</em></h1>
+      <p>Nine more inside five weeks. Your other 42 properties have nothing due until autumn — they're in the ledger below.</p>
+    </div>
+    <div class="find">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+        <circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+      <input placeholder="Find a property">
+    </div>
+  </div>
+
+  <div class="sect"><h2>Due to HUD by August 1</h2><span>three days</span></div>
+  <div class="live">
+    <div class="job"><div class="when">3 days</div>
+      <h3>Park Place</h3>
+      <div class="meta">Rent comparability study<br><b>242 units</b> · effective Dec 1</div>
+      <button class="go">Start the RCS package</button></div>
+    <div class="job"><div class="when">3 days</div>
+      <h3>Round Barn Manor</h3>
+      <div class="meta">OCAF adjustment<br><b>156 units</b> · effective Dec 1</div>
+      <button class="go">Start the OCAF package</button></div>
+    <div class="job"><div class="when">3 days</div>
+      <h3>Fairview Housing</h3>
+      <div class="meta">OCAF adjustment<br><b>124 units</b> · effective Dec 1</div>
+      <button class="go">Start the OCAF package</button></div>
+    <div class="job next"><div class="when">10 days</div>
+      <h3>Ebony Gardens</h3>
+      <div class="meta">OCAF adjustment<br><b>144 units</b> · effective Dec 8</div>
+      <button class="go quiet">Start the OCAF package</button></div>
+  </div>
+
+  <div class="sect"><h2>The rest of your portfolio</h2><span>50 properties · earliest deadline first</span></div>
+  <div class="ledger-box">
+    <table>
+      <thead><tr><th>Property</th><th>Program</th><th>Due to HUD</th><th>Rents effective</th>
+        <th class="r">Units</th><th></th></tr></thead>
+      <tbody>
+        <tr class="grpr"><td colspan="6">September</td></tr>
+        <tr class="soon"><td class="nm">Faust Landmark Apartments</td><td class="prog">OCAF</td>
+          <td class="due">Sep 1</td><td>Jan 1, 2027</td><td class="r">200</td>
+          <td class="r"><button class="mini">Start</button></td></tr>
+        <tr class="soon"><td class="nm">Northcrest Gardens</td><td class="prog">OCAF</td>
+          <td class="due">Sep 1</td><td>Dec 1, 2026</td><td class="r">182</td>
+          <td class="r"><button class="mini">Start</button></td></tr>
+        <tr class="soon"><td class="nm">Asbury</td><td class="prog">OCAF</td>
+          <td class="due">Sep 1</td><td>Dec 1, 2026</td><td class="r">119</td>
+          <td class="r"><button class="mini">Start</button></td></tr>
+        <tr class="soon"><td class="nm">Norwalk North</td><td class="prog">OCAF</td>
+          <td class="due">Sep 1</td><td>Dec 1, 2026</td><td class="r">72</td>
+          <td class="r"><button class="mini">Start</button></td></tr>
+        <tr class="soon"><td class="nm">Trees – Pine</td><td class="prog">OCAF</td>
+          <td class="due">Sep 1</td><td>Dec 1, 2026</td><td class="r">61</td>
+          <td class="r"><button class="mini">Start</button></td></tr>
+        <tr class="soon"><td class="nm">Mad River Manor</td><td class="prog">OCAF</td>
+          <td class="due">Sep 3</td><td>Jan 1, 2027</td><td class="r">74</td>
+          <td class="r"><button class="mini">Start</button></td></tr>
+        <tr class="grpr"><td colspan="6">October</td></tr>
+        <tr><td class="nm">Circle Park Apartments</td><td class="prog">OCAF</td>
+          <td class="due">Oct 1</td><td>Feb 1, 2027</td><td class="r">418</td>
+          <td class="r"><button class="mini">Start</button></td></tr>
+        <tr><td class="nm">Albright</td><td class="prog">OCAF</td>
+          <td class="due">Oct 1</td><td>Feb 1, 2027</td><td class="r">112</td>
+          <td class="r"><button class="mini">Start</button></td></tr>
+        <tr><td class="nm">Ferncliff South</td><td class="prog">OCAF</td>
+          <td class="due">Oct 1</td><td>Feb 1, 2027</td><td class="r">84</td>
+          <td class="r"><button class="mini">Start</button></td></tr>
+        <tr class="grpr"><td colspan="6">December</td></tr>
+        <tr><td class="nm">Southern Hills / Orlando</td><td class="prog">OCAF</td>
+          <td class="due">Dec 1</td><td>Apr 1, 2027</td><td class="r">212</td>
+          <td class="r"><button class="mini">Start</button></td></tr>
+        <tr><td class="nm">Alpha Towers</td><td class="prog">OCAF</td>
+          <td class="due">Dec 1</td><td>Apr 1, 2027</td><td class="r">165</td>
+          <td class="r"><button class="mini">Start</button></td></tr>
+        <tr><td class="nm">Hazelwood Towers</td><td class="prog">OCAF</td>
+          <td class="due">Dec 15</td><td>Apr 1, 2027</td><td class="r">97</td>
+          <td class="r"><button class="mini">Start</button></td></tr>
+      </tbody>
+    </table>
+    <div class="foot">38 more, through March 2028 · <button>Show all</button></div>
+  </div>
+</main>
+
+<script>
+function T(m,btn){document.documentElement.dataset.t=m;
+  [...btn.parentNode.children].forEach(b=>b.setAttribute('aria-pressed',b===btn));}
+document.documentElement.dataset.t='day';
+</script>
+</body></html>
