@@ -117,7 +117,8 @@ function computeAnalysis(form) {
   units.forEach(i => {
     const n = num(val('units.' + i + '.num_units')), cur = num(val('units.' + i + '.current')), pro = num(val('units.' + i + '.proposed'));
     const ue = num(val('units.' + i + '.ua_exec')), ur = num(val('units.' + i + '.ua_rcs'));
-    const usrc = val('units.' + i + '.ua_source') || (ue > 0 ? 'exec' : (ur > 0 ? 'rcs' : 'custom'));
+    // Same precedence as app.js defUaSrc: the study first, the prior schedule second.
+    const usrc = val('units.' + i + '.ua_source') || (ur > 0 ? 'rcs' : (ue > 0 ? 'exec' : 'custom'));
     const ua = usrc === 'rcs' ? num(val('units.' + i + '.ua_rcs')) : (usrc === 'custom' ? num(val('units.' + i + '.ua_custom')) : num(val('units.' + i + '.ua_exec')));
     const safmr = safmrResolvedFrom(val, i);
     cg += (cur + ua) * n; pg += (pro + ua) * n; tot += n;
