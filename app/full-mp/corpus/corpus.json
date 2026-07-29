@@ -12,8 +12,9 @@
           "year": 2024,
           "studies": [
             {
-              "file": "2024 - RCS/24-127-Northcross Townhomes RCS (updated UAs).pdf",
-              "bytes": 3306348,
+              "file": "2024 - RCS/24-127-Northcross Townhomes RCS v2 06.14.24.pdf",
+              "bytes": 3305546,
+              "rank": 6.001718633218,
               "firm": "renzi",
               "s8": "NC19E000007",
               "name": "Northcross Townhomes",
@@ -22,8 +23,9 @@
               "pageCount": 62
             },
             {
-              "file": "2024 - RCS/24-127-Northcross Townhomes RCS v2 06.14.24.pdf",
-              "bytes": 3305546,
+              "file": "2024 - RCS/24-127-Northcross Townhomes RCS (updated UAs).pdf",
+              "bytes": 3306348,
+              "rank": 6.001717507903,
               "firm": "renzi",
               "s8": "NC19E000007",
               "name": "Northcross Townhomes",
@@ -34,6 +36,7 @@
             {
               "file": "2024 - RCS/Archive/24-127 - Northcross Townhomes, 1835 Griers Grove Road, Charlotte, NC.pdf",
               "bytes": 3200121,
+              "rank": -0.998284019743,
               "firm": "renzi",
               "s8": "NC19E000007",
               "name": "Northcross Townhomes",
@@ -105,12 +108,20 @@
             ]
           },
           "executedRs": [],
-          "priorRs": null,
+          "priorRs": "2023/Northcross Townhomes Rent Schedule 10-1-2023 (signed).pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 5,
+          "priorRsTried": [
+            "year-1 folder(2)",
+            "year-1 in the name(2)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2024 - RCS/24-127-Northcross Townhomes RCS v2 06.14.24.pdf",
           "hasCombined": true,
           "problems": [
-            "no year -1 executed rent schedule",
-            "3 study candidates"
+            "top two studies are within one rank; the choice is a coin toss"
           ],
+          "notes": [],
           "wave": 1
         }
       ]
@@ -126,8 +137,9 @@
           "year": 2025,
           "studies": [
             {
-              "file": "2025 - RCS/Archive/RCS/25-072 - Westwood Village, 748 Westwood Boulevard, Roanoke, VA.pdf",
+              "file": "2025 - RCS/Submission/Exhibit 3 - 25-072 - Westwood Village, 748 Westwood Boulevard, Roanoke, VA.pdf",
               "bytes": 4365814,
+              "rank": 4.00175078446,
               "firm": "belfry",
               "s8": "VA36H026152",
               "name": "Westwood Village",
@@ -136,8 +148,9 @@
               "pageCount": 61
             },
             {
-              "file": "2025 - RCS/Submission/Exhibit 3 - 25-072 - Westwood Village, 748 Westwood Boulevard, Roanoke, VA.pdf",
+              "file": "2025 - RCS/Archive/RCS/25-072 - Westwood Village, 748 Westwood Boulevard, Roanoke, VA.pdf",
               "bytes": 4365814,
+              "rank": -0.99824921554,
               "firm": "belfry",
               "s8": "VA36H026152",
               "name": "Westwood Village",
@@ -221,11 +234,19 @@
             ]
           },
           "executedRs": [],
-          "priorRs": null,
+          "priorRs": "2024/Westwood Village Rent Schedule eff. 8.1.24.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 0,
+          "priorRsTried": [
+            "year-1 folder(2)",
+            "year-1 in the name(2)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2025 - RCS/Submission/Exhibit 3 - 25-072 - Westwood Village, 748 Westwood Boulevard, Roanoke, VA.pdf",
           "hasCombined": true,
-          "problems": [
-            "no year -1 executed rent schedule",
-            "2 study candidates"
+          "problems": [],
+          "notes": [
+            "prior RS filename carries no signed/executed marker"
           ],
           "wave": 1
         }
@@ -242,18 +263,9 @@
           "year": 2025,
           "studies": [
             {
-              "file": "2025 - RCS/Gill Group/Riverwood RCS V2.pdf",
-              "bytes": 6313270,
-              "firm": "gill",
-              "s8": null,
-              "name": "Riverwood Apartments",
-              "units": 0,
-              "pagesRead": 4,
-              "pageCount": 103
-            },
-            {
               "file": "2025 - RCS/Submission Archive/4 - R2999R2017 - Riverwood Apartments - RCS (FINAL).pdf",
               "bytes": 9667347,
+              "rank": 10.001735572329,
               "firm": "gill",
               "s8": null,
               "name": "Riverwood Apartments",
@@ -262,8 +274,20 @@
               "pageCount": 96
             },
             {
+              "file": "2025 - RCS/Gill Group/Riverwood RCS V2.pdf",
+              "bytes": 6313270,
+              "rank": 6.001729719925,
+              "firm": "gill",
+              "s8": null,
+              "name": "Riverwood Apartments",
+              "units": 0,
+              "pagesRead": 4,
+              "pageCount": 103
+            },
+            {
               "file": "2025 - RCS/Submission Archive/R2999R2017 - Riverwood Apartments - RCS (DRAFT).pdf",
               "bytes": 9671538,
+              "rank": -3.998267945857,
               "firm": "gill",
               "s8": null,
               "name": "Riverwood Apartments",
@@ -273,6 +297,24 @@
             }
           ],
           "docs": {
+            "rentSchedule": [
+              {
+                "file": "2025 - RCS/Executed - FY2025 RS.pdf",
+                "bytes": 451253
+              },
+              {
+                "file": "2025 - RCS/Gill Group/FY2024 RS - Riverwood (executed).pdf",
+                "bytes": 254401
+              },
+              {
+                "file": "2025 - RCS/Submission Archive/HUD 92458 - Rent Schedule - Riverwood eff. 04.01.25 (unsigned).pdf",
+                "bytes": 451035
+              },
+              {
+                "file": "2025 - RCS/Submission Archive/HUD 92458 - Rent Schedule - Riverwood eff. 04.01.25.pdf",
+                "bytes": 386053
+              }
+            ],
             "analysisXlsx": [
               {
                 "file": "2025 - RCS/Riverwood - RCS Analysis.xlsx",
@@ -311,16 +353,6 @@
                 "bytes": 367889
               }
             ],
-            "rentSchedule": [
-              {
-                "file": "2025 - RCS/Submission Archive/HUD 92458 - Rent Schedule - Riverwood eff. 04.01.25 (unsigned).pdf",
-                "bytes": 451035
-              },
-              {
-                "file": "2025 - RCS/Submission Archive/HUD 92458 - Rent Schedule - Riverwood eff. 04.01.25.pdf",
-                "bytes": 386053
-              }
-            ],
             "combinedPackage": [
               {
                 "file": "2025 - RCS/Submission Archive/Riverwood (VA36R000009) - 5-Year RCS Submission (cover signed).pdf",
@@ -336,21 +368,19 @@
               }
             ]
           },
-          "executedRs": [
-            {
-              "file": "2025 - RCS/Executed - FY2025 RS.pdf",
-              "bytes": 451253
-            },
-            {
-              "file": "2025 - RCS/Gill Group/FY2024 RS - Riverwood (executed).pdf",
-              "bytes": 254401
-            }
-          ],
+          "executedRs": [],
           "priorRs": "2024/FY2024 RS - Riverwood (executed).pdf",
-          "hasCombined": true,
-          "problems": [
-            "3 study candidates"
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 6,
+          "priorRsTried": [
+            "year-1 folder(3)",
+            "year-1 in the name(4)",
+            "newest before year 0(1)"
           ],
+          "chosenStudy": "2025 - RCS/Submission Archive/4 - R2999R2017 - Riverwood Apartments - RCS (FINAL).pdf",
+          "hasCombined": true,
+          "problems": [],
+          "notes": [],
           "wave": 1
         },
         {
@@ -358,8 +388,20 @@
           "year": 2020,
           "studies": [
             {
+              "file": "2020/Riverwood RCS V2.pdf",
+              "bytes": 6313270,
+              "rank": 2.001576620672,
+              "firm": "gill",
+              "s8": null,
+              "name": "Riverwood Apartments",
+              "units": 0,
+              "pagesRead": 4,
+              "pageCount": 103
+            },
+            {
               "file": "2020/Old/Riverwood RCS.pdf",
               "bytes": 6079196,
+              "rank": -4.998425290433,
               "firm": "gill",
               "s8": null,
               "name": "Riverwood Apartments",
@@ -370,22 +412,13 @@
             {
               "file": "2020/Riverwood RCS R1508R2017 Draft.pdf",
               "bytes": 6610370,
+              "rank": -7.998426840524,
               "firm": "gill",
               "s8": null,
               "name": "Riverwood Apartments",
               "units": 0,
               "pagesRead": 4,
               "pageCount": 93
-            },
-            {
-              "file": "2020/Riverwood RCS V2.pdf",
-              "bytes": 6313270,
-              "firm": "gill",
-              "s8": null,
-              "name": "Riverwood Apartments",
-              "units": 0,
-              "pagesRead": 4,
-              "pageCount": 103
             }
           ],
           "docs": {
@@ -427,11 +460,19 @@
             ]
           },
           "executedRs": [],
-          "priorRs": null,
+          "priorRs": "2019/FY2019 Rent Schedule.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 0,
+          "priorRsTried": [
+            "year-1 folder(1)",
+            "year-1 in the name(1)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2020/Riverwood RCS V2.pdf",
           "hasCombined": true,
-          "problems": [
-            "no year -1 executed rent schedule",
-            "3 study candidates"
+          "problems": [],
+          "notes": [
+            "prior RS filename carries no signed/executed marker"
           ],
           "wave": 2
         }
@@ -448,24 +489,26 @@
           "year": 2024,
           "studies": [
             {
-              "file": "2024 - Renewal & RCS/Archive/Grids and Engagement Letters/VA-24-254936 - Burt Farms - RCS - 1-26-24.pdf",
-              "bytes": 2460824,
-              "firm": null,
-              "s8": null,
-              "name": null,
-              "units": 1,
-              "pagesRead": 4,
-              "pageCount": 34
-            },
-            {
               "file": "2024 - Renewal & RCS/Archive/Submission/Exhibit 4 - RCS (Renzi) Burt Farms I 3.22.24.pdf",
               "bytes": 2476622,
+              "rank": -0.998288876331,
               "firm": "renzi",
               "s8": "NY360006019",
               "name": "Burt Farms I Apartments",
               "units": 1,
               "pagesRead": 3,
               "pageCount": 42
+            },
+            {
+              "file": "2024 - Renewal & RCS/Archive/Grids and Engagement Letters/VA-24-254936 - Burt Farms - RCS - 1-26-24.pdf",
+              "bytes": 2460824,
+              "rank": -0.998293611162,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 1,
+              "pagesRead": 4,
+              "pageCount": 34
             }
           ],
           "docs": {
@@ -519,11 +562,21 @@
             ]
           },
           "executedRs": [],
-          "priorRs": null,
+          "priorRs": "2023/Burt Farms I Rent Schedule eff 6.26.23.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 0,
+          "priorRsTried": [
+            "year-1 folder(3)",
+            "year-1 in the name(3)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2024 - Renewal & RCS/Archive/Submission/Exhibit 4 - RCS (Renzi) Burt Farms I 3.22.24.pdf",
           "hasCombined": true,
           "problems": [
-            "no year -1 executed rent schedule",
-            "2 study candidates"
+            "top two studies are within one rank; the choice is a coin toss"
+          ],
+          "notes": [
+            "prior RS filename carries no signed/executed marker"
           ],
           "wave": 1
         }
@@ -540,18 +593,9 @@
           "year": 2025,
           "studies": [
             {
-              "file": "2025 - RCS/24-406 - Sycamore Green, 55 Strathmore Circle, Rochester, NY v1.pdf",
-              "bytes": 3644643,
-              "firm": "renzi",
-              "s8": "NY060006001",
-              "name": "Sycamore Green",
-              "units": 2,
-              "pagesRead": 3,
-              "pageCount": 52
-            },
-            {
-              "file": "2025 - RCS/24-406R - Sycamore Green, 55 Strathmore Circle, Rochester, NY v2.pdf",
-              "bytes": 3775974,
+              "file": "2025 - RCS/24-406R - Sycamore Green, 55 Strathmore Circle, Rochester, NY v4.pdf",
+              "bytes": 3640318,
+              "rank": 6.001734529324,
               "firm": "renzi",
               "s8": "NY060006001",
               "name": "Sycamore Green",
@@ -562,6 +606,7 @@
             {
               "file": "2025 - RCS/24-406R - Sycamore Green, 55 Strathmore Circle, Rochester, NY v3.pdf",
               "bytes": 3645829,
+              "rank": 6.001733253251,
               "firm": "renzi",
               "s8": "NY060006001",
               "name": "Sycamore Green",
@@ -570,8 +615,20 @@
               "pageCount": 52
             },
             {
-              "file": "2025 - RCS/24-406R - Sycamore Green, 55 Strathmore Circle, Rochester, NY v4.pdf",
-              "bytes": 3640318,
+              "file": "2025 - RCS/24-406R - Sycamore Green, 55 Strathmore Circle, Rochester, NY v2.pdf",
+              "bytes": 3775974,
+              "rank": 6.001730321496,
+              "firm": "renzi",
+              "s8": "NY060006001",
+              "name": "Sycamore Green",
+              "units": 2,
+              "pagesRead": 3,
+              "pageCount": 52
+            },
+            {
+              "file": "2025 - RCS/24-406 - Sycamore Green, 55 Strathmore Circle, Rochester, NY v1.pdf",
+              "bytes": 3644643,
+              "rank": 6.001727714336,
               "firm": "renzi",
               "s8": "NY060006001",
               "name": "Sycamore Green",
@@ -621,6 +678,20 @@
                 "bytes": 4171059
               }
             ],
+            "rentSchedule": [
+              {
+                "file": "2025 - RCS/Sycamore Green - Fully Executed RS eff. 03.30.25.pdf",
+                "bytes": 353737
+              },
+              {
+                "file": "2025 - RCS/Sycamore Green RS eff. 03.30.25 (signed).pdf",
+                "bytes": 451195
+              },
+              {
+                "file": "2025 - RCS/Sycamore Green RS eff. 03.30.25 (unsigned).pdf",
+                "bytes": 287740
+              }
+            ],
             "analysisXlsx": [
               {
                 "file": "2025 - RCS/Sycamore Green - RCS Analysis.xlsx",
@@ -630,29 +701,23 @@
                 "file": "2025 - RCS/UA Baseline/Sycamore Green 2025 Utility Analysis Worksheet.xlsx",
                 "bytes": 77961
               }
-            ],
-            "rentSchedule": [
-              {
-                "file": "2025 - RCS/Sycamore Green RS eff. 03.30.25 (signed).pdf",
-                "bytes": 451195
-              },
-              {
-                "file": "2025 - RCS/Sycamore Green RS eff. 03.30.25 (unsigned).pdf",
-                "bytes": 287740
-              }
             ]
           },
-          "executedRs": [
-            {
-              "file": "2025 - RCS/Sycamore Green - Fully Executed RS eff. 03.30.25.pdf",
-              "bytes": 353737
-            }
-          ],
+          "executedRs": [],
           "priorRs": "2024/Executed RS - Sycamore Green.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 6,
+          "priorRsTried": [
+            "year-1 folder(3)",
+            "year-1 in the name(3)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2025 - RCS/24-406R - Sycamore Green, 55 Strathmore Circle, Rochester, NY v4.pdf",
           "hasCombined": true,
           "problems": [
-            "4 study candidates"
+            "top two studies are within one rank; the choice is a coin toss"
           ],
+          "notes": [],
           "wave": 1
         }
       ]
@@ -670,6 +735,7 @@
             {
               "file": "2024 - RCS/archive/JLL/VA-24-254935 - New Horizons - RCS - 3-12-24.pdf",
               "bytes": 2753168,
+              "rank": -0.998289723332,
               "firm": null,
               "s8": null,
               "name": null,
@@ -683,6 +749,10 @@
               {
                 "file": "2024 - RCS/New Horizons Rent Schedule eff. 7.1.24.pdf",
                 "bytes": 985634
+              },
+              {
+                "file": "2024 - RCS/archive/New Horizons_Rent Schedule (Owner Executed).pdf",
+                "bytes": 1244730
               }
             ],
             "analysisXlsx": [
@@ -736,15 +806,19 @@
               }
             ]
           },
-          "executedRs": [
-            {
-              "file": "2024 - RCS/archive/New Horizons_Rent Schedule (Owner Executed).pdf",
-              "bytes": 1244730
-            }
+          "executedRs": [],
+          "priorRs": "2023/Unexecuted RS.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 6,
+          "priorRsTried": [
+            "year-1 folder(6)",
+            "year-1 in the name(6)",
+            "newest before year 0(1)"
           ],
-          "priorRs": "2023/Archive/Unexecuted RS.pdf",
+          "chosenStudy": "2024 - RCS/archive/JLL/VA-24-254935 - New Horizons - RCS - 3-12-24.pdf",
           "hasCombined": true,
           "problems": [],
+          "notes": [],
           "wave": 1
         }
       ]
@@ -762,6 +836,7 @@
             {
               "file": "2025/RCS Submission/24-625-North Park Apt RCS v2.pdf",
               "bytes": 4315307,
+              "rank": 2.001733956414,
               "firm": "renzi",
               "s8": "NY36A005001",
               "name": null,
@@ -772,6 +847,7 @@
             {
               "file": "2025/_Archive/24-625 - North Park Apt, 14-20 West 102nd Street, New York, NY.pdf",
               "bytes": 4313953,
+              "rank": 0.00173395395,
               "firm": "renzi",
               "s8": "NY36A005001",
               "name": null,
@@ -781,6 +857,16 @@
             }
           ],
           "docs": {
+            "rentSchedule": [
+              {
+                "file": "2025/North Park - 2025 Approved Rent Schedule.pdf",
+                "bytes": 267014
+              },
+              {
+                "file": "2025/North Park Executed Rent Schedule.pdf",
+                "bytes": 260339
+              }
+            ],
             "combinedPackage": [
               {
                 "file": "2025/RCS Submission/5th Year Adjustment Request RCS submission (signed).pdf",
@@ -826,22 +912,21 @@
               }
             ]
           },
-          "executedRs": [
-            {
-              "file": "2025/North Park - 2025 Approved Rent Schedule.pdf",
-              "bytes": 267014
-            },
-            {
-              "file": "2025/North Park Executed Rent Schedule.pdf",
-              "bytes": 260339
-            }
+          "executedRs": [],
+          "priorRs": "2023/Executed RS.pdf",
+          "priorRsRule": "newest before year 0",
+          "priorRsRank": 6,
+          "priorRsTried": [
+            "year-1 folder(0)",
+            "year-1 in the name(0)",
+            "newest before year 0(1)"
           ],
-          "priorRs": null,
+          "chosenStudy": "2025/RCS Submission/24-625-North Park Apt RCS v2.pdf",
           "hasCombined": true,
           "problems": [
-            "no year -1 executed rent schedule",
-            "2 study candidates"
+            "prior RS found by fallback: newest before year 0"
           ],
+          "notes": [],
           "wave": 1
         },
         {
@@ -849,14 +934,39 @@
           "year": 2020,
           "studies": [
             {
+              "file": "2020/RCS Submission/2019 North Park Apartment RCS FINAL.pdf",
+              "bytes": 4678102,
+              "rank": 6.00157712657,
+              "firm": null,
+              "s8": null,
+              "name": "North Park Apartments",
+              "units": 4,
+              "pagesRead": 3,
+              "pageCount": 86,
+              "unlocked": true
+            },
+            {
               "file": "2020/RCS Submission/2019 North Park Apartment RCS.pdf",
               "bytes": 6448312,
+              "rank": 0.001574781013,
               "firm": null,
               "s8": null,
               "name": "North Park Apartments",
               "units": 4,
               "pagesRead": 3,
               "pageCount": 85
+            },
+            {
+              "file": "2020/RCS Submission/19-1093 - 14-20 West 102nd Street - North Park Apartment - 11.07.2019.pdf",
+              "bytes": 4582498,
+              "rank": 0.001573227729,
+              "firm": null,
+              "s8": null,
+              "name": "North Park Apartments",
+              "units": 4,
+              "pagesRead": 3,
+              "pageCount": 85,
+              "unlocked": true
             }
           ],
           "docs": {
@@ -884,6 +994,10 @@
               {
                 "file": "2020/RCS Submission/North Park Rent Schedule.pdf",
                 "bytes": 449106
+              },
+              {
+                "file": "2020/Unexecuted RS.pdf",
+                "bytes": 214525
               }
             ],
             "analysisXlsx": [
@@ -919,16 +1033,120 @@
               }
             ]
           },
-          "executedRs": [
+          "executedRs": [],
+          "priorRs": "2019/North Park - Exec Rent Schedule.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 0,
+          "priorRsTried": [
+            "year-1 folder(1)",
+            "year-1 in the name(1)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2020/RCS Submission/2019 North Park Apartment RCS FINAL.pdf",
+          "hasCombined": true,
+          "problems": [],
+          "notes": [
+            "prior RS filename carries no signed/executed marker"
+          ],
+          "wave": 2
+        },
+        {
+          "cycleLabel": "2019",
+          "year": 2019,
+          "studies": [
             {
-              "file": "2020/Unexecuted RS.pdf",
-              "bytes": 214525
+              "file": "2019/RCS Submission/18-1263 - 14-20 West 102nd Street - North Park Apartments - Final 03.21.2019.pdf",
+              "bytes": 4621535,
+              "rank": 6.00155318919,
+              "firm": null,
+              "s8": null,
+              "name": "North Park Apartments",
+              "units": 4,
+              "pagesRead": 3,
+              "pageCount": 86,
+              "unlocked": true
+            },
+            {
+              "file": "2019/RCS Submission/_Old/18-1263 - 14-20 West 102nd Street - North Park Apartments -Final 11.30.2018.pdf",
+              "bytes": 4344418,
+              "rank": 1.001552513553,
+              "firm": null,
+              "s8": null,
+              "name": "North Park Apartments",
+              "units": 4,
+              "pagesRead": 3,
+              "pageCount": 84,
+              "unlocked": true
+            },
+            {
+              "file": "2019/RCS Submission/_Old/18-1263 - 14-20 West 102nd Street - North Park Apartments - Related Affordable Draft 11.20.2018.pdf",
+              "bytes": 4592306,
+              "rank": -12.998457263388,
+              "firm": null,
+              "s8": null,
+              "name": "North Park Apartments",
+              "units": 4,
+              "pagesRead": 3,
+              "pageCount": 86,
+              "unlocked": true
             }
           ],
-          "priorRs": null,
-          "hasCombined": true,
+          "docs": {
+            "rentSchedule": [
+              {
+                "file": "2019/North Park - Exec Rent Schedule.pdf",
+                "bytes": 391836
+              }
+            ],
+            "checklist": [
+              {
+                "file": "2019/RCS Submission/North Park RCS-Owners-Checklist.pdf",
+                "bytes": 254262
+              },
+              {
+                "file": "2019/RCS Submission/RCS Owner's Checklist.pdf",
+                "bytes": 28194
+              }
+            ],
+            "coverLetter": [
+              {
+                "file": "2019/RCS Submission/OLD5th Year Adjustment Request Cover Letter.doc",
+                "bytes": 38400
+              },
+              {
+                "file": "2019/RCS Submission/RCS Owner Cover Letter v2.doc",
+                "bytes": 31232
+              },
+              {
+                "file": "2019/RCS Submission/RCS Owner Cover Letter v2.pdf",
+                "bytes": 32557
+              },
+              {
+                "file": "2019/RCS Submission/_Old/RCS Owner Cover Letter.doc",
+                "bytes": 31232
+              },
+              {
+                "file": "2019/RCS Submission/_Old/RCS Owner Cover Letter.pdf",
+                "bytes": 66096
+              }
+            ]
+          },
+          "executedRs": [],
+          "priorRs": "2018/North Park 2018 Rent Schedule.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 0,
+          "priorRsTried": [
+            "year-1 folder(1)",
+            "year-1 in the name(1)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2019/RCS Submission/18-1263 - 14-20 West 102nd Street - North Park Apartments - Final 03.21.2019.pdf",
+          "hasCombined": false,
           "problems": [
-            "no year -1 executed rent schedule"
+            "no filed submittalLetter, tenantNotice"
+          ],
+          "notes": [
+            "prior RS filename carries no signed/executed marker"
           ],
           "wave": 2
         }
@@ -945,18 +1163,9 @@
           "year": 2026,
           "studies": [
             {
-              "file": "2026 - RCS/Submission/26-029 - Woodbury Oakwood, 231 North Evergreen Avenue, Woodbury, NJ_Revised 5.4.26.pdf",
-              "bytes": 3538158,
-              "firm": "belfry",
-              "s8": "NJ39H085097",
-              "name": "Woodbury Oakwood",
-              "units": 2,
-              "pagesRead": 2,
-              "pageCount": 51
-            },
-            {
               "file": "2026 - RCS/Submission/26-029R - Woodbury Oakwood, 231 North Evergreen Avenue, Woodbury, NJ_Revised 5.12.26.pdf",
               "bytes": 3478302,
+              "rank": 6.001778617422,
               "firm": "belfry",
               "s8": "NJ39H085097",
               "name": "Woodbury Oakwood",
@@ -965,8 +1174,9 @@
               "pageCount": 51
             },
             {
-              "file": "2026 - RCS/Submission/archive/Exhibit 3 - 26-029R - Woodbury Oakwood, 231 North Evergreen Avenue, Woodbury, NJ (RCS).pdf",
-              "bytes": 3492146,
+              "file": "2026 - RCS/Submission/26-029 - Woodbury Oakwood, 231 North Evergreen Avenue, Woodbury, NJ_Revised 5.4.26.pdf",
+              "bytes": 3538158,
+              "rank": 6.0017779167,
               "firm": "belfry",
               "s8": "NJ39H085097",
               "name": "Woodbury Oakwood",
@@ -977,6 +1187,7 @@
             {
               "file": "2026 - RCS/Submission/xExhibit 3 - 25-007 - Fairview Homes, 86 17th Avenue, Newark, New Jersey (RCS).pdf",
               "bytes": 4390881,
+              "rank": 4.001743717592,
               "firm": "belfry",
               "s8": null,
               "name": "Fairview Homes",
@@ -985,8 +1196,9 @@
               "pageCount": 63
             },
             {
-              "file": "2026 - RCS/archive/26-029 - Woodbury Oakwood, 231 North Evergreen Avenue, Woodbury, NJ.pdf",
-              "bytes": 3492976,
+              "file": "2026 - RCS/Submission/archive/Exhibit 3 - 26-029R - Woodbury Oakwood, 231 North Evergreen Avenue, Woodbury, NJ (RCS).pdf",
+              "bytes": 3492146,
+              "rank": -0.9982242181,
               "firm": "belfry",
               "s8": "NJ39H085097",
               "name": "Woodbury Oakwood",
@@ -997,6 +1209,18 @@
             {
               "file": "2026 - RCS/archive/26-029R - Woodbury Oakwood, 231 North Evergreen Avenue, Woodbury, NJ (WRONG UAs).pdf",
               "bytes": 3490208,
+              "rank": -0.99822423214,
+              "firm": "belfry",
+              "s8": "NJ39H085097",
+              "name": "Woodbury Oakwood",
+              "units": 2,
+              "pagesRead": 2,
+              "pageCount": 51
+            },
+            {
+              "file": "2026 - RCS/archive/26-029 - Woodbury Oakwood, 231 North Evergreen Avenue, Woodbury, NJ.pdf",
+              "bytes": 3492976,
+              "rank": -0.9982266391,
               "firm": "belfry",
               "s8": "NJ39H085097",
               "name": "Woodbury Oakwood",
@@ -1070,11 +1294,21 @@
             ]
           },
           "executedRs": [],
-          "priorRs": null,
+          "priorRs": "2025/Woodbury Oakwood (Lakeside) - Rent Schedule eff. 8.5.25.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 0,
+          "priorRsTried": [
+            "year-1 folder(2)",
+            "year-1 in the name(2)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2026 - RCS/Submission/26-029R - Woodbury Oakwood, 231 North Evergreen Avenue, Woodbury, NJ_Revised 5.12.26.pdf",
           "hasCombined": true,
           "problems": [
-            "no year -1 executed rent schedule",
-            "6 study candidates"
+            "top two studies are within one rank; the choice is a coin toss"
+          ],
+          "notes": [
+            "prior RS filename carries no signed/executed marker"
           ],
           "wave": 1
         }
@@ -1091,8 +1325,9 @@
           "year": 2024,
           "studies": [
             {
-              "file": "2024 - RCS/Submission/Exhibit 3 - 24-076- Hampshire House RCS.pdf",
-              "bytes": 3648849,
+              "file": "2024 - RCS/Submission/Revised RCS/24-259R - Hampshire House, 129 North Arlington Avenue, East Orange, NJ.pdf",
+              "bytes": 3433514,
+              "rank": 6.001722977469,
               "firm": "renzi",
               "s8": null,
               "name": "Hampshire House",
@@ -1101,8 +1336,9 @@
               "pageCount": 51
             },
             {
-              "file": "2024 - RCS/Submission/Revised RCS/24-259R - Hampshire House, 129 North Arlington Avenue, East Orange, NJ.pdf",
-              "bytes": 3433514,
+              "file": "2024 - RCS/Submission/Exhibit 3 - 24-076- Hampshire House RCS.pdf",
+              "bytes": 3648849,
+              "rank": 4.001719765712,
               "firm": "renzi",
               "s8": null,
               "name": "Hampshire House",
@@ -1156,12 +1392,20 @@
             ]
           },
           "executedRs": [],
-          "priorRs": null,
+          "priorRs": "2023/Hampshire House - Proposed RS 2023 - 6.29.2023.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": -6,
+          "priorRsTried": [
+            "year-1 folder(3)",
+            "year-1 in the name(3)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2024 - RCS/Submission/Revised RCS/24-259R - Hampshire House, 129 North Arlington Avenue, East Orange, NJ.pdf",
           "hasCombined": true,
           "problems": [
-            "no year -1 executed rent schedule",
-            "2 study candidates"
+            "prior RS is a draft or an unsigned copy"
           ],
+          "notes": [],
           "wave": 1
         }
       ]
@@ -1179,6 +1423,7 @@
             {
               "file": "2026 - RCS/25-119 - Lansing Manor, 5600 Mall Drive West, Lansing MI (updated).pdf",
               "bytes": 3196485,
+              "rank": 6.00176072088,
               "firm": "belfry",
               "s8": "MI330005001",
               "name": "Lansing Manor / Senior World",
@@ -1189,6 +1434,7 @@
             {
               "file": "2026 - RCS/4 - 25-119 - Lansing Manor, 5600 Mall Drive West, Lansing MI.pdf",
               "bytes": 3194313,
+              "rank": 4.00175986456,
               "firm": "belfry",
               "s8": "MI330005001",
               "name": "Lansing Manor / Senior World",
@@ -1199,6 +1445,7 @@
             {
               "file": "2026 - RCS/Archive/4 - 25-119 - Lansing Manor, 5600 Mall Drive West, Lansing MI.pdf",
               "bytes": 3190583,
+              "rank": -0.99824263432,
               "firm": "belfry",
               "s8": "MI330005001",
               "name": "Lansing Manor / Senior World",
@@ -1209,6 +1456,7 @@
             {
               "file": "2026 - RCS/Belfry/Archive/25-119 - Lansing Manor, 5600 Mall Drive West, Lansing MI.pdf",
               "bytes": 3186304,
+              "rank": -0.99824264716,
               "firm": "belfry",
               "s8": "MI330005001",
               "name": "Lansing Manor / Senior World",
@@ -1254,6 +1502,20 @@
                 "bytes": 95287
               }
             ],
+            "rentSchedule": [
+              {
+                "file": "2026 - RCS/800010652 - Approved Rent Schedule - 12-29-25 - Lansing Manor (Village Green III) Fully Executed.pdf",
+                "bytes": 456570
+              },
+              {
+                "file": "2026 - RCS/Lansing Manor - Approved RS - 2026 (signed).pdf",
+                "bytes": 436812
+              },
+              {
+                "file": "2026 - RCS/Lansing Manor - Approved RS - 2026 (unsigned).pdf",
+                "bytes": 1566995
+              }
+            ],
             "analysisXlsx": [
               {
                 "file": "2026 - RCS/Belfry/Senior World - SAFMR Analysis.xlsx",
@@ -1279,25 +1541,19 @@
               }
             ]
           },
-          "executedRs": [
-            {
-              "file": "2026 - RCS/800010652 - Approved Rent Schedule - 12-29-25 - Lansing Manor (Village Green III) Fully Executed.pdf",
-              "bytes": 456570
-            },
-            {
-              "file": "2026 - RCS/Lansing Manor - Approved RS - 2026 (signed).pdf",
-              "bytes": 436812
-            },
-            {
-              "file": "2026 - RCS/Lansing Manor - Approved RS - 2026 (unsigned).pdf",
-              "bytes": 1566995
-            }
-          ],
+          "executedRs": [],
           "priorRs": "2025/800010652 - Approved Rent Schedule - 10-8-24 - Lansing Manor.pdf",
-          "hasCombined": true,
-          "problems": [
-            "4 study candidates"
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 6,
+          "priorRsTried": [
+            "year-1 folder(4)",
+            "year-1 in the name(5)",
+            "newest before year 0(1)"
           ],
+          "chosenStudy": "2026 - RCS/25-119 - Lansing Manor, 5600 Mall Drive West, Lansing MI (updated).pdf",
+          "hasCombined": true,
+          "problems": [],
+          "notes": [],
           "wave": 1
         }
       ]
@@ -1313,8 +1569,33 @@
           "year": 2024,
           "studies": [
             {
+              "file": "2024 - RCS/Archive/Noble Tower, Oakland, CA - RCS - A20240802 Final.pdf",
+              "bytes": 43556351,
+              "rank": 5.00172264218,
+              "firm": null,
+              "s8": null,
+              "name": "Dear Mr. Larmore",
+              "units": 1,
+              "pagesRead": 3,
+              "pageCount": 92,
+              "unlocked": true
+            },
+            {
+              "file": "2024 - RCS/Noble Tower, Oakland, CA - RCS.pdf",
+              "bytes": 42122095,
+              "rank": 4.001724276987,
+              "firm": null,
+              "s8": null,
+              "name": "Dear Mr. Larmore",
+              "units": 1,
+              "pagesRead": 3,
+              "pageCount": 91,
+              "unlocked": true
+            },
+            {
               "file": "2024 - RCS/RCS/Grids/Novo - Noble Tower Preliminary Grids.pdf",
               "bytes": 2750468,
+              "rank": 4.001710902999,
               "firm": null,
               "s8": null,
               "name": null,
@@ -1348,6 +1629,10 @@
               {
                 "file": "2024 - RCS/Archive/Noble Tower FY2025 Prelim RS.pdf",
                 "bytes": 360881
+              },
+              {
+                "file": "2024 - RCS/Noble Tower FY2025 Executed RS.pdf",
+                "bytes": 349229
               }
             ],
             "checklist": [
@@ -1357,15 +1642,21 @@
               }
             ]
           },
-          "executedRs": [
-            {
-              "file": "2024 - RCS/Noble Tower FY2025 Executed RS.pdf",
-              "bytes": 349229
-            }
-          ],
+          "executedRs": [],
           "priorRs": "2023/Noble Tower FY2024 Executed RS.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 6,
+          "priorRsTried": [
+            "year-1 folder(2)",
+            "year-1 in the name(2)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2024 - RCS/Archive/Noble Tower, Oakland, CA - RCS - A20240802 Final.pdf",
           "hasCombined": true,
-          "problems": [],
+          "problems": [
+            "top two studies are within one rank; the choice is a coin toss"
+          ],
+          "notes": [],
           "wave": 1
         }
       ]
@@ -1381,28 +1672,9 @@
           "year": 2025,
           "studies": [
             {
-              "file": "2025 (RCS)/Archive/RCS - Oaks on North Plaza, Austin, TX.pdf",
-              "bytes": 15698482,
-              "firm": "cornerstone",
-              "s8": "TX590022011",
-              "name": "Oaks on North Plaza",
-              "units": 4,
-              "pagesRead": 4,
-              "pageCount": 85
-            },
-            {
-              "file": "2025 (RCS)/Archive/RCS Rent Grids - Oaks on North Plaza, Austin, TX.pdf",
-              "bytes": 3644656,
-              "firm": "cornerstone",
-              "s8": "TX590022011",
-              "name": "Oaks on North Plaza",
-              "units": 4,
-              "pagesRead": 8,
-              "pageCount": 13
-            },
-            {
               "file": "2025 (RCS)/RCS - Oaks on North Plaza, Austin, TX.pdf",
               "bytes": 13723869,
+              "rank": 0.001726515495,
               "firm": "cornerstone",
               "s8": "TX590022011",
               "name": "Oaks on North Plaza",
@@ -1413,6 +1685,29 @@
             {
               "file": "2025 (RCS)/Rent Grid Proposals/RCS Rent Grids - Oaks on North Plaza, Austin, TX.pdf",
               "bytes": 3762151,
+              "rank": 0.001719960195,
+              "firm": "cornerstone",
+              "s8": "TX590022011",
+              "name": "Oaks on North Plaza",
+              "units": 4,
+              "pagesRead": 8,
+              "pageCount": 13
+            },
+            {
+              "file": "2025 (RCS)/Archive/RCS - Oaks on North Plaza, Austin, TX.pdf",
+              "bytes": 15698482,
+              "rank": -4.998274592309,
+              "firm": "cornerstone",
+              "s8": "TX590022011",
+              "name": "Oaks on North Plaza",
+              "units": 4,
+              "pagesRead": 4,
+              "pageCount": 85
+            },
+            {
+              "file": "2025 (RCS)/Archive/RCS Rent Grids - Oaks on North Plaza, Austin, TX.pdf",
+              "bytes": 3644656,
+              "rank": -4.998279196059,
               "firm": "cornerstone",
               "s8": "TX590022011",
               "name": "Oaks on North Plaza",
@@ -1436,12 +1731,22 @@
             ]
           },
           "executedRs": [],
-          "priorRs": null,
+          "priorRs": "2024/Oaks on North Plaza Exec. Rent Schedule.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 0,
+          "priorRsTried": [
+            "year-1 folder(2)",
+            "year-1 in the name(2)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2025 (RCS)/RCS - Oaks on North Plaza, Austin, TX.pdf",
           "hasCombined": false,
           "problems": [
-            "no year -1 executed rent schedule",
             "no filed coverLetter, submittalLetter, checklist, tenantNotice",
-            "4 study candidates"
+            "top two studies are within one rank; the choice is a coin toss"
+          ],
+          "notes": [
+            "prior RS filename carries no signed/executed marker"
           ],
           "wave": 1
         },
@@ -1452,6 +1757,7 @@
             {
               "file": "2019/North Plaza - Gill RCS.pdf",
               "bytes": 5789577,
+              "rank": 0.001560187652,
               "firm": "gill",
               "s8": "TX590022011",
               "name": "North Plaza Apartments",
@@ -1463,11 +1769,20 @@
           "docs": {},
           "executedRs": [],
           "priorRs": null,
+          "priorRsRule": null,
+          "priorRsRank": null,
+          "priorRsTried": [
+            "year-1 folder(0)",
+            "year-1 in the name(0)",
+            "newest before year 0(0)"
+          ],
+          "chosenStudy": "2019/North Plaza - Gill RCS.pdf",
           "hasCombined": false,
           "problems": [
-            "no year -1 executed rent schedule",
+            "no prior rent schedule found; tried year-1 folder(0), year-1 in the name(0), newest before year 0(0)",
             "no filed coverLetter, submittalLetter, checklist, tenantNotice"
           ],
+          "notes": [],
           "wave": 2
         }
       ]
@@ -1485,6 +1800,7 @@
             {
               "file": "2024 - RCS/Archive/Exhibits/Exhibit 3 - Renzi RCS 24-067 - Oceanport Gardens, 278 East Main Street, Oceanport, NJ.pdf",
               "bytes": 3301629,
+              "rank": -0.998286790994,
               "firm": "renzi",
               "s8": null,
               "name": "Oceanport Gardens Apartments",
@@ -1565,8 +1881,17 @@
           },
           "executedRs": [],
           "priorRs": "2023/Oceanport Gardens - FY2023 - Executed RS.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 6,
+          "priorRsTried": [
+            "year-1 folder(2)",
+            "year-1 in the name(2)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2024 - RCS/Archive/Exhibits/Exhibit 3 - Renzi RCS 24-067 - Oceanport Gardens, 278 East Main Street, Oceanport, NJ.pdf",
           "hasCombined": true,
           "problems": [],
+          "notes": [],
           "wave": 1
         }
       ]
@@ -1584,6 +1909,7 @@
             {
               "file": "2025 - RCS/Belfry/25-008 - Holly House, 100 Drury Lane, Asbury Park, NJ (RCS).pdf",
               "bytes": 3010728,
+              "rank": 4.001743024017,
               "firm": "belfry",
               "s8": null,
               "name": "Holly House Apartments",
@@ -1594,6 +1920,7 @@
             {
               "file": "2025 - RCS/Submission/Archive/Exhibit 3 - 25-008 - Holly House, 100 Drury Lane, Asbury Park, NJ.pdf",
               "bytes": 3010728,
+              "rank": -0.998256917187,
               "firm": "belfry",
               "s8": null,
               "name": "Holly House Apartments",
@@ -1611,6 +1938,12 @@
               {
                 "file": "2025 - RCS/UA Baseline/UA Analysis Holly House 2025 _ Submission.xlsx",
                 "bytes": 32707
+              }
+            ],
+            "rentSchedule": [
+              {
+                "file": "2025 - RCS/Holly House - Executed RS - FY2025.pdf",
+                "bytes": 965189
               }
             ],
             "combinedPackage": [
@@ -1662,17 +1995,19 @@
               }
             ]
           },
-          "executedRs": [
-            {
-              "file": "2025 - RCS/Holly House - Executed RS - FY2025.pdf",
-              "bytes": 965189
-            }
-          ],
+          "executedRs": [],
           "priorRs": "2024/Holly House Rent Schedule eff 9.24.24_Executed.pdf",
-          "hasCombined": true,
-          "problems": [
-            "2 study candidates"
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 6,
+          "priorRsTried": [
+            "year-1 folder(2)",
+            "year-1 in the name(2)",
+            "newest before year 0(1)"
           ],
+          "chosenStudy": "2025 - RCS/Belfry/25-008 - Holly House, 100 Drury Lane, Asbury Park, NJ (RCS).pdf",
+          "hasCombined": true,
+          "problems": [],
+          "notes": [],
           "wave": 1
         }
       ]
@@ -1688,18 +2023,9 @@
           "year": 2025,
           "studies": [
             {
-              "file": "2025 - RCS/Archive/RCS - 25-053 - Ebony Gardens, 111 West Third Street, Mount Vernon, NY.pdf",
-              "bytes": 4516730,
-              "firm": "belfry",
-              "s8": "NY36H108040",
-              "name": "Ebony Gardens",
-              "units": 4,
-              "pagesRead": 3,
-              "pageCount": 63
-            },
-            {
               "file": "2025 - RCS/Archive/Revised RCS - 25-053 - Ebony Gardens 111 West Third Street Mount Vernon NY.pdf",
               "bytes": 4202528,
+              "rank": 1.001761853554,
               "firm": "belfry",
               "s8": "NY36H108040",
               "name": "Ebony Gardens",
@@ -1710,6 +2036,18 @@
             {
               "file": "2025 - RCS/Archive/Revised RCS - Ebony Gardens 111 West Third Street Mount Vernon NY.pdf",
               "bytes": 4422764,
+              "rank": 1.001748872396,
+              "firm": "belfry",
+              "s8": "NY36H108040",
+              "name": "Ebony Gardens",
+              "units": 4,
+              "pagesRead": 3,
+              "pageCount": 63
+            },
+            {
+              "file": "2025 - RCS/Archive/RCS - 25-053 - Ebony Gardens, 111 West Third Street, Mount Vernon, NY.pdf",
+              "bytes": 4516730,
+              "rank": -0.99825160373,
               "firm": "belfry",
               "s8": "NY36H108040",
               "name": "Ebony Gardens",
@@ -1791,26 +2129,34 @@
             ],
             "rentSchedule": [
               {
+                "file": "2025 - RCS/FULLY EXECUTED Rent Schedule_Ebony Gardens.pdf",
+                "bytes": 1733968
+              },
+              {
                 "file": "2025 - RCS/Rent Schedule_Ebony Gardens - Signed.pdf",
                 "bytes": 375280
+              },
+              {
+                "file": "2025 - RCS/Unexecuted Rent Schedule_Ebony Gardens.pdf",
+                "bytes": 267767
               }
             ]
           },
-          "executedRs": [
-            {
-              "file": "2025 - RCS/FULLY EXECUTED Rent Schedule_Ebony Gardens.pdf",
-              "bytes": 1733968
-            },
-            {
-              "file": "2025 - RCS/Unexecuted Rent Schedule_Ebony Gardens.pdf",
-              "bytes": 267767
-            }
-          ],
+          "executedRs": [],
           "priorRs": "2024/Executed Rent Schedule.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 6,
+          "priorRsTried": [
+            "year-1 folder(3)",
+            "year-1 in the name(3)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2025 - RCS/Archive/Revised RCS - 25-053 - Ebony Gardens 111 West Third Street Mount Vernon NY.pdf",
           "hasCombined": true,
           "problems": [
-            "3 study candidates"
+            "top two studies are within one rank; the choice is a coin toss"
           ],
+          "notes": [],
           "wave": 1
         }
       ]
@@ -1828,6 +2174,7 @@
             {
               "file": "2026 - RCS/25-175 - Mapleview Towers, 51 Grove Street, Stamford, CT rev v3.pdf",
               "bytes": 3353777,
+              "rank": 6.001783346251,
               "firm": "belfry",
               "s8": "CT26H037026",
               "name": "Mapleview Towers",
@@ -1836,38 +2183,20 @@
               "pageCount": 49
             },
             {
-              "file": "2026 - RCS/25-175 - Mapleview Towers, 51 Grove Street, Stamford,, CT - CLEAR Narrative OLD.pdf",
-              "bytes": 3229734,
+              "file": "2026 - RCS/Mapleview RCS.pdf",
+              "bytes": 5337431,
+              "rank": 4.00177853824,
               "firm": "belfry",
               "s8": "CT26H037026",
               "name": "Mapleview Towers",
               "units": 1,
               "pagesRead": 2,
-              "pageCount": 45
-            },
-            {
-              "file": "2026 - RCS/Appeal/Exhibits/A - 25-175 - Mapleview Towers, 51 Grove Street, Stamford, CT.pdf",
-              "bytes": 3333226,
-              "firm": "belfry",
-              "s8": "CT26H037026",
-              "name": "Mapleview Towers",
-              "units": 1,
-              "pagesRead": 2,
-              "pageCount": 48
-            },
-            {
-              "file": "2026 - RCS/Appeal/Mapleview Tower (CT26H037026) - HUD 5-Year RCS Appeal Letter (unsigned).pdf",
-              "bytes": 5282708,
-              "firm": "belfry",
-              "s8": "CT26H037026",
-              "name": "Mapleview Towers",
-              "units": 1,
-              "pagesRead": 9,
-              "pageCount": 92
+              "pageCount": 49
             },
             {
               "file": "2026 - RCS/Appeal/Mapleview Tower (CT26H037026) - HUD 5-Year RCS Appeal Letter.pdf",
               "bytes": 5533623,
+              "rank": 4.001769814106,
               "firm": "belfry",
               "s8": "CT26H037026",
               "name": "Mapleview Towers",
@@ -1876,8 +2205,20 @@
               "pageCount": 97
             },
             {
-              "file": "2026 - RCS/Archive/25-175 - Mapleview Towers, 51 Grove Street, Stamford, CT.pdf",
+              "file": "2026 - RCS/Appeal/Mapleview Tower (CT26H037026) - HUD 5-Year RCS Appeal Letter (unsigned).pdf",
+              "bytes": 5282708,
+              "rank": 4.001769805958,
+              "firm": "belfry",
+              "s8": "CT26H037026",
+              "name": "Mapleview Towers",
+              "units": 1,
+              "pagesRead": 9,
+              "pageCount": 92
+            },
+            {
+              "file": "2026 - RCS/Appeal/Exhibits/A - 25-175 - Mapleview Towers, 51 Grove Street, Stamford, CT.pdf",
               "bytes": 3333226,
+              "rank": 4.0017671383,
               "firm": "belfry",
               "s8": "CT26H037026",
               "name": "Mapleview Towers",
@@ -1886,18 +2227,9 @@
               "pageCount": 48
             },
             {
-              "file": "2026 - RCS/Archive/25-175R - Mapleview Towers, 51 Grove Street, Stamford, CT 04.29.26.pdf",
-              "bytes": 3396055,
-              "firm": "belfry",
-              "s8": "CT26H037026",
-              "name": "Mapleview Towers",
-              "units": 1,
-              "pagesRead": 2,
-              "pageCount": 48
-            },
-            {
-              "file": "2026 - RCS/Archive/4 - 25-175 - Mapleview Towers, 51 Grove Street, Stamford,, CT OLD.pdf",
-              "bytes": 3175912,
+              "file": "2026 - RCS/25-175 - Mapleview Towers, 51 Grove Street, Stamford,, CT - CLEAR Narrative OLD.pdf",
+              "bytes": 3229734,
+              "rank": 4.00176521848,
               "firm": "belfry",
               "s8": "CT26H037026",
               "name": "Mapleview Towers",
@@ -1908,6 +2240,7 @@
             {
               "file": "2026 - RCS/Archive/4 - 5-175 - Mapleview Towers, 51 Grove Street, Stamford, CT v2.pdf",
               "bytes": 3338974,
+              "rank": 1.00176583048,
               "firm": "belfry",
               "s8": "CT26H037026",
               "name": "Mapleview Towers",
@@ -1916,14 +2249,37 @@
               "pageCount": 47
             },
             {
-              "file": "2026 - RCS/Mapleview RCS.pdf",
-              "bytes": 5337431,
+              "file": "2026 - RCS/Archive/25-175R - Mapleview Towers, 51 Grove Street, Stamford, CT 04.29.26.pdf",
+              "bytes": 3396055,
+              "rank": -0.99822250864,
               "firm": "belfry",
               "s8": "CT26H037026",
               "name": "Mapleview Towers",
               "units": 1,
               "pagesRead": 2,
-              "pageCount": 49
+              "pageCount": 48
+            },
+            {
+              "file": "2026 - RCS/Archive/25-175 - Mapleview Towers, 51 Grove Street, Stamford, CT.pdf",
+              "bytes": 3333226,
+              "rank": -0.9982328617,
+              "firm": "belfry",
+              "s8": "CT26H037026",
+              "name": "Mapleview Towers",
+              "units": 1,
+              "pagesRead": 2,
+              "pageCount": 48
+            },
+            {
+              "file": "2026 - RCS/Archive/4 - 25-175 - Mapleview Towers, 51 Grove Street, Stamford,, CT OLD.pdf",
+              "bytes": 3175912,
+              "rank": -0.99823581004,
+              "firm": "belfry",
+              "s8": "CT26H037026",
+              "name": "Mapleview Towers",
+              "units": 1,
+              "pagesRead": 2,
+              "pageCount": 45
             }
           ],
           "docs": {
@@ -1934,6 +2290,10 @@
               }
             ],
             "rentSchedule": [
+              {
+                "file": "2026 - RCS/FY2026 RS - Mapleview Towers eff. 04.01.26 (executed).pdf",
+                "bytes": 672185
+              },
               {
                 "file": "2026 - RCS/HUD 92458 - Rent Schedule - Mapleview Tower (unsigned).pdf",
                 "bytes": 441731
@@ -1972,17 +2332,19 @@
               }
             ]
           },
-          "executedRs": [
-            {
-              "file": "2026 - RCS/FY2026 RS - Mapleview Towers eff. 04.01.26 (executed).pdf",
-              "bytes": 672185
-            }
-          ],
+          "executedRs": [],
           "priorRs": "2025/Mapleview Towers - FY2025 - Executed RS.pdf",
-          "hasCombined": true,
-          "problems": [
-            "10 study candidates"
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 6,
+          "priorRsTried": [
+            "year-1 folder(3)",
+            "year-1 in the name(3)",
+            "newest before year 0(1)"
           ],
+          "chosenStudy": "2026 - RCS/25-175 - Mapleview Towers, 51 Grove Street, Stamford, CT rev v3.pdf",
+          "hasCombined": true,
+          "problems": [],
+          "notes": [],
           "wave": 1
         }
       ]
@@ -2000,6 +2362,7 @@
             {
               "file": "2026 - RCS/Archive/25-123 - Market Square, 65 Constance Leigh Drive, Newington, CT (updated).pdf",
               "bytes": 3926421,
+              "rank": 1.00176177232,
               "firm": "belfry",
               "s8": "CT26H037003",
               "name": "Market Square",
@@ -2010,6 +2373,7 @@
             {
               "file": "2026 - RCS/Archive/25-123 - Market Square, 65 Constance Leigh Drive, Newington, CT.pdf",
               "bytes": 3893388,
+              "rank": -0.99823625368,
               "firm": "belfry",
               "s8": "CT26H037003",
               "name": "Market Square",
@@ -2020,6 +2384,7 @@
             {
               "file": "2026 - RCS/Archive/4 - 25-123 - Market Square, 65 Constance Leigh Drive, Newington, CT.pdf",
               "bytes": 3828614,
+              "rank": -0.99824124538,
               "firm": "belfry",
               "s8": "CT26H037003",
               "name": "Market Square",
@@ -2069,6 +2434,14 @@
               {
                 "file": "2026 - RCS/Archive/HUD 92458 - Rent Schedule - Market Square (unsigned).pdf",
                 "bytes": 472143
+              },
+              {
+                "file": "2026 - RCS/Archive/Market Square-FY 2026 - RS (fully executed) v1.pdf",
+                "bytes": 320891
+              },
+              {
+                "file": "2026 - RCS/Market Square-FY 2026 - RS (fully executed).pdf",
+                "bytes": 611034
               }
             ],
             "analysisXlsx": [
@@ -2088,21 +2461,19 @@
               }
             ]
           },
-          "executedRs": [
-            {
-              "file": "2026 - RCS/Archive/Market Square-FY 2026 - RS (fully executed) v1.pdf",
-              "bytes": 320891
-            },
-            {
-              "file": "2026 - RCS/Market Square-FY 2026 - RS (fully executed).pdf",
-              "bytes": 611034
-            }
-          ],
+          "executedRs": [],
           "priorRs": "2025/HUD 92458 - Rent Schedule - Market Square EXECUTED.pdf",
-          "hasCombined": true,
-          "problems": [
-            "3 study candidates"
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 6,
+          "priorRsTried": [
+            "year-1 folder(3)",
+            "year-1 in the name(3)",
+            "newest before year 0(1)"
           ],
+          "chosenStudy": "2026 - RCS/Archive/25-123 - Market Square, 65 Constance Leigh Drive, Newington, CT (updated).pdf",
+          "hasCombined": true,
+          "problems": [],
+          "notes": [],
           "wave": 1
         }
       ]
@@ -2120,6 +2491,7 @@
             {
               "file": "2026 - RCS/25-174 - Barnum House, 140 Fairfield Avenue, Bridgeport, CT (CLEAR Narrative).pdf",
               "bytes": 3347900,
+              "rank": 4.00176521848,
               "firm": "belfry",
               "s8": "CT26H037068",
               "name": "Barnum House Apartments",
@@ -2130,6 +2502,7 @@
             {
               "file": "2026 - RCS/4 - 25-174 - Barnum House, 140 Fairfield Avenue, Bridgeport, CT.pdf",
               "bytes": 3342260,
+              "rank": 4.00176478606,
               "firm": "belfry",
               "s8": "CT26H037068",
               "name": "Barnum House Apartments",
@@ -2177,11 +2550,21 @@
             ]
           },
           "executedRs": [],
-          "priorRs": null,
+          "priorRs": "2025/Barnum House - 2025 Rent Schedule.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 0,
+          "priorRsTried": [
+            "year-1 folder(3)",
+            "year-1 in the name(3)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2026 - RCS/25-174 - Barnum House, 140 Fairfield Avenue, Bridgeport, CT (CLEAR Narrative).pdf",
           "hasCombined": true,
           "problems": [
-            "no year -1 executed rent schedule",
-            "2 study candidates"
+            "top two studies are within one rank; the choice is a coin toss"
+          ],
+          "notes": [
+            "prior RS filename carries no signed/executed marker"
           ],
           "wave": 1
         }
@@ -2198,18 +2581,9 @@
           "year": 2026,
           "studies": [
             {
-              "file": "2026 (RCS)/Grids/Rent Grids - Shiloh Village Apartments, Dallas, Texas.pdf",
-              "bytes": 2611450,
-              "firm": "cornerstone",
-              "s8": "TX160011033",
-              "name": "Shiloh Village Apartments",
-              "units": 0,
-              "pagesRead": 8,
-              "pageCount": 10
-            },
-            {
               "file": "2026 (RCS)/RCS - Shiloh Village Apartments, Dallas, TX.pdf",
               "bytes": 17061107,
+              "rank": 0.00176642358,
               "firm": "cornerstone",
               "s8": "TX160011033",
               "name": "Shiloh Village Apartments",
@@ -2220,12 +2594,24 @@
             {
               "file": "2026 (RCS)/RCS Submission/RCS - Shiloh Village Apartments, Dallas, TX.pdf",
               "bytes": 17061107,
+              "rank": 0.00176642358,
               "firm": "cornerstone",
               "s8": "TX160011033",
               "name": "Shiloh Village Apartments",
               "units": 0,
               "pagesRead": 4,
               "pageCount": 77
+            },
+            {
+              "file": "2026 (RCS)/Grids/Rent Grids - Shiloh Village Apartments, Dallas, Texas.pdf",
+              "bytes": 2611450,
+              "rank": 0.00176409126,
+              "firm": "cornerstone",
+              "s8": "TX160011033",
+              "name": "Shiloh Village Apartments",
+              "units": 0,
+              "pagesRead": 8,
+              "pageCount": 10
             }
           ],
           "docs": {
@@ -2269,11 +2655,21 @@
             ]
           },
           "executedRs": [],
-          "priorRs": null,
+          "priorRs": "2025/Rent_Schedule_Eff_5-1-25.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 0,
+          "priorRsTried": [
+            "year-1 folder(1)",
+            "year-1 in the name(1)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2026 (RCS)/RCS - Shiloh Village Apartments, Dallas, TX.pdf",
           "hasCombined": true,
           "problems": [
-            "no year -1 executed rent schedule",
-            "3 study candidates"
+            "top two studies are within one rank; the choice is a coin toss"
+          ],
+          "notes": [
+            "prior RS filename carries no signed/executed marker"
           ],
           "wave": 1
         }
@@ -2292,6 +2688,7 @@
             {
               "file": "2026 - RCS/26-048 - Morningside Court 1250 West Morse Avenue Chicago IL.pdf",
               "bytes": 3462729,
+              "rank": 4.001775673353,
               "firm": "belfry",
               "s8": "IL06H121189",
               "name": "Morningside Court Apartments",
@@ -2302,6 +2699,7 @@
             {
               "file": "2026 - RCS/RCS Package/04. 26-048 - Morningside Court 1250 West Morse Avenue Chicago IL.pdf",
               "bytes": 3462729,
+              "rank": 4.001775673353,
               "firm": "belfry",
               "s8": "IL06H121189",
               "name": "Morningside Court Apartments",
@@ -2360,10 +2758,19 @@
           },
           "executedRs": [],
           "priorRs": "2025/2025-Rent Schedule-Morningside Courts-IL06H121189_EXECUTED.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 6,
+          "priorRsTried": [
+            "year-1 folder(3)",
+            "year-1 in the name(3)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2026 - RCS/26-048 - Morningside Court 1250 West Morse Avenue Chicago IL.pdf",
           "hasCombined": true,
           "problems": [
-            "2 study candidates"
+            "top two studies are within one rank; the choice is a coin toss"
           ],
+          "notes": [],
           "wave": 1
         }
       ]
@@ -2381,6 +2788,7 @@
             {
               "file": "2025 - RCS/Archive/RCS - 333 Holly, The Woodlands, TX.pdf",
               "bytes": 12529454,
+              "rank": -0.998258965135,
               "firm": "cornerstone",
               "s8": "TX24L000142",
               "name": "333 Holly",
@@ -2418,11 +2826,18 @@
             ]
           },
           "executedRs": [],
-          "priorRs": null,
-          "hasCombined": true,
-          "problems": [
-            "no year -1 executed rent schedule"
+          "priorRs": "2024/Archive/Rent Schedule Eff 2024 Jul 1 Signed 2024 Feb 16 - Holly.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 4,
+          "priorRsTried": [
+            "year-1 folder(2)",
+            "year-1 in the name(2)",
+            "newest before year 0(1)"
           ],
+          "chosenStudy": "2025 - RCS/Archive/RCS - 333 Holly, The Woodlands, TX.pdf",
+          "hasCombined": true,
+          "problems": [],
+          "notes": [],
           "wave": 1
         }
       ]
@@ -2440,6 +2855,7 @@
             {
               "file": "2025 - RCS/Archive/RCS - The Pines, The Woodlands, TX.pdf",
               "bytes": 13905028,
+              "rank": -0.998258965044,
               "firm": "cornerstone",
               "s8": "TX248023005",
               "name": "The Pines",
@@ -2467,10 +2883,19 @@
             ]
           },
           "executedRs": [],
-          "priorRs": null,
+          "priorRs": "2024/Rent_Schedule_Eff_7-1-24.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 0,
+          "priorRsTried": [
+            "year-1 folder(2)",
+            "year-1 in the name(2)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2025 - RCS/Archive/RCS - The Pines, The Woodlands, TX.pdf",
           "hasCombined": true,
-          "problems": [
-            "no year -1 executed rent schedule"
+          "problems": [],
+          "notes": [
+            "prior RS filename carries no signed/executed marker"
           ],
           "wave": 1
         }
@@ -2489,6 +2914,7 @@
             {
               "file": "2026 (RCS)/RCS Package/04. Colonial Village - RCS.pdf",
               "bytes": 3970935,
+              "rank": 0.001782845091,
               "firm": "belfry",
               "s8": "OH10M000236",
               "name": "Colonial Village",
@@ -2499,6 +2925,7 @@
             {
               "file": "2026 (RCS)/RCS Package/RCS - 26-124 - Colonial Village, 3641 Irving Street, Cincinnati, OH.pdf",
               "bytes": 3970935,
+              "rank": 0.001782845091,
               "firm": "belfry",
               "s8": "OH10M000236",
               "name": "Colonial Village",
@@ -2565,11 +2992,20 @@
           },
           "executedRs": [],
           "priorRs": "2025/White Oak Townhomes - Executed RS - FY2025.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 6,
+          "priorRsTried": [
+            "year-1 folder(3)",
+            "year-1 in the name(3)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2026 (RCS)/RCS Package/04. Colonial Village - RCS.pdf",
           "hasCombined": false,
           "problems": [
             "no filed submittalLetter",
-            "2 study candidates"
+            "top two studies are within one rank; the choice is a coin toss"
           ],
+          "notes": [],
           "wave": 1
         }
       ]
@@ -2587,6 +3023,7 @@
             {
               "file": "2026 - RCS/4 - 25-093 - Clinton Manor Apt, 100 Clinton Manor, Clinton, SC.pdf",
               "bytes": 3333101,
+              "rank": 4.0017545932,
               "firm": "belfry",
               "s8": "SC160061005",
               "name": "Clinton Manor Apartments",
@@ -2640,6 +3077,10 @@
               {
                 "file": "2026 - RCS/Clinton Manor (SC16-0061-005) - 2026 Rent Schedule.pdf",
                 "bytes": 320904
+              },
+              {
+                "file": "2026 - RCS/Final Copies - Clinton Manor (SC16-0061-005) Rent Schedule eff. 01.01.26 (executed).pdf",
+                "bytes": 1057021
               }
             ],
             "analysisXlsx": [
@@ -2659,15 +3100,19 @@
               }
             ]
           },
-          "executedRs": [
-            {
-              "file": "2026 - RCS/Final Copies - Clinton Manor (SC16-0061-005) Rent Schedule eff. 01.01.26 (executed).pdf",
-              "bytes": 1057021
-            }
-          ],
+          "executedRs": [],
           "priorRs": "2025/Clinton Manor - Rent Schedule eff 1.1.25 (executed).pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 6,
+          "priorRsTried": [
+            "year-1 folder(3)",
+            "year-1 in the name(3)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2026 - RCS/4 - 25-093 - Clinton Manor Apt, 100 Clinton Manor, Clinton, SC.pdf",
           "hasCombined": true,
           "problems": [],
+          "notes": [],
           "wave": 1
         },
         {
@@ -2677,6 +3122,7 @@
             {
               "file": "2019/RCS/Clinton Manor FINAL RCS 4.19.19.pdf",
               "bytes": 5110362,
+              "rank": 6.001560286887,
               "firm": "gill",
               "s8": null,
               "name": "Clinton Manor Apartments",
@@ -2702,18 +3148,26 @@
               {
                 "file": "2019/Archive/Proposed Rent Schedule - Clinton Manor.pdf",
                 "bytes": 482095
+              },
+              {
+                "file": "2019/Clinton Manor Executed RS.pdf",
+                "bytes": 110944
               }
             ]
           },
-          "executedRs": [
-            {
-              "file": "2019/Clinton Manor Executed RS.pdf",
-              "bytes": 110944
-            }
-          ],
+          "executedRs": [],
           "priorRs": "2018/Clinton Manor Form HUD-92458 Rent Schedule 2018 - - Executed.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 6,
+          "priorRsTried": [
+            "year-1 folder(2)",
+            "year-1 in the name(2)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2019/RCS/Clinton Manor FINAL RCS 4.19.19.pdf",
           "hasCombined": true,
           "problems": [],
+          "notes": [],
           "wave": 2
         }
       ]
@@ -2729,8 +3183,9 @@
           "year": 2026,
           "studies": [
             {
-              "file": "2026 - RCS/25-094 - Friendship Court, 719 West Mauldin Street, Anderson, SC (updated) v1.pdf",
-              "bytes": 3223476,
+              "file": "2026 - RCS/25-094 - Friendship Court, 719 West Mauldin Street, Anderson, SC (updated) v2.pdf",
+              "bytes": 3243338,
+              "rank": 6.00176193864,
               "firm": "belfry",
               "s8": "SC16M000048",
               "name": "Friendship Court",
@@ -2739,8 +3194,9 @@
               "pageCount": 67
             },
             {
-              "file": "2026 - RCS/25-094 - Friendship Court, 719 West Mauldin Street, Anderson, SC (updated) v2.pdf",
-              "bytes": 3243338,
+              "file": "2026 - RCS/25-094 - Friendship Court, 719 West Mauldin Street, Anderson, SC (updated) v1.pdf",
+              "bytes": 3223476,
+              "rank": 6.00176185026,
               "firm": "belfry",
               "s8": "SC16M000048",
               "name": "Friendship Court",
@@ -2751,6 +3207,7 @@
             {
               "file": "2026 - RCS/4 - 25-094 - Friendship Court, 719 West Mauldin Street, Anderson, SC.pdf",
               "bytes": 3213477,
+              "rank": 4.0017545932,
               "firm": "belfry",
               "s8": "SC16M000048",
               "name": "Friendship Court",
@@ -2820,11 +3277,21 @@
             ]
           },
           "executedRs": [],
-          "priorRs": null,
+          "priorRs": "2025/Friendship Court (SC16-M000-048) - 2025 Rent Schedule.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 0,
+          "priorRsTried": [
+            "year-1 folder(2)",
+            "year-1 in the name(2)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2026 - RCS/25-094 - Friendship Court, 719 West Mauldin Street, Anderson, SC (updated) v2.pdf",
           "hasCombined": true,
           "problems": [
-            "no year -1 executed rent schedule",
-            "3 study candidates"
+            "top two studies are within one rank; the choice is a coin toss"
+          ],
+          "notes": [
+            "prior RS filename carries no signed/executed marker"
           ],
           "wave": 1
         },
@@ -2835,6 +3302,7 @@
             {
               "file": "2018/3a - Final RCS Unlocked.pdf",
               "bytes": 4691954,
+              "rank": 6.001530024633,
               "firm": "gill",
               "s8": null,
               "name": "Friendship Court Apartments",
@@ -2843,8 +3311,32 @@
               "pageCount": 91
             },
             {
+              "file": "2018/Friendship Final RCS.pdf",
+              "bytes": 4655564,
+              "rank": 6.001527113156,
+              "firm": "gill",
+              "s8": null,
+              "name": "Friendship Court Apartments",
+              "units": 0,
+              "pagesRead": 3,
+              "pageCount": 90,
+              "unlocked": true
+            },
+            {
+              "file": "2018/Old/3a - Final RCS Unlocked.pdf",
+              "bytes": 4649092,
+              "rank": 1.001527687028,
+              "firm": "gill",
+              "s8": null,
+              "name": "Friendship Court Apartments",
+              "units": 0,
+              "pagesRead": 3,
+              "pageCount": 90
+            },
+            {
               "file": "2018/Friendship Court Option 1A Renewal Request.pdf",
               "bytes": 7358770,
+              "rank": 0.001530045648,
               "firm": "gill",
               "s8": null,
               "name": "Friendship Court Apartments",
@@ -2855,6 +3347,7 @@
             {
               "file": "2018/Friendship Court Option 1B Renewal Request.pdf",
               "bytes": 8670263,
+              "rank": 0.001528469426,
               "firm": "gill",
               "s8": null,
               "name": "Friendship Court Apartments",
@@ -2863,14 +3356,16 @@
               "pageCount": 213
             },
             {
-              "file": "2018/Old/3a - Final RCS Unlocked.pdf",
-              "bytes": 4649092,
+              "file": "2018/Friendship Draft RCS.pdf",
+              "bytes": 4635568,
+              "rank": -7.998474881531,
               "firm": "gill",
               "s8": null,
               "name": "Friendship Court Apartments",
               "units": 0,
               "pagesRead": 3,
-              "pageCount": 90
+              "pageCount": 90,
+              "unlocked": true
             }
           ],
           "docs": {
@@ -2914,12 +3409,22 @@
             ]
           },
           "executedRs": [],
-          "priorRs": null,
+          "priorRs": "2017/Friendship Court 2017 Rent Schedule.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 0,
+          "priorRsTried": [
+            "year-1 folder(1)",
+            "year-1 in the name(1)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2018/3a - Final RCS Unlocked.pdf",
           "hasCombined": false,
           "problems": [
-            "no year -1 executed rent schedule",
             "no filed submittalLetter, tenantNotice",
-            "4 study candidates"
+            "top two studies are within one rank; the choice is a coin toss"
+          ],
+          "notes": [
+            "prior RS filename carries no signed/executed marker"
           ],
           "wave": 2
         }
@@ -2938,6 +3443,7 @@
             {
               "file": "2026 - RCS/25-095R - Newberry Arms, 186 Newberry Arms Drive, Newberry, SC (updated).pdf",
               "bytes": 3275291,
+              "rank": 6.001762960808,
               "firm": "belfry",
               "s8": "SC160061002",
               "name": "Newberry Arms",
@@ -2948,6 +3454,7 @@
             {
               "file": "2026 - RCS/4 - 25-095 - Newberry Arms, 186 Newberry Arms Drive, Newberry, SC.pdf",
               "bytes": 2811450,
+              "rank": 4.0017545932,
               "firm": "belfry",
               "s8": "SC160061002",
               "name": "Newberry Arms",
@@ -3010,10 +3517,17 @@
           },
           "executedRs": [],
           "priorRs": "2025/Newberry Arms - Rent Schedule eff 1.1.25 (executed).pdf",
-          "hasCombined": true,
-          "problems": [
-            "2 study candidates"
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 6,
+          "priorRsTried": [
+            "year-1 folder(3)",
+            "year-1 in the name(3)",
+            "newest before year 0(1)"
           ],
+          "chosenStudy": "2026 - RCS/25-095R - Newberry Arms, 186 Newberry Arms Drive, Newberry, SC (updated).pdf",
+          "hasCombined": true,
+          "problems": [],
+          "notes": [],
           "wave": 1
         },
         {
@@ -3023,6 +3537,7 @@
             {
               "file": "2020/4 - Newberry Final RCS.pdf",
               "bytes": 4327522,
+              "rank": 10.001566828585,
               "firm": "gill",
               "s8": "05435389",
               "name": "Newberry Arms",
@@ -3033,6 +3548,7 @@
             {
               "file": "2020/Newberry Arms Option 2 One Year Renewal Request.pdf",
               "bytes": 5050646,
+              "rank": 0.00159587947,
               "firm": "gill",
               "s8": "05435389",
               "name": "Newberry Arms",
@@ -3056,13 +3572,20 @@
             ]
           },
           "executedRs": [],
-          "priorRs": null,
+          "priorRs": "2019/Newberry Arms Owner Signed Rent Schedule.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 5,
+          "priorRsTried": [
+            "year-1 folder(2)",
+            "year-1 in the name(2)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2020/4 - Newberry Final RCS.pdf",
           "hasCombined": false,
           "problems": [
-            "no year -1 executed rent schedule",
-            "no filed coverLetter, submittalLetter, checklist",
-            "2 study candidates"
+            "no filed coverLetter, submittalLetter, checklist"
           ],
+          "notes": [],
           "wave": 2
         },
         {
@@ -3070,18 +3593,9 @@
           "year": 2019,
           "studies": [
             {
-              "file": "2019/Newberry Draft RCS.pdf",
-              "bytes": 4957631,
-              "firm": "gill",
-              "s8": "05435389",
-              "name": "Newberry Arms",
-              "units": 0,
-              "pagesRead": 3,
-              "pageCount": 87
-            },
-            {
               "file": "2019/Newberry Final RCS.pdf",
               "bytes": 4327522,
+              "rank": 6.001566828585,
               "firm": "gill",
               "s8": "05435389",
               "name": "Newberry Arms",
@@ -3092,6 +3606,18 @@
             {
               "file": "2019/Old/Newberry Final RCS.pdf",
               "bytes": 4300274,
+              "rank": 1.001564075777,
+              "firm": "gill",
+              "s8": "05435389",
+              "name": "Newberry Arms",
+              "units": 0,
+              "pagesRead": 3,
+              "pageCount": 87
+            },
+            {
+              "file": "2019/Newberry Draft RCS.pdf",
+              "bytes": 4957631,
+              "rank": -7.998437303217,
               "firm": "gill",
               "s8": "05435389",
               "name": "Newberry Arms",
@@ -3123,12 +3649,21 @@
             ]
           },
           "executedRs": [],
-          "priorRs": null,
+          "priorRs": "2018/Newberry 2018 Rent Schedule.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 0,
+          "priorRsTried": [
+            "year-1 folder(2)",
+            "year-1 in the name(2)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2019/Newberry Final RCS.pdf",
           "hasCombined": false,
           "problems": [
-            "no year -1 executed rent schedule",
-            "no filed submittalLetter, checklist, tenantNotice",
-            "3 study candidates"
+            "no filed submittalLetter, checklist, tenantNotice"
+          ],
+          "notes": [
+            "prior RS filename carries no signed/executed marker"
           ],
           "wave": 2
         }
@@ -3145,24 +3680,26 @@
           "year": 2026,
           "studies": [
             {
-              "file": "2026 - RCS/Archive/4. RCS 25-165 - Circle Park 1111 South Ashland Avenue Chicago IL (004).pdf",
-              "bytes": 4473436,
-              "firm": "belfry",
-              "s8": "IL00054027",
-              "name": "Circle Park Apartments",
-              "units": 5,
-              "pagesRead": 3,
-              "pageCount": 80
-            },
-            {
               "file": "2026 - RCS/RCS_Revised - 25-165 - Circle Park 1111 South Ashland Avenue Chicago IL (004).pdf",
               "bytes": 5273347,
+              "rank": 6.001764110783,
               "firm": "belfry",
               "s8": "IL00054027",
               "name": "Circle Park Apartments",
               "units": 5,
               "pagesRead": 3,
               "pageCount": 87
+            },
+            {
+              "file": "2026 - RCS/Archive/4. RCS 25-165 - Circle Park 1111 South Ashland Avenue Chicago IL (004).pdf",
+              "bytes": 4473436,
+              "rank": -0.998236929161,
+              "firm": "belfry",
+              "s8": "IL00054027",
+              "name": "Circle Park Apartments",
+              "units": 5,
+              "pagesRead": 3,
+              "pageCount": 80
             }
           ],
           "docs": {
@@ -3174,6 +3711,20 @@
               {
                 "file": "2026 - RCS/Archive/0. Circle Park RCS Submission.pdf",
                 "bytes": 4764098
+              }
+            ],
+            "rentSchedule": [
+              {
+                "file": "2026 - RCS/2026-Rent Schedule-Circle Park Apts IL060054027 - EXECUTED.pdf",
+                "bytes": 1736764
+              },
+              {
+                "file": "2026 - RCS/Circle Park Rent Schedule (eff. 02.01.2026) - Signed.pdf",
+                "bytes": 325061
+              },
+              {
+                "file": "2026 - RCS/Circle Park Rent Schedule (eff. 02.01.2026).pdf",
+                "bytes": 424089
               }
             ],
             "coverLetter": [
@@ -3215,29 +3766,21 @@
                 "file": "2026 - RCS/Circle Park - Rent Analysis.xlsx",
                 "bytes": 14780
               }
-            ],
-            "rentSchedule": [
-              {
-                "file": "2026 - RCS/Circle Park Rent Schedule (eff. 02.01.2026) - Signed.pdf",
-                "bytes": 325061
-              },
-              {
-                "file": "2026 - RCS/Circle Park Rent Schedule (eff. 02.01.2026).pdf",
-                "bytes": 424089
-              }
             ]
           },
-          "executedRs": [
-            {
-              "file": "2026 - RCS/2026-Rent Schedule-Circle Park Apts IL060054027 - EXECUTED.pdf",
-              "bytes": 1736764
-            }
-          ],
+          "executedRs": [],
           "priorRs": "2025/2025/2025 - Rent Schedule - Circle Park (FULLY EXECUTED).pdf",
-          "hasCombined": true,
-          "problems": [
-            "2 study candidates"
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 6,
+          "priorRsTried": [
+            "year-1 folder(4)",
+            "year-1 in the name(4)",
+            "newest before year 0(1)"
           ],
+          "chosenStudy": "2026 - RCS/RCS_Revised - 25-165 - Circle Park 1111 South Ashland Avenue Chicago IL (004).pdf",
+          "hasCombined": true,
+          "problems": [],
+          "notes": [],
           "wave": 1
         }
       ]
@@ -3255,6 +3798,7 @@
             {
               "file": "2025 - RCS/25-024 - Peterson Plaza, 5939 West Peterson Avenue, Chicago, IL (updated).pdf",
               "bytes": 4417319,
+              "rank": 6.001746739841,
               "firm": "belfry",
               "s8": null,
               "name": "Peterson Plaza",
@@ -3265,6 +3809,7 @@
             {
               "file": "2025 - RCS/4 - 25-024 - Peterson Plaza, 5939 West Peterson Avenue, Chicago, IL.pdf",
               "bytes": 4365019,
+              "rank": 4.001744307172,
               "firm": "belfry",
               "s8": null,
               "name": "Peterson Plaza",
@@ -3286,6 +3831,20 @@
                 "bytes": 464918
               }
             ],
+            "rentSchedule": [
+              {
+                "file": "2025 - RCS/2025 Rent Schedule-Peterson Plaza eff. 09.01.25 (executed).pdf",
+                "bytes": 452594
+              },
+              {
+                "file": "2025 - RCS/Peterson Plaza (IL060052016) Rent Schedule eff. 09.01.2025 (unsigned).pdf",
+                "bytes": 546340
+              },
+              {
+                "file": "2025 - RCS/Peterson Plaza (IL060052016) Rent Schedule eff. 09.01.2025.pdf",
+                "bytes": 383119
+              }
+            ],
             "checklist": [
               {
                 "file": "2025 - RCS/3 - Peterson Plaza - Owner RCS Checklist.pdf",
@@ -3300,16 +3859,6 @@
               {
                 "file": "2025 - RCS/Peterson Plaza - Tenant Notice.docx",
                 "bytes": 50750
-              }
-            ],
-            "rentSchedule": [
-              {
-                "file": "2025 - RCS/Peterson Plaza (IL060052016) Rent Schedule eff. 09.01.2025 (unsigned).pdf",
-                "bytes": 546340
-              },
-              {
-                "file": "2025 - RCS/Peterson Plaza (IL060052016) Rent Schedule eff. 09.01.2025.pdf",
-                "bytes": 383119
               }
             ],
             "analysisXlsx": [
@@ -3329,17 +3878,19 @@
               }
             ]
           },
-          "executedRs": [
-            {
-              "file": "2025 - RCS/2025 Rent Schedule-Peterson Plaza eff. 09.01.25 (executed).pdf",
-              "bytes": 452594
-            }
-          ],
+          "executedRs": [],
           "priorRs": "2024/2024-Rent Schedule-Peterson Plaza (executed).pdf",
-          "hasCombined": true,
-          "problems": [
-            "2 study candidates"
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 6,
+          "priorRsTried": [
+            "year-1 folder(3)",
+            "year-1 in the name(3)",
+            "newest before year 0(1)"
           ],
+          "chosenStudy": "2025 - RCS/25-024 - Peterson Plaza, 5939 West Peterson Avenue, Chicago, IL (updated).pdf",
+          "hasCombined": true,
+          "problems": [],
+          "notes": [],
           "wave": 1
         }
       ]
@@ -3355,24 +3906,26 @@
           "year": 2025,
           "studies": [
             {
-              "file": "2025 (RCS)/Archive/25-037 - Northgate Terrace, 550 24th Street, Oakland, CA.pdf",
-              "bytes": 3770250,
-              "firm": "renzi",
-              "s8": "CA39M000332",
-              "name": "Northgate Terrace Apartments",
-              "units": 0,
-              "pagesRead": 2,
-              "pageCount": 57
-            },
-            {
               "file": "2025 (RCS)/Northgate Terrace, 550 24th Street, Oakland, CA.pdf",
               "bytes": 3885770,
+              "rank": 0.001742497308,
               "firm": "belfry",
               "s8": "CA39M000332",
               "name": "Northgate Terrace Apartments",
               "units": 2,
               "pagesRead": 4,
               "pageCount": 60
+            },
+            {
+              "file": "2025 (RCS)/Archive/25-037 - Northgate Terrace, 550 24th Street, Oakland, CA.pdf",
+              "bytes": 3770250,
+              "rank": -4.998259993903,
+              "firm": "renzi",
+              "s8": "CA39M000332",
+              "name": "Northgate Terrace Apartments",
+              "units": 0,
+              "pagesRead": 2,
+              "pageCount": 57
             }
           ],
           "docs": {
@@ -3381,21 +3934,73 @@
                 "file": "2025 (RCS)/Archive/Northgate Terrace - Cover Letter.pdf",
                 "bytes": 273250
               }
+            ],
+            "rentSchedule": [
+              {
+                "file": "2025 (RCS)/Northgate Terrace FY2025 Executed RS.pdf",
+                "bytes": 543933
+              }
             ]
           },
-          "executedRs": [
-            {
-              "file": "2025 (RCS)/Northgate Terrace FY2025 Executed RS.pdf",
-              "bytes": 543933
-            }
-          ],
+          "executedRs": [],
           "priorRs": "2024/Northgate Terrace FY2024 Executed RS.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 6,
+          "priorRsTried": [
+            "year-1 folder(4)",
+            "year-1 in the name(4)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2025 (RCS)/Northgate Terrace, 550 24th Street, Oakland, CA.pdf",
           "hasCombined": false,
           "problems": [
-            "no filed submittalLetter, checklist, tenantNotice",
-            "2 study candidates"
+            "no filed submittalLetter, checklist, tenantNotice"
           ],
+          "notes": [],
           "wave": 1
+        },
+        {
+          "cycleLabel": "2016",
+          "year": 2016,
+          "studies": [
+            {
+              "file": "2016/Revised 2 23 15 WNC Northgate Terrace Oakland RCS.pdf",
+              "bytes": 1976707,
+              "rank": 2.001576014454,
+              "firm": null,
+              "s8": null,
+              "name": "550 24th Street",
+              "units": 2,
+              "pagesRead": 3,
+              "pageCount": 86,
+              "unlocked": true
+            }
+          ],
+          "docs": {
+            "rentSchedule": [
+              {
+                "file": "2016/75919 Northgate Terrace Rent Schedule 06-01-16 executed.pdf",
+                "bytes": 296393
+              }
+            ]
+          },
+          "executedRs": [],
+          "priorRs": null,
+          "priorRsRule": null,
+          "priorRsRank": null,
+          "priorRsTried": [
+            "year-1 folder(0)",
+            "year-1 in the name(0)",
+            "newest before year 0(0)"
+          ],
+          "chosenStudy": "2016/Revised 2 23 15 WNC Northgate Terrace Oakland RCS.pdf",
+          "hasCombined": false,
+          "problems": [
+            "no prior rent schedule found; tried year-1 folder(0), year-1 in the name(0), newest before year 0(0)",
+            "no filed coverLetter, submittalLetter, checklist, tenantNotice"
+          ],
+          "notes": [],
+          "wave": 2
         }
       ]
     },
@@ -3412,6 +4017,7 @@
             {
               "file": "2025 - RCS/Archive/Belfry RCS/25-007R - Fairview Homes, 86 17th Avenue, Newark, New Jersey (REVISED RCS).pdf",
               "bytes": 4440763,
+              "rank": 1.001745773977,
               "firm": "belfry",
               "s8": "NJ390013022",
               "name": "Fairview Homes",
@@ -3422,6 +4028,7 @@
             {
               "file": "2025 - RCS/Archive/Submission/Archive/Exhibit 3 - 25-007 - Fairview Homes, 86 17th Avenue, Newark, New Jersey (RCS).pdf",
               "bytes": 4390881,
+              "rank": -0.998256282408,
               "firm": "belfry",
               "s8": null,
               "name": "Fairview Homes",
@@ -3501,21 +4108,30 @@
             ]
           },
           "executedRs": [],
-          "priorRs": null,
-          "hasCombined": true,
-          "problems": [
-            "no year -1 executed rent schedule",
-            "2 study candidates"
+          "priorRs": "2024/Fairview Homes Rent Schedule eff. 5.7.24.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 0,
+          "priorRsTried": [
+            "year-1 folder(1)",
+            "year-1 in the name(1)",
+            "newest before year 0(1)"
           ],
-          "wave": 2
+          "chosenStudy": "2025 - RCS/Archive/Belfry RCS/25-007R - Fairview Homes, 86 17th Avenue, Newark, New Jersey (REVISED RCS).pdf",
+          "hasCombined": true,
+          "problems": [],
+          "notes": [
+            "prior RS filename carries no signed/executed marker"
+          ],
+          "wave": 1
         },
         {
           "cycleLabel": "2020",
           "year": 2020,
           "studies": [
             {
-              "file": "2020/Fairview Homes DRAFT RCS (Gill).pdf",
+              "file": "2020/Fairview Homes FINAL RCS (Gill).pdf",
               "bytes": 4541036,
+              "rank": 6.001581530665,
               "firm": "gill",
               "s8": null,
               "name": "Fairview Apartments",
@@ -3524,8 +4140,9 @@
               "pageCount": 86
             },
             {
-              "file": "2020/Fairview Homes FINAL RCS (Gill).pdf",
+              "file": "2020/Fairview Homes DRAFT RCS (Gill).pdf",
               "bytes": 4541036,
+              "rank": -7.998420791152,
               "firm": "gill",
               "s8": null,
               "name": "Fairview Apartments",
@@ -3549,6 +4166,10 @@
               {
                 "file": "2020/Fairview Homes Proposed 2020 Rent Schedule.pdf",
                 "bytes": 509586
+              },
+              {
+                "file": "2020/Fiarview Homes 2020 Executed Rent Schedule.pdf",
+                "bytes": 345211
               }
             ],
             "coverLetter": [
@@ -3568,19 +4189,22 @@
               }
             ]
           },
-          "executedRs": [
-            {
-              "file": "2020/Fiarview Homes 2020 Executed Rent Schedule.pdf",
-              "bytes": 345211
-            }
-          ],
+          "executedRs": [],
           "priorRs": "2019/Fairview Homes Executed 2019 Rent Schedule.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 6,
+          "priorRsTried": [
+            "year-1 folder(3)",
+            "year-1 in the name(3)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2020/Fairview Homes FINAL RCS (Gill).pdf",
           "hasCombined": false,
           "problems": [
-            "no filed submittalLetter, tenantNotice",
-            "2 study candidates"
+            "no filed submittalLetter, tenantNotice"
           ],
-          "wave": 1
+          "notes": [],
+          "wave": 2
         },
         {
           "cycleLabel": "(no cycle folder)",
@@ -3589,6 +4213,7 @@
             {
               "file": "RCS/R1542R2017.pdf",
               "bytes": 4541036,
+              "rank": 0.001578674404,
               "firm": "gill",
               "s8": null,
               "name": "Fairview Apartments",
@@ -3600,11 +4225,20 @@
           "docs": {},
           "executedRs": [],
           "priorRs": null,
+          "priorRsRule": null,
+          "priorRsRank": null,
+          "priorRsTried": [
+            "year-1 folder(0)",
+            "year-1 in the name(0)",
+            "newest before year 0(0)"
+          ],
+          "chosenStudy": "RCS/R1542R2017.pdf",
           "hasCombined": false,
           "problems": [
-            "no year -1 executed rent schedule",
+            "no prior rent schedule found; tried year-1 folder(0), year-1 in the name(0), newest before year 0(0)",
             "no filed coverLetter, submittalLetter, checklist, tenantNotice"
           ],
+          "notes": [],
           "wave": 2
         }
       ]
@@ -3622,6 +4256,7 @@
             {
               "file": "2025 - RCS/Archive/Submission/Exhibits/Exhibit 3 - 25-020 - Walden (The Cedars), 400 Cliff Street & 55 Main Street, Walden, NY (Full RCS).pdf",
               "bytes": 4119041,
+              "rank": -0.998256889229,
               "firm": "belfry",
               "s8": null,
               "name": "Walden",
@@ -3689,10 +4324,19 @@
             ]
           },
           "executedRs": [],
-          "priorRs": null,
+          "priorRs": "2024/Walden (The Cedars) Rent Schedule eff. 7.16.24.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 0,
+          "priorRsTried": [
+            "year-1 folder(1)",
+            "year-1 in the name(1)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2025 - RCS/Archive/Submission/Exhibits/Exhibit 3 - 25-020 - Walden (The Cedars), 400 Cliff Street & 55 Main Street, Walden, NY (Full RCS).pdf",
           "hasCombined": true,
-          "problems": [
-            "no year -1 executed rent schedule"
+          "problems": [],
+          "notes": [
+            "prior RS filename carries no signed/executed marker"
           ],
           "wave": 1
         }
@@ -3711,6 +4355,7 @@
             {
               "file": "2026 - RCS/4 - 26-052 - Marine Terrace, 20-24 21st Street, Astoria, NY.pdf",
               "bytes": 4437701,
+              "rank": 4.001779110424,
               "firm": "belfry",
               "s8": "NY36H110071",
               "name": "Marine Terrace",
@@ -3752,6 +4397,10 @@
                 "bytes": 512907
               },
               {
+                "file": "2026 - RCS/Marine Terrace Executed RS eff. 06.30.26.pdf",
+                "bytes": 1078147
+              },
+              {
                 "file": "2026 - RCS/Marine Terrace RS eff. 06.30.26 (signed).pdf",
                 "bytes": 1117933
               },
@@ -3787,15 +4436,19 @@
               }
             ]
           },
-          "executedRs": [
-            {
-              "file": "2026 - RCS/Marine Terrace Executed RS eff. 06.30.26.pdf",
-              "bytes": 1078147
-            }
-          ],
+          "executedRs": [],
           "priorRs": "2025/Marine Terrace Executed RS eff. 06.30.25.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 6,
+          "priorRsTried": [
+            "year-1 folder(6)",
+            "year-1 in the name(6)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2026 - RCS/4 - 26-052 - Marine Terrace, 20-24 21st Street, Astoria, NY.pdf",
           "hasCombined": true,
           "problems": [],
+          "notes": [],
           "wave": 1
         },
         {
@@ -3803,18 +4456,9 @@
           "year": 2021,
           "studies": [
             {
-              "file": "2021/RCS/Marine Terrace - Queens RCS - Novogradac.pdf",
-              "bytes": 7233776,
-              "firm": null,
-              "s8": null,
-              "name": "Astoria, Queens County, NY, 11105",
-              "units": 3,
-              "pagesRead": 4,
-              "pageCount": 85
-            },
-            {
               "file": "2021/RCS/Marine Terrace - Queens, NY - RCS - 3-19-2021.pdf",
               "bytes": 7236666,
+              "rank": 0.00161618094,
               "firm": null,
               "s8": null,
               "name": "Astoria, Queens County, NY, 11105",
@@ -3825,6 +4469,18 @@
             {
               "file": "2021/Submission/Marine Terrace - Queens RCS - Novogradac.pdf",
               "bytes": 7233776,
+              "rank": 0.001615918909,
+              "firm": null,
+              "s8": null,
+              "name": "Astoria, Queens County, NY, 11105",
+              "units": 3,
+              "pagesRead": 4,
+              "pageCount": 85
+            },
+            {
+              "file": "2021/RCS/Marine Terrace - Queens RCS - Novogradac.pdf",
+              "bytes": 7233776,
+              "rank": 0.001613770296,
               "firm": null,
               "s8": null,
               "name": "Astoria, Queens County, NY, 11105",
@@ -3834,6 +4490,16 @@
             }
           ],
           "docs": {
+            "rentSchedule": [
+              {
+                "file": "2021/2021 Marine Terrace Executed Rent Schedule.pdf",
+                "bytes": 1012092
+              },
+              {
+                "file": "2021/Submission/Proposed Rent Schedule - Marine Terrace.pdf",
+                "bytes": 486291
+              }
+            ],
             "combinedPackage": [
               {
                 "file": "2021/Submission/Marine Terrace 5 yr RCS submission.pdf",
@@ -3845,25 +4511,23 @@
                 "file": "2021/Submission/Owners-RCS-Checklist.pdf",
                 "bytes": 91195
               }
-            ],
-            "rentSchedule": [
-              {
-                "file": "2021/Submission/Proposed Rent Schedule - Marine Terrace.pdf",
-                "bytes": 486291
-              }
             ]
           },
-          "executedRs": [
-            {
-              "file": "2021/2021 Marine Terrace Executed Rent Schedule.pdf",
-              "bytes": 1012092
-            }
-          ],
+          "executedRs": [],
           "priorRs": "2020/2020 Marine Terrace Executed Rent Schedule.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 6,
+          "priorRsTried": [
+            "year-1 folder(1)",
+            "year-1 in the name(1)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2021/RCS/Marine Terrace - Queens, NY - RCS - 3-19-2021.pdf",
           "hasCombined": true,
           "problems": [
-            "3 study candidates"
+            "top two studies are within one rank; the choice is a coin toss"
           ],
+          "notes": [],
           "wave": 2
         }
       ]
@@ -3881,6 +4545,7 @@
             {
               "file": "2026 - RCS/25-183 - Oak Center, 1601 Market Street, Oakland, CA (revised 1.21).pdf",
               "bytes": 3492905,
+              "rank": 6.00176901792,
               "firm": "belfry",
               "s8": "CA39L000090",
               "name": "Oak Center Apartments",
@@ -3891,6 +4556,7 @@
             {
               "file": "2026 - RCS/Archive/25-183 - Oak Center, 1601 Market Street, Oakland, CA (v1).pdf",
               "bytes": 4046378,
+              "rank": 1.00176494956,
               "firm": "belfry",
               "s8": "CA39L000090",
               "name": "Oak Center Apartments",
@@ -3901,6 +4567,7 @@
             {
               "file": "2026 - RCS/RCS Submission/Archive/25-183 - Oak Center, 1601 Market Street, Oakland, CA.pdf",
               "bytes": 4046378,
+              "rank": -0.99823505044,
               "firm": "belfry",
               "s8": "CA39L000090",
               "name": "Oak Center Apartments",
@@ -3914,6 +4581,10 @@
               {
                 "file": "2026 - RCS/Archive/Oak Center 1 - FY2026 Prelim RS.pdf",
                 "bytes": 267596
+              },
+              {
+                "file": "2026 - RCS/Oak Center 1 - FY2026 Executed RS.pdf",
+                "bytes": 1312158
               },
               {
                 "file": "2026 - RCS/Oak Center 1 - FY2026 Prelim RS (signed).pdf",
@@ -3967,17 +4638,19 @@
               }
             ]
           },
-          "executedRs": [
-            {
-              "file": "2026 - RCS/Oak Center 1 - FY2026 Executed RS.pdf",
-              "bytes": 1312158
-            }
-          ],
+          "executedRs": [],
           "priorRs": "2025/Oak Center 1 FY2025 Executed RS.pdf",
-          "hasCombined": true,
-          "problems": [
-            "3 study candidates"
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 6,
+          "priorRsTried": [
+            "year-1 folder(2)",
+            "year-1 in the name(2)",
+            "newest before year 0(1)"
           ],
+          "chosenStudy": "2026 - RCS/25-183 - Oak Center, 1601 Market Street, Oakland, CA (revised 1.21).pdf",
+          "hasCombined": true,
+          "problems": [],
+          "notes": [],
           "wave": 1
         },
         {
@@ -3985,48 +4658,9 @@
           "year": 2021,
           "studies": [
             {
-              "file": "2021/Archive/Oakland, CA - Oak Center - RCS (12.10.2020).pdf",
-              "bytes": 8535631,
-              "firm": null,
-              "s8": null,
-              "name": "Oakland, Alameda County, CA 94067",
-              "units": 5,
-              "pagesRead": 4,
-              "pageCount": 126
-            },
-            {
-              "file": "2021/Archive/Oakland, CA - Oak Center - RCS (12.2.2020) v3.pdf",
-              "bytes": 12792524,
-              "firm": null,
-              "s8": null,
-              "name": "Oakland, Alameda County, CA 94067",
-              "units": 5,
-              "pagesRead": 4,
-              "pageCount": 126
-            },
-            {
-              "file": "2021/Archive/Oakland, CA - Oak Center - RCS (12.8.2020).pdf",
-              "bytes": 14102272,
-              "firm": null,
-              "s8": null,
-              "name": "Oakland, Alameda County, CA 94067",
-              "units": 5,
-              "pagesRead": 4,
-              "pageCount": 126
-            },
-            {
-              "file": "2021/Archive/Oakland, CA - Oak Center - RCS (12.9.2020).pdf",
-              "bytes": 8513101,
-              "firm": null,
-              "s8": null,
-              "name": "Oakland, Alameda County, CA 94067",
-              "units": 5,
-              "pagesRead": 4,
-              "pageCount": 126
-            },
-            {
               "file": "2021/Archive/Oakland, CA - Oak Center - RCS (2020) - final 2.pdf",
               "bytes": 12834616,
+              "rank": 1.001605630982,
               "firm": null,
               "s8": null,
               "name": "Oakland, Alameda County, CA 94067",
@@ -4037,12 +4671,57 @@
             {
               "file": "2021/Oakland, CA - Oak Center - RCS (12.23.2020).pdf",
               "bytes": 13844002,
+              "rank": 0.001609077102,
               "firm": null,
               "s8": null,
               "name": "Oakland, Alameda County, CA 94067",
               "units": 5,
               "pagesRead": 4,
               "pageCount": 136
+            },
+            {
+              "file": "2021/Archive/Oakland, CA - Oak Center - RCS (12.2.2020) v3.pdf",
+              "bytes": 12792524,
+              "rank": -2.998393039063,
+              "firm": null,
+              "s8": null,
+              "name": "Oakland, Alameda County, CA 94067",
+              "units": 5,
+              "pagesRead": 4,
+              "pageCount": 126
+            },
+            {
+              "file": "2021/Archive/Oakland, CA - Oak Center - RCS (12.10.2020).pdf",
+              "bytes": 8535631,
+              "rank": -4.998392376683,
+              "firm": null,
+              "s8": null,
+              "name": "Oakland, Alameda County, CA 94067",
+              "units": 5,
+              "pagesRead": 4,
+              "pageCount": 126
+            },
+            {
+              "file": "2021/Archive/Oakland, CA - Oak Center - RCS (12.9.2020).pdf",
+              "bytes": 8513101,
+              "rank": -4.998392386758,
+              "firm": null,
+              "s8": null,
+              "name": "Oakland, Alameda County, CA 94067",
+              "units": 5,
+              "pagesRead": 4,
+              "pageCount": 126
+            },
+            {
+              "file": "2021/Archive/Oakland, CA - Oak Center - RCS (12.8.2020).pdf",
+              "bytes": 14102272,
+              "rank": -4.998392475998,
+              "firm": null,
+              "s8": null,
+              "name": "Oakland, Alameda County, CA 94067",
+              "units": 5,
+              "pagesRead": 4,
+              "pageCount": 126
             }
           ],
           "docs": {
@@ -4058,6 +4737,10 @@
               {
                 "file": "2021/Archive/Oak Center - HUD92458_Rent Schedule for signature.pdf",
                 "bytes": 309513
+              },
+              {
+                "file": "2021/Oak Center 1 FY2021 Executed RS.pdf",
+                "bytes": 2241557
               }
             ],
             "coverLetter": [
@@ -4073,17 +4756,21 @@
               }
             ]
           },
-          "executedRs": [
-            {
-              "file": "2021/Oak Center 1 FY2021 Executed RS.pdf",
-              "bytes": 2241557
-            }
-          ],
+          "executedRs": [],
           "priorRs": "2020/Oak Center 1 CA39L000090 - Executed Rent Schedule eff. 4.1.2020.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 6,
+          "priorRsTried": [
+            "year-1 folder(3)",
+            "year-1 in the name(3)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2021/Archive/Oakland, CA - Oak Center - RCS (2020) - final 2.pdf",
           "hasCombined": true,
           "problems": [
-            "6 study candidates"
+            "top two studies are within one rank; the choice is a coin toss"
           ],
+          "notes": [],
           "wave": 2
         }
       ]
@@ -4101,6 +4788,7 @@
             {
               "file": "2026 - RCS/25-184 - Morh I, 741 Filbert Street, Oakland, CA (Revised 1.21).pdf",
               "bytes": 3755395,
+              "rank": 6.00176901792,
               "firm": "belfry",
               "s8": "CA39L000088",
               "name": "Morh I Apartments",
@@ -4109,8 +4797,9 @@
               "pageCount": 57
             },
             {
-              "file": "2026 - RCS/Archive/25-184 - Morh I, 741 Filbert Street, Oakland, CA.pdf",
+              "file": "2026 - RCS/RCS Submission/25-184 - Morh I, 741 Filbert Street, Oakland, CA.pdf",
               "bytes": 4047197,
+              "rank": 4.00176494956,
               "firm": "belfry",
               "s8": "CA39L000088",
               "name": "Morh I Apartments",
@@ -4119,8 +4808,9 @@
               "pageCount": 54
             },
             {
-              "file": "2026 - RCS/RCS Submission/25-184 - Morh I, 741 Filbert Street, Oakland, CA.pdf",
+              "file": "2026 - RCS/Archive/25-184 - Morh I, 741 Filbert Street, Oakland, CA.pdf",
               "bytes": 4047197,
+              "rank": -0.99823505044,
               "firm": "belfry",
               "s8": "CA39L000088",
               "name": "Morh I Apartments",
@@ -4152,6 +4842,10 @@
               {
                 "file": "2026 - RCS/Archive/Morh I Housing FY2026 Prelim RS.pdf",
                 "bytes": 262719
+              },
+              {
+                "file": "2026 - RCS/Morh I Housing FY2026 Executed RS.pdf",
+                "bytes": 852387
               }
             ],
             "analysisXlsx": [
@@ -4191,17 +4885,19 @@
               }
             ]
           },
-          "executedRs": [
-            {
-              "file": "2026 - RCS/Morh I Housing FY2026 Executed RS.pdf",
-              "bytes": 852387
-            }
-          ],
+          "executedRs": [],
           "priorRs": "2025/Morh I Housing FY2025 Executed RS.pdf",
-          "hasCombined": true,
-          "problems": [
-            "3 study candidates"
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 6,
+          "priorRsTried": [
+            "year-1 folder(2)",
+            "year-1 in the name(2)",
+            "newest before year 0(1)"
           ],
+          "chosenStudy": "2026 - RCS/25-184 - Morh I, 741 Filbert Street, Oakland, CA (Revised 1.21).pdf",
+          "hasCombined": true,
+          "problems": [],
+          "notes": [],
           "wave": 1
         },
         {
@@ -4209,8 +4905,42 @@
           "year": 2021,
           "studies": [
             {
+              "file": "2021/Archive/Oakland, CA - MORH Housing - RCS (2020) - final 2 (11.17.20).pdf",
+              "bytes": 8020256,
+              "rank": 1.001605670856,
+              "firm": null,
+              "s8": null,
+              "name": "Oakland, Alameda County, CA 94067",
+              "units": 2,
+              "pagesRead": 4,
+              "pageCount": 71
+            },
+            {
+              "file": "2021/Archive/Oakland, CA - MORH Housing - RCS (2020) - final (11.11.20).pdf",
+              "bytes": 11821137,
+              "rank": 1.001605205975,
+              "firm": null,
+              "s8": null,
+              "name": "Oakland, Alameda County, CA 94067",
+              "units": 2,
+              "pagesRead": 4,
+              "pageCount": 93
+            },
+            {
+              "file": "2021/Oakland, CA - MORH Housing - RCS (12.23.2020).pdf",
+              "bytes": 12597792,
+              "rank": 0.001609077025,
+              "firm": null,
+              "s8": null,
+              "name": "Oakland, Alameda County, CA 94067",
+              "units": 2,
+              "pagesRead": 4,
+              "pageCount": 97
+            },
+            {
               "file": "2021/Archive/Oakland, CA - MORH Housing - RCS (2020) - Revised_12.14.2020.pdf",
               "bytes": 8216931,
+              "rank": -2.998391833845,
               "firm": null,
               "s8": null,
               "name": "Oakland, Alameda County, CA 94067",
@@ -4221,42 +4951,13 @@
             {
               "file": "2021/Archive/Oakland, CA - MORH Housing - RCS (2020) - Revised_12.2020.pdf",
               "bytes": 12477166,
+              "rank": -2.998392386661,
               "firm": null,
               "s8": null,
               "name": "Oakland, Alameda County, CA 94067",
               "units": 2,
               "pagesRead": 4,
               "pageCount": 93
-            },
-            {
-              "file": "2021/Archive/Oakland, CA - MORH Housing - RCS (2020) - final (11.11.20).pdf",
-              "bytes": 11821137,
-              "firm": null,
-              "s8": null,
-              "name": "Oakland, Alameda County, CA 94067",
-              "units": 2,
-              "pagesRead": 4,
-              "pageCount": 93
-            },
-            {
-              "file": "2021/Archive/Oakland, CA - MORH Housing - RCS (2020) - final 2 (11.17.20).pdf",
-              "bytes": 8020256,
-              "firm": null,
-              "s8": null,
-              "name": "Oakland, Alameda County, CA 94067",
-              "units": 2,
-              "pagesRead": 4,
-              "pageCount": 71
-            },
-            {
-              "file": "2021/Oakland, CA - MORH Housing - RCS (12.23.2020).pdf",
-              "bytes": 12597792,
-              "firm": null,
-              "s8": null,
-              "name": "Oakland, Alameda County, CA 94067",
-              "units": 2,
-              "pagesRead": 4,
-              "pageCount": 97
             }
           ],
           "docs": {
@@ -4264,6 +4965,10 @@
               {
                 "file": "2021/Archive/MORH Housing - Draft Rent Schedule 2021 RCS (to be signed).pdf",
                 "bytes": 729849
+              },
+              {
+                "file": "2021/Morh I Housing FY2021 Executed RS.pdf",
+                "bytes": 2222746
               }
             ],
             "combinedPackage": [
@@ -4279,122 +4984,25 @@
               }
             ]
           },
-          "executedRs": [
-            {
-              "file": "2021/Morh I Housing FY2021 Executed RS.pdf",
-              "bytes": 2222746
-            }
-          ],
+          "executedRs": [],
           "priorRs": "2020/Morh I Housing CA39L000088 - 2020 Executed Rent Schedule.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 6,
+          "priorRsTried": [
+            "year-1 folder(2)",
+            "year-1 in the name(2)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2021/Archive/Oakland, CA - MORH Housing - RCS (2020) - final 2 (11.17.20).pdf",
           "hasCombined": true,
           "problems": [
-            "5 study candidates"
+            "top two studies are within one rank; the choice is a coin toss"
           ],
+          "notes": [],
           "wave": 2
         }
       ]
     }
   ],
-  "readErrors": [
-    {
-      "property": "Sycamore Green",
-      "file": "2014/453 Sycamore Green RCS 11-19-14 (MVS) - FINAL.pdf",
-      "error": "Expected instance of e, but got instance of undefined"
-    },
-    {
-      "property": "Sycamore Green",
-      "file": "2020/RCS/Sycamore Green 2019 RCS - MVS UPDATED.pdf",
-      "error": "Expected instance of e, but got instance of undefined"
-    },
-    {
-      "property": "Sycamore Green",
-      "file": "2020/RCS/Sycamore Green 2019 RCS - MVS.pdf",
-      "error": "Expected instance of e, but got instance of undefined"
-    },
-    {
-      "property": "New Horizons",
-      "file": "2014/474 New Horizons RCS March 2014 (MVS).pdf",
-      "error": "Expected instance of e, but got instance of undefined"
-    },
-    {
-      "property": "New Horizons",
-      "file": "2019/Exhibit 1 - New Horizons RCS February 2019 (MVS) .pdf",
-      "error": "Expected instance of e, but got instance of undefined"
-    },
-    {
-      "property": "New Horizons",
-      "file": "2019/Exhibit 1 - New Horizons RCS February 2019 (MVS).pdf",
-      "error": "Expected instance of e, but got instance of undefined"
-    },
-    {
-      "property": "New Horizons",
-      "file": "2019/New Horizons RCS February 2019 (MVS) .pdf",
-      "error": "Expected instance of e, but got instance of undefined"
-    },
-    {
-      "property": "New Horizons",
-      "file": "2019/New Horizons RCS February 2019 (MVS).pdf",
-      "error": "Expected instance of e, but got instance of undefined"
-    },
-    {
-      "property": "North Park",
-      "file": "2019/RCS Submission/18-1263 - 14-20 West 102nd Street - North Park Apartments - Final 03.21.2019.pdf",
-      "error": "Expected instance of e, but got instance of undefined"
-    },
-    {
-      "property": "North Park",
-      "file": "2019/RCS Submission/_Old/18-1263 - 14-20 West 102nd Street - North Park Apartments - Related Affordable Draft 11.20.2018.pdf",
-      "error": "Expected instance of e, but got instance of undefined"
-    },
-    {
-      "property": "North Park",
-      "file": "2019/RCS Submission/_Old/18-1263 - 14-20 West 102nd Street - North Park Apartments -Final 11.30.2018.pdf",
-      "error": "Expected instance of e, but got instance of undefined"
-    },
-    {
-      "property": "North Park",
-      "file": "2020/RCS Submission/19-1093 - 14-20 West 102nd Street - North Park Apartment - 11.07.2019.pdf",
-      "error": "Expected instance of e, but got instance of undefined"
-    },
-    {
-      "property": "North Park",
-      "file": "2020/RCS Submission/2019 North Park Apartment RCS FINAL.pdf",
-      "error": "Expected instance of e, but got instance of undefined"
-    },
-    {
-      "property": "North Park",
-      "file": "_Archive/North Park 2014 RCS.pdf",
-      "error": "Expected instance of e, but got instance of undefined"
-    },
-    {
-      "property": "North Park",
-      "file": "_Archive/North Park RCS - 14-20 West 102nd Street - 1.5.2015.pdf",
-      "error": "Expected instance of e, but got instance of undefined"
-    },
-    {
-      "property": "Noble Tower",
-      "file": "2024 - RCS/Archive/Noble Tower, Oakland, CA - RCS - A20240802 Final.pdf",
-      "error": "Expected instance of e, but got instance of undefined"
-    },
-    {
-      "property": "Noble Tower",
-      "file": "2024 - RCS/Noble Tower, Oakland, CA - RCS.pdf",
-      "error": "Expected instance of e, but got instance of undefined"
-    },
-    {
-      "property": "Friendship Court",
-      "file": "2018/Friendship Draft RCS.pdf",
-      "error": "Expected instance of e, but got instance of undefined"
-    },
-    {
-      "property": "Friendship Court",
-      "file": "2018/Friendship Final RCS.pdf",
-      "error": "Expected instance of e, but got instance of undefined"
-    },
-    {
-      "property": "Northgate Terrace CA",
-      "file": "2016/Revised 2 23 15 WNC Northgate Terrace Oakland RCS.pdf",
-      "error": "Expected instance of e, but got instance of undefined"
-    }
-  ]
+  "readErrors": []
 }
