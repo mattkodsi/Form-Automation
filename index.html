@@ -2440,6 +2440,14 @@ function makeSupabaseDb(client) {
       const prj = r.principals || {}; if (prj && typeof prj === 'object') for (const i in prj) { const e = prj[i] || {}; if (e.name != null) place(p, 'principals.' + i + '.name', e.name, sa); if (e.title != null) place(p, 'principals.' + i + '.title', e.title, sa); }
       const cl = r.checklist || {};
       for (const k in cl) place(p, 'check.' + k, cl[k], sa);
+      /* The tracker code, which the loader used to drop on the floor. It is not
+         a form cell, so it is in no PSCALAR map and nothing else read it back —
+         written on createProperty, present in the row, gone from memory the
+         moment the page reloaded. propByRaCode() then answered null for every
+         property, so a scheduled property you had already opened came back as a
+         record the schedule does not carry: a copy at the bottom of the list,
+         and a name clash the next time you opened it. */
+      if (r.ra_property_code != null) p.ra_property_code = String(r.ra_property_code);
       D.props[r.id] = p;
     });
     (ur.data || []).forEach(u => {
