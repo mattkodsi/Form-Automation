@@ -474,6 +474,13 @@ async function makeDb(adapter, opts) {
     getActive() { return { pid: D.meta.activePid }; },
     setActive(pid) { if (D.props[pid]) D.meta.activePid = pid; return Promise.resolve(); }, // pointer only; nav must not write (real saves persist it)
     createProperty(name, raMasterId) { assertNameFree(name); const r = _createProperty(name || '', raMasterId); persist(); return r; },
+    /* API PARITY with db.supabase.js. Binding, not creating: a record can
+       predate the schedule, and then opening its tracker row tried to make a
+       SECOND property under the same name and hit the one-name rule. */
+    setRaCode(pid, code) { const p = D.props[pid]; if (!p) return;
+      const c = String(code == null ? '' : code).trim();
+      if (!c || String(p.ra_property_code || '') === c) return;
+      p.ra_property_code = c; touch(pid); return persist(); },
     renameProperty(pid, name) { const p = D.props[pid]; if (!p) return; assertNameFree(name, pid); p.durable['property.name'] = cell(name); touch(pid); return persist(); },
     deleteProperty(pid) {
       delete D.props[pid];
