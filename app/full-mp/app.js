@@ -3302,6 +3302,47 @@ function renderWho(){
 /* Opening a tracker property for the first time is what brings its record into
    existence. Everything downstream — cycles, the form, generation — already
    works on a record, so this is the only new step. */
+/* ============================ DEV ONLY ==================================
+   TEMPORARY. This exists to clear the records left over from before the
+   tracker became the source of truth, and it goes away once that is done.
+   To remove it: set DEV_PURGE to false and delete this function, the
+   `#orphPurge` heading button in renderMenu, its one-line wiring below the
+   [data-pact] loop, and the .olist/.orow rules in shell.head.html. The
+   purge-guard checks in smoke_combined.js go with it.
+   ======================================================================== */
+const DEV_PURGE=true;
+/* Removing records is the user's decision, so the app's whole job is to make
+   it an informed one. "13 records" is not something anyone can decide on: these
+   are the only copy of whatever was entered by hand, nothing in the tracker
+   will recreate them, and one of them may be the one holding a finished
+   package. So the confirm lists them and says what each one holds. */
+function purgeOrphans(list){
+  if(!list||!list.length)return;
+  const cyOf=p=>((mpdb&&mpdb.listCycles&&p.id)?(mpdb.listCycles(p.id)||[]):[]);
+  const rows=list.map(p=>{
+    const n=cyOf(p).length,bits=[];
+    if(n)bits.push(fmtNum(n)+' package'+(n===1?'':'s'));
+    if(p.total_units)bits.push(fmtNum(p.total_units)+' units');
+    if(p.completeness)bits.push(Math.round(p.completeness*100)+'% complete');
+    return '<div class="orow"><b>'+esc(p.name||'(unnamed)')+'</b><span>'
+      +esc(bits.length?bits.join(' \u00b7 '):'nothing saved')+'</span></div>';}).join('');
+  const held=list.filter(p=>cyOf(p).length).length;
+  dialogConfirm('Remove '+fmtNum(list.length)+' record'+(list.length===1?'':'s'),
+    '<div class="dlg-sub">The renewal schedule does not carry these, so nothing will bring them back. This cannot be undone.</div>'
+    +'<div class="olist">'+rows+'</div>'
+    +(held?('<div class="dlg-sub" style="margin-top:9px"><b>'+fmtNum(held)+'</b> of them hold '
+      +(held===1?'a package':'packages')+'. Those go too.</div>'):''),
+    'Remove them',true,async()=>{
+      /* Stop at the first failure rather than carrying on. A partial sweep that
+         reported success would leave the menu disagreeing with the database. */
+      for(let i=0;i<list.length;i++){
+        try{await mpdb.deleteProperty(list[i].id);}
+        catch(e){setStatus('');saveFailedModal(e);openMenu();return;}
+      }
+      setStatus('Removed '+fmtNum(list.length)+' record'+(list.length===1?'':'s')+' the schedule does not carry.');
+      openMenu();
+    });
+}
 async function openHapProperty(code){
   const p=hapProperties().find(x=>x.code===code);
   if(!p)return;
@@ -3523,7 +3564,14 @@ function renderMenu(){
     /* Two headings for one idea, back to back, is how it read before: the
        band's own "Not in the schedule" followed by this one. It appears only
        where it separates two populations. */
-    +((_or.length&&_banded.length)?'<div class="mgroup">Not in the renewal schedule</div>':'')
+    /* Named whenever it has members, because the heading now carries the only
+       control that removes them. Sweeping is offered HERE and nowhere else:
+       the group above is IN the schedule and merely has nothing ahead of it,
+       so a sweep that took both would delete live properties. */
+    +(_or.length?('<div class="mgroup"><span>Not in the renewal schedule</span>'
+      +(DEV_PURGE?('<button class="txtbtn del" id="orphPurge">Remove '
+        +(_or.length===1?'this record':'these '+fmtNum(_or.length)+' records')+'</button>'):'')
+      +'</div>'):'')
     +_or.map(p=>card(p,'none')).join('');
   const _body=(_liveN?(_liveHd+'<div class="mgrid rows live">'+_liveHtml+'</div>'):'')
     +(_restN?(_restHd+'<div class="mgrid rows">'+_cols+_restHtml+'</div>'):'');
@@ -3536,6 +3584,7 @@ function renderMenu(){
   /* No e.stopPropagation(): the two buttons are siblings, and adding one would
      be a lie about the structure. */
   document.querySelectorAll('[data-pact]').forEach(b=>b.onclick=()=>primaryActionClick(b.getAttribute('data-pact')));
+  if(el('orphPurge'))el('orphPurge').onclick=()=>purgeOrphans(_or);
   /* Wired here rather than in boot(): the rail is rebuilt on every render, so a
      one-time wiring would go stale on the first click. Clearing the search is
      deliberate — search forces the All view, and a stale query would silently
