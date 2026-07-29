@@ -13,7 +13,7 @@ const G=require(D+'gen.js');
    DecompressionStream, Blob and atob, all of which node has had since 18. */
 new Function('window',fs.readFileSync(D+'xlsx.js','utf8'))(global.window);
 
-const MIN_CHECKS=62;                 // the count this file is known to run to the end
+const MIN_CHECKS=72;                 // the count this file is known to run to the end
 let n=0,fails=0,verdict=null;
 const BAR='═'.repeat(68);
 function fail(msg,err){
@@ -279,6 +279,27 @@ function record(extra){
      fullCalcOnLoad only helps a reader who opens it in Excel. And the SAFMR
      column printed 4413.3333333333335 because the app stores the ceiling and the
      column wanted the base. */
+  /* ── one unit-type label, one function ────────────────────────────────────
+     The rent schedule built its label with gen.js's utype(), which appends the
+     designation the way the executed copies write it ("1 BR E"). The workbook
+     built its own, `br + '/' + ba`, and so dropped it: Morningside Court's two
+     one-bedroom types print as "1 BR / 1 BA S" and "1 BR / 1 BA Large" on the
+     schedule and as "1BR/1BA" twice in the workbook beside it — two different
+     unit types at two different rents wearing one label. Two callers formatting
+     one field two ways is how a package comes to contradict itself, so the
+     function is exported and there is now one. */
+  console.log('\n─ the unit-type label, shared by both documents ─');
+  { const ut=window.RCSGen.utype;
+    T('the label function is exported',typeof ut==='function');
+    eq('a designation is kept',ut('1BR','1BA','Large'),'1 BR / 1 BA Large');
+    eq('and spacing is normalised',ut('1BR','1BA',''),'1 BR / 1 BA');
+    eq('a type with no bathroom still reads',ut('1BR','',''),'1 BR');
+    eq('and one with no bedroom count does too',ut('','1BA',''),'1 BA');
+    /* The designation is free text, not a code, so nothing may be dropped for
+       being unrecognised: Lansing prices "with patio" separately. */
+    eq('a free-text designation survives whole',ut('3BR','1.5BA','with patio'),'3 BR / 1.5 BA with patio');
+    eq('and an empty type stays empty',ut('','',''),''); }
+
   console.log('\n─ the analysis workbook ─');
   { const wbBytes=await window.RCSXlsx.rentAnalysis({propertyName:'Test Gardens',apprFirm:'Belfry Valuation, LLC',
       rows:[{type:'1BR/1BA',units:90,cur:1368,pro:2000,ua:70,safmr150:2250},

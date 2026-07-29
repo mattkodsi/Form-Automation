@@ -12,6 +12,20 @@
      block: it should read the way the person signs it, not the way we would
      phrase it. Four properties in wave 1 printed the inserted word. */
   const sigTitle=(t,p)=>{t=String(t||'').trim();p=String(p||'').trim();if(t&&p)return t+' of '+p;return t||p||'';};
+  /* Column 1 of Part A, and the same string the Rent Analysis workbook labels its
+     rows with. The designation rides on the end, the way the executed copies
+     write it ("1 BR E"). Without it a property whose elderly and family rows
+     carry different rents generated two rows that read identically.
+
+     It lives out here, and is exported, because the workbook was building its
+     own label - `br + '/' + ba` in app.js's buildRentAnalysisBytes - and so
+     dropped the designation and the spacing both. Morningside Court's two
+     one-bedroom types print as "1 BR / 1 BA S" and "1 BR / 1 BA Large" on the
+     rent schedule and as "1BR/1BA" twice in the workbook beside it, which is
+     the very fault the paragraph above was written about, reappearing in the
+     other document. Two callers formatting the same field two ways is how that
+     happens, so now there is one. */
+  const utype=(br,ba,dg)=>{const b=String(br||'').replace(/(\d+)\s*BR/i,'$1 BR').replace(/^\s*\/?\s*$/,'').trim();const a=String(ba||'').replace(/(\d+(?:\.\d+)?)\s*BA/i,'$1 BA').trim();const t=(b&&a)?(b+' / '+a):(b||a);const d=String(dg||'').trim();return t&&d?(t+' '+d):t;};
 
 /* Dates are stamped in New York, not UTC. toISOString() rolls over at 7 or 8pm
    Eastern, so a package generated in the evening was dated tomorrow — and the
@@ -254,12 +268,6 @@ const addrLine=(street,city,state,zip)=>{
     const _dei=_toISO(_de);
     T(1,g('property.name')); T(2,g('property.fha')); T(3,dfmt(_dei));
     { const rp=String(_dei).slice(0,10).split('-'); if(rp.length===3){ T(4,rp[1]); T(5,rp[2]); T(6,rp[0]); } }
-    /* The designation rides on the end of Column 1, the way the executed copies
-       write it ("1 BR E"). Without it a property whose elderly and family rows
-       carry different rents generated two rows that read identically. */
-    /* The third part is free text now, so this needs no new logic — it already
-       appends whatever string it is handed. Only its source changed. */
-    const utype=(br,ba,dg)=>{const b=String(br||'').replace(/(\d+)\s*BR/i,'$1 BR').replace(/^\s*\/?\s*$/,'').trim();const a=String(ba||'').replace(/(\d+(?:\.\d+)?)\s*BA/i,'$1 BA').trim();const t=(b&&a)?(b+' / '+a):(b||a);const d=String(dg||'').trim();return t&&d?(t+' '+d):t;};
     // Part A layout: Section 8 rev rows, then a full-width "Non- Section 8
     // Rents" banner + the non-Section-8 rows, then a blank spacer row + the
     // non-revenue rows. Over 11 rows: drop the spacer first, then the
@@ -637,7 +645,7 @@ const addrLine=(street,city,state,zip)=>{
     return await doc.save({objectsPerTick:Infinity});
   }
 
-  const API={resolve,coverLetter,ownerLetter,tenantNotice,fillChecklist,fillRentSchedule,ocafWorksheet,exhibitA,uafCert,dsEvidence,uaTenantNotice,tenantCommentCert,ocafCalcRec,uafCalcRec};
+  const API={resolve,utype,coverLetter,ownerLetter,tenantNotice,fillChecklist,fillRentSchedule,ocafWorksheet,exhibitA,uafCert,dsEvidence,uaTenantNotice,tenantCommentCert,ocafCalcRec,uafCalcRec};
   if(typeof module!=='undefined') module.exports=API;
   if(typeof window!=='undefined') window.RCSGen=API;
 })();
