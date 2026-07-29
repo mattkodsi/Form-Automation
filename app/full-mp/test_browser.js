@@ -35,7 +35,7 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=295;   // 2026-07-28: +19 — the primary action, pressed on a real card.
+const MIN_CHECKS=292;   // 2026-07-29: -3 — the rail's eight rows became the strip's five figures.
                        // 2026-07-28: +35 — the home page's filter rail, driven by real clicks.
                        // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
                        // pristine (three seeds, two checks each). 2026-07-27: the unit-type cell
@@ -1866,6 +1866,7 @@ const FULL=process.argv.includes('--full');
           buttons:card.querySelectorAll('button').length,
           nested:!!card.querySelector('button button'),
           label:(card.querySelector('[data-pact]')||{}).textContent||'',
+          prog:(card.querySelector('.pc-prog')||{}).textContent||'',
           body:!!card.querySelector('.pc-body'),
           tag:card.tagName}:{found:0};`);
       T('the tracker property has a card',st.found===1);
@@ -1875,7 +1876,10 @@ const FULL=process.argv.includes('--full');
          string and is a different tree in the browser. */
       eq('and neither is inside the other',await c.eval('return document.querySelector("#menuGrid .pcard button button")===null'),true);
       T('the card body is its own button',st.body);
-      eq('the action names the year and program the tracker gave',st.label,'Start 2030 OCAF');
+      /* In the ledger the programme is a column of its own, so the action names
+         the verb and the year and stops repeating the header beside it. */
+      eq('the action names the verb and the year',st.label,'Start 2030');
+      eq('and the programme is the column it is headed with',st.prog,'OCAF');
 
       /* Both halves must be tab-reachable — that is the reason for two siblings
          rather than a span with a click handler. */
@@ -1908,15 +1912,16 @@ const FULL=process.argv.includes('--full');
       const cy=await c.eval('return (window.__t.__cycles()||[]).map(c=>({e:c.effective_date,p:c.programs}))');
       eq('confirming creates the package the tracker described',cy,[{e:'2030-01-01',p:['ocaf']}]);
 
-      /* Starting it moves the property out of Coming up and into In flight —
-         the rail's whole argument, seen from the other end. */
-      await c.eval('window.__t.openMenu();window.__t.__setMenuView("coming");return 1');await sleep(300);
-      T('the property has left the view it was waiting in',
-        !(await c.eval('return /Selftest Gardens/.test(document.getElementById("menuGrid").innerHTML)')));
-      await c.eval('window.__t.__setMenuView("flight");return 1');await sleep(200);
-      eq('and its card, now in flight, offers to continue it',
+      /* Starting a package is not a deadline, so it moves nothing. The rail
+         lifted the property out of "Needs you" the moment a draft existed,
+         which is how a generated-but-rejected package read as finished. The
+         band is when it is owed; the button is how far along it is. */
+      await c.eval('window.__t.openMenu();window.__t.__setMenuView("later");return 1');await sleep(300);
+      T('the property stays in the band its deadline puts it in',
+        await c.eval('return /Selftest Gardens/.test(document.getElementById("menuGrid").innerHTML)'));
+      eq('and its row now offers to continue what was started',
         await c.eval(`const card=[...document.querySelectorAll('#menuGrid .pcard')].find(x=>/Selftest Gardens/.test(x.textContent));
-          return card?((card.querySelector('[data-pact]')||{}).textContent||''):'(no card)';`),'Continue 2030 OCAF');
+          return card?((card.querySelector('[data-pact]')||{}).textContent||''):'(no card)';`),'Continue 2030');
 
       /* Continue goes all the way through: record, then the package the tracker
          named, then the form open on it. Checking only the label would leave the
@@ -1958,26 +1963,30 @@ const FULL=process.argv.includes('--full');
       const us=n=>{const d=new Date(T0+n*DAY);return (d.getUTCMonth()+1)+'/'+d.getUTCDate()+'/'+d.getUTCFullYear();};
       const trow=(code,name,type,dueIn)=>({'Property Code':code,'Property Name':name,'Portfolio Mgr':'Claire Beatty',
         'Increase Type':type,'Rent Increase':us(dueIn+122),'Due to HUD':us(dueIn)});
-      const rows=[trow('B001','Rail Overdue','RCS',-10),trow('B002','Rail Now','OCAF',10),
+      /* No overdue row on purpose: one band must come out empty, because a
+         band that empties has to stay pressable and say so rather than
+         vanishing from the strip. Selftest Gardens has no row here, so it
+         falls out of the schedule and fills the undated band. */
+      const rows=[trow('B002','Rail Now','OCAF',10),
                   trow('B003','Rail Soon','OCAF',60),trow('B004','Rail Later','OCAF',200)];
       await c.eval('await window.__t.__seedHap('+JSON.stringify(rows)+');window.__t.openMenu();return 1');
       await sleep(250);
-      const railN=await c.eval('return document.querySelectorAll("#menuRail [data-view]").length');
-      eq('the rail draws six views and a Programs group of two',railN,8);
-      T('nothing undefined reached the rail',
-        !(await c.eval('return /undefined/.test(document.getElementById("menuRail").innerHTML)')));
+      const railN=await c.eval('return document.querySelectorAll("#menuCount [data-view]").length');
+      eq('the strip draws four bands and their total',railN,5);
+      T('nothing undefined reached the strip',
+        !(await c.eval('return /undefined/.test(document.getElementById("menuCount").innerHTML)')));
 
       /* Clicking each row: the click reaches the state, exactly one row reads as
          current, and the badge on it equals the cards actually drawn. The last
          is the check a pure unit test cannot make — it is two renderers being
          asked the same question. */
-      const views=await c.eval('return [...document.querySelectorAll("#menuRail [data-view]")].map(b=>b.getAttribute("data-view"))');
+      const views=await c.eval('return [...document.querySelectorAll("#menuCount [data-view]")].map(b=>b.getAttribute("data-view"))');
       for(const v of views){
-        await c.eval('document.querySelector(\'#menuRail [data-view="'+v+'"]\').click();return 1');
+        await c.eval('document.querySelector(\'#menuCount [data-view="'+v+'"]\').click();return 1');
         await sleep(140);
         const st=await c.eval('return {view:window.__t.__menuView(),'
-          +'on:document.querySelectorAll("#menuRail .mr-row.on").length,'
-          +'badge:+(document.querySelector(\'#menuRail [data-view="'+v+'"] .mr-n\').textContent||0),'
+          +'on:document.querySelectorAll("#menuCount .fig.on").length,'
+          +'badge:+(document.querySelector(\'#menuCount [data-view="'+v+'"] b\').textContent||0),'
           +'cards:document.querySelectorAll("#menuGrid .pcard:not(.newcard)").length,'
           +'lede:(document.getElementById("menuLede").textContent||"").length};');
         eq('clicking "'+v+'" selects it, alone',[st.view,st.on],[v,1]);
@@ -1988,10 +1997,28 @@ const FULL=process.argv.includes('--full');
       /* A zero-count row stays on the rail, dimmed and still clickable: a rail
          whose rows come and go means the row you clicked yesterday is not where
          it was, and "Needs you · 0" is the best news the page can give. */
-      await c.eval('document.querySelector(\'#menuRail [data-view="done"]\').click();return 1');
+      /* Disjointness, read off the rendered page rather than off the counts
+         object: four bands and their sum, and the arithmetic has to hold in the
+         DOM the user is actually looking at. */
+      const sum=await c.eval(`const b={};[...document.querySelectorAll('#menuCount [data-view]')]
+        .forEach(x=>b[x.getAttribute('data-view')]=+x.querySelector('b').textContent);
+        return {parts:b.past+b.now+b.later+b.undated,total:b.all};`);
+      eq('the four bands sum to the total, on screen',sum.parts,sum.total);
+      /* A heading asserts a fact, so only its members may sit under it. "Due to
+         HUD by Jul 31" stood over a row due Aug 1 — the band is a window, so
+         the heading names the window. */
+      await c.eval('document.querySelector(\'#menuCount [data-view="all"]\').click();return 1');
+      await sleep(200);
+      T('the live panel heading names the window it holds, not one date inside it',
+        await c.eval('return /Due within 30 days/.test((document.querySelector("#menuGrid .zhead h3")||{}).textContent||"")'));
+
+      const zv=await c.eval('return ([...document.querySelectorAll("#menuCount [data-view]")]'
+        +'.find(b=>+b.querySelector("b").textContent===0)||{getAttribute:()=>""}).getAttribute("data-view")');
+      T('the fixture leaves a band empty, so the empty state can be pressed',!!zv);
+      await c.eval('document.querySelector(\'#menuCount [data-view="'+zv+'"]\').click();return 1');
       await sleep(140);
-      const z=await c.eval('return {zero:document.querySelector(\'#menuRail [data-view="done"]\').classList.contains("zero"),'
-        +'on:document.querySelector(\'#menuRail [data-view="done"]\').classList.contains("on"),'
+      const z=await c.eval('return {zero:document.querySelector(\'#menuCount [data-view="'+zv+'"]\').classList.contains("zero"),'
+        +'on:document.querySelector(\'#menuCount [data-view="'+zv+'"]\').classList.contains("on"),'
         +'empty:document.querySelectorAll("#menuGrid .mempty").length,'
         +'clear:/Clear search/.test(document.getElementById("menuGrid").innerHTML),'
         +'cards:document.querySelectorAll("#menuGrid .pcard:not(.newcard)").length};');
@@ -2002,27 +2029,35 @@ const FULL=process.argv.includes('--full');
 
       /* Search is a find-within. It forces All so a name is never hidden by the
          filter, without overwriting the view you were in. */
-      await c.eval('document.querySelector(\'#menuRail [data-view="coming"]\').click();return 1');
+      await c.eval('document.querySelector(\'#menuCount [data-view="later"]\').click();return 1');
       await sleep(140);
       await c.eval('const s=document.getElementById("menuSearch");s.focus();s.value="";return 1');
-      await c.type('Overdue');
+      await c.type('Rail Now');
       await sleep(220);
       const s1=await c.eval('return {view:window.__t.__menuView(),'
-        +'found:/Rail Overdue/.test(document.getElementById("menuGrid").innerHTML)};');
+        +'found:/Rail Now/.test(document.getElementById("menuGrid").innerHTML)};');
       T('typing a name finds a property outside the current view',s1.found);
-      eq('and leaves the chosen view alone',s1.view,'coming');
+      eq('and leaves the chosen view alone',s1.view,'later');
       await c.eval('const s=document.getElementById("menuSearch");s.value="";s.dispatchEvent(new Event("input"));return 1');
       await sleep(200);
       const s2=await c.eval('return {view:window.__t.__menuView(),'
-        +'on:(document.querySelector("#menuRail .mr-row.on")||{}).getAttribute("data-view")};');
-      eq('clearing the box returns you where you were',[s2.view,s2.on],['coming','coming']);
+        +'on:(document.querySelector("#menuCount .fig.on")||{}).getAttribute("data-view")};');
+      eq('clearing the box returns you where you were',[s2.view,s2.on],['later','later']);
 
-      /* Mine and All are a different question, so the rail re-resolves rather
-         than stranding you in a view emptied by the lens. */
-      await c.eval('document.querySelector(\'[data-lens="all"]\').click();return 1');
-      await sleep(200);
-      eq('switching the lens re-resolves the view',
-        await c.eval('return window.__t.__menuView()'),'needs');
+      /* Whose portfolio you are reading is one control now, and changing it
+         releases the band — the bands are not the same shape for one manager
+         as for everyone, so a chosen band would sit on a bucket that emptied
+         only because the scope moved. */
+      await c.eval('document.getElementById("menuWho").click();return 1');
+      await sleep(250);
+      T('the name in the masthead opens the portfolio picker',
+        await c.eval('return !!document.querySelector(\'[data-who="*"]\')'));
+      await c.eval('document.querySelector(\'[data-who="*"]\').click();return 1');
+      await sleep(300);
+      eq('choosing Everyone releases the chosen band',
+        await c.eval('return window.__t.__menuView()'),'all');
+      T('and the masthead says which portfolio is on screen',
+        await c.eval('return /All portfolios/.test(document.getElementById("menuWho").textContent)'));
     }
 
     console.log('\n── the console stayed quiet ───────────────────────────');

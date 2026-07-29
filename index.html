@@ -658,53 +658,66 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
    built for real. Scoped to #viewMenu: the form keeps its own look until
    that redesign is signed off separately.
    ================================================================== */
-#viewMenu{--paper:#d8dde4;--card:#fff;--sunk:#eef1f5;
+#viewMenu{--paper:#d8dde4;--card:#fff;--sunk:#eef1f5;--r-ctl:4px;--r-card:8px;
   --i1:#101822;--i2:#41505f;--i3:#556270;--i4:#636c77;
   --ln:#c2cbd6;--ln-soft:#e4e9ef;
   --stamp:#9c2b18;--ledger:#1f5480;--filed:#2f6a45;
   background:var(--paper);min-height:100vh;
   font-family:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,sans-serif;
   font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
-#viewMenu .mtop{background:#101d2b;border-bottom:0;height:60px}
+/* The masthead the mockup drew: no mark, the two names on one baseline, and
+   plain links at 40px rather than a bordered chip beside two bare words. */
+#viewMenu .mtop{background:#101d2b;border-bottom:0;height:60px;padding:0 40px}
+#viewMenu .brand{align-items:baseline;gap:11px}
 #viewMenu .bname{font-weight:600;font-size:15px;letter-spacing:-.005em}
-#viewMenu .btag{letter-spacing:.17em;font-weight:600;font-size:10px}
+#viewMenu .btag{letter-spacing:.17em;font-weight:600;font-size:10px;margin-top:0;
+  color:rgba(255,255,255,.55)}
+#viewMenu .mtoprightwrap{gap:2px}
+#viewMenu .backlink{font-size:13px;font-weight:400;color:#fff;opacity:.75;
+  min-height:40px;padding:0 12px;border-radius:var(--r-ctl)}
+#viewMenu .backlink:hover{opacity:1;background:rgba(255,255,255,.08);color:#fff}
+/* Which portfolio you are reading is one question, so it gets one control.
+   Mine/All asked it a second time next to the search box and answered it in a
+   different vocabulary. */
+#viewMenu .whochip{background:none;border-radius:var(--r-ctl);padding:0 12px;font-weight:600;opacity:1}
+#viewMenu .whochip:hover{background:rgba(255,255,255,.08)}
+#viewMenu .whochip.unset{border:1px dashed rgba(255,255,255,.45);opacity:.85}
+/* the finder sits on the title's baseline, and the page breathes below it */
+#viewMenu .mhead{align-items:flex-end;gap:48px;margin-bottom:52px}
+#viewMenu .searchbox{flex:0 0 300px}
+#viewMenu .searchbox svg{stroke:var(--i4);left:11px}
+#viewMenu .searchbox input{width:100%;background:var(--sunk);border:1px solid var(--ln);
+  border-radius:var(--r-ctl);padding:11px 12px 11px 33px;font-size:13px;color:var(--i1)}
+#viewMenu .searchbox input:focus{border-color:var(--ledger);background:var(--card);box-shadow:none}
+#viewMenu .searchbox input::placeholder{color:var(--i4)}
 #viewMenu .mwrap{max-width:1480px;padding:36px 40px 80px}
 #viewMenu .mtitle{font-size:22px;font-weight:600;color:var(--i1);letter-spacing:-.015em}
 #viewMenu .mtitle .eyebrow{display:block;font-size:10.5px;font-weight:600;
   letter-spacing:.13em;text-transform:uppercase;color:var(--i3);margin-bottom:5px}
 /* the figures line: each carries the left rule in the colour of what it says */
-#viewMenu .msub{display:flex;gap:20px;flex-wrap:wrap;margin-top:14px;
-  font-size:13px;color:var(--i3)}
-#viewMenu .msub span{border-left:2px solid var(--ln);padding-left:9px}
-#viewMenu .msub span.now{border-left-color:var(--stamp)}
-#viewMenu .msub span.soon{border-left-color:var(--ledger)}
-#viewMenu .msub span.done{border-left-color:var(--filed)}
-#viewMenu .msub b{color:var(--i1);font-weight:600;font-size:14px}
+#viewMenu .msub{display:flex;gap:4px;flex-wrap:wrap;margin-top:12px;font-size:13px;color:var(--i3)}
+#viewMenu .msub .fig{font:inherit;font-size:13px;color:var(--i3);background:none;border:0;
+  border-left:2px solid var(--ln);border-radius:0;cursor:pointer;
+  display:inline-flex;align-items:baseline;gap:5px;min-height:36px;padding:0 14px 0 9px}
+#viewMenu .msub .fig b{color:var(--i1);font-weight:600;font-size:14px}
+#viewMenu .msub .fig.now{border-left-color:var(--stamp)}
+#viewMenu .msub .fig.soon{border-left-color:var(--ledger)}
+#viewMenu .msub .fig.done{border-left-color:var(--filed)}
+#viewMenu .msub .fig:hover{color:var(--i1);background:rgba(255,255,255,.5)}
+/* Selected is a raised chip, not a hue: on this page a colour means a deadline
+   and which figure you are holding is not one. */
+#viewMenu .msub .fig.on{background:var(--card);border-radius:0 var(--r-ctl) var(--r-ctl) 0;color:var(--i1)}
+#viewMenu .msub .fig.zero{color:var(--i4)}
+#viewMenu .msub .fig.zero b{color:var(--i4);font-weight:500}
 /* the rail stays — it filters, which the mockup had no way to do — but it
    becomes a document on the desk like everything else rather than floating */
-#viewMenu .mbody{gap:24px}
-#viewMenu .rside,#viewMenu .mrail{background:var(--card);border:1px solid var(--ln);
-  border-radius:8px;padding:14px 12px}
-/* An index on a document, not a strip of navy pills. Which filter you are
-   holding is stated in ink and a sunk fill and never in a hue: on this page a
-   colour means a deadline, and the rail carries none. */
-#viewMenu .mr-gt{color:var(--i3);font-weight:600;font-size:10px;letter-spacing:.12em;
-  padding:0 9px;margin-bottom:7px}
-#viewMenu .mr-g+.mr-g{margin-top:18px;padding-top:15px;border-top:1px solid var(--ln-soft)}
-#viewMenu .mr-tot{border-top-color:var(--ln-soft)}
-#viewMenu .mr-row{font-size:13px;font-weight:500;color:var(--i2);border-radius:4px;
-  padding:7px 9px;box-shadow:inset 2px 0 0 transparent}
-#viewMenu .mr-row:hover{background:var(--sunk);color:var(--i1)}
-#viewMenu .mr-row.on{background:var(--sunk);color:var(--i1);font-weight:600;
-  box-shadow:inset 2px 0 0 var(--i1)}
-#viewMenu .mr-row.zero{color:var(--i4);font-weight:400}
-#viewMenu .mr-row.zero.on{color:var(--i1);font-weight:600}
-#viewMenu .mr-n{color:var(--i3);font-weight:500;font-size:12px}
-#viewMenu .mr-row.on .mr-n{color:var(--i1);font-weight:600}
-#viewMenu .mr-row.zero .mr-n{color:var(--i4);font-weight:400}
-/* the one coloured thing in the rail, and it says the same red the page does */
-#viewMenu .mr-late{background:var(--stamp)}
-#viewMenu .mgrid.rows{border-color:var(--ln);border-radius:8px}
+#viewMenu .rside{background:var(--card);border:1px solid var(--ln);border-radius:var(--r-card);padding:14px 12px}
+#viewMenu .mgrid.rows{border-color:var(--ln);border-radius:var(--r-card)}
+/* Three radii in this view and no more: 4 for a control, 8 for a document,
+   999 for a pill. The style guide said so and then eight values shipped. */
+#viewMenu .profchip,#viewMenu .pc-alias,#viewMenu .mempty,
+#viewMenu .pc-body,#viewMenu .pcard.newcard{border-radius:var(--r-ctl)}
+#viewMenu .pc-act .btn{border-radius:var(--r-ctl)}
 #viewMenu .mgrid.rows .mcols{background:var(--sunk);border-bottom:1px solid var(--ln);
   color:var(--i3);letter-spacing:.12em;font-weight:600;font-size:10px}
 #viewMenu .mgrid.rows .mgroup{background:var(--sunk);border-top:1px solid var(--ln);
@@ -733,10 +746,10 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
 #viewMenu .mgrid.rows.live{margin-bottom:44px}
 /* the live row: the name leads and says what the package is, the columns are
    programme, countdown, size, action — as in the mockup */
-#viewMenu .mgrid.rows.live .pcard{grid-template-columns:minmax(0,1fr) 74px 108px 116px 212px;
+#viewMenu .mgrid.rows.live .pcard{grid-template-columns:minmax(0,1fr) 90px 130px 110px 212px;
   padding:0 22px}
-#viewMenu .mgrid.rows.live .pc-body{grid-column:1/5;
-  grid-template-columns:minmax(0,1fr) 74px 108px 116px;padding:16px 0}
+#viewMenu .mgrid.rows.live .pc-body{grid-column:1/5;column-gap:24px;
+  grid-template-columns:minmax(0,1fr) 90px 130px 110px;padding:16px 0}
 /* .pc-units and .pc-prog live inside .pc-foot, so they cannot be placed in the
    row's grid while the footer is a box. display:contents dissolves the box and
    lets each fact take its own column. */
@@ -751,26 +764,36 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
 #viewMenu .mgrid.rows.live .pc-units{grid-column:4;grid-row:1/3;justify-self:end;
   font-size:13px;color:var(--i2);white-space:nowrap}
 #viewMenu .mgrid.rows.live .pc-act{grid-column:5}
+#viewMenu .mgrid.rows.live .pc-act .btn{min-height:40px;padding:0 18px;font-size:13px;
+  font-weight:600;border-radius:var(--r-ctl);background:#101d2b;border-color:#101d2b;
+  letter-spacing:0;text-transform:none}
+#viewMenu .mgrid.rows.live .pc-act .btn:hover:not(:disabled){background:var(--ledger);border-color:var(--ledger)}
+#viewMenu .mgrid.rows.live .pc-act .btn:disabled{background:transparent;border-color:var(--ln);color:var(--i4)}
 /* the ledger row: quiet, and its action is a text affordance not a slab */
 #viewMenu .mgrid.rows:not(.live) .pcard{
-  grid-template-columns:minmax(0,1fr) 110px 130px 150px 90px 90px;padding:0 18px}
+  grid-template-columns:minmax(0,1fr) 110px 150px 150px 90px 104px;padding:0 18px}
 #viewMenu .mgrid.rows:not(.live) .pc-body{grid-column:1/6;
-  grid-template-columns:minmax(0,1fr) 110px 130px 150px 90px}
+  grid-template-columns:minmax(0,1fr) 110px 150px 150px 90px}
 #viewMenu .mgrid.rows:not(.live) .pc-prog{grid-column:2;grid-row:1;justify-self:start}
+#viewMenu .pc-prog{background:none;border-radius:0;padding:0;color:var(--i3);
+  font-size:10.5px;font-weight:600;letter-spacing:.09em}
+#viewMenu .pc-prog.unk{background:none;color:var(--stamp)}
 #viewMenu .mgrid.rows:not(.live) .pc-meta{display:none}
 
 #viewMenu .mgrid.rows:not(.live) .pc-due{grid-column:3;grid-row:1}
+#viewMenu .mgrid.rows:not(.live) .pc-eff{grid-column:4;grid-row:1;font-size:13px;color:var(--i3)}
+#viewMenu .mgrid.rows.live .pc-eff{display:none}
+.pc-eff{font-size:12px;color:var(--muted)}
 #viewMenu .mgrid.rows:not(.live) .pc-units{grid-column:5;grid-row:1;justify-self:end;
   white-space:nowrap}
 #viewMenu .mgrid.rows:not(.live) .pc-act{grid-column:6}
 #viewMenu .mgrid.rows:not(.live) .pc-act .btn{background:none;border:0;color:var(--i3);
   font-weight:600;font-size:12px;padding:0;width:auto}
 #viewMenu .mgrid.rows:not(.live) .pcard:hover .pc-act .btn{color:var(--ledger)}
-#viewMenu .mcols{grid-template-columns:minmax(0,1fr) 110px 130px 150px 90px 90px}
+#viewMenu .mcols{grid-template-columns:minmax(0,1fr) 110px 150px 150px 90px 104px}
 #viewMenu .mcols .r{text-align:right}
 /* the rail goes: its bands are the list's own groups now, and its programme
    cross-cut moves to the search box. */
-#viewMenu .mbody{grid-template-columns:200px minmax(0,1fr);gap:24px}
 #viewMenu .btn.p{background:#101d2b;border-color:#101d2b;font-weight:600}
 #viewMenu .btn.p:hover{background:var(--ledger);border-color:var(--ledger)}
 
@@ -981,40 +1004,12 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
 .nextup .btn{flex:0 0 auto}
 .pc-new{opacity:.72}
 .mgroup{grid-column:1/-1;font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin:14px 0 -4px}
-/* ---- the filter rail: named views, one at a time --------------------- */
 /* minmax(0,1fr) on the second column is load-bearing: without it the auto-fill
    card grid refuses to shrink below its track size and the page scrolls
    sideways. */
-.mbody{display:grid;grid-template-columns:196px minmax(0,1fr);gap:26px;align-items:start}
-/* No tracker, no rail, no gutter for one. */
-.mbody.norail{grid-template-columns:minmax(0,1fr);gap:0}
+.mbody{display:grid;grid-template-columns:minmax(0,1fr);gap:0;align-items:start}
 .mmain{min-width:0}
-.mrail{position:sticky;top:22px;display:flex;flex-direction:column;gap:2px}
-.mr-g+.mr-g{margin-top:16px}
-.mr-gt{font-size:10px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:var(--muted-4);padding:0 10px;margin-bottom:6px}
-.mr-row{display:flex;align-items:center;gap:8px;width:100%;text-align:left;font:inherit;font-size:13px;font-weight:600;color:var(--ink-3);background:none;border:none;border-radius:9px;padding:8px 10px;cursor:pointer}
-.mr-row:hover{background:#eef2f8;color:var(--navy)}
-.mr-row.on{background:var(--navy);color:var(--surface)}
-.mr-row.zero{color:#a8b0c0}
-.mr-row.zero.on{color:var(--surface)}
-.mr-t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.mr-n{font-size:11.5px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--muted)}
-.mr-row.on .mr-n{color:var(--navy-pale)}
-.mr-row.zero .mr-n{color:#c2c9d6}
-.mr-late{width:6px;height:6px;border-radius:50%;background:var(--danger);flex:0 0 auto}
-/* Five states and their sum are not six peers. The rail's counts are only
-   worth reading because the five add up to All properties, so the total is
-   ruled off the way a total is on paper. */
-.mr-tot{margin-top:7px;padding-top:7px;border-top:1px solid var(--line-2)}
 .mlede{font-size:12px;color:var(--muted);margin:-4px 0 14px;line-height:1.5}
-@media(max-width:900px){
- .mbody{grid-template-columns:minmax(0,1fr)}
- .mrail{position:static;flex-direction:row;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:6px}
- .mr-g{display:flex;gap:6px}.mr-g+.mr-g{margin-top:0}.mr-gt{display:none}
- #viewMenu .mr-g+.mr-g,#viewMenu .mr-tot{margin-top:0;padding-top:0;border-top:0}
- .mr-tot{display:contents}
- .mr-row{width:auto;white-space:nowrap;border:1px solid var(--line-2);background:var(--surface)}
-}
 .ns8flag{display:inline-flex;align-items:center;gap:8px;cursor:pointer;line-height:1.35;vertical-align:middle} .ns8flag input{accent-color:var(--navy);width:14px;height:14px;margin:0;flex:0 0 auto} .partd .rgh{margin-top:12px}
 .safmrhead{display:inline-flex;align-items:center;gap:6px} .rgh .hudbtn,.ocpull .hudbtn{font-size:9.5px;padding:2px 7px;letter-spacing:0;text-transform:none;font-weight:700;white-space:nowrap;color:var(--prov-over)} .rgh .hudbtn.off,.ocpull .hudbtn.off{opacity:.55;cursor:default;color:var(--muted-2);border-color:#d7deea;background:#f1f4f9} .rgh .hudbtn.done,.ocpull .hudbtn.done{color:var(--ok);border-color:var(--ok-line);background:var(--ok-tint)}
 </style></head>
@@ -1033,15 +1028,13 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
  </div>
  <!-- ===================== PROPERTY MENU ===================== -->
  <div id="viewMenu" style="display:none">
-   <div class="mtop"><div class="brand"><span class="mark"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M4 11 12 4l8 7" stroke="var(--navy)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 10v9h12v-9" stroke="var(--navy)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><div class="bname">Section 8 Rent Adjustments</div><div class="btag">Related Affordable</div></div></div><div class="mtoprightwrap"><button class="backlink mtopright whochip" id="menuWho"></button><button class="backlink mtopright" id="bContacts">Contacts</button><button class="backlink mtopright" id="bSignOut">Sign out</button></div></div>
+   <div class="mtop"><div class="brand"><div class="bname">Section 8 Rent Adjustments</div><div class="btag">Related Affordable</div></div><div class="mtoprightwrap"><button class="backlink mtopright" id="bContacts">Contacts</button><button class="backlink mtopright" id="bNewProperty">New property</button><button class="backlink mtopright whochip" id="menuWho"></button><button class="backlink mtopright" id="bSignOut">Sign out</button></div></div>
    <div class="mwrap">
      <div class="mhead">
        <div><h2 class="mtitle"><span class="eyebrow" id="menuEyebrow">Portfolio</span>Renewals</h2><div class="msub" id="menuCount"></div></div>
-       <div class="mtools"><div class="segmented" id="lensSeg"><button class="seg-b on" data-lens="mine">Mine</button><button class="seg-b" data-lens="all">All</button></div><div class="searchbox"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted-4)" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2" stroke-linecap="round"/></svg><input id="menuSearch" placeholder="Search by name or FHA #" autocomplete="off"></div><button class="btn p" id="bNewProperty">+ New property</button></div>
+       <div class="mtools"><div class="searchbox"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4" stroke-linecap="round"/></svg><input id="menuSearch" placeholder="Find a property" autocomplete="off"></div></div>
      </div>
      <div class="mbody" id="menuBody">
-       <nav class="mrail" id="menuRail"></nav>
-       
        <div class="mmain"><div class="mlede" id="menuLede"></div><div class="mgrid rows" id="menuGrid"></div></div>
      </div>
    </div>
@@ -5757,7 +5750,11 @@ function hapProperties(){
       id:pid||('hap:'+code), code:code, hap:true, started:!!pid,
       name:(rec&&rec.name)||any.name, alias:(rec&&rec.alias)||'',
       fha:(rec&&rec.fha)||'—', city_state:(rec&&rec.city_state)||'',
-      total_units:(rec&&rec.total_units)||0, unit_types:(rec&&rec.unit_types)||0,
+      /* The schedule carries a unit count, so a property the app has never
+         opened still knows how big the job is. Reading only the record printed
+         "0 units" on every unstarted row — a figure, and wrong. */
+      total_units:(rec&&rec.total_units)||(+String(any.units||'').replace(/[^0-9]/g,'')||0),
+      unit_types:(rec&&rec.unit_types)||0,
       completeness:rec?rec.completeness:0, updated_at:(rec&&rec.updated_at)||'',
       /* Carried, not recomputed. Without these two the profile chip and the
          card's hover caption were dead on every scheduled property — the chip
@@ -5834,9 +5831,10 @@ function actionReason(a){
    message about rings. A record with no tracker row gets no button at all: it
    already sits under its own "Not in the renewal schedule" heading, and its
    action is #bNewCycle on the launcher. */
-function actionBtnHtml(p){
+function actionBtnHtml(p,short){
   const a=p.hap&&p.action;if(!a||a.kind==='none')return '';
-  const lab=actionLabel(a);if(!lab)return '';
+  let lab=actionLabel(a);if(!lab)return '';
+  if(short){const m=lab.match(/^(\S+)\s+(\d{4})\b/);lab=m?(m[1]+' '+m[2]):lab.split(' ')[0];}
   const why=actionReason(a);
   /* The reason hangs on the WRAPPER. A disabled <button> swallows its own
      tooltip in Firefox and Safari, and "disabled, with a reason" is the one
@@ -5846,22 +5844,25 @@ function actionBtnHtml(p){
     +(a.disabled?' disabled':'')+'>'+esc(lab)+'</button></div>';
 }
 
-/* ---- the filter rail: named views over one portfolio ------------------
-   Six rows, then a Programs group. Every property lands in exactly ONE of the
-   first five, so the counts sum to "All properties" — which is why viewOf()
-   below is evaluated once per property per render and its answer stored, rather
-   than the predicate being asked again by whatever needs it next. A rail whose
-   badge says 6 above a grid of 5 cards is the same defect as a ring and a
-   document list disagreeing about one number. */
+/* ---- the figures line IS the filter -------------------------------------
+   One partition of the portfolio, stated once. The rail asked the same
+   question in a second vocabulary and got a different answer: "Needs you"
+   welded past-their-date onto due-within-30 and then subtracted whatever had
+   a package open, so on a portfolio where an overdue row means the package
+   already went in, its headline counted 20 finished properties as work — and
+   that view opened by default.
+
+   These five are the bands the list is grouped by, so every figure is
+   countable on the page beneath it, they are disjoint, and they sum to the
+   total. Chronological order, no editorial: the strip reports when things are
+   due, it does not rank them by how much they should worry you. */
 const MENU_VIEWS=[
- {k:'needs',  t:'Needs you'},
- {k:'coming', t:'Coming up'},
- {k:'flight', t:'In flight'},
- {k:'done',   t:'Done for the year'},
- {k:'undated',t:'Undated'},
- {k:'all',    t:'All properties'},
+ {k:'past',   t:'past their date',     c:''},
+ {k:'now',    t:'due within 30 days',  c:'now'},
+ {k:'later',  t:'later',               c:'soon'},
+ {k:'undated',t:'not in the schedule', c:''},
+ {k:'all',    t:'properties',          c:''},
 ];
-const MENU_PROG_VIEWS=[{k:'rcs',t:'RCS years'},{k:'ocaf',t:'OCAF years'}];
 function _bandNow(){return (window.RCSHap&&window.RCSHap._bandDays&&window.RCSHap._bandDays.now)||30;}
 /* The words live here, not in a click handler (FORM-RULES 17): the lede under
    the heading and the copy shown when a view is empty are two halves of one
@@ -5871,26 +5872,23 @@ function _bandNow(){return (window.RCSHap&&window.RCSHap._bandDays&&window.RCSHa
 function menuViewCopy(k){
   const N=_bandNow();
   const M={
-   needs:{lede:'Due in the next '+N+' days, or already late — and no package started yet. Earliest first.',
-          empty:'Nothing is due in the next '+N+' days. Coming up has what is next.'},
-   coming:{lede:'Due more than '+N+' days out, with no package started yet. Earliest first.',
-          empty:'Nothing further out is waiting on you.'},
-   flight:{lede:'A package is already open for the renewal that is next due. Earliest first.',
-          empty:'No package is open. Start one from Needs you or Coming up.'},
-   done:{lede:'This renewal’s package has been generated. Nothing further is owed until the next one comes due.',
-          empty:'No package has been generated for a current renewal yet.'},
+   now:{lede:'Due in the next '+N+' days. Earliest first.',
+        empty:'Nothing is due in the next '+N+' days.'},
+   /* Not an alarm, and the lede says why. The tracker carries the deadline,
+      not the filing, so a date in the past means the package went in and the
+      row has not caught up. */
+   past:{lede:'The deadline has passed. The schedule records the deadline, not the filing, so a package has usually already gone in.',
+        empty:'No deadline has passed.'},
+   later:{lede:'Due more than '+N+' days out. Earliest first.',
+        empty:'Nothing further out is waiting.'},
    /* Three reasons, not two. The schedule can end on the contract's own expiry,
       it can simply stop, or the record can carry no tracker code at all — and a
       lede that named only the last two read as though an expiring contract were
       a data problem. */
    undated:{lede:'No renewal scheduled — the schedule ends at a contract expiry, it stops without one, or the record is not in the schedule at all.',
-          empty:'Every property has a date.'},
+        empty:'Every property has a date.'},
    all:{lede:'Every property: those in the schedule by deadline, then the records the schedule does not carry.',
-          empty:'No properties yet.'},
-   rcs:{lede:'Properties whose next renewal sets rents from a market study. Earliest first.',
-          empty:'No market resets are next up.'},
-   ocaf:{lede:'Properties whose next renewal applies HUD’s published operating-cost factor. Earliest first.',
-          empty:'No factor adjustments are next up.'},
+        empty:'No properties yet.'},
   };
   return M[k]||M.all;
 }
@@ -5910,34 +5908,27 @@ function menuViewCopy(k){
    effective whenever due is missing, so an undated property is one with no row
    to be about — awaiting, a gap, or an expiring contract — and none of those can
    have a matching package. */
-function viewOf(p){
-  if(!p.hap)return 'undated';                          // no tracker code: no deadline to have
-  const a=p.action||{};
-  if(a.kind==='continue')return 'flight';
-  if(a.kind==='view')return 'done';
-  if(!p.deadline)return 'undated';
-  return (p.band==='overdue'||p.band==='now')?'needs':'coming';
+const MONTHS=['January','February','March','April','May','June','July',
+              'August','September','October','November','December'];
+/* The strip's buckets and the list's group headings are the same function, so
+   they cannot disagree. When they were two functions they did: the strip said
+   one property was undated while the rail said two. */
+function bandOf(p){
+  const d=p.hap?p.days:null;
+  if(!p.hap||d==null||!p.deadline)return {view:'undated',rank:9,key:'none',label:'Not in the schedule'};
+  if(d>=0&&d<=30)return {view:'now', rank:0,key:'now', label:'Due within 30 days'};
+  if(d<0)        return {view:'past',rank:1,key:'past',label:'Past their date'};
+  const iso=String(p.deadline).slice(0,10).split('-');
+  return {view:'later',rank:2,key:'m'+iso[0]+iso[1],label:MONTHS[(+iso[1])-1]+' '+iso[0]};
 }
-function railHtml(counts,late,view){
-  const row=v=>{const C=menuViewCopy(v.k);
-    return '<button class="mr-row'+(v.k===view?' on':'')+(counts[v.k]?'':' zero')+'" data-view="'+v.k+'"'
-    +(v.k===view?' aria-current="true"':'')+' title="'+esc(C.lede)+'">'
-    +'<span class="mr-t">'+esc(v.t)+'</span>'
-    /* Only In flight can carry this. The partition puts local progress above the
-       deadline, so a package that is late but started sits here rather than in
-       Needs you — without the dot it would be invisible. Coming up cannot hold a
-       late one by construction, and Done owes nothing. */
-    +(late[v.k]?'<span class="mr-late" title="'+late[v.k]+' of these is already late or due within '+_bandNow()+' days"></span>':'')
-    +'<span class="mr-n">'+counts[v.k]+'</span></button>';};
-  /* Both groups are titled, because an untitled list above a titled one reads
-     as a preamble rather than as the other half of a pair. And All properties
-     leaves the run of states for a block of its own: it is not a sixth state,
-     it is what the five come to, and the rail is only trustworthy while that
-     arithmetic is visible. */
-  const states=MENU_VIEWS.filter(v=>v.k!=='all'),total=MENU_VIEWS.filter(v=>v.k==='all');
-  return '<div class="mr-g"><div class="mr-gt">Status</div>'+states.map(row).join('')
-    +'<div class="mr-tot">'+total.map(row).join('')+'</div></div>'
-    +'<div class="mr-g"><div class="mr-gt">Programs</div>'+MENU_PROG_VIEWS.map(row).join('')+'</div>';
+/* Each figure is a button. The number you press is the number of rows you get
+   — the invariant the whole strip rests on, and the one the suite asserts. */
+function figuresHtml(counts,view){
+  return MENU_VIEWS.map(v=>{const C=menuViewCopy(v.k);
+    return '<button class="fig'+(v.c?' '+v.c:'')+(v.k===view?' on':'')+(counts[v.k]?'':' zero')
+      +'" data-view="'+v.k+'"'+(v.k===view?' aria-current="true"':'')
+      +' title="'+esc(C.lede)+'"><b>'+counts[v.k]+'</b> '
+      +esc(v.k==='all'&&counts.all===1?'property':v.t)+'</button>';}).join('');
 }
 
 /* The deadline, said the way a person would say it. */
@@ -5964,8 +5955,8 @@ function dueLine(p){
      "119 days late" in red across a hundred and three rows buried the handful
      that are genuinely live. It states the date and stops there. */
   if(d<0)return '<div class="pc-due past">Was due '+esc(fmtDateShort(p.deadline))+'</div>';
-  if(d<=30)return '<div class="pc-due now">Due '+esc(fmtDateShort(p.deadline))+' · '+d+' day'+(d===1?'':'s')+' left</div>';
-  return '<div class="pc-due ok">Due '+esc(fmtDateShort(p.deadline))+' · '+d+' days</div>';
+  if(d<=30)return '<div class="pc-due now">'+esc(fmtDateShort(p.deadline))+' · '+d+' day'+(d===1?'':'s')+' left</div>';
+  return '<div class="pc-due ok">'+esc(fmtDateShort(p.deadline))+' · '+d+' days</div>';
 }
 function fmtDateShort(iso){
   const m=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -5979,25 +5970,33 @@ function pickWhoDialog(){
   const H=window.RCSHap,rows=hapAll();
   const names=(H&&rows)?H.managers(rows):[];
   if(!names.length){setStatus('The renewal schedule has not loaded, so there are no names to choose from.');return;}
-  const rowsHtml=names.map(nm=>'<div class="uaopt" data-who="'+esc(nm)+'" style="padding:9px 12px;cursor:pointer'
-    +(nm===pmName?';font-weight:700':'')+'">'+esc(nm)+(nm===pmName?'<span class="uasub">current</span>':'')+'</div>').join('');
-  modal('<div class="dlg-t">Which portfolio manager are you?</div>'
-    +'<div class="lh-note" style="margin-bottom:10px">Your name decides which properties show under <b>Mine</b>. '
-    +'These are the managers named in the renewal schedule.</div>'
+  const _cur=nm=>(menuLens==='all')?(nm==='*'):(nm===pmName);
+  const _row=(k,lab)=>'<div class="uaopt" data-who="'+esc(k)+'" style="padding:9px 12px;cursor:pointer'
+    +(_cur(k)?';font-weight:700':'')+'">'+esc(lab)+(_cur(k)?'<span class="uasub">current</span>':'')+'</div>';
+  const rowsHtml=_row('*','Everyone')+names.map(nm=>_row(nm,nm)).join('');
+  modal('<div class="dlg-t">Whose properties should the list show?</div>'
+    +'<div class="lh-note" style="margin-bottom:10px">These are the managers named in the renewal schedule. '
+    +'Choosing a name also records who you are.</div>'
     +'<div id="whoList" style="max-height:230px;overflow:auto;border:1px solid #e0e5ee;border-radius:8px">'+rowsHtml+'</div>'
     +'<div class="dlg-row"><button class="btn" id="dlgCancel">Cancel</button><span class="dlg-sp"></span></div>');
   el('dlgCancel').onclick=closeModal;
   document.querySelectorAll('[data-who]').forEach(r=>r.onclick=async()=>{
     const nm=r.getAttribute('data-who');closeModal();
-    pmName=nm;renderWho();renderMenu();
+    /* The bands are not the same shape for one manager as for the portfolio, so
+       the chosen view is released rather than left pointing at a bucket that
+       only emptied because the scope moved. */
+    menuView='';
+    if(nm==='*'){menuLens='all';renderWho();renderMenu();return;}
+    menuLens='mine';pmName=nm;renderWho();renderMenu();
     try{if(mpdb&&mpdb.setPmName)await mpdb.setPmName(nm);}catch(e){saveFailedModal(e);}
   });
 }
 function renderWho(){
   const w=el('menuWho');if(!w)return;
-  w.textContent=pmName||'Who are you?';
-  w.classList.toggle('unset',!pmName);
-  w.title=pmName?('Signed in as '+pmName+' — click to change'):'Choose which portfolio manager you are';
+  w.textContent=(menuLens==='all')?'All portfolios':(pmName||'Choose a portfolio');
+  w.classList.toggle('unset',menuLens!=='all'&&!pmName);
+  w.title=(menuLens==='all')?'Showing every manager\u2019s properties — click to choose one'
+    :(pmName?('Showing '+pmName+'\u2019s properties — click to change'):'Choose whose properties to show');
 }
 
 /* Opening a tracker property for the first time is what brings its record into
@@ -6052,20 +6051,22 @@ function renderMenu(){
      query: the lens changes whose work it is, so a manager reading "12" must
      find 12 cards, while search is a find-within and a rail that renumbers under
      the cursor as you type is a moving target. */
-  const counts={},late={};
-  MENU_VIEWS.concat(MENU_PROG_VIEWS).forEach(v=>{counts[v.k]=0;late[v.k]=0;});
-  if(hasRail)all.forEach(p=>{p._view=viewOf(p);counts[p._view]++;counts.all++;
-    if(p.program==='RCS')counts.rcs++;else if(p.program==='OCAF')counts.ocaf++;
-    if(p._view==='flight'&&(p.band==='overdue'||p.band==='now'))late.flight++;});
+  const counts={};
+  MENU_VIEWS.forEach(v=>{counts[v.k]=0;});
+  if(hasRail)all.forEach(p=>{p._band=bandOf(p);p._view=p._band.view;counts[p._view]++;counts.all++;});
   /* Resolved only while unset. A view chosen explicitly and then emptied STAYS
      chosen and shows its empty state \u2014 finishing the last item in Needs you
      should show you an empty Needs you, not teleport you somewhere else. */
-  if(hasRail&&!menuView)menuView=(MENU_VIEWS.find(v=>counts[v.k])||{k:'all'}).k;
+  /* The page opens on everything. The two zones already put what is live at
+     the top, so opening pre-filtered hid the portfolio to answer a question
+     nobody had asked yet. A view chosen explicitly and then emptied STAYS
+     chosen and shows its empty state. */
+  if(hasRail&&!menuView)menuView='all';
   /* Searching forces All without overwriting the stored view, so clearing the
      box returns you where you were and "I know it exists, where is it?" cannot
      happen inside a filtered view. */
   const view=q?'all':menuView;
-  const inView=p=>!hasRail||view==='all'||(view==='rcs'?p.program==='RCS':view==='ocaf'?p.program==='OCAF':p._view===view);
+  const inView=p=>!hasRail||view==='all'||p._view===view;
   const props=all.filter(inView).filter(p=>!q||(p.name+' '+(p.alias||'')+' '+p.fha+' '+(p.city_state||'')).toLowerCase().indexOf(q)>=0);
   if(q){const _sc=p=>{const nm=String(p.name||'').toLowerCase();if(nm.startsWith(q))return 0;if(nm.split(/\s+/).some(w=>w.startsWith(q)))return 1;if(nm.indexOf(q)>=0)return 2;const al=String(p.alias||'').toLowerCase();if(al.startsWith(q)||al.split(/\s+/).some(w=>w.startsWith(q)))return 3;return 4;};props.sort((a,b)=>_sc(a)-_sc(b)||String(a.name||'').localeCompare(String(b.name||'')));}
   else if(hasRail)props.sort((a,b)=>String(a.deadline||'9999-99-99').localeCompare(String(b.deadline||'9999-99-99'))||String(a.name||'').localeCompare(String(b.name||'')));
@@ -6102,24 +6103,15 @@ function renderMenu(){
          undated where this line called one — the same word, two answers,
          on one screen. A record the schedule does not carry is undated;
          that is what undated means. */
-      const _t=all;
-      const _n=_t.filter(p=>p.days!=null&&p.deadline&&p.days>=0&&p.days<=30).length;
-      const _p=_t.filter(p=>p.days!=null&&p.deadline&&p.days<0).length;
-      const _u=_t.filter(p=>p.days==null||!p.deadline).length;
-      const _l=_t.length-_n-_p-_u;
-      const fig=(cls,n,lab)=>'<span'+(cls?' class="'+cls+'"':'')+'><b>'+n+'</b> '+esc(lab)+'</span>';
-      el('menuCount').innerHTML=fig('now',_n,'due within 30 days')
-        +fig('soon',_l,'later')
-        +fig('',_p,'past their date')
-        +(_u?fig('',_u,'undated'):'')
-        +fig('done',all.length,all.length===1?'property':'properties');
+      el('menuCount').innerHTML=figuresHtml(counts,view);
+      document.querySelectorAll('#menuCount [data-view]').forEach(b=>b.onclick=()=>{
+        menuView=b.getAttribute('data-view');renderMenu();});
     }else el('menuCount').textContent=bits.join('  \u00b7  ');
   }
-  if(el('menuRail'))el('menuRail').innerHTML=hasRail?railHtml(counts,late,view):'';
-  /* Emptying the rail does not collapse the column it sits in. Without this the
-     no-tracker fallback — the path that is supposed to look like the old flat
-     grid — draws every card behind 222px of nothing. */
-  if(el('menuBody'))el('menuBody').classList.toggle('norail',!hasRail);
+  /* Whose work this is, said once, where the control that changes it lives. */
+  if(el('menuEyebrow'))el('menuEyebrow').textContent=
+    'Portfolio'+(hasRail?((menuLens==='all'||!pmName)?' \u00b7 all managers':' \u00b7 '+pmName):'');
+  renderWho();
   if(el('menuLede'))el('menuLede').textContent=hasRail?menuViewCopy(view).lede:'';
   /* The card is a CONTAINER holding two sibling buttons, not a button with
      another inside it. A <button> nested in a <button> is invalid: the parser
@@ -6143,11 +6135,16 @@ function renderMenu(){
     const body='<button class="pc-body" data-open="'+p.id+'"'+(p.caption?' title="'+esc(p.caption)+'"':'')+'><div class="pc-top"><div class="pc-name">'+esc(p.name)+(showAl?'<span class="pc-alias">&ldquo;'+esc(al)+'&rdquo;</span>':'')+'</div>'+profileChip(p)+'</div>'
       +'<div class="pc-meta">'+(p.hap?(esc(p.pm||'Unassigned')+(p.city_state?' &middot; '+esc(p.city_state):'')):(esc(p.fha)+(p.city_state?' &middot; '+esc(p.city_state):'')))+'</div>'
       +(p.hap?dueLine(p):'')
+      /* The ledger printed a "Rents effective" header over an empty column. */
+      +'<div class="pc-eff">'+((p.hap&&p.action&&p.action.effective)?esc(fmtDateShort(p.action.effective)):'')+'</div>'
       +'<div class="pc-div"></div>'
       +'<div class="pc-foot">'+prog
-      +'<span class="pc-units">'+(p.hap&&!p.started?'Not started':(p.total_units+' unit'+(p.total_units===1?'':'s')+(p.unit_types?' &middot; '+p.unit_types+' type'+(p.unit_types===1?'':'s'):'')))+'</span>'
+      /* Always the unit count. "Not started" stood here instead, which is the
+         progress question the row's own button already answers — and it took
+         the slot the size of the job belongs in. */
+      +'<span class="pc-units">'+(p.total_units?(p.total_units+' unit'+(p.total_units===1?'':'s')+(p.unit_types?' &middot; '+p.unit_types+' type'+(p.unit_types===1?'':'s'):'')):'')+'</span>'
       +(p.hap&&!p.started?'':'<span class="pc-upd" title="'+esc(updTitle(p.updated_at))+'">Updated '+relTime(p.updated_at)+'</span>')+'</div></button>';
-    return '<div class="pcard"'+(_band?' data-band="'+esc(_band)+'"':'')+'>'+body+actionBtnHtml(p)+'</div>';};
+    return '<div class="pcard"'+(_band?' data-band="'+esc(_band)+'"':'')+'>'+body+actionBtnHtml(p,_band!=='now')+'</div>';};
   /* A "+ New property" tile sitting inside "Needs you" would imply it belongs to
      that band. #bNewProperty in the toolbar is always there, so the tile appears
      only where it means what it looks like. */
@@ -6163,18 +6160,7 @@ function renderMenu(){
      looked like every other. The rows do not change and none is added or
      removed — the count still equals the rail badge — they are banded, and the
      band that can be acted on today is put first and given weight. */
-  const MONTHS=['January','February','March','April','May','June','July',
-                'August','September','October','November','December'];
-  const bandOfProp=p=>{
-    const d=p.days;
-    if(d==null||!p.deadline)return {rank:9,key:'none',label:'No date scheduled'};
-    if(d>=0&&d<=30)return {rank:0,key:'now',label:'Due within 30 days'};
-    if(d<0)return {rank:1,key:'past',label:'Past their date'};
-    const iso=String(p.deadline).slice(0,10).split('-');
-    const key='m'+iso[0]+iso[1];
-    return {rank:2,key:key,label:MONTHS[(+iso[1])-1]+' '+iso[0]};
-  };
-  const _banded=_tr.map(p=>({p:p,b:bandOfProp(p)}));
+  const _banded=_tr.map(p=>({p:p,b:p._band||bandOf(p)}));
   _banded.sort((a,b)=>(a.b.rank-b.b.rank)
     ||String(a.b.key).localeCompare(String(b.b.key))
     ||(_tr.indexOf(a.p)-_tr.indexOf(b.p)));
@@ -6193,10 +6179,11 @@ function renderMenu(){
      above it, and the rest is a ledger with its own heading. Run together in
      one table the live rows were just the first few lines of a long list. */
   const _liveN=_banded.filter(x=>x.b.key==='now').length;
-  const _liveDue=_liveN?_banded.find(x=>x.b.key==='now').p.deadline:'';
-  const _liveHd=_liveN?('<div class="zhead"><h3>Due to HUD by '
-      +esc(fmtDateShort(_liveDue))+'</h3><span>'+_liveN
-      +(_liveN===1?' property':' properties')+'</span></div>'):'';
+  /* "Due to HUD by Jul 31" over a row due Aug 1 is a heading asserting
+     something its members do not share. The band is a window, so the heading
+     names the window. */
+  const _liveHd=_liveN?('<div class="zhead"><h3>Due within '+_bandNow()+' days</h3><span>'+_liveN
+      +(_liveN===1?' property':' properties')+' &middot; earliest deadline first</span></div>'):'';
   const _restN=_banded.length-_liveN;
   const _restHd=_restN?('<div class="zhead"><h3>Remaining</h3><span>'+_restN
       +(_restN===1?' property':' properties')+' &middot; earliest deadline first</span></div>'):'';
@@ -7177,12 +7164,6 @@ async function boot(){
   const ms=el('menuSearch');if(ms)ms.addEventListener('input',renderMenu);
   const bn=el('bNewProperty');if(bn)bn.onclick=createProperty;
   const who=el('menuWho');if(who)who.onclick=pickWhoDialog;
-  document.querySelectorAll('[data-lens]').forEach(b=>b.onclick=()=>{menuLens=b.getAttribute('data-lens');
-    document.querySelectorAll('[data-lens]').forEach(x=>x.classList.toggle('on',x===b));
-    /* Mine and All are different questions, and the first non-empty view for one
-       is rarely the first for the other — so the rail re-resolves rather than
-       landing you in a view that is empty only because the lens moved. */
-    menuView='';renderMenu();});
   const be=el('bExit');if(be)be.onclick=requestExit;
   wireHome();
   const _revertToSaved=async()=>{form=await store.fillForm();await refreshSnap();fixSavedToggles();deriveUnits();snapForm();renderBody();setStatus('Reverted to the last saved record.');};

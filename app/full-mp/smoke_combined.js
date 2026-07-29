@@ -79,7 +79,7 @@ const T=(label,v)=>eq(label,!!v,true);
   /* The guard the rail rests on. With no tracker rows the page keeps the flat
      grid it had — which is what keeps a pre-tracker deployment working, and the
      RA port, whose build does not concatenate hap.js at all. */
-  T('with no renewal schedule the page keeps its flat grid', els.menuRail.innerHTML==='');
+  T('with no renewal schedule the page keeps its flat grid', !/data-view=/.test(els.menuCount.innerHTML));
   T('and offers no action on a record the schedule does not carry', !/data-pact/.test(grid));
 
   /* ── THE RAIL ─────────────────────────────────────────────────────────
@@ -114,41 +114,38 @@ const T=(label,v)=>eq(label,!!v,true);
     trow('R005','Rail Awaiting','OCAF',-500),
   ]);
   app.openMenu();
-  const rail1=els.menuRail.innerHTML, lede1=els.menuLede.textContent, g1=els.menuGrid.innerHTML;
+  const strip1=els.menuCount.innerHTML, lede1=els.menuLede.textContent, g1=els.menuGrid.innerHTML;
   const c1=app.__menuCounts();
-  T('the rail renders once the tracker supplies properties', /mr-row/.test(rail1));
-  T('nothing undefined leaked into the rail', !/undefined/.test(rail1));
-  T('the rail names every view', /Needs you/.test(rail1)&&/Coming up/.test(rail1)&&/In flight/.test(rail1)
-    &&/Done for the year/.test(rail1)&&/Undated/.test(rail1)&&/All properties/.test(rail1));
-  T('and groups the two programs under their own heading', /Programs/.test(rail1)&&/RCS years/.test(rail1)&&/OCAF years/.test(rail1));
+  T('the figures strip renders once the tracker supplies properties', /class="fig/.test(strip1));
+  T('nothing undefined leaked into the strip', !/undefined/.test(strip1));
+  T('the strip names every band', /past their date/.test(strip1)&&/due within 30 days/.test(strip1)
+    &&/later/.test(strip1)&&/not in the schedule/.test(strip1)&&/properties/.test(strip1));
+  T('and every figure is a control, not a caption', (strip1.match(/data-view=/g)||[]).length===5);
   T('the lede explains the view on screen', lede1.length>20);
-  eq('overdue and due-now land in Needs you', c1.needs, 2);
-  eq('soon and later land in Coming up',      c1.coming, 2);
+  eq('a deadline already passed lands in past their date', c1.past, 1);
+  eq('inside 30 days lands in due within 30 days',          c1.now, 1);
+  eq('further out lands in later',                          c1.later, 2);
   /* Gates Manor carries no tracker code and Rail Awaiting has no future
      startable row: two different reasons, one honest answer — no date. */
-  eq('a property with no future renewal, and the uncoded record, are Undated', c1.undated, 2);
-  eq('nothing is in flight before a package exists', c1.flight, 0);
-  eq('and nothing is done',                            c1.done, 0);
-  eq('the five views sum to All properties', c1.needs+c1.coming+c1.flight+c1.done+c1.undated, c1.all);
-  /* Three, not four: Rail Awaiting has no target, so it has no program either.
-     The Programs group asks what the NEXT renewal is, and a property with no
-     next renewal has no answer — putting it under OCAF because it once had one
-     would assert work that is not scheduled. */
-  eq('the Programs group cross-cuts on the target program', [c1.rcs,c1.ocaf], [1,3]);
-  /* The badge and the grid answer one question. A rail saying 6 above a grid of
-     5 is the defect this pass exists to make impossible. */
+  eq('a property with no future renewal, and the uncoded record, are not in the schedule', c1.undated, 2);
+  /* The strip's whole claim. Four disjoint bands and their sum, all countable
+     on the page under them. */
+  eq('the four bands sum to the total', c1.past+c1.now+c1.later+c1.undated, c1.all);
+  /* The figure and the grid answer one question. A strip saying 6 above a grid
+     of 5 is the defect this pass exists to make impossible. */
   const cardsIn=h=>(h.match(/class="pcard"/g)||[]).length;
-  eq('the rail opens on the first non-empty view', app.__menuView(), 'needs');
-  eq('and the badge on that row equals the cards drawn', cardsIn(g1), c1.needs);
-  app.__setMenuView('coming');
-  eq('switching view redraws the grid to match its badge', cardsIn(els.menuGrid.innerHTML), c1.coming);
+  eq('the page opens on everything', app.__menuView(), 'all');
+  T('and the figure holding that view is marked current',
+    /data-view="all"[^>]*aria-current/.test(strip1));
+  eq('and the total equals the cards drawn', cardsIn(g1), c1.all);
+  app.__setMenuView('later');
+  eq('pressing a figure redraws the grid to match it', cardsIn(els.menuGrid.innerHTML), c1.later);
+  app.__setMenuView('past');
+  eq('and past their date draws only what is past', cardsIn(els.menuGrid.innerHTML), c1.past);
   app.__setMenuView('undated');
-  eq('Undated draws both populations',                    cardsIn(els.menuGrid.innerHTML), c1.undated);
+  eq('not in the schedule draws both populations',    cardsIn(els.menuGrid.innerHTML), c1.undated);
   T('and separates them under the heading that says so',
     /Not in the renewal schedule/.test(els.menuGrid.innerHTML));
-  app.__setMenuView('flight');
-  T('an empty view says what is empty and where to look instead',
-    /class="mempty"/.test(els.menuGrid.innerHTML)&&!/Clear search/.test(els.menuGrid.innerHTML));
 
   /* ── THE PRIMARY ACTION ────────────────────────────────────────────── */
   console.log('\n─ ONE ACTION PER CARD, DERIVED NOT DECORATED ─');
@@ -174,36 +171,47 @@ const T=(label,v)=>eq(label,!!v,true);
      rendering it disabled, greyed or absent retires it on the tracker's say-so. */
   app.__setMenuView('undated');
   const gund=els.menuGrid.innerHTML;
-  T('a property whose schedule runs out is still startable', /Start a package/.test(gund));
+  /* In the ledger the action is the verb and the year; a property with no
+     scheduled renewal has no year, so the verb stands alone. What matters is
+     that it HAS one — rendering it disabled, greyed or absent would retire
+     the property on the tracker's say-so. */
+  T('a property whose schedule runs out is still startable', /data-pact="R005"[^>]*>Start</.test(gund));
   T('and its button is not disabled', !/data-pact="R005"[^>]*disabled/.test(gund));
 
-  /* In flight and Done for the year come from the app's own packages, never
-     from the tracker: every workflow column in the export is empty. */
+  /* How far along a package is comes from the app's own cycles, never from the
+     tracker: every workflow column in the export is empty. And it is NOT a
+     band. Starting one does not change when the renewal is owed, so it must
+     not move the property — the rail used to lift it out of "Needs you" the
+     moment a draft existed, which is how a generated-but-rejected package read
+     as finished. The band says when; the button says how far. */
   const rpid=(await db.createProperty('Rail Now','R002')).pid;
   const rcid=(await db.createCycle(rpid,{programs:['ocaf'],label:String(new Date(T0+132*DAY).getUTCFullYear()),
     effective_date:us(132)})).cid;
-  app.openMenu();
+  app.openMenu();app.__setMenuView('all');
   const c2=app.__menuCounts();
-  eq('a matching draft moves that property into In flight', c2.flight, 1);
-  eq('and takes it out of Needs you',                       c2.needs, c1.needs-1);
-  eq('the partition still sums',                            c2.needs+c2.coming+c2.flight+c2.done+c2.undated, c2.all);
+  eq('starting a package moves no property between bands',
+     [c2.past,c2.now,c2.later,c2.undated], [c1.past,c1.now,c1.later,c1.undated]);
+  T('and the row offers to continue what was started', /Continue /.test(els.menuGrid.innerHTML));
+  eq('the partition still sums', c2.past+c2.now+c2.later+c2.undated, c2.all);
   await db.setCycleGenerated(rcid,['cover']);
-  app.openMenu();
+  app.openMenu();app.__setMenuView('all');
   const c3=app.__menuCounts();
-  eq('generating it moves the property on to Done for the year', [c3.done,c3.flight], [1,0]);
-  eq('and the partition still sums', c3.needs+c3.coming+c3.flight+c3.done+c3.undated, c3.all);
+  eq('generating it moves nothing either',
+     [c3.past,c3.now,c3.later,c3.undated], [c1.past,c1.now,c1.later,c1.undated]);
+  T('and the row offers to view what was generated', /View /.test(els.menuGrid.innerHTML));
+  eq('and the partition still sums', c3.past+c3.now+c3.later+c3.undated, c3.all);
 
   /* Search is a find-within: it forces the All view so a name is never hidden by
      the filter, and it does not overwrite the view you were in. */
-  app.__setMenuView('coming');
+  app.__setMenuView('later');
   els.menuSearch.value='Overdue';
   app.renderMenu();
   T('searching finds a property outside the current view', /Rail Overdue/.test(els.menuGrid.innerHTML));
-  eq('without moving the view you were in', app.__menuView(), 'coming');
+  eq('without moving the view you were in', app.__menuView(), 'later');
   els.menuSearch.value='';
   app.renderMenu();
-  eq('clearing the search returns you there', app.__menuView(), 'coming');
-  T('and draws that view again', cardsIn(els.menuGrid.innerHTML)===app.__menuCounts().coming);
+  eq('clearing the search returns you there', app.__menuView(), 'later');
+  T('and draws that view again', cardsIn(els.menuGrid.innerHTML)===app.__menuCounts().later);
 
   /* An increase type nobody has seen must not leave a card describing two
      different renewals. Before this was pinned, a property with an unreadable

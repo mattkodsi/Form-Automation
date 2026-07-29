@@ -658,53 +658,66 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
    built for real. Scoped to #viewMenu: the form keeps its own look until
    that redesign is signed off separately.
    ================================================================== */
-#viewMenu{--paper:#d8dde4;--card:#fff;--sunk:#eef1f5;
+#viewMenu{--paper:#d8dde4;--card:#fff;--sunk:#eef1f5;--r-ctl:4px;--r-card:8px;
   --i1:#101822;--i2:#41505f;--i3:#556270;--i4:#636c77;
   --ln:#c2cbd6;--ln-soft:#e4e9ef;
   --stamp:#9c2b18;--ledger:#1f5480;--filed:#2f6a45;
   background:var(--paper);min-height:100vh;
   font-family:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,sans-serif;
   font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
-#viewMenu .mtop{background:#101d2b;border-bottom:0;height:60px}
+/* The masthead the mockup drew: no mark, the two names on one baseline, and
+   plain links at 40px rather than a bordered chip beside two bare words. */
+#viewMenu .mtop{background:#101d2b;border-bottom:0;height:60px;padding:0 40px}
+#viewMenu .brand{align-items:baseline;gap:11px}
 #viewMenu .bname{font-weight:600;font-size:15px;letter-spacing:-.005em}
-#viewMenu .btag{letter-spacing:.17em;font-weight:600;font-size:10px}
+#viewMenu .btag{letter-spacing:.17em;font-weight:600;font-size:10px;margin-top:0;
+  color:rgba(255,255,255,.55)}
+#viewMenu .mtoprightwrap{gap:2px}
+#viewMenu .backlink{font-size:13px;font-weight:400;color:#fff;opacity:.75;
+  min-height:40px;padding:0 12px;border-radius:var(--r-ctl)}
+#viewMenu .backlink:hover{opacity:1;background:rgba(255,255,255,.08);color:#fff}
+/* Which portfolio you are reading is one question, so it gets one control.
+   Mine/All asked it a second time next to the search box and answered it in a
+   different vocabulary. */
+#viewMenu .whochip{background:none;border-radius:var(--r-ctl);padding:0 12px;font-weight:600;opacity:1}
+#viewMenu .whochip:hover{background:rgba(255,255,255,.08)}
+#viewMenu .whochip.unset{border:1px dashed rgba(255,255,255,.45);opacity:.85}
+/* the finder sits on the title's baseline, and the page breathes below it */
+#viewMenu .mhead{align-items:flex-end;gap:48px;margin-bottom:52px}
+#viewMenu .searchbox{flex:0 0 300px}
+#viewMenu .searchbox svg{stroke:var(--i4);left:11px}
+#viewMenu .searchbox input{width:100%;background:var(--sunk);border:1px solid var(--ln);
+  border-radius:var(--r-ctl);padding:11px 12px 11px 33px;font-size:13px;color:var(--i1)}
+#viewMenu .searchbox input:focus{border-color:var(--ledger);background:var(--card);box-shadow:none}
+#viewMenu .searchbox input::placeholder{color:var(--i4)}
 #viewMenu .mwrap{max-width:1480px;padding:36px 40px 80px}
 #viewMenu .mtitle{font-size:22px;font-weight:600;color:var(--i1);letter-spacing:-.015em}
 #viewMenu .mtitle .eyebrow{display:block;font-size:10.5px;font-weight:600;
   letter-spacing:.13em;text-transform:uppercase;color:var(--i3);margin-bottom:5px}
 /* the figures line: each carries the left rule in the colour of what it says */
-#viewMenu .msub{display:flex;gap:20px;flex-wrap:wrap;margin-top:14px;
-  font-size:13px;color:var(--i3)}
-#viewMenu .msub span{border-left:2px solid var(--ln);padding-left:9px}
-#viewMenu .msub span.now{border-left-color:var(--stamp)}
-#viewMenu .msub span.soon{border-left-color:var(--ledger)}
-#viewMenu .msub span.done{border-left-color:var(--filed)}
-#viewMenu .msub b{color:var(--i1);font-weight:600;font-size:14px}
+#viewMenu .msub{display:flex;gap:4px;flex-wrap:wrap;margin-top:12px;font-size:13px;color:var(--i3)}
+#viewMenu .msub .fig{font:inherit;font-size:13px;color:var(--i3);background:none;border:0;
+  border-left:2px solid var(--ln);border-radius:0;cursor:pointer;
+  display:inline-flex;align-items:baseline;gap:5px;min-height:36px;padding:0 14px 0 9px}
+#viewMenu .msub .fig b{color:var(--i1);font-weight:600;font-size:14px}
+#viewMenu .msub .fig.now{border-left-color:var(--stamp)}
+#viewMenu .msub .fig.soon{border-left-color:var(--ledger)}
+#viewMenu .msub .fig.done{border-left-color:var(--filed)}
+#viewMenu .msub .fig:hover{color:var(--i1);background:rgba(255,255,255,.5)}
+/* Selected is a raised chip, not a hue: on this page a colour means a deadline
+   and which figure you are holding is not one. */
+#viewMenu .msub .fig.on{background:var(--card);border-radius:0 var(--r-ctl) var(--r-ctl) 0;color:var(--i1)}
+#viewMenu .msub .fig.zero{color:var(--i4)}
+#viewMenu .msub .fig.zero b{color:var(--i4);font-weight:500}
 /* the rail stays — it filters, which the mockup had no way to do — but it
    becomes a document on the desk like everything else rather than floating */
-#viewMenu .mbody{gap:24px}
-#viewMenu .rside,#viewMenu .mrail{background:var(--card);border:1px solid var(--ln);
-  border-radius:8px;padding:14px 12px}
-/* An index on a document, not a strip of navy pills. Which filter you are
-   holding is stated in ink and a sunk fill and never in a hue: on this page a
-   colour means a deadline, and the rail carries none. */
-#viewMenu .mr-gt{color:var(--i3);font-weight:600;font-size:10px;letter-spacing:.12em;
-  padding:0 9px;margin-bottom:7px}
-#viewMenu .mr-g+.mr-g{margin-top:18px;padding-top:15px;border-top:1px solid var(--ln-soft)}
-#viewMenu .mr-tot{border-top-color:var(--ln-soft)}
-#viewMenu .mr-row{font-size:13px;font-weight:500;color:var(--i2);border-radius:4px;
-  padding:7px 9px;box-shadow:inset 2px 0 0 transparent}
-#viewMenu .mr-row:hover{background:var(--sunk);color:var(--i1)}
-#viewMenu .mr-row.on{background:var(--sunk);color:var(--i1);font-weight:600;
-  box-shadow:inset 2px 0 0 var(--i1)}
-#viewMenu .mr-row.zero{color:var(--i4);font-weight:400}
-#viewMenu .mr-row.zero.on{color:var(--i1);font-weight:600}
-#viewMenu .mr-n{color:var(--i3);font-weight:500;font-size:12px}
-#viewMenu .mr-row.on .mr-n{color:var(--i1);font-weight:600}
-#viewMenu .mr-row.zero .mr-n{color:var(--i4);font-weight:400}
-/* the one coloured thing in the rail, and it says the same red the page does */
-#viewMenu .mr-late{background:var(--stamp)}
-#viewMenu .mgrid.rows{border-color:var(--ln);border-radius:8px}
+#viewMenu .rside{background:var(--card);border:1px solid var(--ln);border-radius:var(--r-card);padding:14px 12px}
+#viewMenu .mgrid.rows{border-color:var(--ln);border-radius:var(--r-card)}
+/* Three radii in this view and no more: 4 for a control, 8 for a document,
+   999 for a pill. The style guide said so and then eight values shipped. */
+#viewMenu .profchip,#viewMenu .pc-alias,#viewMenu .mempty,
+#viewMenu .pc-body,#viewMenu .pcard.newcard{border-radius:var(--r-ctl)}
+#viewMenu .pc-act .btn{border-radius:var(--r-ctl)}
 #viewMenu .mgrid.rows .mcols{background:var(--sunk);border-bottom:1px solid var(--ln);
   color:var(--i3);letter-spacing:.12em;font-weight:600;font-size:10px}
 #viewMenu .mgrid.rows .mgroup{background:var(--sunk);border-top:1px solid var(--ln);
@@ -733,10 +746,10 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
 #viewMenu .mgrid.rows.live{margin-bottom:44px}
 /* the live row: the name leads and says what the package is, the columns are
    programme, countdown, size, action — as in the mockup */
-#viewMenu .mgrid.rows.live .pcard{grid-template-columns:minmax(0,1fr) 74px 108px 116px 212px;
+#viewMenu .mgrid.rows.live .pcard{grid-template-columns:minmax(0,1fr) 90px 130px 110px 212px;
   padding:0 22px}
-#viewMenu .mgrid.rows.live .pc-body{grid-column:1/5;
-  grid-template-columns:minmax(0,1fr) 74px 108px 116px;padding:16px 0}
+#viewMenu .mgrid.rows.live .pc-body{grid-column:1/5;column-gap:24px;
+  grid-template-columns:minmax(0,1fr) 90px 130px 110px;padding:16px 0}
 /* .pc-units and .pc-prog live inside .pc-foot, so they cannot be placed in the
    row's grid while the footer is a box. display:contents dissolves the box and
    lets each fact take its own column. */
@@ -751,26 +764,36 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
 #viewMenu .mgrid.rows.live .pc-units{grid-column:4;grid-row:1/3;justify-self:end;
   font-size:13px;color:var(--i2);white-space:nowrap}
 #viewMenu .mgrid.rows.live .pc-act{grid-column:5}
+#viewMenu .mgrid.rows.live .pc-act .btn{min-height:40px;padding:0 18px;font-size:13px;
+  font-weight:600;border-radius:var(--r-ctl);background:#101d2b;border-color:#101d2b;
+  letter-spacing:0;text-transform:none}
+#viewMenu .mgrid.rows.live .pc-act .btn:hover:not(:disabled){background:var(--ledger);border-color:var(--ledger)}
+#viewMenu .mgrid.rows.live .pc-act .btn:disabled{background:transparent;border-color:var(--ln);color:var(--i4)}
 /* the ledger row: quiet, and its action is a text affordance not a slab */
 #viewMenu .mgrid.rows:not(.live) .pcard{
-  grid-template-columns:minmax(0,1fr) 110px 130px 150px 90px 90px;padding:0 18px}
+  grid-template-columns:minmax(0,1fr) 110px 150px 150px 90px 104px;padding:0 18px}
 #viewMenu .mgrid.rows:not(.live) .pc-body{grid-column:1/6;
-  grid-template-columns:minmax(0,1fr) 110px 130px 150px 90px}
+  grid-template-columns:minmax(0,1fr) 110px 150px 150px 90px}
 #viewMenu .mgrid.rows:not(.live) .pc-prog{grid-column:2;grid-row:1;justify-self:start}
+#viewMenu .pc-prog{background:none;border-radius:0;padding:0;color:var(--i3);
+  font-size:10.5px;font-weight:600;letter-spacing:.09em}
+#viewMenu .pc-prog.unk{background:none;color:var(--stamp)}
 #viewMenu .mgrid.rows:not(.live) .pc-meta{display:none}
 
 #viewMenu .mgrid.rows:not(.live) .pc-due{grid-column:3;grid-row:1}
+#viewMenu .mgrid.rows:not(.live) .pc-eff{grid-column:4;grid-row:1;font-size:13px;color:var(--i3)}
+#viewMenu .mgrid.rows.live .pc-eff{display:none}
+.pc-eff{font-size:12px;color:var(--muted)}
 #viewMenu .mgrid.rows:not(.live) .pc-units{grid-column:5;grid-row:1;justify-self:end;
   white-space:nowrap}
 #viewMenu .mgrid.rows:not(.live) .pc-act{grid-column:6}
 #viewMenu .mgrid.rows:not(.live) .pc-act .btn{background:none;border:0;color:var(--i3);
   font-weight:600;font-size:12px;padding:0;width:auto}
 #viewMenu .mgrid.rows:not(.live) .pcard:hover .pc-act .btn{color:var(--ledger)}
-#viewMenu .mcols{grid-template-columns:minmax(0,1fr) 110px 130px 150px 90px 90px}
+#viewMenu .mcols{grid-template-columns:minmax(0,1fr) 110px 150px 150px 90px 104px}
 #viewMenu .mcols .r{text-align:right}
 /* the rail goes: its bands are the list's own groups now, and its programme
    cross-cut moves to the search box. */
-#viewMenu .mbody{grid-template-columns:200px minmax(0,1fr);gap:24px}
 #viewMenu .btn.p{background:#101d2b;border-color:#101d2b;font-weight:600}
 #viewMenu .btn.p:hover{background:var(--ledger);border-color:var(--ledger)}
 
@@ -981,40 +1004,12 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
 .nextup .btn{flex:0 0 auto}
 .pc-new{opacity:.72}
 .mgroup{grid-column:1/-1;font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin:14px 0 -4px}
-/* ---- the filter rail: named views, one at a time --------------------- */
 /* minmax(0,1fr) on the second column is load-bearing: without it the auto-fill
    card grid refuses to shrink below its track size and the page scrolls
    sideways. */
-.mbody{display:grid;grid-template-columns:196px minmax(0,1fr);gap:26px;align-items:start}
-/* No tracker, no rail, no gutter for one. */
-.mbody.norail{grid-template-columns:minmax(0,1fr);gap:0}
+.mbody{display:grid;grid-template-columns:minmax(0,1fr);gap:0;align-items:start}
 .mmain{min-width:0}
-.mrail{position:sticky;top:22px;display:flex;flex-direction:column;gap:2px}
-.mr-g+.mr-g{margin-top:16px}
-.mr-gt{font-size:10px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:var(--muted-4);padding:0 10px;margin-bottom:6px}
-.mr-row{display:flex;align-items:center;gap:8px;width:100%;text-align:left;font:inherit;font-size:13px;font-weight:600;color:var(--ink-3);background:none;border:none;border-radius:9px;padding:8px 10px;cursor:pointer}
-.mr-row:hover{background:#eef2f8;color:var(--navy)}
-.mr-row.on{background:var(--navy);color:var(--surface)}
-.mr-row.zero{color:#a8b0c0}
-.mr-row.zero.on{color:var(--surface)}
-.mr-t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.mr-n{font-size:11.5px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--muted)}
-.mr-row.on .mr-n{color:var(--navy-pale)}
-.mr-row.zero .mr-n{color:#c2c9d6}
-.mr-late{width:6px;height:6px;border-radius:50%;background:var(--danger);flex:0 0 auto}
-/* Five states and their sum are not six peers. The rail's counts are only
-   worth reading because the five add up to All properties, so the total is
-   ruled off the way a total is on paper. */
-.mr-tot{margin-top:7px;padding-top:7px;border-top:1px solid var(--line-2)}
 .mlede{font-size:12px;color:var(--muted);margin:-4px 0 14px;line-height:1.5}
-@media(max-width:900px){
- .mbody{grid-template-columns:minmax(0,1fr)}
- .mrail{position:static;flex-direction:row;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:6px}
- .mr-g{display:flex;gap:6px}.mr-g+.mr-g{margin-top:0}.mr-gt{display:none}
- #viewMenu .mr-g+.mr-g,#viewMenu .mr-tot{margin-top:0;padding-top:0;border-top:0}
- .mr-tot{display:contents}
- .mr-row{width:auto;white-space:nowrap;border:1px solid var(--line-2);background:var(--surface)}
-}
 .ns8flag{display:inline-flex;align-items:center;gap:8px;cursor:pointer;line-height:1.35;vertical-align:middle} .ns8flag input{accent-color:var(--navy);width:14px;height:14px;margin:0;flex:0 0 auto} .partd .rgh{margin-top:12px}
 .safmrhead{display:inline-flex;align-items:center;gap:6px} .rgh .hudbtn,.ocpull .hudbtn{font-size:9.5px;padding:2px 7px;letter-spacing:0;text-transform:none;font-weight:700;white-space:nowrap;color:var(--prov-over)} .rgh .hudbtn.off,.ocpull .hudbtn.off{opacity:.55;cursor:default;color:var(--muted-2);border-color:#d7deea;background:#f1f4f9} .rgh .hudbtn.done,.ocpull .hudbtn.done{color:var(--ok);border-color:var(--ok-line);background:var(--ok-tint)}
 </style></head>
@@ -1033,15 +1028,13 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
  </div>
  <!-- ===================== PROPERTY MENU ===================== -->
  <div id="viewMenu" style="display:none">
-   <div class="mtop"><div class="brand"><span class="mark"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M4 11 12 4l8 7" stroke="var(--navy)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 10v9h12v-9" stroke="var(--navy)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><div class="bname">Section 8 Rent Adjustments</div><div class="btag">Related Affordable</div></div></div><div class="mtoprightwrap"><button class="backlink mtopright whochip" id="menuWho"></button><button class="backlink mtopright" id="bContacts">Contacts</button><button class="backlink mtopright" id="bSignOut">Sign out</button></div></div>
+   <div class="mtop"><div class="brand"><div class="bname">Section 8 Rent Adjustments</div><div class="btag">Related Affordable</div></div><div class="mtoprightwrap"><button class="backlink mtopright" id="bContacts">Contacts</button><button class="backlink mtopright" id="bNewProperty">New property</button><button class="backlink mtopright whochip" id="menuWho"></button><button class="backlink mtopright" id="bSignOut">Sign out</button></div></div>
    <div class="mwrap">
      <div class="mhead">
        <div><h2 class="mtitle"><span class="eyebrow" id="menuEyebrow">Portfolio</span>Renewals</h2><div class="msub" id="menuCount"></div></div>
-       <div class="mtools"><div class="segmented" id="lensSeg"><button class="seg-b on" data-lens="mine">Mine</button><button class="seg-b" data-lens="all">All</button></div><div class="searchbox"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted-4)" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2" stroke-linecap="round"/></svg><input id="menuSearch" placeholder="Search by name or FHA #" autocomplete="off"></div><button class="btn p" id="bNewProperty">+ New property</button></div>
+       <div class="mtools"><div class="searchbox"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4" stroke-linecap="round"/></svg><input id="menuSearch" placeholder="Find a property" autocomplete="off"></div></div>
      </div>
      <div class="mbody" id="menuBody">
-       <nav class="mrail" id="menuRail"></nav>
-       
        <div class="mmain"><div class="mlede" id="menuLede"></div><div class="mgrid rows" id="menuGrid"></div></div>
      </div>
    </div>

@@ -3019,7 +3019,11 @@ function hapProperties(){
       id:pid||('hap:'+code), code:code, hap:true, started:!!pid,
       name:(rec&&rec.name)||any.name, alias:(rec&&rec.alias)||'',
       fha:(rec&&rec.fha)||'—', city_state:(rec&&rec.city_state)||'',
-      total_units:(rec&&rec.total_units)||0, unit_types:(rec&&rec.unit_types)||0,
+      /* The schedule carries a unit count, so a property the app has never
+         opened still knows how big the job is. Reading only the record printed
+         "0 units" on every unstarted row — a figure, and wrong. */
+      total_units:(rec&&rec.total_units)||(+String(any.units||'').replace(/[^0-9]/g,'')||0),
+      unit_types:(rec&&rec.unit_types)||0,
       completeness:rec?rec.completeness:0, updated_at:(rec&&rec.updated_at)||'',
       /* Carried, not recomputed. Without these two the profile chip and the
          card's hover caption were dead on every scheduled property — the chip
@@ -3096,9 +3100,10 @@ function actionReason(a){
    message about rings. A record with no tracker row gets no button at all: it
    already sits under its own "Not in the renewal schedule" heading, and its
    action is #bNewCycle on the launcher. */
-function actionBtnHtml(p){
+function actionBtnHtml(p,short){
   const a=p.hap&&p.action;if(!a||a.kind==='none')return '';
-  const lab=actionLabel(a);if(!lab)return '';
+  let lab=actionLabel(a);if(!lab)return '';
+  if(short){const m=lab.match(/^(\S+)\s+(\d{4})\b/);lab=m?(m[1]+' '+m[2]):lab.split(' ')[0];}
   const why=actionReason(a);
   /* The reason hangs on the WRAPPER. A disabled <button> swallows its own
      tooltip in Firefox and Safari, and "disabled, with a reason" is the one
@@ -3108,22 +3113,25 @@ function actionBtnHtml(p){
     +(a.disabled?' disabled':'')+'>'+esc(lab)+'</button></div>';
 }
 
-/* ---- the filter rail: named views over one portfolio ------------------
-   Six rows, then a Programs group. Every property lands in exactly ONE of the
-   first five, so the counts sum to "All properties" — which is why viewOf()
-   below is evaluated once per property per render and its answer stored, rather
-   than the predicate being asked again by whatever needs it next. A rail whose
-   badge says 6 above a grid of 5 cards is the same defect as a ring and a
-   document list disagreeing about one number. */
+/* ---- the figures line IS the filter -------------------------------------
+   One partition of the portfolio, stated once. The rail asked the same
+   question in a second vocabulary and got a different answer: "Needs you"
+   welded past-their-date onto due-within-30 and then subtracted whatever had
+   a package open, so on a portfolio where an overdue row means the package
+   already went in, its headline counted 20 finished properties as work — and
+   that view opened by default.
+
+   These five are the bands the list is grouped by, so every figure is
+   countable on the page beneath it, they are disjoint, and they sum to the
+   total. Chronological order, no editorial: the strip reports when things are
+   due, it does not rank them by how much they should worry you. */
 const MENU_VIEWS=[
- {k:'needs',  t:'Needs you'},
- {k:'coming', t:'Coming up'},
- {k:'flight', t:'In flight'},
- {k:'done',   t:'Done for the year'},
- {k:'undated',t:'Undated'},
- {k:'all',    t:'All properties'},
+ {k:'past',   t:'past their date',     c:''},
+ {k:'now',    t:'due within 30 days',  c:'now'},
+ {k:'later',  t:'later',               c:'soon'},
+ {k:'undated',t:'not in the schedule', c:''},
+ {k:'all',    t:'properties',          c:''},
 ];
-const MENU_PROG_VIEWS=[{k:'rcs',t:'RCS years'},{k:'ocaf',t:'OCAF years'}];
 function _bandNow(){return (window.RCSHap&&window.RCSHap._bandDays&&window.RCSHap._bandDays.now)||30;}
 /* The words live here, not in a click handler (FORM-RULES 17): the lede under
    the heading and the copy shown when a view is empty are two halves of one
@@ -3133,26 +3141,23 @@ function _bandNow(){return (window.RCSHap&&window.RCSHap._bandDays&&window.RCSHa
 function menuViewCopy(k){
   const N=_bandNow();
   const M={
-   needs:{lede:'Due in the next '+N+' days, or already late — and no package started yet. Earliest first.',
-          empty:'Nothing is due in the next '+N+' days. Coming up has what is next.'},
-   coming:{lede:'Due more than '+N+' days out, with no package started yet. Earliest first.',
-          empty:'Nothing further out is waiting on you.'},
-   flight:{lede:'A package is already open for the renewal that is next due. Earliest first.',
-          empty:'No package is open. Start one from Needs you or Coming up.'},
-   done:{lede:'This renewal’s package has been generated. Nothing further is owed until the next one comes due.',
-          empty:'No package has been generated for a current renewal yet.'},
+   now:{lede:'Due in the next '+N+' days. Earliest first.',
+        empty:'Nothing is due in the next '+N+' days.'},
+   /* Not an alarm, and the lede says why. The tracker carries the deadline,
+      not the filing, so a date in the past means the package went in and the
+      row has not caught up. */
+   past:{lede:'The deadline has passed. The schedule records the deadline, not the filing, so a package has usually already gone in.',
+        empty:'No deadline has passed.'},
+   later:{lede:'Due more than '+N+' days out. Earliest first.',
+        empty:'Nothing further out is waiting.'},
    /* Three reasons, not two. The schedule can end on the contract's own expiry,
       it can simply stop, or the record can carry no tracker code at all — and a
       lede that named only the last two read as though an expiring contract were
       a data problem. */
    undated:{lede:'No renewal scheduled — the schedule ends at a contract expiry, it stops without one, or the record is not in the schedule at all.',
-          empty:'Every property has a date.'},
+        empty:'Every property has a date.'},
    all:{lede:'Every property: those in the schedule by deadline, then the records the schedule does not carry.',
-          empty:'No properties yet.'},
-   rcs:{lede:'Properties whose next renewal sets rents from a market study. Earliest first.',
-          empty:'No market resets are next up.'},
-   ocaf:{lede:'Properties whose next renewal applies HUD’s published operating-cost factor. Earliest first.',
-          empty:'No factor adjustments are next up.'},
+        empty:'No properties yet.'},
   };
   return M[k]||M.all;
 }
@@ -3172,34 +3177,27 @@ function menuViewCopy(k){
    effective whenever due is missing, so an undated property is one with no row
    to be about — awaiting, a gap, or an expiring contract — and none of those can
    have a matching package. */
-function viewOf(p){
-  if(!p.hap)return 'undated';                          // no tracker code: no deadline to have
-  const a=p.action||{};
-  if(a.kind==='continue')return 'flight';
-  if(a.kind==='view')return 'done';
-  if(!p.deadline)return 'undated';
-  return (p.band==='overdue'||p.band==='now')?'needs':'coming';
+const MONTHS=['January','February','March','April','May','June','July',
+              'August','September','October','November','December'];
+/* The strip's buckets and the list's group headings are the same function, so
+   they cannot disagree. When they were two functions they did: the strip said
+   one property was undated while the rail said two. */
+function bandOf(p){
+  const d=p.hap?p.days:null;
+  if(!p.hap||d==null||!p.deadline)return {view:'undated',rank:9,key:'none',label:'Not in the schedule'};
+  if(d>=0&&d<=30)return {view:'now', rank:0,key:'now', label:'Due within 30 days'};
+  if(d<0)        return {view:'past',rank:1,key:'past',label:'Past their date'};
+  const iso=String(p.deadline).slice(0,10).split('-');
+  return {view:'later',rank:2,key:'m'+iso[0]+iso[1],label:MONTHS[(+iso[1])-1]+' '+iso[0]};
 }
-function railHtml(counts,late,view){
-  const row=v=>{const C=menuViewCopy(v.k);
-    return '<button class="mr-row'+(v.k===view?' on':'')+(counts[v.k]?'':' zero')+'" data-view="'+v.k+'"'
-    +(v.k===view?' aria-current="true"':'')+' title="'+esc(C.lede)+'">'
-    +'<span class="mr-t">'+esc(v.t)+'</span>'
-    /* Only In flight can carry this. The partition puts local progress above the
-       deadline, so a package that is late but started sits here rather than in
-       Needs you — without the dot it would be invisible. Coming up cannot hold a
-       late one by construction, and Done owes nothing. */
-    +(late[v.k]?'<span class="mr-late" title="'+late[v.k]+' of these is already late or due within '+_bandNow()+' days"></span>':'')
-    +'<span class="mr-n">'+counts[v.k]+'</span></button>';};
-  /* Both groups are titled, because an untitled list above a titled one reads
-     as a preamble rather than as the other half of a pair. And All properties
-     leaves the run of states for a block of its own: it is not a sixth state,
-     it is what the five come to, and the rail is only trustworthy while that
-     arithmetic is visible. */
-  const states=MENU_VIEWS.filter(v=>v.k!=='all'),total=MENU_VIEWS.filter(v=>v.k==='all');
-  return '<div class="mr-g"><div class="mr-gt">Status</div>'+states.map(row).join('')
-    +'<div class="mr-tot">'+total.map(row).join('')+'</div></div>'
-    +'<div class="mr-g"><div class="mr-gt">Programs</div>'+MENU_PROG_VIEWS.map(row).join('')+'</div>';
+/* Each figure is a button. The number you press is the number of rows you get
+   — the invariant the whole strip rests on, and the one the suite asserts. */
+function figuresHtml(counts,view){
+  return MENU_VIEWS.map(v=>{const C=menuViewCopy(v.k);
+    return '<button class="fig'+(v.c?' '+v.c:'')+(v.k===view?' on':'')+(counts[v.k]?'':' zero')
+      +'" data-view="'+v.k+'"'+(v.k===view?' aria-current="true"':'')
+      +' title="'+esc(C.lede)+'"><b>'+counts[v.k]+'</b> '
+      +esc(v.k==='all'&&counts.all===1?'property':v.t)+'</button>';}).join('');
 }
 
 /* The deadline, said the way a person would say it. */
@@ -3226,8 +3224,8 @@ function dueLine(p){
      "119 days late" in red across a hundred and three rows buried the handful
      that are genuinely live. It states the date and stops there. */
   if(d<0)return '<div class="pc-due past">Was due '+esc(fmtDateShort(p.deadline))+'</div>';
-  if(d<=30)return '<div class="pc-due now">Due '+esc(fmtDateShort(p.deadline))+' · '+d+' day'+(d===1?'':'s')+' left</div>';
-  return '<div class="pc-due ok">Due '+esc(fmtDateShort(p.deadline))+' · '+d+' days</div>';
+  if(d<=30)return '<div class="pc-due now">'+esc(fmtDateShort(p.deadline))+' · '+d+' day'+(d===1?'':'s')+' left</div>';
+  return '<div class="pc-due ok">'+esc(fmtDateShort(p.deadline))+' · '+d+' days</div>';
 }
 function fmtDateShort(iso){
   const m=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -3241,25 +3239,33 @@ function pickWhoDialog(){
   const H=window.RCSHap,rows=hapAll();
   const names=(H&&rows)?H.managers(rows):[];
   if(!names.length){setStatus('The renewal schedule has not loaded, so there are no names to choose from.');return;}
-  const rowsHtml=names.map(nm=>'<div class="uaopt" data-who="'+esc(nm)+'" style="padding:9px 12px;cursor:pointer'
-    +(nm===pmName?';font-weight:700':'')+'">'+esc(nm)+(nm===pmName?'<span class="uasub">current</span>':'')+'</div>').join('');
-  modal('<div class="dlg-t">Which portfolio manager are you?</div>'
-    +'<div class="lh-note" style="margin-bottom:10px">Your name decides which properties show under <b>Mine</b>. '
-    +'These are the managers named in the renewal schedule.</div>'
+  const _cur=nm=>(menuLens==='all')?(nm==='*'):(nm===pmName);
+  const _row=(k,lab)=>'<div class="uaopt" data-who="'+esc(k)+'" style="padding:9px 12px;cursor:pointer'
+    +(_cur(k)?';font-weight:700':'')+'">'+esc(lab)+(_cur(k)?'<span class="uasub">current</span>':'')+'</div>';
+  const rowsHtml=_row('*','Everyone')+names.map(nm=>_row(nm,nm)).join('');
+  modal('<div class="dlg-t">Whose properties should the list show?</div>'
+    +'<div class="lh-note" style="margin-bottom:10px">These are the managers named in the renewal schedule. '
+    +'Choosing a name also records who you are.</div>'
     +'<div id="whoList" style="max-height:230px;overflow:auto;border:1px solid #e0e5ee;border-radius:8px">'+rowsHtml+'</div>'
     +'<div class="dlg-row"><button class="btn" id="dlgCancel">Cancel</button><span class="dlg-sp"></span></div>');
   el('dlgCancel').onclick=closeModal;
   document.querySelectorAll('[data-who]').forEach(r=>r.onclick=async()=>{
     const nm=r.getAttribute('data-who');closeModal();
-    pmName=nm;renderWho();renderMenu();
+    /* The bands are not the same shape for one manager as for the portfolio, so
+       the chosen view is released rather than left pointing at a bucket that
+       only emptied because the scope moved. */
+    menuView='';
+    if(nm==='*'){menuLens='all';renderWho();renderMenu();return;}
+    menuLens='mine';pmName=nm;renderWho();renderMenu();
     try{if(mpdb&&mpdb.setPmName)await mpdb.setPmName(nm);}catch(e){saveFailedModal(e);}
   });
 }
 function renderWho(){
   const w=el('menuWho');if(!w)return;
-  w.textContent=pmName||'Who are you?';
-  w.classList.toggle('unset',!pmName);
-  w.title=pmName?('Signed in as '+pmName+' — click to change'):'Choose which portfolio manager you are';
+  w.textContent=(menuLens==='all')?'All portfolios':(pmName||'Choose a portfolio');
+  w.classList.toggle('unset',menuLens!=='all'&&!pmName);
+  w.title=(menuLens==='all')?'Showing every manager\u2019s properties — click to choose one'
+    :(pmName?('Showing '+pmName+'\u2019s properties — click to change'):'Choose whose properties to show');
 }
 
 /* Opening a tracker property for the first time is what brings its record into
@@ -3314,20 +3320,22 @@ function renderMenu(){
      query: the lens changes whose work it is, so a manager reading "12" must
      find 12 cards, while search is a find-within and a rail that renumbers under
      the cursor as you type is a moving target. */
-  const counts={},late={};
-  MENU_VIEWS.concat(MENU_PROG_VIEWS).forEach(v=>{counts[v.k]=0;late[v.k]=0;});
-  if(hasRail)all.forEach(p=>{p._view=viewOf(p);counts[p._view]++;counts.all++;
-    if(p.program==='RCS')counts.rcs++;else if(p.program==='OCAF')counts.ocaf++;
-    if(p._view==='flight'&&(p.band==='overdue'||p.band==='now'))late.flight++;});
+  const counts={};
+  MENU_VIEWS.forEach(v=>{counts[v.k]=0;});
+  if(hasRail)all.forEach(p=>{p._band=bandOf(p);p._view=p._band.view;counts[p._view]++;counts.all++;});
   /* Resolved only while unset. A view chosen explicitly and then emptied STAYS
      chosen and shows its empty state \u2014 finishing the last item in Needs you
      should show you an empty Needs you, not teleport you somewhere else. */
-  if(hasRail&&!menuView)menuView=(MENU_VIEWS.find(v=>counts[v.k])||{k:'all'}).k;
+  /* The page opens on everything. The two zones already put what is live at
+     the top, so opening pre-filtered hid the portfolio to answer a question
+     nobody had asked yet. A view chosen explicitly and then emptied STAYS
+     chosen and shows its empty state. */
+  if(hasRail&&!menuView)menuView='all';
   /* Searching forces All without overwriting the stored view, so clearing the
      box returns you where you were and "I know it exists, where is it?" cannot
      happen inside a filtered view. */
   const view=q?'all':menuView;
-  const inView=p=>!hasRail||view==='all'||(view==='rcs'?p.program==='RCS':view==='ocaf'?p.program==='OCAF':p._view===view);
+  const inView=p=>!hasRail||view==='all'||p._view===view;
   const props=all.filter(inView).filter(p=>!q||(p.name+' '+(p.alias||'')+' '+p.fha+' '+(p.city_state||'')).toLowerCase().indexOf(q)>=0);
   if(q){const _sc=p=>{const nm=String(p.name||'').toLowerCase();if(nm.startsWith(q))return 0;if(nm.split(/\s+/).some(w=>w.startsWith(q)))return 1;if(nm.indexOf(q)>=0)return 2;const al=String(p.alias||'').toLowerCase();if(al.startsWith(q)||al.split(/\s+/).some(w=>w.startsWith(q)))return 3;return 4;};props.sort((a,b)=>_sc(a)-_sc(b)||String(a.name||'').localeCompare(String(b.name||'')));}
   else if(hasRail)props.sort((a,b)=>String(a.deadline||'9999-99-99').localeCompare(String(b.deadline||'9999-99-99'))||String(a.name||'').localeCompare(String(b.name||'')));
@@ -3364,24 +3372,15 @@ function renderMenu(){
          undated where this line called one — the same word, two answers,
          on one screen. A record the schedule does not carry is undated;
          that is what undated means. */
-      const _t=all;
-      const _n=_t.filter(p=>p.days!=null&&p.deadline&&p.days>=0&&p.days<=30).length;
-      const _p=_t.filter(p=>p.days!=null&&p.deadline&&p.days<0).length;
-      const _u=_t.filter(p=>p.days==null||!p.deadline).length;
-      const _l=_t.length-_n-_p-_u;
-      const fig=(cls,n,lab)=>'<span'+(cls?' class="'+cls+'"':'')+'><b>'+n+'</b> '+esc(lab)+'</span>';
-      el('menuCount').innerHTML=fig('now',_n,'due within 30 days')
-        +fig('soon',_l,'later')
-        +fig('',_p,'past their date')
-        +(_u?fig('',_u,'undated'):'')
-        +fig('done',all.length,all.length===1?'property':'properties');
+      el('menuCount').innerHTML=figuresHtml(counts,view);
+      document.querySelectorAll('#menuCount [data-view]').forEach(b=>b.onclick=()=>{
+        menuView=b.getAttribute('data-view');renderMenu();});
     }else el('menuCount').textContent=bits.join('  \u00b7  ');
   }
-  if(el('menuRail'))el('menuRail').innerHTML=hasRail?railHtml(counts,late,view):'';
-  /* Emptying the rail does not collapse the column it sits in. Without this the
-     no-tracker fallback — the path that is supposed to look like the old flat
-     grid — draws every card behind 222px of nothing. */
-  if(el('menuBody'))el('menuBody').classList.toggle('norail',!hasRail);
+  /* Whose work this is, said once, where the control that changes it lives. */
+  if(el('menuEyebrow'))el('menuEyebrow').textContent=
+    'Portfolio'+(hasRail?((menuLens==='all'||!pmName)?' \u00b7 all managers':' \u00b7 '+pmName):'');
+  renderWho();
   if(el('menuLede'))el('menuLede').textContent=hasRail?menuViewCopy(view).lede:'';
   /* The card is a CONTAINER holding two sibling buttons, not a button with
      another inside it. A <button> nested in a <button> is invalid: the parser
@@ -3405,11 +3404,16 @@ function renderMenu(){
     const body='<button class="pc-body" data-open="'+p.id+'"'+(p.caption?' title="'+esc(p.caption)+'"':'')+'><div class="pc-top"><div class="pc-name">'+esc(p.name)+(showAl?'<span class="pc-alias">&ldquo;'+esc(al)+'&rdquo;</span>':'')+'</div>'+profileChip(p)+'</div>'
       +'<div class="pc-meta">'+(p.hap?(esc(p.pm||'Unassigned')+(p.city_state?' &middot; '+esc(p.city_state):'')):(esc(p.fha)+(p.city_state?' &middot; '+esc(p.city_state):'')))+'</div>'
       +(p.hap?dueLine(p):'')
+      /* The ledger printed a "Rents effective" header over an empty column. */
+      +'<div class="pc-eff">'+((p.hap&&p.action&&p.action.effective)?esc(fmtDateShort(p.action.effective)):'')+'</div>'
       +'<div class="pc-div"></div>'
       +'<div class="pc-foot">'+prog
-      +'<span class="pc-units">'+(p.hap&&!p.started?'Not started':(p.total_units+' unit'+(p.total_units===1?'':'s')+(p.unit_types?' &middot; '+p.unit_types+' type'+(p.unit_types===1?'':'s'):'')))+'</span>'
+      /* Always the unit count. "Not started" stood here instead, which is the
+         progress question the row's own button already answers — and it took
+         the slot the size of the job belongs in. */
+      +'<span class="pc-units">'+(p.total_units?(p.total_units+' unit'+(p.total_units===1?'':'s')+(p.unit_types?' &middot; '+p.unit_types+' type'+(p.unit_types===1?'':'s'):'')):'')+'</span>'
       +(p.hap&&!p.started?'':'<span class="pc-upd" title="'+esc(updTitle(p.updated_at))+'">Updated '+relTime(p.updated_at)+'</span>')+'</div></button>';
-    return '<div class="pcard"'+(_band?' data-band="'+esc(_band)+'"':'')+'>'+body+actionBtnHtml(p)+'</div>';};
+    return '<div class="pcard"'+(_band?' data-band="'+esc(_band)+'"':'')+'>'+body+actionBtnHtml(p,_band!=='now')+'</div>';};
   /* A "+ New property" tile sitting inside "Needs you" would imply it belongs to
      that band. #bNewProperty in the toolbar is always there, so the tile appears
      only where it means what it looks like. */
@@ -3425,18 +3429,7 @@ function renderMenu(){
      looked like every other. The rows do not change and none is added or
      removed — the count still equals the rail badge — they are banded, and the
      band that can be acted on today is put first and given weight. */
-  const MONTHS=['January','February','March','April','May','June','July',
-                'August','September','October','November','December'];
-  const bandOfProp=p=>{
-    const d=p.days;
-    if(d==null||!p.deadline)return {rank:9,key:'none',label:'No date scheduled'};
-    if(d>=0&&d<=30)return {rank:0,key:'now',label:'Due within 30 days'};
-    if(d<0)return {rank:1,key:'past',label:'Past their date'};
-    const iso=String(p.deadline).slice(0,10).split('-');
-    const key='m'+iso[0]+iso[1];
-    return {rank:2,key:key,label:MONTHS[(+iso[1])-1]+' '+iso[0]};
-  };
-  const _banded=_tr.map(p=>({p:p,b:bandOfProp(p)}));
+  const _banded=_tr.map(p=>({p:p,b:p._band||bandOf(p)}));
   _banded.sort((a,b)=>(a.b.rank-b.b.rank)
     ||String(a.b.key).localeCompare(String(b.b.key))
     ||(_tr.indexOf(a.p)-_tr.indexOf(b.p)));
@@ -3455,10 +3448,11 @@ function renderMenu(){
      above it, and the rest is a ledger with its own heading. Run together in
      one table the live rows were just the first few lines of a long list. */
   const _liveN=_banded.filter(x=>x.b.key==='now').length;
-  const _liveDue=_liveN?_banded.find(x=>x.b.key==='now').p.deadline:'';
-  const _liveHd=_liveN?('<div class="zhead"><h3>Due to HUD by '
-      +esc(fmtDateShort(_liveDue))+'</h3><span>'+_liveN
-      +(_liveN===1?' property':' properties')+'</span></div>'):'';
+  /* "Due to HUD by Jul 31" over a row due Aug 1 is a heading asserting
+     something its members do not share. The band is a window, so the heading
+     names the window. */
+  const _liveHd=_liveN?('<div class="zhead"><h3>Due within '+_bandNow()+' days</h3><span>'+_liveN
+      +(_liveN===1?' property':' properties')+' &middot; earliest deadline first</span></div>'):'';
   const _restN=_banded.length-_liveN;
   const _restHd=_restN?('<div class="zhead"><h3>Remaining</h3><span>'+_restN
       +(_restN===1?' property':' properties')+' &middot; earliest deadline first</span></div>'):'';
@@ -4439,12 +4433,6 @@ async function boot(){
   const ms=el('menuSearch');if(ms)ms.addEventListener('input',renderMenu);
   const bn=el('bNewProperty');if(bn)bn.onclick=createProperty;
   const who=el('menuWho');if(who)who.onclick=pickWhoDialog;
-  document.querySelectorAll('[data-lens]').forEach(b=>b.onclick=()=>{menuLens=b.getAttribute('data-lens');
-    document.querySelectorAll('[data-lens]').forEach(x=>x.classList.toggle('on',x===b));
-    /* Mine and All are different questions, and the first non-empty view for one
-       is rarely the first for the other — so the rail re-resolves rather than
-       landing you in a view that is empty only because the lens moved. */
-    menuView='';renderMenu();});
   const be=el('bExit');if(be)be.onclick=requestExit;
   wireHome();
   const _revertToSaved=async()=>{form=await store.fillForm();await refreshSnap();fixSavedToggles();deriveUnits();snapForm();renderBody();setStatus('Reverted to the last saved record.');};
