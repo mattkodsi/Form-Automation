@@ -422,3 +422,72 @@ RESUME HERE: remaining tractable work is measurement-only — Hampshire House's
 flattened rent schedule reads address text as unit values, and Barnum's reads a
 date as the FHA number. Everything else is gated on the two decisions in
 MORNING-REPORT.md sections 1 and 3.
+
+---
+
+# RESUME HERE — read this section first (2026-07-29, morning)
+
+## The big correction
+
+**"The app cannot read 27 of 34 executed rent schedules" was measured with OCR
+switched off — a constraint I imposed myself and should have put to Matt instead
+of burying in the plan.** With tier 3 available, Lansing Manor's schedule reads
+*perfectly*: `1Bedroom`/32/$892/UA 116 and `1Bedroom Patio`/68/$897/UA 116, plus
+name, contract number, signatory and owner entity — every value identical to the
+hand-verified ground truth in `corpus/verified/lansing-manor.json`.
+
+The vector-outline finding stands (those values genuinely are not text). The
+conclusion "unreadable" does not. Expect the 27 to fall a long way once the real
+run happens. **Do not repeat the old headline without re-measuring.**
+
+## What is set up and working
+
+- **Session**: `_archive/corpus-cache/.session.json`, role `authenticated`, mode
+  600, gitignored, refresh token present. Created by `corpus/signin.js`, which
+  **Matt runs, not me** — it never records or reveals the password. If it has
+  expired, `ocr-cache.js`/the driver refresh it automatically; if the refresh
+  fails, ask Matt to run signin.js again.
+- **OCR is live and exact.** Verified against ground truth, 3 Azure calls for one
+  property. Free tier (F0), ~500 pages/month, ~1 request/sec. Budget ~80 calls
+  for 27 properties.
+
+## The design Matt actually asked for (I had it wrong twice)
+
+The two runs are **two fill orders from ONE upload**, not two uploads:
+
+1. Create property + RCS cycle in the REAL signed-in app
+2. Upload prior rent schedule → **OCR runs once**; `rsRemember()` (app.js:1031)
+   persists the parsed reading to the cycle
+3. Upload study
+4. Click *Fill from RS* → *Fill from study* → Generate → capture
+5. **Reload.** Form values were never saved (the fill functions make zero
+   `saveToDb`/`saveField` calls; `markCycle` at app.js:107 only flips an
+   in-memory label), so the form returns empty while both uploads are recalled
+   from the database — **no second OCR**
+6. Click *Fill from study* → *Fill from RS* → Generate → capture
+
+## In flight when the context was reset
+
+An agent was rewriting `app/full-mp/corpus/drive.js` to drive the **real
+signed-in app through the real DOM** (no `window.__t` — it does not exist outside
+selftest, and that is deliberate). Its work is on disk and the OCR-cache path has
+already been removed. **It may be unverified — run it on one property before
+trusting it.**
+
+`corpus/ocr-cache.js` is now **diagnostic only**, not part of the pipeline. Note
+its "readable without OCR — not billed" line is WRONG: the pre-check calls
+`parseRsPdf`, which itself runs the whole ladder including tier 3.
+
+## MUST NOT FORGET
+
+Runs write to Matt's **live account** (`mfkodsi@gmail.com`, his choice). Every
+test property is named `ZZ-CORPUS-*` and **must be deleted afterwards** —
+`cleanup()` in drive.js. Check `listProperties` for leftovers before finishing.
+
+## Next command
+
+```
+node app/full-mp/corpus/drive.js "$CORPUS" _archive/corpus-cache app/full-mp/corpus/corpus.json "Lansing Manor"
+```
+Prove one property end to end, confirm OCR ran ONCE and the reload assertions
+held, then sweep all 34 and diff against `sweep-6.json` keyed on property·doc·key.
