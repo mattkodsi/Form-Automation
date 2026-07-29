@@ -566,3 +566,158 @@ the June 14 revision (3BR UA 221) while the package filed the June 4 one (222). 
 Green: the app was fed v4 (SAFMR 990/1,230) while all three filed packages contain v1
 (1,050/1,310). Burt Farms I: the alternative study concludes **$1,475** against the
 chosen **$1,825** — $350 a unit. The chosen file was right there, but the margin is real.
+
+---
+
+# Wave 3 (partial) — the allowance fix, verified against the filed documents
+
+`d714cd8` re-driven over all ten audited properties. Every allowance moved the way the
+evidence said it would, and no other row moved:
+
+| property | before | after | filed |
+|---|---|---|---|
+| Burt Farms I | 52 | **54** | 54 |
+| Sycamore Green | 42 · 50 | **51 · 64** | 51 · 64 |
+| Northcross | 149 · 184 · 204 | **180 · 221 · 246** | 180 · 221 · 246 |
+| Ebony Gardens | 65 · 88 · 98 · 107 | **96 · 117 · 129 · 125** | the filed workbook's four rows now read `match` |
+
+Mismatch counts fell on four properties and rose on none: Ebony 100→93, Sycamore 81→78,
+Oak Center 150→147, Morh 97→100→97. Riverwood is still 0 — it generates nothing.
+
+## M22 · One study, one unit type, two spellings — FIXED
+
+**North Park** prices four unit types. The reader found **seven**. Its transmittal table
+writes `1BD/1BA` where its SAFMR and gross-renewal tables write `1BR/1BA`, and the roster
+keyed on the raw string, so three ghost rows appeared carrying a SAFMR and nothing else.
+
+The quieter half is worse: the studio matched between the two tables and took the study's
+allowance, the other three did not match and fell back to the prior schedule's. **One
+column, one document, two different allowance policies, decided by a letter.**
+`typeKey` now folds BD to BR. It cannot merge rows a study means to keep apart —
+Lansing Manor's patio/no-patio pair differ by more than a letter, and the suite pins it.
+
+## M23 · The corpus rig is feeding the app documents the team did not use
+
+This is not an app defect, and it means **some rows recorded as `app wrong` are artifacts**.
+
+**Wrong prior schedule.** New Horizons: the rig chose `2023/Unexecuted RS.pdf`, which is
+100% vector outlines — `Print To PDF`, zero fonts, zero images, `pdftotext` returns three
+bytes, and the decompressed streams hold ~2,400 line operators and **not one text-drawing
+operator**. Two readable siblings sit in the same folder and **one has a live AcroForm**
+that tier 1 would have read outright. North Park: the rig chose the **2023** schedule when
+`2024/Executed RS_North Park Apts.pdf` is the real year−1 — so every "current rent" we
+printed is a year stale (500,223 against 510,752).
+
+**Wrong study.** Northcross (June 4 filed vs June 14 fed), Sycamore Green (v1 filed vs v4
+fed), New Horizons (3-26 filed vs 3-12 fed). On New Horizons the two differ in exactly the
+column under repair: the fed draft says 132/138/151/139, the filed study says
+149/156/171/158, and the filed schedule says 149/156/171/158. **Preferring the study is
+right — but only against the study the team actually filed.**
+
+The ranker sorts by folder and filename and never asks whether the file is readable or
+whether it is the one that was filed. **From here, every allowance or SAFMR row must name
+which study it was measured against.**
+
+## New Horizons and North Park
+
+New Horizons generated **nothing** in both orders — "Cannot generate the package with zero
+units" — from the unreadable schedule above plus an Azure **429**. North Park generated
+**one of six**: the study, passed through unchanged. Its workbook is order-dependent —
+`rs-first` loses the study's 1/2/3BR rents and SAFMRs entirely; `rcs-first` keeps them but
+on the three ghost rows.
+
+North Park's filed allowances (94/112/123/129) match `2025/Exhibit A.pdf` exactly and
+match neither the study nor any schedule. Its study's UA table is a verbatim copy of the
+year−1 schedule's Column 5, so on that property "prefer the study" and "prefer the prior
+schedule" would give the same answer had the right schedule been fed.
+
+New Horizons' correct allowances are derived in `Submission/Exhibit 5 - New Horizons
+UAF.pdf` under HUD Notice 2015-04 from the FY2024 New York factors (electric 1.04, gas
+1.296): 84×1.04=87 plus 48×1.296=62 gives $149, and so on for the rest.
+
+## team wrong
+
+- New Horizons: the loose `Exhibit 2 - RCS Owners Checklist … 3.25.24.pdf` is titled
+  **`Oceanport Senior Citizens`** — another property — and it is the NEWER copy, signed
+  three weeks after the one in the package. A later re-signing reintroduced a wrong header.
+- North Park: the filed package renders one contract number three ways —
+  `NY36A005001`, `NY36-A005-001`, and again as an "FHA Project No." in the study.
+- New Horizons passes its 150% test by **$353** on $204,742 — 0.17%. The competing grid
+  block in the same workbook reads `Below 150%? = NO`.
+
+## M24 · Hampshire House — the study's concluded rents reached NOTHING
+
+The study prints **$2,000** and **$2,400** unambiguously, on its page-2 letter table and
+in row 46 of both HUD-92273-S8 grids. In our output:
+
+- draft rent schedule Col. 3, Col. 4 and Col. 6: **blank on both rows**
+- Monthly and Yearly Contract Rent Potential: **blank** (filed: $240,000 / $2,880,000)
+- Part F: **blank**
+- workbook column E ("RCS Rents"): **empty on both rows**
+
+And the app still reported the draft rent schedule as **"✓ … 1 suggested"**. Both fill
+orders identical, so this is not an ordering fault. Circle Park loses one priced row this
+way; Hampshire House loses **all** of them. **Two properties — this is now fixable.**
+
+## M25 · Two documents in one package disagree with each other on the allowance
+
+Hampshire House, same run, same record: the **workbook** printed the study's **70 / 86**
+and the **draft rent schedule Col. 5** printed the prior schedule's **68 / 83**. One
+package cannot state two allowances. The workbook resolves through `uaResolvedOf`; the
+schedule resolves through its own inline fallback in `gen.js`. After `d714cd8` those two
+were supposed to agree, and on this property they do not — so one of the two paths is not
+seeing `ua_rcs` at all. Trace before touching either.
+
+## M26 · The workbook flattens a distinction the rent schedule keeps
+
+**Lansing Manor** is the test case the corpus was waiting for: two 1-bedroom types at
+different rents, separated only by a patio.
+
+- our **rent schedule** prints `1 BR / 1 BA` and `1 BR / 1 BA Patio` — correct, and it
+  keeps them apart by inheriting the prior schedule's suffix
+- our **workbook** labels **both rows `1BR/1BA`** — identical strings, distinguishable
+  only by unit count
+
+The study's own words ("without patio" / "with patio") survive in neither. Fifth property
+for the workbook-label defect, and the clearest: the same run gets it right in one
+document and wrong in the other.
+
+## Wave 3 — the rest
+
+**Hampshire House** needed **no OCR** (`tier: text`, 0 calls) and was right to: its prior
+schedule is a real AcroForm with an embedded text layer. **Lansing Manor** made **3 OCR
+calls** on a document whose page 4 (Exhibit A) carries the entire rent roll in a clean
+text layer — `32 / 1BR / 892 / 116 / 1,008` reads straight out of it. Its HUD-92458 pages
+are flattened (`/Fields` empty, zero widgets), so tier 1 legitimately fails, but tier 2
+had a readable page and did not use it.
+
+New app-wrong rows this wave:
+
+| defect | properties |
+|---|---|
+| Part G "Other (specify)" stores `Liability Company` — the word **Limited** is lost | Lansing |
+| Effective date 02/01/2026 where every source says 02/02/2026 | Lansing |
+| Checklist ticks `Copy of RCS Appraiser's License` though the study answers **N** to the temporary-licence question | Lansing, Circle Park — **now 2** |
+| Checklist `Scope of Work` unticked | Lansing — **now 6** |
+| Part I HAP contract number blank | Lansing — **now 7** |
+| Part F blank | Lansing — **now 8** |
+| Non-revenue row present in the input and dropped from our output | Hampshire |
+| Workbook rows 10/15 missing formulas entirely (hard zeros in L, M, V) | Hampshire |
+| SAFMR from the HUD pull, not the study: 1,590/1,916 vs 1,500/1,810; 1,012 vs 1,040 | Hampshire, Lansing — **now 8** |
+
+## The utility allowance, restated after ten properties
+
+Every property has a **third document**, and it is usually the one that governs:
+
+| property | the filed Col. 5 comes from |
+|---|---|
+| Hampshire House | `M2M-UAF YR3-FY2025.pdf` — a **CA letter written eight weeks AFTER filing**, applying a gas factor of 1.312 the owner's own UAF letter never used |
+| Lansing Manor | `Appendix II - Senior World (UA Decrease).pdf`, 12/24/2025: $116 − $17 = **$99** |
+| New Horizons | `Exhibit 5 - UAF.pdf`, HUD Notice 2015-04, factors 1.04 and 1.296 |
+| North Park | `2025/Exhibit A.pdf` |
+| Ebony, Clinton, Circle Park, Riverwood, Westwood | as recorded in Wave 1 and Wave 2 |
+
+Hampshire House is the sharpest case: the owner's own UAF letter computes 68×1.033 = **70**
+and 83×1.033 = **86**, which is exactly what the study says and exactly what we now print.
+The filed schedule says **73 / 89**, from a document that did not exist when the package
+was assembled. **On that property our output is right and the filed one is later.**

@@ -128,11 +128,11 @@ A wave marks a property `audited` only when its agent returned rows.
 | 3 | 4640013 | Riverwood | **audited** | 2 |
 | 4 | 75109 | Burt Farms I | **audited** | 2 |
 | 5 | 75453 | Sycamore Green | **audited** | 2 |
-| 6 | 75474 | New Horizons | unaudited | |
-| 7 | 75478 | North Park | unaudited | |
+| 6 | 75474 | New Horizons | **audited** | 3 |
+| 7 | 75478 | North Park | **audited** | 3 |
 | 8 | 75488 | Woodbury Oakwood (Lakeside) | unaudited | |
-| 9 | 75495 | Hampshire House | unaudited | |
-| 10 | 75500 | Lansing Manor | unaudited | |
+| 9 | 75495 | Hampshire House | **audited** | 3 |
+| 10 | 75500 | Lansing Manor | **audited** | 3 |
 | 11 | 75543 | Noble Tower | unaudited | |
 | 12 | 75544 | Oaks on North Plaza | unaudited | |
 | 13 | 75563 | Oceanport | unaudited | |
