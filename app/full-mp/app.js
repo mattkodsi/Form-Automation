@@ -3191,7 +3191,14 @@ function railHtml(counts,late,view){
        late one by construction, and Done owes nothing. */
     +(late[v.k]?'<span class="mr-late" title="'+late[v.k]+' of these is already late or due within '+_bandNow()+' days"></span>':'')
     +'<span class="mr-n">'+counts[v.k]+'</span></button>';};
-  return '<div class="mr-g">'+MENU_VIEWS.map(row).join('')+'</div>'
+  /* Both groups are titled, because an untitled list above a titled one reads
+     as a preamble rather than as the other half of a pair. And All properties
+     leaves the run of states for a block of its own: it is not a sixth state,
+     it is what the five come to, and the rail is only trustworthy while that
+     arithmetic is visible. */
+  const states=MENU_VIEWS.filter(v=>v.k!=='all'),total=MENU_VIEWS.filter(v=>v.k==='all');
+  return '<div class="mr-g"><div class="mr-gt">Status</div>'+states.map(row).join('')
+    +'<div class="mr-tot">'+total.map(row).join('')+'</div></div>'
     +'<div class="mr-g"><div class="mr-gt">Programs</div>'+MENU_PROG_VIEWS.map(row).join('')+'</div>';
 }
 
@@ -3351,7 +3358,13 @@ function renderMenu(){
        looking is worse than no count, because they cannot tell whether the
        figure or the grouping is wrong. */
     if(hasRail){
-      const _t=all.filter(p=>p.hap);
+      /* Over every property, not only the tracked ones. Counted over the
+         tracked subset the four buckets came to 229 beside a total that
+         printed 230, and the rail one column away called two properties
+         undated where this line called one — the same word, two answers,
+         on one screen. A record the schedule does not carry is undated;
+         that is what undated means. */
+      const _t=all;
       const _n=_t.filter(p=>p.days!=null&&p.deadline&&p.days>=0&&p.days<=30).length;
       const _p=_t.filter(p=>p.days!=null&&p.deadline&&p.days<0).length;
       const _u=_t.filter(p=>p.days==null||!p.deadline).length;

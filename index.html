@@ -685,6 +685,25 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
 #viewMenu .mbody{gap:24px}
 #viewMenu .rside,#viewMenu .mrail{background:var(--card);border:1px solid var(--ln);
   border-radius:8px;padding:14px 12px}
+/* An index on a document, not a strip of navy pills. Which filter you are
+   holding is stated in ink and a sunk fill and never in a hue: on this page a
+   colour means a deadline, and the rail carries none. */
+#viewMenu .mr-gt{color:var(--i3);font-weight:600;font-size:10px;letter-spacing:.12em;
+  padding:0 9px;margin-bottom:7px}
+#viewMenu .mr-g+.mr-g{margin-top:18px;padding-top:15px;border-top:1px solid var(--ln-soft)}
+#viewMenu .mr-tot{border-top-color:var(--ln-soft)}
+#viewMenu .mr-row{font-size:13px;font-weight:500;color:var(--i2);border-radius:4px;
+  padding:7px 9px;box-shadow:inset 2px 0 0 transparent}
+#viewMenu .mr-row:hover{background:var(--sunk);color:var(--i1)}
+#viewMenu .mr-row.on{background:var(--sunk);color:var(--i1);font-weight:600;
+  box-shadow:inset 2px 0 0 var(--i1)}
+#viewMenu .mr-row.zero{color:var(--i4);font-weight:400}
+#viewMenu .mr-row.zero.on{color:var(--i1);font-weight:600}
+#viewMenu .mr-n{color:var(--i3);font-weight:500;font-size:12px}
+#viewMenu .mr-row.on .mr-n{color:var(--i1);font-weight:600}
+#viewMenu .mr-row.zero .mr-n{color:var(--i4);font-weight:400}
+/* the one coloured thing in the rail, and it says the same red the page does */
+#viewMenu .mr-late{background:var(--stamp)}
 #viewMenu .mgrid.rows{border-color:var(--ln);border-radius:8px}
 #viewMenu .mgrid.rows .mcols{background:var(--sunk);border-bottom:1px solid var(--ln);
   color:var(--i3);letter-spacing:.12em;font-weight:600;font-size:10px}
@@ -983,11 +1002,17 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
 .mr-row.on .mr-n{color:var(--navy-pale)}
 .mr-row.zero .mr-n{color:#c2c9d6}
 .mr-late{width:6px;height:6px;border-radius:50%;background:var(--danger);flex:0 0 auto}
+/* Five states and their sum are not six peers. The rail's counts are only
+   worth reading because the five add up to All properties, so the total is
+   ruled off the way a total is on paper. */
+.mr-tot{margin-top:7px;padding-top:7px;border-top:1px solid var(--line-2)}
 .mlede{font-size:12px;color:var(--muted);margin:-4px 0 14px;line-height:1.5}
 @media(max-width:900px){
  .mbody{grid-template-columns:minmax(0,1fr)}
  .mrail{position:static;flex-direction:row;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:6px}
  .mr-g{display:flex;gap:6px}.mr-g+.mr-g{margin-top:0}.mr-gt{display:none}
+ #viewMenu .mr-g+.mr-g,#viewMenu .mr-tot{margin-top:0;padding-top:0;border-top:0}
+ .mr-tot{display:contents}
  .mr-row{width:auto;white-space:nowrap;border:1px solid var(--line-2);background:var(--surface)}
 }
 .ns8flag{display:inline-flex;align-items:center;gap:8px;cursor:pointer;line-height:1.35;vertical-align:middle} .ns8flag input{accent-color:var(--navy);width:14px;height:14px;margin:0;flex:0 0 auto} .partd .rgh{margin-top:12px}
@@ -5904,7 +5929,14 @@ function railHtml(counts,late,view){
        late one by construction, and Done owes nothing. */
     +(late[v.k]?'<span class="mr-late" title="'+late[v.k]+' of these is already late or due within '+_bandNow()+' days"></span>':'')
     +'<span class="mr-n">'+counts[v.k]+'</span></button>';};
-  return '<div class="mr-g">'+MENU_VIEWS.map(row).join('')+'</div>'
+  /* Both groups are titled, because an untitled list above a titled one reads
+     as a preamble rather than as the other half of a pair. And All properties
+     leaves the run of states for a block of its own: it is not a sixth state,
+     it is what the five come to, and the rail is only trustworthy while that
+     arithmetic is visible. */
+  const states=MENU_VIEWS.filter(v=>v.k!=='all'),total=MENU_VIEWS.filter(v=>v.k==='all');
+  return '<div class="mr-g"><div class="mr-gt">Status</div>'+states.map(row).join('')
+    +'<div class="mr-tot">'+total.map(row).join('')+'</div></div>'
     +'<div class="mr-g"><div class="mr-gt">Programs</div>'+MENU_PROG_VIEWS.map(row).join('')+'</div>';
 }
 
@@ -6064,7 +6096,13 @@ function renderMenu(){
        looking is worse than no count, because they cannot tell whether the
        figure or the grouping is wrong. */
     if(hasRail){
-      const _t=all.filter(p=>p.hap);
+      /* Over every property, not only the tracked ones. Counted over the
+         tracked subset the four buckets came to 229 beside a total that
+         printed 230, and the rail one column away called two properties
+         undated where this line called one — the same word, two answers,
+         on one screen. A record the schedule does not carry is undated;
+         that is what undated means. */
+      const _t=all;
       const _n=_t.filter(p=>p.days!=null&&p.deadline&&p.days>=0&&p.days<=30).length;
       const _p=_t.filter(p=>p.days!=null&&p.deadline&&p.days<0).length;
       const _u=_t.filter(p=>p.days==null||!p.deadline).length;
