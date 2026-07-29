@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en" data-t="day"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Form — redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#d8dde4; --card:#ffffff; --sunk:#eef1f5;
+  --ink:#101822; --ink-2:#41505f; --ink-3:#556270; --ink-4:#636c77;
+  --rule:#c2cbd6; --rule-soft:#e4e9ef;
+  --stamp:#9c2b18; --ledger:#1f5480; --filed:#2f6a45;
+  --chrome:#101d2b; --on-chrome:#fff; --on-chrome-wash:rgba(255,255,255,.10);
+  --on-chrome-line:rgba(255,255,255,.26);
+  --btn:#101d2b; --btn-hover:#1f5480;
+  /* provenance — a contract with tests behind it. Values unchanged. */
+  --prov-db:#2563eb;    --prov-db-fill:#e8f0fe;
+  --prov-cycle:#0f766e; --prov-cycle-fill:#e9f5f2;
+  --prov-over:#b45309;  --prov-over-fill:#fbf1e6;
+  --prov-new:#64748b;   --prov-new-fill:#f6f7f9;
+  --r-ctl:4px; --r-card:8px; --ease:cubic-bezier(.23,1,.32,1);
+}
+html[data-t="night"]{
+  --paper:#0a0e14; --card:#161c25; --sunk:#11161e;
+  --ink:#eef2f7; --ink-2:#a9b6c4; --ink-3:#8796a7; --ink-4:#75869a;
+  --rule:rgba(255,255,255,.13); --rule-soft:rgba(255,255,255,.08);
+  --stamp:#e8836d; --ledger:#5b9dd4; --filed:#4fb383;
+  --chrome:#080c11; --btn:#2d6ca8; --btn-hover:#3d81c2;
+  --prov-db:#6ea0f5;    --prov-db-fill:#141f33;
+  --prov-cycle:#4fb3a5; --prov-cycle-fill:#0f2320;
+  --prov-over:#dd9245;  --prov-over-fill:#2a1d0d;
+  --prov-new:#8794a6;   --prov-new-fill:#151a21;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-font-smoothing:antialiased}
+body{background:var(--paper);color:var(--ink);font-family:'IBM Plex Sans',sans-serif;
+     font-size:13.5px;line-height:1.5;font-variant-numeric:tabular-nums}
+button{font:inherit;cursor:pointer;transition:background .14s var(--ease),
+       border-color .14s var(--ease),color .14s var(--ease),transform .1s var(--ease)}
+button:active{transform:scale(.975)}
+:focus-visible{outline:2px solid var(--ledger);outline-offset:-2px;border-radius:var(--r-ctl)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;transform:none!important}}
+
+/* ---------------- masthead ---------------- */
+header{background:var(--chrome);color:var(--on-chrome);padding:0 28px;height:60px;
+       display:flex;align-items:center;justify-content:space-between}
+.bd b{font-size:15px;font-weight:600}
+.bd span{font-size:10px;letter-spacing:.17em;text-transform:uppercase;opacity:.55;
+         font-weight:600;margin-left:11px}
+.hr{display:flex;align-items:center;gap:16px}
+.hr .prop{font-size:13.5px;font-weight:600}
+.pills{display:flex;gap:4px;background:var(--on-chrome-wash);padding:4px;border-radius:999px}
+.pills button{background:none;border:none;color:var(--on-chrome);opacity:.6;font-size:11.5px;
+              font-weight:600;padding:0 14px;min-height:30px;border-radius:999px}
+.pills button[aria-pressed="true"]{background:var(--on-chrome);color:var(--chrome);opacity:1}
+
+/* ---------------- command bar ---------------- */
+.cmd{display:flex;align-items:center;gap:10px;padding:14px 28px;
+     border-bottom:1px solid var(--rule)}
+.lnk{background:none;border:1px solid var(--rule);color:var(--ink-2);border-radius:var(--r-ctl);
+     padding:0 14px;min-height:36px;font-size:12.5px;font-weight:600}
+.lnk:hover{background:var(--card);border-color:var(--ledger);color:var(--ledger)}
+.cmd .sp{flex:1}
+
+/* ---- ONE status strip, not three competing dashboards ----
+   The three boxes answered three questions: does it clear the ceiling, is
+   anything unresolved, can it be generated. That is one line of state. */
+.strip{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr) minmax(0,1fr);
+       background:var(--card);border:1px solid var(--rule);border-radius:var(--r-card);
+       margin:20px 28px 0;overflow:hidden}
+.seg{padding:16px 20px;border-left:1px solid var(--rule-soft)}
+.seg:first-child{border-left:none;box-shadow:inset 3px 0 0 var(--filed)}
+.seg.warn{box-shadow:inset 3px 0 0 var(--prov-over)}
+.seg .k{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
+        color:var(--ink-3)}
+.seg .v{font-size:15px;font-weight:600;margin-top:5px}
+.seg .v em{font-style:normal;color:var(--filed)}
+.seg .m{font-size:12.5px;color:var(--ink-3);margin-top:3px}
+.figs{display:flex;gap:22px;margin-top:10px}
+.figs div{font-size:12.5px;color:var(--ink-3)}
+.figs b{display:block;font-size:15px;font-weight:600;color:var(--ink);letter-spacing:-.01em}
+.bar{height:6px;border-radius:3px;background:var(--sunk);margin-top:11px;position:relative;
+     overflow:hidden}
+.bar i{position:absolute;inset:0 auto 0 0;background:var(--filed);border-radius:3px}
+.bar u{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--stamp)}
+.issue{display:flex;gap:9px;align-items:baseline;font-size:12.5px;color:var(--ink-2);
+       margin-top:7px}
+.issue:first-of-type{margin-top:8px}
+.issue s{text-decoration:none;color:var(--prov-over);font-weight:700}
+.doclist{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:8px;font-size:12.5px;
+         color:var(--ink-2)}
+.doclist span{display:flex;gap:6px;align-items:baseline}
+.doclist .ok{color:var(--filed);font-weight:700}
+.doclist .no{color:var(--ink-4);font-weight:700}
+.doclist .miss{color:var(--ink-4)}
+
+/* ---------------- body: rail + form ---------------- */
+.body{display:grid;grid-template-columns:214px minmax(0,1fr);gap:24px;padding:24px 28px 90px}
+.rail{position:sticky;top:20px;align-self:start}
+.rail h4{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
+         color:var(--ink-3);margin-bottom:10px}
+.rail a{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:var(--r-ctl);
+        font-size:13px;color:var(--ink-2);text-decoration:none;
+        box-shadow:inset 2px 0 0 transparent}
+.rail a:hover{background:var(--card)}
+.rail a.on{background:var(--card);color:var(--ink);font-weight:600;
+           box-shadow:inset 2px 0 0 var(--ledger)}
+.rail a.todo{box-shadow:inset 2px 0 0 var(--prov-over)}
+.rail a i{font-style:normal;font-size:11px;color:var(--ink-4);width:14px}
+.rail a.done i{color:var(--filed)}
+.rail a.todo i{color:var(--prov-over)}
+.prog{margin-top:18px;padding-top:16px;border-top:1px solid var(--rule)}
+.prog .n{font-size:13px;font-weight:600}
+.prog .m{font-size:12.5px;color:var(--ink-3);margin-top:2px}
+.prog .bar{margin-top:9px}
+.key{margin-top:18px;padding-top:16px;border-top:1px solid var(--rule)}
+.key div{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--ink-3);
+         margin-top:7px}
+.key s{text-decoration:none;width:3px;height:14px;border-radius:2px;flex:none}
+
+/* ---------------- section cards ---------------- */
+.card{background:var(--card);border:1px solid var(--rule);border-radius:var(--r-card);
+      margin-bottom:14px;overflow:hidden}
+.chead{display:flex;align-items:center;gap:12px;padding:14px 20px;
+       border-bottom:1px solid var(--rule-soft)}
+.cnum{width:22px;height:22px;border-radius:50%;background:var(--sunk);color:var(--ink-3);
+      font-size:11px;font-weight:600;display:grid;place-items:center;flex:none}
+.card.done .cnum{background:var(--filed);color:#fff}
+.ctitle{font-size:15px;font-weight:600;letter-spacing:-.01em}
+.tag{margin-left:auto;font-size:10.5px;font-weight:600;letter-spacing:.08em;
+     text-transform:uppercase;color:var(--ink-3)}
+.card.done .tag{color:var(--filed)}
+.card.todo .tag{color:var(--prov-over)}
+.cbody{padding:20px}
+
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px 20px}
+.f{min-width:0}
+.f label{display:block;font-size:11.5px;font-weight:600;color:var(--ink-3);margin-bottom:5px}
+/* the cell: fill states the save state, the rule states it again at the edge */
+.cell{display:flex;align-items:center;width:100%;min-height:40px;padding:0 12px;
+      border:1px solid var(--rule);border-radius:var(--r-ctl);background:var(--card);
+      font-size:13.5px;color:var(--ink);box-shadow:inset 3px 0 0 var(--prov-new)}
+.cell.db{background:var(--prov-db-fill);box-shadow:inset 3px 0 0 var(--prov-db)}
+.cell.cy{background:var(--prov-cycle-fill);box-shadow:inset 3px 0 0 var(--prov-cycle)}
+.cell.ov{background:var(--prov-over-fill);box-shadow:inset 3px 0 0 var(--prov-over)}
+.cell.nw{background:var(--prov-new-fill)}
+.cell .ph{color:var(--ink-4)}
+.row3{display:grid;grid-template-columns:1fr 150px 74px 110px;gap:8px}
+.foot{position:fixed;left:0;right:0;bottom:0;background:var(--card);
+      border-top:1px solid var(--rule);padding:12px 28px;display:flex;justify-content:center;gap:10px}
+.go{background:var(--btn);color:#fff;border:1px solid var(--btn);border-radius:var(--r-ctl);
+    padding:0 18px;min-height:40px;font-size:13px;font-weight:600}
+.go:hover{background:var(--btn-hover);border-color:var(--btn-hover)}
+.tog{display:flex;border:1px solid var(--on-chrome-line);border-radius:999px;overflow:hidden}
+.tog button{background:none;border:none;color:var(--on-chrome);opacity:.6;font-size:11.5px;
+            padding:0 14px;min-height:34px}
+.tog button[aria-pressed="true"]{background:var(--on-chrome-wash);opacity:1;font-weight:600}
+</style></head>
+<body>
+
+<header>
+  <div class="bd"><b>Package Builder</b><span>HUD Section 8</span></div>
+  <div class="hr">
+    <div class="tog">
+      <button aria-pressed="true" onclick="T('day',this)">Day</button>
+      <button aria-pressed="false" onclick="T('night',this)">Night</button>
+    </div>
+    <span class="prop">Beacon Hill Apartments</span>
+    <div class="pills">
+      <button aria-pressed="true">RCS</button><button aria-pressed="false">OCAF</button>
+      <button aria-pressed="false">UAF</button><button aria-pressed="false">BBRA</button>
+    </div>
+  </div>
+</header>
+
+<div class="cmd">
+  <button class="lnk">← Back to property</button>
+  <button class="lnk">↺ Revert to saved</button>
+</div>
+
+<!-- three dashboards become one strip: does it clear, what's unresolved, can it ship -->
+<div class="strip">
+  <div class="seg">
+    <div class="k">Affordability</div>
+    <div class="v"><em>Clears the 150% ceiling</em> by $30,338</div>
+    <div class="bar"><i style="width:82.6%"></i><u style="left:82.6%"></u></div>
+    <div class="figs">
+      <div><b>$131,582</b>current</div><div><b>$144,062</b>proposed</div>
+      <div><b>$174,400</b>ceiling</div><div><b>+10%</b>increase</div>
+      <div><b>+$150K</b>per year</div>
+    </div>
+  </div>
+  <div class="seg warn">
+    <div class="k">Unresolved</div>
+    <div class="v">2 conflicts</div>
+    <div class="issue"><s>!</s><span>Utility allowance — 1 unit type needs a source</span></div>
+    <div class="issue"><s>!</s><span>SAFMR — HUD and the RCS differ, using HUD</span></div>
+  </div>
+  <div class="seg">
+    <div class="k">This package</div>
+    <div class="v">5 of 6 documents ready</div>
+    <div class="doclist">
+      <span><b class="ok">✓</b>Cover letter</span><span><b class="ok">✓</b>Owner letter</span>
+      <span><b class="ok">✓</b>Checklist</span><span><b class="ok">✓</b>Rent schedule</span>
+      <span><b class="ok">✓</b>Tenant notice</span>
+      <span class="miss"><b class="no">○</b>RCS report — not uploaded</span>
+    </div>
+  </div>
+</div>
+
+<div class="body">
+  <div class="rail">
+    <h4>Sections</h4>
+    <a href="#" class="todo"><i>!</i>Source documents</a>
+    <a href="#" class="on done"><i>✓</i>Property</a>
+    <a href="#" class="done"><i>✓</i>Principals</a>
+    <a href="#" class="done"><i>✓</i>Point of contact</a>
+    <a href="#" class="done"><i>✓</i>Contract administrator</a>
+    <a href="#" class="done"><i>✓</i>Appraiser</a>
+    <a href="#" class="todo"><i>!</i>Rents &amp; unit mix</a>
+    <a href="#" class="done"><i>✓</i>Items included in rent</a>
+    <a href="#" class="done"><i>✓</i>Owner’s checklist</a>
+    <a href="#" class="done"><i>✓</i>Tenant notice</a>
+    <div class="prog">
+      <div class="n">8 of 10 confirmed</div>
+      <div class="m">2 sections still to confirm</div>
+      <div class="bar"><i style="width:80%;background:var(--ledger)"></i></div>
+    </div>
+    <div class="key">
+      <div><s style="background:var(--prov-db)"></s>On file</div>
+      <div><s style="background:var(--prov-cycle)"></s>From a source, not saved</div>
+      <div><s style="background:var(--prov-over)"></s>Overridden</div>
+      <div><s style="background:var(--prov-new)"></s>New</div>
+    </div>
+  </div>
+
+  <div>
+    <div class="card todo">
+      <div class="chead"><span class="cnum">1</span><span class="ctitle">Source documents</span>
+        <span class="tag">Needs you</span></div>
+      <div class="cbody">
+        <div class="grid">
+          <div class="f"><label>Current executed rent schedule</label>
+            <div class="cell nw"><span class="ph">Not uploaded — fills unit mix, rents and principals</span></div></div>
+          <div class="f"><label>Completed RCS report</label>
+            <div class="cell nw"><span class="ph">Not uploaded — document 04 of the package</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card done">
+      <div class="chead"><span class="cnum">2</span><span class="ctitle">Property</span>
+        <span class="tag">Confirmed</span></div>
+      <div class="cbody">
+        <div class="grid">
+          <div class="f"><label>Property name</label>
+            <div class="cell db">Beacon Hill Apartments</div></div>
+          <div class="f"><label>Ownership entity</label>
+            <div class="cell db">Beacon Hill Preservation LP</div></div>
+          <div class="f"><label>Also known to tenants as</label>
+            <div class="cell nw"><span class="ph">—</span></div></div>
+          <div class="f"><label>Entity type</label>
+            <div class="cell db">Limited Partnership</div></div>
+        </div>
+        <div style="margin-top:16px">
+          <label style="display:block;font-size:11.5px;font-weight:600;color:var(--ink-3);margin-bottom:5px">Address</label>
+          <div class="row3">
+            <div class="cell db">1450 Woodward Avenue</div>
+            <div class="cell db">Detroit</div>
+            <div class="cell db">MI</div>
+            <div class="cell db">48226</div>
+          </div>
+        </div>
+        <div class="grid" style="margin-top:16px">
+          <div class="f"><label>Section 8 number</label><div class="cell db">MI16-T851-004</div></div>
+          <div class="f"><label>FHA number</label><div class="cell ov">044-35218</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="foot">
+  <button class="lnk">↺ Revert to saved</button>
+  <button class="go">Update property profile</button>
+  <button class="go">Generate package</button>
+</div>
+
+<script>
+function T(m,btn){document.documentElement.dataset.t=m;
+  [...btn.parentNode.children].forEach(b=>b.setAttribute('aria-pressed',b===btn));}
+</script>
+</body></html>
