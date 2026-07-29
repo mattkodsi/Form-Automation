@@ -1,4 +1,7 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Package Builder &mdash; Section 8 Rent Adjustments</title><style>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Package Builder &mdash; Section 8 Rent Adjustments</title><link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
 /* ------------------------------------------------------------------
    Colour tokens. Extracted 2026-07-29 from the 128 hex values that were
    typed inline throughout this sheet. Every value is UNCHANGED — this is
@@ -650,11 +653,65 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
 /* overdue is not an alarm here: everything past its date has already been
    filed, so it states the date and stops shouting. */
 .pc-due.past{color:var(--muted)}
+/* ==================================================================
+   HOME SCREEN — the design from docs/design/2026-07-28-home-redesign.html,
+   built for real. Scoped to #viewMenu: the form keeps its own look until
+   that redesign is signed off separately.
+   ================================================================== */
+#viewMenu{--paper:#d8dde4;--card:#fff;--sunk:#eef1f5;
+  --i1:#101822;--i2:#41505f;--i3:#556270;--i4:#636c77;
+  --ln:#c2cbd6;--ln-soft:#e4e9ef;
+  --stamp:#9c2b18;--ledger:#1f5480;--filed:#2f6a45;
+  background:var(--paper);min-height:100vh;
+  font-family:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+  font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+#viewMenu .mtop{background:#101d2b;border-bottom:0;height:60px}
+#viewMenu .bname{font-weight:600;font-size:15px;letter-spacing:-.005em}
+#viewMenu .btag{letter-spacing:.17em;font-weight:600;font-size:10px}
+#viewMenu .mwrap{max-width:1480px;padding:36px 40px 80px}
+#viewMenu .mtitle{font-size:22px;font-weight:600;color:var(--i1);letter-spacing:-.015em}
+#viewMenu .mtitle .eyebrow{display:block;font-size:10.5px;font-weight:600;
+  letter-spacing:.13em;text-transform:uppercase;color:var(--i3);margin-bottom:5px}
+/* the figures line: each carries the left rule in the colour of what it says */
+#viewMenu .msub{display:flex;gap:20px;flex-wrap:wrap;margin-top:14px;
+  font-size:13px;color:var(--i3)}
+#viewMenu .msub span{border-left:2px solid var(--ln);padding-left:9px}
+#viewMenu .msub span.now{border-left-color:var(--stamp)}
+#viewMenu .msub span.soon{border-left-color:var(--ledger)}
+#viewMenu .msub span.done{border-left-color:var(--filed)}
+#viewMenu .msub b{color:var(--i1);font-weight:600;font-size:14px}
+/* the rail stays — it filters, which the mockup had no way to do — but it
+   becomes a document on the desk like everything else rather than floating */
+#viewMenu .mbody{gap:24px}
+#viewMenu .rside,#viewMenu .mrail{background:var(--card);border:1px solid var(--ln);
+  border-radius:8px;padding:14px 12px}
+#viewMenu .mgrid.rows{border-color:var(--ln);border-radius:8px}
+#viewMenu .mgrid.rows .mcols{background:var(--sunk);border-bottom:1px solid var(--ln);
+  color:var(--i3);letter-spacing:.12em;font-weight:600;font-size:10px}
+#viewMenu .mgrid.rows .mgroup{background:var(--sunk);border-top:1px solid var(--ln);
+  color:var(--i3);font-weight:600;letter-spacing:.12em;font-size:10.5px;padding:8px 18px}
+#viewMenu .mgrid.rows .mgroup.live{background:var(--card);color:var(--stamp);
+  padding:14px 18px 8px}
+#viewMenu .mgrid.rows .pcard{border-top-color:var(--ln-soft)}
+#viewMenu .pc-name{color:var(--i1)}
+#viewMenu .pc-meta{color:var(--i3)}
+#viewMenu .pc-due.past{color:var(--i4);font-weight:500}
+#viewMenu .pc-due.ok{color:var(--i3);font-weight:500}
+#viewMenu .pc-units{color:var(--i3);font-weight:400}
+/* due within 30 days: the stamp rule down the left, the way the mockup marks
+   what is live. Every other row carries the same rule, transparent. */
+#viewMenu .mgrid.rows .pcard{box-shadow:inset 3px 0 0 transparent}
+#viewMenu .mgrid.rows .pcard[data-band="now"]{box-shadow:inset 3px 0 0 var(--stamp)}
+#viewMenu .mgrid.rows .pcard[data-band="now"] .pc-due{color:var(--stamp);font-weight:600}
+#viewMenu .mgrid.rows .pcard[data-band^="m"]{box-shadow:inset 3px 0 0 var(--ledger)}
+#viewMenu .btn.p{background:#101d2b;border-color:#101d2b;font-weight:600}
+#viewMenu .btn.p:hover{background:var(--ledger);border-color:var(--ledger)}
+
 /* the band that can be acted on today reads as the head of the list, not as
    another row in it. Everything past its date recedes — it is already filed. */
 .mgrid.rows .mgroup{margin:0;padding:13px 18px 7px;background:var(--page);
   border-top:1px solid var(--line);color:var(--muted)}
-.mgrid.rows .mhead{display:grid;
+.mgrid.rows .mcols{display:grid;
   grid-template-columns:minmax(0,1fr) 176px 168px 210px;column-gap:20px;
   padding:11px 18px;background:var(--band);border-bottom:1px solid var(--line);
   font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;
@@ -906,7 +963,7 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
    <div class="mtop"><div class="brand"><span class="mark"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M4 11 12 4l8 7" stroke="var(--navy)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 10v9h12v-9" stroke="var(--navy)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><div class="bname">Section 8 Rent Adjustments</div><div class="btag">Related Affordable</div></div></div><div class="mtoprightwrap"><button class="backlink mtopright whochip" id="menuWho"></button><button class="backlink mtopright" id="bContacts">Contacts</button><button class="backlink mtopright" id="bSignOut">Sign out</button></div></div>
    <div class="mwrap">
      <div class="mhead">
-       <div><h2 class="mtitle">Properties</h2><div class="msub" id="menuCount"></div></div>
+       <div><h2 class="mtitle"><span class="eyebrow" id="menuEyebrow">Portfolio</span>Renewals</h2><div class="msub" id="menuCount"></div></div>
        <div class="mtools"><div class="segmented" id="lensSeg"><button class="seg-b on" data-lens="mine">Mine</button><button class="seg-b" data-lens="all">All</button></div><div class="searchbox"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted-4)" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2" stroke-linecap="round"/></svg><input id="menuSearch" placeholder="Search by name or FHA #" autocomplete="off"></div><button class="btn p" id="bNewProperty">+ New property</button></div>
      </div>
      <div class="mbody" id="menuBody">
