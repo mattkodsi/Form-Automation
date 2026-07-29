@@ -650,6 +650,20 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
 /* overdue is not an alarm here: everything past its date has already been
    filed, so it states the date and stops shouting. */
 .pc-due.past{color:var(--muted)}
+/* the band that can be acted on today reads as the head of the list, not as
+   another row in it. Everything past its date recedes — it is already filed. */
+.mgrid.rows .mgroup{margin:0;padding:13px 18px 7px;background:var(--page);
+  border-top:1px solid var(--line);color:var(--muted)}
+.mgrid.rows .mhead{display:grid;
+  grid-template-columns:minmax(0,1fr) 176px 168px 210px;column-gap:20px;
+  padding:11px 18px;background:var(--band);border-bottom:1px solid var(--line);
+  font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;
+  color:var(--muted)}
+.mgrid.rows .mgroup:first-child{border-top:0}
+.mgrid.rows .mgroup.live{color:var(--navy);background:var(--surface)}
+.mgrid.rows .pcard[data-band="now"]{background:var(--surface)}
+.mgrid.rows .pcard[data-band="now"] .pc-name{font-size:15px}
+.mgrid.rows .pcard[data-band="now"] .pc-due{color:var(--prov-over);font-weight:800}
 
 /* The card is a container now, not a button — the primary action is a real
    sibling button inside it, and a button nested in a button is re-parented by
@@ -5952,7 +5966,7 @@ function renderMenu(){
      stopPropagation anywhere — and a stopPropagation guarding against a DOM
      shape is the first thing to break when the shape changes — and both halves
      are tab-reachable. */
-  const card=p=>{const pct=Math.round(p.completeness*100);
+  const card=(p,_band)=>{const pct=Math.round(p.completeness*100);
     const al=(p.alias||'').trim();const showAl=al&&al.toLowerCase()!==String(p.name||'').trim().toLowerCase();
     /* The gallery is read by scanning it — six cards, and the eye is looking
        for a name and a ring. A sentence under every one of them is a line of
@@ -5970,7 +5984,7 @@ function renderMenu(){
       +'<div class="pc-foot">'+prog
       +'<span class="pc-units">'+(p.hap&&!p.started?'Not started':(p.total_units+' unit'+(p.total_units===1?'':'s')+(p.unit_types?' &middot; '+p.unit_types+' type'+(p.unit_types===1?'':'s'):'')))+'</span>'
       +(p.hap&&!p.started?'':'<span class="pc-upd" title="'+esc(updTitle(p.updated_at))+'">Updated '+relTime(p.updated_at)+'</span>')+'</div></button>';
-    return '<div class="pcard">'+body+actionBtnHtml(p)+'</div>';};
+    return '<div class="pcard"'+(_band?' data-band="'+esc(_band)+'"':'')+'>'+body+actionBtnHtml(p)+'</div>';};
   /* A "+ New property" tile sitting inside "Needs you" would imply it belongs to
      that band. #bNewProperty in the toolbar is always there, so the tile appears
      only where it means what it looks like. */
@@ -5980,9 +5994,42 @@ function renderMenu(){
   /* Two populations, and they must be told apart on sight: mixed together, a
      record with no renewal date reads as a property with nothing due. */
   const _tr=props.filter(p=>p.hap),_or=props.filter(p=>!p.hap);
-  const _body=(_tr.length?_tr.map(card).join(''):'')
+  /* ---- the list groups itself ----
+     Sorted by deadline alone, the handful of properties genuinely inside the
+     next month sat below a hundred that are past their date, and every row
+     looked like every other. The rows do not change and none is added or
+     removed — the count still equals the rail badge — they are banded, and the
+     band that can be acted on today is put first and given weight. */
+  const MONTHS=['January','February','March','April','May','June','July',
+                'August','September','October','November','December'];
+  const bandOfProp=p=>{
+    const d=p.days;
+    if(d==null||!p.deadline)return {rank:9,key:'none',label:'No date scheduled'};
+    if(d>=0&&d<=30)return {rank:0,key:'now',label:'Due within 30 days'};
+    if(d<0)return {rank:1,key:'past',label:'Past their date'};
+    const iso=String(p.deadline).slice(0,10).split('-');
+    const key='m'+iso[0]+iso[1];
+    return {rank:2,key:key,label:MONTHS[(+iso[1])-1]+' '+iso[0]};
+  };
+  const _banded=_tr.map(p=>({p:p,b:bandOfProp(p)}));
+  _banded.sort((a,b)=>(a.b.rank-b.b.rank)
+    ||String(a.b.key).localeCompare(String(b.b.key))
+    ||(_tr.indexOf(a.p)-_tr.indexOf(b.p)));
+  let _lastKey=null;
+  const _trHtml=_banded.map(x=>{
+    const hdr=(x.b.key!==_lastKey)
+      ?('<div class="mgroup'+(x.b.key==='now'?' live':'')+'">'+esc(x.b.label)+'</div>'):'';
+    _lastKey=x.b.key;
+    return hdr+card(x.p,x.b.key);
+  }).join('');
+  /* The columns were unlabelled. As cards that was fine — each fact sat under
+     the name that explained it. As rows it is a table, and a table says what
+     its columns hold. */
+  const _cols=_tr.length?('<div class="mhead"><span>Property</span>'
+    +'<span>Due to HUD</span><span>Programme</span><span></span></div>'):'';
+  const _body=_cols+(_tr.length?_trHtml:'')
     +((_or.length&&_tr.length)?'<div class="mgroup">Not in the renewal schedule</div>':'')
-    +(_or.length?_or.map(card).join(''):'');
+    +(_or.length?_or.map(p=>card(p)).join(''):'');
   el('menuGrid').innerHTML=_body+(q&&!props.length?empty:'')
     +((hasRail&&!q&&!props.length)?viewEmpty:'')
     +((!q&&(!hasRail||view==='all'))?newTile:'');

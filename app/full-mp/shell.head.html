@@ -650,6 +650,20 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
 /* overdue is not an alarm here: everything past its date has already been
    filed, so it states the date and stops shouting. */
 .pc-due.past{color:var(--muted)}
+/* the band that can be acted on today reads as the head of the list, not as
+   another row in it. Everything past its date recedes — it is already filed. */
+.mgrid.rows .mgroup{margin:0;padding:13px 18px 7px;background:var(--page);
+  border-top:1px solid var(--line);color:var(--muted)}
+.mgrid.rows .mhead{display:grid;
+  grid-template-columns:minmax(0,1fr) 176px 168px 210px;column-gap:20px;
+  padding:11px 18px;background:var(--band);border-bottom:1px solid var(--line);
+  font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;
+  color:var(--muted)}
+.mgrid.rows .mgroup:first-child{border-top:0}
+.mgrid.rows .mgroup.live{color:var(--navy);background:var(--surface)}
+.mgrid.rows .pcard[data-band="now"]{background:var(--surface)}
+.mgrid.rows .pcard[data-band="now"] .pc-name{font-size:15px}
+.mgrid.rows .pcard[data-band="now"] .pc-due{color:var(--prov-over);font-weight:800}
 
 /* The card is a container now, not a button — the primary action is a real
    sibling button inside it, and a button nested in a button is re-parented by
