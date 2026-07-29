@@ -16,7 +16,7 @@ const els={};
 global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>null,querySelectorAll:()=>[],createElement:()=>mk(),addEventListener(){},body:{classList:{toggle(){},contains(){return false;}}}};
 const fs=require('fs'),path=require('path'),os=require('os');
 
-const MIN_CHECKS=294;
+const MIN_CHECKS=307;
 let n=0,fails=0,verdict=null;
 const BAR='='.repeat(68);
 function fail(msg,err){
@@ -55,7 +55,7 @@ const _b=path.join(os.tmpdir(),'rcs_parse_test.'+process.pid+'.js');
 process.on('exit',()=>{try{fs.rmSync(_b,{force:true});}catch(e){}});
 fs.writeFileSync(_b,'function ocrHalf(b,p,skip){(globalThis.__HALF=globalThis.__HALF||[]).push({p:p,skip:(skip||[]).slice()});return Promise.resolve(null);}\n'
   +['templates.js','core.js','score.js','db.js','app.js','rcs.js'].map(x=>fs.readFileSync(path.join(_d,x),'utf8')).join('\n')
-  +'\nif(typeof module!=="undefined")Object.assign(module.exports,{__rsTextPageAt:rsTextPageAt,__rsTextPages:rsTextPages,__rsReadTextTier:rsReadTextTier});\n');
+  +'\nif(typeof module!=="undefined")Object.assign(module.exports,{__rsTextPageAt:rsTextPageAt,__rsTextPages:rsTextPages,__rsReadTextTier:rsReadTextTier,__rsTplAlign:rsTplAlign,__rsTplPremiseHolds:rsTplPremiseHolds});\n');
 const app=require(_b);
 const R=global.window.RCSParse;
 const D_=_d+'/';
@@ -594,6 +594,76 @@ async function reader(file){
          goes out asking for everything except the thing it needs. */
       T('and the page it needs is not skipped',globalThis.__HALF[0].skip.indexOf(1)<0);
     }
+  }
+
+  /* ── the page must print the form where the form prints it ────────────────
+     Tier 2 reads values out of the blank template's field rectangles, so it is
+     only entitled to do that on a copy laid out like the template. Four filed
+     schedules were not, and were read anyway: Oaks on North Plaza reported a
+     monthly potential of $1,642,642 against a page printing $91,922, and named
+     itself "OaksonINorthP,lazafkaNorthPlazaApartmentsPartA-ApartmentRents" --
+     the form's own heading pulled into the Project Name box, because a label
+     that is not where the template puts it is not recognised as a label.
+
+     The blank template is the aligned case by construction. Shifting its own
+     runs is the misaligned case, and it is a fair model of the real ones: the
+     four bad copies show at most 3 labels in place where every good copy shows
+     28 or more. */
+  console.log('\n─ a page laid out unlike the form is declined, not guessed at ─');
+  {
+    const P=global.window.PDFLib;
+    const tplB=Buffer.from(global.window.RCSTemplates.rentSchedule,'base64');
+    const tdoc=await P.PDFDocument.load(new Uint8Array(tplB),{ignoreEncryption:true,throwOnInvalidObject:false});
+    const tpages=await app.__rsTextPages(tdoc);
+
+    const al=app.__rsTplAlign(tpages[0],tpages[0]);
+    eq('a page compared with itself has every label in place',al.at,al.seen);
+    T('and there are enough of them to judge by',al.at>=28);
+    T('so the premise holds',app.__rsTplPremiseHolds(al));
+
+    /* The shift is the one the real misaligned copies suggested before the
+       measurement showed they do not agree on any shift at all. */
+    const shifted=tpages[0].map(r=>({s:r.s,x:r.x-10,y:r.y+15,d:r.d}));
+    const bad=app.__rsTplAlign(shifted,tpages[0]);
+    eq('a displaced page has the same labels present',bad.seen,al.seen);
+    eq('and not one of them in place',bad.at,0);
+    T('so the premise fails',!app.__rsTplPremiseHolds(bad));
+
+    /* A copy printing only SOME of the form is still readable -- the gate must
+       not turn into a completeness requirement. Half the labels in place, and
+       comfortably above the floor, passes. */
+    const half=tpages[0].filter((r,i)=>i%2===0);
+    T('a page showing half the form in place still passes',
+      app.__rsTplPremiseHolds(app.__rsTplAlign(half,tpages[0])));
+
+    /* ── and now the real page, not a model of one ──────────────────────────
+       fixture_rs_misaligned.json is the Part A page of Oaks on North Plaza's
+       executed schedule, as its own text layer positions it: 550 runs, of which
+       exactly 2 of the 25 form labels present sit where the form puts them.
+
+       This is the fixture that gives the check teeth. Feed this page to the
+       reader WITHOUT the premise check and it does not fail — it succeeds, and
+       reports a 14-unit row at $111,198 a month, unit types called "16R" and
+       "3613", a monthly potential of $1,642,642 against a page printing $91,922,
+       and a project called
+         "OaksonINorthP,lazafkaNorthPlazaApartmentsPartA-ApartmentRents".
+       Every one of those figures went into a generated package. */
+    const fx=JSON.parse(fs.readFileSync(path.join(_d,'fixture_rs_misaligned.json'),'utf8'));
+    eq('the misaligned fixture is the whole page',fx.runs.length,550);
+    { const fa=app.__rsTplAlign(fx.runs,tpages[0]);
+      eq('and 25 of the form’s labels are present on it',fa.seen,25);
+      eq('but only 2 sit where the form puts them',fa.at,2);
+      T('so the premise fails on the real page too',!app.__rsTplPremiseHolds(fa)); }
+    /* The page alone, exactly as the reader would receive a one-page half. */
+    const real=await app.__rsReadTextTier([fx.runs],null,null);
+    eq('a real misaligned schedule is declined, not read',real,null);
+
+    /* The control, and the reason this block cannot be passed by a gate set so
+       tight that nothing is ever read: the aligned page must still go through.
+       Reaching the second-half scan request is proof it got past the premise. */
+    globalThis.__HALF=[];
+    await app.__rsReadTextTier(tpages,new Uint8Array(tplB),null);
+    T('while an aligned page is still processed',globalThis.__HALF.length>0);
   }
 
   /* Two ways to read nothing, and the reader has to tell them apart, because
