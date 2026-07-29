@@ -16,19 +16,21 @@ a SaaS product. The app writes HUD documents, so it should speak in their voice.
 
 ## Signature
 
-**The app is set like the document it produces.** Two devices carry it:
-
-1. **The coloured left rule.** One marker, three scales — on a *cell* it means provenance
-   (is this saved?), on a *row* it means urgency (is this owed?), on a *section* it means
-   status. Learned once, true everywhere. This already exists in the form; the redesign
-   promotes it rather than inventing a new marker.
-2. **The serif voice.** IBM Plex Serif for the page's one statement, for property names,
-   and for the ledger's month bands. Everything else is Plex Sans. The serif appears only
-   where the product is *naming a thing on the record*.
+**The coloured left rule.** One marker, three scales — on a *cell* it means provenance
+(is this saved?), on a *row* it means urgency (is this owed?), on a *section* it means
+status. Learned once, true everywhere. This already exists in the form; the redesign
+promotes it rather than inventing a new marker.
 
 Everything that competes with the rule — pills, chips, coloured badges, box borders —
 goes quiet or goes away. That is the whole risk of the direction: the rule carries the
 weight alone, so it must be the only coloured thing on a resting screen.
+
+**Rejected 2026-07-28: a serif voice.** The first pass set the page's statement, property
+names and month bands in IBM Plex Serif, italic for the accent line. Matt's read was
+"beautiful, but a tad artsy — a tad unprofessional." He is right, and the reason is worth
+keeping: a display face carries its own personality into a room where the product's
+authority comes from being *exact*, not expressive. An italic serif headline reads
+editorial. This tool files with HUD. The rule alone is the signature.
 
 ## Where the palette comes from
 
@@ -90,11 +92,11 @@ co-occur on one screen. Check this before adding a coloured marker anywhere.
 
 ## Type
 
-IBM Plex Sans (UI) · IBM Plex Serif (statements, property names, month bands) ·
-IBM Plex Mono reserved for money columns in the rent schedule, where the ledger texture
-pays for itself. One superfamily, three roles.
+IBM Plex Sans for everything the interface says · IBM Plex Mono only for figures sitting
+in a column against another figure (rents, allowances, contract numbers). Two roles, one
+family. **No display face and no italics** — see the rejected serif above.
 
-Scale ≈1.25 off a 13.5px body: `caption 11 · meta 12 · body 13.5 · h4 15 · h3 19 · h1 34`.
+Scale ≈1.25 off a 13.5px body: `caption 11 · meta 12 · body 13.5 · h4 15 · h3 17 · h1 33`.
 Weight and colour do the hierarchy work, not size alone — three tiers at one size via
 `600/--ink`, `500/--ink-2`, `400/--ink-3`.
 
@@ -102,8 +104,8 @@ Weight and colour do the hierarchy work, not size alone — three tiers at one s
 column being compared to another figure.
 
 **Delivery constraint:** `index.html` is a standalone file Matt double-clicks — no CDN.
-Plex must ship as base64 `woff2` subsets inside the bundle (~60 KB against 2.46 MB).
-The brainstorm mockup links Google Fonts; the real build cannot.
+Plex must ship as base64 `woff2` subsets inside the bundle (~40 KB for two faces against
+2.46 MB). The mockups link Google Fonts; the real build cannot.
 
 ## Depth — one strategy
 
