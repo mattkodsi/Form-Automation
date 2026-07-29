@@ -280,6 +280,37 @@ function jsonAdapter() { let s = null; return { get: async () => (s ? JSON.parse
    db.supabase.js writes against it is static, needs no credentials, and would
    have caught both. If it fails: add the column and record it in schema.sql,
    or stop writing it. */
+/* ---- a column written and never read back is a column that vanishes -------
+   ra_property_code was written by createProperty, stored correctly, present in
+   the row, and dropped by the loader: it is not a form cell, so it is in no
+   PSCALAR map and nothing else picked it up. In one session everything worked.
+   On the next page load propByRaCode() answered null for every property, so a
+   scheduled property already opened came back as a record the schedule does not
+   carry — a copy at the bottom of the menu, and a name clash on reopening.
+
+   The rule, not the column: every column any write path puts on `property` must
+   appear in the block that reads `property` rows back. Static, no credentials.
+   PSCALAR columns are exempt because the loader walks PSCALAR_REV over all of
+   them; these are the ones written by hand, which is where this can happen. */
+(function propertyRoundTrip(){
+  const _fs=require('fs'),_p=require('path'),_d=__dirname;
+  const sup=_fs.readFileSync(_p.join(_d,'db.supabase.js'),'utf8');
+  const li=sup.indexOf('(pr.data || []).forEach(r => {');
+  const lj=sup.indexOf('D.props[r.id] = p;',li);
+  ok('the property loader can be located',li>0&&lj>li,true);
+  const loader=sup.slice(li,lj);
+  const scalars=new Set();
+  { const i=sup.indexOf('const PSCALAR'),j=sup.indexOf('};',i);
+    (sup.slice(i,j).match(/'([a-z_0-9]+)'/g)||[]).forEach(x=>scalars.add(x.replace(/'/g,''))); }
+  const written=new Set();
+  { const i=sup.indexOf('function buildPropRow('),j=sup.indexOf('\n  }',i);
+    (sup.slice(i,j).match(/row\.([a-z_0-9]+)\s*=/g)||[]).forEach(x=>written.add(x.match(/row\.([a-z_0-9]+)/)[1])); }
+  const re=/from\('property'\)\s*\.\s*(?:upsert|update)\(\{([^}]*)\}/g; let m;
+  while((m=re.exec(sup)))(m[1].match(/([a-z_0-9]+)\s*:/g)||[]).forEach(x=>written.add(x.replace(/\s*:$/,'')));
+  ok('the write paths were found',written.size>=3,true);
+  const missed=[...written].filter(c=>!scalars.has(c)&&loader.indexOf('r.'+c)<0);
+  ok('every hand-written property column is read back on load',missed,[]);
+})();
 (function schemaParity(){
   const _fs=require('fs'),_p=require('path'),_d=__dirname;
   const sql=_fs.readFileSync(_p.join(_d,'..','..','schema.sql'),'utf8');
