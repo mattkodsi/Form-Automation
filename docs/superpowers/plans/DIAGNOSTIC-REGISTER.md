@@ -890,3 +890,30 @@ it exits 0; the delivery succeeded unchanged on retry. The failing run overlappe
 headless chromium instances and a subagent fleet, so contention is the likely cause. It
 matters because an unattended loop reads that gate as authority — **a single red delivery
 is worth one retry before it is believed.**
+
+## M30 · The SAFMR the appraiser printed now beats the one the API returned — FIXED
+
+`defSafmrSrc` preferred the HUD pull whenever it returned anything. Two independent
+reasons to reverse that, and neither depends on the other.
+
+**The team used the study's figure on every property audited.**
+
+| property | the study prints | the pull returned | the filed workbook used |
+|---|---|---|---|
+| Westwood Village | 1,120 · 1,570 · 1,850 | 1,254 · 1,743.33 · 2,104 | the study |
+| Sycamore Green | 990 · 1,230 | 1,149.33 · 1,427.33 | the study (v1's 1,050 · 1,310) |
+| Hampshire House | 1,500 · 1,810 | 1,590 · 1,916 | the study |
+| Clinton Manor | 720 · 950 · 1,160 · 1,340 | 869.33 · 1,133.33 · 1,358 · 1,625.33 | the study |
+| Northcross, Burt Farms | — | matched the study | the study |
+
+**And the pull is not stable.** Ebony Gardens, driven twice in one afternoon on the same
+build, returned `2,511 · 2,780 · 3,465` and then `2,655 · 2,910 · 3,644`. Neither is its
+study's `2,490 · 2,730 · 3,420`. A figure that moves between runs cannot be the default
+for a federal filing when the appraiser has printed one in the document under their
+licence.
+
+The 150% test turns on this number, and **Clinton Manor passes it by $12**.
+
+An explicit choice still wins, the pull still fills in when the study is silent, and an
+entered figure beats both. `db.js` carries the same precedence, so the menu card and the
+form cannot disagree about whether a property clears its ceiling.

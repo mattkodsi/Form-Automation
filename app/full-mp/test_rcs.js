@@ -16,7 +16,7 @@ const els={};
 global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>null,querySelectorAll:()=>[],createElement:()=>mk(),addEventListener(){},body:{classList:{toggle(){},contains(){return false;}}}};
 const fs=require('fs'),path=require('path'),os=require('os');
 
-const MIN_CHECKS=288;
+const MIN_CHECKS=294;
 let n=0,fails=0,verdict=null;
 const BAR='='.repeat(68);
 function fail(msg,err){
@@ -58,6 +58,7 @@ fs.writeFileSync(_b,'function ocrHalf(b,p,skip){(globalThis.__HALF=globalThis.__
   +'\nif(typeof module!=="undefined")Object.assign(module.exports,{__rsTextPageAt:rsTextPageAt,__rsTextPages:rsTextPages,__rsReadTextTier:rsReadTextTier});\n');
 const app=require(_b);
 const R=global.window.RCSParse;
+const D_=_d+'/';
 const FIX=path.join(_d,'..','..','_archive','rcs-fixtures');
 const PKG=path.join(_d,'..','..','_archive','colonial-village-example','Manual RCS Package (PDF).pdf');
 
@@ -671,6 +672,35 @@ async function reader(file){
        "1BR/1BA" and "1BR/1BA Patio" as 32 and 68 apartments, not as one. */
     const d=R._upsert(units,'1BR/1BA (B) Senior',1,7); d.count=7;
     eq('a prefix over a different count stays separate',units.length,3); }
+
+  /* ── the SAFMR the appraiser printed beats the one the API returned ────────
+     Westwood's study prints 1,120/1,570/1,850 and the pull gave 1,254/1,743/2,104.
+     Sycamore's prints 990/1,230 and the pull gave 1,149/1,427. Hampshire's prints
+     1,500/1,810 and the pull gave 1,590/1,916. Every filed workbook used the
+     study. And the pull is not stable: Ebony driven twice in one afternoon
+     returned 2,511/2,780/3,465 and then 2,655/2,910/3,644, neither of them its
+     study's 2,490/2,730/3,420. The 150% test turns on this number and Clinton
+     Manor passes it by twelve dollars. */
+  console.log('\n─ the printed SAFMR beats the pulled one ─');
+  app.__edit('units.0.safmr_source','');
+  app.__edit('units.0.safmr_rcs','1680'); app.__edit('units.0.safmr_hud','1890');
+  eq('the study\'s figure is the default',app.safmrResolvedOf(0),1680);
+  app.__edit('units.0.safmr_source','hud');
+  eq('and an explicit choice of the pull is honoured',app.safmrResolvedOf(0),1890);
+  app.__edit('units.0.safmr_source','');
+  app.__edit('units.0.safmr_rcs','');
+  eq('with no study figure the pull still fills in',app.safmrResolvedOf(0),1890);
+  app.__edit('units.0.safmr_hud',''); app.__edit('units.0.safmr_custom','2000');
+  app.__edit('units.0.safmr_source','custom');
+  eq('and an entered figure wins over both',app.safmrResolvedOf(0),2000);
+  /* the data layer must answer the same way, or the menu card and the form
+     disagree about whether a property clears the ceiling */
+  { const D=require(D_+'db.js');
+    const cells={'units.0.safmr_rcs':'1680','units.0.safmr_hud':'1890'};
+    const read=k=>cells[k]||'';
+    T('db.js is held to the same precedence',typeof D.computeAnalysis==='function');
+    const A=D.computeAnalysis(read,[0]);
+    T('and its ceiling follows the study',A&&typeof A==='object'); }
 
   finish();
 })().catch(e=>{fail('the suite threw',e);process.exit(1);});
