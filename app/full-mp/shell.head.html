@@ -659,30 +659,42 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
    built for real. Scoped to #viewMenu: the form keeps its own look until
    that redesign is signed off separately.
    ================================================================== */
-#viewMenu{--paper:#d8dde4;--card:#fff;--sunk:#eef1f5;--r-ctl:4px;--r-card:8px;
+/* The desk's tokens sit at :root rather than on a view, because the portfolio
+   picker is a DIALOG — a sibling of the four views, not a child of one — and a
+   token it cannot inherit is a token it would have to re-declare. Two copies of
+   one palette is how a palette starts drifting. Nothing in #viewForm reads
+   these names, so declaring them here changes nothing about the form.
+   The prov-* contract is untouched; it lives in the :root block at the top. */
+:root{--paper:#d8dde4;--card:#fff;--sunk:#eef1f5;--r-ctl:4px;--r-card:8px;
   --i1:#101822;--i2:#41505f;--i3:#556270;--i4:#636c77;
   --ln:#c2cbd6;--ln-soft:#e4e9ef;
-  --stamp:#9c2b18;--ledger:#1f5480;--filed:#2f6a45;
-  background:var(--paper);min-height:100vh;
+  --stamp:#9c2b18;--ledger:#1f5480;--filed:#2f6a45}
+/* The four pages that are not the form are one desk. #viewForm is deliberately
+   absent: it keeps its own look until its overhaul lands. */
+#viewMenu,#viewAuth,#viewContacts,#viewLauncher{
+  background:var(--paper);color:var(--i2);min-height:100vh;
   font-family:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,sans-serif;
   font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
 /* The masthead the mockup drew: no mark, the two names on one baseline, and
-   plain links at 40px rather than a bordered chip beside two bare words. */
-#viewMenu .mtop{background:#101d2b;border-bottom:0;height:60px;padding:0 40px}
-#viewMenu .brand{align-items:baseline;gap:11px}
-#viewMenu .bname{font-weight:600;font-size:15px;letter-spacing:-.005em}
-#viewMenu .btag{letter-spacing:.17em;font-weight:600;font-size:10px;margin-top:0;
-  color:rgba(255,255,255,.55)}
-#viewMenu .mtoprightwrap{gap:2px}
-#viewMenu .backlink{font-size:13px;font-weight:400;color:#fff;opacity:.75;
+   plain links at 40px rather than a bordered chip beside two bare words.
+   One masthead across the four views — sign-in, the gallery, the property and
+   the contacts page were four different heights and three different link
+   treatments, which is what made moving between them read as two products. */
+:is(#viewMenu,#viewAuth,#viewContacts,#viewLauncher) .mtop{background:#101d2b;border-bottom:0;height:60px;padding:0 40px}
+:is(#viewMenu,#viewAuth,#viewContacts,#viewLauncher) .brand{align-items:baseline;gap:11px}
+:is(#viewMenu,#viewAuth,#viewContacts,#viewLauncher) .bname{font-weight:600;font-size:15px;letter-spacing:-.005em;color:#fff}
+:is(#viewMenu,#viewAuth,#viewContacts,#viewLauncher) .btag{letter-spacing:.17em;font-weight:600;font-size:10px;margin-top:0;
+  text-transform:uppercase;color:rgba(255,255,255,.55)}
+:is(#viewMenu,#viewAuth,#viewContacts,#viewLauncher) .mtoprightwrap{gap:2px}
+:is(#viewMenu,#viewAuth,#viewContacts,#viewLauncher) .backlink{font-size:13px;font-weight:400;color:#fff;opacity:.75;
   min-height:40px;padding:0 12px;border-radius:var(--r-ctl)}
-#viewMenu .backlink:hover{opacity:1;background:rgba(255,255,255,.08);color:#fff}
+:is(#viewMenu,#viewAuth,#viewContacts,#viewLauncher) .backlink:hover{opacity:1;background:rgba(255,255,255,.08);color:#fff}
 /* Which portfolio you are reading is one question, so it gets one control.
    Mine/All asked it a second time next to the search box and answered it in a
    different vocabulary. */
-#viewMenu .whochip{background:none;border-radius:var(--r-ctl);padding:0 12px;font-weight:600;opacity:1}
-#viewMenu .whochip:hover{background:rgba(255,255,255,.08)}
-#viewMenu .whochip.unset{border:1px dashed rgba(255,255,255,.45);opacity:.85}
+:is(#viewMenu,#viewAuth,#viewContacts,#viewLauncher) .whochip{background:none;border-radius:var(--r-ctl);padding:0 12px;font-weight:600;opacity:1}
+:is(#viewMenu,#viewAuth,#viewContacts,#viewLauncher) .whochip:hover{background:rgba(255,255,255,.08)}
+:is(#viewMenu,#viewAuth,#viewContacts,#viewLauncher) .whochip.unset{border:1px dashed rgba(255,255,255,.45);opacity:.85}
 /* the finder sits on the title's baseline, and the page breathes below it */
 #viewMenu .mhead{align-items:flex-end;gap:48px;margin-bottom:10px}
 #viewMenu .mlede{font-size:12.5px;color:var(--i3);margin:0 0 44px;max-width:96ch}
@@ -806,8 +818,13 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
 #viewMenu .mcols .r{text-align:right}
 /* the rail goes: its bands are the list's own groups now, and its programme
    cross-cut moves to the search box. */
-#viewMenu .btn.p{background:#101d2b;border-color:#101d2b;font-weight:600}
-#viewMenu .btn.p:hover{background:var(--ledger);border-color:var(--ledger)}
+:is(#viewMenu,#viewAuth,#viewContacts,#viewLauncher) .btn{border-radius:var(--r-ctl);border-color:var(--ln);background:var(--card);
+  color:var(--i2);font-weight:600;font-size:12.5px}
+:is(#viewMenu,#viewAuth,#viewContacts,#viewLauncher) .btn:hover:not(:disabled){background:var(--sunk)}
+:is(#viewMenu,#viewAuth,#viewContacts,#viewLauncher) .btn.p{background:#101d2b;border-color:#101d2b;color:#fff;font-weight:600}
+:is(#viewMenu,#viewAuth,#viewContacts,#viewLauncher) .btn.p:hover:not(:disabled){background:var(--ledger);border-color:var(--ledger)}
+:is(#viewMenu,#viewAuth,#viewContacts,#viewLauncher) .btn.danger{background:var(--card);border-color:var(--ln);color:var(--stamp)}
+:is(#viewMenu,#viewAuth,#viewContacts,#viewLauncher) .btn.danger:hover{background:var(--sunk)}
 
 /* the band that can be acted on today reads as the head of the list, not as
    another row in it. Everything past its date recedes — it is already filed. */
@@ -1024,11 +1041,176 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
 .mlede{font-size:12px;color:var(--muted);margin:-4px 0 14px;line-height:1.5}
 .ns8flag{display:inline-flex;align-items:center;gap:8px;cursor:pointer;line-height:1.35;vertical-align:middle} .ns8flag input{accent-color:var(--navy);width:14px;height:14px;margin:0;flex:0 0 auto} .partd .rgh{margin-top:12px}
 .safmrhead{display:inline-flex;align-items:center;gap:6px} .rgh .hudbtn,.ocpull .hudbtn{font-size:9.5px;padding:2px 7px;letter-spacing:0;text-transform:none;font-weight:700;white-space:nowrap;color:var(--prov-over)} .rgh .hudbtn.off,.ocpull .hudbtn.off{opacity:.55;cursor:default;color:var(--muted-2);border-color:#d7deea;background:#f1f4f9} .rgh .hudbtn.done,.ocpull .hudbtn.done{color:var(--ok);border-color:var(--ok-line);background:var(--ok-tint)}
+
+/* ==================================================================
+   THE SAME DESK, ON THE OTHER FOUR PAGES — 2026-07-29.
+   The home screen's system above was written scoped to #viewMenu, so
+   sign-in, the property profile, the contacts page and the portfolio
+   picker went on wearing navy, 7-to-15px radii and five greys that the
+   palette does not contain. Promoted to a shared scope rather than
+   copied four times: copy-paste is precisely the drift this pass
+   exists to remove.
+   The rules: three radii (4 control, 8 document, 999 pill); four inks;
+   and colour that means one of three things — stamp (a deadline),
+   ledger (a link or the current thing) or filed (done, passing).
+   #viewForm is not in any selector here.
+   ================================================================== */
+/* One measure for the two document pages, laid at the SAME left margin as the
+   gallery and the masthead above it. Centred, the property page started 230px
+   further right than the list you had just left, so every trip in and out of a
+   property shifted the whole page sideways. */
+/* One frame for the whole desk. At 1020 against the menu's 1480 the page
+   changed width under you as you moved between them, and on a wide monitor
+   the masthead ran the full width over content that stopped a third of the
+   way across. Left-flush at the masthead's own 40px, not centred: centring
+   slid the page sideways every time you opened a property. */
+:is(#viewContacts,#viewLauncher) .lwrap{max-width:1480px;margin:0;padding:36px 40px 80px}
+
+/* ---- the page head is a title ON the paper, not a card laid on it ---- */
+:is(#viewContacts,#viewLauncher) .lhead{background:none;border:0;border-radius:0;padding:0;
+  gap:40px;margin-bottom:30px;align-items:flex-end}
+:is(#viewContacts,#viewLauncher) .lh-name{font-size:22px;font-weight:600;color:var(--i1);letter-spacing:-.015em}
+:is(#viewContacts,#viewLauncher) .lh-alias{font-size:14px;font-weight:400;color:var(--i3);margin-left:9px}
+:is(#viewContacts,#viewLauncher) .lh-meta{font-size:13px;color:var(--i3);margin-top:7px}
+:is(#viewContacts,#viewLauncher) .lh-entity{font-size:12.5px;color:var(--i4);margin-top:3px}
+:is(#viewContacts,#viewLauncher) .lh-note{font-size:12px;color:var(--i4);margin-top:9px;line-height:1.6}
+:is(#viewContacts,#viewLauncher) .lh-tools{gap:2px}
+:is(#viewContacts,#viewLauncher) .lh-prof{margin-top:7px}
+/* Edit / Rename / Delete: controls, so they answer at a control's size */
+:is(#viewContacts,#viewLauncher) .txtbtn{display:inline-flex;align-items:center;min-height:28px;padding:0 9px;
+  border-radius:var(--r-ctl);font-size:12.5px;font-weight:600;color:var(--i3)}
+:is(#viewContacts,#viewLauncher) .txtbtn:hover{color:var(--ledger);background:var(--sunk)}
+:is(#viewContacts,#viewLauncher) .txtbtn.del:hover{color:var(--stamp);background:var(--sunk)}
+:is(#viewContacts,#viewLauncher) .dotsep{color:var(--ln)}
+/* what a record is short of. Amber was a fifth colour saying "attention",
+   which on this desk is what the stamp already says. */
+:is(#viewMenu,#viewLauncher) .pchip{background:none;border:1px solid var(--stamp);
+  color:var(--stamp);border-radius:999px;font-size:10.5px;font-weight:600;padding:2px 9px}
+:is(#viewMenu,#viewLauncher) .pchip.ok{background:none;border-color:var(--filed);color:var(--filed)}
+/* section headings read as the zone headings on the gallery do */
+:is(#viewContacts,#viewLauncher) .lsec{margin-top:34px}
+:is(#viewContacts,#viewLauncher) .lsec-t{font-size:11px;font-weight:600;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--i3);margin-bottom:12px}
+:is(#viewContacts,#viewLauncher) .mempty{background:var(--card);border:1px dashed var(--ln);border-radius:var(--r-card);
+  color:var(--i3);font-size:13px}
+:is(#viewContacts,#viewLauncher) .addrow{display:inline-flex;align-items:center;min-height:32px;padding:0 11px;
+  margin-top:12px;border:1px solid var(--ln);border-radius:var(--r-ctl);background:var(--card);
+  color:var(--i2);font-size:12.5px;font-weight:600}
+:is(#viewContacts,#viewLauncher) .addrow:hover{border-color:var(--ledger);color:var(--ledger);background:var(--sunk)}
+:is(#viewContacts,#viewLauncher) .btn.sm{padding:6px 11px;font-size:12px;border-radius:var(--r-ctl)}
+
+/* ---- CONTACTS: one document per kind, rows inside it ---- */
+#viewContacts .clist{background:var(--card);border:1px solid var(--ln);
+  border-radius:var(--r-card);overflow:hidden}
+#viewContacts .clist .crow2{margin:0;border:0;border-top:1px solid var(--ln-soft);
+  border-radius:0;background:none;padding:13px 18px;gap:12px}
+#viewContacts .clist .crow2:first-child{border-top:0}
+#viewContacts .clist .crow2:hover{background:var(--sunk)}
+#viewContacts .clist .mempty{border:0;border-radius:0;background:none;
+  padding:20px;color:var(--i4);font-size:12.5px;text-align:center}
+#viewContacts .cc-name{font-size:14px;font-weight:600;color:var(--i1)}
+#viewContacts .cc-sub{font-size:12.5px;color:var(--i3);margin-top:2px}
+
+/* ---- SIGN IN ---- */
+#viewAuth .authwrap{padding:40px}
+#viewAuth .authcard{background:var(--card);border:1px solid var(--ln);
+  border-radius:var(--r-card);box-shadow:none;padding:30px 32px;width:404px}
+#viewAuth .authtitle{font-size:22px;font-weight:600;color:var(--i1);letter-spacing:-.015em}
+#viewAuth .authsub{font-size:12.5px;color:var(--i3);margin-top:7px;line-height:1.6}
+#viewAuth .autherr{color:var(--stamp);font-size:12px}
+#viewAuth .dlg-field{margin-top:18px}
+#viewAuth .dlg-field label{font-size:10.5px;font-weight:600;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--i3);margin-bottom:7px}
+#viewAuth .dlg-field input{background:var(--sunk);border:1px solid var(--ln);
+  border-radius:var(--r-ctl);font-size:13.5px;padding:10px 12px;color:var(--i1)}
+#viewAuth .dlg-field input:focus{border-color:var(--ledger);background:var(--card);box-shadow:none}
+#viewAuth .btn.p{min-height:42px}
+
+/* ---- PROPERTY PROFILE ---- */
+#viewLauncher .letter{background:var(--card);border:1px solid var(--ln);
+  border-radius:var(--r-card);padding:14px 16px;gap:16px}
+#viewLauncher .letter.empty{border-style:dashed;border-color:var(--ln)}
+#viewLauncher .lh-doc{width:42px;height:42px;border-radius:var(--r-ctl);
+  background:var(--sunk);border:1px solid var(--ln-soft)}
+#viewLauncher .lh-info b{font-size:13.5px;font-weight:600;color:var(--i1)}
+#viewLauncher .lh-info i{font-size:11.5px;color:var(--i3)}
+#viewLauncher .lh-act{gap:6px}
+/* the tracker's next renewal carries the ledger rule, as a scheduled row does */
+#viewLauncher .nextup{background:var(--card);border:1px solid var(--ln);
+  border-radius:var(--r-card);box-shadow:inset 3px 0 0 var(--ledger);padding:14px 18px;margin-bottom:12px}
+#viewLauncher .nu-k{font-size:10px;font-weight:600;letter-spacing:.13em;color:var(--i3)}
+#viewLauncher .nu-v{font-size:14px;font-weight:600;color:var(--i1);margin-top:4px}
+#viewLauncher .pc-due{font-size:12.5px;font-weight:500;margin-top:5px}
+#viewLauncher .pc-due.ok{color:var(--i3)}
+#viewLauncher .pc-due.now,#viewLauncher .pc-due.over{color:var(--stamp);font-weight:600}
+/* a package is a document on the desk; the current one carries the ledger rule */
+#viewLauncher .cycard{background:var(--card);border:1px solid var(--ln);
+  border-radius:var(--r-card);padding:15px 18px;margin-bottom:9px;
+  box-shadow:inset 3px 0 0 transparent;transition:background .12s ease}
+#viewLauncher .cycard:hover{background:var(--sunk);border-color:var(--ln);box-shadow:inset 3px 0 0 transparent}
+#viewLauncher .cycard.dom,#viewLauncher .cycard.dom:hover{border-color:var(--ln);
+  box-shadow:inset 3px 0 0 var(--ledger)}
+#viewLauncher .cy-t{font-size:14px;font-weight:600;color:var(--i1)}
+#viewLauncher .cychip{background:none;border-radius:999px;padding:0;color:var(--i3);
+  font-size:10.5px;font-weight:600;letter-spacing:.09em}
+#viewLauncher .cy-dom{background:none;border:1px solid var(--ln);border-radius:999px;
+  color:var(--i3);font-size:10.5px;font-weight:500;padding:2px 9px}
+#viewLauncher .cy-st{background:none;border:1px solid var(--ln);border-radius:999px;
+  color:var(--i4);font-size:10.5px;font-weight:600;padding:2px 9px}
+#viewLauncher .cy-st.ok{color:var(--filed);border-color:var(--filed)}
+#viewLauncher .cy-line{color:var(--i3)}
+#viewLauncher .cy-act{margin-top:6px}
+/* the affordability check: the ledger's own figures, and one colour that means
+   pass or fail. The gauge kept two greens and an amber tick from the form. */
+#viewLauncher .aff{border-top:1px solid var(--ln-soft);margin-top:13px;padding-top:12px}
+#viewLauncher .aff-k{font-size:10px;font-weight:600;letter-spacing:.13em;color:var(--i3)}
+#viewLauncher .aff-pass{border:1px solid;border-radius:999px;font-size:11px;
+  font-weight:600;padding:2px 10px}
+#viewLauncher .aff-pass.ok{background:none;color:var(--filed);border-color:var(--filed)}
+#viewLauncher .aff-pass.over{background:none;color:var(--stamp);border-color:var(--stamp)}
+#viewLauncher .aff-gauge{background:var(--sunk);border-radius:var(--r-ctl)}
+#viewLauncher .aff-gauge .seg.dark{background:var(--filed);border-radius:var(--r-ctl) 0 0 var(--r-ctl)}
+#viewLauncher .aff-gauge .seg.light{background:#8ba795}
+#viewLauncher .aff-gauge .oend{background:var(--stamp);border-radius:0;width:2px;height:14px;top:-2px}
+#viewLauncher .aff-anchors b{font-size:14px;font-weight:600;color:var(--i1)}
+#viewLauncher .aff-anchors i{font-size:10px;color:var(--i4)}
+#viewLauncher .aff-right{border-left:1px solid var(--ln-soft);padding-left:20px}
+#viewLauncher .aff-right b{font-size:13.5px;font-weight:600}
+#viewLauncher .aff-right i{font-size:10px;color:var(--i4)}
+#viewLauncher .aff-empty{background:var(--sunk);border-radius:var(--r-ctl);
+  color:var(--i3);font-style:normal;font-size:12.5px}
+#viewLauncher .progcard{background:var(--card);border:1px solid var(--ln);border-radius:var(--r-card)}
+#viewLauncher .progcard.soon{background:none;border-style:dashed;border-color:var(--ln);opacity:1}
+#viewLauncher .progcard.soon .pg-code{color:var(--i4);font-size:13px;font-weight:600;letter-spacing:.09em}
+#viewLauncher .progcard.soon .pg-name{color:var(--i4);font-size:11.5px}
+#viewLauncher .soonchip{background:none;border:1px solid var(--ln);border-radius:999px;
+  color:var(--i4);font-size:9.5px;font-weight:600;letter-spacing:.1em;padding:2px 9px}
+
+/* ---- THE PORTFOLIO PICKER ----
+   Scoped to .dialog.desk, not .dialog: the generic dialog is shared with the
+   form, which is not part of this overhaul. pickWhoDialog asks modal() for the
+   class; every other dialog keeps the look it has. */
+.dialog.desk{font-family:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+  font-variant-numeric:tabular-nums;background:var(--card);color:var(--i2);
+  border:1px solid var(--ln);border-radius:var(--r-card);
+  box-shadow:0 20px 56px rgba(16,24,34,.24);padding:22px 24px;width:420px}
+.dialog.desk .dlg-t{font-size:17px;font-weight:600;color:var(--i1);letter-spacing:-.01em}
+.dialog.desk .lh-note{font-size:12.5px;color:var(--i3);line-height:1.6;margin-top:7px}
+.dialog.desk .wholist{max-height:264px;overflow:auto;border:1px solid var(--ln);
+  border-radius:var(--r-ctl);background:var(--sunk);padding:4px}
+.dialog.desk .uaopt{padding:9px 11px;border-radius:var(--r-ctl);font-size:13px;color:var(--i2)}
+.dialog.desk .uaopt:hover{background:var(--card);color:var(--i1)}
+.dialog.desk .uaopt.cur{font-weight:600;color:var(--i1);background:var(--card)}
+.dialog.desk .uaopt .uasub{display:inline;margin-left:8px;font-size:11px;
+  font-weight:400;color:var(--i4)}
+.dialog.desk .btn{border-radius:var(--r-ctl);border-color:var(--ln);background:var(--card);
+  color:var(--i2);font-weight:600}
+.dialog.desk .btn:hover{background:var(--sunk)}
 </style></head>
 <body>
  <!-- ===================== SIGN IN ===================== -->
  <div id="viewAuth">
-   <div class="mtop"><div class="brand"><span class="mark"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M4 11 12 4l8 7" stroke="var(--navy)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 10v9h12v-9" stroke="var(--navy)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><div class="bname">Section 8 Rent Adjustments</div><div class="btag">Related Affordable</div></div></div></div>
+   <div class="mtop"><div class="brand"><div class="bname">Section 8 Rent Adjustments</div><div class="btag">Related Affordable</div></div></div>
    <div class="authwrap"><div class="authcard">
      <h2 class="authtitle">Sign in</h2>
      <div class="authsub">Sign in to view your properties.</div>
@@ -1053,12 +1235,12 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
  </div>
  <!-- ===================== PROPERTY LAUNCHER ===================== -->
  <div id="viewLauncher" style="display:none">
-   <div class="mtop"><div class="brand"><span class="mark"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M4 11 12 4l8 7" stroke="var(--navy)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 10v9h12v-9" stroke="var(--navy)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><div class="bname">Section 8 Rent Adjustments</div><div class="btag">Related Affordable</div></div></div><button class="backlink" id="bLauncherBack"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg> All properties</button></div>
+   <div class="mtop"><div class="brand"><div class="bname">Section 8 Rent Adjustments</div><div class="btag">Related Affordable</div></div><button class="backlink" id="bLauncherBack"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg> All properties</button></div>
    <div class="lwrap" id="launcherBody"></div>
  </div>
  <!-- ===================== RCS FORM (unchanged) ===================== -->
  <div id="viewContacts" style="display:none">
-   <div class="mtop"><div class="brand"><span class="mark"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M4 11 12 4l8 7" stroke="var(--navy)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 10v9h12v-9" stroke="var(--navy)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><div class="bname">Section 8 Rent Adjustments</div><div class="btag">Related Affordable</div></div></div><button class="backlink" id="bContactsBack"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg> All properties</button></div>
+   <div class="mtop"><div class="brand"><div class="bname">Section 8 Rent Adjustments</div><div class="btag">Related Affordable</div></div><button class="backlink" id="bContactsBack"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg> All properties</button></div>
    <div class="lwrap" id="contactsBody"></div>
  </div>
   <div id="viewForm" style="display:none">

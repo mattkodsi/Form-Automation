@@ -3265,15 +3265,20 @@ function pickWhoDialog(){
   const H=window.RCSHap,rows=hapAll();
   const names=(H&&rows)?H.managers(rows):[];
   if(!names.length){setStatus('The renewal schedule has not loaded, so there are no names to choose from.');return;}
-  const _cur=nm=>(menuLens==='all')?(nm==='*'):(nm===pmName);
-  const _row=(k,lab)=>'<div class="uaopt" data-who="'+esc(k)+'" style="padding:9px 12px;cursor:pointer'
-    +(_cur(k)?';font-weight:700':'')+'">'+esc(lab)+(_cur(k)?'<span class="uasub">current</span>':'')+'</div>';
+  /* The same condition the list itself filters on. Asking only whether the
+     lens is 'all' left the picker marking nothing as current on a page whose
+     eyebrow already read \u201call managers\u201d \u2014 no name chosen is showing
+     everyone, and the picker has to say the same thing the page does. */
+  const _everyone=(menuLens==='all'||!pmName);
+  const _cur=nm=>_everyone?(nm==='*'):(nm===pmName);
+  const _row=(k,lab)=>'<div class="uaopt'+(_cur(k)?' cur':'')+'" data-who="'+esc(k)+'">'
+    +esc(lab)+(_cur(k)?'<span class="uasub">current</span>':'')+'</div>';
   const rowsHtml=_row('*','Everyone')+names.map(nm=>_row(nm,nm)).join('');
   modal('<div class="dlg-t">Whose properties should the list show?</div>'
-    +'<div class="lh-note" style="margin-bottom:10px">These are the managers named in the renewal schedule. '
+    +'<div class="lh-note" style="margin-bottom:12px">These are the managers named in the renewal schedule. '
     +'Choosing a name also records who you are.</div>'
-    +'<div id="whoList" style="max-height:230px;overflow:auto;border:1px solid #e0e5ee;border-radius:8px">'+rowsHtml+'</div>'
-    +'<div class="dlg-row"><button class="btn" id="dlgCancel">Cancel</button><span class="dlg-sp"></span></div>');
+    +'<div id="whoList" class="wholist">'+rowsHtml+'</div>'
+    +'<div class="dlg-row"><button class="btn" id="dlgCancel">Cancel</button><span class="dlg-sp"></span></div>','desk');
   el('dlgCancel').onclick=closeModal;
   document.querySelectorAll('[data-who]').forEach(r=>r.onclick=async()=>{
     const nm=r.getAttribute('data-who');closeModal();
@@ -3587,6 +3592,11 @@ function createProperty(){
 /* ---- LAUNCHER: property summary + program picker --------------------- */
 function openLauncher(pid){activePid=pid;activeCid=null;renderLauncher();show('Launcher');}
 function docIcon(){return '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c86a2" stroke-width="1.6" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>';}
+/* On this desk a colour means a deadline, a link or a thing that is done, and
+   an increase is none of those — it is the ordinary case, so it is ink. A
+   DECREASE is worth naming, and gets the stamp. Separate from liftClr (teal /
+   red / slate), which the FORM still speaks and which this pass does not touch. */
+const deskClr=n=>n<0?'var(--stamp)':(n>0?'var(--i1)':'var(--i4)');
 function rcsAffPane(a){
   if(!a.total_units)return '<div class="aff-empty">Add unit types &amp; rents to see the affordability check.</div>';
   if(a.safmr_missing||!a.ceiling)return '<div class="aff-empty">Enter a 150% SAFMR to run the affordability check.</div>';
@@ -3597,8 +3607,8 @@ function rcsAffPane(a){
   const pCur=CEIL>0?clamp(CG/CEIL*100):0,pPro=CEIL>0?clamp(PG/CEIL*100):0;const dMo=a.delta_mo,dYr=a.delta_yr;
   return '<div class="aff"><div class="aff-top"><span class="aff-k">AFFORDABILITY CHECK</span><span class="aff-pass '+(PASS?'ok':'over')+'">'+(PASS?'&#10003; PASS':'&#10007; OVER')+' &middot; '+money(Math.abs(HEAD))+(PASS?' headroom':' over')+(partial?' &middot; '+a.types_priced+' of '+a.types_total+' types priced':'')+'</span></div>'
     +'<div class="aff-body"><div class="aff-left"><div class="aff-gauge">'+gaugeSegs(pCur,pPro)+'<div class="oend"></div></div>'
-      +'<div class="aff-anchors"><span><b style="color:#2f7d57">'+money(CG)+'</b><i>current</i></span><span><b style="color:#47a377">'+money(PG)+'</b><i>proposed</i></span><span><b>'+money(CEIL)+'</b><i>150% ceiling</i></span></div></div>'
-    +'<div class="aff-right"><span><b style="color:'+liftClr(a.pct)+'">'+sPct(a.pct)+'</b><i>'+liftWord(a.pct)+'</i></span><span><b style="color:'+liftClr(a.per_unit)+'">'+sMoney(a.per_unit)+'</b><i>per unit</i></span><span><b style="color:'+liftClr(dMo)+'">'+sMoney(dMo)+'</b><i>per month</i></span><span><b style="color:'+liftClr(dYr)+'">'+sK(dYr)+'</b><i>/yr</i></span></div></div></div>';}
+      +'<div class="aff-anchors"><span><b>'+money(CG)+'</b><i>current</i></span><span><b>'+money(PG)+'</b><i>proposed</i></span><span><b>'+money(CEIL)+'</b><i>150% ceiling</i></span></div></div>'
+    +'<div class="aff-right"><span><b style="color:'+deskClr(a.pct)+'">'+sPct(a.pct)+'</b><i>'+liftWord(a.pct)+'</i></span><span><b style="color:'+deskClr(a.per_unit)+'">'+sMoney(a.per_unit)+'</b><i>per unit</i></span><span><b style="color:'+deskClr(dMo)+'">'+sMoney(dMo)+'</b><i>per month</i></span><span><b style="color:'+deskClr(dYr)+'">'+sK(dYr)+'</b><i>/yr</i></span></div></div></div>';}
 /* ---- CYCLES: property-page cards + create picker ----------------------
    A cycle is a complete frozen snapshot (see CYCLES-OCAF-UAF-DESIGN.md).
    The dominant cycle (latest effective date; rent-setting beats UAF-only)
@@ -4614,9 +4624,9 @@ const DIR_SECTIONS=[
 function renderContacts(){const list=mpdb.listContacts();
   const pmRows=list.map(c=>'<div class="crow2"><div class="cc-main"><div class="cc-name">'+esc(c.name||'(unnamed)')+'</div><div class="cc-sub">'+esc(fmtEmail(c.email)||'\u2014')+'  \u00b7  '+esc(c.phone?fmtPhone(c.phone):'\u2014')+'</div></div><button class="txtbtn" data-ced="'+c.id+'">Edit</button><span class="dotsep">\u00b7</span><button class="txtbtn del" data-cdel="'+c.id+'">Delete</button></div>').join('');
   let html='<div class="lhead" style="display:block"><div class="lh-name">Contacts</div><div class="lh-meta">Shared across all properties. Picking a saved contact on a property fills that part of the form.</div></div>';
-  html+='<div class="lsec"><div class="lsec-t">PM contacts</div>'+(pmRows||'<div class="mempty" style="padding:20px">No contacts yet.</div>')+'<div class="addrow" id="cAdd">+ Add PM contact</div></div>';
+  html+='<div class="lsec"><div class="lsec-t">PM contacts</div><div class="clist">'+(pmRows||'<div class="mempty">No contacts yet.</div>')+'</div><div class="addrow" id="cAdd">+ Add PM contact</div></div>';
   DIR_SECTIONS.forEach(S=>{const rows=dirList(S.kind).map(c=>'<div class="crow2"><div class="cc-main"><div class="cc-name">'+esc(((c.prefix?c.prefix+' ':'')+(c.name||'')).trim()||'(unnamed)')+'</div><div class="cc-sub">'+esc(S.sub(c)||'\u2014')+'</div></div><button class="txtbtn" data-dired="'+c.id+'" data-dkind="'+S.kind+'">Edit</button><span class="dotsep">\u00b7</span><button class="txtbtn del" data-dirdel="'+c.id+'" data-dkind="'+S.kind+'">Delete</button></div>').join('');
-    html+='<div class="lsec"><div class="lsec-t">'+S.title+'</div>'+(rows||'<div class="mempty" style="padding:20px">None saved yet.</div>')+'<div class="addrow" data-diradd="'+S.kind+'">'+S.add+'</div></div>';});
+    html+='<div class="lsec"><div class="lsec-t">'+S.title+'</div><div class="clist">'+(rows||'<div class="mempty">None saved yet.</div>')+'</div><div class="addrow" data-diradd="'+S.kind+'">'+S.add+'</div></div>';});
   el('contactsBody').innerHTML=html;
   const a=el('cAdd');if(a)a.onclick=()=>contactDialog(null);
   document.querySelectorAll('[data-ced]').forEach(b=>b.onclick=()=>contactDialog(mpdb.listContacts().find(x=>x.id===b.getAttribute('data-ced'))));
