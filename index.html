@@ -7384,7 +7384,13 @@ function showPackageModal(nm,docs,combined,missingRcs,missingLh,capMsgs,blocked,
      All six rows stay 46px whatever is missing. */
   const gapOf=lab=>{const b=blkBy[lab];
     if(b)return (b.missing||[]);
-    return byLabel[lab]?[]:[{key:'',label:'the RCS report, uploaded in '+secRef(1),sec:1}];};
+    if(byLabel[lab])return [];
+    /* A reopened package HAS the study — its name, its parse and its figures are
+       all on the record — so "upload the RCS report" reads as false to someone
+       looking at the tile that names it. What is actually absent is the file. */
+    if(_rcsUpload&&!_rcsUpload.bytes)
+      return [{key:'',label:'the RCS report file itself — its reading was saved, the PDF was not, so re-attach it in '+secRef(1),sec:1}];
+    return [{key:'',label:'the RCS report, uploaded in '+secRef(1),sec:1}];};
   const sugOf=lab=>[].concat(((warnOf||{})[lab])||((blkBy[lab]||{}).warns)||[],extraWarn[lab]||[]);
   /* The whole row is the download, not the word "Download": a 46px-tall row
      whose only target was eight characters of text at the far right. */
@@ -7629,10 +7635,14 @@ async function __genOcafUafRun(){
       await add('uanotice','30-day tenant notice (UA decrease)','UA Decrease Tenant Notice',()=>window.RCSGen.uaTenantNotice(rec,lh,logo));
       await add('tcert','Tenant-comment certification','Tenant Comment Certification',()=>window.RCSGen.tenantCommentCert(rec));
     }
-    if(_rcsUpload){order.push('CA package (uploaded)');docs.push({label:'CA package (uploaded)',file:pre()+N+' - CA Package (as received)',bytes:_rcsUpload.bytes});}
+    if(_rcsUpload&&_rcsUpload.bytes){order.push('CA package (uploaded)');docs.push({label:'CA package (uploaded)',file:pre()+N+' - CA Package (as received)',bytes:_rcsUpload.bytes});}
     const combined=docs.length?await combinePdfs(docs.map(d=>d.bytes)):null;
     const warns=[];
     if(hasProg('ocaf')&&!_rcsUpload)warns.push('The CA’s auto-OCAF package isn’t uploaded — add it in '+secRef(1)+' for the file.');
+    /* Attached but not stored is a different sentence from never attached, and
+       telling someone to upload a file the page shows as already there is how a
+       true warning reads as a broken one. */
+    else if(hasProg('ocaf')&&!_rcsUpload.bytes)warns.push('The CA’s auto-OCAF package is on file but only its reading was saved, not the PDF — re-attach it in '+secRef(1)+' to include it in this package.');
     if(needsDerivedRents(C))warns.push('Proposed rents were derived from the worksheet (×'+C.R.toFixed(3)+') — use “Apply as proposed rents” + “Update property profile” to save them.');
     if(hasProg('uaf')&&A.mismatch.length)warns.push(A.mismatch.length+' unit type'+(A.mismatch.length>1?'s':'')+': UA components don’t total the current UA.');
     showOcafUafModal(N,tag,docs,combined,warns,blocked,warnOf,order);
@@ -7689,7 +7699,15 @@ async function __genPackageRun(){
     await add('cover','Cover letter (CA)','01. '+N+' - Cover Letter',()=>window.RCSGen.coverLetter(rec,logo));
     await add('owner','Owner cover letter','02. '+N+' - RCS Owner Cover Letter',()=>window.RCSGen.ownerLetter(rec));
     if(T.checklist)await add('checklist',"Owner's checklist","03. "+N+" - RCS Owner's Checklist",()=>window.RCSGen.fillChecklist(b64ToBytes(T.checklist),rec));
-    if(_rcsUpload)docs.push({label:'RCS report',file:'04. '+N+' - RCS Report',bytes:_rcsUpload.bytes});
+    /* bytes, not just presence. rcsRecall() returns bytes:null by design — a
+       reopened package has the study's READING persisted on the cycle but not
+       the PDF itself — and pushing that null put a document into the package
+       that had no content: combinePdfs silently skipped it (`if(!b)continue`),
+       so the merged PDF quietly lost the RCS report, and buildZip read
+       f.data.length off null and threw, making the folder undownloadable for
+       anyone who closed a package and came back to it. Leaving it out instead
+       costs the same document and says so on the row. */
+    if(_rcsUpload&&_rcsUpload.bytes)docs.push({label:'RCS report',file:'04. '+N+' - RCS Report',bytes:_rcsUpload.bytes});
     if(T.rentSchedule)await add('schedule','Draft rent schedule','05. '+N+' - Draft Rent Schedule',()=>window.RCSGen.fillRentSchedule(b64ToBytes(T.rentSchedule),rec));
     await add('notice','Tenant notice','06. '+N+' - RCS Tenant Notice',()=>window.RCSGen.tenantNotice(rec,lh,logo));
     const combined=docs.length?await combinePdfs(docs.map(d=>d.bytes)):null;

@@ -174,6 +174,19 @@ async function runProperty(p){
     perOrder[order]=facts;
     rec.orders[order]={
       files:(r.files||[]).length, tier:r.tier, weakerTest:!!r.weakerTest,
+      /* WHAT WE ACTUALLY PAID, and the only field here that knows. `tier` comes
+         from the app's own `via`, which names the FUNCTION that assembled the
+         record, not where its values came from: rsReadTextTier calls ocrHalf
+         (app.js:1777 and 1805) and then reports via:'text' regardless. Lansing
+         Manor's unit rows arrive through that page-0 tick-box call, which fills
+         blank value fields as well as boxes, and the app labels the result a
+         text read. Made Azure unreachable and the same file yields zero unit
+         rows — so the values are Azure's and nothing in the app records it.
+         ocrCalls counts real HTTP requests to the ocr-rs endpoint, observed by
+         a fetch wrapper installed before the app's own script. For a question
+         about billing it is the instrument; `tier` is not. */
+      ocrCalls:(r.uploads&&r.uploads.ocrCalls)||0,
+      via:(r.uploads&&r.uploads.rs&&r.uploads.rs.via)||null,
       missing:r.missing||null, warnings:r.warnings||[], errors:r.errors||[],
       docsExtracted:Object.keys(facts)
     };
@@ -305,6 +318,13 @@ function report(records){
   push('| — we produced a value the filed document has no field for | ',st['missing-theirs']||0,' |');
   push('| — the filed document had a value we produced nothing for | ',st['missing-ours']||0,' |');
   push('| fill-order disagreements | ',records.reduce((s,r)=>s+(r.fillOrder||[]).length,0),' |');
+  /* Reported per sweep because it is a recurring cost, not a one-off: every
+     package a user makes pays this again. Counted from HTTP requests actually
+     sent, not from any label the app applies to the reading afterwards. */
+  const calls=records.reduce((s,r)=>s+Object.values(r.orders||{}).reduce((a,o)=>Math.max(a,o.ocrCalls||0),0),0);
+  const billed=records.filter(r=>Object.values(r.orders||{}).some(o=>(o.ocrCalls||0)>0));
+  push('| Azure OCR requests sent | ',calls,' |');
+  push('| — properties that needed at least one | ',billed.length,' of ',records.length,' |');
   push('');
 
   /* Fill-order first: same inputs, two packages. No ground truth needed. */

@@ -43,6 +43,15 @@
    reported as an error rather than folded quietly into a result that looks like
    the other 33.
 
+   ONE THING THE RELOAD DOES NOT RESTORE, and it is an app defect this loop
+   found on its first night: document 04 of the package IS the study PDF, passed
+   through byte for byte, but `rcsRecall()` answers `bytes:null`. So a reopened
+   package builds document 04 out of nothing — the combined PDF silently loses
+   it and the folder download dies with "Cannot read properties of null". Step
+   6b re-attaches the STUDY (never the schedule) so the second order can still
+   be produced, asserts that doing so billed no OCR, and says all of this out
+   loud in the warnings. See reattachStudy's note at step 6b.
+
    THE PROPERTY NAME. These runs create real records in a real account, so they
    must be findable and removable afterwards. Every property this file creates
    is named `ZZ-CORPUS-<code>-<stamp>`, and `cleanup()` deletes exactly the rows
@@ -311,7 +320,7 @@ const EX_VIEW = `const V=['Auth','Menu','Launcher','Form','Contacts'];
   for(let i=0;i<V.length;i++){const e=document.getElementById('view'+V[i]);if(e&&e.style.display!=='none')return V[i];}
   return '(none)';`;
 
-/* renderSources() emits '<div class="srcgrid">'+rs+rcs+'</div>' (app.js:1944),
+/* renderSources() emits '<div class="srcgrid">'+rs+rcs+'</div>' (app.js:1950),
    so row 0 is the executed rent schedule and row 1 the study. .sfname holds the
    placeholder until a file is read and the file's own name after; .spin is the
    reading indicator; .sfacts holds #rsApply / #rcsApply / #upRs / #upRcs. */
@@ -349,6 +358,29 @@ const EX_IDS = `return {pid:(typeof activePid==='undefined'?null:activePid),
 
 const EX_PROPNAME = `const i=document.querySelector('#sections [data-k="property.name"]');
   return i?String(i.value||''):'';`;
+
+/* What the app RECORDED about each upload, which the tile only paraphrases.
+   Two things are wanted and neither is legible on screen:
+
+   · kind + via. parseRsPdf answers with a PAIR and the halves mean different
+     things: `kind:'fields'` is "values came out", `via` is which tier they came
+     from ('' = the AcroForm, 'text' = the text layer, 'ocr' = Azure).
+     `kind:'text'` with a null parse is the OPPOSITE of `via:'text'` — it means
+     the page had text and none of it was a value. Reading the tier off the
+     tile's prose could not tell those apart, and counting OCR REQUESTS is no
+     better: ocrHalf is also called to read tick boxes on a page whose values the
+     text tier read perfectly well, so "Azure was called" is not "the values came
+     from Azure". This is the app's own answer to the question actually asked.
+   · hasBytes. rsRecall/rcsRecall return bytes:null by design — the reading is
+     persisted with the cycle, the PDF is not (app.js:1037, app.js:1404). The
+     tile looks identical either way, and it is the difference between a package
+     folder that downloads and one that does not (see step 6b). */
+const EX_UPLOAD_STATE = `const one=u=>u?{name:u.name||'',stored:!!u.stored,hasBytes:!!(u.bytes&&u.bytes.length),
+    kind:u.kind==null?null:String(u.kind),via:u.via==null?null:String(u.via),why:String(u.why||''),
+    units:(u.parsed&&u.parsed.units)?u.parsed.units.length:0,
+    halfB:!!(u.parsed&&u.parsed.halfB)}:null;
+  return {rs:one(typeof _rsUpload==='undefined'?null:_rsUpload),
+          rcs:one(typeof _rcsUpload==='undefined'?null:_rcsUpload)};`;
 
 /* ── waiting ────────────────────────────────────────────────────────────── */
 async function waitFor(c, expr, { timeout = 30000, poll = 250, label = 'a condition', onTick = null } = {}) {
@@ -397,6 +429,29 @@ async function settleDir(dir, quietMs = 3000, maxMs = 180000) {
     if (!pending && Date.now() - lastAt >= quietMs) break;
   }
   return (fs.existsSync(dir) ? fs.readdirSync(dir) : []).filter(n => !/\.crdownload$/.test(n));
+}
+/* WHERE chromium put it, not where we asked it to. Browser.setDownloadBehavior
+   is set again before every order, and a build that quietly ignores the second
+   call keeps writing to the first order's directory — which looks from inside
+   the second order exactly like a download that never happened. So the whole
+   run's download tree is searched, and a file found under the wrong order is
+   reported as that, not as nothing. */
+function findZips(root, sinceMs) {
+  const out = [];
+  const walk = d => {
+    let ents = [];
+    try { ents = fs.readdirSync(d, { withFileTypes: true }); } catch (e) { return; }
+    for (const e of ents) {
+      const p = path.join(d, e.name);
+      if (e.isDirectory()) { walk(p); continue; }
+      if (!/\.zip$/i.test(e.name)) continue;
+      let st = null; try { st = fs.statSync(p); } catch (e2) { continue; }
+      if (sinceMs && st.mtimeMs < sinceMs - 2000) continue;
+      out.push({ file: p, dir: d, name: e.name, bytes: st.size, mtimeMs: st.mtimeMs });
+    }
+  };
+  walk(root);
+  return out.sort((a, b) => b.mtimeMs - a.mtimeMs);
 }
 
 /* ── the browser session ────────────────────────────────────────────────── */
@@ -562,25 +617,21 @@ async function clickApply(c, id, label) {
   return { clicked: true, warning: null, status: await statusOf(c) };
 }
 
-/* The source tile's own words, turned back into the vocabulary the sweep
-   speaks. parseRsPdf answers with a PAIR and the halves mean different things:
-   `kind:'fields'` is "values came out", `via` is which tier they came from.
-   `kind:'text'` with a null parse is the OPPOSITE of `via:'text'` — it means
-   the page had text and none of it was a value. Collapsing those two into the
-   word "text" would report a run as a successful tier-2 read when nothing at
-   all was read. */
-function tierOf(tile, sawOcr) {
-  if (!tile) return null;
-  const st = String(tile.state || ''), sub = String(tile.sub || '');
-  if (/could not be read/i.test(st)) return 'unreadable:' + (/[Ss]canned/.test(sub) ? 'scan' : 'text');
-  if (/front half read only/i.test(st)) return (sawOcr ? 'ocr' : 'fields-or-text') + ':half';
-  if (/^read/i.test(st)) return (sawOcr || /^Scanned/.test(sub)) ? 'ocr' : 'fields-or-text';
-  if (/not read/i.test(st)) return 'unreadable:none';
-  return 'unknown:' + st;
+/* The record parseRsPdf left behind, in the vocabulary the sweep speaks. `kind`
+   says whether values came out at all and `via` says which tier produced them,
+   and the two must not be collapsed: `kind:'text'` with a null parse is the
+   OPPOSITE of `via:'text'`. Reported as the old file reported it — the tier
+   name, or `unreadable:<kind>` — so nothing downstream has to learn a new word.
+   `halfB` rides along because "Part A came through and Parts F/G did not" is a
+   different result from either. */
+function tierOf(u) {
+  if (!u) return null;
+  if (u.kind !== 'fields') return 'unreadable:' + (u.kind || 'none');
+  return (u.via || 'fields') + (u.halfB ? ':half' : '');
 }
 
 /* ── generate + capture one package ─────────────────────────────────────── */
-async function generateAndCapture(c, { outDir, dlDir, label, log }) {
+async function generateAndCapture(c, { outDir, dlDir, dlBase, label, log }) {
   const warnings = [], errors = [];
   const files = [];
   let weakerTest = false, pkgText = [], docRows = null;
@@ -639,21 +690,46 @@ async function generateAndCapture(c, { outDir, dlDir, label, log }) {
     return { outDir, files, weakerTest, pkgText, docRows, warnings, errors };
   }
 
+  const clickedAt = Date.now();
   await clickId(c, 'dlFolder');
+  /* dlPackageFolder ENDS by writing to the status bar, whichever way it goes
+     (app.js:4126-4139) — "RCS Package folder downloaded …" or "Folder download
+     failed: <reason>". That sentence is the app's own account of what happened
+     and is worth infinitely more than watching a directory and inferring. A
+     directory that stays empty is the same picture whether the zip was written
+     somewhere else, the packager threw, or chromium declined; this tells them
+     apart. */
+  const dlSaid = await waitFor(c,
+    `(function(){const s=((document.getElementById('status')||{}).textContent||'');
+      return /folder downloaded|Folder download failed|Packager still loading/i.test(s)?s:null;})()`,
+    { timeout: 180000, poll: 400, label: 'the folder download to report itself in the status bar' })
+    .catch(() => null);
+  if (dlSaid && /failed|still loading/i.test(dlSaid)) errors.push(label + ': ' + dlSaid);
+
   const landed = await settleDir(dlDir);
-  const zips = landed.filter(n => /\.zip$/i.test(n));
+  const here = landed.filter(n => /\.zip$/i.test(n));
   let zipBuf = null;
-  if (zips.length) zipBuf = fs.readFileSync(path.join(dlDir, zips[0]));
+  if (here.length) zipBuf = fs.readFileSync(path.join(dlDir, here[0]));
   else {
-    const n = await c.eval('return (window.__grab||[]).length;');
-    if (n <= grabBefore) {
-      errors.push('nothing downloaded and nothing captured — the folder button produced no blob at all');
-      return { outDir, files, weakerTest: true, pkgText, docRows, warnings, errors };
+    const stray = dlBase ? findZips(dlBase, clickedAt).filter(z => path.resolve(z.dir) !== path.resolve(dlDir)) : [];
+    if (stray.length) {
+      zipBuf = fs.readFileSync(stray[0].file);
+      warnings.push('chromium ignored the download directory for this order and wrote to ' + J(stray[0].dir)
+        + ' (setDownloadBehavior=' + c.downloadOk + '); the file was taken from there');
+      try { fs.rmSync(stray[0].file, { force: true }); } catch (e) {}
+    } else {
+      const n = await c.eval('return (window.__grab||[]).length;');
+      if (n <= grabBefore) {
+        errors.push('nothing downloaded and nothing captured — the folder button produced no file and no blob.'
+          + '  status: ' + J(dlSaid) + '  ·  setDownloadBehavior=' + c.downloadOk
+          + '  ·  ' + J(dlDir) + ' holds ' + J(landed));
+        return { outDir, files, weakerTest: true, pkgText, docRows, warnings, errors };
+      }
+      zipBuf = await pullGrab(c, n - 1);
+      weakerTest = true;
+      warnings.push('chromium wrote no file to the download directory (setDownloadBehavior=' + c.downloadOk +
+                    '); the package bytes were pulled out of the page instead — weakerTest');
     }
-    zipBuf = await pullGrab(c, n - 1);
-    weakerTest = true;
-    warnings.push('chromium wrote no file to the download directory (setDownloadBehavior=' + c.downloadOk +
-                  '); the package bytes were pulled out of the page instead — weakerTest');
   }
 
   /* The app names its documents after the property, and a property may be
@@ -802,11 +878,21 @@ async function driveBoth(opts) {
 
     const netAfterUploads = await c.eval('return (window.__net||[]).slice();');
     const ocrCalls = netAfterUploads.filter(x => /functions\/v1\/ocr/.test(x));
-    if (rsTile && !/read/i.test(rsTile.state)) warnings.push('the rent schedule was not readable (' + rsTile.state + ') — no values can be applied from it');
-    if (rcsTile && /not read/i.test(rcsTile.state)) warnings.push('the study yielded no unit types — no values can be applied from it');
-    const tier = tierOf(rsTile, ocrCalls.length > 0);
-    const rsVia = tier && tier.indexOf('ocr') === 0 ? 'ocr' : (tier === 'fields-or-text' ? 'fields-or-text' : null);
-    log('  OCR endpoint calls during the uploads: ' + ocrCalls.length + (ocrCalls.length ? '  [' + ocrCalls.join(', ') + ']' : ''));
+    const read = await c.eval(EX_UPLOAD_STATE);
+    const tier = tierOf(read.rs);
+    const rsVia = read.rs ? (read.rs.via || (read.rs.kind === 'fields' ? 'fields' : null)) : null;
+    if (read.rs && read.rs.kind !== 'fields')
+      warnings.push('the rent schedule was not readable (kind=' + read.rs.kind + (read.rs.why ? ', ' + read.rs.why : '') + ') — no values can be applied from it');
+    if (read.rs && read.rs.halfB)
+      warnings.push('only the front half of the rent schedule was read — Parts F and G (ownership entity, principals, signatory) did not come through');
+    if (read.rcs && !read.rcs.units)
+      warnings.push('the study yielded no unit types — no values can be applied from it');
+    /* Requests, not tiers. ocrHalf is also called to read the tick boxes on a
+       page whose values the TEXT tier read perfectly well, so this number is
+       what was billed and `tier` is where the values came from. They answer
+       different questions and are reported separately on purpose. */
+    log('  tier: ' + tier + (read.rcs ? ' · study: ' + read.rcs.units + ' unit types' : '')
+      + ' · OCR endpoint calls during the uploads: ' + ocrCalls.length);
 
     /* ---- one order: two clicks, then Generate -------------------------- */
     const runOrder = async order => {
@@ -821,7 +907,7 @@ async function driveBoth(opts) {
       const ocrBefore = (await c.eval('return (window.__net||[]).slice();')).filter(x => /functions\/v1\/ocr/.test(x)).length;
       const g = await generateAndCapture(c, {
         outDir: path.join(outRoot, String(code), order),
-        dlDir: path.join(dlBase, order), label: order, log,
+        dlDir: path.join(dlBase, order), dlBase, label: order, log,
       });
       g.warnings.forEach(x => w.push(x)); g.errors.forEach(x => er.push(x));
       return {
@@ -845,7 +931,7 @@ async function driveBoth(opts) {
        against the ones from before the reload, so "the same cycle" is a fact
        rather than an assumption. A property with no tracker row is an orphan
        and always shows, and any search query forces the All view
-       (renderMenu, app.js:3383), so no lens can hide it. */
+       (renderMenu, app.js:3384), so no lens can hide it. */
     await typeInto(c, 'menuSearch', runName);
     await sleep(500);
     const cardPid = await c.eval(`const q=${J(runName)};
@@ -868,6 +954,7 @@ async function driveBoth(opts) {
     const ids2 = await c.eval(EX_IDS);
     const after = await c.eval(EX_SNAP);
     const tiles2 = await c.eval(EX_TILES);
+    const held = await c.eval(EX_UPLOAD_STATE);
     const diffs = diffSnaps(baseline, after);
     const leaked = diffs.filter(d => !d.auto);
     const rsRetained = !rs || !!(tiles2.rs && tiles2.rs.name === path.basename(rs.tmp));
@@ -879,6 +966,7 @@ async function driveBoth(opts) {
       propertyIdFromDom: cardPid, cycleIdFromDom: cyc.ids[0],
       formEmpty: leaked.length === 0, diffs, leaked,
       rsRetained, rcsRetained, rsTile: tiles2.rs, rcsTile: tiles2.rcs,
+      held, studyReattached: false,
       ocrCallsSinceReload: ocrSinceReload,
     };
     if (!reopen.propertyIdMatched || !reopen.cycleIdMatched)
@@ -896,6 +984,64 @@ async function driveBoth(opts) {
     log('reopen  : form empty=' + reopen.formEmpty + ' · rs kept=' + rsRetained + ' · study kept=' + rcsRetained
       + ' · same property=' + reopen.propertyIdMatched + ' · same package=' + reopen.cycleIdMatched
       + ' · OCR since reload=' + ocrSinceReload);
+
+    /* ---- 6b. the one thing a reload does NOT restore ------------------- */
+    /* DOCUMENT 04 IS THE STUDY PDF ITSELF, PASSED STRAIGHT THROUGH:
+         if(_rcsUpload)docs.push({label:'RCS report', …, bytes:_rcsUpload.bytes})
+       — app.js:4395, and again at 4335 for the OCAF/UAF package. But
+       `rcsRecall()` answers `bytes:null` (app.js:1404), because the reading is
+       persisted with the cycle and the PDF deliberately is not. So on a recalled
+       package the app pushes a document whose bytes are null, and then:
+         · combinePdfs skips it (`if(!b)continue`, app.js:3884) — the combined
+           PDF silently comes out WITHOUT the RCS report;
+         · buildZip reads data.length — the folder download dies outright with
+           "Folder download failed: Cannot read properties of null".
+       That is an app defect, and it is not this file's to fix: it means anyone
+       who closes a package and comes back to it cannot download its folder. It
+       is reported on every run that meets it, in the words the app used.
+
+       The repair here is the smallest one that is honest. Only the STUDY is
+       re-attached, and only its bytes are wanted:
+         · the study is never OCR'd — #rcsFile's handler calls parseRcsPdf, whose
+           only reader is the text layer, so this costs nothing and bills nothing
+           (asserted below against the OCR counter);
+         · the rent schedule is NOT re-attached, because nothing downstream ever
+           reads _rsUpload.bytes — only its parsed reading, which the recall
+           restores intact. The expensive document is read exactly once per
+           property, which is the whole point of the design.
+       An upload does not fill anything; only #rcsApply does. So this puts the
+       bytes back and leaves the form as empty as the assertions just found it. */
+    if (study && rcsRetained && held.rcs && !held.rcs.hasBytes) {
+      /* This WAS the crash report for a live defect: document 04 went into the
+         package as null bytes, combinePdfs dropped it silently and buildZip
+         threw on f.data.length, so anyone reopening a saved package could not
+         download its folder. Fixed 2026-07-29 — the push is now guarded on
+         bytes and the row says the file must be re-attached.
+         The note stays because the CONDITION it detects has not gone away:
+         rcsRecall still returns bytes:null by design (the reading is persisted,
+         the PDF deliberately is not), so a reopened package still cannot
+         include the study until someone re-attaches it. That is what the
+         harness does here, and it is what a real user would do. Worth stating
+         on every run so a package that is missing document 04 is never mistaken
+         for a package the app declined to build. */
+      warnings.push('after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading '
+        + 'is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. '
+        + 'The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.');
+      const before = ocrSinceReload;
+      const u = await uploadThrough(c, { inputId: 'rcsFile', filePath: study.tmp, tileKey: 'rcs', label: 'study (re-attached for its bytes)', timeoutMs: uploadTimeoutMs, log });
+      u.warnings.forEach(w => warnings.push(w));
+      await awaitQuiet(c, { timeout: 60000, quietMs: 1200 });
+      const nowOcr = (await c.eval('return (window.__net||[]).slice();')).filter(x => /functions\/v1\/ocr/.test(x)).length;
+      if (nowOcr !== before) errors.push('re-attaching the study reached the OCR endpoint ' + (nowOcr - before) + ' time(s) — it must not, and this run has been billed for it');
+      const held2 = await c.eval(EX_UPLOAD_STATE);
+      reopen.studyReattached = true; reopen.heldAfterReattach = held2;
+      const after2 = await c.eval(EX_SNAP);
+      const leaked2 = diffSnaps(baseline, after2).filter(d => !d.auto);
+      if (leaked2.length) errors.push('re-attaching the study put ' + leaked2.length + ' value(s) into the form; it was supposed to change nothing');
+      log('reopen  : study re-attached for its bytes (no OCR: ' + before + ' -> ' + nowOcr + ')');
+    } else if (study && held.rcs && !held.rcs.hasBytes) {
+      warnings.push('the study was recalled without its bytes and could not be re-attached — document 04 will be missing or the folder download will fail');
+    }
 
     /* ---- 7. order B: study then RS ------------------------------------- */
     if (!rsRetained || !rcsRetained) {
@@ -924,8 +1070,8 @@ async function driveBoth(opts) {
          package says the real name. */
       nameIsPrefix: nameUsedInDocs.indexOf(NAME_PREFIX) === 0,
       uploads: {
-        rs: rsTile ? { name: rsTile.name, state: rsTile.state, sub: rsTile.sub, ms: rsMs } : null,
-        rcs: rcsTile ? { name: rcsTile.name, state: rcsTile.state, sub: rcsTile.sub, ms: rcsMs } : null,
+        rs: rsTile ? { name: rsTile.name, state: rsTile.state, sub: rsTile.sub, ms: rsMs, kind: read.rs && read.rs.kind, via: read.rs && read.rs.via, halfB: !!(read.rs && read.rs.halfB) } : null,
+        rcs: rcsTile ? { name: rcsTile.name, state: rcsTile.state, sub: rcsTile.sub, ms: rcsMs, units: read.rcs && read.rcs.units } : null,
         ocrCalls: ocrCalls.length, ocrEndpoints: ocrCalls, tier,
       },
       reopen, orders, warnings, errors,
@@ -940,8 +1086,12 @@ async function driveBoth(opts) {
     studyPath: studyPath || null, priorRsPath: priorRsPath || null,
     at: new Date().toISOString(),
   }, meta);
-  out.warnings = warnings.concat(meta.warnings || []);
-  out.errors = errors.concat(meta.errors || []);
+  /* `warnings` / `errors` are the SAME arrays the run pushed into and handed
+     back as meta.warnings / meta.errors — the pre-flight pushes above happen
+     before withApp and land in them too. Concatenating the two printed every
+     line twice. */
+  out.warnings = meta.warnings || warnings;
+  out.errors = meta.errors || errors;
   if (out.nameIsPrefix)
     out.warnings.push('the generated documents carry the harness name ' + J(out.propertyNameInDocuments)
       + ' — the schedule supplied no property name to overwrite it, so property.name WILL mismatch the filed package');
@@ -962,12 +1112,25 @@ async function driveBoth(opts) {
    That still works, but NOT by running twice: the first call does both orders in
    one session and the second is served from this memo. One property, one
    browser, one upload, one OCR bill — whichever way it is called. */
+/* THE FAILURE IS MEMOISED TOO, and that is the whole point of the guard. A
+   throw late in driveBoth — during generation, say, long after Azure has been
+   paid — leaves sweep.js's catch to move on to the second order, which finds no
+   memo and runs the ENTIRE thing again, schedule upload and OCR included. A
+   property that failed would cost two reads instead of one, which is exactly
+   the bill this file exists to halve. So the first attempt's outcome is
+   recorded whichever way it went, and the second call re-throws the same error
+   instead of paying to rediscover it. */
 let _memo = null;
 async function driveOne(opts) {
   const order = opts.order;
   if (ORDERS.indexOf(order) < 0) throw new Error('order must be "rs-first" or "rcs-first", got ' + J(order));
   const sig = [opts.propertyFolder, opts.studyPath, opts.priorRsPath, opts.outRoot, opts.corpusRoot, opts.cacheRoot].join(' | ');
-  if (!_memo || _memo.sig !== sig) _memo = { sig, both: await driveBoth(opts) };
+  if (!_memo || _memo.sig !== sig) {
+    _memo = { sig, both: null, err: null };
+    try { _memo.both = await driveBoth(opts); }
+    catch (e) { _memo.err = e; }
+  }
+  if (_memo.err) throw _memo.err;
   const b = _memo.both;
   const r = b.orders[order] || {
     outDir: path.join(opts.outRoot, String(b.code), order), files: [],
@@ -991,7 +1154,13 @@ async function driveOne(opts) {
    re-checked in node with startsWith rather than trusted to a server-side LIKE
    pattern, and every row is printed before anything is removed. The app's own
    #pDelete button on the property page does the same single delete; this is
-   that, in a loop, without a browser. */
+   that, in a loop, without a browser.
+
+   ONE delete per property is the whole job: cycle, unit_type, ns8_unit and
+   nonrev_unit are all property-scoped with ON DELETE CASCADE (verified against
+   the live schema, 2026-07-29), and pm_contact is not property-scoped at all —
+   it is shared and must survive. deleteProperty in db.supabase.js relies on the
+   same cascade. If that ever changes, this leaves orphans silently. */
 async function cleanup(sessionFile, opts) {
   const prefix = opts && opts.prefix;
   if (typeof prefix !== 'string' || prefix.length < 4)
@@ -1089,6 +1258,9 @@ if (require.main === module) {
       console.log('OCR      : ' + r.uploads.ocrCalls + ' call(s) during the uploads, ' + r.reopen.ocrCallsSinceReload + ' after the reload');
       console.log('reopen   : form empty=' + r.reopen.formEmpty + ' · rs kept=' + r.reopen.rsRetained + ' · study kept=' + r.reopen.rcsRetained
         + ' · same property=' + r.reopen.propertyIdMatched + ' · same package=' + r.reopen.cycleIdMatched);
+      console.log('           recalled with bytes: rs=' + J(r.reopen.held && r.reopen.held.rs && r.reopen.held.rs.hasBytes)
+        + ' study=' + J(r.reopen.held && r.reopen.held.rcs && r.reopen.held.rcs.hasBytes)
+        + (r.reopen.studyReattached ? '  -> study re-attached for its bytes (no OCR)' : ''));
       if (r.reopen.diffs.length) {
         console.log('           cells that moved across the reload:');
         r.reopen.diffs.slice(0, 14).forEach(d => console.log('             ' + (d.auto ? '(auto) ' : 'LEAKED ') + d.key + '  ' + J(d.wasAtCreate) + ' -> ' + J(d.isNow)));
