@@ -631,7 +631,7 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
   align-items:center;column-gap:20px;padding:0 18px;
   min-height:0;transition:background .12s ease}
 .mgrid.rows .pcard:first-child{border-top:0}
-.mgrid.rows .pcard:hover{background:var(--surface-tint)}
+.mgrid.rows .pcard:hover{background:var(--surface-tint);transform:none;box-shadow:none}
 .mgrid.rows .pc-body{display:grid;grid-column:1/4;
   grid-template-columns:minmax(0,1fr) 176px 168px;grid-template-rows:auto auto;
   align-items:center;padding:10px 0;column-gap:20px;row-gap:0;min-height:0}
@@ -683,7 +683,9 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
 #viewMenu .whochip:hover{background:rgba(255,255,255,.08)}
 #viewMenu .whochip.unset{border:1px dashed rgba(255,255,255,.45);opacity:.85}
 /* the finder sits on the title's baseline, and the page breathes below it */
-#viewMenu .mhead{align-items:flex-end;gap:48px;margin-bottom:52px}
+#viewMenu .mhead{align-items:flex-end;gap:48px;margin-bottom:10px}
+#viewMenu .mlede{font-size:12.5px;color:var(--i3);margin:0 0 44px;max-width:96ch}
+#viewMenu .mlede:empty{margin:0}
 #viewMenu .searchbox{flex:0 0 300px}
 #viewMenu .searchbox svg{stroke:var(--i4);left:11px}
 #viewMenu .searchbox input{width:100%;background:var(--sunk);border:1px solid var(--ln);
@@ -695,18 +697,22 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
 #viewMenu .mtitle .eyebrow{display:block;font-size:10.5px;font-weight:600;
   letter-spacing:.13em;text-transform:uppercase;color:var(--i3);margin-bottom:5px}
 /* the figures line: each carries the left rule in the colour of what it says */
-#viewMenu .msub{display:flex;gap:4px;flex-wrap:wrap;margin-top:12px;font-size:13px;color:var(--i3)}
+#viewMenu .msub{display:flex;gap:0;flex-wrap:wrap;margin-top:12px;font-size:13px;color:var(--i3)}
+#viewMenu .msub .fig:first-child{padding-left:9px}
 #viewMenu .msub .fig{font:inherit;font-size:13px;color:var(--i3);background:none;border:0;
   border-left:2px solid var(--ln);border-radius:0;cursor:pointer;
-  display:inline-flex;align-items:baseline;gap:5px;min-height:36px;padding:0 14px 0 9px}
+  display:inline-flex;align-items:baseline;gap:5px;min-height:36px;padding:0 12px}
 #viewMenu .msub .fig b{color:var(--i1);font-weight:600;font-size:14px}
 #viewMenu .msub .fig.now{border-left-color:var(--stamp)}
 #viewMenu .msub .fig.soon{border-left-color:var(--ledger)}
 #viewMenu .msub .fig.done{border-left-color:var(--filed)}
-#viewMenu .msub .fig:hover{color:var(--i1);background:rgba(255,255,255,.5)}
-/* Selected is a raised chip, not a hue: on this page a colour means a deadline
-   and which figure you are holding is not one. */
-#viewMenu .msub .fig.on{background:var(--card);border-radius:0 var(--r-ctl) var(--r-ctl) 0;color:var(--i1)}
+#viewMenu .msub .fig:hover{color:var(--i1)}
+/* Selected is an underline in ink. As a white chip it stood taller than the
+   four figures beside it and covered its own divider, so the strip read as
+   four items and a button rather than five readings of one portfolio. Ink,
+   because on this page a colour means a deadline and which figure you are
+   holding is not one. */
+#viewMenu .msub .fig.on{color:var(--i1);box-shadow:inset 0 -2px 0 var(--i1)}
 #viewMenu .msub .fig.zero{color:var(--i4)}
 #viewMenu .msub .fig.zero b{color:var(--i4);font-weight:500}
 /* the rail stays — it filters, which the mockup had no way to do — but it
@@ -733,6 +739,7 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
 /* due within 30 days: the stamp rule down the left, the way the mockup marks
    what is live. Every other row carries the same rule, transparent. */
 #viewMenu .mgrid.rows .pcard{box-shadow:inset 3px 0 0 transparent}
+#viewMenu .mgrid.rows .pcard:hover{background:var(--sunk);transform:none;border-color:var(--ln-soft)}
 #viewMenu .mgrid.rows .pcard[data-band="now"]{box-shadow:inset 3px 0 0 var(--stamp)}
 #viewMenu .mgrid.rows .pcard[data-band="now"] .pc-due{color:var(--stamp);font-weight:600}
 #viewMenu .mgrid.rows .pcard[data-band^="m"]{box-shadow:inset 3px 0 0 var(--ledger)}
@@ -743,7 +750,7 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
   text-transform:uppercase;color:var(--i3);margin:0}
 #viewMenu .zhead span{font-size:12.5px;color:var(--i3)}
 #viewMenu .mgrid.rows{margin-bottom:0}
-#viewMenu .mgrid.rows.live{margin-bottom:44px}
+#viewMenu .mgrid.rows.live{margin-bottom:48px}
 /* the live row: the name leads and says what the package is, the columns are
    programme, countdown, size, action — as in the mockup */
 #viewMenu .mgrid.rows.live .pcard{grid-template-columns:minmax(0,1fr) 90px 130px 110px 212px;
@@ -787,7 +794,7 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
 #viewMenu .mgrid.rows:not(.live) .pc-units{grid-column:5;grid-row:1;justify-self:end;
   white-space:nowrap}
 #viewMenu .mgrid.rows:not(.live) .pc-act{grid-column:6}
-#viewMenu .mgrid.rows:not(.live) .pc-act .btn{background:none;border:0;color:var(--i3);
+#viewMenu .mgrid.rows:not(.live) .pc-act .btn{text-align:right;padding:0;background:none;border:0;color:var(--i3);
   font-weight:600;font-size:12px;padding:0;width:auto}
 #viewMenu .mgrid.rows:not(.live) .pcard:hover .pc-act .btn{color:var(--ledger)}
 #viewMenu .mcols{grid-template-columns:minmax(0,1fr) 110px 150px 150px 90px 104px}
