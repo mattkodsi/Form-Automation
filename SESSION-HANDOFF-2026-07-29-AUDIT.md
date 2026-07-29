@@ -87,6 +87,16 @@ Tier 1 scanner: `scratchpad/scan.js` pattern — loads `app/full-mp/*.js` in nod
   Every scratch property is named `ZZ-CORPUS-*` and **must be deleted after each batch**:
   `node app/full-mp/corpus/drive.js --cleanup --prefix ZZ-CORPUS-`
   Baseline: **12 real properties.** After cleanup that count must still be 12.
+- **The live-account baseline is no longer 12.** After wave 1 the account holds **14**,
+  with **0** `ZZ-CORPUS-*` — my scratch properties were all deleted and verified gone.
+  Nine properties were created on 2026-07-29 that are NOT mine and NOT prefixed:
+  `Luther Towers`, `Clarendon Court`, `Gates Mills Villa`, `Garden House of River Oaks II`,
+  `Ebony Gardens`, `Round Barn Manor`, `Park Place`, `Fairview Housing`, `Winter Garden`.
+  **All nine have 0 cycles and 0 unit types** — empty shells. `Gates Manor` also appears
+  twice. They look like the HAP-tracker home page or hand clicking, not the driver, which
+  names everything `ZZ-CORPUS-*`. **Do not delete them** — they are real records in Matt's
+  account and removing them is irreversible. The cleanup check is therefore
+  "0 `ZZ-CORPUS-*`", not "exactly 12 properties".
 - **Never open with `Read`:** `index.html` (~411k tok), `app/full-mp/templates.js`,
   `app/full-mp/lib/pdf-lib.min.js`. Use `grep -n` / `sed -n` / `head -c`.
 - **Never host-edit source files.** Write to `/tmp` (the scratchpad), `cp` in, then
@@ -127,7 +137,7 @@ A wave marks a property `audited` only when its agent returned rows.
 | 12 | 75544 | Oaks on North Plaza | unaudited | |
 | 13 | 75563 | Oceanport | unaudited | |
 | 14 | 75564 | Holly House | unaudited | |
-| 15 | 75566 | Ebony Gardens | sources read | 1 |
+| 15 | 75566 | Ebony Gardens | **audited** | 1 |
 | 16 | 75567 | Mapleview Towers | unaudited | |
 | 17 | 75568 | Market Square | unaudited | |
 | 18 | 75569 | Barnum House | unaudited | |
@@ -136,17 +146,17 @@ A wave marks a property `audited` only when its agent returned rows.
 | 21 | 75704 | 333 Holly | unaudited | |
 | 22 | 75705 | The Pines | unaudited | |
 | 23 | 75708 | Colonial Village | unaudited | |
-| 24 | 75830 | Clinton Manor | unaudited | 1 |
+| 24 | 75830 | Clinton Manor | **audited** | 1 |
 | 25 | 75831 | Friendship Court | unaudited | |
 | 26 | 75832 | Newberry Arms | unaudited | |
-| 27 | 75833 | Circle Park | unaudited | 1 |
+| 27 | 75833 | Circle Park | **audited** | 1 |
 | 28 | 75917 | Peterson Plaza | **audited** | 0 |
 | 29 | 75919 | Northgate Terrace CA | unaudited | |
 | 30 | 75920 | Fairview Homes | unaudited | |
 | 31 | 75921 | Walden | unaudited | |
 | 32 | 75922 | Marine Terrace | unaudited | |
-| 33 | 75926 | Oak Center | unaudited | 1 |
-| 34 | 75927 | Morh Housing | unaudited | 1 |
+| 33 | 75926 | Oak Center | **audited** | 1 |
+| 34 | 75927 | Morh Housing | **audited** | 1 |
 
 **Wave 0** (before the loop): Peterson Plaza, traced end to end — commit `bbe9868`.
 
@@ -172,39 +182,58 @@ lines across 7 studies. Now 1.
 Verified against the filed package: Peterson Plaza's 100-unit row went 2,025 → **2,050**
 (filed: 2,050), monthly potential 429,200 → **431,700** (filed: 431,750).
 
-### Open defects, in priority order
+### THE REPAIR QUEUE — wave 1 is audited, the repairs are NOT yet written
 
-1. **`Senior` wrapped-designation line** — the studies print the unit type over two
-   lines (spec, then designation). Peterson's 1-unit row captures `Senior` as its type,
-   so it takes 2,650 instead of 2,700. Last $50 of Peterson's gap. The row reader, not
-   `parseType`.
-2. **Utility allowances come from the wrong document.** Ours are exactly the study's
-   `ua` values (Peterson: 86/83/111/131). The filed package uses the property's own
-   allowance workbook (60/71/71/125 — see `2025 - RCS/Utility Baseline/Peterson Plaza
-   Baseline UA Workbook 4.14.xlsx`). Col 5 of HUD-92458 is the allowance in effect, not
-   the appraiser's estimate. 17 rows, 7 properties.
-3. **Fill order changes the package** — 83 rows, 8 properties. Peterson's total contract
-   rent is 429,200 schedule-first and 285,250 study-first. **Diagnosed, fix WRITTEN AND
-   PARKED at `scratchpad/PARKED-roster-fix.patch`** — Matt asked me not to apply it
-   mid-diagnosis. Cause: on an empty form every study line is homeless so the STUDY
-   builds the roster; `rsFillFromParsed` then writes `units.<i>` positionally over it.
-   The fix re-reads an already-applied study after the schedule lays down the roster.
-   Note the vocabulary fix may have shrunk this class — **re-measure before applying.**
-4. **SAFMR averaged across ZIPs** and printed unrounded — `869.3333333333334` vs filed
-   `720`. Drives the 150% gate, so it matters more than its count. 29 rows, 10 properties.
-5. **Part F blank** where the filed schedule prints a Maximum Allowable Monthly Rent
-   Potential (Peterson: 335,132).
-6. **Unit type vocabulary/designation** — we print `2BR/1.5BA`, filed prints `2BR-Flat` /
-   `2BR-TH` / `2BRLG` / `3 BR - small`. **The designation IS in the sources** — the study
-   says `Senior` / `Multi-Family`, and Ebony's prior schedule says `3 BR - small` /
-   `3 BR - large`. So this is "stop discarding what the documents say", not "invent a
-   data model". Still Matt's call on the field's name and UI.
-7. **Four properties produced nothing comparable** — New Horizons, Noble Tower,
-   Oceanport, Riverwood. Two of them (Noble Tower, New Horizons) had EVERY study line
-   fail the vocabulary bug, so the fix may have revived them. **Re-check first.**
-8. **Property name** — we emit `FairviewHomes(NJ390013022)`, `OakCenter1`,
-   `MorningsideCourtApartments` where filed says `FairviewHomes`, `OakCenter`,
-   `MorningsideCourt`.
+Full evidence, with per-property values and provenance, is in
+`docs/superpowers/plans/DIAGNOSTIC-REGISTER.md` under "Wave 1". Do not re-derive it.
+
+**Do these in order. Each already meets the two-property rule.**
+
+| # | mechanism | properties | where |
+|--:|---|---|---|
+| 1 | Non-revenue / manager's-unit rows are emitted **twice** (once as a type, once as the Part D *use*), or dropped entirely. Oak Center Total Units 78 vs 77 and $1,728 missing from the potential; Morh 127 vs 126; Ebony writes `Superintendent` into the Unit Type cell; Circle Park drops four $0 LIHTC rows, 239 vs 418 | 4 | the Part A row builder |
+| 2 | The workbook's SAFMR column divides a **rounded 150% ceiling** back by 1.5 and prints the remainder (`6620/1.5 = 4413.333333333333`) | 4 | `hudCeil` app.js:771, `applyHudSafmr` app.js:797 |
+| 3 | Part F (max allowable monthly rent potential) left blank | 4 | `fillRentSchedule` in gen.js |
+| 4 | Part I HAP contract number left blank though the prior schedule carries it | 4 | gen.js |
+| 5 | Part H prints `Vice President of **the** General Partner` — the word is in no source | 4 | gen.js |
+| 6 | Checklist stamped with the **run date** under an unsigned signature line | 4 | `fillChecklist` in gen.js |
+| 7 | Checklist leaves `Scope of Work` unticked though every study has it | 3 | the checklist mapping |
+| 8 | Workbook unit labels drop the designation suffix, so two rows read identically | 3 | xlsx.js |
+| 9 | Generated PDFs are **not flattened** — `Clear All` / `Print` buttons render on page 2 | 2 | gen.js |
+| 10 | Fill order still changes the bottom line: Morh 607,600 vs 602,500, and both orders parsed identically, so the divergence is in **apply**, not parse | 3 | `scratchpad/PARKED-roster-fix.patch` — re-measure first |
+
+**Not yet fixable — one property each, need a second before a fix is written:**
+
+- Circle Park's `3 BR / 1.5 BA TH` row (58 units, $4,675) produces **no rent at all** in
+  both orders — $271,150/month, $3.25M/year. The study omits the `Y` in its PREPARED GRID
+  column for exactly that row. Highest single-property money in the corpus.
+- Clinton Manor's prior schedule is a raster scan that the OCR anchor pass rejected at
+  **7 of 8** labels — yet the page is perfectly legible by eye at 200 dpi. Two candidate
+  interferences: a rotated `REC'D CONTRACT ADMIN` stamp running through the form's left
+  edge, and a DocuSign banner above the title. `OCR_MINPAIRS=8`, `ocr.js:26`.
+- Oak Center prints `Community Roc` — Part B services clipped at the line width.
+
+### DECISIONS FOR MATT — these are not repairs
+
+1. **Where does the Col. 5 utility allowance come from?** On all five properties the filed
+   allowance comes from a **third document** in the same cycle folder — a CA exhibit, a UA
+   workbook, a UAF notice, a PG&E utility study — that the app is never given. The app
+   holds the schedule's and the study's figures side by side and flags the disagreement,
+   which is the right behaviour for the inputs it has. It cannot reach the filed number.
+2. **SAFMR: HUD's live pull or the study's own table?** `defSafmrSrc` (app.js:234) prefers
+   HUD. On all four properties the team used the study's, and the filed 150% test is
+   computed from it. Clinton's margin is **$12** — at that width the source decides whether
+   a package passes.
+3. **Three of six documents never generate** (CA letter, owner letter, tenant notice),
+   because a fresh scratch property has no `ca.name` / `ca.org` / `poc.name`. Probably a
+   fixture gap, but it means documents 01, 02 and 06 go unverified on every property.
+
+### Two register claims are DISPROVED — do not re-fix them
+
+- **`OakCenter1` is not real.** Every string the app emits reads `Oak Center 1`, correctly
+  spaced, and it never appends the contract number. Morh likewise resolves `Morh I Housing`
+  correctly. The name rows were the extractor's own lost spacing.
+- **Utility allowances are not "the study's values"** — see decision 1.
 
 ### Harness problems that corrupt the evidence — do not trust these rows
 

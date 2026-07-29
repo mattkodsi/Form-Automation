@@ -278,3 +278,145 @@ exactly what distinguishes Circle Park's `2BR-Flat` from `2BR-TH` and 333 Holly'
 `2BRLG`. The field class A needs is already in the source; the parser is throwing
 it away (P3). That reframes A from "invent a data model" to "stop discarding what
 the appraiser already told us".
+
+---
+
+# Wave 1 — five properties read by eye, three ways
+
+Ebony Gardens (75566), Clinton Manor (75830), Circle Park (75833), Oak Center (75926),
+Morh Housing (75927). App frozen at `f829094`. Each property audited by reading the RCS
+study and the year−1 executed rent schedule as rendered images, then comparing our
+generated package and the filed package against that reading.
+
+## Two claims in this register are now DISPROVED
+
+- **`OakCenter1` is not a defect.** Every string the app emits reads `Oak Center 1`,
+  correctly spaced, and it never appends the contract number. Grepped across all four
+  generated PDFs and the workbook: zero unspaced occurrences. Class F's name rows were
+  the extractor's spacing loss, not the app's output. Morh Housing likewise: the app
+  resolved `Morh I Housing` from the prior schedule's Project Name and used it
+  everywhere — one of the four strings the team itself uses, and the one the form wants.
+- **Utility allowances are not "the study's values".** See M16.
+
+## Mechanisms, ranked by money then by breadth
+
+### M1 · SAFMR — the workbook divides a rounded ceiling by 1.5 and prints the remainder
+
+4 properties (Ebony, Clinton, Morh, Oak Center).
+
+`applyHudSafmr` (app.js:797) stores `safmr_hud` = `hudCeil(...)` = `round(base × 1.5)`
+(app.js:771) — that is the **150% ceiling**, already rounded. The workbook's SAFMR column
+wants the base, and recovers it by dividing by 1.5. `6620 / 1.5 = 4413.333333333333`.
+
+| property | ours | the study's own SAFMR | filed workbook |
+|---|---|---|---|
+| Morh (94607) | 3,724 · 4,413.333… | 3,130 · 3,710 | 3,130 · 3,710 |
+| Oak Center (94607) | 2,385.33 · 2,912 · 3,724 · 3,724 · 4,413.33 | 2,010 · 2,450 · 3,130 · 3,130 · 3,710 | same as study |
+| Clinton | 869.333… · 1,133.333… · 1,358 · 1,625.333… | 720 · 950 · 1,160 · 1,340 | same as study |
+| Ebony | 2,511.333… · 2,780 · 3,465.333… | 2,490 · 2,730 · 3,420 | same as study |
+
+Two separate faults, and they need separating before either is fixed:
+
+1. **The fractional print is unambiguous.** A rounded ceiling divided back down is not a
+   SAFMR; it is a rounding remainder. Oak Center and Morh share ZIP 94607 and get
+   byte-identical figures, which confirms the pull itself is deterministic and real.
+2. **`defSafmrSrc` prefers HUD over the study** (app.js:234). On all four properties the
+   team used the study's SAFMR, and the filed 150% test is computed from it. Clinton's
+   margin is **$12** ($90,528 vs $90,540) — at that width the choice of source decides
+   whether a package passes. This half is a decision, not a repair.
+
+### M2/M3 · Non-revenue and $0-rent rows — emitted twice, or not at all
+
+3 properties emit a phantom row; 2 drop real ones. Same seam.
+
+- **Oak Center**: the OCR read 6 unit rows including the non-revenue one, then emitted it
+  **twice** — once as `3 BR` with empty money cells and once as `Manager's Unit` with
+  empty money cells. Total Units **78 vs 77**; monthly potential **277,700 vs 279,428**,
+  because the manager's unit's $1,728 fell out of the total.
+- **Morh Housing**: a phantom fourth row titled `Manager's Unit`, 1 unit, no rents.
+  Total Units **127 vs 126**.
+- **Ebony Gardens**: writes the *use* (`Superintendent`) into the Part A **Unit Type**
+  cell, and drops both section-header rows.
+- **Circle Park**: all four zero-rent LIHTC rows dropped. Total Units **239 vs 418**.
+
+The Part D "use" is being turned into a Part A unit type. That is the mechanism.
+
+### M4 · A priced study row produces no rent at all — Circle Park, $3.25M/yr
+
+`3 BR / 1.5 BA TH`, 58 units, $4,675: contract rent, Col. 4 and gross rent all blank in
+**both** fill orders. Monthly potential **565,900 instead of 837,050**.
+Candidate anchor: the study omits the `Y` in its PREPARED GRID column for exactly that
+row on both p2 and p74, though the grid itself exists at pp59–68. One property so far —
+needs a second before a fix is written.
+
+### M5 · Fill order still changes the bottom line
+
+Morh: rs-first **607,600**, rcs-first **602,500** — and both runs parsed identically
+(3 rows from the schedule, 2 from the study). The divergence happens during **apply**,
+not parse. Ebony loses its non-revenue row the same way. The written-and-parked patch at
+`scratchpad/PARKED-roster-fix.patch` targets this.
+
+### M6–M11 · The small ones, each on 3–4 properties
+
+| id | defect | properties |
+|---|---|---|
+| M6 | Part F (max allowable monthly rent potential) left blank | Ebony, Circle Park, Morh, Oak Center |
+| M7 | Part I HAP contract number left blank though the prior schedule carries it | Ebony, Circle Park, Morh, Oak Center |
+| M8 | Part H prints `Vice President of **the** General Partner`; the word appears in no source | Ebony, Circle Park, Morh, Oak Center |
+| M9 | Checklist stamped with the **run date** under an unsigned signature line | Ebony, Circle Park, Morh, Oak Center |
+| M10 | Checklist leaves `Scope of Work` unticked though every study has it | Circle Park, Morh, Oak Center |
+| M11 | Workbook unit labels drop the designation suffix, producing duplicate labels (`2BR/1.5BA` twice) | Ebony, Circle Park, Oak Center |
+
+Also: Circle Park's checklist ticks `Copy of RCS Appraiser's License` though the study
+answers **N** to the temporary-licence question. Our generated PDFs are **not flattened**
+— `Clear All` and `Print` buttons render on page 2 (Circle Park, Oak Center). Oak Center's
+Part B services print `Community Roc`, clipped at the line width.
+
+### M12 · Half the package never generates
+
+Every property: "3 of 6 ready." The CA cover letter, owner cover letter and tenant notice
+are each withheld for missing `ca.name` / `ca.org` / `poc.name` (`score.js:69`). Those are
+contacts a PM keeps on the property record and a fresh scratch property does not have.
+Most likely a fixture gap rather than a defect — but it means documents 01, 02 and 06 are
+currently unverified against what the team filed, on every property in the corpus.
+
+## M16 · The utility allowance comes from a document the app is never given
+
+Five properties, five different filing chains, one conclusion.
+
+| property | ours | the study says | the team filed | where the filed number comes from |
+|---|---|---|---|---|
+| Ebony | 65/88/98/107 (**last year's**) | 96/117/129/125 | 100/121/135/125 | `Exhibit A.pdf`, a Contract Administrator document |
+| Clinton | 116/134/168/196 (**the study's**) | same | 98/131/150/167 | UA workbook → tenant notice v2 → signed UA summary letter |
+| Circle Park | 74/100/128/185/182 | same | 69/93/119/172/169 | `2025-IL-UAF-Rounded-v-Unrounded.pdf`: current × Illinois UAF 0.928 |
+| Morh | 102/138 | same | 107/144 | `FY2026 UAF Notice.pdf` |
+| Oak Center | 44/49/62/67/54 (**last year's**) | — | 39/53/57/65/70 | the property's own PG&E utility study |
+
+The app holds `ua_exec` and `ua_rcs` side by side, flags the disagreement, and defaults to
+the executed schedule (app.js:235, app.js:1865). So Ebony printed last year's and Clinton
+printed the study's from the *same code* — Clinton's prior schedule was unreadable, so the
+default fell through. The behaviour is consistent; the inputs are not.
+
+**In none of the five cases is the filed allowance derivable from the two documents the app
+receives.** Every one comes from a third document sitting in the same cycle folder. This
+is a decision about what the app should ingest, not a bug to repair.
+
+## Errors in the filed packages (team wrong) and in the studies
+
+- Circle Park: the filed schedule **drops the percentage interests** from Part G
+  (`General Partner` for `.01% General Partner`). Ours carries them; the form requires them.
+- Circle Park: the filed tenant notice certification is **unsigned and undated**.
+- Oak Center: filed 4BR allowance is **$70** where the team's own utility study computes
+  **$69** — both sides wrong against the source.
+- Clinton: the study places the property in **North Carolina** (p11), contradicts itself on
+  bathroom counts (`3BR/1.5BA` vs `3BR/1BA`, narrative says one bathroom throughout), and
+  the prior filed schedule uses **periods as thousands separators** in three cells
+  (`9.984`, `24.384`, `1.150`) while others use commas.
+- Circle Park: the study prints the contract number as `IL00054027` — a digit short of
+  `IL060054027` — throughout, and two of its own totals are off by $80 and $270.
+- Ebony: the study gives two different subject addresses, and inverts the 3 BR allowances
+  relative to every other source.
+- Oak Center: the study's own unit count disagrees with itself (76 on p2 and p69, 77 on
+  p18). Both the app and the team took the schedule's figure. Correctly ignored by both.
+- Four studies label the **Section 8 contract number as an FHA project number**. The app
+  correctly declines to take it every time.
