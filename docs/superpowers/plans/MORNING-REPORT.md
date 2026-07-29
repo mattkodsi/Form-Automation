@@ -10,6 +10,55 @@ Read this in order. The first item changes what the other items mean.
 
 ---
 
+## 0. What changed while you slept
+
+I ran the whole corpus again after fixing what I could fix without you
+(`sweep-4`, app frozen at `8730a23`). Same 34 properties, same two orders.
+
+| | first sweep | after the fixes |
+|---|---:|---:|
+| **fill-order disagreements** | **50** | **16** |
+| **properties producing two different packages** | **6** | **1** |
+| both sides had a value and they differ | 174 | **168** |
+| we produced a value the filed document has no field for | 356 | 352 |
+| the filed document had a value we produced nothing for | 398 | 401 |
+
+**44 resolved, 6 new, and none of the 6 is a regression** — four are cases of the
+app now producing a value the filed workbook simply has no field for, and two are
+row-ordering on Oaks. I checked each one rather than assuming.
+
+**Two defects fixed, both found by the sweep and both diagnosed to root cause:**
+
+1. **A studio the reader could not read was inflating a HUD form by 17 units.**
+   Barnum House's schedule writes its studio as `0 BEDROOM`. The reader returned
+   no bedroom count, the matcher skips a row with no bedroom count, so the
+   study's studio line was treated as new and added a *second* row for the same
+   17 units — the generated form claimed 100 units where the schedule says 83.
+   Both orders now say 83. Rather than fix one property I parsed all 34 filed
+   schedules and fixed every spelling they actually use: `BR3` (Shiloh Village,
+   333 Holly, The Pines) and `2BR2BA` (333 Holly, Oaks) as well.
+   **Shiloh Village gained a whole missing unit row from this** — 4BR, 72 units —
+   and now matches its filed package.
+2. **The bathroom count reached the printed unit type only when the study
+   created the row**, so schedule-first printed `1BR` and study-first
+   `1BR/1BA` from identical files. Fixed for Friendship Court, Hampshire House
+   and The Pines, all now at zero.
+
+**Still one property with order-dependence: Oaks on North Plaza**, whose schedule
+is a poor scan the reader turns into `3613`, `16R` and `2BIRMBA-ADA`. I left those
+deliberately unread — a wrong unit type is worse than a missing one. It did get
+substantively better: 11 outright data losses down to 5.
+
+**Read the 168, not the 921.** Two thirds of the raw total is one side holding a
+field the other's template does not have — your analysis workbook titles itself
+in free text and carries no appraiser firm at all, so every property contributes
+two rows that are not disagreements about anything.
+
+Everything below still stands; item 1 is unchanged and is still the one that
+needs you.
+
+---
+
 ## 1. The headline: the app cannot read 27 of your 34 executed rent schedules
 
 Not a parser nicety — the largest single defect in the product, and a **cost**

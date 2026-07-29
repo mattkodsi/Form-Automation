@@ -237,8 +237,23 @@ async function runProperty(p){
 function report(records){
   const L=[];
   const push=(...a)=>L.push(a.join(''));
-  push('# ',LABEL,' — ',records.length,' properties, app frozen at ',SHA);
+  /* THE SHA MUST COME FROM THE RECORDS, NOT FROM THE CLOCK. Each property
+     stamps the commit it was actually driven at; rendering the report later --
+     or re-rendering it from cache after a commit -- would otherwise print
+     today's SHA over yesterday's numbers, which is the one thing a comparison
+     harness must never do. If the records disagree the run was not frozen, and
+     that has to be said out loud rather than averaged away. */
+  const shas=[...new Set(records.map(r=>r.sha).filter(Boolean))];
+  push('# ',LABEL,' — ',records.length,' properties, app frozen at ',shas.join(' + ')||'unknown');
   push('');
+  if(shas.length>1){
+    push('> **These results are NOT comparable.** They were produced at ',shas.length,
+         ' different commits (',shas.join(', '),'), so a difference between two');
+    push('> properties may be a difference between two builds. Re-run with --force.');
+    push('');
+  }
+  if(shas.length===1&&shas[0]!==SHA)
+    push('_(rendered at '+SHA+'; the numbers below are from '+shas[0]+')_\n');
   const ran=records.filter(r=>r.counts);
   const blank=records.filter(r=>!r.counts);
   push('| | count |');
@@ -248,6 +263,17 @@ function report(records){
   push('| produced nothing comparable | ',blank.length,' |');
   push('| values compared | ',ran.reduce((s,r)=>s+r.counts.compared,0),' |');
   push('| values differing | ',ran.reduce((s,r)=>s+r.counts.differing,0),' |');
+  /* THE RAW TOTAL IS THE WRONG HEADLINE. Two thirds of it is one side holding a
+     field the other's template simply does not have -- the PM team's analysis
+     workbook titles itself in free text and carries no appraiser firm at all,
+     so every property contributes two rows that are not disagreements about
+     anything. What matters is where both documents state a value and the
+     values differ. */
+  const st={};
+  ran.forEach(r=>(r.rows||[]).forEach(x=>{if(x.status!=='match')st[x.status]=(st[x.status]||0)+1;}));
+  push('| — of those, **both sides had a value and they differ** | **',st.mismatch||0,'** |');
+  push('| — we produced a value the filed document has no field for | ',st['missing-theirs']||0,' |');
+  push('| — the filed document had a value we produced nothing for | ',st['missing-ours']||0,' |');
   push('| fill-order disagreements | ',records.reduce((s,r)=>s+(r.fillOrder||[]).length,0),' |');
   push('');
 
@@ -308,6 +334,10 @@ function report(records){
   const byCause={};
   rows.forEach(x=>{(byCause[x.cause||'undiagnosed']=byCause[x.cause||'undiagnosed']||[]).push(x);});
   push('## Differences, grouped by cause then by key');
+  push('');
+  push('Read the **mismatch** rows first: those are the ones where both documents');
+  push('state a value and the two disagree. A `missing-theirs` row usually means');
+  push('the filed template has no such field, not that anything is wrong.');
   push('');
   push('Every row starts `undiagnosed`. A cause is only set by a person, or by a');
   push('rule that says how it knows.');
