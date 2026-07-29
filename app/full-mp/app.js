@@ -1326,7 +1326,15 @@ function rcsFillFromParsed(){
     if(reuse<0)UNITS.push(ni);added.push(u.type||_b);
   });
 
-  (NONREV||[]).forEach(function(i){const v=rcsNonrevVal(i);if(v)setk('nonrev.'+i+'.rent',v);});
+  /* The study prices a non-revenue unit by its shape, which is a reasonable guess
+     when nothing better is on file -- but the executed schedule STATES that unit's
+     rent, and a guess must not overwrite a statement. Without this, the upload
+     order decided Part D: schedule-then-study printed the study's figure, and
+     study-then-schedule printed nothing at all, on the same two documents. */
+  (NONREV||[]).forEach(function(i){
+    const cur=get('nonrev.'+i+'.rent');
+    if(cur!==''&&cur!=null)return;
+    const v=rcsNonrevVal(i);if(v)setk('nonrev.'+i+'.rent',v);});
 
   deriveUnits();renderBody();scheduleHudRefresh();
   const n=rcsFillKeys().length;
@@ -1881,7 +1889,14 @@ function rsFillFromParsed(){const P=_rsUpload&&_rsUpload.parsed;if(!P)return;
       setk('ns8.'+ix+'.num_units',u.count);setk('ns8.'+ix+'.avg_rent',u.rent);});}
   if(P.nonrev&&P.nonrev.length){form=store.editForm(form,'nonrev.enabled','1');mark('nonrev.enabled');
     P.nonrev.forEach((u,ix)=>{setk('nonrev.'+ix+'.use',u.use);setk('nonrev.'+ix+'.br',u.br);setk('nonrev.'+ix+'.ba',u.ba);
-      if(u.rent!==''&&u.rent>0)setk('nonrev.'+ix+'.rent',u.rent);
+      /* A superintendent's apartment that earns nothing has a real rent of $0,
+         and the executed schedule states it. Testing >0 threw that away, and the
+         empty cell was then filled by the study's figure for the same bedroom
+         count -- so Part D charged rent loss that does not exist: Ebony 3,700
+         where the schedule says 0, Sycamore 1,450, Woodbury 2,075, each of them
+         the contract rent of a DIFFERENT, revenue-earning unit. Same lesson the
+         allowance learned three fixes ago: a stated zero is a figure. */
+      if(u.rent!==''&&u.rent!=null)setk('nonrev.'+ix+'.rent',u.rent);
       /* Part D has no unit-count field on the schedule (each row is one named
          space), so 1 is derived rather than read — and derived is still parsed,
          the same way the effective date is derived by adding a year. Marked, it

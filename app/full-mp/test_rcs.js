@@ -16,7 +16,7 @@ const els={};
 global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>null,querySelectorAll:()=>[],createElement:()=>mk(),addEventListener(){},body:{classList:{toggle(){},contains(){return false;}}}};
 const fs=require('fs'),path=require('path'),os=require('os');
 
-const MIN_CHECKS=283;
+const MIN_CHECKS=288;
 let n=0,fails=0,verdict=null;
 const BAR='='.repeat(68);
 function fail(msg,err){
@@ -373,6 +373,24 @@ async function reader(file){
   eq('a non-revenue unit takes the matching market rent',app.getVal('nonrev.0.rent'),'1850');
   T('and it says where it came from',app.__rcsTag('nonrev.0.rent').indexOf('RCS')>=0);
   eq('it is declared as a key the fill writes',app.__rcsFillKeys().indexOf('nonrev.0.rent')>=0,true);
+
+  /* But the executed schedule STATES that unit's rent, and a guess must not
+     overwrite a statement. Ebony's superintendent apartment rents at $0 and Part D
+     charged 3,700 -- the contract rent of a different, revenue-earning 2 BR.
+     Sycamore charged 1,450 the same way, Woodbury 2,075. And the upload order
+     decided it: schedule-then-study printed the study's figure, study-then-schedule
+     printed nothing, on the same two documents. */
+  app.__edit('nonrev.0.rent','0');
+  app.__rcsFill();
+  eq('a stated $0 survives the study',app.getVal('nonrev.0.rent'),'0');
+  app.__edit('nonrev.0.rent','1728');
+  app.__rcsFill();
+  eq('and so does a stated rent',app.getVal('nonrev.0.rent'),'1728');
+  /* and an EMPTY cell still takes the study's figure, which is the whole point of
+     the guess: it is better than nothing, just not better than a statement. */
+  app.__edit('nonrev.0.rent','');
+  app.__rcsFill();
+  eq('an empty cell still fills from the study',app.getVal('nonrev.0.rent'),'1850');
 
   /* the same ambiguity rule, with no unit count available to break the tie */
   app.__setRcsParsed(lnRec);
