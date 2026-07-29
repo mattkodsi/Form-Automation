@@ -9206,7 +9206,12 @@ window.RCSParse={norm:norm,lines:lines,money:money,dec:dec,pageKey:pageKey,
   const first=n=>String(n||'').trim().split(/\s+/)[0];
   const lastWord=n=>{const p=String(n||'').trim().split(/\s+/);return p[p.length-1]||'';};
   const salutationName=(name,prefix)=>{prefix=String(prefix||'').trim();return prefix?(prefix+' '+lastWord(name)):first(name);};
-  const sigTitle=(t,p)=>{t=String(t||'').trim();p=String(p||'').trim();if(t&&p)return t+' of the '+p;return t||p||'';};
+  /* "Vice President of the General Partner" — the article is ours, and it is in
+     no source. Every executed schedule and every filed checklist across the
+     corpus writes "of General Partner" or "of GP", and Part H is a signature
+     block: it should read the way the person signs it, not the way we would
+     phrase it. Four properties in wave 1 printed the inserted word. */
+  const sigTitle=(t,p)=>{t=String(t||'').trim();p=String(p||'').trim();if(t&&p)return t+' of '+p;return t||p||'';};
 
 /* Dates are stamped in New York, not UTC. toISOString() rolls over at 7 or 8pm
    Eastern, so a package generated in the evening was dated tomorrow — and the
@@ -9226,7 +9231,12 @@ const addrLine=(street,city,state,zip)=>{
     return {
       date:monthY(g('cycle.submission_date')||ET_TODAY()),
       notice_date:monthY(g('tenant.date_of_notice')||ET_TODAY()),
-      sign_date:monthY(g('checklist.sign_date')||ET_TODAY()),
+      /* This prints under an UNSIGNED signature line. Falling back to today put
+         the generation date on a document nobody had signed — a draft made in
+         July claiming to have been executed in July, next to a blank rule. The
+         filed copies all carry the date the owner actually signed. No date is
+         the honest answer until there is one. */
+      sign_date:(g('checklist.sign_date')?monthY(g('checklist.sign_date')):''),
       property_name:g('property.name'), tenant_alias:g('tenant.property_alias'), section8:g('property.s8'), entity:g('owner.entity_name'),
       ca_name:g('ca.name'), ca_salutation:salutationName(g('ca.name'),g('ca.prefix')), ca_position:g('ca.position'), ca_company:g('ca.org'),
       ca_address:g('ca.addr_street'), ca_csz:addrLine('',g('ca.addr_city'),g('ca.addr_state'),g('ca.addr_zip')),
@@ -9500,7 +9510,19 @@ const addrLine=(street,city,state,zip)=>{
       else if(row[0]==='li'){ const n=nmv(g('ns8.'+i+'.num_units')),ar=g('ns8.'+i+'.avg_rent');
         T(base, utype(g('ns8.'+i+'.br'),g('ns8.'+i+'.ba'))); if(n)T(base+1,n); ptU+=n;
         if(ar!==''&&ar!=null){ const rv=Math.round(nmv(ar)); T(base+2,money(rv)); T(base+3,money(n*rv)); T(base+5,money(rv)); ptC+=n*rv; } }
-      else { const nn=nmv(g('nonrev.'+i+'.num_units'))||1; T(base, g('nonrev.'+i+'.use')||utype(g('nonrev.'+i+'.br'),g('nonrev.'+i+'.ba'))); T(base+1,nn); ptU+=nn; }
+      /* Column 1 of Part A is the UNIT TYPE. Printing the use put "Manager's
+         Unit" and "Superintendent" where the executed copies print "3 Bedroom"
+         and "2 BR" — the use has its own column in Part D and does not belong
+         here twice. And the row's rent was never printed at all, so Oak
+         Center's manager's unit rented at $1,728 fell out of Col. 4 and out of
+         the monthly potential: 277,700 where the filed schedule foots 279,428.
+         A non-revenue unit still occupies the building and still extends. */
+      else { const nn=nmv(g('nonrev.'+i+'.num_units'))||1;
+        const nrType=utype(g('nonrev.'+i+'.br'),g('nonrev.'+i+'.ba'));
+        T(base, nrType||g('nonrev.'+i+'.use')); T(base+1,nn); ptU+=nn;
+        const nrRaw=g('nonrev.'+i+'.rent'), nrHas=nrRaw!==''&&nrRaw!=null;
+        if(nrHas){ const nrR=Math.round(nmv(nrRaw));
+          T(base+2,money(nrR)); T(base+3,money(nn*nrR)); T(base+5,money(nrR)); ptC+=nn*nrR; } }
     });
     // Totals count every unit — non-S8 rents add into the contract rent
     // potential like S8 rows, and non-rev units count even when trimmed
