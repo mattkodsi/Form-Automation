@@ -39,7 +39,7 @@
           app/full-mp/corpus/corpus.json "Colonial Village" rs-first
 */
 
-const cp = require('child_process'), http = require('http'), fs = require('fs'),
+const cp = require('child_process'), http = require('http'), fs = require('fs'), crypto = require('crypto'),
       os = require('os'), path = require('path'), net = require('net');
 
 const SRC = path.join(__dirname, '..');            // app/full-mp
@@ -322,6 +322,21 @@ async function clickApply(c, id, label) {
   return { clicked: true, warning: null };
 }
 
+/* The tier-3 cache, keyed by the schedule's own bytes so a renamed copy still
+   hits and a different document never does. Absent cache = ordinary behaviour. */
+function ocrCached(rel) {
+  try {
+    if (!rel || !_cacheRoot) return null;
+    const abs = [path.join(_cacheRoot, _folder || '', rel), path.join(_corpusRoot || '', _folder || '', rel)]
+      .find(x => { try { return fs.existsSync(x); } catch (e) { return false; } });
+    if (!abs) return null;
+    const h = crypto.createHash('sha256').update(fs.readFileSync(abs)).digest('hex').slice(0, 16);
+    const f = path.join(_cacheRoot, '_ocr', h + '.json');
+    return fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, 'utf8')) : null;
+  } catch (e) { return null; }
+}
+let _cacheRoot = null, _corpusRoot = null, _folder = null;
+
 async function driveOne(opts) {
   const {
     propertyFolder, studyPath, priorRsPath, order,
@@ -331,6 +346,7 @@ async function driveOne(opts) {
   if (order !== 'rs-first' && order !== 'rcs-first') throw new Error('order must be "rs-first" or "rcs-first", got ' + J(order));
 
   const warnings = [], errors = [];
+  _cacheRoot = cacheRoot; _corpusRoot = corpusRoot; _folder = propertyFolder;
   /* Prefer a decrypted copy in the cache at the same relative path; the corpus
      is the fallback, and is only ever read. Both are copied into a pid-scoped
      scratch directory before chromium sees them, so nothing under the Drive
@@ -362,6 +378,7 @@ async function driveOne(opts) {
 
   const result = await withApp(async c => {
     let tier = null, weakerTest = false, files = [], pkgText = [], missing = null;
+    let rsVia = null, rsFromCache = false;
 
     /* the two structural assertions this whole night rests on */
     const boot = await c.eval(`return {api:!!window.__t, apiAlias:!!window.__API,
@@ -408,6 +425,23 @@ async function driveOne(opts) {
 
     const doRs = async () => {
       if (!rs) { errors.push('no rent schedule to upload'); return; }
+      /* A SCHEDULE ONLY TIER 3 CAN READ IS READ ONCE, NOT ONCE PER ORDER.
+         ocr-cache.js runs the app's own ocr.js in node against a real session
+         and caches the parsed record by file hash. Feeding that record here
+         does bypass the file input for these properties -- the upload path is
+         already proven on the ones tier 1 and 2 can read -- and in exchange the
+         two fill orders are compared against IDENTICAL parsed input, so a
+         difference between them cannot be a difference between two scans of the
+         same page. Every row it produces is labelled rsVia:'ocr'. */
+      const cached = ocrCached(priorRsPath);
+      if (cached && cached.tier === 'ocr') {
+        await c.eval('window.__t.__setRsParsed(' + J({ kind: 'fields', via: 'ocr', parsed: cached.parsed }) + ');'
+          + 'window.__t.__rsFill();window.__t.__renderBody();return 1');
+        await sleep(400);
+        tier = 'ocr'; rsVia = 'ocr'; rsFromCache = true;
+        warnings.push('rent schedule supplied from the tier-3 cache (read once in node, shared by both orders)');
+        return;
+      }
       const u = await uploadThrough(c, { inputId: 'rsFile', filePath: rs.tmp, cid, getter: 'getCycleRs', label: 'rent schedule' });
       u.warnings.forEach(w => warnings.push(w));
       /* parseRsPdf answers with a PAIR, and the two halves mean different
@@ -479,7 +513,7 @@ async function driveOne(opts) {
     if (!pkg) {
       const st = await c.eval(`return (document.getElementById('status')||{}).textContent||'';`);
       errors.push('the package dialog never opened. Status bar said: ' + J(st));
-      return { outDir, files: [], tier, warnings, errors, weakerTest, order, pkgText, missing, dialogs: c.dialogs, console: c.logs.slice(0, 20) };
+      return { outDir, files: [], tier, rsVia, rsFromCache, warnings, errors, weakerTest, order, pkgText, missing, dialogs: c.dialogs, console: c.logs.slice(0, 20) };
     }
     warnings.push('package dialog: ' + pkg.head.trim());
     pkgText = pkg.rows;
@@ -493,7 +527,7 @@ async function driveOne(opts) {
       return o;`);
     if (!pkg.folder) {
       errors.push('no "Download the RCS Package folder" button — the app produced no ready documents');
-      return { outDir, files: [], tier, warnings, errors, weakerTest, order, pkgText, missing, dialogs: c.dialogs, console: c.logs.slice(0, 20) };
+      return { outDir, files: [], tier, rsVia, rsFromCache, warnings, errors, weakerTest, order, pkgText, missing, dialogs: c.dialogs, console: c.logs.slice(0, 20) };
     }
 
     await c.eval(`document.getElementById('dlFolder').click();return 1;`);
@@ -507,7 +541,7 @@ async function driveOne(opts) {
       const n = await c.eval('return (window.__grab||[]).length;');
       if (!n) {
         errors.push('nothing downloaded and nothing captured — the folder button produced no blob at all');
-        return { outDir, files: [], tier, warnings, errors, weakerTest: true, order, pkgText, missing, dialogs: c.dialogs, console: c.logs.slice(0, 20) };
+        return { outDir, files: [], tier, rsVia, rsFromCache, warnings, errors, weakerTest: true, order, pkgText, missing, dialogs: c.dialogs, console: c.logs.slice(0, 20) };
       }
       zipBuf = await pullGrab(c, n - 1);
       weakerTest = true;
@@ -531,7 +565,7 @@ async function driveOne(opts) {
       if (file !== name) warnings.push('the document name contains a path separator and was written as ' + J(file));
     }
 
-    return { outDir, files, tier, warnings, errors, weakerTest, order, pkgText, missing, dialogs: c.dialogs, console: c.logs.slice(0, 20) };
+    return { outDir, files, tier, rsVia, rsFromCache, warnings, errors, weakerTest, order, pkgText, missing, dialogs: c.dialogs, console: c.logs.slice(0, 20) };
   }, { downloadPath: dlDir });
 
   try { fs.rmSync(dlDir, { recursive: true, force: true }); } catch (e) {}
