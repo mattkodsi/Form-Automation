@@ -100,21 +100,25 @@
   .sect h2{font-size:11px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3)}
   .sect span{font-size:12.5px;color:var(--ink-3)}
 
-  /* ---- the focal zone: the ONLY raised surfaces on the page ----
-     Three cards, because three properties share this deadline. The card row
-     and the ledger used to be two white slabs of equal weight, so nothing led. */
-  .live{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:64px}
-  .job{background:var(--card);border:1px solid var(--rule);border-left:3px solid var(--stamp);
-       border-radius:var(--r-card);padding:20px 24px;
-       display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;
-       column-gap:20px;row-gap:10px}
-  .job .when{grid-column:1/-1}
-  .job .when{font-size:10.5px;font-weight:600;letter-spacing:.11em;text-transform:uppercase;
-             color:var(--stamp)}
-  .job h3{font-size:19px;font-weight:600;letter-spacing:-.015em;margin:0 0 4px;line-height:1.2}
-  .job .meta{font-size:13px;color:var(--ink-3);line-height:1.55}
-  .job .meta b{color:var(--ink-2);font-weight:500}
-  .go{min-width:196px;background:var(--btn);color:var(--btn-ink);border:1px solid var(--btn);
+  /* ---- the focal zone ----
+     Three similar items side by side are rows, not cards. A card grid forced
+     the content into 456px boxes it could not fill, so either the column was
+     tall with dead space or the row was stretched and uneven. These are the
+     same shape of data as the ledger below — property, programme, when, size,
+     action — so they get the same column rhythm, elevated: white surface,
+     stamp rule, larger name, a real button. One system, two volumes. */
+  .live{background:var(--card);border:1px solid var(--rule);border-radius:var(--r-card);
+        overflow:hidden;margin-bottom:56px}
+  .job{display:grid;grid-template-columns:minmax(0,1fr) 90px 90px 110px 212px;
+       align-items:center;column-gap:24px;padding:16px 22px;
+       border-bottom:1px solid var(--rule-soft);box-shadow:inset 3px 0 0 var(--stamp)}
+  .job:last-child{border-bottom:none}
+  .job h3{font-size:17px;font-weight:600;letter-spacing:-.015em;line-height:1.25}
+  .job .sub{font-size:12.5px;color:var(--ink-3);margin-top:2px}
+  .job .pg{font-size:10.5px;font-weight:600;letter-spacing:.09em;color:var(--ink-3)}
+  .job .when{font-size:13px;font-weight:600;color:var(--stamp)}
+  .job .u{font-size:13px;color:var(--ink-2);text-align:right}
+  .go{width:100%;background:var(--btn);color:var(--btn-ink);border:1px solid var(--btn);
       border-radius:var(--r-ctl);padding:0 18px;font-size:13px;font-weight:600;min-height:40px}
   .go:hover{background:var(--btn-hover);border-color:var(--btn-hover)}
   .go:disabled{background:transparent;border-color:var(--rule);color:var(--ink-4);
@@ -190,18 +194,27 @@
   <!-- exactly the properties that share this deadline. Nothing else. -->
   <div class="sect"><h2>Due to HUD by August 1</h2><span>3 days</span></div>
   <div class="live">
-    <div class="job"><div class="when">3 days</div>
-      <div class="txt"><h3>Park Place</h3>
-        <div class="meta">Rent comparability study<br><b>242 units</b> · rents effective Dec 1</div></div>
-      <button class="go">Start the RCS package</button></div>
-    <div class="job"><div class="when">3 days</div>
-      <div class="txt"><h3>Round Barn Manor</h3>
-        <div class="meta">OCAF adjustment<br><b>156 units</b> · rents effective Dec 1</div></div>
-      <button class="go">Start the OCAF package</button></div>
-    <div class="job"><div class="when">3 days</div>
-      <div class="txt"><h3>Fairview Housing</h3>
-        <div class="meta">OCAF adjustment<br><b>124 units</b> · rents effective Dec 1</div></div>
-      <button class="go">Start the OCAF package</button></div>
+    <div class="job">
+      <div><h3>Park Place</h3><div class="sub">Rent comparability study · rents effective Dec 1</div></div>
+      <div class="pg">RCS</div>
+      <div class="when">3 days</div>
+      <div class="u">242 units</div>
+      <button class="go">Start the RCS package</button>
+    </div>
+    <div class="job">
+      <div><h3>Round Barn Manor</h3><div class="sub">OCAF adjustment · rents effective Dec 1</div></div>
+      <div class="pg">OCAF</div>
+      <div class="when">3 days</div>
+      <div class="u">156 units</div>
+      <button class="go">Start the OCAF package</button>
+    </div>
+    <div class="job">
+      <div><h3>Fairview Housing</h3><div class="sub">OCAF adjustment · rents effective Dec 1</div></div>
+      <div class="pg">OCAF</div>
+      <div class="when">3 days</div>
+      <div class="u">124 units</div>
+      <button class="go">Start the OCAF package</button>
+    </div>
   </div>
 
   <div class="sect"><h2>Remaining</h2><span>51 properties · earliest deadline first</span></div>
