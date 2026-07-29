@@ -19,7 +19,11 @@ d="$(cd "$(dirname "$0")" && pwd)"     # app/full-mp
 # chromium, pressing real keys. It is the only suite that can see whether a
 # keystroke ever REACHES the code the others test. Where no chromium is
 # installed it skips loudly — never as a pass.
-suites="test_crypto.js test_db.js test_interactions.js smoke_combined.js test_gen.js test_rcs.js test_hap.js test_browser.js"
+# The corpus suites live one directory down. They are hermetic: test_extract.js
+# reads the filed Colonial Village package committed under _archive/, and
+# test_compare.js builds its own fixtures. test_safety.js skips its Drive-mount
+# check loudly on a machine that has no mount, so it gates everywhere.
+suites="test_crypto.js test_db.js test_interactions.js smoke_combined.js test_gen.js test_rcs.js test_hap.js test_browser.js corpus/test_safety.js corpus/test_compare.js corpus/test_extract.js"
 failed=""
 
 for s in $suites; do

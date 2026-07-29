@@ -6,9 +6,12 @@
    real contract numbers into git with no error; a push from main is a
    production deploy that looks exactly like any other push. */
 const fs=require('fs'),path=require('path'),cp=require('child_process');
-const MIN_CHECKS=7;
-let n=0,fails=0;
+const MIN_CHECKS=6;
+let n=0,fails=0,skips=0;
 const T=(l,v)=>{n++;if(!v){fails++;console.log('  X '+l);}else console.log('  + '+l);};
+/* Loudly, never as a pass -- the house convention from test_browser.js. A
+   machine without the Drive mount can still gate everything else. */
+const SKIP=(l,why)=>{skips++;console.log('  ~ SKIPPED: '+l+'  ('+why+')');};
 const ROOT=path.resolve(__dirname,'..','..','..');
 const MP=path.join(ROOT,'app','full-mp');
 
@@ -39,8 +42,9 @@ T('not working on main (got "'+br+'")',br!=='main');
    of runs discovers otherwise at 3am. */
 const CORPUS=process.env.CORPUS||path.join(process.env.HOME,
   'Library/CloudStorage/GoogleDrive-mfkodsi@gmail.com/My Drive/RCS Package Samples');
-let dirs=[];try{dirs=fs.readdirSync(CORPUS).filter(x=>!x.startsWith('.'));}catch(e){}
-T('the corpus mount is readable ('+dirs.length+' property folders)',dirs.length>=30);
+let dirs=null;try{dirs=fs.readdirSync(CORPUS).filter(x=>!x.startsWith('.'));}catch(e){}
+if(dirs===null)SKIP('the corpus mount is readable','no Drive mount on this machine; set CORPUS to check it');
+else T('the corpus mount is readable ('+dirs.length+' property folders)',dirs.length>=30);
 
 /* 7. The decryptor the corpus depends on is the one we ship. */
 T('pdfdecrypt.js and crypto.js are present in the app source',
@@ -51,6 +55,6 @@ if(!fails&&n<MIN_CHECKS){
   process.exitCode=1;
 }else{
   console.log('\n'+(fails?('X SAFETY SUITE FAILED ('+fails+' of '+n+')')
-                        :('+ ALL '+n+' SAFETY CHECKS PASSED')));
+                        :('+ ALL '+n+' SAFETY CHECKS PASSED'+(skips?('  ('+skips+' skipped loudly)'):''))));
   process.exitCode=fails?1:0;
 }
