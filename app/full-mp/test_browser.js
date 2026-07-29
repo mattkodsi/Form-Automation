@@ -35,7 +35,7 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=301;   // 2026-07-29: +6 — either upload order, one package (found by the corpus sweep).
+const MIN_CHECKS=315;   // 2026-07-29: +11 — either upload order, one package (found by the corpus sweep).
                        // 2026-07-28: +35 — the home page's filter rail, driven by real clicks.
                        // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
                        // pristine (three seeds, two checks each). 2026-07-27: the unit-type cell
@@ -1260,6 +1260,79 @@ const FULL=process.argv.includes('--full');
       T('the bathroom the study names reaches the printed type, whichever order',
         rsFirst.types.every(t=>/\//.test(t))&&rcsFirst.types.every(t=>/\//.test(t)));
       eq('and the schedule still owns the unit counts it stated',rsFirst.counts,['66','17']);
+
+      /* ── the unit types the filed schedules actually use ────────────────────
+       Every spelling below was taken from a real executed schedule by parsing
+       all 34 of them, not invented. An unparseable type is not cosmetic: it
+       makes a row rcsMatch skips, so the study's line for the same units goes
+       down the homeless path and adds a SECOND row -- Barnum House's generated
+       HUD form claimed 100 units where the schedule says 83. */
+    {
+      const P=async t=>await c.eval('return window.__t.rsParseUnitType('+JSON.stringify(t)+')');
+      eq('"1 BEDROOM" still reads as one bedroom',(await P('1 BEDROOM')).br,'1BR');
+      eq('"1BR/1BA" still reads both counts',[(await P('1BR/1BA')).br,(await P('1BR/1BA')).ba],['1BR','1BA']);
+      eq('"Studio" still reads as a studio',(await P('Studio')).br,'Studio');
+      /* Barnum House */
+      eq('"0 BEDROOM" is a studio, the way rcsBrOf has always read a zero',
+         (await P('0 BEDROOM')).br,'Studio');
+      /* Shiloh Village, 333 Holly, The Pines */
+      eq('"BR3" puts the number after the letters and still means three',
+         (await P('BR3')).br,'3BR');
+      /* 333 Holly, Oaks on North Plaza */
+      eq('"2BR2BA" runs the counts together and still means both',
+         [(await P('2BR2BA')).br,(await P('2BR2BA')).ba],['2BR','2BA']);
+      eq('and a type the reader understands leaves no leftover label',
+         [(await P('BR3')).label,(await P('2BR2BA')).label,(await P('0 BEDROOM')).label],['','','']);
+      /* Beacon Hill and Willow Woods designations must survive untouched */
+      eq('a designation is still kept verbatim',(await P('1 Bedroom, Elderly')).label,'Elderly');
+      /* Oaks on North Plaza's scan produces these; guessing at them would be
+         inventing unit types, so they must stay unread rather than become wrong. */
+      eq('OCR wreckage stays unread rather than becoming a wrong unit type',
+         [(await P('3613')).br,(await P('16R')).br,(await P('2BIRMBA-ADA')).br],['','','']);
+    }
+
+    /* ── and again, with the two documents listing the types in a DIFFERENT
+         ORDER ─────────────────────────────────────────────────────────────
+         The block above gives both documents the same order, which is exactly
+         why it misses Barnum House: its schedule lists 1BR then Studio, its
+         study lists Studio then 1BR. The sweep says that property's generated
+         HUD form totals 100 units one way and 83 the other -- and 66 + 17 is
+         83, so one order is inventing a third row worth 17 units and leaving
+         the first form line blank. A HUD form stating the wrong number of units
+         is about as bad as this gets. */
+      const studyRev={scalars:{},firm:'belfry',
+        units:[{type:'Studio/1BA',br:0,ba:1,count:'17',rent:'',ua:'',proposed:'2325',safmr:''},
+               {type:'1BR/1BA',br:1,ba:1,count:'66',rent:'',ua:'',proposed:'2825',safmr:''}]};
+      const sum=a=>a.reduce((t,x)=>t+(parseInt(x,10)||0),0);
+
+      await c.reload();
+      await c.eval(HELPERS);
+      await fresh('Order test C');
+      await sleep(300);
+      await c.eval('window.__t.__setRsParsed('+JSON.stringify(rs)+');window.__t.__rsFill();'
+        +'window.__t.__setRcsParsed('+JSON.stringify(studyRev)+');window.__t.__rcsFill();'
+        +'window.__t.__renderBody();return 1');
+      await sleep(400);
+      const revRs=await snap();
+
+      await c.reload();
+      await c.eval(HELPERS);
+      await fresh('Order test D');
+      await sleep(300);
+      await c.eval('window.__t.__setRcsParsed('+JSON.stringify(studyRev)+');window.__t.__rcsFill();'
+        +'window.__t.__setRsParsed('+JSON.stringify(rs)+');window.__t.__rsFill();'
+        +'window.__t.__renderBody();return 1');
+      await sleep(400);
+      const revRcs=await snap();
+
+      eq('documents listing types in opposite orders still build the same rows',
+         revRs.rows,revRcs.rows);
+      eq('and neither invents a row: two types in, two types out',revRs.rows,2);
+      eq('the unit counts total the same either way',sum(revRs.counts),sum(revRcs.counts));
+      eq('and total 83, which is what the schedule actually says',sum(revRs.counts),83);
+      T('no row is left without a unit type',
+        revRs.types.every(function(t){return t&&t!=='/';})
+        &&revRcs.types.every(function(t){return t&&t!=='/';}));
     }
 
     /* ── the OCAF / UAF package states its own requirements ─────────────────

@@ -24,7 +24,15 @@ echo "2/5  test suites (run_tests.sh)…"
 if ! bash "$d/run_tests.sh" > "$tmp/test.out" 2>&1; then
   # only the ✗ lines: the failed checks and the banner, not 130 passing ones
   echo "     ✗ tests FAILED — not delivering:"; grep '✗' "$tmp/test.out" | tail -20 | sed 's/^/     /'
-  echo "       (full output: bash $d/run_tests.sh)"; exit 1
+  # KEEP THE EVIDENCE. test_crypto.js failed here twice and passed on every one
+  # of eight standalone runs afterwards, so there was nothing left to diagnose:
+  # the output lived in a temp directory this script deletes on exit. A suite
+  # that fails intermittently is exactly the one whose output you cannot
+  # reproduce on demand, so save it where it survives the run.
+  keep="${TMPDIR:-/tmp}/rcs-deliver-fail.$(date +%Y%m%d-%H%M%S).log"
+  cp "$tmp/test.out" "$keep" 2>/dev/null && echo "       full output kept at: $keep"
+  echo "       last 25 lines of it:"; tail -25 "$tmp/test.out" | sed 's/^/       | /'
+  echo "       (re-run alone: bash $d/run_tests.sh)"; exit 1
 fi
 grep -o 'ALL .* PASSED' "$tmp/test.out" | sed 's/^/     ✓ /'
 

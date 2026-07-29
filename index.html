@@ -4714,7 +4714,32 @@ function rsNum(v){let s=String(v==null?'':v).replace(/[^0-9.,\-]/g,'');
   const n=parseFloat(s);return isFinite(n)?n:'';}
 function rsDateISO(v){v=String(v||'').trim();let m=v.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);if(m)return m[3]+'-'+('0'+m[1]).slice(-2)+'-'+('0'+m[2]).slice(-2);m=v.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m)return v.slice(0,10);const MN={january:1,february:2,march:3,april:4,may:5,june:6,july:7,august:8,september:9,october:10,november:11,december:12};m=v.toLowerCase().match(/([a-z]+)\s+(\d{1,2}),?\s+(\d{4})/);if(m&&MN[m[1]])return m[3]+'-'+('0'+MN[m[1]]).slice(-2)+'-'+('0'+m[2]).slice(-2);return '';}
 function rsYearOn(iso){const m=String(iso||'').match(/^(\d{4})-(\d{2})-(\d{2})/);return m?((+m[1])+1)+'-'+m[2]+'-'+m[3]:'';}   // the uploaded schedule is the one in force; this package renews it
-function rsParseUnitType(t){t=String(t||'');let br='',ba='';if(/studio|efficiency/i.test(t))br='Studio';else{const m=t.match(/(\d+)\s*(?:br\b|bed)/i);if(m&&BR_OPTS.indexOf(m[1]+'BR')>=0)br=m[1]+'BR';else{const bare=t.trim().match(/^(\d+)$/);if(bare&&BR_OPTS.indexOf(bare[1]+'BR')>=0)br=bare[1]+'BR';}}const b=t.match(/(\d+(?:\.\d+)?)\s*(?:ba\b|bath)/i);if(b&&BA_OPTS.indexOf(b[1]+'BA')>=0)ba=b[1]+'BA';
+/* Three spellings the real corpus uses that the first pass could not read, each
+   found by parsing all 34 filed schedules rather than by imagining them:
+
+   "BR3"      puts the number AFTER the letters — Shiloh Village, 333 Holly and
+              The Pines all write it that way.
+   "2BR2BA"   runs the bath count straight on, so the \b after "br" never fires
+              because the next character is a digit — 333 Holly, Oaks on North
+              Plaza.
+   "0 BEDROOM" is how Barnum House writes a studio. One property, but the reader
+              on the other side of the form, rcsBrOf, has always mapped zero
+              bedrooms to Studio, so this is the same asymmetry rather than one
+              document's quirk. It cost real money: an unparseable type makes a
+              row rcsMatch skips, the study's studio line then goes down the
+              homeless path and adds a SECOND row for the same 17 units, and the
+              generated HUD form claims 100 units instead of 83.
+
+   Not fixed, deliberately: "3613", "16R", "2BIRMBA-ADA" and "2lBA", all from
+   Oaks on North Plaza, which are OCR misreads of a poor scan and not a naming
+   convention. Guessing at those would be inventing unit types. */
+function rsParseUnitType(t){t=String(t||'');let br='',ba='';
+  const asBr=n=>(String(n)==='0')?'Studio':(BR_OPTS.indexOf(n+'BR')>=0?n+'BR':'');
+  if(/studio|efficiency/i.test(t))br='Studio';else{
+    const m=t.match(/(\d+)\s*(?:br|bed(?:room)?s?)(?![a-z])/i)   // "1BR", "1 Bedroom", "2BR2BA"
+         ||t.match(/\bbr\s*(\d+)/i);                            // "BR3"
+    if(m)br=asBr(m[1]);
+    if(!br){const bare=t.trim().match(/^(\d+)$/);if(bare)br=asBr(bare[1]);}}const b=t.match(/(\d+(?:\.\d+)?)\s*(?:ba\b|bath)/i);if(b&&BA_OPTS.indexOf(b[1]+'BA')>=0)ba=b[1]+'BA';
   /* Both spellings appear across the real corpus: "1 BR E" / "1 BR F" at Beacon
      Hill, "1 Bedroom, Elderly" / "1 Bedroom, Family" at Willow Woods. A bare
      letter counts only at the very end of the string, so an F inside a word can
@@ -4727,8 +4752,11 @@ function rsParseUnitType(t){t=String(t||'');let br='',ba='';if(/studio|efficienc
      off br, and none of that may move. */
   let label=String(t)
     .replace(/studio|efficiency/ig,'')
-    .replace(/\d+\s*(?:br\b|bedrooms?\b|beds?\b)/ig,'')
-    .replace(/\d+(?:\.\d+)?\s*(?:ba\b|bathrooms?\b|baths?\b)/ig,'')
+    /* the same three spellings, so a type the reader now understands does not
+       leave its own bedroom count behind as a "label" */
+    .replace(/\d+(?:\.\d+)?\s*(?:ba|bathrooms?|baths?)(?![a-z])/ig,'')
+    .replace(/\d+\s*(?:br|bed(?:room)?s?)(?![a-z])/ig,'')
+    .replace(/\bbr\s*\d+/ig,'')
     .replace(/[\s,\/\u2013\u2014-]+/g,' ')
     .trim();
   if(/^\d+$/.test(label))label='';        // a bare number is the bedroom count, not a label
