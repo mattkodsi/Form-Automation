@@ -259,13 +259,37 @@ function readSignature(txt,S){
 
 const WORDNUM={one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10};
 /* "2BR/1BA", "1 BR / 1 BA", "Two Bedroom", "1BR/1BA without patio". */
+/* EVERY SPELLING BELOW IS ONE A REAL STUDY USED, and each one that was not
+   understood cost a rent. Measured across the 34-property corpus: 15 of 98
+   priced unit lines in 7 studies returned no bedroom count, and a line with no
+   bedroom count is invisible to rcsMatch -- so its row silently took a
+   DIFFERENT unit type's rent rather than none. Sample Property's schedule came
+   out $2,550 short that way.
+
+     IBR/1BA      Sample Property, Sample Property, Sample Property  -- capital I, not 1
+     3B/1BA       Sample Property                            -- B alone
+     4B/2BA       Sample Property
+     1BD/1BA      North Park                                  -- BD
+     1-BR/1 BA    New Horizons                                -- hyphen separator
+     One-Bedroom  Sample Property                                 -- hyphen before the word
+
+   The bare B is the one that needs care: "1BA" must never read as one bedroom,
+   so every bedroom token is followed by (?![a-z]) -- B before A fails, B before
+   / or space or end succeeds. Order matters in the alternation too: the longer
+   spellings come first so "bedroom" is not consumed as a bare "b". */
 function parseType(t){
   const v=String(t||'').trim(),o={type:v,br:'',ba:''};
-  let m=v.match(/(\d+)\s*(?:br\b|bed)/i);
+  /* A capital I standing in for the digit 1, immediately before a bedroom
+     token. Only uppercase, and only in that position, so a word beginning with
+     I is untouched. */
+  const nv=v.replace(/\bI(?=B[RD]?(?![a-z]))/g,'1');
+  const BRTOK='(?:bedrooms?|beds?|br|bd|b)(?![a-z])';
+  let m=nv.match(new RegExp('(\\d+)[\\s.-]*'+BRTOK,'i'));
   if(m)o.br=+m[1];
-  else{m=v.match(/\b([a-z]+)\s*(?:bedroom|bed\b)/i);if(m&&WORDNUM[m[1].toLowerCase()]!=null)o.br=WORDNUM[m[1].toLowerCase()];}
-  if(o.br===''&&/studio|efficiency/i.test(v))o.br=0;
-  m=v.match(/(\d+(?:\.\d+)?)\s*(?:ba\b|bath)/i);
+  else{m=nv.match(new RegExp('\\b([a-z]+)[\\s-]*(?:bedrooms?|bed\\b)','i'));
+       if(m&&WORDNUM[m[1].toLowerCase()]!=null)o.br=WORDNUM[m[1].toLowerCase()];}
+  if(o.br===''&&/studio|efficiency/i.test(nv))o.br=0;
+  m=nv.match(/(\d+(?:\.\d+)?)\s*(?:ba\b|bath)/i);
   if(m)o.ba=parseFloat(m[1]);
   return o;
 }
