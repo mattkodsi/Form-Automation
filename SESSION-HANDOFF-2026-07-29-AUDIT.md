@@ -5,6 +5,15 @@ production deploy).
 
 ---
 
+> **WAVE 4 AUDITS NEED RE-RUNNING.** On 2026-07-29 four of the five wave-4 audit
+> agents — Noble Tower, Oaks on North Plaza, Oceanport, Holly House — died on
+> `API Error: 529 Overloaded`, a server-side fault, before returning anything.
+> Mapleview Towers may or may not have completed. The 13-property sweep labelled
+> `wave-4` is unaffected (it is local node + chromium, not the API) and its output
+> stands, with the pre-fix snapshot preserved at `_archive/corpus-cache/_snap-w3/`.
+> Nothing was lost and nothing was half-recorded: no wave-4 property is marked
+> audited. Re-launch those five when the API is healthy.
+
 ## The job, in one paragraph
 
 Use the app to build real RCS packages for ~34 properties, check each one against what
