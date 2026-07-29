@@ -10,7 +10,7 @@ new Function('window',fs.readFileSync(D+'templates.js','utf8'))(global.window);
 const TPL=global.window.RCSTemplates;
 const G=require(D+'gen.js');
 
-const MIN_CHECKS=44;                 // the count this file is known to run to the end
+const MIN_CHECKS=49;                 // the count this file is known to run to the end
 let n=0,fails=0,verdict=null;
 const BAR='═'.repeat(68);
 function fail(msg,err){
@@ -242,6 +242,32 @@ function record(extra){
     eq('a non-revenue row with no rent prints none',V(row+2),'');
     eq('and adds nothing to the potential',V('95'),(10*900+6*1100).toLocaleString('en-US'));
     eq('and column 1 is still the type, not the use',V(row),'2 BR / 1 BA'); }
+
+  console.log('\n─ column 5 is the allowance for the term being filed ─');
+  /* Sycamore Green printed 42/50 where its own study, its UA workbook, its
+     Exhibit A and the filed schedule all say 51/64. Burt Farms printed 52 where
+     the study and the signed UAF both say 54. Northcross printed 149/184/204
+     against 180/221/246. In each case the right figure was in a file the app had
+     been handed. The executed schedule states LAST term's allowance. */
+  { const r=record({'units.0.ua_exec':'42','units.0.ua_rcs':'51',
+      'units.1.ua_exec':'50','units.1.ua_rcs':'64',
+      'units.0.proposed':'1200','units.1.proposed':'1450'});
+    delete r['units.0.ua_source']; delete r['units.1.ua_source'];
+    const by=await G.fillRentSchedule(rsBytes,r);
+    const f=(await PDFDocument.load(by)).getForm();
+    const V=id=>{try{return f.getTextField(String(id)).getText()||'';}catch(e){return null;}};
+    eq('the study\'s allowance, not the prior schedule\'s',V(7+4),'51');
+    eq('and on the second row too',V(7+8+4),'64');
+    eq('so gross rent follows the study',V(7+5),'1,251');
+    eq('and on the second row',V(7+8+5),'1,514'); }
+  /* A source the PM HAS chosen still wins -- the default moved, the override
+     did not. */
+  { const r=record({'units.0.ua_exec':'42','units.0.ua_rcs':'51',
+      'units.0.ua_source':'exec','units.0.proposed':'1200'});
+    const by=await G.fillRentSchedule(rsBytes,r);
+    const f=(await PDFDocument.load(by)).getForm();
+    const V=id=>{try{return f.getTextField(String(id)).getText()||'';}catch(e){return null;}};
+    eq('an explicit choice of the prior schedule is honoured',V(7+4),'42'); }
 
   finish();
 })().catch(e=>fail('the suite threw before reaching its verdict',e));

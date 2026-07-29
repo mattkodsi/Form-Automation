@@ -292,11 +292,13 @@ const addrLine=(street,city,state,zip)=>{
       const i=row[1];
       if(row[0]==='s8'){ const br=g('units.'+i+'.br'),ba=g('units.'+i+'.ba'),n=nmv(g('units.'+i+'.num_units')),pro=nmv(g('units.'+i+'.proposed'));
         // Mirror the form's own fallback (app.js defUaSrc): with no source chosen
-        // it shows the executed-RS figure, else the RCS one, else the custom one.
+        // it shows the RCS figure, else the executed-RS one, else the custom one.
+        // The study states the allowance for the term being filed; the executed
+        // schedule states the last one. Three properties filed the study's.
         // Defaulting flatly to 'exec' printed a BLANK allowance whenever the UA had
         // come from the RCS report — and gross rent is what the 150% test turns on.
         const _ue=nmv(g('units.'+i+'.ua_exec')),_ur=nmv(g('units.'+i+'.ua_rcs'));
-        const us=g('units.'+i+'.ua_source')||(_ue>0?'exec':(_ur>0?'rcs':'custom'));
+        const us=g('units.'+i+'.ua_source')||(_ur>0?'rcs':(_ue>0?'exec':'custom'));
         const ua=us==='rcs'?_ur:(us==='custom'?nmv(g('units.'+i+'.ua_custom')):_ue);
         // A proposed rent nobody has set yet is blank, not 0 — on a HUD form a
         // printed 0 reads as a real figure. An entered 0 still prints.

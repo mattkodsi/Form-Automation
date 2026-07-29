@@ -2185,7 +2185,8 @@ function computeAnalysis(form) {
   units.forEach(i => {
     const n = num(val('units.' + i + '.num_units')), cur = num(val('units.' + i + '.current')), pro = num(val('units.' + i + '.proposed'));
     const ue = num(val('units.' + i + '.ua_exec')), ur = num(val('units.' + i + '.ua_rcs'));
-    const usrc = val('units.' + i + '.ua_source') || (ue > 0 ? 'exec' : (ur > 0 ? 'rcs' : 'custom'));
+    // Same precedence as app.js defUaSrc: the study first, the prior schedule second.
+    const usrc = val('units.' + i + '.ua_source') || (ur > 0 ? 'rcs' : (ue > 0 ? 'exec' : 'custom'));
     const ua = usrc === 'rcs' ? num(val('units.' + i + '.ua_rcs')) : (usrc === 'custom' ? num(val('units.' + i + '.ua_custom')) : num(val('units.' + i + '.ua_exec')));
     const safmr = safmrResolvedFrom(val, i);
     cg += (cur + ua) * n; pg += (pro + ua) * n; tot += n;
@@ -3527,7 +3528,15 @@ function computeSecPos(){_secPos={};visibleSections().forEach((n,ix)=>_secPos[n]
 function secRef(n){return 'Section '+(_secPos[n]||n);}
 function deriveUnits(){const u=new Set([0]),nr=new Set(),lh=new Set(),pr=new Set([0]);Object.keys(form).forEach(k=>{let m=k.match(/^units\.(\d+)\./);if(m)u.add(+m[1]);m=k.match(/^nonrev\.(\d+)\./);if(m)nr.add(+m[1]);m=k.match(/^ns8\.(\d+)\./);if(m)lh.add(+m[1]);m=k.match(/^principals\.(\d+)\./);if(m)pr.add(+m[1]);});UNITS=[...u].sort((a,b)=>a-b);NONREV=[...nr].sort((a,b)=>a-b);NS8=[...lh].sort((a,b)=>a-b);PRINCIPALS=[...pr].sort((a,b)=>a-b);}
 
-function defUaSrc(i){return uaHas('units.'+i+'.ua_exec')?'exec':(uaHas('units.'+i+'.ua_rcs')?'rcs':'custom');}
+/* The STUDY comes first, not the prior schedule. Column 5 of the HUD-92458 is
+   the allowance in effect for the NEW term; the executed schedule states last
+   term's. Preferring it printed the prior year's allowance on every property in
+   the corpus, and on Sycamore Green, Burt Farms I and Northcross the study's own
+   table is exactly what the team filed -- the right figure was in a file the app
+   had been handed, and it used the other one. Where a third document governs
+   (a CA exhibit, a UA workbook, a UAF notice) the study is still the nearer of
+   the two. The disagreement is still flagged either way; only the default moved. */
+function defUaSrc(i){return uaHas('units.'+i+'.ua_rcs')?'rcs':(uaHas('units.'+i+'.ua_exec')?'exec':'custom');}
 function defSafmrSrc(i){const h=numf(get('units.'+i+'.safmr_hud')),r=numf(get('units.'+i+'.safmr_rcs'));return h>0?'hud':(r>0?'rcs':'custom');}
 function uaResolvedOf(i){const src=get('units.'+i+'.ua_source')||defUaSrc(i);if(src==='rcs')return numf(get('units.'+i+'.ua_rcs'));if(src==='custom')return numf(get('units.'+i+'.ua_custom'));return numf(get('units.'+i+'.ua_exec'));}
 /* A property with every utility owner-paid has a real $0 allowance. Testing
@@ -5159,7 +5168,12 @@ function rsFillFromParsed(){const P=_rsUpload&&_rsUpload.parsed;if(!P)return;
   P.principals.forEach((p,ix)=>{setk('principals.'+ix+'.name',p.name);setk('principals.'+ix+'.title',p.title);});
   P.units.forEach((u,ix)=>{const bb=rsParseUnitType(u.type);setk('units.'+ix+'.br',bb.br);setk('units.'+ix+'.ba',bb.ba);setk('units.'+ix+'.label',bb.label);
     setk('units.'+ix+'.num_units',u.count);setk('units.'+ix+'.current',u.rent);
-    if(u.ua!==''&&u.ua>0){setk('units.'+ix+'.ua_exec',u.ua);if(!get('units.'+ix+'.ua_source')){srcSetSource('units.'+ix+'.ua_custom','exec');mark('units.'+ix+'.ua_source');}}});
+    /* Record the figure, do not pin the choice. Writing 'exec' here made the
+       upload ORDER decide the allowance: schedule-first nailed the source to the
+       prior year before the study had been read, and study-first left it free.
+       Leaving it unset lets defUaSrc answer the same way whichever file arrived
+       first, which is what a source dropdown the PM never touched should do. */
+    if(u.ua!==''&&u.ua>0)setk('units.'+ix+'.ua_exec',u.ua);});
   if(P.ns8&&P.ns8.length){form=store.editForm(form,'ns8.enabled','1');mark('ns8.enabled');
     P.ns8.forEach((u,ix)=>{const bb=rsParseUnitType(u.type);setk('ns8.'+ix+'.br',bb.br);setk('ns8.'+ix+'.ba',bb.ba);
       setk('ns8.'+ix+'.num_units',u.count);setk('ns8.'+ix+'.avg_rent',u.rent);});}
@@ -9511,11 +9525,13 @@ const addrLine=(street,city,state,zip)=>{
       const i=row[1];
       if(row[0]==='s8'){ const br=g('units.'+i+'.br'),ba=g('units.'+i+'.ba'),n=nmv(g('units.'+i+'.num_units')),pro=nmv(g('units.'+i+'.proposed'));
         // Mirror the form's own fallback (app.js defUaSrc): with no source chosen
-        // it shows the executed-RS figure, else the RCS one, else the custom one.
+        // it shows the RCS figure, else the executed-RS one, else the custom one.
+        // The study states the allowance for the term being filed; the executed
+        // schedule states the last one. Three properties filed the study's.
         // Defaulting flatly to 'exec' printed a BLANK allowance whenever the UA had
         // come from the RCS report — and gross rent is what the 150% test turns on.
         const _ue=nmv(g('units.'+i+'.ua_exec')),_ur=nmv(g('units.'+i+'.ua_rcs'));
-        const us=g('units.'+i+'.ua_source')||(_ue>0?'exec':(_ur>0?'rcs':'custom'));
+        const us=g('units.'+i+'.ua_source')||(_ur>0?'rcs':(_ue>0?'exec':'custom'));
         const ua=us==='rcs'?_ur:(us==='custom'?nmv(g('units.'+i+'.ua_custom')):_ue);
         // A proposed rent nobody has set yet is blank, not 0 — on a HUD form a
         // printed 0 reads as a real figure. An entered 0 still prints.
