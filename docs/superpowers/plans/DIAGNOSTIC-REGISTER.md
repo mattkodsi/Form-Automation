@@ -188,3 +188,93 @@ New Horizons · Noble Tower · Oceanport · Riverwood. Cause not yet established
 4. **Then B and C**, which need tracing.
 5. **A needs Matt** — the designation field is a data-model decision, not something to
    invent unattended.
+
+---
+
+# Property 1 — Peterson Plaza (75917), read by eye against the filed package
+
+Ours: `_sweep/_out/75917/rs-first/05. … Draft Rent Schedule.pdf`
+Theirs: `2025 - RCS/Peterson Plaza (IL060052016) Rent Schedule eff. 09.01.2025 (unsigned).pdf`
+
+| row | units | ours rent | filed rent | ours UA | filed UA |
+|---|---:|---:|---:|---:|---:|
+| 1BR | 100 | **2,025** | **2,050** | **86** | **60** |
+| 1BR | 30 | 2,025 | 2,025 | **83** | **71** |
+| 2BR | 1 | **2,650** | **2,700** | **111** | **71** |
+| 2BR | 42 | 2,650 | 2,650 | **111** | **71** |
+| 3BR | 16 | 3,250 | 3,250 | **131** | **125** |
+| total | 189 ✓ | **429,200** | **431,750** | | |
+
+Unit counts and row order are exactly right. The 2,550 shortfall is exactly
+`100 × 25 + 1 × 50` — the two rows that took the wrong rent.
+
+## The chain, end to end
+
+The study's table lists each type over TWO lines — the spec, then a designation:
+
+```
+IBR/1BA        100    562    $2,050
+  Senior
+1BR/1BA         30    672    $2,025
+  Multi-Family
+2BR /1BA         1    742    $2,700
+  Senior
+2BR/1BA         42    786    $2,650
+  Multi-Family
+3BR/1.5BA       16   1,049   $3,250
+  Multi-Family
+```
+
+The app parses it to:
+
+```
+[0] type:"IBR/1BA"   br:""  count:100  proposed:2050  ua:86
+[1] type:"1BR/1BA"   br:1   count:30   proposed:2025  ua:83
+[2] type:"Senior"    br:""  count:1    proposed:2700  ua:""
+[3] type:"2BR/1BA"   br:2   count:42   proposed:2650  ua:111
+[4] type:"3BR/1.5BA" br:3   count:16   proposed:3250  ua:131
+```
+
+`rcsMatch` (app.js:1106) selects candidate lines by bedroom count. Lines 0 and 2
+have none, so they are not candidates at all. For the two 1BR form rows only line
+1 survives — `hit.length === 1`, so it reads as UNAMBIGUOUS, the count tiebreak at
+app.js:1124 never runs, and both rows take 2,025. Identically both 2BR rows take
+2,650 because line 2 dropped out.
+
+## Defects
+
+**P1 — `IBR/1BA` is not read as 1BR.** The document's own text has a capital `I`
+for the digit `1`. `rsParseUnitType` returns no bedroom count, so the line is
+invisible to matching. *(app.js `rsParseUnitType`)*
+
+**P2 — `2BR /1BA` is not read.** An internal space before the slash breaks type
+recognition, and the row then adopts the wrapped designation line below it, so its
+type becomes `Senior`.
+
+**P3 — wrapped designation lines are consumed as unit types** instead of being
+attached to the spec above them. `Senior` / `Multi-Family` are designations.
+
+**P4 — THE DANGEROUS ONE. A line that cannot be matched does not blank the cell;
+it lets another line's rent be broadcast into the row.** Because the unreadable
+line is not a candidate, the remaining line looks unambiguous and the `many` guard
+never fires. A parse miss becomes a wrong number on a HUD form, silently. The rule
+should be: if the study prices N types for a bedroom count and the form has N rows,
+a line that failed to parse must make that group ambiguous, not unanimous.
+
+**P5 — utility allowances come from the wrong document.** Our 86 / 83 / 111 / 131
+are exactly the study's `ua` values. The filed package's 60 / 71 / 71 / 125 come
+from the property's own allowance schedule (`2025 - RCS/Utility Baseline/Peterson
+Plaza Baseline UA Workbook 4.14.xlsx`). Col 5 of HUD-92458 is the allowance in
+effect, not the appraiser's estimate. This is class C's root cause and it affects
+every property where the two differ.
+
+**P6 — Part F is blank.** The filed schedule prints Maximum Allowable Monthly Rent
+Potential 335,132; we print nothing.
+
+## And the answer to the designation question
+
+The study CARRIES the designation — `Senior` vs `Multi-Family` — and that is
+exactly what distinguishes Circle Park's `2BR-Flat` from `2BR-TH` and 333 Holly's
+`2BRLG`. The field class A needs is already in the source; the parser is throwing
+it away (P3). That reframes A from "invent a data model" to "stop discarding what
+the appraiser already told us".
