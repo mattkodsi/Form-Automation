@@ -223,6 +223,10 @@ header{background:var(--chrome);color:var(--on-chrome);padding:0 28px;height:60p
 /* the designation is its own control with its own source tag — collapsing it
    to inline text lost both. Two stacked cells, as on the real form. */
 .utwrap{display:flex;flex-direction:column;gap:4px}
+/* the designation sits under the unit type and is deliberately shorter than a
+   main cell — 28px against 38px in the real app. It is a qualifier on the row
+   above, not a peer of it, and equal heights read as two equal fields. */
+.utwrap .cell.desig{min-height:28px;font-size:12.5px}
 .tagline{margin-left:auto;display:flex;align-items:center;gap:7px}
 .rcstag{font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--prov-cycle);
         background:var(--prov-cycle-fill);border:1px solid var(--prov-cycle);
@@ -352,7 +356,7 @@ header{background:var(--chrome);color:var(--on-chrome);padding:0 28px;height:60p
           </tr></thead>
           <tbody>
             <tr>
-              <td><div class="utwrap"><div class="cell db"><span class="ut">1BR / 1BA</span><span class="tagline"><span class="rcstag">RCS</span><span class="cvx">&#9662;</span></span></div><div class="cell cy"><span>Elderly</span><span class="tagline"><span class="src">&middot; RS</span><span class="cvx">&#9662;</span></span></div></div></td>
+              <td><div class="utwrap"><div class="cell db"><span class="ut">1BR / 1BA</span><span class="tagline"><span class="rcstag">RCS</span><span class="cvx">&#9662;</span></span></div><div class="cell cy desig"><span>Elderly</span><span class="tagline"><span class="src">&middot; RS</span><span class="cvx">&#9662;</span></span></div></div></td>
               <td><div class="cell db num">24</div></td>
               <td><div class="cell db num">$1,045</div></td>
               <td><div class="cell db num">$1,146</div><div class="delta">+$101 · +10%</div></td>
@@ -364,7 +368,7 @@ header{background:var(--chrome);color:var(--on-chrome);padding:0 28px;height:60p
                   <button class="approve">Approve HUD</button></div></td>
             </tr>
             <tr>
-              <td><div class="utwrap"><div class="cell db"><span class="ut">2BR / 1BA</span><span class="tagline"><span class="cvx">&#9662;</span></span></div><div class="cell cy"><span>Elderly</span><span class="tagline"><span class="src">&middot; RS</span><span class="cvx">&#9662;</span></span></div></div></td>
+              <td><div class="utwrap"><div class="cell db"><span class="ut">2BR / 1BA</span><span class="tagline"><span class="cvx">&#9662;</span></span></div><div class="cell cy desig"><span>Elderly</span><span class="tagline"><span class="src">&middot; RS</span><span class="cvx">&#9662;</span></span></div></div></td>
               <td><div class="cell db num">36</div></td>
               <td><div class="cell db num">$1,240</div></td>
               <td><div class="cell db num">$1,362</div><div class="delta">+$122 · +10%</div></td>
@@ -373,7 +377,7 @@ header{background:var(--chrome);color:var(--on-chrome);padding:0 28px;height:60p
                   <div class="clear">$1,400 clears by $290</div></td>
             </tr>
             <tr>
-              <td><div class="utwrap"><div class="cell db"><span class="ut">2BR / 2BA</span><span class="tagline"><span class="cvx">&#9662;</span></span></div><div class="cell cy"><span>Family</span><span class="tagline"><span class="src">&middot; RS</span><span class="cvx">&#9662;</span></span></div></div></td>
+              <td><div class="utwrap"><div class="cell db"><span class="ut">2BR / 2BA</span><span class="tagline"><span class="cvx">&#9662;</span></span></div><div class="cell cy desig"><span>Family</span><span class="tagline"><span class="src">&middot; RS</span><span class="cvx">&#9662;</span></span></div></div></td>
               <td><div class="cell db num">18</div></td>
               <td><div class="cell db num">$1,310</div></td>
               <td><div class="cell db num">$1,438</div><div class="delta">+$128 · +10%</div></td>
@@ -382,7 +386,7 @@ header{background:var(--chrome);color:var(--on-chrome);padding:0 28px;height:60p
                   <div class="clear">$1,476 clears by $214</div></td>
             </tr>
             <tr>
-              <td><div class="utwrap"><div class="cell db"><span class="ut">3BR / 2BA</span><span class="tagline"><span class="cvx">&#9662;</span></span></div><div class="cell cy"><span>Family</span><span class="tagline"><span class="src">&middot; RS</span><span class="cvx">&#9662;</span></span></div></div></td>
+              <td><div class="utwrap"><div class="cell db"><span class="ut">3BR / 2BA</span><span class="tagline"><span class="cvx">&#9662;</span></span></div><div class="cell cy desig"><span>Family</span><span class="tagline"><span class="src">&middot; RS</span><span class="cvx">&#9662;</span></span></div></div></td>
               <td><div class="cell db num">12</div></td>
               <td><div class="cell db num">$1,495</div></td>
               <td><div class="cell db num">$1,641</div><div class="delta">+$146 · +10%</div></td>
@@ -391,7 +395,7 @@ header{background:var(--chrome);color:var(--on-chrome);padding:0 28px;height:60p
                   <div class="clear">$1,688 clears by $492</div></td>
             </tr>
             <tr>
-              <td><div class="utwrap"><div class="cell db"><span class="ut">3BR / 2.5BA</span><span class="tagline"><span class="cvx">&#9662;</span></span></div><div class="cell cy"><span>Family</span><span class="tagline"><span class="src">&middot; RS</span><span class="cvx">&#9662;</span></span></div></div></td>
+              <td><div class="utwrap"><div class="cell db"><span class="ut">3BR / 2.5BA</span><span class="tagline"><span class="cvx">&#9662;</span></span></div><div class="cell cy desig"><span>Family</span><span class="tagline"><span class="src">&middot; RS</span><span class="cvx">&#9662;</span></span></div></div></td>
               <td><div class="cell db num">6</div></td>
               <td><div class="cell db num">$1,560</div></td>
               <td><div class="cell db num">$1,712</div><div class="delta">+$152 · +10%</div></td>
@@ -400,7 +404,7 @@ header{background:var(--chrome);color:var(--on-chrome);padding:0 28px;height:60p
                   <div class="clear">$1,759 clears by $421</div></td>
             </tr>
             <tr>
-              <td><div class="utwrap"><div class="cell db"><span class="ut">4BR / 2BA</span><span class="tagline"><span class="cvx">&#9662;</span></span></div><div class="cell cy"><span>Family</span><span class="tagline"><span class="src">&middot; RS</span><span class="cvx">&#9662;</span></span></div></div></td>
+              <td><div class="utwrap"><div class="cell db"><span class="ut">4BR / 2BA</span><span class="tagline"><span class="cvx">&#9662;</span></span></div><div class="cell cy desig"><span>Family</span><span class="tagline"><span class="src">&middot; RS</span><span class="cvx">&#9662;</span></span></div></div></td>
               <td><div class="cell db num">4</div></td>
               <td><div class="cell db num">$1,780</div></td>
               <td><div class="cell db num">$1,954</div><div class="delta">+$174 · +10%</div></td>
