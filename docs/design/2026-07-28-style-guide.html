@@ -8,7 +8,7 @@
 <style>
 :root{
   --paper:#d8dde4; --card:#ffffff; --sunk:#eef1f5;
-  --ink:#101822; --ink-2:#41505f; --ink-3:#6a7b8c; --ink-4:#93a2b1;
+  --ink:#101822; --ink-2:#41505f; --ink-3:#556270; --ink-4:#636c77;
   --rule:#c2cbd6; --rule-soft:#e4e9ef;
   --stamp:#9c2b18; --stamp-wash:#f7ece8;
   --ledger:#1f5480; --filed:#2f6a45; --chrome:#101d2b;
@@ -17,7 +17,7 @@
 }
 html[data-t="night"]{
   --paper:#0a0e14; --card:#161c25; --sunk:#11161e;
-  --ink:#eef2f7; --ink-2:#a9b6c4; --ink-3:#7d8b9b; --ink-4:#5d6b7b;
+  --ink:#eef2f7; --ink-2:#a9b6c4; --ink-3:#8796a7; --ink-4:#75869a;
   --rule:rgba(255,255,255,.11); --rule-soft:rgba(255,255,255,.06);
   --stamp:#e8836d; --stamp-wash:#2a1710;
   --ledger:#5b9dd4; --filed:#4fb383; --chrome:#080c11;
@@ -45,14 +45,14 @@ header span{font-size:10px;letter-spacing:.17em;text-transform:uppercase;opacity
 main{max-width:1240px;margin:0 auto;padding:40px 40px 80px}
 h1{font-size:22px;font-weight:600;letter-spacing:-.015em;margin-top:5px}
 .eyebrow{font-size:10.5px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;
-         color:var(--ink-4)}
+         color:var(--ink-3)}
 .stats{display:flex;gap:20px;margin-top:14px;font-size:13px;color:var(--ink-3);flex-wrap:wrap}
 .stats span{border-left:2px solid var(--rule);padding-left:9px}
 .stats b{color:var(--ink);font-weight:600;font-size:14px}
 .lede{font-size:13.5px;color:var(--ink-2);margin-top:11px;max-width:64ch;text-wrap:pretty}
 h2{font-size:11px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;
    color:var(--ink-3);margin:46px 0 4px}
-.note{font-size:12.5px;color:var(--ink-4);margin-bottom:14px;max-width:70ch;text-wrap:pretty}
+.note{font-size:12.5px;color:var(--ink-3);margin-bottom:14px;max-width:70ch;text-wrap:pretty}
 .panel{background:var(--card);border:1px solid var(--rule);border-radius:var(--r-card);padding:22px}
 
 /* swatches */
@@ -243,8 +243,9 @@ td.nm{color:var(--ink);font-weight:500}
 <script>
 const P=[['--paper','#d8dde4','#0a0e14','the desk'],['--card','#ffffff','#161c25','a document'],
 ['--sunk','#eef1f5','#11161e','a ruled band, an input'],['--ink','#101822','#eef2f7','signature ink'],
-['--ink-2','#41505f','#a9b6c4','typed body'],['--ink-3','#6a7b8c','#7d8b9b','carbon copy'],
-['--ink-4','#93a2b1','#5d6b7b','pencil note'],['--rule','#c2cbd6','rgba(255,255,255,.11)','a ruled edge'],
+['--ink-2','#41505f','#a9b6c4','typed body'],['--ink-3','#556270','#8796a7','carbon copy'],
+['--ink-4','#636c77','#75869a','pencil note — card and sunk only'],
+['--rule','#c2cbd6','rgba(255,255,255,.11)','a ruled edge'],
 ['--rule-soft','#e4e9ef','rgba(255,255,255,.06)','between rows'],
 ['--stamp','#9c2b18','#e8836d','received-stamp ink — owed now'],
 ['--ledger','#1f5480','#5b9dd4','columnar-pad blue — coming up'],

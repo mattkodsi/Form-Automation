@@ -16,11 +16,12 @@
     --card:#ffffff;         /* a document on it */
     --sunk:#eef1f5;         /* a ruled band / an inset control */
 
-    /* ink — four levels, not two */
+    /* ink — four levels, not two. Every one clears 4.5:1 on the surface it is
+       actually used on; --ink-4 is never used on --paper. */
     --ink:#101822;          /* signature ink */
     --ink-2:#41505f;        /* typed body */
-    --ink-3:#6a7b8c;        /* carbon copy */
-    --ink-4:#93a2b1;        /* pencil note */
+    --ink-3:#556270;        /* carbon copy */
+    --ink-4:#636c77;        /* pencil note — card and sunk only */
 
     /* rules */
     --rule:#c2cbd6;         /* the ruled edge */
@@ -39,7 +40,7 @@
   }
   html[data-t="night"]{
     --paper:#0a0e14; --card:#161c25; --sunk:#11161e;
-    --ink:#eef2f7; --ink-2:#a9b6c4; --ink-3:#7d8b9b; --ink-4:#5d6b7b;
+    --ink:#eef2f7; --ink-2:#a9b6c4; --ink-3:#8796a7; --ink-4:#75869a;
     --rule:rgba(255,255,255,.11); --rule-soft:rgba(255,255,255,.06);
     --stamp:#e8836d; --stamp-wash:#2a1710;
     --ledger:#5b9dd4; --filed:#4fb383;
@@ -78,7 +79,7 @@
      a line of figures that answers "how much, and how soon". */
   .lede{display:flex;justify-content:space-between;align-items:flex-end;gap:48px;margin-bottom:32px}
   .eyebrow{font-size:10.5px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;
-           color:var(--ink-4)}
+           color:var(--ink-3)}
   h1{font-size:22px;font-weight:600;letter-spacing:-.015em;margin-top:5px}
   .stats{display:flex;gap:20px;margin-top:14px;font-size:13px;color:var(--ink-3);flex-wrap:wrap}
   /* the left rule teaches its own colour code here, at the top of the page */
@@ -96,7 +97,7 @@
   /* ---------------- section marks ---------------- */
   .sect{display:flex;align-items:baseline;gap:12px;margin:0 0 14px}
   .sect h2{font-size:11px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3)}
-  .sect span{font-size:12.5px;color:var(--ink-4)}
+  .sect span{font-size:12.5px;color:var(--ink-3)}
 
   /* ------ live work — the signature rule, at card scale ------ */
   /* breathe unevenly: the three sharing a deadline group tight,
