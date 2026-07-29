@@ -673,7 +673,7 @@ function xlsxFacts(bytes){
      than above it. Take the first candidate column that actually carries a
      value on the first data row, rather than assuming the label is right. */
   const dataStart=hdrRow+1;
-  const rowsRead=[];
+  const rowsRead=[],skipped=[];
   const STOP=/^(monthly|annual|grand)?\s*total/i;
   const typeCols=(hdr.type||[]).concat(['B']);
   let r=0;
@@ -682,6 +682,19 @@ function xlsxFacts(bytes){
     for(const c of typeCols){const v=at(c,row);if(v!=null&&String(v).trim()!==''){type=String(v).trim();break;}}
     if(type==null||type==='')continue;
     if(STOP.test(type))break;
+    /* A ROW THAT NAMES A UNIT TYPE AND THEN COUNTS NOTHING IS A TEMPLATE ROW,
+       NOT A UNIT TYPE. Several of the filed workbooks leave a labelled but
+       empty first row above the real ones. Taking it shifted every subsequent
+       row by one, so our first unit type was compared against their second --
+       and that single off-by-one produced most of the corpus's apparent
+       disagreements: 69 unit-type rows across 24 properties, plus the counts,
+       allowances and rents that travel beside them. A row is real if it counts
+       units, or charges rent, or proposes one. */
+    const num=key=>{
+      for(const c of (hdr[key]||[])){const v=at(c,row);
+        if(v!=null&&String(v).trim()!=='')return parseFloat(String(v).replace(/[$,]/g,''))||0;}
+      return 0;};
+    if(!num('units')&&!num('current')&&!num('proposed')){skipped.push(row);continue;}
     values['unit.'+r+'.type']=canon(type);
     for(const [key] of WANT){
       if(key==='type')continue;
@@ -698,6 +711,7 @@ function xlsxFacts(bytes){
     r++;
   }
   if(rowsRead.length)notes.push('unit rows read from sheet rows '+rowsRead.join(', '));
+  if(skipped.length)notes.push('skipped as template rows (a unit type counting no units, no rent, no proposal): sheet row '+skipped.join(', '));
   if(!r)notes.push('header row found but no unit rows beneath it');
   return {docType:'analysisXlsx',pages:[0,0],values:values,boilerplate:[],notes:notes};
 }
