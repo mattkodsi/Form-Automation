@@ -3213,7 +3213,12 @@ function dueLine(p){
   if(!p.deadline)return '<div class="pc-due ok">No date scheduled</div>';
   const d=p.days;
   if(d==null)return '<div class="pc-due ok">No date scheduled</div>';
-  if(d<0)return '<div class="pc-due over">Was due '+esc(fmtDateShort(p.deadline))+' · '+(-d)+' day'+(-d===1?'':'s')+' late</div>';
+  /* Overdue is not an alarm. Matt: "anything overdue has already been
+     completed" — the tracker carries the deadline, not the filing, so a past
+     date means the package went in and the row has not caught up. Shouting
+     "119 days late" in red across a hundred and three rows buried the handful
+     that are genuinely live. It states the date and stops there. */
+  if(d<0)return '<div class="pc-due past">Was due '+esc(fmtDateShort(p.deadline))+'</div>';
   if(d<=30)return '<div class="pc-due now">Due '+esc(fmtDateShort(p.deadline))+' · '+d+' day'+(d===1?'':'s')+' left</div>';
   return '<div class="pc-due ok">Due '+esc(fmtDateShort(p.deadline))+' · '+d+' days</div>';
 }
