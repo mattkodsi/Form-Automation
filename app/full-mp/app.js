@@ -95,8 +95,25 @@ function sK(n){const a=Math.abs(n),sg=(n<0?'-$':'+$');return a>=1e6?sg+(a/1e6).t
    caption follows it, so a decrease is never captioned "increase". */
 const liftClr=n=>n>0?'#0f766e':(n<0?'#b91c1c':'#64748b');
 const liftWord=n=>n<0?'decrease':'increase';
+/* ---- display formatting -------------------------------------------------
+   Every figure this product shows is formatted at the point of display; the
+   record keeps the raw value so parsing, comparison and generation are
+   untouched. A units column reading 1689 looks like a database dump, and the
+   authority of a document that files with HUD is that its numbers read exact. */
+function fmtNum(n){const v=String(n==null?'':n).trim();if(!v)return '';
+  const neg=v.charAt(0)==='-',d=v.replace(/[^0-9.]/g,'');if(!d)return '';
+  const parts=d.split('.');
+  return (neg?'-':'')+parts[0].replace(/\B(?=(\d{3})+(?!\d))/g,',')+(parts[1]?('.'+parts[1]):'');}
+/* Ten digits, or eleven led by a country code, get the shape. Anything else is
+   shown verbatim — inventing a format for a number we cannot read would assert
+   a phone number where the record holds something else. */
+function fmtPhone(v){const s=String(v==null?'':v).trim();if(!s)return '';
+  let d=s.replace(/\D/g,'');if(d.length===11&&d.charAt(0)==='1')d=d.slice(1);
+  if(d.length!==10)return s;
+  return '('+d.slice(0,3)+') '+d.slice(3,6)+'-'+d.slice(6);}
+function fmtEmail(v){return String(v==null?'':v).trim().toLowerCase();}
 function fmtDate(d){if(!d)return '';const p=String(d).split('-');return p.length===3?p[1]+'/'+p[2]+'/'+p[0]:d;}
-function fmtPhone(x){const d=String(x).replace(/\D/g,'').slice(0,10);if(!d)return '';if(d.length<4)return '('+d;if(d.length<7)return '('+d.slice(0,3)+') '+d.slice(3);return '('+d.slice(0,3)+') '+d.slice(3,6)+'-'+d.slice(6);}
+function fmtPhoneInput(x){const d=String(x).replace(/\D/g,'').slice(0,10);if(!d)return '';if(d.length<4)return '('+d;if(d.length<7)return '('+d.slice(0,3)+') '+d.slice(3);return '('+d.slice(0,3)+') '+d.slice(3,6)+'-'+d.slice(6);}
 function cleanNum(x){return String(x==null?'':x).replace(/[^0-9]/g,'');}
 function fmtMoney(x){const d=cleanNum(x);return d?(+d).toLocaleString('en-US'):'';}
 function fmtDateInput(x){const d=String(x==null?'':x).replace(/\D/g,'').slice(0,8);if(!d)return '';let o=d.slice(0,2);if(d.length>=3)o+='/'+d.slice(2,4);if(d.length>=5)o+='/'+d.slice(4,8);return o;}
@@ -297,7 +314,7 @@ function dateEffCell(){const rs=get('rent_schedule.date_eff_rs');const src=get('
   const _bad=(src==='custom')&&String(custom||'').trim()!==''&&!dateParts(custom);
   return `<div class="field"><div class="flabel">Date rents will be effective</div>${_bad?'<div class="ucnote warn" style="margin:0 0 4px">\u26a0 That is not a date \u2014 enter it as mm/dd/yyyy.</div>':''}<div class="fbox uacell" data-box="${boxKey}" style="background:${c[1]};border-left-color:${c[0]}"><div class="uadrop" style="flex:1;min-width:0"><div class="uatrigger" tabindex="0">${lab}<span class="cvx">▾</span></div>${menu}</div>${ovIcons(['rent_schedule.date_eff_custom','rent_schedule.date_eff_source','rent_schedule.date_eff_rs'])}</div></div>`;}
 const POC_PICK_KEYS=['poc.name','poc.email','poc.phone'];
-function pocSelectContact(ct){form=store.editForm(form,'poc.name',ct.name||'');form=store.editForm(form,'poc.email',ct.email||'');form=store.editForm(form,'poc.phone',fmtPhone(ct.phone||''));
+function pocSelectContact(ct){form=store.editForm(form,'poc.name',ct.name||'');form=store.editForm(form,'poc.email',ct.email||'');form=store.editForm(form,'poc.phone',fmtPhoneInput(ct.phone||''));
   POC_PICK_KEYS.forEach(k=>{if(form[k])form[k].fromPick=true;});}
 // The name cell's save/revert buttons bundle the whole contact group ONLY while
 // the pick is still intact (the name key itself still carries fromPick — a plain
@@ -330,7 +347,7 @@ function caDir(modeKeys,sub){return {kind:'ca',one:'contract administrator',
   sub:sub};}
 const DIR_PICK={
  'appr.name':{kind:'appraiser',one:'appraiser',keys:['appr.name','appr.firm','appr.email','appr.phone','appr.addr_street','appr.addr_city','appr.addr_state','appr.addr_zip'],modeKeys:['appr.name'],
-  apply:ct=>dirFill([['appr.name',ct.name],['appr.firm',ct.firm],['appr.email',ct.email],['appr.phone',fmtPhone(ct.phone||'')],['appr.addr_street',ct.addr_street],['appr.addr_city',ct.addr_city],['appr.addr_state',ct.addr_state],['appr.addr_zip',ct.addr_zip]]),
+  apply:ct=>dirFill([['appr.name',ct.name],['appr.firm',ct.firm],['appr.email',ct.email],['appr.phone',fmtPhoneInput(ct.phone||'')],['appr.addr_street',ct.addr_street],['appr.addr_city',ct.addr_city],['appr.addr_state',ct.addr_state],['appr.addr_zip',ct.addr_zip]]),
   sub:ct=>[ct.firm,dirAddrLine(ct)].filter(Boolean).join(' \u00b7 ')||ct.email||''},
  'ca.name':caDir(['ca.prefix','ca.name'],ct=>[ct.title,ct.org,dirAddrLine(ct)].filter(Boolean).join(' \u00b7 ')),
  /* The same entry, reached from the cell you happen to be looking at. Each
@@ -391,6 +408,7 @@ function srcDisp(k,v){
   if(SRC_MONEY.test(k)){const f=fmtMoney(v);return f?('$'+f):String(v);}   // a value we cannot read as a number prints as it came
   if(SRC_COUNT.test(k)){const f=fmtMoney(v);return f||String(v);}          // separators, no currency
   if(/\.phone$/.test(k))return fmtPhone(v)||String(v);
+  if(/\.email$/.test(k))return fmtEmail(v);
   return v;}
 function srcOptRow(attrs,val,tag,sel){const _c='uaopt srcopt'+(sel?' sel':'');return val?('<div class="'+_c+'" '+attrs+'>'+val+'<span class="uasub">'+esc(tag)+'</span></div>'):('<div class="'+_c+' srcdim">\u2014<span class="uasub">'+esc(tag)+' \u00b7 not available</span></div>');}
 function srcPick(k,rows){
@@ -417,7 +435,7 @@ const SRCPICK_ROWS={
  'tenant.sender_title':()=>[{tag:'Related Affordable',val:raVal('tenant.sender_title')}],
  'appr.firm':()=>[{tag:'RCS report',val:rcsVal('appr.firm')}],
  'appr.email':()=>[{tag:'RCS report',val:rcsVal('appr.email')}],
- 'appr.phone':()=>[{tag:'RCS report',val:rcsVal('appr.phone')?fmtPhone(rcsVal('appr.phone')):null}],
+ 'appr.phone':()=>[{tag:'RCS report',val:rcsVal('appr.phone')?fmtPhoneInput(rcsVal('appr.phone')):null}],
  'tenant.sender_name':()=>[{tag:'Related Affordable',val:raVal('tenant.sender_name')}],
 };
 /* Address groups: one dropdown pulls the whole street/city/state/zip group. */
@@ -487,7 +505,7 @@ function fieldCell(f){if(f.type==='sigtitle')return sigTitleCell(f);if(f.type===
   const s=form[f.k]||{value:'',source:'new'};
   const c=f.prefix?groupColors([f.prefix,f.k]):cellColors(f.k);
   const pre=f.prefix?csDrop(f.prefix,['Ms.','Mr.','Dr.','Mx.'],'—','csnarrow',true,partHot(f.prefix)?tintStyle(f.prefix):''):'';
-  return `<div class="field"><div class="flabel">${f.label}</div><div class="fbox" data-box="${f.k}" style="background:${c[1]};border-left-color:${c[0]}">${pre}<input type="text" data-k="${f.k}" style="${f.prefix&&partHot(f.k)?tintStyle(f.k):''}"${f.type==='phone'?' data-phone="1" inputmode="tel" maxlength="14"':''} value="${esc(f.type==='phone'?fmtPhone(s.value):s.value)}" autocomplete="off">${srcTags(f.k)}${SRCPICK_ROWS[f.k]?srcPick(f.k,SRCPICK_ROWS[f.k]()):''}</div>${ovNote(f.prefix?[f.prefix,f.k]:f.k)}</div>`;}
+  return `<div class="field"><div class="flabel">${f.label}</div><div class="fbox" data-box="${f.k}" style="background:${c[1]};border-left-color:${c[0]}">${pre}<input type="text" data-k="${f.k}" style="${f.prefix&&partHot(f.k)?tintStyle(f.k):''}"${f.type==='phone'?' data-phone="1" inputmode="tel" maxlength="14"':''} value="${esc(f.type==='phone'?fmtPhoneInput(s.value):s.value)}" autocomplete="off">${srcTags(f.k)}${SRCPICK_ROWS[f.k]?srcPick(f.k,SRCPICK_ROWS[f.k]()):''}</div>${ovNote(f.prefix?[f.prefix,f.k]:f.k)}</div>`;}
 function addrCell(){return compAddrCell(ADDR,'property.addr','Address');}
 function caAddrCell(){return compAddrCell(CA_ADDR,'ca.addr','CA address');}
 function apprAddrCell(){return compAddrCell(APPR_ADDR,'appr.addr','Appraiser address');}
@@ -1212,7 +1230,7 @@ function rcsFillFromParsed(){
      person's name, not a scalar, and it is worth more once matched against the
      contact list. */
   RCS_SCALARS.forEach(function(k){if(k!=='appr.phone')setk(k,P.scalars[k]);});
-  if(P.scalars['appr.phone'])setk('appr.phone',fmtPhone(P.scalars['appr.phone']));
+  if(P.scalars['appr.phone'])setk('appr.phone',fmtPhoneInput(P.scalars['appr.phone']));
   /* The addressee, and the contact it names. Where the name matches exactly one
      saved contact the email and phone come with it; where it matches none, or
      more than one, only the name is written — the study told us who, not how to
@@ -1221,7 +1239,7 @@ function rcsFillFromParsed(){
     if(pm.name){
       setk('poc.name',pm.contact?pm.contact.name:pm.name);
       if(pm.contact){setk('poc.email',pm.contact.email);
-        if(pm.contact.phone)setk('poc.phone',fmtPhone(pm.contact.phone));}} }
+        if(pm.contact.phone)setk('poc.phone',fmtPhoneInput(pm.contact.phone));}} }
 
   let ambiguous=0;
   const claimed=new Set(),ambig=new Set();
@@ -2607,7 +2625,7 @@ function srcEditKey(k,val){
 }
 function wireBody(){
   document.querySelectorAll('input[data-k]').forEach(inp=>{const k=inp.getAttribute('data-k'),wion=inp.getAttribute('data-wion');
-    inp.addEventListener('input',()=>{pushCellUndo(k);let v=inp.value;if(inp.getAttribute('data-phone')){v=fmtPhone(v);inp.value=v;}else if(inp.getAttribute('data-money')){v=cleanNum(v);inp.value=fmtMoney(v);}else if(inp.getAttribute('data-date')){
+    inp.addEventListener('input',()=>{pushCellUndo(k);let v=inp.value;if(inp.getAttribute('data-phone')){v=fmtPhoneInput(v);inp.value=v;}else if(inp.getAttribute('data-money')){v=cleanNum(v);inp.value=fmtMoney(v);}else if(inp.getAttribute('data-date')){
       /* Keep the caret where the reader left it. The mask lays the digits out
          again from scratch, which moves every character after the one just
          typed — so without this a correction to the month left the caret in the
@@ -2935,8 +2953,13 @@ function profileChip(p){
   const m=(p&&p.profile&&p.profile.missing)||[];
   if(!m.length)return '';
   const names=m.map(x=>x.label);
-  return '<span class="pchip" title="'+esc('Missing: '+andJoin(names))+'">'
-    +m.length+' missing from the profile</span>';}
+  /* "4 missing from the profile" named nothing. The count was the whole chip
+     and the four labels lived in a title attribute, so the one question it
+     provoked — which four? — was the one it would not answer without a hover
+     nobody knows to try. It says them. */
+  const shown=names.length<=3?andJoin(names):(names.slice(0,2).join(', ')+' and '+(names.length-2)+' more');
+  return '<span class="pchip" title="'+esc('Missing: '+andJoin(names))+'">Needs '
+    +esc(shown)+'</span>';}
 function ringSvg(pct,size){size=size||36;const r=size/2-3;const c=2*Math.PI*r;const off=c*(1-Math.max(0,Math.min(100,pct))/100);const col=ringColor(pct);
   return '<svg class="ringsvg" width="'+size+'" height="'+size+'" viewBox="0 0 '+size+' '+size+'"><circle cx="'+size/2+'" cy="'+size/2+'" r="'+r+'" fill="none" stroke="#e9edf4" stroke-width="3.4"/><circle cx="'+size/2+'" cy="'+size/2+'" r="'+r+'" fill="none" stroke="'+col+'" stroke-width="3.4" stroke-linecap="round" stroke-dasharray="'+c.toFixed(1)+'" stroke-dashoffset="'+off.toFixed(1)+'" transform="rotate(-90 '+size/2+' '+size/2+')"/><text x="50%" y="53%" dominant-baseline="middle" text-anchor="middle" font-size="'+(size<44?10:12.5)+'" font-weight="700" fill="#33405c">'+pct+'</text></svg>';}
 function niceDate(d){if(!d)return '—';const m=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];const p=String(d).slice(0,10).split('-');if(p.length!==3)return d;return m[(+p[1])-1]+' '+(+p[2])+', '+p[0];}
@@ -3125,12 +3148,15 @@ function actionBtnHtml(p,short){
    countable on the page beneath it, they are disjoint, and they sum to the
    total. Chronological order, no editorial: the strip reports when things are
    due, it does not rank them by how much they should worry you. */
+/* The total leads. It is the view the page opens on, and reading the strip
+   left to right should start with what you are looking at and then break it
+   down, not arrive at it after four qualifications. */
 const MENU_VIEWS=[
+ {k:'all',    t:'properties',          c:''},
  {k:'past',   t:'past their date',     c:''},
  {k:'now',    t:'due within 30 days',  c:'now'},
  {k:'later',  t:'later',               c:'soon'},
  {k:'undated',t:'not in the schedule', c:''},
- {k:'all',    t:'properties',          c:''},
 ];
 function _bandNow(){return (window.RCSHap&&window.RCSHap._bandDays&&window.RCSHap._bandDays.now)||30;}
 /* The words live here, not in a click handler (FORM-RULES 17): the lede under
@@ -3184,7 +3210,7 @@ const MONTHS=['January','February','March','April','May','June','July',
    one property was undated while the rail said two. */
 function bandOf(p){
   const d=p.hap?p.days:null;
-  if(!p.hap||d==null||!p.deadline)return {view:'undated',rank:9,key:'none',label:'Not in the schedule'};
+  if(!p.hap||d==null||!p.deadline)return {view:'undated',rank:9,key:'none',label:'No renewal scheduled'};
   if(d>=0&&d<=30)return {view:'now', rank:0,key:'now', label:'Due within 30 days'};
   if(d<0)        return {view:'past',rank:1,key:'past',label:'Past their date'};
   const iso=String(p.deadline).slice(0,10).split('-');
@@ -3196,7 +3222,7 @@ function figuresHtml(counts,view){
   return MENU_VIEWS.map(v=>{const C=menuViewCopy(v.k);
     return '<button class="fig'+(v.c?' '+v.c:'')+(v.k===view?' on':'')+(counts[v.k]?'':' zero')
       +'" data-view="'+v.k+'"'+(v.k===view?' aria-current="true"':'')
-      +' title="'+esc(C.lede)+'"><b>'+counts[v.k]+'</b> '
+      +' title="'+esc(C.lede)+'"><b>'+fmtNum(counts[v.k])+'</b> '
       +esc(v.k==='all'&&counts.all===1?'property':v.t)+'</button>';}).join('');
 }
 
@@ -3277,7 +3303,17 @@ async function openHapProperty(code){
   let pid=(mpdb&&mpdb.propByRaCode)?mpdb.propByRaCode(code):null;
   if(!pid){
     try{const r=await mpdb.createProperty(p.name,code);pid=r&&r.pid;}
-    catch(e){saveFailedModal(e);return;}
+    catch(e){
+      /* The building is already in the record under this name, carrying no
+         tracker code — imported by hand, or named before the code existed. The
+         schedule's row and that record are the same property, so the code goes
+         onto it. Reporting "that name is taken" here made every such property
+         unopenable: the only route in was the one that refused. */
+      if(e&&e.code==='DUP_PROPERTY_NAME'&&e.pid){
+        pid=e.pid;
+        try{if(mpdb.setRaCode)await mpdb.setRaCode(pid,code);}catch(_){}
+      }else{saveFailedModal(e);return;}
+    }
   }
   if(pid)openLauncher(pid);
   return pid;                    // callers chain a package action onto the record it just made
@@ -3405,13 +3441,17 @@ function renderMenu(){
       +'<div class="pc-meta">'+(p.hap?(esc(p.pm||'Unassigned')+(p.city_state?' &middot; '+esc(p.city_state):'')):(esc(p.fha)+(p.city_state?' &middot; '+esc(p.city_state):'')))+'</div>'
       +(p.hap?dueLine(p):'')
       /* The ledger printed a "Rents effective" header over an empty column. */
-      +'<div class="pc-eff">'+((p.hap&&p.action&&p.action.effective)?esc(fmtDateShort(p.action.effective)):'')+'</div>'
+      /* Only where the column's own header is true of it. For an expiring or
+         abandoned schedule p.action.effective is a CONTRACT EXPIRY, and
+         printing it under "Rents effective" restated the due cell one column
+         over as a different fact. */
+      +'<div class="pc-eff">'+((p.hap&&p.action&&p.action.effective&&p.action.kind!=='expiring'&&p.action.kind!=='gap')?esc(fmtDateShort(p.action.effective)):'')+'</div>'
       +'<div class="pc-div"></div>'
       +'<div class="pc-foot">'+prog
       /* Always the unit count. "Not started" stood here instead, which is the
          progress question the row's own button already answers — and it took
          the slot the size of the job belongs in. */
-      +'<span class="pc-units">'+(p.total_units?(p.total_units+' unit'+(p.total_units===1?'':'s')+(p.unit_types?' &middot; '+p.unit_types+' type'+(p.unit_types===1?'':'s'):'')):'')+'</span>'
+      +'<span class="pc-units">'+(p.total_units?(fmtNum(p.total_units)+' unit'+(p.total_units===1?'':'s')+(p.unit_types?' &middot; '+p.unit_types+' type'+(p.unit_types===1?'':'s'):'')):'')+'</span>'
       +(p.hap&&!p.started?'':'<span class="pc-upd" title="'+esc(updTitle(p.updated_at))+'">Updated '+relTime(p.updated_at)+'</span>')+'</div></button>';
     return '<div class="pcard"'+(_band?' data-band="'+esc(_band)+'"':'')+'>'+body+actionBtnHtml(p,_band!=='now')+'</div>';};
   /* A "+ New property" tile sitting inside "Needs you" would imply it belongs to
@@ -3451,11 +3491,22 @@ function renderMenu(){
   /* "Due to HUD by Jul 31" over a row due Aug 1 is a heading asserting
      something its members do not share. The band is a window, so the heading
      names the window. */
-  const _liveHd=_liveN?('<div class="zhead"><h3>Due within '+_bandNow()+' days</h3><span>'+_liveN
+  const _liveHd=_liveN?('<div class="zhead"><h3>Due within '+_bandNow()+' days</h3><span>'+fmtNum(_liveN)
       +(_liveN===1?' property':' properties')+' &middot; earliest deadline first</span></div>'):'';
-  const _restN=_banded.length-_liveN;
-  const _restHd=_restN?('<div class="zhead"><h3>Remaining</h3><span>'+_restN
-      +(_restN===1?' property':' properties')+' &middot; earliest deadline first</span></div>'):'';
+  /* The records the schedule does not carry are ROWS OF THIS TABLE, under a
+     group heading like every other group. They used to be a third grid with a
+     bare heading emitted as a sibling of the table — so the heading matched no
+     scoped rule, kept a -4px margin meant for a card gallery, and sat 4px
+     under the first row it was supposed to introduce. In the one view where
+     they are most of the list, that read as broken. */
+  const _restN=_banded.length-_liveN+_or.length;
+  /* Only where there is a live panel above it can a heading say "Remaining".
+     In the undated view nothing is live, so "Remaining" was the remainder of
+     nothing — and "earliest deadline first" sat over rows with no deadline. */
+  const _restLbl=_liveN?'Remaining':'All of them';
+  const _restSort=_banded.some(x=>x.b.key!=='none')?' &middot; earliest deadline first':'';
+  const _restHd=_restN?('<div class="zhead"><h3>'+esc(_restLbl)+'</h3><span>'+fmtNum(_restN)
+      +(_restN===1?' property':' properties')+_restSort+'</span></div>'):'';
   const _cols=_restN?('<div class="mcols"><span>Property</span><span>Program</span>'
     +'<span>Due to HUD</span><span>Rents effective</span><span class="r">Units</span>'
     +'<span></span></div>'):'';
@@ -3463,11 +3514,14 @@ function renderMenu(){
   let _lk=null;
   const _restHtml=_banded.filter(x=>x.b.key!=='now').map(x=>{
     const h=(x.b.key!==_lk)?('<div class="mgroup">'+esc(x.b.label)+'</div>'):'';
-    _lk=x.b.key; return h+card(x.p,x.b.key);}).join('');
+    _lk=x.b.key; return h+card(x.p,x.b.key);}).join('')
+    /* Two headings for one idea, back to back, is how it read before: the
+       band's own "Not in the schedule" followed by this one. It appears only
+       where it separates two populations. */
+    +((_or.length&&_banded.length)?'<div class="mgroup">Not in the renewal schedule</div>':'')
+    +_or.map(p=>card(p,'none')).join('');
   const _body=(_liveN?(_liveHd+'<div class="mgrid rows live">'+_liveHtml+'</div>'):'')
-    +(_restN?(_restHd+'<div class="mgrid rows">'+_cols+_restHtml+'</div>'):'')
-    +((_or.length&&_tr.length)?'<div class="mgroup">Not in the renewal schedule</div>':'')
-    +(_or.length?('<div class="mgrid rows">'+_or.map(p=>card(p)).join('')+'</div>'):'');
+    +(_restN?(_restHd+'<div class="mgrid rows">'+_cols+_restHtml+'</div>'):'');
   el('menuGrid').className='mzones';
   el('menuGrid').innerHTML=_body+(q&&!props.length?empty:'')
     +((hasRail&&!q&&!props.length)?viewEmpty:'')
@@ -3716,7 +3770,7 @@ function renderLauncher(){
     :'<div class="letter empty"><div class="lh-doc">'+docIcon()+'</div><div class="lh-info"><b>Add the property letterhead</b><i>Used on the tenant notice &middot; PDF, PNG or JPG, kept with the property</i></div><button class="btn sm" id="lhAdd">Upload</button></div>';
   el('launcherBody').innerHTML=
     '<div class="lhead"><div class="lh-left"><div class="lh-name">'+esc(p.name)+(_showAl?'<span class="lh-alias">&ldquo;'+esc(_al)+'&rdquo;</span>':'')+'</div>'
-      +'<div class="lh-meta">'+esc(p.fha)+(p.city_state?' &middot; '+esc(p.city_state):'')+(p.total_units?' &middot; '+p.total_units+' units':'')+'</div>'
+      +'<div class="lh-meta">'+esc(p.fha)+(p.city_state?' &middot; '+esc(p.city_state):'')+(p.total_units?' &middot; '+fmtNum(p.total_units)+' units':'')+'</div>'
       +(p.entity?'<div class="lh-entity">'+esc(p.entity)+'</div>':'')+'</div>'
       +'<div class="lh-right"><div class="lh-tools"><button class="txtbtn" id="pRename">Rename</button><span class="dotsep">&middot;</span><button class="txtbtn del" id="pDelete">Delete</button></div><div class="lh-prof">'+(profileChip(p)||'<span class="pchip ok">Profile complete</span>')+'</div></div></div>'
     +'<div class="lsec"><div class="lsec-t">Property letterhead</div>'+letter+'<div class="lh-note">The uploaded letterhead appears on the tenant notice. All other letterheads are built into the document templates.</div><input type="file" id="lhFile" accept="image/*,.pdf,application/pdf" style="display:none"></div>'
@@ -4552,13 +4606,13 @@ function openContacts(){renderContacts();show('Contacts');}
 const DIR_SECTIONS=[
  {kind:'appraiser',title:'Appraisers',one:'appraiser',add:'+ Add appraiser',
   rows:[[['name','Name']],[['firm','Company']],[['addr_street','Street']],[['addr_city','City'],['addr_state','State',STATES,'nrw'],['addr_zip','ZIP',null,'nrw']],[['email','Email']],[['phone','Phone']]],
-  sub:c=>[c.firm,dirAddrLine(c),c.email,c.phone?fmtPhone(c.phone):''].filter(Boolean).join('  \u00b7  ')},
+  sub:c=>[c.firm,dirAddrLine(c),fmtEmail(c.email),c.phone?fmtPhone(c.phone):''].filter(Boolean).join('  \u00b7  ')},
  {kind:'ca',title:'Contract administrators',one:'contract administrator',add:'+ Add contract administrator',
   rows:[[['prefix','Prefix',['Ms.','Mr.','Dr.','Mx.'],'nrw'],['name','Name']],[['title','Position']],[['org','Organization']],[['addr_street','Street']],[['addr_city','City'],['addr_state','State',STATES,'nrw'],['addr_zip','ZIP',null,'nrw']]],
   sub:c=>[c.title,c.org,dirAddrLine(c)].filter(Boolean).join('  \u00b7  ')},
 ];
 function renderContacts(){const list=mpdb.listContacts();
-  const pmRows=list.map(c=>'<div class="crow2"><div class="cc-main"><div class="cc-name">'+esc(c.name||'(unnamed)')+'</div><div class="cc-sub">'+esc(c.email||'\u2014')+'  \u00b7  '+esc(c.phone?fmtPhone(c.phone):'\u2014')+'</div></div><button class="txtbtn" data-ced="'+c.id+'">Edit</button><span class="dotsep">\u00b7</span><button class="txtbtn del" data-cdel="'+c.id+'">Delete</button></div>').join('');
+  const pmRows=list.map(c=>'<div class="crow2"><div class="cc-main"><div class="cc-name">'+esc(c.name||'(unnamed)')+'</div><div class="cc-sub">'+esc(fmtEmail(c.email)||'\u2014')+'  \u00b7  '+esc(c.phone?fmtPhone(c.phone):'\u2014')+'</div></div><button class="txtbtn" data-ced="'+c.id+'">Edit</button><span class="dotsep">\u00b7</span><button class="txtbtn del" data-cdel="'+c.id+'">Delete</button></div>').join('');
   let html='<div class="lhead" style="display:block"><div class="lh-name">Contacts</div><div class="lh-meta">Shared across all properties. Picking a saved contact on a property fills that part of the form.</div></div>';
   html+='<div class="lsec"><div class="lsec-t">PM contacts</div>'+(pmRows||'<div class="mempty" style="padding:20px">No contacts yet.</div>')+'<div class="addrow" id="cAdd">+ Add PM contact</div></div>';
   DIR_SECTIONS.forEach(S=>{const rows=dirList(S.kind).map(c=>'<div class="crow2"><div class="cc-main"><div class="cc-name">'+esc(((c.prefix?c.prefix+' ':'')+(c.name||'')).trim()||'(unnamed)')+'</div><div class="cc-sub">'+esc(S.sub(c)||'\u2014')+'</div></div><button class="txtbtn" data-dired="'+c.id+'" data-dkind="'+S.kind+'">Edit</button><span class="dotsep">\u00b7</span><button class="txtbtn del" data-dirdel="'+c.id+'" data-dkind="'+S.kind+'">Delete</button></div>').join('');
@@ -4571,18 +4625,18 @@ function renderContacts(){const list=mpdb.listContacts();
   document.querySelectorAll('[data-dired]').forEach(b=>b.onclick=()=>dirDialog(b.getAttribute('data-dkind'),dirList(b.getAttribute('data-dkind')).find(x=>x.id===b.getAttribute('data-dired'))));
   document.querySelectorAll('[data-dirdel]').forEach(b=>b.onclick=()=>{const id=b.getAttribute('data-dirdel');const S=DIR_SECTIONS.find(x=>x.kind===b.getAttribute('data-dkind'));const c=dirList(S.kind).find(x=>x.id===id);dialogConfirm('Delete '+S.one,'Remove <b>'+esc(c&&c.name?c.name:'this contact')+'</b> from '+S.title.toLowerCase()+'?','Delete',true,async()=>{try{await mpdb.deleteDir(id);renderContacts();}catch(e){saveFailedModal(e);}});});}
 function dirDialog(kind,c){const S=DIR_SECTIONS.find(x=>x.kind===kind);c=c||{};const FLDS=S.rows.flat();
-  const cell=f=>{const v=f[0]==='phone'&&c[f[0]]?fmtPhone(c[f[0]]):(c[f[0]]||'');
+  const cell=f=>{const v=f[0]==='phone'&&c[f[0]]?fmtPhoneInput(c[f[0]]):(c[f[0]]||'');
     const inner=f[2]?('<select id="dc_'+f[0]+'">'+[''].concat(f[2]).map(o=>'<option value="'+esc(o)+'"'+(String(v)===o?' selected':'')+'>'+(o===''?'\u2014':esc(o))+'</option>').join('')+'</select>')
       :('<input id="dc_'+f[0]+'" value="'+esc(v)+'" autocomplete="off">');
     return '<div class="dlg-field'+(f[3]?' '+f[3]:'')+'"><label>'+esc(f[1])+'</label>'+inner+'</div>';};
   modal('<div class="dlg-t">'+(c.id?'Edit ':'Add ')+esc(S.one)+'</div>'+S.rows.map(row=>row.length>1?('<div class="dlg-2">'+row.map(cell).join('')+'</div>'):cell(row[0])).join('')+'<div class="dlg-row"><button class="btn" id="dlgCancel">Cancel</button><span class="dlg-sp"></span><button class="btn p" id="dlgOk">Save</button></div>');
-  const pp=el('dc_phone');if(pp&&pp.addEventListener)pp.addEventListener('input',()=>{pp.value=fmtPhone(pp.value);});
+  const pp=el('dc_phone');if(pp&&pp.addEventListener)pp.addEventListener('input',()=>{pp.value=fmtPhoneInput(pp.value);});
   FLDS.forEach(f=>{const ff=el('dc_'+f[0]);if(ff&&ff.addEventListener)ff.addEventListener('keydown',ev=>{if(ev.key!=='Enter')return;ev.preventDefault();const d=pp?(pp.value||'').replace(/\D/g,''):'';if(!pp||d.length===0||d.length===10)el('dlgOk').click();});});
   el('dlgCancel').onclick=closeModal;
   el('dlgOk').onclick=async()=>{const patch={};FLDS.forEach(f=>{patch[f[0]]=(el('dc_'+f[0]).value||'').trim();});closeModal();try{if(c.id)await mpdb.updateDir(c.id,patch);else await mpdb.addDir(kind,patch);renderContacts();}catch(e){saveFailedModal(e);}};}
 function contactDialog(c){c=c||{};
-  modal('<div class="dlg-t">'+(c.id?'Edit contact':'Add contact')+'</div><div class="dlg-field"><label>Name</label><input id="ccN" value="'+esc(c.name||'')+'" autocomplete="off"></div><div class="dlg-field"><label>Email</label><input id="ccE" value="'+esc(c.email||'')+'" autocomplete="off"></div><div class="dlg-field"><label>Phone</label><input id="ccP" value="'+esc(c.phone?fmtPhone(c.phone):'')+'" autocomplete="off"></div><div class="dlg-row"><button class="btn" id="dlgCancel">Cancel</button><span class="dlg-sp"></span><button class="btn p" id="dlgOk">Save</button></div>');
-  { const pp=el('ccP'); if(pp){ pp.value=fmtPhone(pp.value||''); if(pp.addEventListener) pp.addEventListener('input',()=>{ pp.value=fmtPhone(pp.value); }); } }
+  modal('<div class="dlg-t">'+(c.id?'Edit contact':'Add contact')+'</div><div class="dlg-field"><label>Name</label><input id="ccN" value="'+esc(c.name||'')+'" autocomplete="off"></div><div class="dlg-field"><label>Email</label><input id="ccE" value="'+esc(c.email||'')+'" autocomplete="off"></div><div class="dlg-field"><label>Phone</label><input id="ccP" value="'+esc(c.phone?fmtPhoneInput(c.phone):'')+'" autocomplete="off"></div><div class="dlg-row"><button class="btn" id="dlgCancel">Cancel</button><span class="dlg-sp"></span><button class="btn p" id="dlgOk">Save</button></div>');
+  { const pp=el('ccP'); if(pp){ pp.value=fmtPhoneInput(pp.value||''); if(pp.addEventListener) pp.addEventListener('input',()=>{ pp.value=fmtPhoneInput(pp.value); }); } }
   ['ccN','ccE','ccP'].forEach(id=>{const ff=el(id);if(ff&&ff.addEventListener)ff.addEventListener('keydown',ev=>{if(ev.key!=='Enter')return;ev.preventDefault();const d=(el('ccP').value||'').replace(/\D/g,'');if(d.length===0||d.length===10)el('dlgOk').click();});});
   el('dlgCancel').onclick=closeModal;
   el('dlgOk').onclick=async()=>{const patch={name:(el('ccN').value||'').trim(),email:(el('ccE').value||'').trim(),phone:(el('ccP').value||'').trim()};closeModal();try{if(c.id)await mpdb.updateContact(c.id,patch);else await mpdb.addContact(patch);renderContacts();}catch(e){saveFailedModal(e);}};}
@@ -4591,7 +4645,7 @@ function contactDialog(c){c=c||{};
    ReferenceError at load and took three suites down with zero checks run. An
    arrow defers the lookup to the call, which only ever happens in the browser
    suite, which has the whole bundle. */
-const __API={LABEL_HINTS,rsParseUnitType,rsNum,ocrMapPages:(p)=>ocrMapPages(p),ocrWhy:()=>ocrWhy(),fmtPhone,fmtDate,sMoney,sPct,sK,analysis,uaResolvedOf,uaConflict,uaUnresolved,renderMenu,renderLauncher,openMenu,openForm,openLauncher,ringSvg,niceDate,isDirty,overrideCount,isStateKey,attnFlags,pbUtil,clearUncheckedWriteins,srcOf:(k)=>srcOf(k),__openForm:(pid)=>{activePid=pid;return openForm('RCS');},__openCycleForm:(pid,cid)=>{activePid=pid;return openCycleForm(cid);},__renderBody:()=>renderBody(),__docMissing:(id)=>docMissing(id).map(x=>x.label),__docWarns:(id)=>docWarns(id).map(x=>x.label),__edit:(k,v)=>{form=store.editForm(form,k,v);},getVal:(k)=>get(k),modeOf:(kk)=>modeOf(kk),fieldKeys:(k)=>fieldKeys(k),keysCanSave:(ks)=>keysCanSave(ks),keysCanRevert:(ks)=>keysCanRevert(ks),keysNewDirty:(ks)=>keysNewDirty(ks),__revert:(k)=>store.revertForm(form,k),coupledKeys:(k)=>coupledKeys(k),__firstPid:()=>{const ps=mpdb?mpdb.listProperties():[];return ps.length?ps[0].id:null;},__listProps:()=>(mpdb?mpdb.listProperties():[]),__cycles:()=>(mpdb?mpdb.listCycles(activePid):[]),packageScore:()=>packageScore(),packageDocs:()=>packageDocs(),scoreCtx:()=>scoreCtx(),__pkgCard:()=>pkgCard(),__boxes:(i)=>({ua:uaBox(i),safmr:safmrBox(i)}),__saveField:async(k)=>{form=await store.saveField(form,k);},__set:(f,u)=>{form=f;UNITS=u;},__cell:(k)=>form[k],
+const __API={LABEL_HINTS,rsParseUnitType,rsNum,ocrMapPages:(p)=>ocrMapPages(p),ocrWhy:()=>ocrWhy(),fmtPhone,fmtPhoneInput,fmtDate,sMoney,sPct,sK,analysis,uaResolvedOf,uaConflict,uaUnresolved,renderMenu,renderLauncher,openMenu,openForm,openLauncher,ringSvg,niceDate,isDirty,overrideCount,isStateKey,attnFlags,pbUtil,clearUncheckedWriteins,srcOf:(k)=>srcOf(k),__openForm:(pid)=>{activePid=pid;return openForm('RCS');},__openCycleForm:(pid,cid)=>{activePid=pid;return openCycleForm(cid);},__renderBody:()=>renderBody(),__docMissing:(id)=>docMissing(id).map(x=>x.label),__docWarns:(id)=>docWarns(id).map(x=>x.label),__edit:(k,v)=>{form=store.editForm(form,k,v);},getVal:(k)=>get(k),modeOf:(kk)=>modeOf(kk),fieldKeys:(k)=>fieldKeys(k),keysCanSave:(ks)=>keysCanSave(ks),keysCanRevert:(ks)=>keysCanRevert(ks),keysNewDirty:(ks)=>keysNewDirty(ks),__revert:(k)=>store.revertForm(form,k),coupledKeys:(k)=>coupledKeys(k),__firstPid:()=>{const ps=mpdb?mpdb.listProperties():[];return ps.length?ps[0].id:null;},__listProps:()=>(mpdb?mpdb.listProperties():[]),__cycles:()=>(mpdb?mpdb.listCycles(activePid):[]),packageScore:()=>packageScore(),packageDocs:()=>packageDocs(),scoreCtx:()=>scoreCtx(),__pkgCard:()=>pkgCard(),__boxes:(i)=>({ua:uaBox(i),safmr:safmrBox(i)}),__saveField:async(k)=>{form=await store.saveField(form,k);},__set:(f,u)=>{form=f;UNITS=u;},__cell:(k)=>form[k],
   /* The whole record, and the snapshot isDirty() measures against. The round-trip
      sweep needs a key-by-key diff (FORM-RULES "Before you deliver" 6): isDirty()
      compares VALUES ONLY, so a hidden side-effect key strands the form dirty with
@@ -4644,6 +4698,10 @@ __rcsFill:()=>rcsFillFromParsed(),/* The same door for the rent schedule. Fillin
   __menuView:()=>menuView,
   __setMenuView:(v)=>{menuView=v;renderMenu();},
   __menuCounts:()=>Object.assign({},_menuCounts),
-  __hapProps:()=>hapProperties()};
+  __hapProps:()=>hapProperties(),
+  /* The route that was unreachable: a record already in the registry under
+     the schedule's own name, carrying no tracker code. */
+  __openHap:(code)=>openHapProperty(code),
+  __fmt:{num:fmtNum,phone:fmtPhone,email:fmtEmail,date:fmtDate}};
 if(typeof module!=='undefined')module.exports=__API;
 if(SELFTEST)window.__t=__API;   // browser gets the identical surface, flag-gated

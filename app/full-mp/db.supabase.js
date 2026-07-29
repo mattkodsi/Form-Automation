@@ -402,6 +402,20 @@ function makeSupabaseDb(client) {
         enqueue(pid, () => client.from('property').upsert({ id: pid, name: name || null, ra_property_code: raMasterId ? String(raMasterId) : null }).then(r => { if (r.error) throw r.error; }));
         return { pid };
       },
+      /* Binding, not creating. A record can predate the schedule — imported by
+         hand, or named before the code existed — and then the schedule's own
+         row has nowhere to land, so opening it tried to make a SECOND property
+         under the same name and hit the one-name rule instead of opening the
+         one already there. Same building, so the code goes on the record. */
+      setRaCode(pid, code) {
+        const p = D.props[pid]; if (!p) return Promise.resolve();
+        const c = String(code == null ? '' : code).trim();
+        if (!c || String(p.ra_property_code || '') === c) return Promise.resolve();
+        p.ra_property_code = c; p.updated_at = now();
+        enqueue(pid, () => client.from('property').upsert({ id: pid, ra_property_code: c })
+          .then(r => { if (r.error) throw r.error; }));
+        return Promise.resolve();
+      },
       renameProperty(pid, name) {
         const p = D.props[pid]; if (!p) return Promise.resolve();
         assertNameFree(name, pid);

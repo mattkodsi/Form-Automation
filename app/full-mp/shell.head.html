@@ -53,7 +53,8 @@
   --kraft-line:#d8b483;
 }
 
-*{box-sizing:border-box} body{margin:0;background:#e4e8f1;color:var(--ink);font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:13.5px}
+*{box-sizing:border-box}
+html{scrollbar-gutter:stable} body{margin:0;background:#e4e8f1;color:var(--ink);font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:13.5px}
 .hdr{background:var(--navy);color:var(--surface);padding:13px 26px;display:flex;justify-content:space-between;align-items:center}
 .hdr h1{margin:0;font-size:17px} .hdr .sub{font-size:11px;color:var(--muted-5);letter-spacing:.6px;text-transform:uppercase;margin-top:2px}
 .progs{display:flex;gap:7px} .prog{font-size:12px;font-weight:700;padding:5px 13px;border-radius:20px} .prog.on{background:var(--surface);color:var(--navy)} .prog.off{background:rgba(255,255,255,.12);color:var(--muted-5);cursor:default} .progs .prog[data-progpill]{cursor:pointer} .progs .prog.off[data-progpill]:hover{background:rgba(255,255,255,.22);color:#dbe5f2} .progs .prog.dis{opacity:.45;cursor:default}
@@ -701,7 +702,7 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
 #viewMenu .msub .fig:first-child{padding-left:9px}
 #viewMenu .msub .fig{font:inherit;font-size:13px;color:var(--i3);background:none;border:0;
   border-left:2px solid var(--ln);border-radius:0;cursor:pointer;
-  display:inline-flex;align-items:baseline;gap:5px;min-height:36px;padding:0 12px}
+  display:inline-flex;align-items:center;gap:5px;min-height:26px;padding:0 12px}
 #viewMenu .msub .fig b{color:var(--i1);font-weight:600;font-size:14px}
 #viewMenu .msub .fig.now{border-left-color:var(--stamp)}
 #viewMenu .msub .fig.soon{border-left-color:var(--ledger)}
@@ -713,6 +714,7 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
    because on this page a colour means a deadline and which figure you are
    holding is not one. */
 #viewMenu .msub .fig.on{color:var(--i1);box-shadow:inset 0 -2px 0 var(--i1)}
+#viewMenu .msub{align-items:stretch}
 #viewMenu .msub .fig.zero{color:var(--i4)}
 #viewMenu .msub .fig.zero b{color:var(--i4);font-weight:500}
 /* the rail stays — it filters, which the mockup had no way to do — but it
@@ -794,9 +796,12 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
 #viewMenu .mgrid.rows:not(.live) .pc-units{grid-column:5;grid-row:1;justify-self:end;
   white-space:nowrap}
 #viewMenu .mgrid.rows:not(.live) .pc-act{grid-column:6}
-#viewMenu .mgrid.rows:not(.live) .pc-act .btn{text-align:right;padding:0;background:none;border:0;color:var(--i3);
+#viewMenu .mgrid.rows:not(.live) .pc-act .btn{text-align:center;padding:5px 10px;width:100%;
+  background:none;border:1px solid transparent;border-radius:var(--r-ctl);color:var(--i3);
   font-weight:600;font-size:12px;padding:0;width:auto}
-#viewMenu .mgrid.rows:not(.live) .pcard:hover .pc-act .btn{color:var(--ledger)}
+#viewMenu .mgrid.rows:not(.live) .pcard:hover .pc-act .btn{color:var(--ledger);
+  border-color:var(--ln);background:var(--card)}
+#viewMenu .mgrid.rows:not(.live) .pc-act .btn:hover{border-color:var(--ledger);color:var(--ledger)}
 #viewMenu .mcols{grid-template-columns:minmax(0,1fr) 110px 150px 150px 90px 104px}
 #viewMenu .mcols .r{text-align:right}
 /* the rail goes: its bands are the list's own groups now, and its programme

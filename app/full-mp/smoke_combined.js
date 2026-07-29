@@ -201,6 +201,32 @@ const T=(label,v)=>eq(label,!!v,true);
   T('and the row offers to view what was generated', /View /.test(els.menuGrid.innerHTML));
   eq('and the partition still sums', c3.past+c3.now+c3.later+c3.undated, c3.all);
 
+  /* ── OPENING A PROPERTY THE REGISTRY ALREADY HOLDS ──────────────────
+     A record can predate the schedule: imported by hand, or named before the
+     tracker code existed. Opening its row then tried to CREATE a second
+     property under the same name, hit the one-name rule, and reported "that
+     name is already taken" — so the only route into that property was the one
+     that refused. It binds the code to the record that is already there. */
+  const twin=(await db.createProperty('Rail Later')).pid;
+  const before=(db.listProperties()||[]).length;
+  const got=await app.__openHap('R004');
+  eq('opening a scheduled property finds the record already under that name', got, twin);
+  eq('and makes no second one',(db.listProperties()||[]).length, before);
+  eq('the tracker code is bound to it', db.propByRaCode('R004'), twin);
+
+  /* ── DISPLAY FORMATTING ─────────────────────────────────────────────
+     Formatted where it is shown, never in the record. A units column reading
+     1689 is a database dump; this product files with HUD. */
+  const F=app.__fmt;
+  eq('figures carry thousands separators', [F.num(1689),F.num(51),F.num(1234567)], ['1,689','51','1,234,567']);
+  eq('and a blank stays blank rather than becoming a zero', F.num(''), '');
+  eq('phone numbers take one shape', F.phone('5551234567'), '(555) 123-4567');
+  eq('a leading country code is dropped, not counted', F.phone('1-555-123-4567'), '(555) 123-4567');
+  /* Inventing a shape for digits we cannot read would assert a phone number
+     where the record holds something else. */
+  eq('and anything that is not a phone number is shown verbatim', F.phone('x1234'), 'x1234');
+  eq('email addresses are lower case', F.email('  Claire.Beatty@Related.COM '), 'claire.beatty@related.com');
+
   /* Search is a find-within: it forces the All view so a name is never hidden by
      the filter, and it does not overwrite the view you were in. */
   app.__setMenuView('later');
