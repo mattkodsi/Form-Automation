@@ -1,10 +1,22 @@
 /* The rails that make unattended running safe. If any of these stops being
    true, the night must not proceed.
 
-   Each check exists because the failure it guards is silent: tier-3 OCR bills
-   per page and reports nothing unusual when it fires; a committed cache leaks
-   real contract numbers into git with no error; a push from main is a
-   production deploy that looks exactly like any other push. */
+   Each check exists because the failure it guards is silent: a committed cache
+   leaks real contract numbers into git with no error; a push from main is a
+   production deploy that looks exactly like any other push; and tier-3 OCR
+   bills per page while reporting nothing unusual when it fires.
+
+   ON BILLING, read this before trusting checks 1-3. They no longer mean "the
+   corpus cannot spend money" -- that was true only while the harness drove the
+   app through ?selftest=1, which never constructs a Supabase client. The real
+   driver signs in as Matt and DELIBERATELY bills: 27 of 34 executed schedules
+   are flattened to vector outlines and OCR is the only way to read them. What
+   these three still buy is narrower and still worth having -- that the spend
+   has exactly ONE route off this machine (ocr.js -> supaClient.functions.invoke
+   -> the ocr-rs edge function), so "how many pages did we pay for" is a
+   question with one place to look and one place to cap. A direct fetch added to
+   ocr.js would move billing somewhere nothing is counting; that is the failure
+   these guard now. */
 const fs=require('fs'),path=require('path'),cp=require('child_process');
 const MIN_CHECKS=6;
 let n=0,fails=0,skips=0;
@@ -15,17 +27,18 @@ const SKIP=(l,why)=>{skips++;console.log('  ~ SKIPPED: '+l+'  ('+why+')');};
 const ROOT=path.resolve(__dirname,'..','..','..');
 const MP=path.join(ROOT,'app','full-mp');
 
-/* 1-2. Tier 3 cannot bill. ocrHalf's only route off this machine is the
-   Supabase edge function, and selftest never constructs a client, so the call
-   throws before it can spend anything. Asserted, not assumed. */
+/* 1-2. Tier 3 spends through one door. ocrHalf's only route off this machine
+   is the Supabase edge function, so every billable page passes a single choke
+   point that can be counted and capped. Asserted, not assumed. */
 const ocr=fs.readFileSync(path.join(MP,'ocr.js'),'utf8');
 T('ocr.js makes no direct network call of its own',
   (ocr.match(/\bfetch\s*\(|XMLHttpRequest|require\(['"]https?['"]\)/g)||[]).length===0);
 T('ocr.js reaches Azure only through supaClient.functions.invoke',
   /supaClient[\s\S]{0,40}functions[\s\S]{0,20}invoke/.test(ocr));
 
-/* 3. Selftest boot does not construct a Supabase client, so supaClient is
-   null and the invoke above cannot resolve. */
+/* 3. Selftest boot does not construct a Supabase client, so a run driven
+   through the hatch still cannot reach Supabase at all -- the isolation the
+   app documents. The corpus driver does not use the hatch; it signs in. */
 const app=fs.readFileSync(path.join(MP,'app.js'),'utf8');
 T('the selftest hatch routes the data layer to the local stub, not Supabase',
   /selftest/.test(app)&&/__localDb/.test(app));
