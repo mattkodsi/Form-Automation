@@ -1103,3 +1103,103 @@ Any conclusion drawn from "the team filed nothing here" would have been false.
 - Oceanport's `Exhibit 2` checklist carries the PDF title `…New Horizons 3.25.24.pdf` while
   New Horizons' checklist was titled `Oceanport Senior Citizens`. A reciprocal re-save
   between two properties, and a real filing artefact.
+
+---
+
+# Noble Tower (75543) — the app crashes, and now we know why
+
+## M34 · An ENCRYPTED study makes generation fail outright
+
+Both orders produced **zero files**, reproducibly across **four** preserved runs at three
+different commits:
+
+> `the app refused to generate — Generation failed: Expected instance of e, but got instance of undefined`
+
+That is a pdf-lib shape, and the cause is in the document. The chosen study is:
+
+```
+Pages: 92        File size: 43,556,351 bytes        Form: AcroForm (with an EMPTY /Fields)
+Encrypted: yes   /Filter /Standard  /V 5  /R 6  /CFM /AESV3  /Length 256
+                 /StmF /StdCF  /StrF /StdCF  /P -1052   (copy/extract disabled)
+```
+
+AES-256, PDF-2.0 revision 6, **both streams and strings encrypted**, opening on an empty
+user password. It is **43.6 MB against a corpus median of 4.3 MB** — 2.5× the next largest.
+Its sibling (21 August, 91 pages) carries the same encryption.
+
+`corpus.json` flags exactly **three** chosen studies as `unlocked: true` — this one, North
+Park wave 2, and Northgate Terrace wave 2. So this is not unique, and the failure mode is
+total: no cover letter, no checklist, no schedule, no workbook, nothing.
+
+## M35 · The salutation became the property name — the `DearMr.Delancy,` shape was real
+
+The study was also never read: `units: 0`, "No appraiser's letter was found in this file."
+But the letter **is** on pages 2–4, the concluded-rent tables on pages 2 and 3, page 1
+carries 213 characters of clean extractable text, and `pdftotext -layout` yields ~165 KB
+across the document. The node scan read three pages and came back with
+**`name: "Dear Mr. Larmore"`** — the salutation — plus `firm: null` and `s8: null`, though
+`CA39H113049` is printed in the letter's own `Re:` line.
+
+The register long ago dismissed `DearMr.Delancy,` as an extractor artifact on a different
+property. **On this property the app itself does it.** The letter-finder can settle on a page
+whose only match is the greeting, and then read a person's name as a project's.
+
+## Where the truth stands
+
+Prior schedule (a pure image scan — `pdffonts` returns nothing, so tier 3 was correct here):
+`1 Bedroom A` 182 @ 3,106 and `1 Bedroom B` 13 @ 3,219, UA **0** on both, total 195,
+monthly **607,139**. Filed FY2025: both rows at **3,265**, monthly **636,675**, Part F the
+same. The study concluded a single rent for a 532 SF typical unit while its own page 26 shows
+the B units at 665 SF; the team collapsed the A/B spread to match. Recorded, not judged.
+
+Four spellings of two unit types inside one cycle: `One-Bedroom` (study pp2–3),
+`One-Bedroom A`/`B` (study p26), `1 Bedroom A`/`B` (both schedules), `1 BR A`/`B` (workbook).
+
+## The allowance question, answered differently for the first time
+
+Every document says **$0**: the prior schedule's Col. 5, the study's Unit Summary, the study's
+threshold table, and the filed Col. 5. The study's own narrative explains it — heat, cooling,
+cooking, hot water, other electric, water, sewer, trash and parking are **all included in
+rent**. A third document exists (a PHA HUD-52667 bound at study p91) and its "Actual Family
+Allowances" panel is **entirely blank**, so it is an exhibit rather than an applied schedule.
+
+**First of thirteen properties where the third document agrees with a $0 Column 5 instead of
+overriding it.** Worth holding onto when the allowance question is finally settled: $0 is
+sometimes the right answer and must survive.
+
+## team wrong — the filed workbook overstates its own headroom by 13×
+
+| field | the study says | the filed workbook says |
+|---|---|---|
+| SAFMR, 1 BR | **$2,180** (zip 94612) | **$2,220**, labelled zip **`80204`** — a Denver ZIP |
+| annual SAFMR | 5,101,200 | 5,194,800 |
+| 150% ceiling | **7,651,800** | **7,792,200** |
+| headroom | **+11,700 · 0.15%** | **+152,100 · 1.99%** |
+
+The study's own arithmetic is internally consistent and its "Below" verdict holds either way,
+but the filed sheet shows comfortable clearance where the study shows **$975 a month**. It
+also ships a live `#REF!` in `R14`, and a cross-block formula that reads the wrong block's
+unit counts while omitting a row. Stray template text names "Gill" and "Starmark" rents in a
+Van Hazinga comparison.
+
+**And the study itself carries two other properties' names, filed as-is:** page 7's running
+header reads **`Raymond J. Lord Manor`** and page 26's table subtitle reads **`Hostmark of
+Village Cove, Poulsbo, WA`** — corroborated by two Hostmark files sitting in the same archive.
+Both leaks are in the filed package, under an owner's certification.
+
+The contact's phone number differs between the transmittal (714 316-3021) and the owner's
+cover letter (310 359-0047), and Appendix 9-2-1 is addressed to the owner itself.
+
+## Two method findings worth more than either property
+
+**1. `pdftotext` dropped a digit and nearly produced a false accusation.** The agent read
+package page 9 as an image and saw `August 2, 2024`; the text layer renders the same line as
+`August , 2024`. Had it trusted the parser it would have filed "the team bound an undated
+study" as a team defect. **The read-as-images rule earned itself here.**
+
+**2. Agents are clobbering each other in the shared scratchpad.** This agent wrote
+`pdftotext` output to `scratchpad/study.txt`, a concurrent agent wrote the same path, and it
+briefly read another firm's study while believing it was this one. It caught the swap only
+because the content contradicted images it had already read. It re-extracted everything under
+a pid-scoped path. **Every future agent brief must require a pid- or property-scoped scratch
+path** — this is the same clobber that once made a test suite read another run's bundle.
