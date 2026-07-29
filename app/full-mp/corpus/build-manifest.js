@@ -81,17 +81,22 @@ async function readsAsStudy(f){
   if(!/\.pdf$/i.test(f.name))return null;
   if(SKIP.test(f.name))return null;
   if(f.bytes<200*1024)return null;                        // a real report is not tiny
-  let doc;
-  try{ doc=await P.PDFDocument.load(new Uint8Array(fs.readFileSync(f.abs)),{ignoreEncryption:true,throwOnInvalidObject:false}); }
-  catch(e){ return {error:'unreadable pdf: '+e.message}; }
-  const rd={pageCount:doc.getPageCount(),hits:0,
-            getPage:async i=>{rd.hits++;return await app.__rsTextPageAt(doc,i);}};
-  let rec=null;
-  try{ rec=await R.readLetter(rd); }catch(e){ return {error:'readLetter threw: '+e.message,pages:rd.pageCount}; }
+  /* One try around everything, because pdf-lib parses lazily: load() accepts a
+     document whose page tree is broken and only throws later, at getPageCount.
+     Sycamore Green has such a file, and it killed a 34-property run from
+     outside a catch that only wrapped load(). No single document may end the
+     sweep -- an unreadable one is a result, recorded and moved past. */
+  let rec=null, rd=null;
+  try{
+    const doc=await P.PDFDocument.load(new Uint8Array(fs.readFileSync(f.abs)),{ignoreEncryption:true,throwOnInvalidObject:false});
+    rd={pageCount:doc.getPageCount(),hits:0,
+        getPage:async i=>{rd.hits++;return await app.__rsTextPageAt(doc,i);}};
+    rec=await R.readLetter(rd);
+  }catch(e){ return {error:String(e&&e.message||e).slice(0,120)}; }
   if(!rec)return null;
   const sc=rec.scalars||{};
   const out={firm:rec.firm||null, s8:sc['property.s8']||null, name:sc['property.name']||null,
-             units:(rec.units||[]).length, pagesRead:rd.hits, pageCount:doc.getPageCount()};
+             units:(rec.units||[]).length, pagesRead:rd.hits, pageCount:rd.pageCount};
   /* readLetter returns a record for documents that are not studies at all --
      OCAF letters, rent schedules, non-compliance notices -- with every field
      null. On the first three properties that was 73 of 84 "hits". A truthy
