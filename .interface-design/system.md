@@ -76,7 +76,7 @@ the absence of a system. Everything below collapses into one `:root` block.
 ```css
 :root{
   --paper:#d8dde4;  --card:#ffffff;  --sunk:#eef1f5;   /* the desk, a document, a ruled band */
-  --ink:#101822; --ink-2:#41505f; --ink-3:#6a7b8c; --ink-4:#93a2b1;  /* four levels, not two */
+  --ink:#101822; --ink-2:#41505f; --ink-3:#556270; --ink-4:#636c77;  /* four levels, not two */
   --rule:#c2cbd6;  --rule-soft:#e4e9ef;
   --stamp:#9c2b18;  --stamp-wash:#f7ece8;   /* received-stamp ink — owed now */
   --ledger:#1f5480;                          /* columnar-pad blue — coming up */
@@ -88,7 +88,7 @@ the absence of a system. Everything below collapses into one `:root` block.
 }
 html[data-t="night"]{
   --paper:#0a0e14; --card:#161c25; --sunk:#11161e;
-  --ink:#eef2f7; --ink-2:#a9b6c4; --ink-3:#7d8b9b; --ink-4:#5d6b7b;
+  --ink:#eef2f7; --ink-2:#a9b6c4; --ink-3:#8796a7; --ink-4:#75869a;
   --rule:rgba(255,255,255,.11); --rule-soft:rgba(255,255,255,.06);
   --stamp:#e8836d; --stamp-wash:#2a1710;
   --ledger:#5b9dd4; --filed:#4fb383; --chrome:#080c11;
@@ -98,6 +98,29 @@ html[data-t="night"]{
 
 Night mode inverts lightness only — one hue family throughout, semantic colours
 desaturated slightly, and **no depth shadows** (they don't read on dark).
+
+### The ink levels are measured, not chosen by eye
+
+The first pass picked them by appearance and three of the four failed WCAG on the light
+surfaces — `--ink-4` on `--paper` came out at **1.91:1** against a 4.5:1 floor, which is
+barely a colour difference and would have been invisible on the very monitor this redesign
+exists to fix. Matt spotted it by eye before any tool did.
+
+Every text/surface pair now clears **4.5:1 in both themes** — 40 pairs measured, all
+passing. Two rules fall out of that, and both are binding:
+
+- **`--ink-4` is never used on `--paper`.** It is the placeholder-and-resting-control level
+  and it lives on `--card` and `--sunk` only. Pushing it dark enough to work on the page
+  background would have collapsed it into `--ink-3` and cost a level.
+- **Any new colour pair gets measured before it ships.** `/tmp` scripts don't survive;
+  if this recurs, the check belongs in a suite.
+
+Known trade-off: `--ink-3` and `--ink-4` now sit 1.17 apart in contrast, tighter than the
+1.2 that reads as clearly distinct. That is the price of four legible levels on a light
+surface, and it is the right price — an invisible level is not a level.
+
+The surface steps were already right and did not move: `--paper` 72% → `--sunk` 88% →
+`--card` 100% relative luminance. That 28-point spread is the washed-out fix.
 
 ## The provenance palette is not ours to restyle
 
