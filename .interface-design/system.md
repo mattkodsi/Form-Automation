@@ -32,6 +32,35 @@ keeping: a display face carries its own personality into a room where the produc
 authority comes from being *exact*, not expressive. An italic serif headline reads
 editorial. This tool files with HUD. The rule alone is the signature.
 
+## Voice — the app reports, it never narrates
+
+This is the rule that took three passes to find, and it outranks every typographic
+decision below. Matt's words: *"it reads as custom written rather than
+informative/accurate."*
+
+The first pass opened with **"Three packages due this week."** at 33px in two colours,
+over **"Nine more inside five weeks. Your other 42 properties have nothing due until
+autumn — they're in the ledger below."** Both are sentences a person wrote to another
+person. Removing the serif did not fix it, because the typeface was never the problem —
+a magazine cover set in Helvetica is still a magazine cover.
+
+What replaced it: an eyebrow naming the scope, a two-word title naming the view, and a
+line of figures — `3 due this week · 9 within 30 days · 42 later · 54 properties` — each
+carrying the left rule in its urgency colour, so the page teaches its own colour code in
+the first thing you read.
+
+Concretely:
+
+- **No prose paragraph anywhere in the chrome.** Figures with labels, not sentences.
+- **No headline above ~22px.** Size is not how this product earns attention; being right is.
+- **Never two colours in one heading.** Colour means urgency or provenance. A heading has
+  neither, so a heading is one colour.
+- **Never "your".** "Remaining", not "the rest of your portfolio". The user knows whose
+  portfolio it is.
+- **Figures, not words, for quantities.** "3 days", never "three days".
+- Helper text stays professional prose in the *form*, where it explains a rule the user
+  must follow. That is instruction, not narration, and it is the one place sentences belong.
+
 ## Where the palette comes from
 
 A housing-authority file room: manila kraft, the pale safety-paper green of a HUD form,

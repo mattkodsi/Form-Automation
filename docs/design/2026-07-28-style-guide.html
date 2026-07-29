@@ -43,8 +43,12 @@ header span{font-size:10px;letter-spacing:.17em;text-transform:uppercase;opacity
 .tog button[aria-pressed="true"]{background:rgba(255,255,255,.15);opacity:1;font-weight:600}
 
 main{max-width:1240px;margin:0 auto;padding:40px 40px 80px}
-h1{font-size:33px;font-weight:600;letter-spacing:-.025em;line-height:1.14}
-h1 em{font-style:normal;color:var(--stamp)}
+h1{font-size:22px;font-weight:600;letter-spacing:-.015em;margin-top:5px}
+.eyebrow{font-size:10.5px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;
+         color:var(--ink-4)}
+.stats{display:flex;gap:20px;margin-top:14px;font-size:13px;color:var(--ink-3);flex-wrap:wrap}
+.stats span{border-left:2px solid var(--rule);padding-left:9px}
+.stats b{color:var(--ink);font-weight:600;font-size:14px}
 .lede{font-size:13.5px;color:var(--ink-2);margin-top:11px;max-width:64ch;text-wrap:pretty}
 h2{font-size:11px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;
    color:var(--ink-3);margin:46px 0 4px}
@@ -123,11 +127,17 @@ td.nm{color:var(--ink);font-weight:500}
 </header>
 
 <main>
-  <h1>One palette,<br><em>one type family.</em></h1>
-  <p class="lede">Every value below is a decision, and every decision is one token. Today the app
-  carries 128 distinct hex values and 20 border-radius values across no custom properties at all —
-  which is why it reads flat. Open this on the large monitor: if the page and the cards look like
-  the same colour there, the values are wrong and nothing else matters.</p>
+  <div class="eyebrow">Section 8 Rent Adjustments</div>
+  <h1>Design system</h1>
+  <div class="stats">
+    <span><b>13</b> colour tokens, from 128 hex values</span>
+    <span><b>3</b> radii, from 20</span>
+    <span><b>2</b> type roles</span>
+    <span><b>1</b> depth strategy</span>
+  </div>
+  <p class="lede">Open this on the large monitor. If <span class="mono">--paper</span> and
+  <span class="mono">--card</span> read as the same colour there, the values are wrong and the rest
+  of this page does not matter.</p>
 
   <h2>Palette</h2>
   <p class="note">Drawn from a housing-authority file room — kraft, safety-paper green, received-stamp

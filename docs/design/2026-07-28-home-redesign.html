@@ -73,13 +73,19 @@
 
   main{max-width:1480px;margin:0 auto;padding:40px 40px 72px}
 
-  /* ------- the statement, set in the voice of the form ------- */
-  .lede{display:flex;justify-content:space-between;align-items:flex-end;gap:48px;margin-bottom:34px}
-  /* the statement leads on size, weight and one colour — not on a typeface
-     with a personality of its own. This is a HUD filing tool. */
-  h1{font-size:33px;font-weight:600;letter-spacing:-.025em;line-height:1.14;text-wrap:balance}
-  h1 em{font-style:normal;color:var(--stamp)}
-  .lede p{font-size:13.5px;color:var(--ink-2);margin-top:11px;max-width:54ch;text-wrap:pretty}
+  /* ---- the page reports its state; it does not narrate it ----
+     No sentence, no second colour, no 33px. A title that names the view and
+     a line of figures that answers "how much, and how soon". */
+  .lede{display:flex;justify-content:space-between;align-items:flex-end;gap:48px;margin-bottom:32px}
+  .eyebrow{font-size:10.5px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;
+           color:var(--ink-4)}
+  h1{font-size:22px;font-weight:600;letter-spacing:-.015em;margin-top:5px}
+  .stats{display:flex;gap:20px;margin-top:14px;font-size:13px;color:var(--ink-3);flex-wrap:wrap}
+  /* the left rule teaches its own colour code here, at the top of the page */
+  .stats span{border-left:2px solid var(--rule);padding-left:9px}
+  .stats span.now{border-left-color:var(--stamp)}
+  .stats span.soon{border-left-color:var(--ledger)}
+  .stats b{color:var(--ink);font-weight:600;font-size:14px}
   .find{position:relative;flex:0 0 300px}
   .find input{width:100%;background:var(--sunk);border:1px solid var(--rule);
               border-radius:var(--r-ctl);padding:11px 12px 11px 33px;font:inherit;font-size:13px;color:var(--ink)}
@@ -159,8 +165,14 @@
 <main>
   <div class="lede">
     <div>
-      <h1>Three packages<br><em>due this week.</em></h1>
-      <p>Nine more inside five weeks. Your other 42 properties have nothing due until autumn — they're in the ledger below.</p>
+      <div class="eyebrow">Portfolio · Claire Beatty</div>
+      <h1>Renewals</h1>
+      <div class="stats">
+        <span class="now"><b>3</b> due this week</span>
+        <span class="soon"><b>9</b> within 30 days</span>
+        <span><b>42</b> later</span>
+        <span><b>54</b> properties</span>
+      </div>
     </div>
     <div class="find">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
@@ -169,7 +181,7 @@
     </div>
   </div>
 
-  <div class="sect"><h2>Due to HUD by August 1</h2><span>three days</span></div>
+  <div class="sect"><h2>Due to HUD by August 1</h2><span>3 days</span></div>
   <div class="live">
     <div class="job"><div class="when">3 days</div>
       <h3>Park Place</h3>
@@ -189,7 +201,7 @@
       <button class="go quiet">Start the OCAF package</button></div>
   </div>
 
-  <div class="sect"><h2>The rest of your portfolio</h2><span>50 properties · earliest deadline first</span></div>
+  <div class="sect"><h2>Remaining</h2><span>50 properties · earliest deadline first</span></div>
   <div class="ledger-box">
     <table>
       <thead><tr><th>Property</th><th>Program</th><th>Due to HUD</th><th>Rents effective</th>
@@ -236,7 +248,7 @@
           <td class="r"><button class="mini">Start</button></td></tr>
       </tbody>
     </table>
-    <div class="foot">38 more, through March 2028 · <button>Show all</button></div>
+    <div class="foot">38 more · through March 2028 · <button>Show all</button></div>
   </div>
 </main>
 
