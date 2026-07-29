@@ -145,7 +145,7 @@ A wave marks a property `audited` only when its agent returned rows.
 | 11 | 75543 | Noble Tower | unaudited | |
 | 12 | 75544 | Oaks on North Plaza | unaudited | |
 | 13 | 75563 | Oceanport | unaudited | |
-| 14 | 75564 | Holly House | unaudited | |
+| 14 | 75564 | Holly House | **audited** | 4 |
 | 15 | 75566 | Ebony Gardens | **audited** | 1 |
 | 16 | 75567 | Mapleview Towers | unaudited | |
 | 17 | 75568 | Market Square | unaudited | |

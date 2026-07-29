@@ -917,3 +917,77 @@ The 150% test turns on this number, and **Clinton Manor passes it by $12**.
 An explicit choice still wins, the pull still fills in when the study is silent, and an
 entered figure beats both. `db.js` carries the same precedence, so the menu card and the
 form cannot disagree about whether a property clears its ceiling.
+
+---
+
+# Holly House (75564) — wave 4, sixteenth property
+
+## The whole package was lost to a rate limit, and the tier call was right
+
+`uploads.rs.state` is `could not be read` — `kind=scan`, **"Azure declined the page (429)"** — in
+**all four runs** (both orders of the current sweep and both of the snapshot). `tier:
+unreadable:scan`, `rsVia: null`, and the harness recorded *"#rsApply never appeared — nothing
+was applied to the form"*. **1 of 6 documents generated.**
+
+And OCR was the correct tier: `pdffonts` on that schedule returns **nothing at all** — zero
+fonts — and `pdfimages -list` finds **101 JPEGs**, page 1 alone being 37 sliced 2550×34
+strips from a print-driver band split. There is no text layer to read. **The failure is the
+429, not the classification.** Four properties have now lost most or all of a package to it:
+Riverwood, New Horizons, Woodbury Oakwood, Holly House.
+
+## M27 confirmed on a second property, and it dropped a whole unit type
+
+Ebony lost the ability to read its schedule between runs. Holly House lost a **unit type**:
+
+- in the snapshot, both orders, workbook **row 10 is entirely empty** — no label, no count,
+  no rent, no allowance, no SAFMR. The 1-bedroom type, **20 of 42 units**, simply absent
+- in the current sweep, both orders, row 10 is fully populated: `1BR/1BA · 20 · 2,375 · UA 64`
+
+Same inputs, same build, and both `_drive.json`s record the identical parse — `read · Belfry
+Valuation · 2 unit types`. Confirmed in the raw sheet XML, so not a reader artifact.
+**Two properties now show run-to-run instability, and one of them silently dropped half its
+unit mix.**
+
+## SAFMR — a fifth property, and the agent traced it to the seam I had just repaired
+
+Ours printed `1,690 / 1,910`; the study prints `1,440 / 1,620` (150%: 2,160 / 2,430). The
+agent ran the shipped reader over the study independently and it read the table **perfectly**
+— `safmr_base: 1440/1620`, `safmr: 2160/2430`, `grossSafmr150: 96120`. So the reader had the
+right figure and the workbook took the HUD pull instead. Our 150% threshold came out at
+**$113,070** against the study's and the team's **$96,120**.
+
+`592101a` reverses exactly that precedence, so this property should now agree. It is the
+fifth independent confirmation, and the first where an agent proved the reader innocent.
+
+## The utility allowance, and four different pairs in one cycle
+
+| reading | Studio | 1 BR | where |
+|---|---|---|---|
+| prior schedule Col. 5 | 48 | 51 | prior RS p2 |
+| the study's table | **61** | **64** | study p3 |
+| **ours** | **61** | **64** | our workbook — the study's |
+| **filed Col. 5** | **40** | **51** | executed FY2025 RS p2 |
+
+The filed figure comes from `UA Decrease Notice/Holly House UA Decrease.pdf` (28 May 2025):
+`0 BR 48 → 40`, `1 BR 51 → 51`. That governs. But the same cycle folder also holds a baseline
+workbook proposing **38 / 53**, the team's own impact analysis repeating 38/53, and a filed
+UAF certification deriving the study's **61 / 64** from `58 × 1.058` and `61 × 1.058`.
+**Four different pairs across the team's own documents, all in one filing.** Ours reproduces
+the study's, which is what the app's inputs support.
+
+## New, small
+
+`P20 = SUM(P9:P19)` sums the **allowance column** into a total row — a figure with no meaning.
+The team's sheet prints `-` there.
+
+## team wrong
+
+- The tenant notice is dated **April 30th** and signed **April 29th** — the signature predates
+  the notice on the same page.
+- Its column headings are transposed in meaning: `Proposed Increase` holds the delta and
+  `RCS Increase` holds the new rent. The arithmetic is right; the labels are not.
+- The CA's own transmittal is dated **"Jube 2, 2025"**.
+- The loose `Exhibit 2` checklist is unsigned and undated where the bound copy is executed.
+
+**No arithmetic error in any filed document on this property** — the agent verified every
+extension, total and gross by hand, both years.
