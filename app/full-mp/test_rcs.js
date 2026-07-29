@@ -16,7 +16,7 @@ const els={};
 global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>null,querySelectorAll:()=>[],createElement:()=>mk(),addEventListener(){},body:{classList:{toggle(){},contains(){return false;}}}};
 const fs=require('fs'),path=require('path'),os=require('os');
 
-const MIN_CHECKS=245;
+const MIN_CHECKS=262;
 let n=0,fails=0,verdict=null;
 const BAR='='.repeat(68);
 function fail(msg,err){
@@ -221,6 +221,38 @@ async function reader(file){
   eq('the hyphenated printing reduces to the same value',R._s8From("Subject's FHA #: OH10-M000-236"),'OH10M000236');
   eq('a spelled-out grid heading parses',R.parseType('Two Bedroom').br,2);
   eq('a spaced type parses',[R.parseType('1 BR / 1 BA').br,R.parseType('1 BR / 1 BA').ba],[1,1]);
+
+  /* EVERY SPELLING HERE COST A RENT IN A REAL PACKAGE. A type whose bedroom
+     count does not parse is invisible to rcsMatch, and its form row then takes
+     a DIFFERENT unit type's rent rather than none -- Peterson Plaza's schedule
+     came out $2,550 short exactly that way. Measured over the corpus: 15 of 98
+     priced lines in 7 studies parsed no bedroom count; after this, 1. Each case
+     is named for the study that prints it. */
+  eq('a capital I standing in for the digit 1 (Peterson Plaza, Ebony Gardens, Holly House)',
+     R.parseType('IBR/1BA').br,1);
+  eq('and it still reads the bathrooms',R.parseType('IBR/1BA').ba,1);
+  eq('B alone for bedroom (Westwood Village)',R.parseType('3B/1BA').br,3);
+  eq('with a designation after it (Westwood Village)',R.parseType('3B/1BA HC').br,3);
+  eq('and a two-bath variant (Westwood Village)',[R.parseType('4B/2BA').br,R.parseType('4B/2BA').ba],[4,2]);
+  eq('BD for bedroom (North Park)',R.parseType('1BD/1BA').br,1);
+  eq('BD with a half bath (North Park)',[R.parseType('3BD/1.5BA').br,R.parseType('3BD/1.5BA').ba],[3,1.5]);
+  eq('a hyphen between the count and BR (New Horizons)',R.parseType('1-BR/1 BA').br,1);
+  eq('a hyphen before the spelled-out word (Noble Tower)',R.parseType('One-Bedroom').br,1);
+  eq('a space before the slash (Peterson Plaza)',R.parseType('2BR /1BA').br,2);
+  /* THE GUARD THAT MAKES THE BARE B SAFE. "1BA" is one BATHROOM and no
+     bedrooms; reading its B as a bedroom token would invent a unit type on
+     every row of every study. Every bedroom spelling is followed by (?![a-z]),
+     so B before A fails and B before / or space or end succeeds. */
+  eq('a bare bathroom count is NOT a bedroom count',R.parseType('1BA').br,'');
+  eq('nor is a two-bath one',R.parseType('2BA').br,'');
+  eq('and a bathroom-only type still reads its baths',R.parseType('1BA').ba,1);
+  /* Not a unit type at all: the studies wrap a designation onto its own line,
+     and a line that is only a designation must stay unparsed rather than
+     inventing a bedroom count. */
+  eq('a designation on its own line yields no bedroom count',R.parseType('Senior').br,'');
+  eq('nor does Multi-Family',R.parseType('Multi-Family').br,'');
+  eq('studio still reads as zero bedrooms',R.parseType('STUDIO/1BA').br,0);
+  eq('and efficiency does too',R.parseType('Efficiency').br,0);
 
 
   /* ============ the form side: values must actually land ============ */
