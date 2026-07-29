@@ -4,7 +4,7 @@
 <title>Style guide — Section 8 Rent Adjustments</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:ital,wght@0,500;0,600;1,600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --paper:#d8dde4; --card:#ffffff; --sunk:#eef1f5;
@@ -35,7 +35,7 @@ button:active{transform:scale(.975)}
 
 header{background:var(--chrome);color:#fff;padding:0 40px;height:56px;
        display:flex;align-items:center;justify-content:space-between}
-header b{font-family:'IBM Plex Serif',serif;font-size:16px;font-weight:600}
+header b{font-size:15px;font-weight:600;letter-spacing:-.005em}
 header span{font-size:10px;letter-spacing:.17em;text-transform:uppercase;opacity:.5;
             font-weight:600;margin-left:11px}
 .tog{display:flex;border:1px solid rgba(255,255,255,.24);border-radius:999px;overflow:hidden}
@@ -43,9 +43,8 @@ header span{font-size:10px;letter-spacing:.17em;text-transform:uppercase;opacity
 .tog button[aria-pressed="true"]{background:rgba(255,255,255,.15);opacity:1;font-weight:600}
 
 main{max-width:1240px;margin:0 auto;padding:40px 40px 80px}
-h1{font-family:'IBM Plex Serif',serif;font-size:34px;font-weight:600;letter-spacing:-.018em;
-   line-height:1.12}
-h1 em{font-style:italic;color:var(--stamp)}
+h1{font-size:33px;font-weight:600;letter-spacing:-.025em;line-height:1.14}
+h1 em{font-style:normal;color:var(--stamp)}
 .lede{font-size:13.5px;color:var(--ink-2);margin-top:11px;max-width:64ch;text-wrap:pretty}
 h2{font-size:11px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;
    color:var(--ink-3);margin:46px 0 4px}
@@ -67,7 +66,6 @@ h2{font-size:11px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;
 .ts>div:last-child{border:none}
 .ts .tag{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--ink-4);
          flex:0 0 190px}
-.serif{font-family:'IBM Plex Serif',serif}
 .mono{font-family:'IBM Plex Mono',monospace}
 
 /* provenance */
@@ -125,7 +123,7 @@ td.nm{color:var(--ink);font-weight:500}
 </header>
 
 <main>
-  <h1>A file room,<br><em>not a dashboard.</em></h1>
+  <h1>One palette,<br><em>one type family.</em></h1>
   <p class="lede">Every value below is a decision, and every decision is one token. Today the app
   carries 128 distinct hex values and 20 border-radius values across no custom properties at all —
   which is why it reads flat. Open this on the large monitor: if the page and the cards look like
@@ -148,19 +146,20 @@ td.nm{color:var(--ink);font-weight:500}
     </div>
   </div>
 
-  <h2>Type — IBM Plex, three roles</h2>
-  <p class="note">Serif appears only where the product names a thing on the record: the page's one
-  statement, property names, month bands. Mono is reserved for money columns in the rent schedule.
-  Everything else is Sans. Scale steps at about 1.25 off a 13.5px body; weight and colour carry more
-  hierarchy than size.</p>
+  <h2>Type — IBM Plex, two roles</h2>
+  <p class="note">Sans for everything the interface says. Mono only for figures that sit in a column
+  being compared to another figure — rents, allowances, contract numbers. No display face and no
+  italics: this tool files with HUD, and a typeface with a personality of its own reads as editorial.
+  Hierarchy comes from size, weight and colour used together, which is more than enough. Scale steps
+  at about 1.25 off a 13.5px body.</p>
   <div class="panel"><div class="ts">
-    <div><span class="tag">Serif 34/600 · statement</span><span class="serif" style="font-size:34px;font-weight:600;letter-spacing:-.018em">Three packages due this week.</span></div>
-    <div><span class="tag">Serif 19/600 · a named record</span><span class="serif" style="font-size:19px;font-weight:600">Round Barn Manor</span></div>
+    <div><span class="tag">Sans 33/600 · statement</span><span style="font-size:33px;font-weight:600;letter-spacing:-.025em">Three packages due this week.</span></div>
+    <div><span class="tag">Sans 17/600 · a named record</span><span style="font-size:17px;font-weight:600;letter-spacing:-.015em">Round Barn Manor</span></div>
     <div><span class="tag">Sans 15/600 · h4</span><span style="font-size:15px;font-weight:600">Rents &amp; unit mix</span></div>
     <div><span class="tag">Sans 13.5/400 · body</span><span>The appraiser's study supports a proposed rent above the current contract rent.</span></div>
     <div><span class="tag">Sans 12/500 · meta</span><span style="font-size:12px;font-weight:500;color:var(--ink-3)">242 units · effective Dec 1</span></div>
     <div><span class="tag">Sans 11/600 · caption</span><span style="font-size:11px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3)">Due to HUD by August 1</span></div>
-    <div><span class="tag">Mono 13/400 · money</span><span class="mono" style="font-size:13px">$1,147 &nbsp; $1,407 &nbsp; $1,903 &nbsp; $93,930</span></div>
+    <div><span class="tag">Mono 13/400 · figures in a column</span><span class="mono" style="font-size:13px">$1,147 &nbsp; $1,407 &nbsp; $1,903 &nbsp; $93,930</span></div>
   </div></div>
 
   <h2>The four ink levels</h2>
