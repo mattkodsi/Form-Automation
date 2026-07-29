@@ -101,9 +101,12 @@ function unitIndices(form) {
     never diverge. */
 function safmrResolvedFrom(val, i) {
   const sh = num(val('units.' + i + '.safmr_hud')), sr = num(val('units.' + i + '.safmr_rcs'));
-  const src = val('units.' + i + '.safmr_source') || (sh > 0 ? 'hud' : (sr > 0 ? 'rcs' : 'custom'));
+  // Same precedence as app.js defSafmrSrc: the study's printed table first, the
+  // HUD pull second. The team used the study on every property audited, and the
+  // pull returns different figures on different runs.
+  const src = val('units.' + i + '.safmr_source') || (sr > 0 ? 'rcs' : (sh > 0 ? 'hud' : 'custom'));
   if (src === 'custom') return num(val('units.' + i + '.safmr_custom'));
-  return src === 'rcs' ? (sr || sh) : (sh || sr); // HUD trumps by default
+  return src === 'rcs' ? (sr || sh) : (sh || sr);
 }
 function computeAnalysis(form) {
   const val = k => (form[k] ? form[k].value : '');

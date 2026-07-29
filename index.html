@@ -2169,9 +2169,12 @@ function unitIndices(form) {
     never diverge. */
 function safmrResolvedFrom(val, i) {
   const sh = num(val('units.' + i + '.safmr_hud')), sr = num(val('units.' + i + '.safmr_rcs'));
-  const src = val('units.' + i + '.safmr_source') || (sh > 0 ? 'hud' : (sr > 0 ? 'rcs' : 'custom'));
+  // Same precedence as app.js defSafmrSrc: the study's printed table first, the
+  // HUD pull second. The team used the study on every property audited, and the
+  // pull returns different figures on different runs.
+  const src = val('units.' + i + '.safmr_source') || (sr > 0 ? 'rcs' : (sh > 0 ? 'hud' : 'custom'));
   if (src === 'custom') return num(val('units.' + i + '.safmr_custom'));
-  return src === 'rcs' ? (sr || sh) : (sh || sr); // HUD trumps by default
+  return src === 'rcs' ? (sr || sh) : (sh || sr);
 }
 function computeAnalysis(form) {
   const val = k => (form[k] ? form[k].value : '');
@@ -3537,7 +3540,19 @@ function deriveUnits(){const u=new Set([0]),nr=new Set(),lh=new Set(),pr=new Set
    (a CA exhibit, a UA workbook, a UAF notice) the study is still the nearer of
    the two. The disagreement is still flagged either way; only the default moved. */
 function defUaSrc(i){return uaHas('units.'+i+'.ua_rcs')?'rcs':(uaHas('units.'+i+'.ua_exec')?'exec':'custom');}
-function defSafmrSrc(i){const h=numf(get('units.'+i+'.safmr_hud')),r=numf(get('units.'+i+'.safmr_rcs'));return h>0?'hud':(r>0?'rcs':'custom');}
+/* The STUDY's own printed table comes first, not the HUD pull, and there are two
+   independent reasons. The team used the study's figure on every property audited
+   -- Westwood's study prints 1,120/1,570/1,850 and the pull gave 1,254/1,743/2,104,
+   Sycamore's prints 990/1,230 and the pull gave 1,149/1,427, Hampshire's prints
+   1,500/1,810 and the pull gave 1,590/1,916, and in each case the filed workbook
+   used the study. And the pull is not stable: driving Ebony twice in one afternoon
+   returned 2,511/2,780/3,465 and then 2,655/2,910/3,644, neither matching its
+   study's 2,490/2,730/3,420.
+
+   The 150% test turns on this figure. Sample Property passes it by $12. A number
+   that moves between runs cannot be the default for a federal filing when the
+   appraiser has printed one in the document. */
+function defSafmrSrc(i){const h=numf(get('units.'+i+'.safmr_hud')),r=numf(get('units.'+i+'.safmr_rcs'));return r>0?'rcs':(h>0?'hud':'custom');}
 function uaResolvedOf(i){const src=get('units.'+i+'.ua_source')||defUaSrc(i);if(src==='rcs')return numf(get('units.'+i+'.ua_rcs'));if(src==='custom')return numf(get('units.'+i+'.ua_custom'));return numf(get('units.'+i+'.ua_exec'));}
 /* A property with every utility owner-paid has a real $0 allowance. Testing
    >0 threw it away: the schedule's own $0 was unreadable, a $0-vs-$50
@@ -7924,7 +7939,7 @@ function contactDialog(c){c=c||{};
    ReferenceError at load and took three suites down with zero checks run. An
    arrow defers the lookup to the call, which only ever happens in the browser
    suite, which has the whole bundle. */
-const __API={LABEL_HINTS,rsParseUnitType,rsNum,ocrMapPages:(p)=>ocrMapPages(p),ocrWhy:()=>ocrWhy(),fmtPhone,fmtDate,sMoney,sPct,sK,analysis,uaResolvedOf,uaConflict,uaUnresolved,renderMenu,renderLauncher,openMenu,openForm,openLauncher,ringSvg,niceDate,isDirty,overrideCount,isStateKey,attnFlags,pbUtil,clearUncheckedWriteins,srcOf:(k)=>srcOf(k),__openForm:(pid)=>{activePid=pid;return openForm('RCS');},__openCycleForm:(pid,cid)=>{activePid=pid;return openCycleForm(cid);},__renderBody:()=>renderBody(),__docMissing:(id)=>docMissing(id).map(x=>x.label),__docWarns:(id)=>docWarns(id).map(x=>x.label),__edit:(k,v)=>{form=store.editForm(form,k,v);},getVal:(k)=>get(k),modeOf:(kk)=>modeOf(kk),fieldKeys:(k)=>fieldKeys(k),keysCanSave:(ks)=>keysCanSave(ks),keysCanRevert:(ks)=>keysCanRevert(ks),keysNewDirty:(ks)=>keysNewDirty(ks),__revert:(k)=>store.revertForm(form,k),coupledKeys:(k)=>coupledKeys(k),__firstPid:()=>{const ps=mpdb?mpdb.listProperties():[];return ps.length?ps[0].id:null;},__listProps:()=>(mpdb?mpdb.listProperties():[]),__cycles:()=>(mpdb?mpdb.listCycles(activePid):[]),packageScore:()=>packageScore(),packageDocs:()=>packageDocs(),scoreCtx:()=>scoreCtx(),__pkgCard:()=>pkgCard(),__boxes:(i)=>({ua:uaBox(i),safmr:safmrBox(i)}),__saveField:async(k)=>{form=await store.saveField(form,k);},__set:(f,u)=>{form=f;UNITS=u;},__cell:(k)=>form[k],
+const __API={LABEL_HINTS,rsParseUnitType,rsNum,ocrMapPages:(p)=>ocrMapPages(p),ocrWhy:()=>ocrWhy(),fmtPhone,fmtDate,sMoney,sPct,sK,analysis,uaResolvedOf,safmrResolvedOf,uaConflict,uaUnresolved,renderMenu,renderLauncher,openMenu,openForm,openLauncher,ringSvg,niceDate,isDirty,overrideCount,isStateKey,attnFlags,pbUtil,clearUncheckedWriteins,srcOf:(k)=>srcOf(k),__openForm:(pid)=>{activePid=pid;return openForm('RCS');},__openCycleForm:(pid,cid)=>{activePid=pid;return openCycleForm(cid);},__renderBody:()=>renderBody(),__docMissing:(id)=>docMissing(id).map(x=>x.label),__docWarns:(id)=>docWarns(id).map(x=>x.label),__edit:(k,v)=>{form=store.editForm(form,k,v);},getVal:(k)=>get(k),modeOf:(kk)=>modeOf(kk),fieldKeys:(k)=>fieldKeys(k),keysCanSave:(ks)=>keysCanSave(ks),keysCanRevert:(ks)=>keysCanRevert(ks),keysNewDirty:(ks)=>keysNewDirty(ks),__revert:(k)=>store.revertForm(form,k),coupledKeys:(k)=>coupledKeys(k),__firstPid:()=>{const ps=mpdb?mpdb.listProperties():[];return ps.length?ps[0].id:null;},__listProps:()=>(mpdb?mpdb.listProperties():[]),__cycles:()=>(mpdb?mpdb.listCycles(activePid):[]),packageScore:()=>packageScore(),packageDocs:()=>packageDocs(),scoreCtx:()=>scoreCtx(),__pkgCard:()=>pkgCard(),__boxes:(i)=>({ua:uaBox(i),safmr:safmrBox(i)}),__saveField:async(k)=>{form=await store.saveField(form,k);},__set:(f,u)=>{form=f;UNITS=u;},__cell:(k)=>form[k],
   /* The whole record, and the snapshot isDirty() measures against. The round-trip
      sweep needs a key-by-key diff (FORM-RULES "Before you deliver" 6): isDirty()
      compares VALUES ONLY, so a hidden side-effect key strands the form dirty with
