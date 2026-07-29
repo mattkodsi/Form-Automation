@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en" data-t="day"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Style guide — Section 8 Rent Adjustments</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:ital,wght@0,500;0,600;1,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#d8dde4; --card:#ffffff; --sunk:#eef1f5;
+  --ink:#101822; --ink-2:#41505f; --ink-3:#6a7b8c; --ink-4:#93a2b1;
+  --rule:#c2cbd6; --rule-soft:#e4e9ef;
+  --stamp:#9c2b18; --stamp-wash:#f7ece8;
+  --ledger:#1f5480; --filed:#2f6a45; --chrome:#101d2b;
+  --btn:#101d2b; --btn-hover:#1f5480; --btn-ink:#fff;
+  --r-ctl:4px; --r-card:8px; --ease:cubic-bezier(.23,1,.32,1);
+}
+html[data-t="night"]{
+  --paper:#0a0e14; --card:#161c25; --sunk:#11161e;
+  --ink:#eef2f7; --ink-2:#a9b6c4; --ink-3:#7d8b9b; --ink-4:#5d6b7b;
+  --rule:rgba(255,255,255,.11); --rule-soft:rgba(255,255,255,.06);
+  --stamp:#e8836d; --stamp-wash:#2a1710;
+  --ledger:#5b9dd4; --filed:#4fb383; --chrome:#080c11;
+  --btn:#2d6ca8; --btn-hover:#3d81c2; --btn-ink:#fff;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-font-smoothing:antialiased}
+body{background:var(--paper);color:var(--ink);font-family:'IBM Plex Sans',sans-serif;
+     font-size:13.5px;line-height:1.5;font-variant-numeric:tabular-nums}
+button{font:inherit;cursor:pointer;transition:background .14s var(--ease),
+       border-color .14s var(--ease),color .14s var(--ease),transform .1s var(--ease)}
+button:active{transform:scale(.975)}
+:focus-visible{outline:2px solid var(--ledger);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+header{background:var(--chrome);color:#fff;padding:0 40px;height:56px;
+       display:flex;align-items:center;justify-content:space-between}
+header b{font-family:'IBM Plex Serif',serif;font-size:16px;font-weight:600}
+header span{font-size:10px;letter-spacing:.17em;text-transform:uppercase;opacity:.5;
+            font-weight:600;margin-left:11px}
+.tog{display:flex;border:1px solid rgba(255,255,255,.24);border-radius:999px;overflow:hidden}
+.tog button{background:none;border:none;color:#fff;opacity:.55;font-size:11.5px;padding:4px 12px}
+.tog button[aria-pressed="true"]{background:rgba(255,255,255,.15);opacity:1;font-weight:600}
+
+main{max-width:1240px;margin:0 auto;padding:40px 40px 80px}
+h1{font-family:'IBM Plex Serif',serif;font-size:34px;font-weight:600;letter-spacing:-.018em;
+   line-height:1.12}
+h1 em{font-style:italic;color:var(--stamp)}
+.lede{font-size:13.5px;color:var(--ink-2);margin-top:11px;max-width:64ch;text-wrap:pretty}
+h2{font-size:11px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;
+   color:var(--ink-3);margin:46px 0 4px}
+.note{font-size:12.5px;color:var(--ink-4);margin-bottom:14px;max-width:70ch;text-wrap:pretty}
+.panel{background:var(--card);border:1px solid var(--rule);border-radius:var(--r-card);padding:22px}
+
+/* swatches */
+.sw{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:12px}
+.chip{border:1px solid var(--rule);border-radius:var(--r-ctl);overflow:hidden}
+.chip .fill{height:56px}
+.chip .cap{padding:8px 10px;background:var(--card)}
+.chip .nm{font-size:12px;font-weight:600;color:var(--ink)}
+.chip .hx{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--ink-4);margin-top:2px}
+.chip .ro{font-size:11px;color:var(--ink-3);margin-top:3px}
+
+/* type */
+.ts>div{border-bottom:1px solid var(--rule-soft);padding:11px 0;display:flex;
+        align-items:baseline;gap:20px}
+.ts>div:last-child{border:none}
+.ts .tag{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--ink-4);
+         flex:0 0 190px}
+.serif{font-family:'IBM Plex Serif',serif}
+.mono{font-family:'IBM Plex Mono',monospace}
+
+/* provenance */
+.prov{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.pv{border-left:3px solid;border-radius:var(--r-ctl);padding:11px 13px}
+.pv .k{font-size:10px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;
+       color:var(--ink-3)}
+.pv .v{font-size:15px;font-weight:600;margin-top:3px;color:#111}
+.pv .m{font-size:11.5px;color:#556;margin-top:2px}
+.locked{border:1px solid var(--stamp);background:var(--stamp-wash);color:var(--stamp);
+        border-radius:var(--r-ctl);padding:11px 14px;font-size:12.5px;margin-top:14px;
+        text-wrap:pretty}
+.locked b{font-weight:600}
+
+/* components */
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.go{background:var(--btn);color:var(--btn-ink);border:1px solid var(--btn);
+    border-radius:var(--r-ctl);padding:8px 15px;font-size:12.5px;font-weight:600;min-height:34px}
+.go:hover{background:var(--btn-hover);border-color:var(--btn-hover)}
+.go.quiet{background:transparent;color:var(--ink-2);border-color:var(--rule)}
+.go.quiet:hover{background:var(--sunk);border-color:var(--ledger);color:var(--ledger)}
+.go:disabled{background:transparent;border-color:var(--rule-soft);color:var(--ink-4);
+             cursor:not-allowed;transform:none}
+.inp{background:var(--sunk);border:1px solid var(--rule);border-radius:var(--r-ctl);
+     padding:11px 12px;font:inherit;font-size:13px;color:var(--ink);width:240px}
+.inp:focus{outline:none;border-color:var(--ledger);background:var(--card)}
+
+table{width:100%;border-collapse:collapse;margin-top:4px}
+th{background:var(--sunk);font-size:10px;font-weight:600;letter-spacing:.12em;
+   text-transform:uppercase;color:var(--ink-3);text-align:left;padding:10px 16px;
+   border-bottom:1px solid var(--rule)}
+td{padding:11px 16px;border-bottom:1px solid var(--rule-soft);font-size:13px;color:var(--ink-3)}
+tr{border-left:3px solid transparent}
+tr.soon{border-left-color:var(--ledger)}
+tr.now{border-left-color:var(--stamp)}
+tr:hover td{background:var(--sunk)}
+td.nm{color:var(--ink);font-weight:500}
+.r{text-align:right}
+
+/* radii + depth */
+.rad{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap}
+.rad div{background:var(--sunk);border:1px solid var(--rule);padding:16px 18px;
+         font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-3)}
+.steps{display:flex;gap:0;border:1px solid var(--rule);border-radius:var(--r-card);overflow:hidden}
+.steps div{flex:1;padding:26px 16px;font-size:11.5px;font-weight:500}
+</style></head>
+<body>
+
+<header>
+  <div><b>Section 8 Rent Adjustments</b><span>Style guide</span></div>
+  <div class="tog">
+    <button aria-pressed="true" onclick="T('day',this)">Day</button>
+    <button aria-pressed="false" onclick="T('night',this)">Night</button>
+  </div>
+</header>
+
+<main>
+  <h1>A file room,<br><em>not a dashboard.</em></h1>
+  <p class="lede">Every value below is a decision, and every decision is one token. Today the app
+  carries 128 distinct hex values and 20 border-radius values across no custom properties at all —
+  which is why it reads flat. Open this on the large monitor: if the page and the cards look like
+  the same colour there, the values are wrong and nothing else matters.</p>
+
+  <h2>Palette</h2>
+  <p class="note">Drawn from a housing-authority file room — kraft, safety-paper green, received-stamp
+  ink, ballpoint blue-black, the ruled blue of a columnar pad. Colour is scarce: roughly 90% of the
+  screen is paper and ink, and the three meaning-colours are the rest.</p>
+  <div class="panel"><div class="sw" id="sw"></div></div>
+
+  <h2>Surface steps — the washed-out fix</h2>
+  <p class="note">The current app steps 4% from page to card, which disappears on a bright monitor.
+  This steps about 10%. Depth is borders and surface shift only — no shadows. A document doesn't float.</p>
+  <div class="panel">
+    <div class="steps">
+      <div style="background:var(--paper);color:var(--ink-2)">--paper · the desk</div>
+      <div style="background:var(--sunk);color:var(--ink-2)">--sunk · a ruled band, an input</div>
+      <div style="background:var(--card);color:var(--ink-2)">--card · a document on the desk</div>
+    </div>
+  </div>
+
+  <h2>Type — IBM Plex, three roles</h2>
+  <p class="note">Serif appears only where the product names a thing on the record: the page's one
+  statement, property names, month bands. Mono is reserved for money columns in the rent schedule.
+  Everything else is Sans. Scale steps at about 1.25 off a 13.5px body; weight and colour carry more
+  hierarchy than size.</p>
+  <div class="panel"><div class="ts">
+    <div><span class="tag">Serif 34/600 · statement</span><span class="serif" style="font-size:34px;font-weight:600;letter-spacing:-.018em">Three packages due this week.</span></div>
+    <div><span class="tag">Serif 19/600 · a named record</span><span class="serif" style="font-size:19px;font-weight:600">Round Barn Manor</span></div>
+    <div><span class="tag">Sans 15/600 · h4</span><span style="font-size:15px;font-weight:600">Rents &amp; unit mix</span></div>
+    <div><span class="tag">Sans 13.5/400 · body</span><span>The appraiser's study supports a proposed rent above the current contract rent.</span></div>
+    <div><span class="tag">Sans 12/500 · meta</span><span style="font-size:12px;font-weight:500;color:var(--ink-3)">242 units · effective Dec 1</span></div>
+    <div><span class="tag">Sans 11/600 · caption</span><span style="font-size:11px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3)">Due to HUD by August 1</span></div>
+    <div><span class="tag">Mono 13/400 · money</span><span class="mono" style="font-size:13px">$1,147 &nbsp; $1,407 &nbsp; $1,903 &nbsp; $93,930</span></div>
+  </div></div>
+
+  <h2>The four ink levels</h2>
+  <p class="note">Four, not two. Two is what makes an interface read flat.</p>
+  <div class="panel">
+    <div style="font-size:15px;font-weight:600">--ink · the value you came to read</div>
+    <div style="color:var(--ink-2);margin-top:6px">--ink-2 · supporting prose and labels</div>
+    <div style="color:var(--ink-3);margin-top:6px">--ink-3 · metadata, column heads, units</div>
+    <div style="color:var(--ink-4);margin-top:6px">--ink-4 · placeholders and resting actions</div>
+  </div>
+
+  <h2>Provenance — not ours to restyle</h2>
+  <p class="note">These four are a contract with tests behind them. Colour answers <em>is this saved?</em>;
+  the badge answers <em>where did it come from?</em> They become tokens at their existing values so night
+  mode can tune them — the values themselves do not change.</p>
+  <div class="panel">
+    <div class="prov">
+      <div class="pv" style="border-color:#2563eb;background:#e8f0fe">
+        <div class="k">Section 8 number</div><div class="v mono">OH10M000236</div><div class="m">On file</div></div>
+      <div class="pv" style="border-color:#0f766e;background:#e9f5f2">
+        <div class="k">Proposed rent</div><div class="v mono">$2,745</div><div class="m">Parsed this package, not saved</div></div>
+      <div class="pv" style="border-color:#b45309;background:#fbf1e6">
+        <div class="k">Utility allowance</div><div class="v mono">$118</div><div class="m">Overridden — was $104</div></div>
+      <div class="pv" style="border-color:#64748b;background:#f6f7f9">
+        <div class="k">FHA number</div><div class="v mono">—</div><div class="m">New — nothing on file</div></div>
+    </div>
+    <div class="locked"><b>The collision rule.</b> Urgency and provenance may never share a surface.
+    Urgency lives on the home page and launcher; provenance lives inside the form. The stamp red is a
+    red no provenance state uses, so a deadline marker can never be misread as a save state. Check this
+    before adding any coloured marker anywhere in the app.</div>
+  </div>
+
+  <h2>The signature — one rule, three scales</h2>
+  <p class="note">On a cell it means provenance. On a row it means urgency. On a section it means status.
+  One marker, learned once, true everywhere — which is why everything that competes with it goes quiet.</p>
+  <div class="panel" style="padding:0;overflow:hidden">
+    <table>
+      <tr><th>Property</th><th>Program</th><th>Due to HUD</th><th class="r">Units</th></tr>
+      <tr class="now"><td class="nm">Park Place</td><td>RCS</td><td>Aug 1</td><td class="r">242</td></tr>
+      <tr class="soon"><td class="nm">Faust Landmark Apartments</td><td>OCAF</td><td>Sep 1</td><td class="r">200</td></tr>
+      <tr><td class="nm">Circle Park Apartments</td><td>OCAF</td><td>Oct 1</td><td class="r">418</td></tr>
+    </table>
+  </div>
+
+  <h2>Controls and their states</h2>
+  <p class="note">Every control owes default, hover, active, focus-visible and disabled. Press feedback is
+  a 0.975 scale. Primary buttons are never full-width — a solid slab out-shouts the page's statement.</p>
+  <div class="panel">
+    <div class="row">
+      <button class="go">Start the RCS package</button>
+      <button class="go quiet">Start the OCAF package</button>
+      <button class="go" disabled>No increase type on file</button>
+      <input class="inp" placeholder="Find a property">
+    </div>
+    <p class="note" style="margin:16px 0 0">Hover each, tab through them, and hold one down.</p>
+  </div>
+
+  <h2>Radii — three, not twenty</h2>
+  <div class="panel"><div class="rad">
+    <div style="border-radius:4px">4px · controls</div>
+    <div style="border-radius:8px">8px · cards and panels</div>
+    <div style="border-radius:999px">999px · pills only</div>
+  </div></div>
+
+  <h2>What this does not yet cover</h2>
+  <p class="note">The form's own surfaces: the nine-section rail, the command-centre bar, the unit-mix
+  grid, dropdowns and source pickers, the dialogs, and the six-document package card. Those are the next
+  section of the design, and none of them should be built until the values above survive your monitor.</p>
+</main>
+
+<script>
+const P=[['--paper','#d8dde4','#0a0e14','the desk'],['--card','#ffffff','#161c25','a document'],
+['--sunk','#eef1f5','#11161e','a ruled band, an input'],['--ink','#101822','#eef2f7','signature ink'],
+['--ink-2','#41505f','#a9b6c4','typed body'],['--ink-3','#6a7b8c','#7d8b9b','carbon copy'],
+['--ink-4','#93a2b1','#5d6b7b','pencil note'],['--rule','#c2cbd6','rgba(255,255,255,.11)','a ruled edge'],
+['--rule-soft','#e4e9ef','rgba(255,255,255,.06)','between rows'],
+['--stamp','#9c2b18','#e8836d','received-stamp ink — owed now'],
+['--ledger','#1f5480','#5b9dd4','columnar-pad blue — coming up'],
+['--filed','#2f6a45','#4fb383','safety-paper green — done'],
+['--chrome','#101d2b','#080c11','the masthead']];
+function paint(){const n=document.documentElement.dataset.t==='night';
+  document.getElementById('sw').innerHTML=P.map(([k,d,g,role])=>
+    '<div class="chip"><div class="fill" style="background:'+(n?g:d)+'"></div>'+
+    '<div class="cap"><div class="nm">'+k+'</div><div class="hx">'+(n?g:d)+'</div>'+
+    '<div class="ro">'+role+'</div></div></div>').join('');}
+function T(m,btn){document.documentElement.dataset.t=m;
+  [...btn.parentNode.children].forEach(b=>b.setAttribute('aria-pressed',b===btn));paint();}
+paint();
+</script>
+</body></html>
