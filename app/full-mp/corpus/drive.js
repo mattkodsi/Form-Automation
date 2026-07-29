@@ -389,7 +389,13 @@ async function driveOne(opts) {
     /* a fresh property and a fresh RCS package, so nothing the selftest seed
        holds can be mistaken for something a parser supplied */
     const made = await c.eval(`const db=window.__t.__db();
-      const nm=${J((propertyName || 'Corpus property') + ' [' + code + ' ' + order + ']')};
+      /* THE PROPERTY NAME IS DATA THE APP PRINTS, NOT A RUN LABEL. Tagging it
+         '[75500 rs-first]' put the harness's own bookkeeping into every
+         generated document, so property.name mismatched the filed package on
+         every property in the sweep -- 34 rows of pure noise. Each run gets its
+         own chromium profile and its own stub database, so the name never
+         needed to be unique in the first place. */
+      const nm=${J(propertyName || 'Corpus property')};
       const r=await db.createProperty(nm);
       const pid=r&&(r.pid||r.id)||r;
       await window.__t.__openForm(pid);
