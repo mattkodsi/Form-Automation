@@ -105,6 +105,53 @@ Tier 1 scanner: `scratchpad/scan.js` pattern — loads `app/full-mp/*.js` in nod
 
 ---
 
+## Progress — which properties have been audited
+
+`audited` means the three-way comparison was done and its rows are in the ledger.
+`sources read` means the truth column exists but nothing has been compared to it yet.
+A wave marks a property `audited` only when its agent returned rows.
+
+| # | code | property | status | wave |
+|--:|---|---|---|--:|
+| 1 | 2640001 | Northcross | unaudited | |
+| 2 | 4640009 | Westwood Village | unaudited | |
+| 3 | 4640013 | Riverwood | unaudited | |
+| 4 | 75109 | Burt Farms I | unaudited | |
+| 5 | 75453 | Sycamore Green | unaudited | |
+| 6 | 75474 | New Horizons | unaudited | |
+| 7 | 75478 | North Park | unaudited | |
+| 8 | 75488 | Woodbury Oakwood (Lakeside) | unaudited | |
+| 9 | 75495 | Hampshire House | unaudited | |
+| 10 | 75500 | Lansing Manor | unaudited | |
+| 11 | 75543 | Noble Tower | unaudited | |
+| 12 | 75544 | Oaks on North Plaza | unaudited | |
+| 13 | 75563 | Oceanport | unaudited | |
+| 14 | 75564 | Holly House | unaudited | |
+| 15 | 75566 | Ebony Gardens | sources read | 1 |
+| 16 | 75567 | Mapleview Towers | unaudited | |
+| 17 | 75568 | Market Square | unaudited | |
+| 18 | 75569 | Barnum House | unaudited | |
+| 19 | 75572 | Shiloh Village | unaudited | |
+| 20 | 75573 | Morningside Court | unaudited | |
+| 21 | 75704 | 333 Holly | unaudited | |
+| 22 | 75705 | The Pines | unaudited | |
+| 23 | 75708 | Colonial Village | unaudited | |
+| 24 | 75830 | Clinton Manor | unaudited | 1 |
+| 25 | 75831 | Friendship Court | unaudited | |
+| 26 | 75832 | Newberry Arms | unaudited | |
+| 27 | 75833 | Circle Park | unaudited | 1 |
+| 28 | 75917 | Peterson Plaza | **audited** | 0 |
+| 29 | 75919 | Northgate Terrace CA | unaudited | |
+| 30 | 75920 | Fairview Homes | unaudited | |
+| 31 | 75921 | Walden | unaudited | |
+| 32 | 75922 | Marine Terrace | unaudited | |
+| 33 | 75926 | Oak Center | unaudited | 1 |
+| 34 | 75927 | Morh Housing | unaudited | 1 |
+
+**Wave 0** (before the loop): Peterson Plaza, traced end to end — commit `bbe9868`.
+
+---
+
 ## Where things stand
 
 ### Fixed and verified today
