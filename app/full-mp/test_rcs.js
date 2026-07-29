@@ -16,7 +16,7 @@ const els={};
 global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>null,querySelectorAll:()=>[],createElement:()=>mk(),addEventListener(){},body:{classList:{toggle(){},contains(){return false;}}}};
 const fs=require('fs'),path=require('path'),os=require('os');
 
-const MIN_CHECKS=268;
+const MIN_CHECKS=283;
 let n=0,fails=0,verdict=null;
 const BAR='='.repeat(68);
 function fail(msg,err){
@@ -606,6 +606,53 @@ async function reader(file){
     eq('two rows differing by a qualifier are still two',ln2.units.length,2);
     T('and still carry different rents',ln2.units[0].proposed!==ln2.units[1].proposed);
     eq('and no ghost row was invented',ln2.units.filter(u=>!u.count&&!u.proposed).length,0); }
+
+  /* ── the concluded-rent row, against the exact lines three studies print ──
+     Every one of these cost a filed number. Hampshire House lost BOTH its rows
+     and printed a schedule whose Column 3, Column 4, Column 6, both totals and
+     Part F were blank against a study that says $2,000 and $2,400 in plain
+     sight. Circle Park lost 58 units their rent -- $271,150 a month. Walden's
+     Senior line became a ghost row holding an allowance and no rent. */
+  console.log('\n─ the concluded-rent row, as three real studies print it ─');
+  { const M=R._ROW_MAIN;
+    const hh=' 1BR/1BA 90 640 SF $2,000 $3.13 Y'.trim().match(M);
+    T('Hampshire: an area that names its unit still reads',!!hh);
+    eq('and the rent is the rent, not the SF',hh&&hh[4],'2,000');
+    eq('and the count survives',hh&&hh[2],'90');
+    const hh2='2BR/1BA 25 950 SF $2,400 $2.53 Y'.match(M);
+    eq('and the second row too',hh2&&hh2[4],'2,400');
+    const cp='3BR/1.5BA TH 58 1200 $4,675 $3.90'.match(M);
+    T('Circle Park: a row with no PREPARED GRID flag still reads',!!cp);
+    eq('and keeps its rent',cp&&cp[4],'4,675');
+    eq('and its count',cp&&cp[2],'58');
+    const ok='1BR/1BA ELDERLY 120 630 $2,975 $4.72 Y'.match(M);
+    eq('a row that always worked is unchanged',ok&&ok[4],'2,975');
+    eq('and still reports its grid flag',ok&&ok[6],'Y');
+    /* The SAFMR and gross-renewal rows must STILL be rejected by this pattern --
+       they put a dollar sign where the area goes, and reading one as a concluded
+       rent would overwrite a real rent with a ceiling. */
+    T('a SAFMR row is still not a concluded-rent row',!'1BR/1BA 90 $1,500 $135,000'.match(M));
+    T('nor is a gross-renewal row',!'2BR/1BA 25 $2,400 $86 $62,150'.match(M)); }
+
+  /* Walden's conclusion table says "1BR/1BA (B)"; its comparison and gross-renewal
+     tables say "1BR/1BA (B) Senior". Same thirty apartments, and the designation
+     arrives only after the rent has been read. */
+  console.log('\n─ a designation that arrives late is not a new unit type ─');
+  { const units=[];
+    /* readTables fills the count after the upsert returns, so the fixture does too. */
+    const a=R._upsert(units,'1BR/1BA (B)',0,30); a.count=30; a.proposed=2150;
+    const b=R._upsert(units,'1BR/1BA (B) Senior',1,30);
+    eq('the designation joins the row it belongs to',units.length,1);
+    T('and it is the same row',a===b);
+    eq('so the rent it never carried is still there',units[0].proposed,2150);
+    eq('and the designation is kept as an alias',(units[0].alias||[]).length,1);
+    /* a genuinely different type still gets its own row */
+    const c=R._upsert(units,'2BR/1BA',1,26); c.count=26;
+    eq('a real second type is still a second row',units.length,2);
+    /* and a prefix over a DIFFERENT count is a different row -- Lansing prices
+       "1BR/1BA" and "1BR/1BA Patio" as 32 and 68 apartments, not as one. */
+    const d=R._upsert(units,'1BR/1BA (B) Senior',1,7); d.count=7;
+    eq('a prefix over a different count stays separate',units.length,3); }
 
   finish();
 })().catch(e=>{fail('the suite threw',e);process.exit(1);});
