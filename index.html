@@ -6206,7 +6206,14 @@ function dueLine(p){
      asserting rather than computing (FORM-RULES 15). What says there is nothing
      to do here is the absence of an action button. */
   if(a&&a.kind==='expiring')return '<div class="pc-due ok">Contract expires '+esc(fmtDateShort(a.effective))+'</div>';
-  if(a&&a.kind==='gap')return '<div class="pc-due ok">No renewal scheduled after '+esc(fmtDateShort(a.effective))+'</div>';
+  /* A gap is a CONTRADICTION, and the line has to carry both halves or it
+     reads as a wind-down. "No renewal scheduled after Apr 1, 2027" printed the
+     horizon and hid the reason: the tracker's last row is an EXPIRES in 2027
+     while its own Contract Exp column runs to 2045. Naming only the first date
+     said "this property is ending" about a property with eighteen years of
+     contract left, and gave no hint why the row still has a live Start. */
+  if(a&&a.kind==='gap')return '<div class="pc-due ok">Schedule ends '+esc(fmtDateShort(a.effective))
+    +(a.contractExp?(' &middot; contract runs to '+esc(fmtDateShort(a.contractExp))):'')+'</div>';
   if(p.status==='awaiting-schedule')return '<div class="pc-due ok">Awaiting the next schedule</div>';
   if(!p.deadline)return '<div class="pc-due ok">No date scheduled</div>';
   const d=p.days;
@@ -6665,7 +6672,7 @@ function nextUpHtml(){
   const scheduled=!!(a.effective&&a.year);
   const v=scheduled?esc(a.type+' · effective '+fmtDateLong(a.effective))
     :a.kind==='expiring'?esc('Contract expires '+fmtDateLong(a.effective))
-    :a.kind==='gap'?esc('No renewal scheduled after '+fmtDateLong(a.effective))
+    :a.kind==='gap'?esc('Schedule ends '+fmtDateLong(a.effective)+(a.contractExp?(' \u2014 the contract runs to '+fmtDateLong(a.contractExp)):''))
     :'Not scheduled';
   return '<div class="nextup"><div class="nu-l">'
     +'<div class="nu-k">NEXT RENEWAL</div>'
