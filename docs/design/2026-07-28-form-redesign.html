@@ -76,6 +76,13 @@ header{background:var(--chrome);color:var(--on-chrome);padding:0 28px;height:60p
      color:var(--filed)}
 .big span{color:var(--ink)}
 .sub{font-size:12.5px;color:var(--ink-3);margin-top:5px}
+.gauge{margin-top:12px}
+.gauge .track{height:8px;border-radius:4px;background:var(--sunk);overflow:hidden;display:flex;
+              border:1px solid var(--rule-soft)}
+.gauge .track i{display:block;height:100%}
+.gauge .cur{background:var(--filed)}
+.gauge .add{background:var(--filed);opacity:.45}
+.gauge .cap{display:flex;justify-content:space-between;font-size:11px;color:var(--ink-4);margin-top:5px}
 .arith{display:flex;gap:18px;margin-top:12px;padding-top:11px;border-top:1px solid var(--rule-soft)}
 .arith div{font-size:12px;color:var(--ink-3)}
 .arith b{display:block;font-size:13.5px;font-weight:600;color:var(--ink-2)}
@@ -83,22 +90,34 @@ header{background:var(--chrome);color:var(--on-chrome);padding:0 28px;height:60p
 .issue{display:flex;gap:9px;align-items:baseline;font-size:12.5px;color:var(--ink-2);margin-top:9px}
 .issue s{text-decoration:none;color:var(--prov-over);font-weight:700}
 .issue em{font-style:normal;color:var(--ink-3)}
+.docs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px 14px;margin-top:9px}
+.docs span{display:flex;gap:7px;align-items:baseline;font-size:12.5px;color:var(--ink-2)}
+.docs .ok{color:var(--filed);font-weight:700}
+.docs .no{color:var(--ink-4);font-weight:700}
+.docs .miss{color:var(--ink-4)}
 .jump{background:none;border:none;color:var(--ledger);font-size:12.5px;font-weight:600;
       padding:0;text-decoration:underline;text-underline-offset:2px}
 
 .body{display:grid;grid-template-columns:206px minmax(0,1fr);gap:24px;padding:24px 28px 90px}
-.rail{position:sticky;top:20px;align-self:start}
+.rail{position:sticky;top:20px;align-self:start;background:var(--card);
+       border:1px solid var(--rule);border-radius:var(--r-card);padding:16px 14px}
 .rail h4{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
          color:var(--ink-3);margin-bottom:10px}
 .rail a{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:var(--r-ctl);
         font-size:13px;color:var(--ink-2);text-decoration:none;box-shadow:inset 2px 0 0 transparent}
-.rail a:hover{background:var(--card)}
-.rail a.on{background:var(--card);color:var(--ink);font-weight:600;
+.rail a:hover{background:var(--sunk)}
+.rail a.on{background:var(--sunk);color:var(--ink);font-weight:600;
            box-shadow:inset 2px 0 0 var(--ledger)}
 .rail a.todo{box-shadow:inset 2px 0 0 var(--prov-over)}
 .rail a i{font-style:normal;font-size:11px;color:var(--ink-4);width:14px}
 .rail a.done i{color:var(--filed)} .rail a.todo i{color:var(--prov-over)}
-.prog{margin-top:18px;padding-top:16px;border-top:1px solid var(--rule)}
+.alert{margin-top:16px;background:var(--prov-over-fill);border-radius:var(--r-ctl);
+       padding:11px 12px;box-shadow:inset 3px 0 0 var(--prov-over)}
+.alert h5{font-size:12px;font-weight:600;color:var(--prov-over)}
+.alert a{display:block;padding:0;font-size:12px;color:var(--ink-2);text-decoration:none;
+         line-height:1.45;margin-top:6px;box-shadow:none}
+.alert a:hover{background:none;color:var(--prov-over);text-decoration:underline}
+.prog{margin-top:16px;padding-top:16px;border-top:1px solid var(--rule)}
 .prog .n{font-size:13px;font-weight:600}
 .prog .m{font-size:12.5px;color:var(--ink-3);margin-top:2px}
 .bar{height:6px;border-radius:3px;background:var(--sunk);margin-top:9px;overflow:hidden}
@@ -191,6 +210,10 @@ header{background:var(--chrome);color:var(--on-chrome);padding:0 28px;height:60p
     <div class="k">Affordability</div>
     <div class="big">$30,338 <span>of headroom</span></div>
     <div class="sub">The proposed rents clear the 150% SAFMR ceiling.</div>
+    <div class="gauge">
+      <div class="track"><i class="cur" style="width:75.4%"></i><i class="add" style="width:7.2%"></i></div>
+      <div class="cap"><span>current $131,582</span><span>proposed $144,062</span><span>ceiling $174,400</span></div>
+    </div>
     <div class="arith">
       <div><b>$131,582</b>current</div><div><b>$144,062</b>proposed</div>
       <div><b>$174,400</b>ceiling</div><div><b>+10%</b>increase</div>
@@ -207,7 +230,15 @@ header{background:var(--chrome);color:var(--on-chrome);padding:0 28px;height:60p
   <div class="seg">
     <div class="k">This package</div>
     <div class="v">5 of 6 documents ready</div>
-    <div class="sub">Only the RCS report is missing — it is uploaded in
+    <div class="docs">
+      <span><b class="ok">✓</b>Cover letter (CA)</span>
+      <span><b class="ok">✓</b>Owner cover letter</span>
+      <span><b class="ok">✓</b>Owner’s checklist</span>
+      <span><b class="ok">✓</b>Draft rent schedule</span>
+      <span><b class="ok">✓</b>Tenant notice</span>
+      <span class="miss"><b class="no">○</b>RCS report</span>
+    </div>
+    <div class="sub">The RCS report is uploaded in
       <button class="jump">Source documents</button>.</div>
   </div>
 </div>
@@ -225,6 +256,12 @@ header{background:var(--chrome);color:var(--on-chrome);padding:0 28px;height:60p
     <a href="#" class="done"><i>✓</i>Items included in rent</a>
     <a href="#" class="done"><i>✓</i>Owner’s checklist</a>
     <a href="#" class="done"><i>✓</i>Tenant notice</a>
+    <div class="alert">
+      <h5>⚠ 3 things to look at</h5>
+      <a href="#">1 UA conflict to resolve</a>
+      <a href="#">1 SAFMR conflict to resolve</a>
+      <a href="#">The completed RCS report isn’t uploaded (Section 1)</a>
+    </div>
     <div class="prog"><div class="n">8 of 10 confirmed</div>
       <div class="m">2 sections still to confirm</div>
       <div class="bar"><i style="width:80%"></i></div></div>
