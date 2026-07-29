@@ -63,8 +63,27 @@ can't be read, the app declines to generate the documents that depend on it:
 defects: the same two files, uploaded in a different order, produced different
 documents.
 
-**Root cause, found in the source rather than guessed: unit rows are matched
-positionally, not by identity.** Every unit field is keyed `units.<i>.<field>`,
+> **Updated after I fixed part of this.** My first root cause here was wrong and
+> I have corrected it below. Friendship Court and Hampshire House now show **zero**
+> fill-order disagreements; The Pines dropped 3 to 1. 14 resolved, 0 regressions.
+> Barnum House and Oaks on North Plaza are unchanged and are two *different*
+> defects — see the end of this section.
+
+**Root cause (corrected): an adopt-versus-offer asymmetry, not a positional
+merge.** `rcsMatch` already matches study lines to form rows by bedrooms and
+bathrooms with the unit count as a tiebreaker. But a study line that *matches* an
+existing row wrote only the shadow keys `br_rcs`/`ba_rcs`, while a line the form
+had no row for wrote `br`/`ba` outright — so the bathroom reached the printed
+unit type only when the study happened to CREATE the row. Fixed: the study is
+adopted, not merely offered, wherever the schedule stated nothing at all.
+
+**What that leaves.** Barnum House's rows still land in a different ORDER
+(schedule-first `1BR, Studio`; study-first `Studio, 1BR`), which is why its total
+is still 100 one way and 83 the other — that one IS positional. And Oaks on North
+Plaza still loses its current rents when the schedule is uploaded first. Those are
+the next two targets.
+
+The original (superseded) diagnosis follows for the record: Every unit field is keyed `units.<i>.<field>`,
 so row 0 is simply "the first row". When the rent schedule and the study list
 unit types in a different order — which is exactly what these five properties do
 — whichever file you upload first decides the layout, and the second file's

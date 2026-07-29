@@ -264,3 +264,53 @@ RESUME HERE: `docs/superpowers/plans/MORNING-REPORT.md` section 6 lists the thre
 decisions. After any fix, re-run with `--label sweep-2 --force` and diff against
 `sweep-1.json` as resolved / persisting / NEW — a NEW row is a regression and
 outranks everything else.
+
+---
+
+## Lane R — the fill-order defect, fixed and measured
+
+**I corrected my own root cause.** The morning report said "unit rows are matched
+positionally". That was wrong, and the code says so: `rcsMatch` already matches
+study lines to form rows by bedrooms and bathrooms with the unit count as a
+tiebreaker, and handles Lansing's patio case properly.
+
+The real cause is narrower: **an adopt-versus-offer asymmetry.** A study line that
+MATCHES an existing row writes only the shadow keys `br_rcs`/`ba_rcs`, so both
+sources stay visible; a line the form has no row for goes down the homeless path,
+which writes `br`/`ba` outright. So the bathroom reached the printed unit type
+only when the study happened to CREATE the row — schedule-first printed `1BR`,
+study-first `1BR/1BA`, from identical inputs.
+
+Fixed by adopting, not merely offering, a shape the schedule never stated. `setk`
+still declines wherever the schedule did state a value; an emptiness test keeps
+anything typed by hand. Six new browser checks drive both orders on a fresh
+property and assert not just that the orders agree but that they agree on a type
+that still HAS its bathroom — two orders agreeing on a wrong value would pass an
+equality check and still be wrong. **1,518 checks, `deliver.sh` green.**
+
+**Re-swept the five affected properties and diffed against `sweep-1`:**
+
+| property | before | after |
+|---|---:|---:|
+| Friendship Court | 8 | **0** |
+| Hampshire House | 4 | **0** |
+| The Pines | 3 | **1** |
+| Oaks on North Plaza | 11 | 11 |
+| Barnum House | 23 | 23 |
+
+**14 resolved · 35 persisting · 0 NEW.** My first diff reported 2 regressions;
+it was keying on the *values*, so an improved value read as a brand-new finding.
+Keyed on location (property · doc · key) there are none.
+
+**The two untouched properties are two different defects, not this one:**
+- **Barnum House** — the unit rows land in a different ORDER (schedule-first
+  `1BR, Studio`; study-first `Studio, 1BR`), and the generated schedule totals
+  100 units one way and 83 the other. This IS a positional problem, just not the
+  one I first described.
+- **Oaks on North Plaza** — schedule-first produces null current rents that
+  study-first fills.
+
+RESUME HERE: next lane-R target is Barnum's row ORDER (23 rows) then Oaks'
+missing current rents (11). Reproduce both with
+`node app/full-mp/corpus/sweep.js "$CORPUS" _archive/corpus-cache app/full-mp/corpus/corpus.json --only "Barnum House" --force --label sweep-3`
+and diff against `sweep-2.json` keyed on property·doc·key.
