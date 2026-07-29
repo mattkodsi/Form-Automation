@@ -23,7 +23,7 @@
     --ink-4:#636c77;        /* pencil note — card and sunk only */
 
     --rule:#c2cbd6;         /* the ruled edge */
-    --rule-soft:#ccd4de;    /* the faint line between rows, on paper */
+    --rule-soft:#e4e9ef;    /* the faint line between rows */
 
     /* the three things colour is allowed to mean */
     --stamp:#9c2b18;        /* received-stamp ink — owed now */
@@ -51,7 +51,7 @@
   button{font:inherit;cursor:pointer;transition:background .14s var(--ease),
          border-color .14s var(--ease),color .14s var(--ease),transform .1s var(--ease)}
   button:active{transform:scale(.975)}
-  :focus-visible{outline:2px solid var(--ledger);outline-offset:2px;border-radius:var(--r-ctl)}
+  :focus-visible{outline:2px solid var(--ledger);outline-offset:-2px;border-radius:var(--r-ctl)}
   @media (prefers-reduced-motion:reduce){*{transition:none!important;transform:none!important}}
 
   /* ---------------- masthead ---------------- */
@@ -118,11 +118,13 @@
   .go:disabled{background:transparent;border-color:var(--rule);color:var(--ink-4);
                cursor:not-allowed;transform:none}
 
-  /* ---- the ledger sits ON the paper, not on a second white slab ----
-     Ruled lines on the desk. This is what lets the cards above lead. */
+  /* ---- the ledger is a document on the desk, like everything else ---- */
+  .ledger-box{background:var(--card);border:1px solid var(--rule);border-radius:var(--r-card);
+              overflow:hidden}
   table{width:100%;border-collapse:collapse}
-  thead th{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
-           color:var(--ink-3);text-align:left;padding:0 18px 9px;border-bottom:1px solid var(--rule)}
+  thead th{background:var(--sunk);font-size:10px;font-weight:600;letter-spacing:.12em;
+           text-transform:uppercase;color:var(--ink-3);text-align:left;padding:10px 18px;
+           border-bottom:1px solid var(--rule)}
   thead th.r,tbody td.r{text-align:right}
   tbody td{padding:11px 18px;border-bottom:1px solid var(--rule-soft);font-size:13px;
            color:var(--ink-3)}
@@ -131,7 +133,7 @@
            transition:background .12s var(--ease)}
   tbody tr.soon{border-left-color:var(--ledger)}
   tbody tr.filed{border-left-color:var(--filed)}
-  tbody tr:hover td{background:var(--card)}
+  tbody tr:hover td{background:var(--sunk)}
   tbody td.nm{color:var(--ink);font-weight:500}
   tbody td.due{color:var(--ink-2);font-weight:500}
   tbody tr.filed td.nm{color:var(--ink-2);font-weight:400}
@@ -140,11 +142,11 @@
         border-radius:var(--r-ctl);padding:5px 12px;font-size:11.5px;font-weight:600}
   tbody tr:hover .mini{border-color:var(--rule);color:var(--ledger)}
   .stamped{font-size:11.5px;font-weight:600;color:var(--filed)}
-  .grpr td{font-size:10.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
-           color:var(--ink-3);padding:26px 18px 7px;border-bottom:1px solid var(--rule)}
+  .grpr td{background:var(--sunk);font-size:10.5px;font-weight:600;letter-spacing:.12em;
+           text-transform:uppercase;color:var(--ink-3);padding:8px 18px}
   .grpr:hover td{background:transparent}
   .grpr{cursor:default}
-  .foot{padding:16px 18px 0;font-size:12.5px;color:var(--ink-3)}
+  .foot{padding:13px 18px;font-size:12.5px;color:var(--ink-3);border-top:1px solid var(--rule-soft)}
   .foot button{background:none;border:none;color:var(--ledger);font-size:12.5px;
                font-weight:600;padding:6px 0;min-height:38px}
   .foot button:hover{text-decoration:underline}
@@ -201,6 +203,7 @@
   </div>
 
   <div class="sect"><h2>Remaining</h2><span>51 properties · earliest deadline first</span></div>
+  <div class="ledger-box">
   <table>
     <thead><tr><th>Property</th><th>Program</th><th>Due to HUD</th><th>Rents effective</th>
       <th class="r">Units</th><th></th></tr></thead>
@@ -263,6 +266,7 @@
     </tbody>
   </table>
   <div class="foot">36 more · through March 2028 · <button>Show all</button></div>
+  </div>
 
   <p class="recon">Every figure above is countable on this page: 3 in the cards, 7 carrying a blue
   rule, 2 carrying a green one, and 42 later — 6 listed here and 36 behind “Show all”. 54 properties.</p>
