@@ -3343,7 +3343,26 @@ function renderMenu(){
       bits.push(all.length+(all.length===1?' property':' properties'));
       if(need)bits.push(need+' need'+(need===1?'s':'')+' review');
     }
-    el('menuCount').textContent=bits.join('  \u00b7  ');
+    /* ---- the figures line ----
+       Every figure here is countable on the page below it: the bands are the
+       same ones the list is grouped by, so "21 due within 30 days" is the
+       length of the band headed "Due within 30 days" and nothing else. They are
+       disjoint and they sum to the total. A count the reader cannot verify by
+       looking is worse than no count, because they cannot tell whether the
+       figure or the grouping is wrong. */
+    if(hasRail){
+      const _t=all.filter(p=>p.hap);
+      const _n=_t.filter(p=>p.days!=null&&p.deadline&&p.days>=0&&p.days<=30).length;
+      const _p=_t.filter(p=>p.days!=null&&p.deadline&&p.days<0).length;
+      const _u=_t.filter(p=>p.days==null||!p.deadline).length;
+      const _l=_t.length-_n-_p-_u;
+      const fig=(cls,n,lab)=>'<span'+(cls?' class="'+cls+'"':'')+'><b>'+n+'</b> '+esc(lab)+'</span>';
+      el('menuCount').innerHTML=fig('now',_n,'due within 30 days')
+        +fig('soon',_l,'later')
+        +fig('',_p,'past their date')
+        +(_u?fig('',_u,'undated'):'')
+        +fig('done',all.length,all.length===1?'property':'properties');
+    }else el('menuCount').textContent=bits.join('  \u00b7  ');
   }
   if(el('menuRail'))el('menuRail').innerHTML=hasRail?railHtml(counts,late,view):'';
   /* Emptying the rail does not collapse the column it sits in. Without this the
@@ -3418,7 +3437,7 @@ function renderMenu(){
   /* The columns were unlabelled. As cards that was fine — each fact sat under
      the name that explained it. As rows it is a table, and a table says what
      its columns hold. */
-  const _cols=_tr.length?('<div class="mhead"><span>Property</span>'
+  const _cols=_tr.length?('<div class="mcols"><span>Property</span>'
     +'<span>Due to HUD</span><span>Programme</span><span></span></div>'):'';
   const _body=_cols+(_tr.length?_trHtml:'')
     +((_or.length&&_tr.length)?'<div class="mgroup">Not in the renewal schedule</div>':'')
