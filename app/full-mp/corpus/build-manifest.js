@@ -2,167 +2,188 @@
 /* build-manifest.js -- walk the filed packages and say, per property and per
    cycle, what went IN and what came OUT.
 
-   This file guesses. It is not allowed to pretend otherwise: every cycle it
-   emits carries `confident` and `problems`, and every file it could not place
-   stays visible in `unclassified`. A misfiled input produces a confident,
-   fabricated discrepancy, which costs more diagnosis time than having no result
-   at all -- so the manifest is a proposal for review, never an answer.
+   Two rules, both learned by getting it wrong:
 
-   usage: node build-manifest.js <corpus-root> [out.json]
+   1. RECURSE EVERYWHERE. The first pass descended only into folders whose name
+      looked like a package, so it never opened Archive/ -- which is exactly
+      where Oceanport and the Pines keep both their study and their filed
+      submission. It then reported those properties as having no RCS year, which
+      was a statement about the walker, not the corpus.
+
+   2. A STUDY IS A FILE THE STUDY READER CAN READ. Five properties, five naming
+      conventions: "25-119 - Lansing Manor...", "R1542R2017", "2019.09.04 - The
+      Pines - Market Study Final", "VA-24-254925 - Oceanport Gardens - RCS",
+      "RCS - The Pines, The Woodlands, TX". No pattern covers them. So we hand
+      candidates to RCSParse.readLetter and let it answer -- which also runs the
+      reader across the whole corpus and reports where it fails.
+
+   Every property is known to have at least one RCS year. A property yielding no
+   study is therefore a failure of this pass, and is reported as one.
+
+   usage: node build-manifest.js <corpus-root> [out.json] [--limit N]
 */
-const fs=require('fs'),path=require('path');
+global.CSS={escape:s=>s};
+const mem={};
+global.window={addEventListener:(e,cb)=>{if(e==='DOMContentLoaded')global.__ready=cb;},localStorage:{getItem:k=>k in mem?mem[k]:null,setItem:(k,v)=>{mem[k]=v;},removeItem:k=>{delete mem[k];}},scrollY:0,scrollTo(){}};
+function mk(id){return {id:id||'',style:{},classList:{toggle(){},add(){},remove(){},contains(){return false;}},setAttribute(){},getAttribute(){return'';},appendChild(){},addEventListener(){},closest(){return null;},parentElement:null,querySelector(){return null;},querySelectorAll(){return[];},innerHTML:'',textContent:'',onclick:null,value:'',checked:false,focus(){},select(){},setSelectionRange(){},files:[]};}
+const els={};
+global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>null,querySelectorAll:()=>[],createElement:()=>mk(),addEventListener(){},body:{classList:{toggle(){},contains(){return false;}}}};
 
-const ROOT=process.argv[2];
-const OUT=process.argv[3]||path.join(__dirname,'corpus.json');
+const fs=require('fs'),path=require('path'),os=require('os');
+const SRC=path.join(__dirname,'..');                       // app/full-mp
+(0,eval)(fs.readFileSync(path.join(SRC,'lib/pdf-lib.min.js'),'utf8'));
+global.window.PDFLib=global.window.PDFLib||globalThis.PDFLib;
+const P=global.window.PDFLib;
+const _b=path.join(os.tmpdir(),'rcs_manifest.'+process.pid+'.js');
+process.on('exit',()=>{try{fs.rmSync(_b,{force:true});}catch(e){}});
+fs.writeFileSync(_b,
+   ['templates.js','core.js','score.js','db.js','app.js','ocr.js','rcs.js']
+     .map(x=>fs.readFileSync(path.join(SRC,x),'utf8')).join('\n')
+  +'\nocrHalf=function(){return Promise.resolve(null);};\n'
+  +'if(typeof module!=="undefined")Object.assign(module.exports,{__rsTextPageAt:rsTextPageAt});\n');
+const app=require(_b);
+const R=global.window.RCSParse;
+
+const args=process.argv.slice(2).filter(a=>!a.startsWith('--'));
+const ROOT=args[0], OUT=args[1]||path.join(__dirname,'corpus.json');
+const LIMIT=(()=>{const i=process.argv.indexOf('--limit');return i>0?+process.argv[i+1]:0;})();
 if(!ROOT||!fs.existsSync(ROOT)){console.error('corpus root not found: '+ROOT);process.exit(1);}
 
-const ls=d=>{try{return fs.readdirSync(d,{withFileTypes:true});}catch(e){return [];}};
-const isDir=e=>e.isDirectory();
-const low=s=>s.toLowerCase();
-
-/* ---- which folders are cycles -------------------------------------------
-   Year folders are named every way a human names them: "2025", "2026 - RCS",
-   "2026 (RCS)", "RCS". The year is what matters; the RCS marker only tells us
-   the cycle is likelier to hold a study. */
-function cycleOf(name){
-  const m=name.match(/(20\d{2})/);
-  if(!m)return null;
-  return {year:+m[1], rcsMarked:/rcs/i.test(name), label:name};
+/* ---- walk ---------------------------------------------------------------- */
+function walk(dir,rel,out){
+  let ents=[];try{ents=fs.readdirSync(dir,{withFileTypes:true});}catch(e){return out;}
+  for(const e of ents){
+    if(/^~\$|^\./.test(e.name))continue;
+    const abs=path.join(dir,e.name), r=rel?rel+'/'+e.name:e.name;
+    if(e.isDirectory())walk(abs,r,out);
+    else if(e.isFile()){
+      let bytes=0;try{bytes=fs.statSync(abs).size;}catch(err){}
+      out.push({rel:r,name:e.name,dir:rel,bytes,abs});
+    }
+  }
+  return out;
 }
 
-/* ---- document classification --------------------------------------------
-   Order matters: "Submittal Cover Letter" must be tested before "Cover Letter",
-   or every submittal letter is filed as a cover letter. */
+/* ---- cycle attribution ---------------------------------------------------
+   A file belongs to the cycle named by the FIRST path segment carrying a year.
+   Files sitting loose at the property root belong to no cycle. */
+function cycleOfPath(rel){
+  for(const seg of rel.split('/').slice(0,-1)){
+    const m=seg.match(/(20\d{2})/);
+    if(m)return {key:seg,year:+m[1]};
+  }
+  return null;
+}
+
+/* ---- is this PDF a study? ------------------------------------------------ */
+const SKIP=/invoice|engagement|certificat|w-?9\b|insurance|tax|deed|mortgage|hap contract|amend rents/i;
+async function readsAsStudy(f){
+  if(!/\.pdf$/i.test(f.name))return null;
+  if(SKIP.test(f.name))return null;
+  if(f.bytes<200*1024)return null;                        // a real report is not tiny
+  let doc;
+  try{ doc=await P.PDFDocument.load(new Uint8Array(fs.readFileSync(f.abs)),{ignoreEncryption:true,throwOnInvalidObject:false}); }
+  catch(e){ return {error:'unreadable pdf: '+e.message}; }
+  const rd={pageCount:doc.getPageCount(),hits:0,
+            getPage:async i=>{rd.hits++;return await app.__rsTextPageAt(doc,i);}};
+  let rec=null;
+  try{ rec=await R.readLetter(rd); }catch(e){ return {error:'readLetter threw: '+e.message,pages:rd.pageCount}; }
+  if(!rec)return null;
+  const sc=rec.scalars||{};
+  const out={firm:rec.firm||null, s8:sc['property.s8']||null, name:sc['property.name']||null,
+             units:(rec.units||[]).length, pagesRead:rd.hits, pageCount:doc.getPageCount()};
+  /* readLetter returns a record for documents that are not studies at all --
+     OCAF letters, rent schedules, non-compliance notices -- with every field
+     null. On the first three properties that was 73 of 84 "hits". A truthy
+     return is therefore not evidence; a firm, a contract number or a unit grid
+     is. Kept as OR rather than requiring a firm, so a study from a firm rcs.js
+     does not yet recognise still counts. */
+  if(!(out.firm||out.s8||out.units>0))return null;
+  return out;
+}
+
+/* ---- filed-output classification (filenames are fine for these) ---------- */
 const RULES=[
-  ['analysisXlsx',   f=>/\.xlsx?$/i.test(f) && /analysis/i.test(f)],
-  ['submittalLetter',f=>/submittal/i.test(f) && /letter/i.test(f)],
+  ['analysisXlsx',   f=>/\.xlsx?$/i.test(f)&&/analysis/i.test(f)],
+  ['submittalLetter',f=>/submittal/i.test(f)&&/letter/i.test(f)],
   ['checklist',      f=>/checklist/i.test(f)],
-  ['tenantNotice',   f=>/tenant notice/i.test(f) || /\b30[- ]day notice/i.test(f)],
+  ['tenantNotice',   f=>/tenant notice/i.test(f)||/\b30[- ]day notice/i.test(f)],
   ['coverLetter',    f=>/cover letter/i.test(f)],
-  ['rentSchedule',   f=>/(rent schedule|\bRS\b|92458)/i.test(f)],
+  ['combinedPackage',f=>/submission|rcs p(ac)?k(a)?g/i.test(f)&&/\.pdf$/i.test(f)],
+  ['rentSchedule',   f=>/(rent[_ ]schedule|\bRS\b|92458)/i.test(f)],
 ];
-/* A study is the appraiser's report: a job number like 25-119, or a firm name,
-   on a PDF large enough to be a real report. */
-function looksStudy(f,bytes){
-  if(!/\.pdf$/i.test(f))return false;
-  if(/invoice|engagement/i.test(f))return false;
-  return (/\b\d{2}-\d{3}\b/.test(f) || /belfry|cornerstone/i.test(f)) && bytes>400*1024;
+const isExecuted=f=>/approved|executed|fully.?exec/i.test(f);
+function classifyName(f){
+  for(const [k,t] of RULES)if(t(f))return k;
+  return null;
 }
-/* An executed/approved schedule is what HUD sent back -- it is the NEXT cycle's
-   year -1 input, and must not be mistaken for the draft we generate. */
-const isExecuted=f=>/approved|executed|fully executed/i.test(f);
 
-function classify(dir){
-  const out={files:[],unclassified:[],study:null,rentScheduleExecuted:[],docs:{}};
-  for(const e of ls(dir)){
-    if(!e.isFile())continue;
-    const f=e.name;
-    if(/^~\$|^\./.test(f))continue;
-    let bytes=0;try{bytes=fs.statSync(path.join(dir,f)).size;}catch(err){}
-    const rec={name:f,bytes};
-    out.files.push(rec);
-    if(looksStudy(f,bytes)){
-      // prefer the copy without "(updated)" -- the numbered package item is what was filed
-      if(!out.study || (/\(updated\)/i.test(out.study.name) && !/\(updated\)/i.test(f)))out.study=rec;
-      continue;
+(async()=>{
+  let dirs=fs.readdirSync(ROOT,{withFileTypes:true}).filter(e=>e.isDirectory()).map(e=>e.name).sort();
+  if(LIMIT)dirs=dirs.slice(0,LIMIT);
+  const properties=[]; let scanned=0,studyHits=0,readErrors=[];
+  for(const folder of dirs){
+    const m=folder.match(/^(\S+)\s*-\s*(.+?)\s*-\s*Section 8/i);
+    const files=walk(path.join(ROOT,folder),'',[]);
+    process.stderr.write('  '+folder+' ('+files.length+' files) ');
+    const cycles={};
+    const add=(key,year,bucket,rec)=>{
+      const c=cycles[key]=cycles[key]||{cycleLabel:key,year,studies:[],docs:{},executedRs:[]};
+      if(bucket==='study')c.studies.push(rec);
+      else if(bucket==='executedRs')c.executedRs.push(rec);
+      else (c.docs[bucket]=c.docs[bucket]||[]).push(rec);
+    };
+    for(const f of files){
+      const cy=cycleOfPath(f.rel);
+      const kind=classifyName(f.name);
+      if(kind==='rentSchedule'&&isExecuted(f.name)){ if(cy)add(cy.key,cy.year,'executedRs',{file:f.rel,bytes:f.bytes}); continue; }
+      if(kind&&cy){ add(cy.key,cy.year,kind,{file:f.rel,bytes:f.bytes}); continue; }
+      // study candidates: content-tested, cycle or not
+      const st=await readsAsStudy(f);
+      scanned++;
+      if(st&&st.error){readErrors.push({property:m?m[2]:folder,file:f.rel,error:st.error});continue;}
+      if(st){ studyHits++;
+        if(cy)add(cy.key,cy.year,'study',Object.assign({file:f.rel,bytes:f.bytes},st));
+        else add('(no cycle folder)',null,'study',Object.assign({file:f.rel,bytes:f.bytes},st));
+      }
     }
-    let hit=null;
-    for(const [key,test] of RULES){ if(test(f)){hit=key;break;} }
-    if(hit==='rentSchedule'&&isExecuted(f)){ out.rentScheduleExecuted.push(rec); continue; }
-    if(hit){ (out.docs[hit]=out.docs[hit]||[]).push(rec); continue; }
-    out.unclassified.push(rec);
-  }
-  return out;
-}
-
-/* Walk one property: its cycle folders, plus any nested package folder. */
-function readProperty(pdir){
-  const cycles={};
-  for(const e of ls(pdir)){
-    if(!isDir(e))continue;
-    const c=cycleOf(e.name);
-    if(!c)continue;
-    let dir=path.join(pdir,e.name);
-    // Colonial Village nests the package one level down.
-    const nested=ls(dir).filter(isDir).find(x=>/rcs package|package|submission/i.test(x.name));
-    const here=classify(dir);
-    let merged=here;
-    if(nested){
-      const deep=classify(path.join(dir,nested.name));
-      merged={files:here.files.concat(deep.files),
-              unclassified:here.unclassified.concat(deep.unclassified),
-              study:here.study||deep.study,
-              rentScheduleExecuted:here.rentScheduleExecuted.concat(deep.rentScheduleExecuted),
-              docs:Object.assign({},here.docs)};
-      for(const k of Object.keys(deep.docs))merged.docs[k]=(merged.docs[k]||[]).concat(deep.docs[k]);
-      merged.nestedIn=nested.name;
-    }
-    merged.label=e.name; merged.year=c.year; merged.rcsMarked=c.rcsMarked;
-    // last one wins only if it carries more; otherwise keep both under distinct labels
-    cycles[e.name]=merged;
-  }
-  return cycles;
-}
-
-/* A cycle is runnable when it has a study (year 0) and we can find the prior
-   year's executed schedule (year -1) somewhere in the property. */
-function buildProperty(name,pdir){
-  const cycles=readProperty(pdir);
-  const years=Object.values(cycles);
-  const out=[];
-  for(const c of years){
-    if(!c.study)continue;                       // no study, no RCS cycle
-    const prior=years.filter(x=>x.year===c.year-1)
-                     .flatMap(x=>x.rentScheduleExecuted.map(r=>({cycle:x.label,file:r})));
-    // fall back: an executed schedule inside the same cycle folder predating it
-    const problems=[];
-    if(!prior.length)problems.push('no year -1 executed rent schedule found');
-    const missing=['coverLetter','submittalLetter','checklist','tenantNotice','analysisXlsx']
-      .filter(k=>!c.docs[k]||!c.docs[k].length);
-    if(missing.length)problems.push('no filed '+missing.join(', '));
-    const multi=Object.keys(c.docs).filter(k=>c.docs[k].length>1);
-    if(multi.length)problems.push('more than one candidate for '+multi.join(', '));
-    out.push({
-      year0:c.year, cycleLabel:c.label, nestedIn:c.nestedIn||null,
-      inputs:{ study:c.study.name, priorRs:prior.length?prior[0].file.name:null,
-               priorRsCycle:prior.length?prior[0].cycle:null },
-      expected:Object.fromEntries(Object.entries(c.docs).map(([k,v])=>[k,v.map(x=>x.name)])),
-      unclassified:c.unclassified.map(x=>x.name),
-      problems, confident:problems.length===0,
+    const list=Object.values(cycles).filter(c=>c.studies.length)
+      .sort((a,b)=>(b.year||0)-(a.year||0));
+    list.forEach(c=>{
+      const prior=Object.values(cycles).filter(x=>x.year===(c.year-1)).flatMap(x=>x.executedRs);
+      c.priorRs=prior.length?prior[0].file:null;
+      const missing=['coverLetter','submittalLetter','checklist','tenantNotice']
+        .filter(k=>!c.docs[k]||!c.docs[k].length);
+      c.hasCombined=!!(c.docs.combinedPackage&&c.docs.combinedPackage.length);
+      c.problems=[];
+      if(!c.priorRs)c.problems.push('no year -1 executed rent schedule');
+      if(missing.length&&!c.hasCombined)c.problems.push('no filed '+missing.join(', '));
+      if(c.studies.length>1)c.problems.push(c.studies.length+' study candidates');
     });
+    list.forEach((c,i)=>c.wave=(c===(list.find(x=>x.priorRs)||list[0]))?1:2);
+    properties.push({code:m?m[1]:null,name:m?m[2]:folder,folder,fileCount:files.length,cycles:list});
+    process.stderr.write('-> '+list.length+' RCS cycle(s)\n');
   }
-  out.sort((a,b)=>b.year0-a.year0);
-  out.forEach((c,i)=>{c.wave=null;});
-  // wave 1 = most recent cycle that is runnable (study AND prior RS present)
-  const w1=out.find(c=>c.inputs.priorRs) || out[0];
-  out.forEach(c=>{c.wave=(c===w1)?1:2;});
-  return out;
-}
+  fs.writeFileSync(OUT,JSON.stringify({root:ROOT,properties,readErrors},null,2));
 
-const props=[];
-for(const e of ls(ROOT)){
-  if(!isDir(e))continue;
-  const m=e.name.match(/^(\S+)\s*-\s*(.+?)\s*-\s*Section 8/i);
-  const cycles=buildProperty(e.name,path.join(ROOT,e.name));
-  props.push({ code:m?m[1]:null, name:m?m[2]:e.name, folder:e.name,
-               cycles, runnable:cycles.some(c=>c.wave===1&&c.inputs.priorRs) });
-}
-props.sort((a,b)=>String(a.name).localeCompare(String(b.name)));
-fs.writeFileSync(OUT,JSON.stringify({root:ROOT,builtFrom:'filesystem walk',properties:props},null,2));
-
-/* ---- report -------------------------------------------------------------- */
-const total=props.length;
-const withCycle=props.filter(p=>p.cycles.length).length;
-const runnable=props.filter(p=>p.runnable).length;
-const confident=props.filter(p=>p.cycles.some(c=>c.wave===1&&c.confident)).length;
-console.log('properties found          : '+total);
-console.log('with at least one RCS cycle: '+withCycle);
-console.log('wave-1 runnable (study + year -1 RS): '+runnable);
-console.log('  of those, no open questions      : '+confident);
-console.log('total cycles with a study : '+props.reduce((n,p)=>n+p.cycles.length,0));
-console.log('\nwritten to '+OUT+'\n');
-console.log('NEEDS REVIEW — properties with no runnable wave-1 cycle:');
-props.filter(p=>!p.runnable).forEach(p=>{
-  const why=p.cycles.length?p.cycles.map(c=>c.year0+': '+c.problems.join('; ')).join('  |  '):'no cycle folder with a study';
-  console.log('  - '+p.name+'  ('+why+')');
-});
+  const none=properties.filter(p=>!p.cycles.length);
+  const w1=properties.filter(p=>p.cycles.some(c=>c.wave===1));
+  const clean=properties.filter(p=>p.cycles.some(c=>c.wave===1&&!c.problems.length));
+  console.log('\n'+'='.repeat(66));
+  console.log('properties            : '+properties.length);
+  console.log('PDFs content-tested   : '+scanned+'   read as a study: '+studyHits);
+  console.log('with an RCS cycle     : '+(properties.length-none.length));
+  console.log('wave-1 cycle chosen   : '+w1.length+'   of those with no open questions: '+clean.length);
+  console.log('readLetter errors     : '+readErrors.length);
+  if(none.length){
+    console.log('\nXXX EVERY PROPERTY IS KNOWN TO HAVE AN RCS YEAR -- these yielded none,');
+    console.log('    which is a failure of this pass, not an absent cycle:');
+    none.forEach(p=>console.log('      - '+p.name+'  ('+p.fileCount+' files walked)'));
+    process.exitCode=1;
+  }
+  if(readErrors.length){
+    console.log('\nreadLetter could not read these (scanner findings, not manifest bugs):');
+    readErrors.slice(0,12).forEach(e=>console.log('      - '+e.property+': '+e.file+'  -- '+e.error));
+  }
+  console.log('\nwritten to '+OUT);
+})().catch(e=>{console.error(e);process.exit(1);});
