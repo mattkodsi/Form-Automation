@@ -10009,11 +10009,34 @@ async function rentAnalysis(opts){
     sheet=setNum(sheet,'D'+r,u?u.cur:null);
     sheet=setNum(sheet,'E'+r,u?u.pro:null);
     sheet=setNum(sheet,'P'+r,u?u.ua:null);
-    sheet=setNum(sheet,'T'+r,(u&&u.safmr150>0)?(u.safmr150/1.5):null);}
+    /* The app stores the CEILING, already rounded, so dividing it back by 1.5
+       does not recover the SAFMR -- it recovers the rounding remainder. A HUD
+       base of 4,413 becomes a ceiling of 6,620, and 6,620/1.5 printed
+       4413.3333333333335 into a column headed "SAFMR". Rounding returns the
+       integer HUD published, exactly, because the ceiling was round(base*1.5). */
+    sheet=setNum(sheet,'T'+r,(u&&u.safmr150>0)?Math.round(u.safmr150/1.5):null);}
   ss=ss.split('<color rgb="FFFF0000"/>').join('<color theme="0"/>');
   ss=ss.split('[Property Name]').join(escXml(opts.propertyName||'Property'));
   ss=ss.split('[Appraisal Company]').join(escXml(opts.apprFirm||'Appraiser'));
   if(wb.indexOf('fullCalcOnLoad')<0)wb=wb.replace('<calcPr ','<calcPr fullCalcOnLoad="1" ');
+  /* Every one of the template's 116 formula cells ships with the cached value it
+     had when the blank was saved -- zeros, #DIV/0!, and a "Below 150%?" verdict
+     of NO. fullCalcOnLoad makes Excel recompute on open, but ANYTHING that reads
+     the stored value instead sees that stale answer: a preview pane, Numbers,
+     Google Sheets, a reader script, or a person who glances at the file without
+     opening it in Excel. Eight properties shipped a workbook saying NO about a
+     package that passes its 150% test.
+     Dropping the cached value leaves the formula and no answer, so the only
+     number anyone can read is one that was actually computed. An empty cell is
+     an honest "not calculated yet"; a cached NO is a claim. */
+  let _stripped=0;
+  sheet=sheet.replace(/<c\b[^>]*>[\s\S]*?<\/c>/g,function(cell){
+    if(cell.indexOf('<f')<0)return cell;              // not a formula cell
+    if(!/<v>[\s\S]*?<\/v>/.test(cell))return cell;    // already valueless
+    _stripped++;
+    /* t="str"/t="e" describe the CACHED value's type, so they go with it. */
+    return cell.replace(/<v>[\s\S]*?<\/v>/g,'').replace(/(<c\b[^>]*?)\s+t="(?:str|e)"/,'$1');});
+  if(!_stripped)throw new Error('the analysis template carried no cached formula values to clear \u2014 its shape has changed, and the 150% verdict may ship stale again');
   F('xl/worksheets/sheet1.xml').data=enc.encode(sheet);
   F('xl/sharedStrings.xml').data=enc.encode(ss);
   F('xl/workbook.xml').data=enc.encode(wb);
