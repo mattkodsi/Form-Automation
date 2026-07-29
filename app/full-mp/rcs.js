@@ -342,6 +342,26 @@ function upsert(units,type,page,count){
   units.push(u);return u;
 }
 
+/* A SAFMR row must never CREATE a unit type. HUD publishes the small-area FMR
+   per BEDROOM COUNT, so that table names sizes ("2BR") where the concluded-rent
+   table names unit types ("2BR/1BA TH"). Routed through upsert(), the mismatch
+   appended three phantom rows to Northcross — a three-type property the app then
+   read as having six, each phantom carrying a SAFMR and no units and no rent.
+
+   Attach to what the roster already has: the exact type, else the stem, else
+   EVERY row with that bedroom count. The last of those is not a fallback but the
+   right answer — when two unit types share a size they share a SAFMR, which is
+   how Circle Park's flat and townhouse rows both come to be priced against the
+   same ceiling. If nothing matches, the figure is dropped rather than invented. */
+function applySafmrBase(units,type,base){
+  const k=norm(type),stem=typeStem(type),br=parseType(type).br;
+  let hit=units.filter(u=>norm(u.type)===k);
+  if(!hit.length)hit=units.filter(u=>typeStem(u.type)===stem);
+  if(!hit.length&&br!=='')hit=units.filter(u=>u.br===br);
+  hit.forEach(u=>{u.safmr_base=base;});
+  return hit.length;
+}
+
 function readTables(txt,pi,units,totals,seen){
   let section='';
   txt.forEach(function(t){
@@ -386,8 +406,7 @@ function readTables(txt,pi,units,totals,seen){
       return;
     }
     if(section==='safmr'&&(m=t.match(ROW_4C))){     // BASE safmr, not the ceiling
-      const u=upsert(units,m[1],pi,money(m[2]));
-      u.safmr_base=money(m[3]);
+      applySafmrBase(units,m[1],money(m[3]));
       return;
     }
   });
