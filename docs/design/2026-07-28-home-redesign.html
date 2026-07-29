@@ -105,15 +105,17 @@
      and the ledger used to be two white slabs of equal weight, so nothing led. */
   .live{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:64px}
   .job{background:var(--card);border:1px solid var(--rule);border-left:3px solid var(--stamp);
-       border-radius:var(--r-card);padding:22px 24px 20px;display:flex;flex-direction:column}
+       border-radius:var(--r-card);padding:20px 24px;
+       display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;
+       column-gap:20px;row-gap:10px}
+  .job .when{grid-column:1/-1}
   .job .when{font-size:10.5px;font-weight:600;letter-spacing:.11em;text-transform:uppercase;
              color:var(--stamp)}
-  .job h3{font-size:19px;font-weight:600;letter-spacing:-.015em;margin:9px 0 6px;line-height:1.2}
-  .job .meta{font-size:13px;color:var(--ink-3);line-height:1.55;flex:1}
+  .job h3{font-size:19px;font-weight:600;letter-spacing:-.015em;margin:0 0 4px;line-height:1.2}
+  .job .meta{font-size:13px;color:var(--ink-3);line-height:1.55}
   .job .meta b{color:var(--ink-2);font-weight:500}
-  .go{margin-top:20px;align-self:flex-start;min-width:196px;background:var(--btn);
-      color:var(--btn-ink);border:1px solid var(--btn);border-radius:var(--r-ctl);
-      padding:0 18px;font-size:13px;font-weight:600;min-height:40px}
+  .go{min-width:196px;background:var(--btn);color:var(--btn-ink);border:1px solid var(--btn);
+      border-radius:var(--r-ctl);padding:0 18px;font-size:13px;font-weight:600;min-height:40px}
   .go:hover{background:var(--btn-hover);border-color:var(--btn-hover)}
   .go:disabled{background:transparent;border-color:var(--rule);color:var(--ink-4);
                cursor:not-allowed;transform:none}
@@ -189,16 +191,16 @@
   <div class="sect"><h2>Due to HUD by August 1</h2><span>3 days</span></div>
   <div class="live">
     <div class="job"><div class="when">3 days</div>
-      <h3>Park Place</h3>
-      <div class="meta">Rent comparability study<br><b>242 units</b> · rents effective Dec 1</div>
+      <div class="txt"><h3>Park Place</h3>
+        <div class="meta">Rent comparability study<br><b>242 units</b> · rents effective Dec 1</div></div>
       <button class="go">Start the RCS package</button></div>
     <div class="job"><div class="when">3 days</div>
-      <h3>Round Barn Manor</h3>
-      <div class="meta">OCAF adjustment<br><b>156 units</b> · rents effective Dec 1</div>
+      <div class="txt"><h3>Round Barn Manor</h3>
+        <div class="meta">OCAF adjustment<br><b>156 units</b> · rents effective Dec 1</div></div>
       <button class="go">Start the OCAF package</button></div>
     <div class="job"><div class="when">3 days</div>
-      <h3>Fairview Housing</h3>
-      <div class="meta">OCAF adjustment<br><b>124 units</b> · rents effective Dec 1</div>
+      <div class="txt"><h3>Fairview Housing</h3>
+        <div class="meta">OCAF adjustment<br><b>124 units</b> · rents effective Dec 1</div></div>
       <button class="go">Start the OCAF package</button></div>
   </div>
 
