@@ -5,7 +5,10 @@ Section 8 (Related Affordable). A form-driven tool that pre-fills from stored +
 uploaded data, clears an internal 150%-SAFMR check, and generates the six-document
 renewal package as review-ready drafts. See `RCS Renewal Automation - Project Plan.md`.
 
-> **Latest handoff:** `SESSION-HANDOFF-2026-07-28.md` — three parallel audits (generation/parsing,
+> **Latest handoff:** `SESSION-HANDOFF-2026-07-29-AUDIT.md` — the corpus audit: the three-way
+> method (read the SOURCES yourself, then compare app vs filed), the audit-wave / repair-break
+> loop, what is fixed, what is open, and the standing rule that every run writes `ZZ-CORPUS-*`
+> properties into Matt's LIVE account and must delete them afterwards. Older: `SESSION-HANDOFF-2026-07-28.md` — three parallel audits (generation/parsing,
 > the UI source against FORM-RULES, and a real browser), 33 defects found and 29 fixed, plus the
 > queue. 852 checks. Older: `SESSION-HANDOFF-2026-07-27.md` — the `?selftest=1` hatch (drive the
 > real form in a browser, no sign-in), what shipped, and the interaction audit that is
