@@ -2949,6 +2949,11 @@ function ringColor(pct){const p=Math.max(0,Math.min(100,pct))/100;
    short specific fields. That is a state, not a percentage: there is no such
    thing as a property being 65% of a property. The chip names what is missing,
    and says nothing at all when nothing is. */
+/* The launcher only. On the menu this hung a "needs" off rows whose whole
+   subject is when a renewal is owed and how big the job is — a demand for
+   something nobody had asked for yet, on a page nobody opens to fill a
+   profile. Where it belongs is the property's own page, next to the fields it
+   is talking about. */
 function profileChip(p){
   const m=(p&&p.profile&&p.profile.missing)||[];
   if(!m.length)return '';
@@ -3483,7 +3488,7 @@ function renderMenu(){
        the card's most important fact (we cannot read this row) nowhere. */
     const _pg=p.hap?(String(p.program||'').trim()||(p.action&&p.action.kind==='unsupported'?'no type stated':'')):'';
     const prog=_pg?('<span class="pc-prog'+(_pg==='OCAF'?' ocaf':_pg==='RCS'?'':' unk')+'">'+esc(_pg)+'</span>'):'';
-    const body='<button class="pc-body" data-open="'+p.id+'"'+(p.caption?' title="'+esc(p.caption)+'"':'')+'><div class="pc-top"><div class="pc-name">'+esc(p.name)+(showAl?'<span class="pc-alias">&ldquo;'+esc(al)+'&rdquo;</span>':'')+'</div>'+profileChip(p)+'</div>'
+    const body='<button class="pc-body" data-open="'+p.id+'"'+(p.caption?' title="'+esc(p.caption)+'"':'')+'><div class="pc-top"><div class="pc-name">'+esc(p.name)+(showAl?'<span class="pc-alias">&ldquo;'+esc(al)+'&rdquo;</span>':'')+'</div></div>'
       +'<div class="pc-meta">'+(p.hap?(esc(p.pm||'Unassigned')+(p.city_state?' &middot; '+esc(p.city_state):'')):(esc(p.fha)+(p.city_state?' &middot; '+esc(p.city_state):'')))+'</div>'
       +(p.hap?dueLine(p):'')
       /* The ledger printed a "Rents effective" header over an empty column. */
