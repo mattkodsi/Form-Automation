@@ -169,7 +169,16 @@ a new suite needs registering (`deliver.sh` calls it).
   they arrive — renamed columns, ISO dates, Excel serials, a promise, a bare array — and that when we
   cannot, `diagnose()` says why instead of showing an empty list.
 
-**1211 checks across seven suites** (168 · 144 · 137 · 33 · 245 · 189 · 295) as of 2026-07-28. These
+- **`app/full-mp/corpus/`** — the RCS corpus loop: drive the real app over every filed package and
+  compare what it generates to what the PM team filed. `test_safety.js` (7) asserts the rails an
+  unattended run needs — tier-3 OCR unreachable, cache gitignored, not on `main`. `test_compare.js`
+  (91) holds the normalisation rules, including the ones that must NOT normalise (the property alias,
+  accounting parentheses, leading zeros). `test_extract.js` (120) reads filed documents and guards the
+  four traps: HUD-92458 values live in widget `/V` and not the text layer, `copyPages` drops the
+  AcroForm, the filed checklist font is offset ASCII−29, and our own output has no word spacing.
+  See `docs/superpowers/plans/MORNING-REPORT.md` for what the first full sweep found.
+
+**1512 checks across eleven suites** (81 · 169 · 144 · 138 · 33 · 245 · 189 · 295 · 7 · 91 · 120) as of 2026-07-29. These
 numbers go stale the moment a suite grows — `MIN_CHECKS` in each file is the binding floor; this list
 is a map.
 ⚠️ **Don't pipe a suite through `| tail`.** A pipeline's exit status is the LAST command's, so node's

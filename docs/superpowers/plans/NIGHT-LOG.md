@@ -225,3 +225,42 @@ RESUME HERE: full sweep of all 34 × 2 orders is running in the background at
 `--jobs 3`, label `sweep-1`, app frozen at d4c3d60. When it lands, read
 `_archive/corpus-cache/_sweep/sweep-1.md`, then diagnose by descending row count
 per Constraint 10 (two properties minimum before any fix).
+
+---
+
+## Task 10 — the full sweep, and the gate
+
+34 properties × 2 fill orders, app frozen at `d4c3d60`. Freeze verified: no file
+under `app/full-mp/*.js` or `shell.head.html` changed between the sweep's start
+and its end — only harness files did.
+
+1,055 values compared. 30 of 34 produced something comparable.
+
+**Three defect classes, each past Constraint 10's two-property floor:**
+
+1. **27 of 34 executed rent schedules unreadable** (7 text · 17 outlined · 10
+   scans). Downstream: no cover letter on 27, no rent schedule on 26, no
+   checklist on 23.
+2. **50 fill-order disagreements across 5 properties** — Barnum House, Friendship
+   Court, Hampshire House, Oaks on North Plaza, The Pines. Root cause read from
+   the source: unit fields are keyed `units.<i>.<field>`, purely positional, so
+   when the schedule and the study order their unit types differently, whichever
+   is uploaded first decides the layout. Barnum House's generated schedule says
+   100 units one way and 83 the other.
+3. **Unit type collapses on 27 properties** — built from bedrooms and bathrooms
+   alone; no field in the data model distinguishes two types sharing both.
+
+**Gate:** `deliver.sh` green end to end — **1,512 checks across 11 suites**
+(81 · 169 · 144 · 138 · 33 · 245 · 189 · 295 · 7 · 91 · 120), RA-port anchors OK,
+bundle built and verified at 2,492,372 bytes.
+
+**Not fixed, deliberately.** All three classes are app changes I stopped short
+of: (1) is a product/cost decision that is Matt's to make, and (2) and (3) both
+need a unit *designation* field that does not exist yet — inventing its name,
+its source and its UI unattended would be the wrong call. Everything is
+diagnosed to root cause with property counts, in `MORNING-REPORT.md`.
+
+RESUME HERE: `docs/superpowers/plans/MORNING-REPORT.md` section 6 lists the three
+decisions. After any fix, re-run with `--label sweep-2 --force` and diff against
+`sweep-1.json` as resolved / persisting / NEW — a NEW row is a regression and
+outranks everything else.
