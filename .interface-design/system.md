@@ -183,11 +183,36 @@ unevenly: things sharing a deadline group tight, things that don't are set apart
 Under 300ms, `--ease` for entering, `transform`/`opacity` only, never `transition:all`.
 Press feedback `scale(.975)`. `prefers-reduced-motion` drops movement, keeps colour.
 
+## Truth rules — a review found all three of these broken at once
+
+This product's authority is that its numbers are right. These are not style preferences.
+
+- **A heading asserts a fact, so only its members may sit under it.** The first build put
+  a card due Aug 8 under a heading that read *"Due to HUD by August 1."* Spacing it apart
+  was decoration over a structural error. If an item does not share the heading's claim, it
+  belongs in a different section — the live zone holds what shares one deadline, nothing else.
+- **Every figure on a page must be countable on that page.** The status line claimed
+  "9 within 30 days" while seven were marked. A count the user cannot verify by looking is
+  worse than no count, because they cannot tell whether the figure or the marking is wrong.
+  The buckets must be disjoint and sum to the total: 3 + 7 + 42 + 2 = 54.
+- **One raised surface family per view.** The card row and the ledger were two white slabs
+  of equal weight on grey, so nothing led. The ledger now sits directly on `--paper` as ruled
+  lines, leaving the live cards as the only elevated surface — that *is* the focal point,
+  achieved structurally rather than by making a headline bigger.
+
 ## States that must exist
 
 Every control: default, hover, active, focus-visible, disabled. Every data surface:
-loading, **empty**, error. The home page's empty state is not an error — when nothing is
-due the statement reads *"Nothing due for three weeks."* A page that can be calm.
+loading, **empty**, error — all four specimened in the style guide.
+
+- The empty state is not a failure. *"No renewals due in the next 60 days"* plus the date of
+  the earliest one. A page that can be calm.
+- **`--filed` earns its place.** A tool for completing packages must show a completed one:
+  green rule, name demoted to 400, submission date in place of the action. You cannot start
+  what is done, so the filed row has no Start button.
+- **Hit areas 40px.** Measured and fixed: the theme toggle was 25px and the masthead links
+  20px. In the ledger the *row* is the 52px target and the Start label stays a quiet
+  affordance — extend the target, don't inflate the control.
 
 ## Checks before shipping a screen
 

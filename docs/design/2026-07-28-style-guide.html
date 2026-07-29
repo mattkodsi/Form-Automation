@@ -109,6 +109,17 @@ tr:hover td{background:var(--sunk)}
 td.nm{color:var(--ink);font-weight:500}
 .r{text-align:right}
 
+/* data states */
+.st{display:flex;gap:20px;padding:15px 0;border-bottom:1px solid var(--rule-soft);align-items:flex-start}
+.st:last-child{border-bottom:none}
+.st-l{flex:0 0 190px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--ink-3);
+      padding-top:2px}
+.st-b{flex:1}
+.st-h{font-size:14px;font-weight:600;color:var(--ink)}
+.st-p{font-size:13px;color:var(--ink-3);margin-top:3px}
+.sk{height:11px;border-radius:2px;background:var(--sunk);border:1px solid var(--rule-soft);
+    margin-bottom:7px}
+
 /* radii + depth */
 .rad{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap}
 .rad div{background:var(--sunk);border:1px solid var(--rule);padding:16px 18px;
@@ -225,6 +236,43 @@ td.nm{color:var(--ink);font-weight:500}
       <input class="inp" placeholder="Find a property">
     </div>
     <p class="note" style="margin:16px 0 0">Hover each, tab through them, and hold one down.</p>
+  </div>
+
+  <h2>Data states</h2>
+  <p class="note">Missing states are the fastest tell of an unfinished interface. Every data surface
+  owes an empty, a loading and an error. The empty state is not a failure — when nothing is due, the
+  page says so plainly and offers the one thing worth doing next.</p>
+  <div class="panel">
+    <div class="st">
+      <div class="st-l">Empty — nothing due</div>
+      <div class="st-b">
+        <div class="st-h">No renewals due in the next 60 days.</div>
+        <div class="st-p">The earliest is Northcrest Gardens on Dec 1.</div>
+        <button class="go quiet" style="margin-top:12px">Show the full calendar</button>
+      </div>
+    </div>
+    <div class="st">
+      <div class="st-l">Empty — no search match</div>
+      <div class="st-b">
+        <div class="st-h">No property matches “fairvew”.</div>
+        <div class="st-p">Check the spelling, or search by contract number.</div>
+      </div>
+    </div>
+    <div class="st">
+      <div class="st-l">Loading</div>
+      <div class="st-b">
+        <div class="sk" style="width:38%"></div><div class="sk" style="width:64%"></div>
+        <div class="sk" style="width:52%"></div>
+      </div>
+    </div>
+    <div class="st">
+      <div class="st-l">Error</div>
+      <div class="st-b">
+        <div class="st-h" style="color:var(--stamp)">The renewal calendar could not be reached.</div>
+        <div class="st-p">Your saved work is unaffected. This page will retry on its own.</div>
+        <button class="go quiet" style="margin-top:12px">Retry now</button>
+      </div>
+    </div>
   </div>
 
   <h2>Radii — three, not twenty</h2>
