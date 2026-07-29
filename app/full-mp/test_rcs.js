@@ -16,7 +16,7 @@ const els={};
 global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>null,querySelectorAll:()=>[],createElement:()=>mk(),addEventListener(){},body:{classList:{toggle(){},contains(){return false;}}}};
 const fs=require('fs'),path=require('path'),os=require('os');
 
-const MIN_CHECKS=262;
+const MIN_CHECKS=268;
 let n=0,fails=0,verdict=null;
 const BAR='='.repeat(68);
 function fail(msg,err){
@@ -588,6 +588,24 @@ async function reader(file){
     {x:72,y:700,s:'Appendix C'},{x:72,y:680,s:'Photographs of the subject'}]});
   eq('a readable file with no letter is not called a scan',!!noLetter.textless,false);
   eq('and it reads nothing either',noLetter.units.length,0);
+
+  /* ── one unit type, one key, however the study spells it ──────────────────
+     North Park's transmittal table says 1BD/1BA where its SAFMR and gross-renewal
+     tables say 1BR/1BA. Keyed on the raw string the roster found SEVEN types in a
+     four-type property and printed three ghost rows, and the allowance split down
+     the middle: the studio matched between tables and took the study's figure,
+     the other three did not and fell back to the prior schedule's. */
+  console.log('\n─ BD and BR are the same bedroom ─');
+  eq('a bedroom spelled BD keys the same as BR',R.parseType('1BD/1BA').br,1);
+  eq('and 2BD too',R.parseType('2BD/1BA').br,2);
+  eq('and 3BD/1.5BA keeps its baths',R.parseType('3BD/1.5BA').ba,1.5);
+  /* And the rows a study means to keep apart stay apart: Lansing prices
+     "with patio" and "without patio" separately, and they differ by more than a
+     letter, so nothing here can merge them. */
+  { const ln2=await R.readLetter(await reader(path.join(FIX,'belfry-lansing-manor.pdf')));
+    eq('two rows differing by a qualifier are still two',ln2.units.length,2);
+    T('and still carry different rents',ln2.units[0].proposed!==ln2.units[1].proposed);
+    eq('and no ghost row was invented',ln2.units.filter(u=>!u.count&&!u.proposed).length,0); }
 
   finish();
 })().catch(e=>{fail('the suite threw',e);process.exit(1);});
