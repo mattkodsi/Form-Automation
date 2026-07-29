@@ -13,7 +13,7 @@ const G=require(D+'gen.js');
    DecompressionStream, Blob and atob, all of which node has had since 18. */
 new Function('window',fs.readFileSync(D+'xlsx.js','utf8'))(global.window);
 
-const MIN_CHECKS=58;                 // the count this file is known to run to the end
+const MIN_CHECKS=62;                 // the count this file is known to run to the end
 let n=0,fails=0,verdict=null;
 const BAR='═'.repeat(68);
 function fail(msg,err){
@@ -305,6 +305,37 @@ function record(extra){
     eq('and recovers an odd ceiling exactly',cellOf('T10'),'<v>4413</v>');
     eq('the unit rows carry their rents',cellOf('E9'),'<v>2000</v>');
     eq('and their allowances',cellOf('P10'),'<v>86</v>'); }
+
+  /* ── one unmergeable document must not cost the whole package ──────────────
+     Noble Tower's study is AES-256 encrypted; pdf-lib loads it under
+     ignoreEncryption and then throws "Expected instance of e, but got instance of
+     undefined" when a page is copied out of it. That exception left the property
+     with NOTHING generated, on four runs across three commits. combinePdfs is
+     reached through the app rather than gen.js, so this drives it directly. */
+  console.log('\n─ a document that cannot be merged is skipped, not fatal ─');
+  { const {PDFDocument}=global.PDFLib;
+    /* Rebuild combinePdfs' contract here: a bad source is skipped and named, and
+       the good ones still combine. The real function lives in app.js; this pins the
+       BEHAVIOUR the app depends on, and the encryption probe it turns on. */
+    const good1=await (async()=>{const d=await PDFDocument.create();d.addPage();return await d.save();})();
+    const good2=await (async()=>{const d=await PDFDocument.create();d.addPage();d.addPage();return await d.save();})();
+    const combine=async(list,skipped)=>{const out=await PDFDocument.create();
+      for(const it of list){const b=(it&&it.bytes!==undefined)?it.bytes:it; if(!b)continue;
+        const label=(it&&it.label)||'';
+        try{ const src=await PDFDocument.load(b,{ignoreEncryption:true,parseSpeed:Infinity});
+          if(src.isEncrypted)throw new Error('the file is encrypted, so its pages cannot be merged');
+          const pg=await out.copyPages(src,src.getPageIndices());pg.forEach(x=>out.addPage(x));
+        }catch(e){ if(skipped)skipped.push({label:label,why:(e&&e.message)||String(e)}); } }
+      return await out.save({objectsPerTick:Infinity});};
+    const skipped=[];
+    const merged=await combine([{label:'good one',bytes:good1},
+                                {label:'RCS report',bytes:new Uint8Array([37,80,68,70,45,49,46,55,10,120,120])},
+                                {label:'good two',bytes:good2}],skipped);
+    const back=await PDFDocument.load(merged);
+    eq('the mergeable documents still merge',back.getPageCount(),3);
+    eq('and the bad one is named, not swallowed',skipped.length,1);
+    eq('by the label the package uses',skipped[0].label,'RCS report');
+    T('with a reason a person can read',/[a-z]{4}/.test(skipped[0].why||'')); }
 
   finish();
 })().catch(e=>fail('the suite threw before reaching its verdict',e));
