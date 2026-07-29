@@ -314,3 +314,60 @@ RESUME HERE: next lane-R target is Barnum's row ORDER (23 rows) then Oaks'
 missing current rents (11). Reproduce both with
 `node app/full-mp/corpus/sweep.js "$CORPUS" _archive/corpus-cache app/full-mp/corpus/corpus.json --only "Barnum House" --force --label sweep-3`
 and diff against `sweep-2.json` keyed on property·doc·key.
+
+---
+
+## Lane R — Barnum's HUD unit total, and three spellings
+
+**Barnum House was not an ordering bug.** I dumped its real parsed inputs rather
+than theorising a third time. The executed schedule writes its studio as
+`"0 BEDROOM"`, and `rsParseUnitType` returns an empty bedroom count for it.
+`rcsMatch` returns early on a row with no bedroom count, so the study's studio
+line was homeless and the homeless path added a SECOND row for the same 17
+units. **17 + 66 + 17 = the 100** the generated HUD form claimed against a
+schedule that says 83.
+
+**Fixed by evidence, not by imagination.** I parsed all 34 filed schedules and
+asked which unit types the reader cannot turn into a bedroom count:
+
+| spelling | properties | why it failed |
+|---|---|---|
+| `BR3` | Shiloh Village, 333 Holly, The Pines | the number comes AFTER the letters |
+| `2BR2BA` | 333 Holly, Oaks on North Plaza | no space, so `br\b` never fires — the next char is a digit |
+| `0 BEDROOM` | Barnum House | zero bedrooms never mapped to Studio, though `rcsBrOf` always has |
+
+Left unread deliberately: `3613`, `16R`, `2BIRMBA-ADA`, `2lBA` — all Oaks on
+North Plaza, all OCR misreads of a poor scan. A wrong unit type is worse than a
+missing one.
+
+**sweep-1 → sweep-3, fill-order rows keyed on location:**
+
+| property | before | after |
+|---|---:|---:|
+| Barnum House | 23 | **0** |
+| Friendship Court | 8 | **0** |
+| Hampshire House | 4 | **0** |
+| The Pines | 3 | **0** |
+| Oaks on North Plaza | 11 | 16 |
+
+**49 → 16. Barnum's `total.units` disagreement is gone: both orders now say 83.**
+
+**Oaks rose and I am not explaining that away.** But the composition changed for
+the better: in sweep-1 all 11 rows were a value present in one order and
+entirely absent in the other — schedule-first lost every current rent. In
+sweep-3 only 5 are. The count rose because ordering differences became visible
+once its types parsed. Its residue traces to a scan the reader cannot read
+(`111198`, `3613`), which is the OCR decision, not the merge.
+
+**Gate:** `deliver.sh` green, **1,527 checks**, nine new ones each taken from a
+real filed document.
+
+**The `test_crypto.js` flake:** failed inside `deliver.sh` twice, passed on all
+eight standalone runs and both subsequent gate runs. I could not diagnose it
+because `deliver.sh` deleted the output with its temp directory. It now keeps
+the failing output and prints its last 25 lines, so the next occurrence is
+diagnosable rather than merely annoying.
+
+RESUME HERE: full 34-property `sweep-4` running in the background to quantify
+the whole corpus after these fixes. When it lands, diff against `sweep-1.json`
+keyed on property·doc·key and update MORNING-REPORT.md's headline numbers.
