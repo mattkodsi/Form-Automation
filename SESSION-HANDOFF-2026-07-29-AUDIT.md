@@ -96,6 +96,15 @@ Tier 1 scanner: `scratchpad/scan.js` pattern — loads `app/full-mp/*.js` in nod
   Every scratch property is named `ZZ-CORPUS-*` and **must be deleted after each batch**:
   `node app/full-mp/corpus/drive.js --cleanup --prefix ZZ-CORPUS-`
   Baseline: **12 real properties.** After cleanup that count must still be 12.
+- **THE PROPERTY COUNT IS NOT A SAFETY CHECK, AND NEVER WAS.** On 2026-07-29 the account
+  went from 14 properties to 4 within minutes, while the corpus cleanup was reporting
+  `0 whose name starts with "ZZ-CORPUS-"` — and `cleanup()` returns before deleting
+  anything when nothing matches the prefix (drive.js:1200), so the runs could not have
+  caused it. Two properties were created at 22:38 that had not existed before
+  (`Trees - Maple`, a fresh `Manhattan Plaza`), which is the signature of someone working
+  in the app, not of a sweep. **The only valid check is "0 properties named `ZZ-CORPUS-*`".**
+  Never assert a total, never delete anything that lacks the prefix, and never treat a
+  changed count as evidence about the audit.
 - **The live-account baseline is no longer 12.** After wave 1 the account holds **14**,
   with **0** `ZZ-CORPUS-*` — my scratch properties were all deleted and verified gone.
   Nine properties were created on 2026-07-29 that are NOT mine and NOT prefixed:
