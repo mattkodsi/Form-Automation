@@ -1769,6 +1769,55 @@ async function rsTplRuns(){ // the blank template's own printed text, read once
   const bin=atob(b64);const tb=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)tb[i]=bin.charCodeAt(i);
   const doc=await window.PDFLib.PDFDocument.load(tb,{parseSpeed:Infinity});
   _rsTplRuns=await rsTextPages(doc);return _rsTplRuns;}
+/* ---- tier 2's premise, and the one pass that checks it -------------------
+   Both of tier 2's moves rest on a single assumption. It reads a value out of
+   the blank template's own field rectangle, and rsDropTplLabels below tells a
+   printed label from an entered value by finding that label at the template's
+   own coordinates. Both are only valid if THIS COPY PRINTS THE FORM WHERE THE
+   BLANK FORM PRINTS IT.
+
+   For a flattened digital copy that is exactly true -- measured at 0.0pt over 84
+   matches. For a page carrying a SCANNER'S text layer it is false, because those
+   coordinates describe where the words landed on the glass, not where the form
+   puts them. Nothing checked which kind of page had arrived, so four schedules
+   were read through boxes sitting over the wrong printing and the reader
+   reported success on all four. Sample Property came back with the form's
+   own heading swallowed into the Project Name box -- a project called
+   "OaksonINorthP,lazafkaNorthPlazaApartmentsPartA-ApartmentRents" -- a 14-unit
+   row at $111,198 a month, and a monthly potential of $1,642,642 where the page
+   prints $91,922. Sample Property, 333 Holly and The Pines each did the same, and
+   each of them named itself "...PartA-ApartmentRents" too.
+
+   Measured over the whole corpus the premise is not marginal, it is binary. A
+   copy that shares the template's geometry puts 28 to 128 of the form's own
+   labels exactly where the form puts them -- 78% to 99% of the ones present on
+   the page. A copy that does not puts at most THREE there, 4% to 10%. There is
+   no document in the corpus between 10% and 78%, so one pass settles it.
+
+   Note what this is NOT: an attempt to measure the offset and correct for it.
+   That was tried first and the measurement refused it -- on the eight misaligned
+   schedules the displaced labels do not agree on any single shift (4 of 56, 5 of
+   62, 2 of 22, 6 of 27 landing within 2pt of the best one). They are not shifted
+   copies of our template, they are a different printing of the form. Correcting
+   a shift that is not there would have placed values with false confidence. */
+const RS_TPL_MIN=8;   // labels at template coordinates; the aligned copies show 28 at worst
+function rsTplAlign(runs,tplRuns){ // -> {at, seen}: how much of the form's own printing sits where the form puts it
+  if(!runs||!tplRuns)return {at:0,seen:0};
+  const by=new Map();
+  runs.forEach(r=>{const t=String(r.s).trim();if(!t)return;
+    if(!by.has(t))by.set(t,[]);by.get(t).push(r);});
+  let at=0,seen=0;
+  for(let i=0;i<tplRuns.length;i++){const L=tplRuns[i],t=String(L.s).trim();
+    // the same two rules rsDropTplLabels applies, so this measures that predicate
+    // and not a near relative of it: a printed rule is not a label, and +/-4pt is
+    // what counts as the same spot
+    if(!t||/^[_\-–—.]+$/.test(t))continue;
+    const c=by.get(t);if(!c)continue;
+    seen++;
+    for(let j=0;j<c.length;j++)
+      if(Math.abs(c[j].y-L.y)<=4&&Math.abs(c[j].x-L.x)<=4){at++;break;}}
+  return {at:at,seen:seen};}
+function rsTplPremiseHolds(al){return !!al&&al.at>=RS_TPL_MIN&&al.at>=al.seen*0.5;}
 function rsDropTplLabels(runs,tplRuns){
   /* The form's own printed text is not an entered value. Depth alone cannot tell
      them apart here: this copy draws everything at depth 0, so "Heating ________"
@@ -1792,6 +1841,15 @@ async function rsReadTextTier(pages,bytes,onStep){ // flattened copy -> same par
   const {pg0,pg1}=rsClassifyPages(pages.map(rs=>rs.map(r=>r.s).join(' ')));
   if(pg0<0)return null;
   const tplr=await rsTplRuns();
+  /* Decline rather than misplace. A page that does not print the form where the
+     form prints it cannot be read out of the form's own boxes, and asking anyway
+     is how $91,922 became $1,642,642. Returning null sends it down to tier 3,
+     which registers a page onto the template before reading it and so is the tier
+     that can take an arbitrary geometry.
+     This comes BEFORE the checkbox assist below on purpose: a page we have
+     already decided we cannot place must not be sent out to be scanned for ticks
+     we could not have located anyway. */
+  if(!rsTplPremiseHolds(rsTplAlign(pages[pg0],tplr&&tplr[0])))return null;
   const clean=(rs,tp)=>rsDropTplLabels(rs,tplr&&tplr[tp]);
   const F=Object.assign(rsMapRects(clean(pages[pg0],0),rects,0),pg1>=0?rsMapRects(clean(pages[pg1],1),rects,1):{});
   let s8=rsS8FromPages(pages);
