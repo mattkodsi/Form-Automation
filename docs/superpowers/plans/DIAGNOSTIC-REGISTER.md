@@ -991,3 +991,115 @@ The team's sheet prints `-` there.
 
 **No arithmetic error in any filed document on this property** — the agent verified every
 extension, total and gross by hand, both years.
+
+---
+
+# Oceanport (75563) and Oaks on North Plaza (75544) — wave 4
+
+## M31 · The zero-unit-type class, root cause found
+
+**Oceanport's study is not the problem it looked like.** It is a fully digital Word→PDF:
+`pdffonts` shows eleven ordinary Times/Arial faces, `Form: none`, page 1 carries 661
+characters of extractable text, and `pdfimages` finds only a 243×235 logo — **no image-only
+cover page hiding anything.** The appraiser's letter is on **pages 2–4** and the
+concluded-rent table on **page 3**.
+
+The reader read **two pages** and reported "No appraiser's letter was found", 0 unit types.
+
+The distinguishing feature is the shape of the table cell: **every unit-type label is two
+lines** — `1BR/1BA` on the first, `SMALL` on the second — so the text stream emits
+`1BR/1BA`, `SMALL`, `1BR/1BA`, `MEDIUM`, … as separate runs, and **all six labels appear
+before the first `# UNITS` value in reading order.** No row pattern can match, because
+there are no rows in the stream.
+
+This is the same family as Peterson's wrapped `Senior` line and Walden's late designation,
+but structural rather than incidental. Two things to fix: the row reader must join a label
+to its continuation line, and the letter scan must reach the page the letter is on.
+
+Because 0 types were read, the draft schedule carried the prior year forward: **no contract
+rents at all**, FY2023 allowances printed under a 07/01/2024 effective date, prior-year
+Part D ($2,082 where the filing says $3,220), no SAFMR, and a spurious seventh Part A row
+taking Total Units to **101** against 100.
+
+The same study spells its six types **four ways across its own pages** — `1BR/1BA`+`SMALL`,
+`1BD/1BA`, `2BD/2BA`, `2BR/2BA` — and four more spellings appear elsewhere in the cycle
+(`1 BR SM`, `1BR SM`, `1 BR-S`, `One Bedroom Small`). Its p47 labels the subject's 2BR units
+as two-bath when p17 says every unit has one bathroom.
+
+## M32 · Tier 2 ACCEPTED a text layer it should have rejected — the mirror of M19
+
+Oaks on North Plaza's prior schedule is a **bitonal CCITT scan carrying a scanner-generated
+OCR text layer of unusable quality**. The app read it — `via: text`, `kind: fields`,
+**0 OCR calls**, tier `text`, recorded as a clean success — and swallowed the garbage
+verbatim:
+
+| field | what the app stored | truth |
+|---|---|---|
+| property name | `OaksonINorthP,lazafkaNorthPlazaApartmentsPartA-ApartmentRents` | `Oaks on North Plaza fka North Plaza Apartments` |
+| 1 BR current rent | **111198** | 1,198 (the layer prints `111, 198`) |
+| 3 BR ADA current rent | **11918** | 1,198 (the layer prints `1, 1918`) |
+| monthly contract rent potential | **1,642,642** | **91,922** |
+
+That name reached the workbook title, all three filenames, the package dialog and the
+letterhead warning. **This is M19 inverted**: there, tier 2 refused pages it could read; here
+it accepted one it could not. Both are the same missing judgement — nothing checks whether
+what came back is plausible. A rent of 111,198 on a property whose other five rents are
+between 1,198 and 1,876, and a project name with no spaces and a comma inside a word, are
+both rejectable on their face.
+
+**A code reading confirms the generality: there is no plausibility check on a parsed rent
+anywhere.** This does not need a second property.
+
+## M33 · Fill order, at its most destructive yet
+
+Oaks on North Plaza, same two files:
+
+- **`rcs-first`** — all six study types merged onto the six schedule rows correctly.
+- **`rs-first`** — **one** of six merged (`2 BR/1 BA` ↔ `2 BR / 1 BA TH`); the other five
+  were **appended as rows 15–19**, giving an eleven-row sheet, 118 units of double-counted
+  allowance, and half-empty rent columns. It also tripped a warning the other order never
+  sees: *"Part A holds 11 rows and your unit types fill them, so the 2 non-revenue rows will
+  be left off Part A."*
+
+The ADA distinction is lost in both orders: `2 BR/1 BA - ADA` and `3 BR - ADA` come out
+identical to their non-ADA siblings, so two pairs of rows read the same.
+
+## Confirmations
+
+- **SAFMR from the HUD pull**: Oaks prints `1562 / 1852 / 2347.3333333333335` where the study
+  prints `1,490 / 1,760 / 2,240`. Sixth property, and the agent noted the pull looks like a
+  current-year vintage against a 2024 filing. `592101a` and `1de0813` address both halves.
+- **Allowances**: Oceanport's filed Col. 5 (43/40/45/63/73/19) comes from
+  `Oceanport Senior Citizens-M2M-UAF-FY2024.pdf`, which applies a **1.033** factor to the
+  FY2023 set; ours printed the FY2023 set unfactored. Oaks' filed Col. 5 (120/233/233/176/
+  246/246) comes from `Exhibit_A_Eff_1-1-25.pdf`; ours printed the prior year's, which is
+  also what its study quoted. **Twelfth and thirteenth confirmations** that a third document
+  governs.
+
+## The rig, again
+
+`corpus.json` records Oaks on North Plaza as having **no filed cover letter, submittal
+letter, checklist or tenant notice** and `hasCombined: false`. All three owner documents sit
+in `2025 (RCS)/Submission Package/` inside a signed 92-page package that was never indexed.
+Any conclusion drawn from "the team filed nothing here" would have been false.
+
+## team wrong
+
+- **Oaks: the filed package binds the SUPERSEDED study.** The signed package carries the
+  **30 August** version — 4 unit types, 16 one-bedrooms, gross $127,422 — while the executed
+  schedule and the team's own workbook use the **16 September** revision — 6 types, 14
+  one-bedrooms plus two ADA rows, gross $128,787. The bound exhibit does not support the
+  rents that were filed.
+- Oaks' filed workbook carries a Denver ZIP (`80209`) for an Austin property and a note about
+  *"Starmark Rents"* — another firm's name in a Cornerstone comparison. Its SAFMR block is
+  the July draft's, not the September study's.
+- Oceanport's study prints the property's ZIP as **60657** — a Chicago ZIP, the appraiser's
+  own city — on its cover page, against 07757 everywhere else; and its p36 narrative
+  describes a property "which specializes on individuals struggling with homelessness",
+  boilerplate from another assignment, on a senior-citizens property.
+- Oceanport's tenant notice told residents **$2,525**; the executed rent is **$2,590**, and
+  **no study concluding 2,590 exists in the folder** — the step from 2,525 is undocumented
+  and not a uniform factor (+65/+65/+65/+20/+15/+20).
+- Oceanport's `Exhibit 2` checklist carries the PDF title `…New Horizons 3.25.24.pdf` while
+  New Horizons' checklist was titled `Oceanport Senior Citizens`. A reciprocal re-save
+  between two properties, and a real filing artefact.
