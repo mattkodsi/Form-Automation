@@ -1203,3 +1203,88 @@ briefly read another firm's study while believing it was this one. It caught the
 because the content contradicted images it had already read. It re-extracted everything under
 a pid-scoped path. **Every future agent brief must require a pid- or property-scoped scratch
 path** — this is the same clobber that once made a test suite read another run's bundle.
+
+---
+
+# Mapleview Towers (75567) — wave 4 complete, and the comparator lied
+
+## M36 · THE SWEEP'S OWN COMPARATOR PRODUCED A FALSE HIGH-SEVERITY MISMATCH
+
+`_sweep/75567.json` reports:
+
+> `unit.0.proposed · ours 3095 / theirs 3200 · mismatch · severity high`
+
+**Both halves are wrong.** The filed workbook has two stacked blocks — rows 2–6 are the
+**superseded $3,200 proposal**, rows 9–13 are labelled **`Revised`** and carry **$3,095**.
+The comparator read the superseded block. And its own `notes` show it read the filed side from
+`Submission/Archive/… (signed).pdf`, the **2 December 2025** submission that Gill Group
+**rejected**, not the 30 April 2026 package that was actually filed and accepted.
+
+Our value of 3,095 matches the governing filed figure **exactly**.
+
+This is the third instrument failure in this register, after `OakCenter1` and the shared-formula
+"missing formulas". It is the worst of the three, because it manufactured a *high-severity*
+row rather than a cosmetic one. **Any high-severity sweep row must be confirmed against the
+newest filed package and the governing block before it is believed.**
+
+## M19 confirmed — tier 2 rejects a readable page, and there may be a reason
+
+`uploads.rs.state = "could not be read"` in all four runs: *"the printed labels do not sit
+where the form puts them (they are out by about **7.1 points**), so the values could not be
+placed with confidence."* Two OCR calls, 30.7 s, then refused. `tier: unreadable:text`.
+
+**The file did not deserve that.** `pdftotext -layout` returns every Part A row, both totals,
+Part B, Part D and Part I correctly laid out, with no OCR at all. `pdffonts` shows embedded
+subsetted fonts, there is a live AcroForm, and `pdfimages` finds three small rasters — a logo
+and two signature strips.
+
+**Westwood Village failed at 7.1 points too.** Same number, same message, both on files a
+text parser reads cleanly. And the agent found a plausible cause worth chasing: the footers
+disagree — **page 1 says "Page 1 of 2" and page 2 says "Page 2 of 3"** — so the document is
+assembled from two different printings of the HUD-92458, which is exactly how a consistent
+few-point offset would arise between the page and the blank the app registers against.
+
+Consequence: **1 of 6 documents.** The workbook's `Current Rent` cell is empty, and that empty
+cell is the only downstream trace of the whole prior schedule.
+
+## The allowance agrees on zero — the second such property
+
+Prior schedule Col. 5, the study's own table, ours, and the executed filing all say **0**, and
+the third document (`Exhibit A - Mapleview Towers.pdf`, effective 4/1/2026) confirms it:
+100 units, 1 bedroom, contract 3,095, **utility allowance 0**, gross 3,095. The filed workbook
+has no allowance column at all.
+
+With Noble Tower that is **two of fourteen** properties where the governing third document
+agrees with $0 rather than overriding. Whatever finally settles Column 5 must not treat a
+stated zero as an absence — the same lesson Part D learned in `83a1e14`.
+
+## `rcsRecall` would cost a real user the one document the app delivered
+
+`reopen.held.rcs.hasBytes = false` on both orders. The harness re-attached the study so the
+two orders stayed comparable; **a real PM who closed the package and came back would lose
+document 04** — which on this property is the only document generated. `d46e42e` made that
+survivable rather than silent, but it is still a loss.
+
+## Correct, and worth saying
+
+The concluded rent is right: **$3,095** in the study, in our workbook, in the filed schedule
+and in the tenant notice. Four spellings of one unit type across the cycle (`1BR/1BA`,
+`One Bed`, `1-Bedroom`, `1 Bedroom`) and ours matches the study it read.
+
+## team wrong
+
+- **The filed draft's Part D is stale:** `Employee Unit / 1 Bedroom / 3,200` and total rent
+  loss `$3,200`, while Part A prices that same unit at **3,095**. Left over from the rejected
+  proposal. The executed copy corrects it to 3,095.
+- The filed draft's **Part F is blank**; the executed copy carries $309,500.
+- The tenant notice's header says `Stamford, CT 06901` and its comment paragraph says
+  **06604** — in both the packaged and the loose copy.
+- The loose tenant notice is five months stale, still showing the rejected `$3,200 / +$752`.
+- Study grid p26 says `Cooking G` and `Hot Water E`; every HUD-92458 says `Cooking E` and
+  `Hot Water G`. One of the two is wrong.
+- The owner cover letter's letterhead is obscured by the DocuSign stamp — it reads
+  `…iew Towers Preservation, LP`.
+
+An agent honesty note worth keeping: it first read the draft's monthly potential as `$312.595`
+at 150 dpi, re-rendered at 500 dpi, found an unambiguous comma, and **withdrew its own
+finding** rather than filing it. 309,500 + 3,095 = 312,595 ✓.
