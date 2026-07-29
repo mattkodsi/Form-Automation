@@ -203,6 +203,36 @@ async function runProperty(p){
      cause once per field and buries the handful of real ones. So compare only
      the documents both sides actually have, and record the rest as what they
      are: a document not generated, with the app's own reason. */
+  /* A FILED WORKBOOK MAY COVER MORE THAN ONE PROPERTY. Colonial Village's holds
+     a sheet for it and a sheet for White Oak Townhomes, which share its
+     contract, and reading the first one compared our figures against the wrong
+     development -- 55 differences that were entirely this.
+
+     The sheet is chosen by UNIT COUNTS, not by which one agrees with us most
+     overall. A unit count is a fact of the property that both documents state
+     independently, so matching on it identifies the sheet without letting the
+     choice be steered by the very values under test. The decision is written
+     into the notes either way. */
+  const fx=filed.facts.analysisXlsx;
+  if(fx&&fx.sheets&&fx.sheets.length>1&&ours.analysisXlsx){
+    const countsOf=v=>new Set(Object.keys(v||{}).filter(k=>/^unit\.\d+\.units$/.test(k))
+      .map(k=>String(v[k])).filter(x=>x&&x!=='0'));
+    const mine=countsOf(ours.analysisXlsx.values);
+    let best=null,bestHit=-1;
+    fx.sheets.forEach(sh=>{
+      const hit=[...countsOf(sh.values)].filter(x=>mine.has(x)).length;
+      if(hit>bestHit){bestHit=hit;best=sh;}});
+    if(best&&best.sheet!==fx.sheet&&bestHit>0){
+      rec.notes.push('filed: the analysis workbook holds '+fx.sheets.length+' sheets ('
+        +fx.sheets.map(x=>JSON.stringify(x.sheet)).join(', ')+'); compared against '
+        +JSON.stringify(best.sheet)+', chosen because '+bestHit+' of its unit counts match ours');
+      filed.facts.analysisXlsx=Object.assign({},fx,{values:best.values,sheet:best.sheet});
+    }else if(best){
+      rec.notes.push('filed: the analysis workbook holds '+fx.sheets.length+' sheets; kept '
+        +JSON.stringify(fx.sheet)+(bestHit>0?'':' — no sheet\'s unit counts matched ours'));
+    }
+  }
+
   const notGenerated=[];
   const commonFiled={};
   for(const dt of Object.keys(filed.facts)){

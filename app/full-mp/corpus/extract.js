@@ -608,12 +608,49 @@ function sharedStrings(xml){
   }
   return out;
 }
+/* A FILED WORKBOOK IS NOT ALWAYS ONE ANALYSIS. Six of the thirty-four hold
+   several sheets, named for the firm that produced them rather than for what
+   they cover -- ["Belfry","Belfy"], ["Cornerstone - 11.25","Gill - 11.25"],
+   ["Belfry - 10.25","Novoco - 10.25"]. Colonial Village's two sheets are the
+   two developments sharing its contract, and reading only the first compared
+   our Colonial Village figures against White Oak Townhomes': 55 differences
+   that were entirely this. Read every sheet; let the caller say which one it
+   means. */
+function xlsxSheets(files,dec){
+  const names={};
+  const wb=files['xl/workbook.xml']?dec(files['xl/workbook.xml']):'';
+  const rels=files['xl/_rels/workbook.xml.rels']?dec(files['xl/_rels/workbook.xml.rels']):'';
+  const relTarget={};
+  for(const m of rels.matchAll(/<Relationship[^>]*Id="([^"]+)"[^>]*Target="([^"]+)"/g))relTarget[m[1]]=m[2];
+  const order=[];
+  for(const m of wb.matchAll(/<sheet[^>]*name="([^"]*)"[^>]*r:id="([^"]+)"/g)){
+    const t=(relTarget[m[2]]||'').replace(/^\/?xl\//,'');
+    if(t)order.push({name:m[1],path:'xl/'+t});
+  }
+  if(!order.length)Object.keys(files).filter(k=>/^xl\/worksheets\/sheet\d+\.xml$/.test(k))
+    .sort().forEach(k=>order.push({name:k.replace(/.*sheet/,'sheet').replace('.xml',''),path:k}));
+  return order.filter(o=>files[o.path]);
+}
+
 function xlsxFacts(bytes){
-  const notes=[],values={};
   const files=unzip(bytes instanceof Uint8Array?bytes:new Uint8Array(bytes));
   const dec=b=>b.toString('utf8');
-  const sheet=files['xl/worksheets/sheet1.xml'];
-  if(!sheet)throw new Error('this workbook has no xl/worksheets/sheet1.xml — it is not the RCS analysis template');
+  const sheets=xlsxSheets(files,dec);
+  if(!sheets.length)throw new Error('this workbook has no worksheets — it is not the RCS analysis template');
+  const all=sheets.map(sh=>Object.assign({sheet:sh.name},oneSheet(files,dec,files[sh.path])));
+  /* The first sheet that actually carries unit rows is the default answer, so
+     a single-sheet workbook behaves exactly as before. */
+  const primary=all.find(x=>Object.keys(x.values).some(k=>/^unit\./.test(k)))||all[0];
+  const out={docType:'analysisXlsx',pages:[0,0],values:primary.values,boilerplate:[],
+             notes:primary.notes.slice(),sheet:primary.sheet,sheets:all};
+  if(all.length>1)out.notes.unshift('this workbook holds '+all.length+' sheets ('
+    +all.map(x=>JSON.stringify(x.sheet)).join(', ')+'); values above are from '
+    +JSON.stringify(primary.sheet)+' — a caller comparing against a known property should pick');
+  return out;
+}
+
+function oneSheet(files,dec,sheet){
+  const notes=[],values={};
   const cells=sheetCells(dec(sheet));
   const ss=files['xl/sharedStrings.xml']?sharedStrings(dec(files['xl/sharedStrings.xml'])):[];
   /* The title is one rich-text string: "<property> - <firm> Rent Grid". */
@@ -665,8 +702,8 @@ function xlsxFacts(bytes){
     }
     if(n>hdrScore){hdrScore=n;hdrRow=row;hdr=found;}
   }
-  if(!hdrRow){notes.push('no header row recognised in this workbook; no unit rows read');
-    return {docType:'analysisXlsx',pages:[0,0],values:values,boilerplate:[],notes:notes};}
+  if(!hdrRow){notes.push('no header row recognised in this sheet; no unit rows read');
+    return {values:values,notes:notes};}
   notes.push('header row '+hdrRow+', '+hdrScore+' columns recognised');
 
   /* A header may appear more than once, and may sit beside its data rather
@@ -713,7 +750,7 @@ function xlsxFacts(bytes){
   if(rowsRead.length)notes.push('unit rows read from sheet rows '+rowsRead.join(', '));
   if(skipped.length)notes.push('skipped as template rows (a unit type counting no units, no rent, no proposal): sheet row '+skipped.join(', '));
   if(!r)notes.push('header row found but no unit rows beneath it');
-  return {docType:'analysisXlsx',pages:[0,0],values:values,boilerplate:[],notes:notes};
+  return {values:values,notes:notes};
 }
 
 /* ------------------------------------------------------------ assembly --- */
@@ -780,6 +817,6 @@ async function extractFacts(bytes,docType){
   return await factsForRange(doc,docType,0,doc.getPageCount()-1);
 }
 
-module.exports={extractFacts,canon,normProse,loadDoc,pageLines,pageAnnots,rangeAnnots,
+module.exports={extractFacts,xlsxSheets,canon,normProse,loadDoc,pageLines,pageAnnots,rangeAnnots,
   shiftedPages,shiftDecode,shiftDecodable,maybeDecode,textScore,boilerplateOf,
   RS_SCALARS,RS_ROW_BASE,RS_ROW_STRIDE,RS_COLS,KNOWN};
