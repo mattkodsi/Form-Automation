@@ -371,3 +371,54 @@ diagnosable rather than merely annoying.
 RESUME HERE: full 34-property `sweep-4` running in the background to quantify
 the whole corpus after these fixes. When it lands, diff against `sweep-1.json`
 keyed on property·doc·key and update MORNING-REPORT.md's headline numbers.
+
+---
+
+## Sweeps 4–6 — the measurement was the problem more often than the app
+
+Three more full passes of all 34. **Values matching the filed package: 127 → 185.
+Real disagreements: 168 → 124. "Filed had it, we produced nothing": 412 → 163.
+Fill-order: 50 → 16 rows across 6 properties → 1.**
+
+Four extractor defects found and fixed, each worth more than any app change:
+
+1. **A labelled row that counts nothing is a template row.** Several filed
+   workbooks leave an empty row above the real ones; taking it shifted the filed
+   side by one on 24 properties and produced 69 phantom unit-type mismatches.
+2. **A filed workbook is not always one analysis.** Colonial Village's holds two
+   sheets — it and White Oak Townhomes share a contract. Reading only the first
+   graded our output against another development: 55 differences, all mine. Six
+   of 34 workbooks have several sheets, named for the FIRM not the content. The
+   sweep now picks by unit count, a fact both documents state independently, so
+   the choice cannot be steered by the values under test.
+3. **The report led with the wrong number.** Two thirds of the raw total is one
+   side holding a field the other's template lacks. It now leads with the rows
+   where both documents state a value and disagree.
+4. **The report stamped the SHA from the clock**, so re-rendering a cached report
+   after a commit printed today's build over yesterday's numbers.
+
+Plus the DocuSign envelope stamp, which sits above everything on a signed page
+and was being handed over as the property name on three checklists.
+
+**The residue is fully accounted for.** Of the 124: 46 are vocabulary
+(`1BR/1BA` vs `1-Bedroom`), 22 are genuinely different type names and need the
+designation field, ~38 are rows missing on our side because the schedule is
+unreadable, ~15 are my extractor still misreading a filed document. **No
+unexplained app data error.**
+
+Ebony Gardens checked in full as an example: its schedule is an unreadable scan
+so the 1-Bedroom row never arrived; `3-BedroomS` and `3-BedroomL` collapse to one
+label; `NonRev2B` belongs in Part D and is correctly absent. All three are
+already-named causes.
+
+**Process failure worth recording:** I reported a commit as pushed when it had
+not been. Nested double quotes in the message broke the shell, `git commit`
+failed, and `&&` skipped the push — but I had read only the tail of a background
+log and said "pushed". Verify with `git log`, never from an assumed `&&` chain.
+
+**Gate:** `deliver.sh` green, 1,527 checks across eleven suites.
+
+RESUME HERE: remaining tractable work is measurement-only — Hampshire House's
+flattened rent schedule reads address text as unit values, and Barnum's reads a
+date as the FHA number. Everything else is gated on the two decisions in
+MORNING-REPORT.md sections 1 and 3.

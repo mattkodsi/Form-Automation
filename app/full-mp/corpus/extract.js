@@ -213,7 +213,13 @@ async function pageLines(doc,i){
   buckets.sort((a,b)=>b.y-a.y);
   const out=buckets.map(b=>{ const rs=b.runs.slice().sort((p,q)=>p.x-q.x);
     return {y:b.y,runs:rs,text:rs.map(r=>r.s).join(''),
-            cells:rs.map(r=>r.s.trim()).filter(s=>s!=='')}; });
+            cells:rs.map(r=>r.s.trim()).filter(s=>s!=='')}; })
+    /* THE SIGNING PLATFORM'S STAMP IS NOT PART OF THE DOCUMENT. DocuSign prints
+       "Docusign Envelope ID: <guid>" up the edge of every page it touches, and
+       because it sits above everything else it became the first line -- which
+       three filed checklists then handed over as the property name. It belongs
+       to the transport, not to the filing. */
+    .filter(l=>!/^\s*docusign\s+envelope\s+id\s*:/i.test(l.text));
   /* Second pass. A run too short to judge on its own ("2ZQH") sits on a line
      whose neighbours decoded confidently; decode it when doing so makes the
      WHOLE line read better. Confined to lines that already decoded, so it can

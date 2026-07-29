@@ -12,6 +12,49 @@ Read this in order. The first item changes what the other items mean.
 
 ## 0. What changed while you slept
 
+**Final numbers — six sweeps of all 34 properties, both fill orders each.**
+
+| | first sweep | last sweep |
+|---|---:|---:|
+| **values that MATCH the filed package** | 127 | **185** |
+| **fill-order disagreements** | **50** | **16** |
+| **properties producing two different packages** | **6** | **1** |
+| both sides had a value and they differ | 168 | **124** |
+| the filed document had a value we produced nothing for | 412 | **163** |
+
+**Every one of the remaining 124 traces to something already named here — I found
+no unexplained data error from the app:**
+
+| what | rows | cause |
+|---|---:|---|
+| we print `1BR/1BA`, you print `1-Bedroom` | 46 | vocabulary, not data |
+| genuinely different type names (`2BRLG`, `3-BedroomS`/`L`) | 22 | the missing designation field, item 3 |
+| rows missing on our side, shifting everything after them | ~38 | the unreadable schedules, item 1 |
+| my own extractor still misreading a filed document | ~15 | mine to fix, not the app's |
+| the DocuSign stamp read as a property name | 3 | fixed |
+
+**A caution about the big numbers.** 343 of the differences are the app producing
+a value the filed document has no field for — your analysis workbook titles
+itself in free text and carries no appraiser firm. Those are not disagreements
+about anything. **Read the 124, and inside it read the 22.**
+
+### What I got wrong, and corrected, in this stretch
+
+- **The app was right and I was grading it against the wrong property.** Colonial
+  Village's analysis workbook holds two sheets — it and White Oak Townhomes share
+  a contract — and I read only the first. Fifty-five differences were entirely
+  mine. Six of your 34 workbooks have several sheets, named for the firm rather
+  than the content.
+- **A labelled row that counts nothing is a template row, not a unit type.**
+  Taking it shifted the filed side by one on 24 properties.
+- **I reported one commit as pushed when it had not been.** Nested quotes in the
+  message broke the shell; the commit failed and the push never ran. It is in
+  now — but I stated something I had not verified, and that is worth knowing.
+
+---
+
+## 0b. The original overnight summary
+
 I ran the whole corpus again after fixing what I could fix without you
 (`sweep-4`, app frozen at `8730a23`). Same 34 properties, same two orders.
 
