@@ -4264,7 +4264,14 @@ async function dlPackageFolder(nm,docs,combined){
   }catch(e){setStatus('Folder download failed: '+((e&&e.message)||e));}}
 function buildRentAnalysisBytes(){
   const nn=v=>{const n=numf(v);return n>0?n:null;};
-  const rows=UNITS.map(i=>({type:(get('units.'+i+'.br')||'')+(get('units.'+i+'.ba')?'/'+get('units.'+i+'.ba'):''),
+  /* The same label the rent schedule prints, from the same function, so the two
+     documents in one package cannot disagree about what a unit type is called.
+     Built here by hand this dropped the designation entirely: Morningside
+     Court's "1 BR / 1 BA S" and "1 BR / 1 BA Large" both came out "1BR/1BA",
+     two different unit types at two different rents wearing one label. */
+  const ut=(window.RCSGen&&window.RCSGen.utype)
+    ||((br,ba)=>String(br||'')+(ba?'/'+ba:''));   // the old shape, if gen.js has not loaded yet
+  const rows=UNITS.map(i=>({type:ut(get('units.'+i+'.br'),get('units.'+i+'.ba'),get('units.'+i+'.label')),
     units:nn(get('units.'+i+'.num_units')),cur:nn(get('units.'+i+'.current')),pro:nn(get('units.'+i+'.proposed')),
     ua:uaHas('units.'+i+'.ua_exec')||uaHas('units.'+i+'.ua_rcs')||uaHas('units.'+i+'.ua_custom')?uaResolvedOf(i):null,safmr150:safmrResolvedOf(i)>0?safmrResolvedOf(i):null}));
   return window.RCSXlsx.rentAnalysis({propertyName:get('property.name')||'Property',apprFirm:get('appr.firm')||'',rows});}
