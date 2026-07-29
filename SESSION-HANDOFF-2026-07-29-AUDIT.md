@@ -5,6 +5,16 @@ production deploy).
 
 ---
 
+> **STOPPED 2026-07-29 ~23:00 at Matt's request — 21 of 34 audited, 14 defects fixed.**
+> Wave 5 is **driven but not audited**: `_archive/corpus-cache/_sweep/_out/` holds fresh
+> output for Market Square (75568), Barnum House (75569), Shiloh Village (75572),
+> Morningside Court (75573) and 333 Holly (75704), and the pre-fix snapshot is at
+> `_snap-w4/`. Their five audit agents were stopped mid-read, so **re-launch those five
+> first** — no Azure spend is needed, the drive is already done. One of them had already
+> found something: Shiloh Village showed a "key UA divergence" before it was stopped.
+> Scratch properties are cleaned (0 `ZZ-CORPUS-*`). Everything is committed and pushed.
+> Resume by re-running `/loop` with the prompt in the last iteration.
+
 > **WAVE 4 AUDITS NEED RE-RUNNING.** On 2026-07-29 four of the five wave-4 audit
 > agents — Noble Tower, Oaks on North Plaza, Oceanport, Holly House — died on
 > `API Error: 529 Overloaded`, a server-side fault, before returning anything.
