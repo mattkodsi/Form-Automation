@@ -7222,7 +7222,30 @@ function dlFile(bytes,name,mime){const blob=new Blob([bytes],{type:mime||'applic
 function dlPdf(bytes,name){dlFile(bytes,name,'application/pdf');}
 function formRec(){const rec={};for(const k in form)rec[k]=form[k].value;return rec;}
 function dataUrlToBytes(u){try{const i=String(u||'').indexOf(',');if(i<0)return null;return b64ToBytes(u.slice(i+1));}catch(e){return null;}}
-async function combinePdfs(list){const {PDFDocument}=window.PDFLib;const out=await PDFDocument.create();for(const b of list){if(!b)continue;const src=await PDFDocument.load(b,{ignoreEncryption:true,parseSpeed:Infinity});const pages=await out.copyPages(src,src.getPageIndices());pages.forEach(p=>out.addPage(p));}return await out.save({objectsPerTick:Infinity});}
+/* One unusable source must not cost the whole package. Sample Property's study is
+   AES-256 encrypted -- revision 6, streams and strings, extraction disabled -- and
+   pdf-lib loads it under ignoreEncryption but cannot copy a page out of it. It
+   throws "Expected instance of e, but got instance of undefined", and that
+   exception propagated out of generation, so the property produced NOTHING: no
+   cover letter, no checklist, no schedule, no workbook, on four runs across three
+   commits. Three of the corpus's chosen studies carry that encryption.
+
+   The study is perfectly readable on its own; only the merge fails. So a source
+   that cannot be copied is skipped, its label is reported to the caller, and the
+   rest still combine. Every document is offered individually either way, so
+   nothing is lost that was not already unmergeable. */
+async function combinePdfs(list,skipped){const {PDFDocument}=window.PDFLib;const out=await PDFDocument.create();
+  for(const it of list){ const b=(it&&it.bytes!==undefined)?it.bytes:it; if(!b)continue;
+    const label=(it&&it.label)||'';
+    try{
+      const src=await PDFDocument.load(b,{ignoreEncryption:true,parseSpeed:Infinity});
+      /* Ask before trying: an encrypted document copies as undefined objects, and
+         the throw that follows names a minified class, which tells a PM nothing. */
+      if(src.isEncrypted)throw new Error('the file is encrypted, so its pages cannot be merged');
+      const pages=await out.copyPages(src,src.getPageIndices());pages.forEach(p=>out.addPage(p));
+    }catch(e){ if(skipped)skipped.push({label:label,why:(e&&e.message)||String(e)}); }
+  }
+  return await out.save({objectsPerTick:Infinity});}
 /* What each document cannot be written without. Generating regardless produced
    real sentences like "submitting to in support of our request", "Dear ,", and a
    bare "7." — a package that looks finished and is not. Anything short of its
@@ -7680,7 +7703,10 @@ async function __genOcafUafRun(){
       await add('tcert','Tenant-comment certification','Tenant Comment Certification',()=>window.RCSGen.tenantCommentCert(rec));
     }
     if(_rcsUpload&&_rcsUpload.bytes){order.push('CA package (uploaded)');docs.push({label:'CA package (uploaded)',file:pre()+N+' - CA Package (as received)',bytes:_rcsUpload.bytes});}
-    const combined=docs.length?await combinePdfs(docs.map(d=>d.bytes)):null;
+    const _skipped=[];
+    const combined=docs.length?await combinePdfs(docs,_skipped):null;
+    _skipped.forEach(k=>{ warnOf[k.label]=(warnOf[k.label]||[]).concat(
+      ['it is in the folder but not in the combined PDF \u2014 '+k.why]); });
     const warns=[];
     if(hasProg('ocaf')&&!_rcsUpload)warns.push('The CA’s auto-OCAF package isn’t uploaded — add it in '+secRef(1)+' for the file.');
     /* Attached but not stored is a different sentence from never attached, and
@@ -7754,7 +7780,10 @@ async function __genPackageRun(){
     if(_rcsUpload&&_rcsUpload.bytes)docs.push({label:'RCS report',file:'04. '+N+' - RCS Report',bytes:_rcsUpload.bytes});
     if(T.rentSchedule)await add('schedule','Draft rent schedule','05. '+N+' - Draft Rent Schedule',()=>window.RCSGen.fillRentSchedule(b64ToBytes(T.rentSchedule),rec));
     await add('notice','Tenant notice','06. '+N+' - RCS Tenant Notice',()=>window.RCSGen.tenantNotice(rec,lh,logo));
-    const combined=docs.length?await combinePdfs(docs.map(d=>d.bytes)):null;
+    const _skipped=[];
+    const combined=docs.length?await combinePdfs(docs,_skipped):null;
+    _skipped.forEach(k=>{ warnOf[k.label]=(warnOf[k.label]||[]).concat(
+      ['it is in the folder but not in the combined PDF \u2014 '+k.why]); });
     let _lhOk=false;try{const L2=(mpdb&&activePid)?mpdb.getLetterhead(activePid):null;_lhOk=!!(L2&&L2.data);}catch(e){}
     showPackageModal(get('property.name')||'Property',docs,combined,!_rcsUpload,!_lhOk,rsCapacity().msgs,blocked,warnOf);
     try{ if(activeCid&&mpdb)await mpdb.setCycleGenerated(activeCid,docs.map(d=>d.label)); }catch(e){}
