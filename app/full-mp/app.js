@@ -3437,11 +3437,31 @@ function renderMenu(){
   /* The columns were unlabelled. As cards that was fine — each fact sat under
      the name that explained it. As rows it is a table, and a table says what
      its columns hold. */
-  const _cols=_tr.length?('<div class="mcols"><span>Property</span>'
-    +'<span>Due to HUD</span><span>Programme</span><span></span></div>'):'';
-  const _body=_cols+(_tr.length?_trHtml:'')
+  /* ---- two zones ----
+     The band that can be acted on today is a panel of its own with a heading
+     above it, and the rest is a ledger with its own heading. Run together in
+     one table the live rows were just the first few lines of a long list. */
+  const _liveN=_banded.filter(x=>x.b.key==='now').length;
+  const _liveDue=_liveN?_banded.find(x=>x.b.key==='now').p.deadline:'';
+  const _liveHd=_liveN?('<div class="zhead"><h3>Due to HUD by '
+      +esc(fmtDateShort(_liveDue))+'</h3><span>'+_liveN
+      +(_liveN===1?' property':' properties')+'</span></div>'):'';
+  const _restN=_banded.length-_liveN;
+  const _restHd=_restN?('<div class="zhead"><h3>Remaining</h3><span>'+_restN
+      +(_restN===1?' property':' properties')+' &middot; earliest deadline first</span></div>'):'';
+  const _cols=_restN?('<div class="mcols"><span>Property</span><span>Program</span>'
+    +'<span>Due to HUD</span><span>Rents effective</span><span class="r">Units</span>'
+    +'<span></span></div>'):'';
+  const _liveHtml=_banded.filter(x=>x.b.key==='now').map(x=>card(x.p,'now')).join('');
+  let _lk=null;
+  const _restHtml=_banded.filter(x=>x.b.key!=='now').map(x=>{
+    const h=(x.b.key!==_lk)?('<div class="mgroup">'+esc(x.b.label)+'</div>'):'';
+    _lk=x.b.key; return h+card(x.p,x.b.key);}).join('');
+  const _body=(_liveN?(_liveHd+'<div class="mgrid rows live">'+_liveHtml+'</div>'):'')
+    +(_restN?(_restHd+'<div class="mgrid rows">'+_cols+_restHtml+'</div>'):'')
     +((_or.length&&_tr.length)?'<div class="mgroup">Not in the renewal schedule</div>':'')
-    +(_or.length?_or.map(p=>card(p)).join(''):'');
+    +(_or.length?('<div class="mgrid rows">'+_or.map(p=>card(p)).join('')+'</div>'):'');
+  el('menuGrid').className='mzones';
   el('menuGrid').innerHTML=_body+(q&&!props.length?empty:'')
     +((hasRail&&!q&&!props.length)?viewEmpty:'')
     +((!q&&(!hasRail||view==='all'))?newTile:'');
