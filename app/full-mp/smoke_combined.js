@@ -214,6 +214,20 @@ const T=(label,v)=>eq(label,!!v,true);
   eq('and makes no second one',(db.listProperties()||[]).length, before);
   eq('the tracker code is bound to it', db.propByRaCode('R004'), twin);
 
+  /* ── THE DEV SWEEP, AND WHAT IT MUST NOT TAKE ───────────────────────
+     "Not in the schedule" holds two populations: records the tracker never
+     carried, and properties it DOES carry whose schedule has run out. The
+     sweep is offered on the first and must never reach the second — taking
+     both would delete live properties on the tracker's silence. */
+  app.__setMenuView('undated');
+  const _ug=els.menuGrid.innerHTML;
+  T('the sweep is offered where the records the schedule does not carry are named',
+    /id="orphPurge"/.test(_ug));
+  T('and it is named for the population, not for the view', /Not in the renewal schedule/.test(_ug));
+  /* R005's schedule has run out. It is in the tracker, so it is not the
+     sweep's business, and it has no record to delete in any case. */
+  T('a property whose schedule ran out is under its own heading', /No renewal scheduled/.test(_ug));
+
   /* ── DISPLAY FORMATTING ─────────────────────────────────────────────
      Formatted where it is shown, never in the record. A units column reading
      1689 is a database dump; this product files with HUD. */
