@@ -25,12 +25,54 @@ These are absolute. Every task inherits them.
 9. **Never pipe a suite through `| tail`** — a pipeline's exit status is the last command's, and node's failure vanishes.
 10. **Never fix from a single property.** A defect must appear in at least two properties, or a code reading must show it is general. A one-property fix is overfitting.
 11. **Commit after every task.** Message style: a declarative sentence naming what was learned, not `feat:`.
-12. **If a task's gate fails twice in a row, stop and write the reason into `docs/superpowers/plans/NIGHT-LOG.md`, then move to the next independent task.** Do not thrash.
+12. **NEVER GO IDLE. Rotate, do not stop.** If a gate fails twice in a row on the same
+    approach, write what was tried into `NIGHT-LOG.md`, switch to the next independent
+    task, and return to the blocked one later with a different approach. Stopping to wait
+    for a human is only correct if continuing would be unsafe (would push `main`, spend
+    money, or write to Drive). Being stuck on one thing is never a reason to do nothing —
+    there is always another lane in the Execution Order below.
 
 **Paths used throughout:**
 - Repo: `/Users/matthewkodsi/Desktop/github/Form-Automation/.claude/worktrees/rcs-corpus`
 - Corpus: `$CORPUS` = `~/Library/CloudStorage/GoogleDrive-mfkodsi@gmail.com/My Drive/RCS Package Samples`
 - Cache: `_archive/corpus-cache/` (gitignored, created in Task 1)
+
+---
+
+---
+
+## Execution Order (set by Matt, 2026-07-29)
+
+**Priority is B before A.** A better scanner across all 34 properties comes first; the
+end-to-end comparison loop second. If the night only half-lands, it must half-land in
+that order.
+
+| Phase | Lane | Tasks | Who |
+|---|---|---|---|
+| 0 | foundation | 1, 2 | me — everything depends on it |
+| 1 | **B — the scanner** | 3, 4 | me, serial (all edits land in `rcs.js`, each gated by `deliver.sh`) |
+| 1 (concurrent) | A's machinery | 5, 6, 7 | 3 agents in isolated worktrees on `corpus/*.js` — no overlap with `rcs.js`, so they cannot collide with Phase 1 |
+| 2 | **A — the loop** | 8, 9, 10 | me, once B is gated and the seams have landed |
+| 3 | permanence + review | 11, adversarial pass | me + 1 agent |
+
+**Why the seams run concurrently rather than after:** they touch only `app/full-mp/corpus/*.js`
+and are tested against fixtures already in the repo. Phase 1 touches `rcs.js` and
+`test_rcs.js`. The single shared resource is `deliver.sh`, which writes `index.html` at the
+repo root — so **agents in worktrees must never run `deliver.sh`**; they run `node --check`
+and their own suite, and I run the full gate when merging their work back.
+
+**Rotation, when something blocks.** Lanes in fallback order, always pick the topmost
+unblocked one:
+1. Phase 1 reader defect classes (there are several; a blocked class does not block the next)
+2. Merging and gating a returned seam
+3. Task 2 manifest refinements still flagged in `corpus-review.md`
+4. Task 11 test scaffolding, which depends on nothing
+5. Re-running the reader audit to confirm a class stayed closed
+
+**If the drive seam cannot capture downloads:** do not stall Phase 2. Drive generation
+through the selftest hatch instead, write `weakerTest: true` into every sweep row it
+produces, and say so plainly in the morning report. A labelled weaker test beats a blocked
+night; an unlabelled one is worse than either.
 
 ---
 
