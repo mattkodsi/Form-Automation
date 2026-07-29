@@ -35,7 +35,7 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=295;   // 2026-07-28: +19 — the primary action, pressed on a real card.
+const MIN_CHECKS=301;   // 2026-07-29: +6 — either upload order, one package (found by the corpus sweep).
                        // 2026-07-28: +35 — the home page's filter rail, driven by real clicks.
                        // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
                        // pristine (three seeds, two checks each). 2026-07-27: the unit-type cell
@@ -1178,6 +1178,88 @@ const FULL=process.argv.includes('--full');
         return {want:want.length,missing};`);
       T('the study fills cells the form can name',r.want>0);
       eq('and every one of them says the study filled it',r.missing,[]);
+    }
+
+    /* ── the same two files, uploaded in either order ───────────────────────
+       Found by the corpus sweep, not by reading the code: 50 disagreements
+       across 5 of 34 properties where uploading the rent schedule first and
+       uploading the study first produced DIFFERENT packages. Barnum House's
+       generated schedule said 100 units one way and 83 the other, and that
+       document goes to HUD.
+
+       The mechanism is an adopt-versus-offer asymmetry. A study line that
+       MATCHES an existing form row writes only the shadow keys br_rcs/ba_rcs,
+       so the two sources can be compared instead of one silently overwriting
+       the other -- which is right when the schedule stated a value of its own.
+       A study line the form has no row for goes down the homeless path, which
+       writes br and ba outright. So the bathroom count reached the printed unit
+       type only when the study happened to CREATE the row: schedule-first
+       printed "1BR", study-first printed "1BR/1BA", from identical inputs.
+
+       An executed schedule that never stated a bathroom is not in conflict with
+       the study about it -- it is silent, and the study is the only source. The
+       file's own rule, written in the homeless path, already says so:
+       precedence is about a cell both documents describe, not about an index
+       that collides. */
+    console.log('\n── either upload order, one package ──────────────────');
+    await c.reload();
+    await c.eval(HELPERS);
+    {
+      /* An executed schedule naming no bathroom, and a study that names one --
+         the shape all five affected properties share. */
+      const rs={scalars:{},units:[{type:'1BR',count:'66',rent:'1770',ua:''},
+                                  {type:'Studio',count:'17',rent:'1520',ua:''}],
+                principals:[],partb:null,ns8:[],nonrev:[]};
+      const study={scalars:{},firm:'belfry',
+        units:[{type:'1BR/1BA',br:1,ba:1,count:'66',rent:'',ua:'',proposed:'2825',safmr:''},
+               {type:'Studio/1BA',br:0,ba:1,count:'17',rent:'',ua:'',proposed:'2325',safmr:''}]};
+      const snap=async()=>await c.eval(`
+        const U=window.__t.__UNITS();
+        return {rows:U.length,
+          types:U.map(i=>String(window.__t.getVal('units.'+i+'.br')||'')
+                        +(window.__t.getVal('units.'+i+'.ba')?'/'+window.__t.getVal('units.'+i+'.ba'):'')),
+          counts:U.map(i=>String(window.__t.getVal('units.'+i+'.num_units')||'')),
+          proposed:U.map(i=>String(window.__t.getVal('units.'+i+'.proposed')||''))};`);
+
+      /* A FRESH property each time, not the seeded one. The seed already carries
+         five unit rows, and filling into them measures the seed as much as the
+         order -- the assertions below have to be about these two documents and
+         nothing else. */
+      const fresh=async name=>await c.eval(`const db=window.__t.__db();
+        const r=await db.createProperty(${'`'}${'$'}{${JSON.stringify(name)}}${'`'});
+        const np=(r&&(r.pid||r.id))||r;
+        await window.__t.__openForm(np);
+        const cy=await window.__t.__newCycle({programs:['rcs'],label:'ORDER'});
+        await window.__t.__openCycleForm(np,(cy&&(cy.cid||cy.id))||cy);
+        return np;`);
+
+      await fresh('Order test A');
+      await sleep(300);
+      await c.eval('window.__t.__setRsParsed('+JSON.stringify(rs)+');window.__t.__rsFill();'
+        +'window.__t.__setRcsParsed('+JSON.stringify(study)+');window.__t.__rcsFill();'
+        +'window.__t.__renderBody();return 1');
+      await sleep(400);
+      const rsFirst=await snap();
+
+      await c.reload();
+      await c.eval(HELPERS);
+      await fresh('Order test B');
+      await sleep(300);
+      await c.eval('window.__t.__setRcsParsed('+JSON.stringify(study)+');window.__t.__rcsFill();'
+        +'window.__t.__setRsParsed('+JSON.stringify(rs)+');window.__t.__rsFill();'
+        +'window.__t.__renderBody();return 1');
+      await sleep(400);
+      const rcsFirst=await snap();
+
+      eq('either order builds the same number of unit rows',rsFirst.rows,rcsFirst.rows);
+      eq('either order gives the same unit types',rsFirst.types,rcsFirst.types);
+      eq('either order gives the same unit counts',rsFirst.counts,rcsFirst.counts);
+      eq('either order gives the same proposed rents',rsFirst.proposed,rcsFirst.proposed);
+      /* Not merely equal -- equal AND right. Two orders agreeing on a type that
+         has lost its bathroom would pass an equality check and still be wrong. */
+      T('the bathroom the study names reaches the printed type, whichever order',
+        rsFirst.types.every(t=>/\//.test(t))&&rcsFirst.types.every(t=>/\//.test(t)));
+      eq('and the schedule still owns the unit counts it stated',rsFirst.counts,['66','17']);
     }
 
     /* ── the OCAF / UAF package states its own requirements ─────────────────

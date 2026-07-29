@@ -1255,6 +1255,27 @@ function rcsFillFromParsed(){
     const _b=rcsBrOf(m.u),_a=rcsBaOf(m.u);
     if(_b)setk('units.'+i+'.br_rcs',_b);
     if(_a)setk('units.'+i+'.ba_rcs',_a);
+    /* And ADOPT, not merely offer, a shape the schedule never stated at all.
+       Sitting these beside the form's own br/ba is right when both documents
+       describe the cell -- that is what makes the conflict visible instead of
+       letting one overwrite the other. But an executed schedule that names no
+       bathroom is not in conflict about it; it is silent, and the study is the
+       only source there is.
+
+       Leaving it silent made the SAME TWO FILES produce different packages
+       depending on which was uploaded first: a study line that matched an
+       existing row wrote only the shadow keys, while a line the form had no row
+       for went down the homeless path below, which writes br and ba outright.
+       So the bathroom reached the printed unit type only when the study
+       happened to CREATE the row -- schedule-first printed "1BR", study-first
+       "1BR/1BA". The homeless path's own comment already states the rule this
+       restores: precedence is about a cell both documents describe, not about
+       an index that collides.
+
+       setk still declines wherever the schedule DID state a value, and the
+       emptiness test keeps a figure someone typed by hand. */
+    if(_b&&!get('units.'+i+'.br'))setk('units.'+i+'.br',_b);
+    if(_a&&!get('units.'+i+'.ba'))setk('units.'+i+'.ba',_a);
     if(m.u.count!=='')setk('units.'+i+'.num_rcs',m.u.count);
   });
 
