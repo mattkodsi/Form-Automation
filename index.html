@@ -8583,7 +8583,20 @@ function parseType(t){
    them — "1 BR / 1 BA30 537 $1,580 $2.94Y" is a 30-unit 1BR of 537 sq ft. The
    type is lazy, so the shortest reading that satisfies the whole row wins and
    "1 BR / 1 BA" is preferred over "1 BR / 1 BA3". */
-const ROW_MAIN=/^(.+?)\s*(\d+)\s+([\d,]+)\s+\$([\d,]+)\s+\$?([\d.]+)\s*([YN])\b/i;  // type count sf rent psf grid
+/* The concluded-rent row, and the only place most studies print the rent at all.
+   Two ways it was being missed, both worth a package:
+
+   Sample Property writes the area with its unit -- "1BR/1BA 90 640 SF $2,000
+   $3.13 Y" -- and the literal SF sat where the pattern expected the rent. BOTH
+   of its rows failed, so its Column 3, Column 4, Column 6, both totals and Part F
+   all printed blank against a study that says $2,000 and $2,400 in plain sight.
+
+   Circle Park's last row -- "3BR/1.5BA TH 58 1200 $4,675 $3.90" -- simply has no
+   Y in the PREPARED GRID column, though the grid exists later in the same
+   document. Requiring that Y cost 58 units their rent: $271,150 a month.
+
+   So the area may name its unit, and the grid flag is optional. */
+const ROW_MAIN=/^(.+?)\s*(\d+)\s+([\d,]+)(?:\s*(?:sf|sq\.?\s*ft\.?))?\s+\$([\d,]+)\s+\$?([\d.]+)\s*(?:([YN])\b|$)/i;  // type count sf rent psf grid
 const ROW_CS6 =/^(.+?)\s*(\d+)\s+\$([\d,]+)\s+\$([\d,]+)\s+\$([\d,]+)\s+\$([\d,]+)\s*$/; // cornerstone: type count net ua gross monthly
 const ROW_5C  =/^(.+?)\s*(\d+)\s+\$([\d,]+)\s+\$([\d,]+)\s+\$([\d,]+)\s*$/;          // belfry: type count rent ua gross
 const ROW_CMP =/^(.+?)\s*(\d+)\s+\$([\d,]+)\s+\$([\d,]+)\s+\$[\d,]+\s*[<>]\s*\$[\d,]+/; // belfry: type count rent 150%safmr verdict
@@ -8619,7 +8632,23 @@ function typeStem(t){return typeKey(String(t||'').replace(/\d+(?:\.\d+)?\s*(?:ba
 function upsert(units,type,page,count){
   const k=typeKey(type);
   for(let i=0;i<units.length;i++)if(typeKey(units[i].type)===k)return units[i];
+  /* A later table appends a designation the roster's own table did not carry.
+     Walden's conclusion prints "1BR/1BA (B)" and its comparison and gross-renewal
+     tables print "1BR/1BA (B) Senior" -- the same thirty apartments -- so a ghost
+     row appeared holding an allowance and a ceiling and no rent, because only the
+     conclusion table states one. A name that extends an existing name, over the
+     same unit count, is that same row wearing its designation. */
   if(count!==''&&count!=null){
+    const kk=typeKey(type);
+    for(let i=0;i<units.length;i++){
+      const ek=typeKey(units[i].type);
+      if(ek&&kk!==ek&&(kk.indexOf(ek)===0||ek.indexOf(kk)===0)
+        &&units[i].count!==''&&Number(units[i].count)===Number(count)){
+        units[i].alias=units[i].alias||[];
+        if(units[i].alias.indexOf(String(type))<0)units[i].alias.push(String(type));
+        return units[i];
+      }
+    }
     const stem=typeStem(type);
     for(let i=0;i<units.length;i++){
       if(typeStem(units[i].type)===stem&&units[i].count!==''&&Number(units[i].count)===Number(count)){
@@ -8785,7 +8814,12 @@ async function readLetter(rd){
 window.RCSParse={norm:norm,lines:lines,money:money,dec:dec,pageKey:pageKey,
   findLetter:findLetter,readLetter:readLetter,parseType:parseType,
   _splitCityStateZip:splitCityStateZip,_isoDate:isoDate,_s8From:s8From,_detectFirm:detectFirm,_readSender:readSender,
-  _caps:{scan:LETTER_SCAN_CAP,tail:LETTER_TAIL},_probeOrder:probeOrder};
+  _caps:{scan:LETTER_SCAN_CAP,tail:LETTER_TAIL},_probeOrder:probeOrder,
+  /* The concluded-rent row pattern and the roster's key, exposed so the suite can
+     pin them against the exact lines three real studies print. Trimming a fixture
+     out of a 90-page report to assert one regex is more moving parts than the
+     assertion is worth. */
+  _ROW_MAIN:ROW_MAIN,_typeKey:typeKey,_upsert:upsert};
 })();
 /* hap.js — the HAP tracker seam.
 
