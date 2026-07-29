@@ -130,7 +130,7 @@ A wave marks a property `audited` only when its agent returned rows.
 | 5 | 75453 | Sycamore Green | **audited** | 2 |
 | 6 | 75474 | New Horizons | **audited** | 3 |
 | 7 | 75478 | North Park | **audited** | 3 |
-| 8 | 75488 | Woodbury Oakwood (Lakeside) | unaudited | |
+| 8 | 75488 | Woodbury Oakwood (Lakeside) | **audited** | 3 |
 | 9 | 75495 | Hampshire House | **audited** | 3 |
 | 10 | 75500 | Lansing Manor | **audited** | 3 |
 | 11 | 75543 | Noble Tower | unaudited | |

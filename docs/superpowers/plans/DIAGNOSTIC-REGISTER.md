@@ -721,3 +721,41 @@ Hampshire House is the sharpest case: the owner's own UAF letter computes 68×1.
 and 83×1.033 = **86**, which is exactly what the study says and exactly what we now print.
 The filed schedule says **73 / 89**, from a document that did not exist when the package
 was assembled. **On that property our output is right and the filed one is later.**
+
+## Woodbury Oakwood (Lakeside) — wave 3, fifteenth property
+
+Rents, counts, totals, Part B, Part G, the checklist and the property name all exactly
+right. Two things wrong, and one of them is now on four properties.
+
+**Part D charges rent loss for a unit that loses none.** rs-first prints Col. 3 `2,075`
+and Total Rent Loss `$2,075`; rcs-first prints blank and `$0`. Truth and the filed
+schedule both say **0**. Ebony printed 3,700, Sycamore 1,450, Morh 4,763.
+**Four properties, all order-dependent, all the same `nonrev.<i>.rent` seam.**
+
+**The workbook is missing formulas outright.** `M9`, `L10`, `M10` and `V10` hold a literal
+`0` with no formula, so annual RCS gross potential totals zero and the 150% SAFMR sum
+silently omits the 2 BR line — 213,840 instead of 234,105. Hampshire House has the same
+holes at rows 10 and 15. **Two properties.**
+
+Its allowances read 48/96 against a study and a filed schedule that both say 53/106 — but
+this property was audited from the **preserved pre-fix output**, so that row is evidence
+about the old build, not the new one. The UAF in its own cycle folder derives it
+explicitly: 48 × 1.101 = 52.847 → **53**, 96 × 1.101 = 105.695 → **106**, confirmed by the
+NJHMFA approval letter. Here the study and the third document agree, so the shipped fix
+should land it.
+
+**team wrong:** the filed schedule prints its Monthly Contract Rent Potential as
+**`$181.725`** — a decimal point where a comma belongs. The prior year's Exhibit A lists
+99 units across bedroom counts that contradict its own Part A, and the prior year's UA
+notice says the allowance was "calculated based on the utility costs at **Oak Park
+Apartments**" — a different property — and states a 2 BR allowance of $88 against the $96
+on its own page 2.
+
+## A harness hazard, recorded so it is not rediscovered
+
+The wave-3 sweep re-drove Woodbury Oakwood **while its auditor was reading the output**,
+overwriting it. The re-run hit an Azure **429** and produced 1 of 6 documents instead of 3,
+and printed the property as "Woodbury Oakwood" rather than "Lakeside Apartments". The
+agent noticed and fell back to the preserved copy under `_sweep-wave2-before`, but only
+because it happened to check. **Never re-drive a property while an agent is auditing it** —
+snapshot first, point the agents at the snapshot, and drive into a fresh label.
