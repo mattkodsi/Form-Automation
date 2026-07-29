@@ -618,17 +618,87 @@ function xlsxFacts(bytes){
   const ss=files['xl/sharedStrings.xml']?sharedStrings(dec(files['xl/sharedStrings.xml'])):[];
   /* The title is one rich-text string: "<property> - <firm> Rent Grid". */
   for(const s of ss){ const m=s.match(/^(.+?)\s+-\s+(.+?)\s+Rent Grid\s*$/); if(m){values['property.name']=canon(m[1]);values['appr.firm']=canon(m[2]);break;} }
-  const at=(col,row)=>{ const c=cells[col+row]; if(!c||c.formula||c.v==null||c.v==='')return null;
+  /* WHETHER A CACHED FORMULA RESULT CAN BE TRUSTED IS A PROPERTY OF THE
+     WORKBOOK, NOT A CONSTANT. Ours is written with fullCalcOnLoad and every
+     derived cell holds a stale 0 until Excel opens it, so reading those would
+     invent zeros. The PM team's workbooks have no such flag -- they were saved
+     BY Excel, so their cached values are exactly what Excel last computed.
+     Refusing both alike made every filed analysis workbook read as empty, and
+     an empty filed side turns 14 real values into 14 phantom differences. */
+  const wb=files['xl/workbook.xml']?dec(files['xl/workbook.xml']):'';
+  const stale=/<calcPr[^>]*fullCalcOnLoad\s*=\s*"1?"/.test(wb)||/fullCalcOnLoad="1"/.test(wb);
+  notes.push(stale
+    ? 'cached formula results ignored: this workbook declares fullCalcOnLoad, so every derived cell holds a stale 0 until Excel opens it'
+    : 'cached formula results used: this workbook does not declare fullCalcOnLoad, so its cached values are what Excel last computed');
+
+  const at=(col,row)=>{ const c=cells[col+row];
+    if(!c||c.v==null||c.v==='')return null;
+    if(c.formula&&stale)return null;
     return c.shared?(ss[+c.v]==null?null:ss[+c.v]):c.v; };
-  const MAP=[['B','type'],['C','units'],['D','current'],['E','proposed'],['P','ua'],['T','safmr']];
+
+  /* MAP BY HEADER TEXT, NOT BY COLUMN LETTER. Our generated sheet puts the
+     unit rows at row 9 under one layout; the filed sheets start at row 3 under
+     another, and Lansing's even carries 'Current Rent' as a header one column
+     to the right of the data it labels. A fixed letter map reads whichever of
+     those it was written for and silently returns nothing for the other. */
+  const COLS='ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+  const WANT=[
+    ['type',   /^unit ?type$/i,                        true ],
+    ['units',  /^#? ?of ?units$|^units$|^# units$/i,   false],
+    ['current',/^current ?rents?$/i,                   false],
+    /* Ours says "RCS Rent", the PM team's says "Proposed Rents". Same column. */
+    ['proposed',/^(proposed|rcs) ?rents?$/i,           false],
+    ['ua',     /^ua$|^utility ?allowance$/i,           false],
+    ['safmr',  /^safmr\b|^safmr for/i,                 false],
+  ];
+  /* the header row is the one naming the most of these */
+  let hdrRow=0,hdrScore=0,hdr={};
+  for(let row=1;row<=25;row++){
+    const found={};let n=0;
+    for(const col of COLS){
+      const raw=at(col,row); if(raw==null)continue;
+      /* Headers carry footnote markers -- ours is literally "RCS Rents*" --
+         and stray leading space. Strip those before matching, rather than
+         adding one more alternative to every pattern. */
+      const t=String(raw).replace(/[\s*†‡]+$/,'').replace(/^\s+/,'').trim();
+      for(const [key,re] of WANT)if(re.test(t)){(found[key]=found[key]||[]).push(col);n++;}
+    }
+    if(n>hdrScore){hdrScore=n;hdrRow=row;hdr=found;}
+  }
+  if(!hdrRow){notes.push('no header row recognised in this workbook; no unit rows read');
+    return {docType:'analysisXlsx',pages:[0,0],values:values,boilerplate:[],notes:notes};}
+  notes.push('header row '+hdrRow+', '+hdrScore+' columns recognised');
+
+  /* A header may appear more than once, and may sit beside its data rather
+     than above it. Take the first candidate column that actually carries a
+     value on the first data row, rather than assuming the label is right. */
+  const dataStart=hdrRow+1;
+  const rowsRead=[];
+  const STOP=/^(monthly|annual|grand)?\s*total/i;
+  const typeCols=(hdr.type||[]).concat(['B']);
   let r=0;
-  for(let row=9;row<=19;row++){
-    const type=at('B',row); if(type==null||String(type).trim()==='')continue;
-    MAP.forEach(([col,key])=>{ const v=at(col,row); if(v!=null)values['unit.'+r+'.'+key]=canon(v); });
-    values['unit.'+r+'.row']=String(row);
+  for(let row=dataStart;row<dataStart+25;row++){
+    let type=null;
+    for(const c of typeCols){const v=at(c,row);if(v!=null&&String(v).trim()!==''){type=String(v).trim();break;}}
+    if(type==null||type==='')continue;
+    if(STOP.test(type))break;
+    values['unit.'+r+'.type']=canon(type);
+    for(const [key] of WANT){
+      if(key==='type')continue;
+      for(const c of (hdr[key]||[])){
+        const v=at(c,row);
+        if(v!=null&&String(v).trim()!==''){values['unit.'+r+'.'+key]=canon(v);break;}
+      }
+    }
+    /* WHICH SPREADSHEET ROW A VALUE CAME FROM IS NOT DATA. Ours starts at row
+       9 and the PM team's at row 3, so comparing it produced one guaranteed
+       false difference per unit type on every property. It belongs in the
+       notes, where it helps a human find the cell, not in the values. */
+    rowsRead.push(r+'->'+row);
     r++;
   }
-  notes.push('cached formula results are ignored: the workbook is written with fullCalcOnLoad and every derived cell holds a stale 0 until Excel opens it');
+  if(rowsRead.length)notes.push('unit rows read from sheet rows '+rowsRead.join(', '));
+  if(!r)notes.push('header row found but no unit rows beneath it');
   return {docType:'analysisXlsx',pages:[0,0],values:values,boilerplate:[],notes:notes};
 }
 
