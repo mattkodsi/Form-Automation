@@ -31,6 +31,9 @@
        --limit N        first N properties
        --jobs N         concurrent chromium instances (default 3)
        --force          re-run properties already on disk
+       --stale-ok       reuse records built by a DIFFERENT app commit
+                        (off by default: a record from another build answers a
+                        question about that build, not this one)
        --label NAME     names the output files (default sweep-1)
 */
 const fs=require('fs'),path=require('path'),cp=require('child_process');
@@ -52,7 +55,7 @@ for(let i=0;i<argv.length;i++){
 }
 const [CORPUS,CACHE,MANIFEST]=positional;
 if(!CORPUS||!CACHE||!MANIFEST){
-  console.log('usage: node sweep.js <corpusRoot> <cacheRoot> <corpus.json> [--only …] [--limit N] [--jobs N] [--force] [--label NAME]');
+  console.log('usage: node sweep.js <corpusRoot> <cacheRoot> <corpus.json> [--only …] [--limit N] [--jobs N] [--force] [--stale-ok] [--label NAME]');
   process.exit(2);
 }
 const OUT=flag('out',path.join(CACHE,'_sweep'));
@@ -61,6 +64,8 @@ const JOBS=Math.max(1,+flag('jobs',3));
 const LIMIT=+flag('limit',0)||0;
 const ONLY=(flag('only','')||'').split(',').map(s=>s.trim()).filter(Boolean);
 const FORCE=has('force');
+/* Opts back into reusing records from another build. Named for what it costs. */
+const STALE_OK=has('stale-ok');
 fs.mkdirSync(OUT,{recursive:true});
 
 const SHA=(()=>{try{return cp.execSync('git rev-parse --short HEAD',{cwd:path.join(__dirname,'..','..','..')}).toString().trim();}catch(e){return 'unknown';}})();
@@ -427,9 +432,29 @@ const J=v=>{
     while(queue.length){
       const p=queue.shift();if(!p)break;
       const file=path.join(OUT,(p.code||p.name).replace(/[^\w.-]/g,'_')+'.json');
+      /* A RECORD BUILT BY A DIFFERENT APP IS NOT A RESULT, IT IS A MEMORY.
+         Resume exists so a crash on property 30 costs one property, not 29 —
+         but it keyed only on "is there a file", and a file written by an older
+         build answers a question about that build. This bit hard: a probe run
+         after the OCR work returned two properties instantly from records made
+         three commits earlier, still reporting tier "unreadable:text", which is
+         precisely the stale headline the OCR work disproved. The sweep would
+         have re-published it under today's commit and the report's own
+         provenance line would have been the only clue.
+         So the cache is now keyed on the app as well as the property. Same
+         commit, reuse it; different commit, drive it again. --stale-ok opts
+         back into the old behaviour for the rare case where the app did not
+         change in a way the sweep can see. */
       if(!FORCE&&fs.existsSync(file)){
-        try{records.push(JSON.parse(fs.readFileSync(file,'utf8')));
-            console.log('  ['+(++done)+'/'+props.length+'] '+p.name+'  (cached)');continue;}
+        try{
+          const prior=JSON.parse(fs.readFileSync(file,'utf8'));
+          if(STALE_OK||prior.sha===SHA){
+            records.push(prior);
+            console.log('  ['+(++done)+'/'+props.length+'] '+p.name+'  (cached'
+              +(prior.sha===SHA?'':', from '+prior.sha)+')');continue;}
+          console.log('  ['+(done+1)+'/'+props.length+'] '+p.name+'  — cached record is from '
+            +(prior.sha||'an unknown commit')+', re-driving at '+SHA);
+        }
         catch(e){/* fall through and re-run */}
       }
       let rec;

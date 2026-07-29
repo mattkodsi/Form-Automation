@@ -1120,18 +1120,39 @@ async function driveBoth(opts) {
    the bill this file exists to halve. So the first attempt's outcome is
    recorded whichever way it went, and the second call re-throws the same error
    instead of paying to rediscover it. */
-let _memo = null;
+/* A MAP, NOT A SLOT, AND IT HOLDS THE PROMISE RATHER THAN THE RESULT.
+   The single-slot version was correct for one property at a time and silently
+   wrong the moment sweep.js ran with --jobs 2. Worker A calls driveOne for
+   property X and awaits a two-minute driveBoth; worker B, running in the gap,
+   calls driveOne for property Y and overwrites the one slot; worker A's second
+   order then finds Y's signature, misses, and drives X all over again.
+   Measured: a two-property probe created FOUR records and spent 5+3 OCR calls
+   on properties that should have cost 3 each. The damage is not only the bill —
+   the two "fill orders" then come from two different runs of the app, so any
+   disagreement between them is a difference between runs, not between orders,
+   and the highest-severity finding in the whole sweep becomes an artifact.
+   Keyed by signature so concurrent properties coexist, and storing the in-flight
+   promise so a second caller for the SAME signature awaits the run already
+   going instead of starting a second one. Outcome is recorded either way: a
+   throw is cached and re-thrown, so a property that fails costs one attempt. */
+const _memo = new Map();
 async function driveOne(opts) {
   const order = opts.order;
   if (ORDERS.indexOf(order) < 0) throw new Error('order must be "rs-first" or "rcs-first", got ' + J(order));
   const sig = [opts.propertyFolder, opts.studyPath, opts.priorRsPath, opts.outRoot, opts.corpusRoot, opts.cacheRoot].join(' | ');
-  if (!_memo || _memo.sig !== sig) {
-    _memo = { sig, both: null, err: null };
-    try { _memo.both = await driveBoth(opts); }
-    catch (e) { _memo.err = e; }
+  /* The seam exists so the memo can be tested without launching a browser:
+     the property this guard protects is "how many times was the expensive
+     thing called", which is exactly what a stub can count and a real run
+     cannot cheaply assert. Production never passes it. */
+  const run = opts.__driveBoth || driveBoth;
+  let pending = _memo.get(sig);
+  if (!pending) {
+    pending = run(opts).then(v => ({ both: v, err: null }), e => ({ both: null, err: e }));
+    _memo.set(sig, pending);
   }
-  if (_memo.err) throw _memo.err;
-  const b = _memo.both;
+  const settled = await pending;
+  if (settled.err) throw settled.err;
+  const b = settled.both;
   const r = b.orders[order] || {
     outDir: path.join(opts.outRoot, String(b.code), order), files: [],
     warnings: [], errors: ['this order produced nothing'],
@@ -1212,6 +1233,7 @@ function findProperty(man, key) {
 
 module.exports = {
   driveBoth, driveOne, cleanup, loadSession, supaConfig,
+  _resetMemo: () => _memo.clear(),
   pickCycle, pickStudy, findProperty, unzipStored, tierOf, diffSnaps,
   NAME_PREFIX, ORDERS,
 };
