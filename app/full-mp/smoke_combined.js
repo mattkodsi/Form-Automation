@@ -73,7 +73,10 @@ const T=(label,v)=>eq(label,!!v,true);
      fields — a state, which the chip names, and which says nothing at all when
      there is nothing to say. */
   T('menu draws no ring on a property card', !/<svg/.test(grid));
-  T('a short profile says what it is short of', !/missing from the profile/.test(grid)||/pchip/.test(grid));
+  /* The menu is a list of what is owed and when. What a profile is short of is
+     the property page's subject, not this one's, and asserting its ABSENCE here
+     is what keeps it from drifting back onto a row. */
+  T('the menu does not tell a row what it needs', !/class="pchip/.test(grid));
   T('menu count chip counts properties', /propert/.test(els.menuCount.textContent));
   T('nothing undefined leaked into the menu', !/undefined/.test(grid));
   /* The guard the rail rests on. With no tracker rows the page keeps the flat
