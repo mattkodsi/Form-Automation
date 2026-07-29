@@ -140,13 +140,16 @@ header{background:var(--chrome);color:var(--on-chrome);padding:0 28px;height:60p
 .cbody{padding:20px}
 
 /* ---- the cell ----
-   RESTING IS PLAIN. In a 42-cell grid where forty are on file, filling all
-   forty is not information, it is wallpaper. The 3px rule still states the
-   save state for every cell — the fill is reserved for the states that need
-   your hands: from a source and not yet saved, or overridden. */
+   A field is INSET — darker than the surface holding it, because it is a box
+   you write in. Plain-white cells on a white card had no figure against
+   ground, which is how removing the provenance fill produced something
+   flatter than the wall of blue it replaced.
+   The 3px rule still states the save state for every cell. Hue is still
+   reserved for the states that need your hands. */
 .cell{display:flex;align-items:center;gap:8px;width:100%;min-height:38px;padding:0 11px;
-      border:1px solid var(--rule);border-radius:var(--r-ctl);background:var(--card);
+      border:1px solid var(--rule);border-radius:var(--r-ctl);background:var(--sunk);
       font-size:13.5px;color:var(--ink);box-shadow:inset 3px 0 0 var(--prov-new)}
+.cell:focus-within{background:var(--card);border-color:var(--ledger)}
 .cell.db{box-shadow:inset 3px 0 0 var(--prov-db)}
 .cell.cy{background:var(--prov-cycle-fill);box-shadow:inset 3px 0 0 var(--prov-cycle)}
 .cell.ov{background:var(--prov-over-fill);box-shadow:inset 3px 0 0 var(--prov-over)}
@@ -167,7 +170,8 @@ header{background:var(--chrome);color:var(--on-chrome);padding:0 28px;height:60p
 .mix th small{display:block;font-size:9.5px;letter-spacing:.04em;text-transform:none;
               color:var(--ink-4);font-weight:500;margin-top:2px}
 .mix td{padding:7px 8px;vertical-align:top}
-.mix tr+tr td{border-top:1px solid var(--rule-soft)}
+.mix tbody tr+tr td{border-top:1px solid var(--rule-soft)}
+.mix tbody tr:hover td{background:rgba(31,84,128,.035)}
 .ut{font-size:13.5px;font-weight:600}
 .ut em{font-style:normal;font-weight:400;color:var(--ink-3);margin-left:7px;font-size:12.5px}
 .delta{font-size:11.5px;color:var(--filed);font-weight:600;margin-top:4px;text-align:right}
