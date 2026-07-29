@@ -111,9 +111,9 @@
   .job h3{font-size:19px;font-weight:600;letter-spacing:-.015em;margin:9px 0 6px;line-height:1.2}
   .job .meta{font-size:13px;color:var(--ink-3);line-height:1.55;flex:1}
   .job .meta b{color:var(--ink-2);font-weight:500}
-  .go{margin-top:20px;align-self:flex-start;background:var(--btn);color:var(--btn-ink);
-      border:1px solid var(--btn);border-radius:var(--r-ctl);padding:0 16px;
-      font-size:12.5px;font-weight:600;min-height:38px}
+  .go{margin-top:20px;align-self:flex-start;min-width:196px;background:var(--btn);
+      color:var(--btn-ink);border:1px solid var(--btn);border-radius:var(--r-ctl);
+      padding:0 18px;font-size:13px;font-weight:600;min-height:40px}
   .go:hover{background:var(--btn-hover);border-color:var(--btn-hover)}
   .go:disabled{background:transparent;border-color:var(--rule);color:var(--ink-4);
                cursor:not-allowed;transform:none}
@@ -129,10 +129,10 @@
   tbody td{padding:11px 18px;border-bottom:1px solid var(--rule-soft);font-size:13px;
            color:var(--ink-3)}
   /* the row is the hit area — 44px — so the Start affordance can stay quiet */
-  tbody tr{border-left:3px solid transparent;cursor:pointer;
-           transition:background .12s var(--ease)}
-  tbody tr.soon{border-left-color:var(--ledger)}
-  tbody tr.filed{border-left-color:var(--filed)}
+  tbody tr{cursor:pointer;transition:background .12s var(--ease)}
+  tbody td:first-child{box-shadow:inset 3px 0 0 transparent}
+  tbody tr.soon td:first-child{box-shadow:inset 3px 0 0 var(--ledger)}
+  tbody tr.filed td:first-child{box-shadow:inset 3px 0 0 var(--filed)}
   tbody tr:hover td{background:var(--sunk)}
   tbody td.nm{color:var(--ink);font-weight:500}
   tbody td.due{color:var(--ink-2);font-weight:500}
