@@ -41,38 +41,50 @@ These are absolute. Every task inherits them.
 
 ---
 
-## Execution Order (set by Matt, 2026-07-29)
+## Execution Order (set by Matt, 2026-07-29 — supersedes the earlier B-first order)
 
-**Priority is B before A.** A better scanner across all 34 properties comes first; the
-end-to-end comparison loop second. If the night only half-lands, it must half-land in
-that order.
+**A before B. Build and run the loop first; fix the scanner as the comparison implicates
+it.** The comparison is what proves a reader defect matters: a misread field that never
+reaches a filed document is not worth a night, and one that changes a rent is. Fixing the
+scanner up front would mean guessing which is which.
 
 | Phase | Lane | Tasks | Who |
 |---|---|---|---|
-| 0 | foundation | 1, 2 | me — everything depends on it |
-| 1 | **B — the scanner** | 3, 4 | me, serial (all edits land in `rcs.js`, each gated by `deliver.sh`) |
-| 1 (concurrent) | A's machinery | 5, 6, 7 | 3 agents in isolated worktrees on `corpus/*.js` — no overlap with `rcs.js`, so they cannot collide with Phase 1 |
-| 2 | **A — the loop** | 8, 9, 10 | me, once B is gated and the seams have landed |
+| 0 | foundation | 1, 2 | me |
+| 0 (concurrent) | **A's seams** | 5, 6, 7 | 3 agents in isolated worktrees on `corpus/*.js` |
+| 1 | **A — prove the loop** | 8 (Lansing by hand), 9 (calibration five) | me |
+| 2 | **A — the sweep** | 10 (all 34 × 2, frozen) | me, parallel workers inside `sweep.js` |
+| R | **B — reactive scanner fixes** | 3, 4 | me, triggered by comparison findings |
 | 3 | permanence + review | 11, adversarial pass | me + 1 agent |
 
-**Why the seams run concurrently rather than after:** they touch only `app/full-mp/corpus/*.js`
-and are tested against fixtures already in the repo. Phase 1 touches `rcs.js` and
-`test_rcs.js`. The single shared resource is `deliver.sh`, which writes `index.html` at the
-repo root — so **agents in worktrees must never run `deliver.sh`**; they run `node --check`
-and their own suite, and I run the full gate when merging their work back.
+**Lane R is not a phase, it is an interrupt.** Whenever a sweep or calibration run produces
+rows whose cause is `parser`, and the same defect class appears in **two or more
+properties** (Constraint 10), stop and fix it: failing check in `test_rcs.js` first, then
+`rcs.js`, then the full `deliver.sh` gate, then re-run the affected comparisons to confirm
+the rows cleared. Then return to the phase that was interrupted.
 
-**Rotation, when something blocks.** Lanes in fallback order, always pick the topmost
-unblocked one:
-1. Phase 1 reader defect classes (there are several; a blocked class does not block the next)
+Task 3's reader audit is now a **diagnostic instrument, not an upfront sweep**: run it over
+the implicated properties when lane R fires, to find every other property carrying the same
+class. That is how a single finding becomes a general fix rather than a special case.
+
+**Why the seams run concurrently with Phase 0:** they touch only
+`app/full-mp/corpus/*.js` and are tested against fixtures already in the repo, while
+Phase 0 touches `corpus/build-manifest.js` and `.gitignore`. The one shared resource is
+`deliver.sh`, which writes `index.html` at the repo root — so **agents in worktrees must
+never run `deliver.sh`**; they run `node --check` and their own suite, and I run the full
+gate when merging their work back.
+
+**Rotation, when something blocks.** Always take the topmost unblocked lane:
+1. The current phase's next step
 2. Merging and gating a returned seam
-3. Task 2 manifest refinements still flagged in `corpus-review.md`
-4. Task 11 test scaffolding, which depends on nothing
-5. Re-running the reader audit to confirm a class stayed closed
+3. Lane R, if any parser class is open with two or more properties behind it
+4. Task 2 manifest refinements still flagged in `corpus-review.md`
+5. Task 11 test scaffolding, which depends on nothing
 
-**If the drive seam cannot capture downloads:** do not stall Phase 2. Drive generation
-through the selftest hatch instead, write `weakerTest: true` into every sweep row it
-produces, and say so plainly in the morning report. A labelled weaker test beats a blocked
-night; an unlabelled one is worse than either.
+**If the drive seam cannot capture downloads:** do not stall. Drive generation through the
+selftest hatch instead, write `weakerTest: true` into every sweep row it produces, and say
+so plainly in the morning report. A labelled weaker test beats a blocked night; an
+unlabelled one is worse than either.
 
 ---
 
