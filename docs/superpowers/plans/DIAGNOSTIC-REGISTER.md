@@ -420,3 +420,149 @@ is a decision about what the app should ingest, not a bug to repair.
   p18). Both the app and the team took the schedule's figure. Correctly ignored by both.
 - Four studies label the **Section 8 contract number as an FHA project number**. The app
   correctly declines to take it every time.
+
+---
+
+# Wave 2 — Northcross, Westwood Village, Riverwood, Burt Farms I, Sycamore Green
+
+App at `3ecdfd2`. Wave 1's five were re-driven on the same build and diffed.
+
+## The three wave-1 fixes landed, and one of them was wrong
+
+| property | before | after | filed |
+|---|---|---|---|
+| Oak Center · monthly potential | 277,700 | **279,428** | **279,428** |
+| Ebony Gardens · monthly potential | 550,625 | 554,325 | **550,625** |
+| Morh Housing · monthly potential | 607,600 | 612,363 | **607,600** |
+
+Part H's inserted article and the checklist's run-date are gone everywhere, and Column 1
+of the non-revenue row now carries the unit type on all three. But **printing the
+non-revenue rent was backed out**: it made Oak Center exactly right and two others newly
+wrong, because the figure we store is not the figure the schedule shows — Ebony's
+non-revenue unit rents at $0 and we hold 3,700, Morh's is 5,100 for the new term and we
+hold last year's 4,763, and on Morh the unit already occupies a `units.*` row so adding
+it again double-counts.
+
+**`nonrev.<i>.rent` being wrong is now the blocking defect**, not the printing of it.
+
+## M17 · The utility allowance IS fixable — the study usually carries the filed number
+
+This overturns the wave-1 conclusion that no repair can reach it. On three of wave 2's
+five, the **study's own table equals what the team filed**, and we printed the prior
+year's anyway:
+
+| property | prior schedule (what we print) | the study says | the team filed |
+|---|---|---|---|
+| Sycamore Green | **42 / 50** | **51 / 64** | **51 / 64** |
+| Burt Farms I | **52** | **54** | **54** |
+| Northcross | **149 / 184 / 204** | **180 / 221 / 246** | **180 / 221 / 246** |
+
+Sycamore Green is the cleanest case in the corpus: its UA workbook, its Exhibit A and its
+study all say 51/64, only the prior schedule says 42/50, and the app had the right figure
+in a file it was handed and used the other one. `defUaSrc` (app.js) prefers `exec`.
+
+Where a third document does govern (Ebony, Clinton, Circle Park, Riverwood, Westwood),
+the study is still nearer the filed figure than last year's is. **Preferring the study is
+the better default on every property audited so far.**
+
+Riverwood's chain, for the record: `UA Baseline/Riverwood Apartments 2025 UA Decrease
+Notice.pdf` proposes 81/66/90/107 and the filed Col. 5 is exactly that; study and prior
+schedule agree with each other on 71/71/85/142 and both differ from what was filed.
+
+## M18 · SAFMR — the figures are real HUD data of the wrong vintage, divided by 1.5
+
+| property | ours | the study says | the team filed |
+|---|---|---|---|
+| Westwood Village | 1,254 · **1,743.3333333333333** · 2,104 | 1,120 · 1,570 · 1,850 | the study's |
+| Sycamore Green | **1,149.3333333333333** · **1,427.3333333333333** | 990 · 1,230 | 1,050 · 1,310 (from the v1 study) |
+| Northcross | 1,520 · 1,890 · 2,430 | same | same |
+| Burt Farms I | 1,260 | same | same |
+
+Two agents independently grepped their study's full text layer and found none of our
+figures. They are the HUD pull. Northcross and Burt Farms match because the pull returned
+the study's own figure there. `hudCeil` stores `round(base × 1.5)` and the workbook
+divides back by 1.5, which is where the repeating third comes from.
+
+## M19 · Tier 2 rejects rent schedules that have a clean text layer
+
+Two properties, and neither document is hard to read:
+
+- **Westwood Village** — the tier-2 reader refused with *"the printed labels do not sit
+  where the form puts them (out by about 7.1 points)"*, on a flattened text PDF whose
+  Part A table `pdftotext -layout` renders perfectly. Three OCR calls followed and it
+  still ended `unreadable:text`. **Five of six documents did not generate.**
+- **Riverwood** — `pdfinfo` says `Form: none`, `pdffonts` shows eight embedded subset
+  fonts, `pdfimages` finds no image on page 1 at all, and PyMuPDF extracts every Part A
+  value cleanly in Tahoma/WinAnsi. The app got a **429 from Azure** and produced
+  **zero documents in both orders**, refusing with "Cannot generate the package with zero
+  units". The only garbled run in the whole file is the DocuSign date stamp.
+- **Burt Farms I** — same shape: a Print-to-PDF DocuSign copy that `pdftotext` reads
+  fine, taken by tier 3 (six OCR calls) rather than tier 1 or 2.
+
+This is a bigger cost than it looks: it is why Azure is being paid for on documents that
+did not need it, and on Riverwood the rate limit that followed cost the whole package.
+
+## M20 · The study reader also fails on Gill Group and on image-first covers
+
+**Riverwood** produced `units: 0` — "No appraiser's letter was found in this file." The
+letter is on **PDF pages 3–4**; page 1 has zero text (an image-only banner page). And its
+unit types are written in bed/bath notation — `1/1`, `1/1`, `2/1`, `3/1.5` — which
+`parseType` does not read, with **two different unit types sharing the label `1/1`**
+(4 units at 515 sf, 23 at 593 sf). Gill Group format; one property so far.
+
+## M21 · The SAFMR table creates unit types out of nothing — FIXED
+
+**Northcross** priced 3 types and the app read **6**: the three real ones plus phantom
+`2BR`, `3BR`, `4BR` rows carrying a SAFMR and nothing else. `upsert()` was shared between
+the concluded-rent table and the SAFMR table, and HUD publishes the small-area FMR per
+bedroom count, so the SAFMR table names sizes where the rent table names unit types.
+Fixed: a SAFMR row now attaches to the exact type, else the stem, else every row with
+that bedroom count — which is the right answer when two unit types share a size — and
+never creates one.
+
+## Confirmations from wave 2
+
+- Workbook ships cached `NO` on the 150% test: Northcross, Westwood, Sycamore. **Now 8.**
+- Part I HAP contract number blank: Burt Farms, Sycamore. **Now 6.**
+- Part F blank: Burt Farms, Sycamore, Westwood. **Now 7.**
+- Checklist `Scope of Work` unticked though the study carries it: Sycamore, Westwood.
+  **Now 5.**
+- Section header rows (`Section 8`, `Non-Revenue`) dropped from Column 1: Burt Farms,
+  Sycamore. **Now 4.**
+- Workbook labels lose the designation: Westwood emits **two rows literally named
+  `2BR/1BA` and two named `3BR/1BA`** (the `HC` suffix dropped). **Now 4.**
+- Unflattened AcroForm — `Clear All` / `Print` render on page 2: Burt Farms, Sycamore.
+  **Now 4.**
+- Fill order changes the bottom line: **Sycamore Green** writes the 2 BR contract rent
+  (1,450) into the non-revenue employee unit AND into Part D under `rs-first`, totalling
+  272,750 where `rcs-first` and the filed schedule both say **271,300**. Same defect
+  family as Ebony and Morh, and the clearest statement of it yet: the correct answer is
+  the one `rcs-first` already produces.
+
+## team wrong, wave 2
+
+- **Northcross**: the filed workbook's `I7 =($C$3*I3)+($C$4*I4)` drops the 4BR term.
+  Filed SAFMR gross $144,000 against a true $178,020; the annual "% of SAFMR" prints
+  **117.12%** where the true figure is **94.74%**. Also `30 Huson Yards` in the owner
+  letter, and Part B's utility checkboxes checked in the loose copy and unchecked in the
+  CA-executed copy of the same DocuSign envelope.
+- **Burt Farms I**: the filed workbook computes the allowance as `=52*1.05` → **54.6**,
+  using a 1.05 factor where the owner's own signed UAF used **1.04**.
+- **Riverwood**: the executed schedule's CA approval date reads `04/24/205`; the two
+  filed copies disagree on the Col. 5 effective date (04/01 vs 05/01/2025); and the UA
+  decrease notice gives the property a Georgia zip.
+- **Sycamore Green**: the filed package contains the **September** study, not the
+  December revision that changed both the UA and the SAFMR; the tenant notice sends
+  residents to 52 Strathmore Circle where every other document says 55; and the team's
+  own 150% test compares contract rent, not gross rent, which is not the study's method.
+- **Westwood Village**: the study's cover letter prints the contract number as
+  `VA36H026152` against `VA36H027152` everywhere else — one digit, on the page the app
+  reads.
+
+## The manifest's "coin toss" is not cosmetic
+
+Three properties this wave turned on which study was chosen. Northcross: the app was fed
+the June 14 revision (3BR UA 221) while the package filed the June 4 one (222). Sycamore
+Green: the app was fed v4 (SAFMR 990/1,230) while all three filed packages contain v1
+(1,050/1,310). Burt Farms I: the alternative study concludes **$1,475** against the
+chosen **$1,825** — $350 a unit. The chosen file was right there, but the margin is real.

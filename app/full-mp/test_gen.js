@@ -223,11 +223,13 @@ function record(extra){
     const base2=7+3*8;
     const row=[V(base),V(base2)].find(x=>/BR|Manager/.test(x))===V(base)?base:base2;
     eq('column 1 carries the unit type',V(row),'3 BR / 1 BA');
-    eq('and the row prints its rent',V(row+2),'1,728');
-    eq('and extends it',V(row+3),'1,728');
-    eq('and grosses it',V(row+5),'1,728');
-    eq('so the monthly potential counts it',V('95'),(10*900+6*1100+1728).toLocaleString('en-US'));
-    eq('and the unit count counts it',V('94a'),'17');
+    /* The rent stays OFF this row until the stored figure can be trusted --
+       see the comment at the non-revenue branch in gen.js. Printing it made
+       Oak Center right and Ebony and Morh wrong. */
+    eq('and does not print a rent we do not trust',V(row+2),'');
+    eq('nor an extension',V(row+3),'');
+    eq('so the potential is the Section 8 rows alone',V('95'),(10*900+6*1100).toLocaleString('en-US'));
+    eq('and the unit count still counts it',V('94a'),'17');
     eq('while Part D still names the use',V(159),"Manager's Unit"); }
   /* A non-revenue unit with no rent of its own must not invent one — Ebony's
      rents at $0 and the filed schedule prints nothing in Col. 3. */
@@ -238,7 +240,8 @@ function record(extra){
     const V=id=>{try{return f.getTextField(String(id)).getText()||'';}catch(e){return null;}};
     const row=/BR/.test(V(7+2*8))?7+2*8:7+3*8;
     eq('a non-revenue row with no rent prints none',V(row+2),'');
-    eq('and adds nothing to the potential',V('95'),(10*900+6*1100).toLocaleString('en-US')); }
+    eq('and adds nothing to the potential',V('95'),(10*900+6*1100).toLocaleString('en-US'));
+    eq('and column 1 is still the type, not the use',V(row),'2 BR / 1 BA'); }
 
   finish();
 })().catch(e=>fail('the suite threw before reaching its verdict',e));

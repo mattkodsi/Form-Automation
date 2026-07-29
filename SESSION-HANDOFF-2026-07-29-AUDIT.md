@@ -123,11 +123,11 @@ A wave marks a property `audited` only when its agent returned rows.
 
 | # | code | property | status | wave |
 |--:|---|---|---|--:|
-| 1 | 2640001 | Northcross | unaudited | |
-| 2 | 4640009 | Westwood Village | unaudited | |
-| 3 | 4640013 | Riverwood | unaudited | |
-| 4 | 75109 | Burt Farms I | unaudited | |
-| 5 | 75453 | Sycamore Green | unaudited | |
+| 1 | 2640001 | Northcross | **audited** | 2 |
+| 2 | 4640009 | Westwood Village | **audited** | 2 |
+| 3 | 4640013 | Riverwood | **audited** | 2 |
+| 4 | 75109 | Burt Farms I | **audited** | 2 |
+| 5 | 75453 | Sycamore Green | **audited** | 2 |
 | 6 | 75474 | New Horizons | unaudited | |
 | 7 | 75478 | North Park | unaudited | |
 | 8 | 75488 | Woodbury Oakwood (Lakeside) | unaudited | |
@@ -182,36 +182,40 @@ lines across 7 studies. Now 1.
 Verified against the filed package: Peterson Plaza's 100-unit row went 2,025 → **2,050**
 (filed: 2,050), monthly potential 429,200 → **431,700** (filed: 431,750).
 
-### THE REPAIR QUEUE — wave 1 is audited, the repairs are NOT yet written
+### THE REPAIR QUEUE — after wave 2
 
-Full evidence, with per-property values and provenance, is in
-`docs/superpowers/plans/DIAGNOSTIC-REGISTER.md` under "Wave 1". Do not re-derive it.
+Evidence is in `docs/superpowers/plans/DIAGNOSTIC-REGISTER.md`, "Wave 1" and "Wave 2".
+Do not re-derive it.
 
-**Do these in order. Each already meets the two-property rule.**
+**FIXED so far:** Part H's inserted article; the checklist's run-date; the non-revenue
+row printing its use instead of its type (`3ecdfd2`); the SAFMR table creating phantom
+unit types (`upsert` no longer shared — `applySafmrBase` in rcs.js).
 
-| # | mechanism | properties | where |
+**Next, in order. Each meets the two-property rule.**
+
+| # | mechanism | properties | note |
 |--:|---|---|---|
-| 1 | Non-revenue / manager's-unit rows are emitted **twice** (once as a type, once as the Part D *use*), or dropped entirely. Oak Center Total Units 78 vs 77 and $1,728 missing from the potential; Morh 127 vs 126; Ebony writes `Superintendent` into the Unit Type cell; Circle Park drops four $0 LIHTC rows, 239 vs 418 | 4 | the Part A row builder |
-| 2 | The workbook's SAFMR column divides a **rounded 150% ceiling** back by 1.5 and prints the remainder (`6620/1.5 = 4413.333333333333`) | 4 | `hudCeil` app.js:771, `applyHudSafmr` app.js:797 |
-| 3 | Part F (max allowable monthly rent potential) left blank | 4 | `fillRentSchedule` in gen.js |
-| 4 | Part I HAP contract number left blank though the prior schedule carries it | 4 | gen.js |
-| 5 | Part H prints `Vice President of **the** General Partner` — the word is in no source | 4 | gen.js |
-| 6 | Checklist stamped with the **run date** under an unsigned signature line | 4 | `fillChecklist` in gen.js |
-| 7 | Checklist leaves `Scope of Work` unticked though every study has it | 3 | the checklist mapping |
-| 8 | Workbook unit labels drop the designation suffix, so two rows read identically | 3 | xlsx.js |
-| 9 | Generated PDFs are **not flattened** — `Clear All` / `Print` buttons render on page 2 | 2 | gen.js |
-| 10 | Fill order still changes the bottom line: Morh 607,600 vs 602,500, and both orders parsed identically, so the divergence is in **apply**, not parse | 3 | `scratchpad/PARKED-roster-fix.patch` — re-measure first |
+| 1 | **`defUaSrc` prefers the prior schedule; it should prefer the study.** On Sycamore Green, Burt Farms I and Northcross the study's own table IS the filed figure and we printed last year's. Where a third document governs, the study is still nearer than last year's. | 3 outright, 8 improved | app.js:235, app.js:1865 |
+| 2 | **`nonrev.<i>.rent` holds the wrong number** — Ebony 3,700 where truth is 0, Morh 4,763 where truth is 5,100. Until this is right the non-revenue row cannot print its rent, and Oak Center stays 1,728 short. | 3 | the roster/apply seam |
+| 3 | **A non-revenue unit occupies a `units.*` row AND a `nonrev.*` row** — double-counted totals and phantom rows. | Morh, Oak Center | same seam as #2 |
+| 4 | **The workbook divides a rounded 150% ceiling by 1.5 and prints the remainder** (`6620/1.5 = 4413.333…`). Separately, `defSafmrSrc` prefers the HUD pull over the study; the team used the study every time. | 6 | `hudCeil` gen-side; app.js:234 |
+| 5 | **The workbook ships cached formula values of 0 and a `NO` verdict** on packages that pass. | 8 | xlsx.js |
+| 6 | Part F left blank | 7 | gen.js |
+| 7 | Part I HAP contract number left blank | 6 | gen.js |
+| 8 | Checklist `Scope of Work` unticked though every study carries it (as "Scope of Assignment") | 5 | the checklist mapping |
+| 9 | Workbook labels drop the designation, so two rows read identically (`2BR/1BA` twice) | 4 | xlsx.js |
+| 10 | Section header rows (`Section 8`, `Non-Revenue`) dropped from Column 1 | 4 | gen.js |
+| 11 | Generated PDFs are not flattened — `Clear All` / `Print` render on page 2 | 4 | gen.js |
+| 12 | Fill order changes the bottom line. **Sycamore Green states it most clearly: `rcs-first` already produces the filed answer (271,300) and `rs-first` does not (272,750).** | 4 | `scratchpad/PARKED-roster-fix.patch` |
 
-**Not yet fixable — one property each, need a second before a fix is written:**
+**Bigger, and worth doing before more auditing:**
 
-- Circle Park's `3 BR / 1.5 BA TH` row (58 units, $4,675) produces **no rent at all** in
-  both orders — $271,150/month, $3.25M/year. The study omits the `Y` in its PREPARED GRID
-  column for exactly that row. Highest single-property money in the corpus.
-- Clinton Manor's prior schedule is a raster scan that the OCR anchor pass rejected at
-  **7 of 8** labels — yet the page is perfectly legible by eye at 200 dpi. Two candidate
-  interferences: a rotated `REC'D CONTRACT ADMIN` stamp running through the form's left
-  edge, and a DocuSign banner above the title. `OCR_MINPAIRS=8`, `ocr.js:26`.
-- Oak Center prints `Community Roc` — Part B services clipped at the line width.
+| # | mechanism | properties | why it matters |
+|--:|---|---|---|
+| 13 | **Tier 2 rejects schedules that have a clean text layer.** Westwood: "labels out by about 7.1 points" on a PDF `pdftotext -layout` reads perfectly. Riverwood: no AcroForm, eight embedded fonts, no image on page 1, every value extractable — and the app went to Azure, got a **429**, and produced **zero documents**. Burt Farms: same, six OCR calls. | 3 | it is why Azure is being paid for at all, and on Riverwood the rate limit cost the entire package |
+| 14 | **A priced study row produces no rent** — Circle Park's `3 BR / 1.5 BA TH`, 58 units, $271,150/month | 1 | biggest single-property money in the corpus |
+| 15 | **The study reader cannot read Gill Group.** Riverwood's letter is on pages 3–4 behind an image-only cover, and its unit types are `1/1`, `2/1`, `3/1.5` | 1 | |
+| 16 | **The OCR anchor pass rejects a legible page at 7 of 8** — Clinton Manor | 1 | `OCR_MINPAIRS`, ocr.js:26 |
 
 ### DECISIONS FOR MATT — these are not repairs
 

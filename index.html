@@ -8607,6 +8607,26 @@ function upsert(units,type,page,count){
   units.push(u);return u;
 }
 
+/* A SAFMR row must never CREATE a unit type. HUD publishes the small-area FMR
+   per BEDROOM COUNT, so that table names sizes ("2BR") where the concluded-rent
+   table names unit types ("2BR/1BA TH"). Routed through upsert(), the mismatch
+   appended three phantom rows to Northcross — a three-type property the app then
+   read as having six, each phantom carrying a SAFMR and no units and no rent.
+
+   Attach to what the roster already has: the exact type, else the stem, else
+   EVERY row with that bedroom count. The last of those is not a fallback but the
+   right answer — when two unit types share a size they share a SAFMR, which is
+   how Circle Park's flat and townhouse rows both come to be priced against the
+   same ceiling. If nothing matches, the figure is dropped rather than invented. */
+function applySafmrBase(units,type,base){
+  const k=norm(type),stem=typeStem(type),br=parseType(type).br;
+  let hit=units.filter(u=>norm(u.type)===k);
+  if(!hit.length)hit=units.filter(u=>typeStem(u.type)===stem);
+  if(!hit.length&&br!=='')hit=units.filter(u=>u.br===br);
+  hit.forEach(u=>{u.safmr_base=base;});
+  return hit.length;
+}
+
 function readTables(txt,pi,units,totals,seen){
   let section='';
   txt.forEach(function(t){
@@ -8651,8 +8671,7 @@ function readTables(txt,pi,units,totals,seen){
       return;
     }
     if(section==='safmr'&&(m=t.match(ROW_4C))){     // BASE safmr, not the ceiling
-      const u=upsert(units,m[1],pi,money(m[2]));
-      u.safmr_base=money(m[3]);
+      applySafmrBase(units,m[1],money(m[3]));
       return;
     }
   });
@@ -9517,12 +9536,18 @@ const addrLine=(street,city,state,zip)=>{
          Center's manager's unit rented at $1,728 fell out of Col. 4 and out of
          the monthly potential: 277,700 where the filed schedule foots 279,428.
          A non-revenue unit still occupies the building and still extends. */
+      /* The rent is deliberately NOT printed here, and that is a decision with
+         evidence behind it. Printing it fixed Oak Center exactly -- 277,700 became
+         the filed 279,428 -- and broke two others, because the figure we hold is
+         not the figure the schedule shows: Ebony's non-revenue unit rents at $0
+         and we store 3,700, Morh's is 5,100 for the new term and we store last
+         year's 4,763. On Morh the unit also occupies a units.* row already, so
+         adding it a second time double-counts. A wrong rent in Column 3 of a
+         federal form is no better than a missing one, so until nonrev.<i>.rent
+         is trustworthy this row prints its type and its count and stops. */
       else { const nn=nmv(g('nonrev.'+i+'.num_units'))||1;
         const nrType=utype(g('nonrev.'+i+'.br'),g('nonrev.'+i+'.ba'));
-        T(base, nrType||g('nonrev.'+i+'.use')); T(base+1,nn); ptU+=nn;
-        const nrRaw=g('nonrev.'+i+'.rent'), nrHas=nrRaw!==''&&nrRaw!=null;
-        if(nrHas){ const nrR=Math.round(nmv(nrRaw));
-          T(base+2,money(nrR)); T(base+3,money(nn*nrR)); T(base+5,money(nrR)); ptC+=nn*nrR; } }
+        T(base, nrType||g('nonrev.'+i+'.use')); T(base+1,nn); ptU+=nn; }
     });
     // Totals count every unit — non-S8 rents add into the contract rent
     // potential like S8 rows, and non-rev units count even when trimmed

@@ -317,12 +317,18 @@ const addrLine=(street,city,state,zip)=>{
          Center's manager's unit rented at $1,728 fell out of Col. 4 and out of
          the monthly potential: 277,700 where the filed schedule foots 279,428.
          A non-revenue unit still occupies the building and still extends. */
+      /* The rent is deliberately NOT printed here, and that is a decision with
+         evidence behind it. Printing it fixed Oak Center exactly -- 277,700 became
+         the filed 279,428 -- and broke two others, because the figure we hold is
+         not the figure the schedule shows: Ebony's non-revenue unit rents at $0
+         and we store 3,700, Morh's is 5,100 for the new term and we store last
+         year's 4,763. On Morh the unit also occupies a units.* row already, so
+         adding it a second time double-counts. A wrong rent in Column 3 of a
+         federal form is no better than a missing one, so until nonrev.<i>.rent
+         is trustworthy this row prints its type and its count and stops. */
       else { const nn=nmv(g('nonrev.'+i+'.num_units'))||1;
         const nrType=utype(g('nonrev.'+i+'.br'),g('nonrev.'+i+'.ba'));
-        T(base, nrType||g('nonrev.'+i+'.use')); T(base+1,nn); ptU+=nn;
-        const nrRaw=g('nonrev.'+i+'.rent'), nrHas=nrRaw!==''&&nrRaw!=null;
-        if(nrHas){ const nrR=Math.round(nmv(nrRaw));
-          T(base+2,money(nrR)); T(base+3,money(nn*nrR)); T(base+5,money(nrR)); ptC+=nn*nrR; } }
+        T(base, nrType||g('nonrev.'+i+'.use')); T(base+1,nn); ptU+=nn; }
     });
     // Totals count every unit — non-S8 rents add into the contract rent
     // potential like S8 rows, and non-rev units count even when trimmed
