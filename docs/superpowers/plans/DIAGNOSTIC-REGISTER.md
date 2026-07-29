@@ -759,3 +759,75 @@ and printed the property as "Woodbury Oakwood" rather than "Lakeside Apartments"
 agent noticed and fell back to the preserved copy under `_sweep-wave2-before`, but only
 because it happened to check. **Never re-drive a property while an agent is auditing it** —
 snapshot first, point the agents at the snapshot, and drive into a fresh label.
+
+---
+
+# Re-check of `1c87c7e` and `83a1e14` — verified against the filed figures
+
+Sweep `wave-4` diffed against the pre-fix snapshot `_snap-w3`, by document and key.
+
+## Hampshire House — from nothing to exactly right
+
+| field | before | after | filed |
+|---|---|---|---|
+| unit.0.rent | *(blank)* | **2,000** | 2,000 |
+| unit.1.rent | *(blank)* | **2,400** | 2,400 |
+| unit.0.extension | *(blank)* | **180,000** | 180,000 |
+| unit.1.extension | *(blank)* | **60,000** | 60,000 |
+| Monthly contract rent potential | *(blank)* | **240,000** | $240,000 |
+| Yearly contract rent potential | *(blank)* | **2,880,000** | $2,880,000 |
+| draft rent schedule | generated but empty | **generated with values** | — |
+
+Gross rents read 2,070 and 2,486 against a filed 2,073 and 2,489 — the $3 difference is the
+allowance question, not this fix: ours is the study's 70/86, which is also what the owner's
+own UAF letter computes, and the filed 73/89 comes from a CA letter written eight weeks
+after the package was submitted.
+
+## Circle Park — the biggest number in the corpus
+
+| field | before | after | filed |
+|---|---|---|---|
+| unit.4.proposed | *(absent)* | **4,675** — status `match` | 4,675 |
+| Monthly contract rent potential | 565,900 | **837,050** | 837,050 |
+| Yearly contract rent potential | 6,790,800 | **10,044,600** | 10,044,600 |
+
+## Part D
+
+Sycamore Green's `nonrev.0.rent` and `nonrev.total_rent` both went **1,450 → 0**, which is
+what the prior schedule and the filed schedule both say.
+
+## Two count increases that are NOT regressions
+
+Woodbury Oakwood 8 → 75 and Hampshire House 67 → 77. Both are **more output, not worse
+output**: Woodbury's previous run had died on an Azure 429 and produced one document of
+six, and Hampshire now emits a populated schedule where it emitted an empty one. Every new
+row is `missing-theirs` — the extractor cannot read the filed rent schedules, a harness
+limit recorded long ago. Woodbury also gained `unit.0.current` 1,109 and `unit.1.current`
+1,356, both `match`, and its printed name went `Woodbury Oakwood` → **`Lakeside
+Apartments`**, which is what the filed schedule says.
+
+## M27 · OCR IS NONDETERMINISTIC — the same document, the same code, a different outcome
+
+**Ebony Gardens read its prior schedule successfully last run and failed this run.** The
+new record says:
+
+> `state: "could not be read"`, `kind: "scan"` — "The scan came back and **47 labels were
+> recognised**, but the page could not be squared with the [blank form]"
+
+Forty-seven anchors is nearly six times the eight the registration needs, so this is not the
+`OCR_MINPAIRS` threshold. It is the fit itself failing on a page that fitted an hour
+earlier. The consequences are a whole package: all four current rents went to `null`, and
+the checklist and the draft rent schedule stopped generating (6 documents → 3).
+
+Its mismatch count fell 93 → 19, which looks like an improvement and is the opposite —
+fewer rows were produced, so fewer could disagree. **A falling difference count is not
+evidence of a fix.**
+
+This also explains the SAFMR figures moving on Ebony (2,511.33 → 2,655.33, 2,780 → 2,910,
+3,465.33 → 3,644) with neither value matching the study's 2,490 / 2,730 / 3,420: the HUD
+pull returns different numbers on different runs. Two independent reasons, then, to stop
+preferring that pull over the study's own printed table.
+
+**This is now the top of the queue.** Every finding in this register that rests on a single
+driven run is weaker than it looked, and any property whose schedule "could not be read"
+should be re-driven before its rows are trusted.
