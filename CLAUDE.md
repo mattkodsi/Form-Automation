@@ -174,6 +174,20 @@ a new suite needs registering (`deliver.sh` calls it).
   they arrive — renamed columns, ISO dates, Excel serials, a promise, a bare array — and that when we
   cannot, `diagnose()` says why instead of showing an empty list.
 
+- **`app/full-mp/shots.js` + `test_shots.js`** — **the only thing here that LOOKS at the app.** `shots.js`
+  boots the same headless chromium `test_browser.js` uses (both now share `cdplib.js`), drives the real
+  bundle through `?selftest=1`, and captures 46 PNGs into the git-ignored `app/full-mp/_shots/` with an
+  `index.md` describing each: the four views, every form section framed on its own, all five `CLR`
+  provenance colours reached through the app's own doors, the interactive states, and a narrow pass at
+  860px. It exists because a `getBoundingClientRect` cannot see two colours that are the same colour, a
+  sticky bar covering the title of the section you just scrolled to, or a control with no focus ring —
+  and this project has twice shipped a wrong finding asserted from reading `app.js`. Run it with
+  `node app/full-mp/shots.js`, then open the images. `test_shots.js` (83) runs the sweep and proves the
+  images are real: PNG signature, plausible dimensions, and no blank rectangles. **It fails, never
+  skips, where no chromium is installed** — a screenshot suite that renders nothing has verified nothing.
+  ⚠ Anything about sticky chrome must be read off the window-true shots (`36`–`38`, `46`–`48`); the
+  clipped ones are in PAGE coordinates and will place a `position:sticky` bar wherever the scroll left it.
+
 - **`app/full-mp/corpus/`** — the RCS corpus loop: drive the real app over every filed package and
   compare what it generates to what the PM team filed. `test_safety.js` (7) asserts the rails an
   unattended run needs — tier-3 OCR unreachable, cache gitignored, not on `main`. `test_compare.js`
@@ -195,7 +209,7 @@ a new suite needs registering (`deliver.sh` calls it).
   computed, and both tools exit 3 with a banner where poppler is absent rather than exiting 0 having
   rendered nothing.
 
-**2008 checks across twelve suites** (98 · 169 · 144 · 175 · 91 · 420 · 189 · 341 · 11 · 91 · 120 · 159) as of 2026-07-30, counted off a real run. These
+**RECOUNT-PENDING checks across thirteen suites** as of 2026-07-30, counted off a real run. These
 numbers go stale the moment a suite grows — `MIN_CHECKS` in each file is the binding floor; this list
 is a map.
 ⚠️ **Don't pipe a suite through `| tail`.** A pipeline's exit status is the LAST command's, so node's
