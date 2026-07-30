@@ -1968,3 +1968,87 @@ carries `#REF!` in its own what-if block.
 1492, 1907.333…, 2433.333… — that appear in **no source document** (1,492 is the 2024 *gross rent* of
 the 1BR-B row). This run reads 1,420 / 1,420 / 1,820 / 2,320, exactly study p.4. And w7's two 1BR
 types were both labelled `1BR/1BA`; they are now `1 BR / 1 BA A` and `1 BR / 1 BA B`.
+
+## Marine Terrace (75922) — audited. 14 differences, **0 real app defects**, and a 429 read as a verdict
+
+`compared: 20, matched: 6, differing: 14, notGenerated: 8` — and **all 20 comparisons came from one
+file**, the workbook, because five of six documents were withheld. Of the 14: 3 graded `high` are one
+label convention counted thrice; 8 are `missing-theirs` on columns the team's own spreadsheet does
+not have; 3 are one throttle counted thrice. **Not one is an app defect.** The two real defects on
+this property were invisible to the sweep because it never produced a checklist to compare.
+
+**M58 — the app renders an HTTP 429 as a permanent verdict on the document. OPEN.** Azure declined
+all three OCR attempts in **2,076 ms** — no meaningful backoff — and the tile reads *"could not be
+read … Enter the values below"* with `tier: unreadable:text` and `errors: []`. Nine hours earlier the
+**same two files** read successfully: `_snap-w7` has `kind: fields`, `via: ocr`, 41,809 ms, **3 of 6
+documents ready and 5 files written**, against this run's 1 of 6 and a 61-page "package" containing
+only the appraiser's own report. So the PM's instructed next action is to hand-key ~30 values that
+were machine-read that afternoon. This is the **third** property to read the same file in one run and
+not the next — and the first where the cause is visibly a retryable throttle rather than the parser.
+The comparator recorded `drift: []`: it has no cross-run memory.
+
+## Fairview Homes (75920) — audited. 95 differences, **4 real, none of them a dollar**
+
+The prior schedule read **perfectly** at tier 3 (3 calls, 63.5 s) — every Part B box, fuel letter,
+write-in, Part D row, the entity, all three principals with percentages and the signatory verified by
+eye. One of the cleanest tier-3 reads in the corpus. And the comparator still reported 95.
+
+**Because the FILED schedule is unreadable too.** Both filed HUD-92458s have no `/AcroForm`, zero
+`/Widget`, and **one character of text on page 2** — DocuSign rasterised them. So the extractor fell
+back to page 1, the NJHMFA transmittal *letter*, and mapped its lines into Part A rows:
+`unit.0.type = "410TenthAve,8"`, `unit.1.type = "NewYork,NY10001"`,
+`unit.3.type = "DearMr.Delancy,"`, `total.contract_rent = "effective"`. **62 of the 95 rows are that
+one substitution**, 18 more are the ASCII-offset checklist font (read as an image, all 17 ticks and
+the signature match), 11 more are a workbook column map. Until the comparator OCRs the filed side —
+or refuses and says *"filed side unreadable"* instead of emitting 62 confident rows — **the difference
+count on any DocuSigned property measures the rig.**
+
+Real: the study's page-one table alone says `3BR/2BA` where its own page 19 Unit Breakdown, its pages
+Two and Three, its comparable map and its narrative all say **`3BR/1.5BA`** — the reader takes the
+letter's table and never reconciles it against the body. Plus the Part A `Non-Revenue Unit` caption
+row is never written, so a HUD reviewer sees an unlabelled one-unit line.
+
+## M57 is now on FIVE properties, and Fairview Homes settles what it is
+
+Not a parsing gap — a **timing** gap. Fairview's allowance authority is
+`Archive/Approval/Fairview Homes M2M, R&R, & NUA Appr_FY2025.pdf` p.1, an NJHMFA letter dated
+**19 May 2025** that sets the adjusted allowance at **$81 / $114 / $134** — **six weeks after the
+4 April submission**. The app faithfully reproduces the study's $76/$91/$131, the study faithfully
+reproduces the prior year's, and **nobody in that chain is arithmetically wrong**; but the schedule
+that gets executed carries different figures in Columns 5 and 6, and there is nowhere in the app for
+that fact to live. Same shape on Shiloh Village, 333 Holly, Friendship Court and Walden — and on
+Friendship Court the governing figures were a **human judgement** (the spreadsheet computes 108.91
+and 124.47; the signed summary filed **105** and **118**), so no amount of parser work reaches them.
+
+## The Part F / Part I question is a DECISION, not a defect
+
+Three properties now say different things and the register should stop pretending otherwise. The
+form's own page 3 prints *"Part F. Do not complete this Part"* and *"Part I. Do not complete this
+Part. The HUD Field Office/lender will complete this part."* Market Square and Fairview Homes confirm
+ours is form-correct to leave both blank. **Walden's team fills Part F** ($196,075) and HUD signed
+it; Marine Terrace's team fills both, as it did the year before. So portfolio convention differs from
+the printed instruction, on a form the owner signs under 18 U.S.C. §1001. **Do not fix either way
+without Matt.**
+
+## M47 — the checklist is a hard-coded seed, and the evidence is now overwhelming
+
+`app.js:72`: `const off=/scope of repair/i.test(it)||/scope of work/i.test(it); SEED['check.'+i]=[off?'':'1',D]`.
+Every one of the seventeen items is ticked except two hand-picked exceptions, and the study is never
+consulted. Across the corpus:
+
+- **"Scope of Work" is seeded OFF on every property** and should be ticked wherever the study carries
+  the section — which is everywhere, under Belfry's own heading **"Scope of Assignment"**, listed in
+  the study's table of contents, and referred to as "the Scope of Work section of this report" in the
+  appraiser's own certification. Wrong on Walden, Colonial Village, Friendship Court, Fairview Homes.
+- **The appraiser-licence item is seeded ON**, so the app certifies that a copy of a *temporary*
+  licence is enclosed on every property that does not use one — Walden (study answers **N**, permanent
+  NY licence 1553109), Marine Terrace (permanent NY 4600054504), Morningside Court, Newberry Arms,
+  Friendship Court, Colonial Village. **A false statement on a form carrying an 18 U.S.C. §1001
+  warning, and the app's own worst act in the corpus.**
+
+One caution before it is "fixed" by reading the study: on **Fairview Homes** the appraiser left the
+printed question *"Did you prepare the RCS under a temporary license? ___"* **blank** while attaching
+Temporary Visiting Practice Permit TP018-25 **and** typing that temporary number into the field
+labelled "Permanent License No". So the study's literal answer is silence and its material answer is
+yes. A rule that reads the answer must handle a blank, and the safe default for an
+unanswered conditional is **not ticked**.
