@@ -184,6 +184,13 @@ function readSender(txt,S,window){
   for(let i=0;i<Math.min(txt.length,window||8);i++){
     const t=txt[i];
     if(!FIRMY.test(t))continue;
+    /* An address is not a name. Northgate Terrace's letter puts the appraiser's
+       e-mail on line 2, so FIRMY matched "(E) azabel@belfryvaluation.com" - the
+       domain contains "valuation" - and appr.firm was stored as that whole
+       string, which then went out on the owner cover letter's certifications.
+       The title-page fallback declines to overwrite a firm it thinks it has, so
+       nothing downstream could recover it. */
+    if(/\S+@\S+\.\S+/.test(t))continue;
     if(/^re[:\s]/i.test(t))continue;
     if(/^(real estate|nationwide)/i.test(t))continue;      // taglines, not names
     fi=i;S['appr.firm']=t.replace(/,\s*$/,'').trim();break;
@@ -239,6 +246,9 @@ function readSubject(txt,S,warn){
 }
 
 /* The appraiser who signed it. */
+/* What one printed name looks like: two to four capitalised tokens. Named
+   because readSignature now asks it of a whole line AND of each half of one. */
+const NAME_LINE=/^[A-Z][A-Za-z.'\-]+(\s+[A-Z][A-Za-z.'\-]*){1,3}$/;
 function readSignature(txt,S){
   if(S['appr.name'])return;
   let si=-1;
@@ -249,9 +259,101 @@ function readSignature(txt,S){
     if(!t)continue;
     if(/license|certified|job\s*no|^[A-Z]{2,4}\/[A-Z]{2,4}$|president|associate|appraiser/i.test(t))continue;
     if(FIRMY.test(t))continue;                     // the firm's own name, not the person who signed
-    if(!/^[A-Z][A-Za-z.'\-]+(\s+[A-Z][A-Za-z.'\-]*){1,3}$/.test(t))continue;
-    S['appr.name']=t;return;
+    if(NAME_LINE.test(t)){S['appr.name']=t;return;}
+    /* Two appraisers, side by side, on one printed line.
+       Belfry and Cornerstone both sign some letters in two columns, so the line
+       assembles as "Aaron M. Zabel   Rachel A Walsh" - six tokens where a name
+       is two to four - and the pattern above rejects it. The lines that follow
+       are then eaten by the license/certified/president/associate skips and the
+       window runs out, so appr.name comes back empty. It is a requirement of the
+       OWNER COVER LETTER, so on Newberry Arms, Morningside Court and Northgate
+       Terrace CA this alone withheld a document.
+
+       Split down the MIDDLE, not at the first place that parses. Two columns hold
+       one name each, so a balanced split is the one that reflects the layout -
+       and trying every split position instead would accept "Aaron M." from
+       "Aaron M. | Zabel Matthew A. Polnow", which parses just as well and is not
+       a person. The lead appraiser signs on the left, which is the name the filed
+       letters carry. */
+    const tk=t.split(/\s+/), n=tk.length;
+    if(n>=4&&n<=8){
+      const mid=n%2?[(n+1)/2,(n-1)/2]:[n/2];
+      for(let m=0;m<mid.length;m++){
+        const head=tk.slice(0,mid[m]).join(' '), tail=tk.slice(mid[m]).join(' ');
+        if(NAME_LINE.test(head)&&NAME_LINE.test(tail)){S['appr.name']=head;return;}
+      }
+    }
   }
+}
+
+/* ------------- the owner's checklist, and the one conditional item -------------
+   Appendix 9-2-2 has seventeen items. Sixteen describe material every RCS
+   submission contains; ONE carries its condition in HUD's own printed wording:
+
+     "Copy of RCS Appraiser's License (only if relying upon a temporary license)"
+
+   The app ticked it on every property, which certifies - under the 18 U.S.C.
+   §1001 warning the owner signs above - that a copy of a temporary licence is
+   enclosed when no temporary licence was used. The study is the document that
+   answers it, in two places:
+
+   1. THE SIGNATURE BLOCK, on a page the reader already holds. Three real
+      studies name one:
+        Holly House      "New Jersey Temporary Practice Permit / License No.: TP018-25"
+        Hampshire House  "New Jersey Temporary Visiting" / "Practice Permit"
+        Noble Tower      "CA Temporary Certified General Appraiser License No. 3012633-001"
+      Hampshire's is the reason this reads a TWO-LINE window and not a line:
+      "Temporary Visiting" ends one line and "Practice Permit" begins the next,
+      so a line-at-a-time test finds "temporary" with no "permit" beside it and
+      reports nothing. Measured over all 31 studies the app can open, the window
+      fires on exactly Holly House and Hampshire House and nowhere else - and
+      those are precisely the two whose FILED checklists tick the item.
+
+   2. THE CERTIFICATION, Appendix 9-1-4 item 12: "Did you prepare the RCS under a
+      temporary license? No". Eleven of the 34 studies print it; ten answer No and
+      Noble Tower answers Yes. It sits 8 to 18 pages from the end, so the reader
+      does not go looking for it - but when a page holding it is already in hand
+      it is the appraiser's sworn answer and it is read.
+
+   SILENCE LEAVES THE BOX EMPTY, and that is the whole point. A conditional item
+   nobody answered is not a yes. Do not "tidy" this into a default of ticked
+   because most packages are fine; the two properties above are the ones that
+   make ticking true, and the other 32 are the ones that make it a false
+   statement. Positive evidence only, and only from the study. */
+function readChecklist(txt,S,warn){
+  let q=null,permit=null;
+  for(let i=0;i<txt.length;i++){
+    const k=norm(txt[i]);
+    /* The sworn answer. The blank template prints the question with nothing after
+       it, so the answer is part of the anchor - no capture, no tick. */
+    const m=k.match(/didyoupreparethercsunderatemporarylicense(yes|no)/);
+    if(m){if(q==null)q=m[1];continue;}
+    if(permit!=null)continue;
+    const w=k+norm(txt[i+1]||'');
+    /* The question's OWN words say "temporary license" twice. Reading them as a
+       signature block would tick the box on every study that prints the blank
+       form - the exact fault this function exists to end. */
+    if(/didyouprepare|ifsoattachacopy/.test(w))continue;
+    /* "temporary" beside a TITLE, not beside any word starting "licen". A bare
+       co-occurrence is too loose: Noble Tower's study says "units were
+       temporarily taken offline" in one place and "all required licenses,
+       consents" in another, and two ordinary sentences must never tick a
+       certification. What the three real signature blocks print is a title -
+       "Practice Permit", "License No.", "Temporarily licensed as" - so those are
+       what this asks for. Bare "permit" is not enough either: a building permit
+       is a permit. */
+    if(/tempor/.test(w)&&/practicepermit|licen[sc]eno|licen[sc]ed/.test(w))permit=String(txt[i]).trim();
+  }
+  if(q==null&&permit==null)return;                       // silent: leave it alone
+  const on=(q==='yes'||permit!=null);
+  if(on||S['check.14']!=='1')S['check.14']=on?'1':'';
+  if(!warn)return;
+  if(permit!=null)
+    warn.push('The study was prepared under a temporary licence, so item 14 of the owner’s checklist is ticked and a copy of that licence belongs in the package.');
+  else if(q==='yes')
+    warn.push('The study certifies it was prepared under a temporary licence, so item 14 of the owner’s checklist is ticked and a copy of that licence belongs in the package.');
+  if(q==='no'&&permit!=null)
+    warn.push('The study answers “no” to preparing the RCS under a temporary licence, but its signature block names one. Item 14 is ticked on the stronger of the two.');
 }
 
 
@@ -259,13 +361,37 @@ function readSignature(txt,S){
 
 const WORDNUM={one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10};
 /* "2BR/1BA", "1 BR / 1 BA", "Two Bedroom", "1BR/1BA without patio". */
+/* EVERY SPELLING BELOW IS ONE A REAL STUDY USED, and each one that was not
+   understood cost a rent. Measured across the 34-property corpus: 15 of 98
+   priced unit lines in 7 studies returned no bedroom count, and a line with no
+   bedroom count is invisible to rcsMatch -- so its row silently took a
+   DIFFERENT unit type's rent rather than none. Peterson Plaza's schedule came
+   out $2,550 short that way.
+
+     IBR/1BA      Peterson Plaza, Ebony Gardens, Holly House  -- capital I, not 1
+     3B/1BA       Westwood Village                            -- B alone
+     4B/2BA       Westwood Village
+     1BD/1BA      North Park                                  -- BD
+     1-BR/1 BA    New Horizons                                -- hyphen separator
+     One-Bedroom  Noble Tower                                 -- hyphen before the word
+
+   The bare B is the one that needs care: "1BA" must never read as one bedroom,
+   so every bedroom token is followed by (?![a-z]) -- B before A fails, B before
+   / or space or end succeeds. Order matters in the alternation too: the longer
+   spellings come first so "bedroom" is not consumed as a bare "b". */
 function parseType(t){
   const v=String(t||'').trim(),o={type:v,br:'',ba:''};
-  let m=v.match(/(\d+)\s*(?:br\b|bed)/i);
+  /* A capital I standing in for the digit 1, immediately before a bedroom
+     token. Only uppercase, and only in that position, so a word beginning with
+     I is untouched. */
+  const nv=v.replace(/\bI(?=B[RD]?(?![a-z]))/g,'1');
+  const BRTOK='(?:bedrooms?|beds?|br|bd|b)(?![a-z])';
+  let m=nv.match(new RegExp('(\\d+)[\\s.-]*'+BRTOK,'i'));
   if(m)o.br=+m[1];
-  else{m=v.match(/\b([a-z]+)\s*(?:bedroom|bed\b)/i);if(m&&WORDNUM[m[1].toLowerCase()]!=null)o.br=WORDNUM[m[1].toLowerCase()];}
-  if(o.br===''&&/studio|efficiency/i.test(v))o.br=0;
-  m=v.match(/(\d+(?:\.\d+)?)\s*(?:ba\b|bath)/i);
+  else{m=nv.match(new RegExp('\\b([a-z]+)[\\s-]*(?:bedrooms?|bed\\b)','i'));
+       if(m&&WORDNUM[m[1].toLowerCase()]!=null)o.br=WORDNUM[m[1].toLowerCase()];}
+  if(o.br===''&&/studio|efficiency/i.test(nv))o.br=0;
+  m=nv.match(/(\d+(?:\.\d+)?)\s*(?:ba\b|bath)/i);
   if(m)o.ba=parseFloat(m[1]);
   return o;
 }
@@ -280,7 +406,20 @@ function parseType(t){
    them — "1 BR / 1 BA30 537 $1,580 $2.94Y" is a 30-unit 1BR of 537 sq ft. The
    type is lazy, so the shortest reading that satisfies the whole row wins and
    "1 BR / 1 BA" is preferred over "1 BR / 1 BA3". */
-const ROW_MAIN=/^(.+?)\s*(\d+)\s+([\d,]+)\s+\$([\d,]+)\s+\$?([\d.]+)\s*([YN])\b/i;  // type count sf rent psf grid
+/* The concluded-rent row, and the only place most studies print the rent at all.
+   Two ways it was being missed, both worth a package:
+
+   Hampshire House writes the area with its unit -- "1BR/1BA 90 640 SF $2,000
+   $3.13 Y" -- and the literal SF sat where the pattern expected the rent. BOTH
+   of its rows failed, so its Column 3, Column 4, Column 6, both totals and Part F
+   all printed blank against a study that says $2,000 and $2,400 in plain sight.
+
+   Circle Park's last row -- "3BR/1.5BA TH 58 1200 $4,675 $3.90" -- simply has no
+   Y in the PREPARED GRID column, though the grid exists later in the same
+   document. Requiring that Y cost 58 units their rent: $271,150 a month.
+
+   So the area may name its unit, and the grid flag is optional. */
+const ROW_MAIN=/^(.+?)\s*(\d+)\s+([\d,]+)(?:\s*(?:sf|sq\.?\s*ft\.?))?\s+\$([\d,]+)\s+\$?([\d.]+)\s*(?:([YN])\b|$)/i;  // type count sf rent psf grid
 const ROW_CS6 =/^(.+?)\s*(\d+)\s+\$([\d,]+)\s+\$([\d,]+)\s+\$([\d,]+)\s+\$([\d,]+)\s*$/; // cornerstone: type count net ua gross monthly
 const ROW_5C  =/^(.+?)\s*(\d+)\s+\$([\d,]+)\s+\$([\d,]+)\s+\$([\d,]+)\s*$/;          // belfry: type count rent ua gross
 const ROW_CMP =/^(.+?)\s*(\d+)\s+\$([\d,]+)\s+\$([\d,]+)\s+\$[\d,]+\s*[<>]\s*\$[\d,]+/; // belfry: type count rent 150%safmr verdict
@@ -289,7 +428,20 @@ const ROW_4C  =/^(.+?)\s*(\d+)\s+\$([\d,]+)\s+\$([\d,]+)\s*$/;                  
 /* The type with its bath count removed. Two rows that agree on everything but
    the bathroom are one unit type described twice; two rows that differ by a
    qualifier are genuinely two. */
-function typeStem(t){return norm(String(t||'').replace(/\d+(?:\.\d+)?\s*(?:ba\b|bath[a-z]*)/ig,''));}
+/* One study, one unit type, two spellings. North Park's transmittal table says
+   1BD/1BA and its SAFMR and gross-renewal tables say 1BR/1BA -- the same four
+   apartments written two ways -- so the roster keyed on the raw string found
+   SEVEN unit types in a four-type property and printed three ghost rows. It also
+   split the allowance: the studio matched between tables and took the study's
+   figure, the other three did not and fell back to the prior schedule's, so one
+   document ended up with two different UA policies down one column.
+
+   BD and BR both mean bedroom. Normalising them to one key is enough on its own,
+   and it cannot merge rows that a study means to keep apart -- Lansing Manor's
+   "1BR/1BA with patio" and "without patio" stay two keys, because they differ by
+   more than the letter. */
+function typeKey(t){return norm(String(t||'')).replace(/(\d)bd/g,'$1br');}
+function typeStem(t){return typeKey(String(t||'').replace(/\d+(?:\.\d+)?\s*(?:ba\b|bath[a-z]*)/ig,''));}
 
 /* Keyed on the FULL type string first, because Lansing prices "1BR/1BA without
    patio" ($1,190) and "1BR/1BA with patio" ($1,200) as two separate rows and a
@@ -301,9 +453,25 @@ function typeStem(t){return norm(String(t||'').replace(/\d+(?:\.\d+)?\s*(?:ba\b|
    identical unit count, that merges; "with patio" vs "without patio" does not,
    because the stems differ. */
 function upsert(units,type,page,count){
-  const k=norm(type);
-  for(let i=0;i<units.length;i++)if(norm(units[i].type)===k)return units[i];
+  const k=typeKey(type);
+  for(let i=0;i<units.length;i++)if(typeKey(units[i].type)===k)return units[i];
+  /* A later table appends a designation the roster's own table did not carry.
+     Walden's conclusion prints "1BR/1BA (B)" and its comparison and gross-renewal
+     tables print "1BR/1BA (B) Senior" -- the same thirty apartments -- so a ghost
+     row appeared holding an allowance and a ceiling and no rent, because only the
+     conclusion table states one. A name that extends an existing name, over the
+     same unit count, is that same row wearing its designation. */
   if(count!==''&&count!=null){
+    const kk=typeKey(type);
+    for(let i=0;i<units.length;i++){
+      const ek=typeKey(units[i].type);
+      if(ek&&kk!==ek&&(kk.indexOf(ek)===0||ek.indexOf(kk)===0)
+        &&units[i].count!==''&&Number(units[i].count)===Number(count)){
+        units[i].alias=units[i].alias||[];
+        if(units[i].alias.indexOf(String(type))<0)units[i].alias.push(String(type));
+        return units[i];
+      }
+    }
     const stem=typeStem(type);
     for(let i=0;i<units.length;i++){
       if(typeStem(units[i].type)===stem&&units[i].count!==''&&Number(units[i].count)===Number(count)){
@@ -316,6 +484,26 @@ function upsert(units,type,page,count){
   const p=parseType(type);
   const u={type:p.type,br:p.br,ba:p.ba,count:'',sf:'',proposed:'',ua:'',safmr:'',safmr_base:'',psf:'',grid:false,page:page,alias:null,safmr_derived:false};
   units.push(u);return u;
+}
+
+/* A SAFMR row must never CREATE a unit type. HUD publishes the small-area FMR
+   per BEDROOM COUNT, so that table names sizes ("2BR") where the concluded-rent
+   table names unit types ("2BR/1BA TH"). Routed through upsert(), the mismatch
+   appended three phantom rows to Northcross — a three-type property the app then
+   read as having six, each phantom carrying a SAFMR and no units and no rent.
+
+   Attach to what the roster already has: the exact type, else the stem, else
+   EVERY row with that bedroom count. The last of those is not a fallback but the
+   right answer — when two unit types share a size they share a SAFMR, which is
+   how Circle Park's flat and townhouse rows both come to be priced against the
+   same ceiling. If nothing matches, the figure is dropped rather than invented. */
+function applySafmrBase(units,type,base){
+  const k=typeKey(type),stem=typeStem(type),br=parseType(type).br;
+  let hit=units.filter(u=>typeKey(u.type)===k);
+  if(!hit.length)hit=units.filter(u=>typeStem(u.type)===stem);
+  if(!hit.length&&br!=='')hit=units.filter(u=>u.br===br);
+  hit.forEach(u=>{u.safmr_base=base;});
+  return hit.length;
 }
 
 function readTables(txt,pi,units,totals,seen){
@@ -362,8 +550,7 @@ function readTables(txt,pi,units,totals,seen){
       return;
     }
     if(section==='safmr'&&(m=t.match(ROW_4C))){     // BASE safmr, not the ceiling
-      const u=upsert(units,m[1],pi,money(m[2]));
-      u.safmr_base=money(m[3]);
+      applySafmrBase(units,m[1],money(m[3]));
       return;
     }
   });
@@ -389,6 +576,15 @@ async function readLetter(rd){
   readSender(perPage[0].txt,S);
   readSubject(perPage[0].txt,S,warn);
   perPage.forEach(function(x){readSignature(x.txt,S);});
+  /* The checklist reads every page the reader HELD, not only the letter's - the
+     probe pages were fetched and paid for either way. The '' between pages is a
+     page boundary: without it the two-line window could weld the last line of
+     one page to the first of the next and read a temporary licence out of two
+     unrelated sentences. */
+  { const held=[];
+    Object.keys(found.runs).map(Number).sort(function(a,b){return a-b;}).forEach(function(i){
+      lines(found.runs[i]).forEach(function(l){held.push(l.text);});held.push('');});
+    readChecklist(held,S,warn); }
   perPage.forEach(function(x){readTables(x.txt,x.pi,units,totals,seen);});
 
   /* Cornerstone keeps its address, telephone and e-mail on the title page
@@ -449,6 +645,11 @@ async function readLetter(rd){
 
 window.RCSParse={norm:norm,lines:lines,money:money,dec:dec,pageKey:pageKey,
   findLetter:findLetter,readLetter:readLetter,parseType:parseType,
-  _splitCityStateZip:splitCityStateZip,_isoDate:isoDate,_s8From:s8From,_detectFirm:detectFirm,_readSender:readSender,
-  _caps:{scan:LETTER_SCAN_CAP,tail:LETTER_TAIL},_probeOrder:probeOrder};
+  _splitCityStateZip:splitCityStateZip,_isoDate:isoDate,_s8From:s8From,_detectFirm:detectFirm,_readSender:readSender,_readSignature:readSignature,_readChecklist:readChecklist,
+  _caps:{scan:LETTER_SCAN_CAP,tail:LETTER_TAIL},_probeOrder:probeOrder,
+  /* The concluded-rent row pattern and the roster's key, exposed so the suite can
+     pin them against the exact lines three real studies print. Trimming a fixture
+     out of a 90-page report to assert one regex is more moving parts than the
+     assertion is worth. */
+  _ROW_MAIN:ROW_MAIN,_typeKey:typeKey,_upsert:upsert};
 })();

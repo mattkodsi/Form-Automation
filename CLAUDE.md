@@ -5,7 +5,10 @@ Section 8 (Related Affordable). A form-driven tool that pre-fills from stored +
 uploaded data, clears an internal 150%-SAFMR check, and generates the six-document
 renewal package as review-ready drafts. See `RCS Renewal Automation - Project Plan.md`.
 
-> **Latest handoff:** `SESSION-HANDOFF-2026-07-28.md` — three parallel audits (generation/parsing,
+> **Latest handoff:** `SESSION-HANDOFF-2026-07-29-AUDIT.md` — the corpus audit: the three-way
+> method (read the SOURCES yourself, then compare app vs filed), the audit-wave / repair-break
+> loop, what is fixed, what is open, and the standing rule that every run writes `ZZ-CORPUS-*`
+> properties into Matt's LIVE account and must delete them afterwards. Older: `SESSION-HANDOFF-2026-07-28.md` — three parallel audits (generation/parsing,
 > the UI source against FORM-RULES, and a real browser), 33 defects found and 29 fixed, plus the
 > queue. 852 checks. Older: `SESSION-HANDOFF-2026-07-27.md` — the `?selftest=1` hatch (drive the
 > real form in a browser, no sign-in), what shipped, and the interaction audit that is
@@ -154,7 +157,9 @@ a new suite needs registering (`deliver.sh` calls it).
   no chromium is installed.
 - **`app/full-mp/test_rcs.js`** — the RCS study reader against the real corpus: nine studies from four
   firms, trimmed to the pages that carry the numbers; 230 checks. The largest suite, and the one that
-  guards every figure the appraiser supplies.
+  guards every figure the appraiser supplies. Since 2026-07-30 it also holds the HUD-92458 table
+  reader (`rsTableA`) against `fixture_rs_printings.json` — two REAL prior schedules printed at
+  coordinates our template does not share, one of them a scanner’s own text layer.
 - **`app/full-mp/test_gen.js`** — record → PDF bytes: what each generated document actually prints,
   and what it refuses to print rather than print wrong; 33 checks.
 
@@ -169,7 +174,42 @@ a new suite needs registering (`deliver.sh` calls it).
   they arrive — renamed columns, ISO dates, Excel serials, a promise, a bare array — and that when we
   cannot, `diagnose()` says why instead of showing an empty list.
 
-**1387 checks across seven suites** (190 · 144 · 185 · 35 · 245 · 189 · 399) as of 2026-07-30. These
+- **`app/full-mp/shots.js` + `test_shots.js`** — **the only thing here that LOOKS at the app.** `shots.js`
+  boots the same headless chromium `test_browser.js` uses (both now share `cdplib.js`), drives the real
+  bundle through `?selftest=1`, and captures 46 PNGs into the git-ignored `app/full-mp/_shots/` with an
+  `index.md` describing each: the four views, every form section framed on its own, all five `CLR`
+  provenance colours reached through the app's own doors, the interactive states, and a narrow pass at
+  860px. It exists because a `getBoundingClientRect` cannot see two colours that are the same colour, a
+  sticky bar covering the title of the section you just scrolled to, or a control with no focus ring —
+  and this project has twice shipped a wrong finding asserted from reading `app.js`. Run it with
+  `node app/full-mp/shots.js`, then open the images. `test_shots.js` (83) runs the sweep and proves the
+  images are real: PNG signature, plausible dimensions, and no blank rectangles. **It fails, never
+  skips, where no chromium is installed** — a screenshot suite that renders nothing has verified nothing.
+  ⚠ Anything about sticky chrome must be read off the window-true shots (`36`–`38`, `46`–`48`); the
+  clipped ones are in PAGE coordinates and will place a `position:sticky` bar wherever the scroll left it.
+
+- **`app/full-mp/corpus/`** — the RCS corpus loop: drive the real app over every filed package and
+  compare what it generates to what the PM team filed. `test_safety.js` (7) asserts the rails an
+  unattended run needs — tier-3 OCR unreachable, cache gitignored, not on `main`. `test_compare.js`
+  (91) holds the normalisation rules, including the ones that must NOT normalise (the property alias,
+  accounting parentheses, leading zeros). `test_extract.js` (120) reads filed documents and guards the
+  four traps: HUD-92458 values live in widget `/V` and not the text layer, `copyPages` drops the
+  AcroForm, the filed checklist font is offset ASCII−29, and our own output has no word spacing.
+  See `docs/superpowers/plans/MORNING-REPORT.md` for what the first full sweep found.
+- **`app/full-mp/corpus/look.js` + `rdiff.js`** — **the only tooling that looks at a rendering.**
+  Everything above compares *values*, and both sides have had `$` and `,` stripped from them before
+  they meet (`extract.js:96`, `compare.js:68`) — so a dropped dollar sign, a missing zero or a figure
+  one row low compares as a perfect match. These two rasterise instead, via poppler (`pdftoppm`; no
+  npm). `look.js` writes PNGs and prints their absolute paths so a person can open them;
+  `rdiff.js` renders two PDFs at one DPI and reports differing pixels, merged region bounding boxes,
+  where each falls on the page in words, and a side-by-side PNG with the regions outlined. Regions
+  carry `meanDelta`/`maxDelta` and `inkA`/`inkB` precisely because a pixel diff cannot by itself tell
+  a changed value from a re-rendered glyph — the numbers are what let a reader tell them apart.
+  `test_look.js` (159) builds its own PDFs byte by byte so every coordinate it asserts is one it
+  computed, and both tools exit 3 with a banner where poppler is absent rather than exiting 0 having
+  rendered nothing.
+
+**2443 checks across thirteen suites** (98 · 190 · 144 · 222 · 125 · 444 · 189 · 539 · 111 · 11 · 91 · 120 · 159) as of 2026-07-30, counted off a real run. These
 numbers go stale the moment a suite grows — `MIN_CHECKS` in each file is the binding floor; this list
 is a map.
 ⚠️ **Don't pipe a suite through `| tail`.** A pipeline's exit status is the LAST command's, so node's

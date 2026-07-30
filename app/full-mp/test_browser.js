@@ -35,15 +35,17 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=399;   // 2026-07-30: the pull cut to two rules — at rest at the top it
-                        // opens, arriving at the top it bobs, and the bob is the same
-                        // length however you arrived   // 2026-07-30: +10 — the swipe rebuilt on the clock: which gestures open it,
-                        // where each one lands, and what the bar is allowed to say
-// 2026-07-30: +25 — the two package modals join the dialog audit, and every
-                        // dialog is now checked against the three colours the desk replaced
-// 2026-07-29: +12 — three zones: the past-due drawer closed on arrival, and
-                        // opening it without moving the panel below (measured in a real layout).
-                        // 2026-07-29: -3 — the rail's eight rows became the strip's five figures.
+const MIN_CHECKS=539;   // 2026-07-30 merge: union of both branches, counted off a real run (was ours 435 / main 399)
+                        //;   // 2026-07-30 merge: the union of both branches, counted off a real run.
+                        // ours: +81 for the section rail — the indicator's choice of section swept
+                        //   across the whole document, the jump landing clear of a #ccbar that is now
+                        //   one constant line, the pin and its release, Tab / Enter / Space / focus
+                        //   ring, prefers-reduced-motion, and 860px; plus tab-order's 13.
+                        // main: the pull cut to two rules — at rest at the top it opens, arriving at
+                        //   the top it bobs, and the bob is the same length however you arrived;
+                        //   +10 the swipe rebuilt on the clock; +25 the two package modals join the
+                        //   dialog audit; +12 three zones and the past-due drawer; -3 the rail's
+                        //   eight rows became the strip's five figures.
                        // 2026-07-28: +35 — the home page's filter rail, driven by real clicks.
                        // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
                        // pristine (three seeds, two checks each). 2026-07-27: the unit-type cell
@@ -84,113 +86,11 @@ const eq=(label,got,want)=>{n++;const p=JSON.stringify(got)===JSON.stringify(wan
 const T=(label,v)=>eq(label,!!v,true);
 
 /* ── the browser ────────────────────────────────────────────────────────── */
-/* Build our own bundle, the way test_interactions.js and smoke_combined.js do.
-   deliver.sh runs the suites at step 2 and builds at step 3, so serving the
-   project-root index.html would test the PREVIOUS build while shipping the new
-   one — green on code that was never run. Building here removes the ordering
-   dependency instead of documenting it. */
-/* Per process. One fixed name in the shared temp directory meant a second
-   run — another session, a probe, a rerun in another window — rebuilt the file
-   THIS run was serving, and the page silently became somebody else's code. It
-   presented as a check failing against a feature that was demonstrably present
-   in the source and in the built bundle. */
-const BUNDLE=path.join(os.tmpdir(),'rcs_browser_bundle.'+process.pid+'.html');
-/* The pid above keeps parallel worktrees off each other's bundle (610fe58); it does
-   not clean up after itself, and a few hundred of these had piled up in the temp
-   directory. Take ours with us. force:true so a run that never got as far as
-   writing the file still exits quietly, and the try/catch so cleanup can never be
-   the thing that fails an otherwise-green run. */
-process.on('exit',()=>{try{fs.rmSync(BUNDLE,{force:true});}catch(e){}});
-function buildBundle(){
-  cp.execFileSync('bash',[path.join(__dirname,'build.sh'),BUNDLE],{stdio:['ignore','ignore','pipe']});
-  const n=fs.statSync(BUNDLE).size;
-  if(n<500000)throw new Error('built bundle is implausibly small ('+n+' bytes)');
-  return n;
-}
-const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-
-function findChrome(){
-  const cands=[];
-  const pw=path.join(os.homedir(),'Library/Caches/ms-playwright');
-  const dirs=fs.existsSync(pw)?fs.readdirSync(pw):[];
-  for(const d of dirs.filter(x=>/headless_shell/.test(x)))
-    cands.push(path.join(pw,d,'chrome-headless-shell-mac-arm64/chrome-headless-shell'),
-               path.join(pw,d,'chrome-headless-shell-linux64/chrome-headless-shell'));
-  for(const d of dirs.filter(x=>/^chromium-/.test(x)))
-    cands.push(path.join(pw,d,'chrome-mac/Chromium.app/Contents/MacOS/Chromium'),
-               path.join(pw,d,'chrome-linux/chrome'));
-  cands.push('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
-             '/usr/bin/google-chrome','/usr/bin/chromium','/usr/bin/chromium-browser');
-  return cands.find(p=>{try{fs.accessSync(p,fs.constants.X_OK);return true;}catch(e){return false;}})||null;
-}
-
-class CDP{
-  constructor(ws){this.ws=ws;this.id=0;this.waits=new Map();this.logs=[];
-    ws.addEventListener('message',e=>{const m=JSON.parse(e.data);
-      if(m.id&&this.waits.has(m.id)){const{res,rej}=this.waits.get(m.id);this.waits.delete(m.id);
-        m.error?rej(new Error(JSON.stringify(m.error))):res(m.result);}
-      else if(m.method==='Runtime.consoleAPICalled'&&m.params.type==='error')
-        this.logs.push((m.params.args||[]).map(a=>a.value||a.description||'').join(' '));
-      else if(m.method==='Runtime.exceptionThrown')
-        this.logs.push('EXCEPTION '+(m.params.exceptionDetails.exception&&m.params.exceptionDetails.exception.description||m.params.exceptionDetails.text));});}
-  send(method,params){const id=++this.id;
-    return new Promise((res,rej)=>{this.waits.set(id,{res,rej});this.ws.send(JSON.stringify({id,method,params:params||{}}));});}
-  async eval(expr){
-    const r=await this.send('Runtime.evaluate',{expression:`(async()=>{${expr}})()`,awaitPromise:true,returnByValue:true});
-    if(r.exceptionDetails)throw new Error('EVAL: '+((r.exceptionDetails.exception&&r.exceptionDetails.exception.description)||r.exceptionDetails.text)+'\n--- expr ---\n'+expr);
-    return r.result.value;}
-  /* a REAL trusted key event — the whole point of this file */
-  async key(k,opts){
-    const M={Enter:{keyCode:13,code:'Enter',text:'\r'},Escape:{keyCode:27,code:'Escape'},
-      Tab:{keyCode:9,code:'Tab'},Backspace:{keyCode:8,code:'Backspace'},
-      ' ':{keyCode:32,code:'Space',text:' '}};
-    const m=M[k]||{keyCode:k.toUpperCase().charCodeAt(0),code:'Key'+k.toUpperCase(),text:k};
-    const base={key:k,windowsVirtualKeyCode:m.keyCode,nativeVirtualKeyCode:m.keyCode,code:m.code,modifiers:(opts&&opts.modifiers)||0};
-    await this.send('Input.dispatchKeyEvent',Object.assign({type:m.text?'keyDown':'rawKeyDown',text:m.text},base));
-    await this.send('Input.dispatchKeyEvent',Object.assign({type:'keyUp'},base));
-    await sleep((opts&&opts.wait)||70);}
-  async type(s){for(const ch of s)await this.key(ch,{wait:14});}
-}
-
-async function withApp(fn,{width=1280,height=900}={}){
-  const bin=findChrome();
-  if(!bin)return {skipped:'no chromium binary found'};
-  console.log(`  (built a fresh bundle: ${buildBundle().toLocaleString()} bytes)`);
-  const srv=await new Promise(res=>{
-    const s=http.createServer((rq,rs)=>fs.readFile(BUNDLE,(e,b)=>{
-      if(e){rs.writeHead(404);rs.end();}else{rs.writeHead(200,{'content-type':'text/html'});rs.end(b);}}));
-    s.listen(0,'127.0.0.1',()=>res(s));});
-  const port=srv.address().port;
-  const dp=await new Promise(r=>{const t=net.createServer();t.listen(0,'127.0.0.1',()=>{const p=t.address().port;t.close(()=>r(p));});});
-  const ud=fs.mkdtempSync(path.join(os.tmpdir(),'rcs-cdp-'));
-  /* A chromium profile is a directory, and one per run had been accumulating
-     since the suite was written. Both exits below own it: the devtools-never-
-     answered throw leaves the try/finally unentered. */
-  const rmUd=()=>{try{fs.rmSync(ud,{recursive:true,force:true});}catch(e){}};
-  const proc=cp.spawn(bin,['--headless=new','--remote-debugging-port='+dp,'--user-data-dir='+ud,
-    '--no-first-run','--no-default-browser-check','--disable-gpu','--window-size='+width+','+height,'about:blank'],
-    {stdio:['ignore','ignore','pipe']});
-  let buf='';proc.stderr.on('data',d=>{buf+=d;});
-  const getj=p=>new Promise((res,rej)=>{http.get({host:'127.0.0.1',port:dp,path:p},r=>{
-    let b='';r.on('data',d=>b+=d);r.on('end',()=>{try{res(JSON.parse(b));}catch(e){rej(e);}});}).on('error',rej);});
-  let list=null;
-  for(let i=0;i<120;i++){try{list=await getj('/json/list');if(list.some(t=>t.type==='page'))break;}catch(e){}await sleep(150);}
-  if(!list){proc.kill();srv.close();rmUd();throw new Error('devtools never answered\n'+buf);}
-  const ws=new WebSocket(list.find(t=>t.type==='page').webSocketDebuggerUrl);
-  await new Promise((res,rej)=>{ws.addEventListener('open',res);ws.addEventListener('error',rej);});
-  const c=new CDP(ws);
-  await c.send('Runtime.enable');await c.send('Page.enable');
-  c.reload=async()=>{
-    await c.send('Page.navigate',{url:`http://127.0.0.1:${port}/index.html?selftest=1`});
-    for(let i=0;i<140;i++){
-      const ok=await c.eval('return !!(window.__t&&window.__t.__firstPid&&window.__t.__firstPid())').catch(()=>false);
-      if(ok)return true;await sleep(150);}
-    throw new Error('the app never booted under ?selftest=1');};
-  await c.reload();
-  try{return await fn(c);}
-  finally{try{ws.close();}catch(e){}proc.kill();srv.close();rmUd();}
-}
-
+/* The boot — build a bundle, serve it, drive a real chromium over CDP — moved
+   to cdplib.js unchanged, so shots.js can photograph the same page this suite
+   drives without a second copy of the sequence. Everything that decides a
+   verdict stayed here. */
+const {sleep,findChrome,CDP,withApp}=require('./cdplib.js');
 /* ── page-side helpers, installed once ──────────────────────────────────── */
 const HELPERS=`window.__b={
   full(){const f=window.__t.__form();const o={};
@@ -216,6 +116,74 @@ const HELPERS=`window.__b={
   footerUnsaved(){const u=document.getElementById('unsavedTag');
     return !!(u&&getComputedStyle(u).display!=='none');}
 };return 1;`;
+
+/* ── the rail's page-side instrument ────────────────────────────────────── */
+/* Everything the rail checks measure is read off the LIVE ELEMENTS here, never
+   off window.__t. The doors are then held to agreeing with this — a door that
+   answers differently from the DOM the reader is looking at is itself the bug,
+   and a door that simply does not exist has to fail a check rather than throw
+   a run away. Nothing below is wrapped in a try/catch for that reason. */
+const RAILKIT=`window.__r={
+  rows(){return [...document.querySelectorAll('#rail .railitem')].map(e=>{
+    const s=getComputedStyle(e);
+    return {tag:e.tagName,sec:e.getAttribute('data-rsec'),
+      label:((e.querySelector('.rname')||e).textContent||'').trim(),
+      on:e.classList.contains('on'),aria:e.getAttribute('aria-current'),
+      tabIndex:e.tabIndex,cursor:s.cursor};});},
+  cards(){return [...document.querySelectorAll('#sections .card')].map(e=>{
+    const r=e.getBoundingClientRect(),t=e.querySelector('.ctitle');
+    return {sec:e.getAttribute('data-sec'),title:t?t.textContent.trim():'',
+      top:Math.round(r.top+window.scrollY),h:Math.round(r.height)};});},
+  /* MULTI and null are returned rather than a best guess: "two rows are lit"
+     and "none is" are distinct failures and must read as distinct failures. */
+  active(){const on=[...document.querySelectorAll('#rail .railitem.on')];
+    return on.length===1?String(on[0].getAttribute('data-rsec')):(on.length?'MULTI:'+on.length:null);},
+  ariaActive(){const a=[...document.querySelectorAll('#rail .railitem[aria-current]')]
+      .filter(e=>e.getAttribute('aria-current')!=='false');
+    return a.length===1?String(a[0].getAttribute('data-rsec')):(a.length?'MULTI:'+a.length:null);},
+  bar(){const b=document.getElementById('railbar');if(!b)return null;
+    const s=getComputedStyle(b),r=b.getBoundingClientRect();
+    return {top:Math.round(r.top+window.scrollY),h:Math.round(r.height),
+      opacity:s.opacity,dur:s.transitionDuration};},
+  /* offsetParent alone does not settle whether a chip is shown — a chip inside
+     an overflow:hidden bar still has one. The text is collected from what
+     survives BOTH tests so "nothing important vanished" is a real question. */
+  ccbar(){const b=document.getElementById('ccbar'),r=b.getBoundingClientRect(),s=getComputedStyle(b);
+    const chips=[...b.querySelectorAll('.bchip')].filter(e=>{
+      const cr=e.getBoundingClientRect();
+      return e.offsetParent!==null&&getComputedStyle(e).display!=='none'&&cr.width>0&&cr.right<=r.right+1;});
+    return {h:+r.height.toFixed(2),top:+r.top.toFixed(2),bottom:+r.bottom.toFixed(2),
+      shown:+s.opacity>0.5&&r.bottom>0,
+      chips:chips.map(e=>e.textContent.replace(/\\s+/g,' ').trim()),
+      chipLines:[...new Set(chips.map(e=>Math.round(e.getBoundingClientRect().top)))].length,
+      text:(b.textContent||'').replace(/\\s+/g,' ').trim()};},
+  headTop(sec){const c=document.querySelector('#sections .card[data-sec="'+sec+'"]');if(!c)return null;
+    const h=c.querySelector('.chead')||c;return +h.getBoundingClientRect().top.toFixed(2);},
+  page(){return {scrollH:document.documentElement.scrollHeight,innerH:window.innerHeight,
+    maxY:Math.max(0,document.documentElement.scrollHeight-window.innerHeight)};},
+  /* A smooth scroll finishes when it stops moving, not after a sleep somebody
+     guessed. Ten quiet frames, then a beat for the observer to answer. */
+  async settle(){let last=-1,same=0;
+    for(let i=0;i<240;i++){await new Promise(r=>requestAnimationFrame(r));
+      const y=Math.round(window.scrollY);
+      if(y===last){if(++same>10)break;}else{same=0;last=y;}}
+    await new Promise(r=>setTimeout(r,160));return window.scrollY;},
+  async clickRow(sec){
+    const e=document.querySelector('#rail .railitem[data-rsec="'+sec+'"]');
+    if(!e)return {err:'no rail row carries data-rsec="'+sec+'"'};
+    e.click();
+    await this.settle();
+    await new Promise(r=>setTimeout(r,280));
+    const cc=this.ccbar();
+    return {headTop:this.headTop(sec),ccBottom:cc.bottom,ccH:cc.h,ccShown:cc.shown,
+      innerH:window.innerHeight,y:Math.round(window.scrollY),active:this.active()};}
+};return 1;`;
+/* A width is a fact about the window, so it is set on the window rather than by
+   restyling the page: the media queries the rail depends on only fire for the
+   real thing. */
+const setViewport=async(c,w,h)=>{
+  await c.send('Emulation.setDeviceMetricsOverride',{width:w,height:h,deviceScaleFactor:1,mobile:false});
+  await sleep(340);};
 
 /* ── the run ────────────────────────────────────────────────────────────── */
 const FULL=process.argv.includes('--full');
@@ -1188,6 +1156,426 @@ const FULL=process.argv.includes('--full');
       eq('and every one of them says the study filled it',r.missing,[]);
     }
 
+    /* ── the same two files, uploaded in either order ───────────────────────
+       Found by the corpus sweep, not by reading the code: 50 disagreements
+       across 5 of 34 properties where uploading the rent schedule first and
+       uploading the study first produced DIFFERENT packages. Barnum House's
+       generated schedule said 100 units one way and 83 the other, and that
+       document goes to HUD.
+
+       The mechanism is an adopt-versus-offer asymmetry. A study line that
+       MATCHES an existing form row writes only the shadow keys br_rcs/ba_rcs,
+       so the two sources can be compared instead of one silently overwriting
+       the other -- which is right when the schedule stated a value of its own.
+       A study line the form has no row for goes down the homeless path, which
+       writes br and ba outright. So the bathroom count reached the printed unit
+       type only when the study happened to CREATE the row: schedule-first
+       printed "1BR", study-first printed "1BR/1BA", from identical inputs.
+
+       An executed schedule that never stated a bathroom is not in conflict with
+       the study about it -- it is silent, and the study is the only source. The
+       file's own rule, written in the homeless path, already says so:
+       precedence is about a cell both documents describe, not about an index
+       that collides. */
+    console.log('\n── either upload order, one package ──────────────────');
+    await c.reload();
+    await c.eval(HELPERS);
+    {
+      /* An executed schedule naming no bathroom, and a study that names one --
+         the shape all five affected properties share. */
+      const rs={scalars:{},units:[{type:'1BR',count:'66',rent:'1770',ua:''},
+                                  {type:'Studio',count:'17',rent:'1520',ua:''}],
+                principals:[],partb:null,ns8:[],nonrev:[]};
+      const study={scalars:{},firm:'belfry',
+        units:[{type:'1BR/1BA',br:1,ba:1,count:'66',rent:'',ua:'',proposed:'2825',safmr:''},
+               {type:'Studio/1BA',br:0,ba:1,count:'17',rent:'',ua:'',proposed:'2325',safmr:''}]};
+      const snap=async()=>await c.eval(`
+        const U=window.__t.__UNITS();
+        return {rows:U.length,
+          types:U.map(i=>String(window.__t.getVal('units.'+i+'.br')||'')
+                        +(window.__t.getVal('units.'+i+'.ba')?'/'+window.__t.getVal('units.'+i+'.ba'):'')),
+          counts:U.map(i=>String(window.__t.getVal('units.'+i+'.num_units')||'')),
+          proposed:U.map(i=>String(window.__t.getVal('units.'+i+'.proposed')||''))};`);
+
+      /* A FRESH property each time, not the seeded one. The seed already carries
+         five unit rows, and filling into them measures the seed as much as the
+         order -- the assertions below have to be about these two documents and
+         nothing else. */
+      const fresh=async name=>await c.eval(`const db=window.__t.__db();
+        const r=await db.createProperty(${'`'}${'$'}{${JSON.stringify(name)}}${'`'});
+        const np=(r&&(r.pid||r.id))||r;
+        await window.__t.__openForm(np);
+        const cy=await window.__t.__newCycle({programs:['rcs'],label:'ORDER'});
+        await window.__t.__openCycleForm(np,(cy&&(cy.cid||cy.id))||cy);
+        return np;`);
+
+      await fresh('Order test A');
+      await sleep(300);
+      await c.eval('window.__t.__setRsParsed('+JSON.stringify(rs)+');window.__t.__rsFill();'
+        +'window.__t.__setRcsParsed('+JSON.stringify(study)+');window.__t.__rcsFill();'
+        +'window.__t.__renderBody();return 1');
+      await sleep(400);
+      const rsFirst=await snap();
+
+      await c.reload();
+      await c.eval(HELPERS);
+      await fresh('Order test B');
+      await sleep(300);
+      await c.eval('window.__t.__setRcsParsed('+JSON.stringify(study)+');window.__t.__rcsFill();'
+        +'window.__t.__setRsParsed('+JSON.stringify(rs)+');window.__t.__rsFill();'
+        +'window.__t.__renderBody();return 1');
+      await sleep(400);
+      const rcsFirst=await snap();
+
+      eq('either order builds the same number of unit rows',rsFirst.rows,rcsFirst.rows);
+      eq('either order gives the same unit types',rsFirst.types,rcsFirst.types);
+      eq('either order gives the same unit counts',rsFirst.counts,rcsFirst.counts);
+      eq('either order gives the same proposed rents',rsFirst.proposed,rcsFirst.proposed);
+      /* Not merely equal -- equal AND right. Two orders agreeing on a type that
+         has lost its bathroom would pass an equality check and still be wrong. */
+      T('the bathroom the study names reaches the printed type, whichever order',
+        rsFirst.types.every(t=>/\//.test(t))&&rcsFirst.types.every(t=>/\//.test(t)));
+      eq('and the schedule still owns the unit counts it stated',rsFirst.counts,['66','17']);
+
+      /* ── the unit types the filed schedules actually use ────────────────────
+       Every spelling below was taken from a real executed schedule by parsing
+       all 34 of them, not invented. An unparseable type is not cosmetic: it
+       makes a row rcsMatch skips, so the study's line for the same units goes
+       down the homeless path and adds a SECOND row -- Barnum House's generated
+       HUD form claimed 100 units where the schedule says 83. */
+    {
+      const P=async t=>await c.eval('return window.__t.rsParseUnitType('+JSON.stringify(t)+')');
+      eq('"1 BEDROOM" still reads as one bedroom',(await P('1 BEDROOM')).br,'1BR');
+      eq('"1BR/1BA" still reads both counts',[(await P('1BR/1BA')).br,(await P('1BR/1BA')).ba],['1BR','1BA']);
+      eq('"Studio" still reads as a studio',(await P('Studio')).br,'Studio');
+      /* Barnum House */
+      eq('"0 BEDROOM" is a studio, the way rcsBrOf has always read a zero',
+         (await P('0 BEDROOM')).br,'Studio');
+      /* Shiloh Village, 333 Holly, The Pines */
+      eq('"BR3" puts the number after the letters and still means three',
+         (await P('BR3')).br,'3BR');
+      /* 333 Holly, Oaks on North Plaza */
+      eq('"2BR2BA" runs the counts together and still means both',
+         [(await P('2BR2BA')).br,(await P('2BR2BA')).ba],['2BR','2BA']);
+      eq('and a type the reader understands leaves no leftover label',
+         [(await P('BR3')).label,(await P('2BR2BA')).label,(await P('0 BEDROOM')).label],['','','']);
+      /* Beacon Hill and Willow Woods designations must survive untouched */
+      eq('a designation is still kept verbatim',(await P('1 Bedroom, Elderly')).label,'Elderly');
+      /* Oaks on North Plaza's scan produces these; guessing at them would be
+         inventing unit types, so they must stay unread rather than become wrong. */
+      eq('OCR wreckage stays unread rather than becoming a wrong unit type',
+         [(await P('3613')).br,(await P('16R')).br,(await P('2BIRMBA-ADA')).br],['','','']);
+    }
+
+    /* ── and again, with the two documents listing the types in a DIFFERENT
+         ORDER ─────────────────────────────────────────────────────────────
+         The block above gives both documents the same order, which is exactly
+         why it misses Barnum House: its schedule lists 1BR then Studio, its
+         study lists Studio then 1BR. The sweep says that property's generated
+         HUD form totals 100 units one way and 83 the other -- and 66 + 17 is
+         83, so one order is inventing a third row worth 17 units and leaving
+         the first form line blank. A HUD form stating the wrong number of units
+         is about as bad as this gets. */
+      const studyRev={scalars:{},firm:'belfry',
+        units:[{type:'Studio/1BA',br:0,ba:1,count:'17',rent:'',ua:'',proposed:'2325',safmr:''},
+               {type:'1BR/1BA',br:1,ba:1,count:'66',rent:'',ua:'',proposed:'2825',safmr:''}]};
+      const sum=a=>a.reduce((t,x)=>t+(parseInt(x,10)||0),0);
+
+      await c.reload();
+      await c.eval(HELPERS);
+      await fresh('Order test C');
+      await sleep(300);
+      await c.eval('window.__t.__setRsParsed('+JSON.stringify(rs)+');window.__t.__rsFill();'
+        +'window.__t.__setRcsParsed('+JSON.stringify(studyRev)+');window.__t.__rcsFill();'
+        +'window.__t.__renderBody();return 1');
+      await sleep(400);
+      const revRs=await snap();
+
+      await c.reload();
+      await c.eval(HELPERS);
+      await fresh('Order test D');
+      await sleep(300);
+      await c.eval('window.__t.__setRcsParsed('+JSON.stringify(studyRev)+');window.__t.__rcsFill();'
+        +'window.__t.__setRsParsed('+JSON.stringify(rs)+');window.__t.__rsFill();'
+        +'window.__t.__renderBody();return 1');
+      await sleep(400);
+      const revRcs=await snap();
+
+      eq('documents listing types in opposite orders still build the same rows',
+         revRs.rows,revRcs.rows);
+      eq('and neither invents a row: two types in, two types out',revRs.rows,2);
+      eq('the unit counts total the same either way',sum(revRs.counts),sum(revRcs.counts));
+      eq('and total 83, which is what the schedule actually says',sum(revRs.counts),83);
+      T('no row is left without a unit type',
+        revRs.types.every(function(t){return t&&t!=='/';})
+        &&revRcs.types.every(function(t){return t&&t!=='/';}));
+    }
+
+    /* ── A REAL RELOAD, which is the whole reason this file exists ──────────
+       Everything above proves the two fill orders agree WITHIN ONE PAGE LOAD.
+       A person does not work that way: they read the study on Monday and the
+       executed schedule on Tuesday, and in between the browser is closed.
+
+       _rsFill / _rcsFill were module variables -- the app's only record that a
+       document had been APPLIED rather than merely read -- while rsRecall /
+       rcsRecall faithfully restored the readings beside them. So a reload threw
+       away the record and kept the reading, and the roster re-read in
+       rsFillFromParsed, which is gated on _rcsFill, could no longer fire.
+       Measured on HEAD in this same browser: a study pricing "all studios" at
+       1000 and "all one-bedrooms" at 1500, against a schedule with two studio
+       variants and two 1BR variants, printed 1000 / 1500 / (blank) / (blank) --
+       the second studio variant wearing the one-bedroom's rent. Which is, to
+       the figure, the defect Matt found by clicking for twenty minutes.
+
+       No other suite can see this. smoke_combined and test_interactions live in
+       one node process, where a module variable survives everything they can do
+       to it -- which is exactly why the offline probe for this came out GREEN on
+       the broken code. */
+    console.log('\n── the study survives a reload ───────────────────────');
+    {
+      const study={scalars:{},firm:'belfry',units:[
+        {type:'Studio',br:0,ba:1,count:'',rent:'',ua:'',proposed:'1000',safmr:''},
+        {type:'1BR',   br:1,ba:1,count:'',rent:'',ua:'',proposed:'1500',safmr:''}]};
+      const rs={scalars:{},principals:[],partb:null,ns8:[],nonrev:[],units:[
+        {type:'Studio',count:'10',rent:'800',ua:'50'},
+        {type:'Studio',count:'6', rent:'810',ua:'50'},
+        {type:'1BR',   count:'12',rent:'900',ua:'60'},
+        {type:'1BR',   count:'4', rent:'910',ua:'60'}]};
+      const SNAP=`const U=window.__t.__UNITS();return {rows:U.length,
+        br:U.map(i=>String(window.__t.getVal('units.'+i+'.br')||'')),
+        counts:U.map(i=>String(window.__t.getVal('units.'+i+'.num_units')||'')),
+        proposed:U.map(i=>String(window.__t.getVal('units.'+i+'.proposed')||''))};`;
+      const mkprop=async name=>await c.eval('const db=window.__t.__db();'
+        +'const r=await db.createProperty('+JSON.stringify(name)+');'
+        +'const np=(r&&(r.pid||r.id))||r;'
+        +'await window.__t.__openForm(np);'
+        +"const cy=await window.__t.__newCycle({programs:['rcs'],label:'RELOAD'});"
+        +'const nc=(cy&&(cy.cid||cy.id))||cy;'
+        +'await window.__t.__openCycleForm(np,nc);'
+        +'return {pid:np,cid:nc};');
+
+      await c.reload();await c.eval(HELPERS);
+      const ids=await mkprop('Reload test A');
+      await sleep(300);
+      /* the study is read and applied, then saved -- saving is what makes its
+         values survive the reload at all, and is what a person does before
+         closing the tab */
+      await c.eval('window.__t.__setRcsParsed('+JSON.stringify(study)+');window.__t.__rcsFill();return 1');
+      await sleep(300);
+      await c.eval("const U=window.__t.__UNITS();"
+        +"for(const i of U)for(const f of ['proposed','br','ba','num_units'])await window.__t.__saveField('units.'+i+'.'+f);"
+        +"return 1");
+      await sleep(300);
+      const pre=await c.eval(SNAP);
+      eq('the study alone builds one row per priced type',pre.rows,2);
+      eq('and prices them as the study says',pre.proposed,['1000','1500']);
+
+      /* ── the reload. Every module variable in the bundle is gone. ── */
+      await c.reload();await c.eval(HELPERS);
+      await c.eval('await window.__t.__openCycleForm('+JSON.stringify(ids.pid)+','+JSON.stringify(ids.cid)+');return 1');
+      await sleep(400);
+      const post=await c.eval(SNAP);
+      eq('the saved rents are still there after a real page reload',post.proposed,['1000','1500']);
+      const recs=await c.eval('return window.__t.__fillRecords()');
+      T('and the app still knows the study was applied',!!(recs&&recs.rcs&&recs.rcs.name));
+      eq('against the file it was applied from',recs.rcs&&recs.rcs.name,'study.pdf');
+
+      /* NOW the schedule arrives, on the second sitting. */
+      await c.eval('window.__t.__setRsParsed('+JSON.stringify(rs)+');window.__t.__rsFill();window.__t.__renderBody();return 1');
+      await sleep(500);
+      const after=await c.eval(SNAP);
+      eq('the schedule still owns the roster after a reload',after.rows,4);
+      eq('and its unit counts',after.counts,['10','6','12','4']);
+      /* THE CHECK THIS WHOLE BLOCK EXISTS FOR. */
+      eq('and the study’s rents reach BOTH variants of each type',
+         after.proposed,['1000','1000','1500','1500']);
+      eq('the studio figure never lands on a one-bedroom',
+         after.br.map((b,i)=>b+':'+after.proposed[i]),
+         ['Studio:1000','Studio:1000','1BR:1500','1BR:1500']);
+
+      /* ── and it does not cross to the next property ─────────────────────
+         The same variables leaked the other way: a study APPLIED on one
+         property left its record standing, so the NEXT property whose study had
+         only been UPLOADED applied itself when its schedule was filled -- a
+         document the user never asked for, written into a different property's
+         package. The gate's own comment says that must never happen. */
+      const idsB=await mkprop('Reload test B');
+      await sleep(300);
+      await c.eval('window.__t.__setRcsParsed('+JSON.stringify(study)+');return 1');   // uploaded, NOT applied
+      await c.eval('await window.__t.__openCycleForm('+JSON.stringify(idsB.pid)+','+JSON.stringify(idsB.cid)+');return 1');
+      await sleep(350);
+      const recsB=await c.eval('return window.__t.__fillRecords()');
+      T('a property whose study was only uploaded claims no fill',!(recsB&&recsB.rcs));
+      await c.eval('window.__t.__setRsParsed('+JSON.stringify(rs)+');window.__t.__rsFill();window.__t.__renderBody();return 1');
+      await sleep(450);
+      const afterB=await c.eval(SNAP);
+      eq('its schedule still fills the roster',afterB.counts,['10','6','12','4']);
+      eq('but the study it never applied stays unapplied',afterB.proposed,['','','','']);
+
+      /* ── …and a fill the reload did NOT carry must stop claiming it ───────
+         Making the record durable introduced its own wrong. A fill that was
+         applied and never saved does not survive a reload -- the values go back
+         to what is on file -- but the record did, so the study tile read
+         "Filled 10 values - 3 still to save." over a form holding one empty row
+         and none of the study's figures. The 3 counted nothing: fillNote counts
+         keys not yet on file, and after a reload those are residual keys with no
+         connection to any fill. A record is a claim about the FORM, so it is now
+         checked against the form before it is believed. */
+      const idsC=await mkprop('Reload test C');
+      await sleep(300);
+      await c.eval('window.__t.__setRcsParsed('+JSON.stringify(study)+');window.__t.__rcsFill();window.__t.__renderBody();return 1');
+      await sleep(350);
+      await c.reload();await c.eval(HELPERS);
+      await c.eval('await window.__t.__openCycleForm('+JSON.stringify(idsC.pid)+','+JSON.stringify(idsC.cid)+');return 1');
+      await sleep(450);
+      const TILES='return [...document.querySelectorAll("#viewForm .srcrow")].map(r=>((r.querySelector(".sfsub")||{}).textContent||"").trim());';
+      const recsC=await c.eval('return window.__t.__fillRecords()');
+      T('a fill the reload did not carry is retired',!(recsC&&recsC.rcs));
+      const tilesC=await c.eval(TILES);
+      T('and the study tile stops claiming values the form does not show',
+        !/Filled/.test(tilesC[1]||''));
+
+      /* The saved schedule is the control: rsTag must answer for at least one of
+         the keys the schedule fills, or this same rule would retire a record
+         that is perfectly true. */
+      const idsD=await mkprop('Reload test D');
+      await sleep(300);
+      await c.eval('window.__t.__setRsParsed('+JSON.stringify(rs)+');window.__t.__rsFill();return 1');
+      await sleep(400);
+      await c.eval("const U=window.__t.__UNITS();"
+        +"for(const i of U)for(const f of ['current','num_units','br','ba','ua_exec'])await window.__t.__saveField('units.'+i+'.'+f);"
+        +"return 1");
+      await sleep(300);
+      await c.reload();await c.eval(HELPERS);
+      await c.eval('await window.__t.__openCycleForm('+JSON.stringify(idsD.pid)+','+JSON.stringify(idsD.cid)+');return 1');
+      await sleep(450);
+      const recsD=await c.eval('return window.__t.__fillRecords()');
+      eq('a saved schedule keeps its record across a reload',recsD.rs&&recsD.rs.name,'rs.pdf');
+      T('and its tile says so',/Filled \d+ values, all saved/.test((await c.eval(TILES))[0]||''));
+
+      /* ── the other order, across the same reload ─────────────────────────
+         Wave 1 only drove study-then-reload-then-schedule. This is the sequence
+         the other half of the corpus performs: the executed schedule is read and
+         saved first, the browser is closed, and the study arrives later. It does
+         not use the gate at all -- the roster already exists, so rcsMatch places
+         the study's two lines onto four rows directly -- which is exactly why it
+         is worth pinning: the two sequences must land in the same place. */
+      await c.eval('window.__t.__setRcsParsed('+JSON.stringify(study)+');window.__t.__rcsFill();window.__t.__renderBody();return 1');
+      await sleep(450);
+      const afterD=await c.eval(SNAP);
+      eq('schedule first, reload, then the study: the roster is the schedule’s',afterD.counts,['10','6','12','4']);
+      eq('and the study still prices both variants of each type',afterD.proposed,['1000','1000','1500','1500']);
+    }
+
+    /* ── PHASE 3d — provenance is painted TWICE, and the two must agree ──────
+       Every colour defect in this register has been the full render and the
+       keystroke repaint answering differently for the same cell. Rather than
+       sample, enumerate: read every [data-box] and its computed
+       border-left-color, fire paintCell on every one of those keys, and read them
+       all again. Nothing may move.
+
+       Measured on the code before this: 2 of 60 boxes moved by a whole colour —
+       units.0.ua_source from #b45309 (overridden) to #64748b (new), and
+       units.0.safmr_source from #0f766e (this package) to the same grey. The
+       repaint handed a *_source key to srcCellState, which wants a *_custom key,
+       got null, and fell through to judging the cell by its own history. The
+       colour of a source-backed cell is a question about the family — the two
+       offers, the custom value, and which source is chosen — which is why that
+       computation now lives in one function both painters call. */
+    console.log('\n── every box keeps its colour when repainted ──────────');
+    {
+      const READ='return [...document.querySelectorAll("#viewForm [data-box]")].map(e=>({'
+        +'k:e.getAttribute("data-box"),cls:e.className,'
+        +'edge:getComputedStyle(e).borderLeftColor,bg:getComputedStyle(e).backgroundColor}));';
+      /* A study and a schedule that disagree about the allowance on row 0, so the
+         UA cell is genuinely in conflict and genuinely coloured — a cell that is
+         grey either way proves nothing about two painters agreeing. */
+      const study2={scalars:{'appr.firm':'Belfry Valuation'},firm:'belfry',units:[
+        {type:'Studio',br:0,ba:1,count:'',rent:'',ua:'40',proposed:'1000',safmr:'1200'},
+        {type:'1BR',   br:1,ba:1,count:'',rent:'',ua:'55',proposed:'1500',safmr:'1700'}]};
+      const rs2={scalars:{},partb:null,ns8:[],nonrev:[{type:'Laundry',rent:'250'}],
+        principals:[{name:'P One',title:'Manager'}],units:[
+        {type:'Studio',count:'10',rent:'800',ua:'50'},
+        {type:'Studio',count:'6', rent:'810',ua:'50'},
+        {type:'1BR',   count:'12',rent:'900',ua:'60'},
+        {type:'1BR',   count:'4', rent:'910',ua:'60'}]};
+
+      /* mkprop above is scoped to the reload block; this one is its twin. */
+      const mkp=async name=>await c.eval('const db=window.__t.__db();'
+        +'const r=await db.createProperty('+JSON.stringify(name)+');'
+        +'const np=(r&&(r.pid||r.id))||r;'
+        +'await window.__t.__openForm(np);'
+        +"const cy=await window.__t.__newCycle({programs:['rcs'],label:'COLOUR'});"
+        +'const nc=(cy&&(cy.cid||cy.id))||cy;'
+        +'await window.__t.__openCycleForm(np,nc);'
+        +'return {pid:np,cid:nc};');
+      await c.reload();await c.eval(HELPERS);
+      const idsE=await mkp('Colour test E');
+      await sleep(300);
+      await c.eval('window.__t.__setRsParsed('+JSON.stringify(rs2)+');window.__t.__rsFill();'
+        +'window.__t.__setRcsParsed('+JSON.stringify(study2)+');window.__t.__rcsFill();'
+        +'window.__t.__renderBody();return 1');
+      await sleep(600);
+
+      const shot=async()=>await c.eval(READ);
+      /* THE try/catch THAT ALMOST MADE THIS SUITE A LIE. Written as
+         `try{__paintCell(k)}catch(e){}`, this block PASSED on the code the defect
+         was measured on: __paintCell did not exist there, every call threw, the
+         catch swallowed it, no cell was ever repainted and so nothing could move.
+         A repaint that did not happen is not agreement. Count them, and say which
+         key threw. */
+      T('the repaint is reachable at all',
+        await c.eval('return typeof window.__t.__paintCell==="function"'));
+      const repaintAll=async boxes=>{
+        const r=await c.eval('let n=0;const err=[];'
+          +'for(const k of '+JSON.stringify(boxes.map(b=>b.k))+'){'
+          +'try{window.__t.__paintCell(k);n++;}catch(e){err.push(k+": "+(e&&e.message||e));}}'
+          +'return {n,err};');
+        await sleep(200);
+        return r;};
+      const drift=(a,b)=>{const m=new Map(b.map(x=>[x.k,x]));
+        return a.filter(x=>{const y=m.get(x.k);return y&&(y.edge!==x.edge||y.bg!==x.bg);}).map(x=>x.k);};
+
+      const b1=await shot();
+      T('a four-row package draws the whole box inventory',b1.length>=50);
+      const rp1=await repaintAll(b1);
+      eq('and every box was actually repainted, none of them throwing',rp1.err,[]);
+      eq('all of them',rp1.n,b1.length);
+      eq('no box changes colour when it is repainted',drift(b1,await shot()),[]);
+
+      /* The typo class phase 3d was written for: ocaf.factor_source vs
+         ocaf.factor_src — a box painted from a key nothing else in the app uses.
+         Address groups are named by their group, and a per-row key is simply
+         unwritten until the row has that value, so both are legitimate; anything
+         else absent from the record is a name that came from nowhere. */
+      const held=new Set(await c.eval('return Object.keys(window.__t.__form())'));
+      const stray=b1.map(x=>x.k).filter(k=>!held.has(k)
+        &&!/^(property|ca|appr)\.addr$/.test(k)
+        &&!/^(units|nonrev|ns8|principals)\.\d+\./.test(k));
+      /* EXACTLY ONE, pinned rather than allowlisted, so a NEW stray name still
+         fails and so fixing this one also fails and forces this comment to move.
+         tenant.mgmt_address is declared in FIELD_SECTIONS (type:'mgmtaddr') but is
+         not in the store's FIELDS, so the record never holds it. Latent, not live:
+         every mutation of that cell goes through renderBody, so its colour is
+         never stale on screen — but paintCell's `if(!s)return` means that one cell
+         can never be repainted, which is one keystroke handler away from the
+         ocaf.factor_source defect. Fixing it means giving the box a key the record
+         holds AND a shared colour function, exactly as the UA cell now has,
+         because the generic repaint path would otherwise disagree with the
+         render's `ovSrc?CLR.overridden:groupColors(ADDR)`. */
+      eq('the only box painted from a non-key is the one known to be',stray,['tenant.mgmt_address']);
+
+      /* …and again after a reload, because the record the render reads is rebuilt
+         from storage there and the repaint is not. */
+      await c.reload();await c.eval(HELPERS);
+      await c.eval('await window.__t.__openCycleForm('+JSON.stringify(idsE.pid)+','+JSON.stringify(idsE.cid)+');return 1');
+      await sleep(500);
+      const b2=await shot();
+      const rp2=await repaintAll(b2);
+      eq('every box repaints after a reload too',rp2.n,b2.length);
+      eq('and none changes colour when repainted after a reload',drift(b2,await shot()),[]);
+    }
+
     /* ── the OCAF / UAF package states its own requirements ─────────────────
        It had none. Every document was written whatever the form held — a
        worksheet with no factor prints a dash from line (N) to line (R) and then
@@ -1272,7 +1660,12 @@ const FULL=process.argv.includes('--full');
         const row=r=>[V(7+r*8),V(7+r*8+1),V(7+r*8+4)];
         return {name:V(1),rows:[row(0),row(1),row(2)],total:V('94a'),
           formCounts:window.__t.__UNITS().map(i=>window.__t.getVal('units.'+i+'.num_units')).filter(v=>v!=='')};`);
-      eq('the project name the schedule printed comes back out',out.name,'Colonial Village');
+      /* Both names. This asserted "Colonial Village" alone until the Colonial
+         Village audit read the sources: its prior EXECUTED schedule and the team's
+         own filed draft both print "Colonial Village/White Oak Townhomes" in Part
+         A, and app.js splits that on the way in. Writing back only the first half
+         left the one form HUD identifies the project by holding half an identity. */
+      eq('the project name the schedule printed comes back out',out.name,'Colonial Village/White Oak Townhomes');
       /* No bath count: Part A of this schedule gives '2 Bedroom' and nothing more,
          so the row that comes out says exactly what the row that went in said. */
       eq('the first unit type, its count and its allowance',out.rows[0],['2 BR','32','161']);
@@ -2470,6 +2863,660 @@ const FULL=process.argv.includes('--full');
       await c.eval('document.querySelector(\'[data-who="*"]\').click();return 1');
       await sleep(300);
     }
+
+    /* ── Tab walks the form the way the form is read ────────────────────────
+       The two-column sections used to be emitted row by row, so Tab crossed the
+       page after every field: name, entity, alias, entity type, address, S8 #.
+       Fifty-two of the form's stops landed somewhere other than where the eye
+       had just been. They are emitted column by column now, and these checks are
+       the guard on that — walked with real Tab presses, because DOM order is
+       only a claim about focus order until a key proves it.
+
+       And a stop you cannot see is a stop you cannot use: 43 of the 83 dropdown
+       triggers suppressed the browser's own focus ring and drew nothing in its
+       place, so half the tab order was invisible. The ring is measured here, not
+       eyeballed — on which element it lands, what box it occupies, and whether
+       it reads against every colour provenance paints underneath it. */
+    await openForm();
+    const TABKIT=`window.__k={
+      trail:[],rec:null,
+      id(e){
+        if(!e||e===document.body)return 'BODY';
+        const g=n=>e.getAttribute?e.getAttribute(n):null;
+        if(e.classList&&e.classList.contains('uatrigger')){
+          const cell=e.closest('[data-box]');
+          return '\\u25be '+(g('data-trigfor')||(cell&&cell.getAttribute('data-box'))||'?');}
+        const k=g('data-k')||g('data-cb')||g('data-wibox')||g('data-fuel')||g('data-fuel3');
+        if(k)return k;
+        return (e.id?'#'+e.id:e.tagName+'.'+String(e.className||'').split(' ')[0]);},
+      /* the boundary between the two grid tracks, read off the grid itself —
+         a guessed midpoint is not where 'calc(50% - 23px) 1fr' actually splits */
+      bound(cols){const cs=getComputedStyle(cols);const t=cs.gridTemplateColumns.split(' ').map(parseFloat);
+        return cols.getBoundingClientRect().left+t[0]+(parseFloat(cs.columnGap)||0)/2;},
+      snap(e){
+        const card=e.closest?e.closest('.card'):null,cols=e.closest?e.closest('.cols'):null;
+        const r=e.getBoundingClientRect();
+        return {id:this.id(e),
+          card:card?((card.querySelector('.ctitle')||{}).textContent||''):'',
+          col:cols?(r.left<this.bound(cols)?0:1):-1,
+          trig:!!(e.classList&&e.classList.contains('uatrigger')),
+          shadow:getComputedStyle(e).boxShadow,
+          y:Math.round(r.top+window.scrollY)};},
+      start(sel){
+        if(!this.rec){this.rec=ev=>{try{this.trail.push(this.snap(ev.target));}catch(_e){}};
+          document.addEventListener('focusin',this.rec);}
+        if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
+        this.trail=[];const e=document.querySelector('#viewForm '+sel);if(!e)return 0;
+        e.focus();return this.trail.length;},
+      read(){return this.trail;},
+      /* Which element GAINED a box-shadow when this stop took focus, and how its
+         box compares with the trigger's, with the .uadrop's, and with the cell's.
+         A shadow that is always there — the drop-shadow under .uamenu — is not a
+         focus indicator, so the only honest test is the difference. */
+      ring(){
+        const a=document.activeElement;if(!a)return null;
+        const R=e=>{const b=e.getBoundingClientRect();
+          return {x:+b.left.toFixed(2),y:+b.top.toFixed(2),w:+b.width.toFixed(2),h:+b.height.toFixed(2)};};
+        const cell=a.closest('[data-box]'),drop=a.closest('.uadrop');
+        const cands=[a,drop,cell].filter(Boolean),names=['trigger','uadrop','cell'];
+        const on=cands.map(e=>getComputedStyle(e).boxShadow);
+        const skin=cell?[getComputedStyle(cell).backgroundColor,getComputedStyle(cell).borderLeftColor]:null;
+        a.blur();
+        const off=cands.map(e=>getComputedStyle(e).boxShadow);
+        const skinOff=cell?[getComputedStyle(cell).backgroundColor,getComputedStyle(cell).borderLeftColor]:null;
+        a.focus({preventScroll:true});
+        let owner=null;
+        for(let i=0;i<cands.length;i++)if(on[i]!==off[i]){owner={which:names[i],shadow:on[i],rect:R(cands[i])};break;}
+        return {owner,trigger:R(a),drop:drop?R(drop):null,cell:cell?R(cell):null,
+          skinHeld:JSON.stringify(skin)===JSON.stringify(skinOff)};},
+      top(box){const e=document.querySelector('[data-box="'+box+'"]');
+        return e?Math.round(e.getBoundingClientRect().top+window.scrollY):null;},
+      /* WCAG relative luminance, so "can you see it on that background" is a
+         number rather than an opinion */
+      contrast(a,b){const L=c=>{const p=c.match(/[\\d.]+/g).slice(0,3).map(v=>{v=+v/255;
+          return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4);});
+          return 0.2126*p[0]+0.7152*p[1]+0.0722*p[2];};
+        const x=L(a),y=L(b);return +(((Math.max(x,y)+0.05)/(Math.min(x,y)+0.05)).toFixed(2));}
+    };return 1;`;
+    await c.eval(TABKIT);
+
+    const cleanBefore=await c.eval('return window.__t.isDirty()');
+    await c.eval('return window.__k.start(\'input[data-k="property.name"]\')');
+    for(let i=0;i<236;i++)await c.key('Tab',{wait:5});
+    let walk=await c.eval('return window.__k.read()');
+    const _wrap=walk.findIndex((t,i)=>i>0&&t.id===walk[0].id);
+    if(_wrap>0)walk=walk.slice(0,_wrap);
+    console.log(`\n── Tab order: ${walk.length} stops walked with real Tab presses ──`);
+
+    /* A stop's y is not its row — a 36px trigger beside a 34px input starts a
+       pixel higher — so cluster before comparing. */
+    const rowOf=items=>{const ys=[...new Set(items.map(t=>t.y))].sort((a,b)=>a-b),band=[];
+      ys.forEach(y=>{if(band.length&&y-band[band.length-1][band[band.length-1].length-1]<=20)band[band.length-1].push(y);else band.push([y]);});
+      const ix={};band.forEach((b,i)=>b.forEach(y=>{ix[y]=i;}));return ix;};
+    const bySec={};walk.forEach(t=>{if(t.col>=0)(bySec[t.card]=bySec[t.card]||[]).push(t);});
+    const crossedBack=[],wentUp=[];
+    Object.keys(bySec).forEach(sec=>{const items=bySec[sec],ix=rowOf(items);
+      let right=false,lastCol=items[0].col,lastRow=-1;
+      items.forEach(t=>{
+        if(t.col===1)right=true;
+        else if(right)crossedBack.push(sec+' → '+t.id);
+        if(t.col!==lastCol){lastCol=t.col;lastRow=-1;}
+        if(ix[t.y]<lastRow)wentUp.push(sec+' → '+t.id);
+        lastRow=Math.max(lastRow,ix[t.y]);});});
+    eq('Tab finishes a section’s left column before it crosses to the right',crossedBack,[]);
+    eq('and inside a column it only ever moves down the page',wentUp,[]);
+
+    const PROPERTY=['property.name','▾ property.name','tenant.property_alias',
+      'property.addr_street','property.addr_city','▾ property.addr_state','property.addr_zip',
+      '▾ property.addr','owner.entity_name','▾ owner.entity_name','▾ owner.entity_type',
+      'property.s8','▾ property.s8','property.fha','▾ property.fha'];
+    eq('the Property section, stop by stop, in the order Tab visits it',
+      walk.filter(t=>t.card==='Property').map(t=>t.id),PROPERTY);
+
+    await c.eval('return window.__k.start(\'[data-box="property.fha"] .uatrigger\')');
+    for(let i=0;i<PROPERTY.length-1;i++)await c.key('Tab',{wait:5,modifiers:8});
+    const back=(await c.eval('return window.__k.read()')).map(t=>t.id);
+    eq('and Shift-Tab retraces it exactly backwards',back,PROPERTY.slice().reverse());
+
+    /* Emitting by column must not unstack the grid: the two columns still share
+       their rows, so a cell that grows still carries its neighbour down. */
+    const tops=await c.eval('return [window.__k.top("property.name"),window.__k.top("owner.entity_name"),'
+      +'window.__k.top("property.addr"),window.__k.top("property.s8")]');
+    eq('the two columns still share their rows',[tops[0]===tops[1],tops[2]===tops[3]],[true,true]);
+
+    /* ── the ring on a focused dropdown ─────────────────────────────────── */
+    await c.eval('return window.__k.start(\'input[data-k="property.name"]\')');
+    await c.key('Tab',{wait:60});
+    const ring=await c.eval('return window.__k.ring()');
+    const near=(a,b)=>Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y),Math.abs(a.w-b.w),Math.abs(a.h-b.h));
+    T('a Tab onto a source chooser paints a ring that was not there before',!!(ring&&ring.owner));
+    eq('and paints it on the trigger, not on the wrapper or the whole cell',
+      ring.owner&&ring.owner.which,'trigger');
+    T('so the ring’s box IS the trigger’s box, to the pixel',
+      ring.owner&&near(ring.owner.rect,ring.trigger)<=1&&near(ring.trigger,ring.drop)<=1);
+    T('and it stays inside the cell provenance colours',
+      ring.owner&&ring.owner.rect.x>=ring.cell.x&&ring.owner.rect.y>=ring.cell.y
+      &&ring.owner.rect.x+ring.owner.rect.w<=ring.cell.x+ring.cell.w
+      &&ring.owner.rect.y+ring.owner.rect.h<=ring.cell.y+ring.cell.h);
+    T('and leaves those colours exactly as it found them',!!(ring&&ring.skinHeld));
+    const dark=walk.filter(t=>t.trig&&!/inset/.test(t.shadow)).map(t=>t.id);
+    console.log(`  (${walk.filter(t=>t.trig).length} of the ${walk.length} stops are dropdowns)`);
+    eq('every dropdown the walk stopped on carries that same ring',dark,[]);
+    /* Reads back the ring's own colour rather than the constant in the
+       stylesheet, and returns nothing at all when there is no ring — a throw
+       here would end the run before the checks below it, and a suite that dies
+       tells you less than a suite that says which line is red. */
+    const con=await c.eval('const r=window.__k.ring();const s=r&&r.owner&&r.owner.shadow;'
+      +'const m=s&&s.match(/rgba?\\([^)]*\\)/);if(!m)return [];const col=m[0];'
+      +'return ["#e8f0fe","#e9f5f2","#fbf1e6","#f6f7f9","#ffffff"].map(h=>{const n=parseInt(h.slice(1),16);'
+      +'return window.__k.contrast(col,"rgb("+[(n>>16)&255,(n>>8)&255,n&255].join(",")+")");});');
+    T('and reads against all five provenance backgrounds'
+      +(con.length?' ('+con.join(', ')+':1)':' \u2014 but there is no ring to measure'),
+      con.length===5&&Math.min.apply(null,con)>=3);
+
+    /* Tab clears _pending by design (see the document keydown handler); what it
+       must never do is leave an edit behind. */
+    eq('and a walk through the whole form with Tab leaves it clean',
+      [cleanBefore,await c.eval('return window.__t.isDirty()')],[false,false]);
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       THE SECTION RAIL — navigation, not decoration.
+
+       The rail used to be ten inert DIVs. It is now a jump-to control with a
+       travelling indicator, and every check below exists because this feature
+       is got wrong in one of six specific ways:
+
+         · the indicator picks its section from "the last heading scrolled
+           past", which can never light a tail shorter than the window, and
+           flickers to the neighbour halfway down a section taller than one;
+         · the jump offset is computed against a bar whose height changes with
+           the viewport, so the heading lands underneath it;
+         · the jump starts at scrollY 0, where the bar is HIDDEN and slides in
+           during the scroll — an offset measured before it appears is short by
+           the bar's whole height;
+         · the row is a DIV with a click handler: no Tab, no Enter, no Space;
+         · the active row is marked by colour alone;
+         · the travel animates under prefers-reduced-motion.
+
+       GROUND TRUTH IS THE DOM (window.__r). The selftest doors are checked for
+       AGREEMENT with it rather than trusted as the measurement. */
+    console.log('\n── the section rail ───────────────────────────────────');
+    await setViewport(c,1280,900);
+    await openForm();
+    await c.eval(RAILKIT);
+
+    /* ── the shape of a row ─────────────────────────────────────────────── */
+    const rows=await c.eval('return window.__r.rows()');
+    const cards=await c.eval('return window.__r.cards()');
+    T(`the rail renders its rows (${rows.length})`,rows.length>=9);
+    eq('every row is a real button, so the browser gives it Enter and Space for free',
+       rows.filter(r=>r.tag!=='BUTTON').map(r=>r.label),[]);
+    eq('every row names the section it points at',rows.filter(r=>!r.sec).map(r=>r.label),[]);
+    eq('every row is reachable by Tab',rows.filter(r=>r.tabIndex!==0).map(r=>r.label),[]);
+    eq('and reads as clickable under the pointer',
+       rows.filter(r=>r.cursor!=='pointer').map(r=>r.label),[]);
+    eq('every section card names itself the same way',cards.filter(x=>!x.sec).map(x=>x.title),[]);
+    /* `!s||` matters: without it a rail of ten unnamed rows pairs perfectly
+       with ten unnamed cards, and the check reads green having compared
+       nothing at all to nothing at all. */
+    eq('and every row has a card to jump to',
+       rows.map(r=>r.sec).filter(s=>!s||!cards.some(x=>x.sec===s)),[]);
+    eq('with no card the rail cannot reach',
+       cards.map(x=>x.sec).filter(s=>!s||!rows.some(r=>r.sec===s)),[]);
+
+    /* THE RENUMBERING TRAP. _secPos renumbers the rail for display: the row
+       reading "3. Principals" is section TWELVE. A spy or a jump that pairs
+       row INDEX to card INDEX rather than section NUMBER is off by that
+       renumbering for most of the form — and looks perfectly right for the
+       first two rows, which is exactly how it ships. */
+    eq('a row and its card agree on the TITLE, not merely on their position',
+       rows.filter(r=>{const card=cards.find(x=>x.sec===r.sec);
+         return !card||r.label.replace(/^\s*\d+\.\s*/,'')!==card.title;}).map(r=>r.label),[]);
+    T('and the rail really is renumbered, so that check has something to catch',
+      rows.some((r,i)=>String(r.sec)!==String(i+1)));
+
+    /* ── the doors, and whether they tell the truth ─────────────────────── */
+    eq('the selftest doors exist',
+       await c.eval(`return {rows:typeof window.__t.railRows,active:typeof window.__t.activeSection,
+         bar:typeof window.__t.railBar,goto:typeof window.__t.railGoto}`),
+       {rows:'function',active:'function',bar:'function',goto:'function'});
+    eq('railRows() agrees with the DOM, row for row',
+       await c.eval(`return (typeof window.__t.railRows==='function'?window.__t.railRows():[]).map(r=>String(r.sec))`),
+       rows.map(r=>String(r.sec)));
+
+    /* ── #ccbar is one line, at every width ─────────────────────────────── */
+    /* Not cosmetic: a jump offset cannot be right against a bar of
+       unpredictable height, so this is the precondition for the jump checks
+       below. Measured at 8fc25a1 — 32px at 1440, 64px at 1050, 154px at 860. */
+    console.log('\n── #ccbar: one constant line ──────────────────────────');
+    const bars={};
+    for(const w of [1440,1050,860]){
+      await setViewport(c,w,900);
+      bars[w]=await c.eval(`window.scrollTo(0,1200);await window.__r.settle();return window.__r.ccbar()`);
+      console.log(`    ${w}px → ${bars[w].h}px tall, ${bars[w].chips.length} chip(s) on ${bars[w].chipLines} line(s)`);
+    }
+    eq('the command bar is exactly as tall at 1050 as at 1440',bars[1050].h,bars[1440].h);
+    eq('and exactly as tall at 860',bars[860].h,bars[1440].h);
+    T(`and it is one line, not a stack (${bars[1440].h}px)`,bars[1440].h>0&&bars[1440].h<=44);
+    eq('its chips sit on a single row at every width',
+       [bars[1440].chipLines,bars[1050].chipLines,bars[860].chipLines],[1,1,1]);
+    /* …and nothing that MATTERS went away when it stopped wrapping. A bar that
+       is constant because it silently dropped the verdict is worse than one
+       that wraps. */
+    eq('the money line survives the squeeze at every width',
+       [1440,1050,860].filter(w=>!/current/.test(bars[w].text)||!/ceiling/.test(bars[w].text)),[]);
+    eq('so does the pass/over verdict',
+       [1440,1050,860].filter(w=>!/PASS|OVER|needed/.test(bars[w].text)),[]);
+    /* Chips may be dropped as the bar narrows — but only the ones saying
+       everything is fine. A warning or a note is the whole reason to look at
+       the bar. Identified by its own glyph rather than by a class name, so
+       this reads the same against old code and new. */
+    const attn=bars[1440].chips.filter(t=>/^[⚠ⓘ]/.test(t));
+    T(`the wide bar carries an attention chip to lose (${JSON.stringify(attn)})`,attn.length>0);
+    eq('and no attention chip is dropped at 1050',
+       attn.filter(t=>bars[1050].chips.indexOf(t)<0),[]);
+    eq('nor at 860',attn.filter(t=>bars[860].chips.indexOf(t)<0),[]);
+
+    /* ── the indicator picks the right section ──────────────────────────── */
+    console.log('\n── the indicator follows the scroll ───────────────────');
+    await setViewport(c,1280,900);
+    const geo=await c.eval('return window.__r.page()');
+    console.log(`    page ${geo.scrollH}px in a ${geo.innerH}px window; max scrollY ${geo.maxY}`);
+
+    const atTop=await c.eval(`window.scrollTo(0,0);await window.__r.settle();
+      return {a:window.__r.active(),aria:window.__r.ariaActive()}`);
+    eq('at the top of the form the first section is the active one',atTop.a,String(rows[0].sec));
+    T(`and the state is not colour-only — aria-current marks the same row (${atTop.aria})`,
+      atTop.a!==null&&atTop.aria===atTop.a);
+
+    /* Each section in turn, brought under the reading line. Cards nearer the
+       document foot than one window height cannot be brought there AT ALL —
+       that is the tail case, which gets its own check below rather than being
+       quietly dropped from this one. */
+    const reachable=cards.filter(x=>x.top-10<=geo.maxY);
+    const missed=[];
+    for(const card of reachable){
+      const got=await c.eval(`window.scrollTo(0,${card.top-10});await window.__r.settle();
+        return {a:window.__r.active(),aria:window.__r.ariaActive()}`);
+      if(got.a!==String(card.sec))missed.push(`${card.title} (sec ${card.sec}) lit ${got.a} instead`);
+      else if(got.aria!==got.a)missed.push(`${card.title}: aria-current on ${got.aria}, class on ${got.a}`);
+    }
+    eq(`scrolling to each of ${reachable.length} reachable sections lights that section`,missed,[]);
+    /* THE SWEEP. The rail must be able to LAND on every row it draws: a row no
+       scroll position can light is a row that lies about where you are.
+       This walks the document in ~120 steps and reads the indicator at each,
+       rather than deciding from geometry which cards "can" reach the reading
+       line. The formula version of this check was written first and was wrong
+       within a day — it encoded one particular scroll-spy rule (a flat reading
+       line) as if it were the definition of reachable, so a correct
+       implementation with a different rule for the last cards failed it. What
+       is actually being asked is "walk the form; does every row light?", and
+       that question survives whatever the rule becomes next. It is also
+       strictly stronger: it catches a row that lights out of order, and one
+       that flickers back to a section already passed. */
+    const sweep=await c.eval(`
+      const maxY=Math.max(0,document.documentElement.scrollHeight-innerHeight);
+      const step=Math.max(1,Math.round(maxY/120));
+      /* …and whether the section it names is actually ON SCREEN. A rail that
+         lights a section the reader cannot see is lying about where they are,
+         and no check that only asks "which row is lit" can tell. */
+      const read=y=>{const on=document.querySelector('#rail .railitem.on');
+        const sec=on?String(on.getAttribute('data-rsec')):null;
+        const card=sec?document.querySelector('#sections .card[data-sec="'+sec+'"]'):null;
+        const r=card?card.getBoundingClientRect():null;
+        return {y:y,a:sec,onScreen:!!(r&&r.bottom>0&&r.top<innerHeight)};};
+      const seen=[];
+      for(let y=0;y<=maxY;y+=step){
+        window.scrollTo(0,y);
+        await new Promise(r=>requestAnimationFrame(r));
+        await new Promise(r=>setTimeout(r,25));
+        seen.push(read(y));}
+      window.scrollTo(0,maxY);await new Promise(r=>setTimeout(r,200));
+      seen.push(read(maxY));
+      return seen;`);
+    const order=[];sweep.forEach(p=>{if(!order.length||order[order.length-1]!==p.a)order.push(p.a);});
+    console.log(`    swept ${sweep.length} scroll positions; the indicator went ${JSON.stringify(order)}`);
+    eq(`a row is lit at every one of ${sweep.length} scroll positions — the rail is never blank`,
+       sweep.filter(p=>p.a===null||/^MULTI/.test(p.a)).map(p=>p.y),[]);
+    eq('and walking the whole form lights EVERY row the rail draws',
+       rows.map(r=>String(r.sec)).filter(x=>!order.includes(x))
+           .map(x=>(cards.find(cd=>cd.sec===x)||{}).title||x),[]);
+    /* No row may be lit, left, and lit again: that is the flicker this rule
+       exists to prevent, and it is invisible to any check that only samples
+       one scroll position per section. */
+    eq('lighting them in the order they are read, and never going back',
+       order.filter((x,i)=>order.indexOf(x)!==i),[]);
+    eq('and the section it names is on screen at every one of those positions',
+       sweep.filter(p=>!p.onScreen).map(p=>`y=${p.y} lit ${p.a}, which is off screen`).slice(0,6),[]);
+    T(`and the order it lit them is the order the rail lists them`,
+      JSON.stringify(order)===JSON.stringify(rows.map(r=>String(r.sec))));
+
+    /* THE TALL SECTION. One card here is taller than the window. A spy that
+       answers "the nearest heading" flickers to the neighbour halfway down it;
+       it must stay lit from its first pixel to its last. */
+    /* Whether any section happens to out-measure a 900px window depends on how
+       much data the suite above it entered, so the window is SHRUNK to
+       guarantee the case instead of hoping for it — a check that quietly does
+       not apply is the thing this file exists to stop. */
+    const tallest=cards.slice().sort((a,b)=>b.h-a.h)[0];
+    const tallH=Math.max(380,Math.min(900,tallest.h-120));
+    await setViewport(c,1280,tallH);
+    const tGeo=await c.eval('return window.__r.page()');
+    const tCards=await c.eval('return window.__r.cards()');
+    const tall=tCards.filter(x=>x.h>tGeo.innerH).sort((a,b)=>b.h-a.h)[0];
+    T(`a section taller than the window to test against`
+      +(tall?` (${tall.title}, ${tall.h}px in ${tGeo.innerH}px)`:` — none, tallest is ${tallest.h}px`),!!tall);
+    const walkT=[];
+    if(tall)for(const frac of [0.05,0.25,0.5,0.75,0.95]){
+      const y=Math.max(0,Math.min(tGeo.maxY,Math.round(tall.top-60+tall.h*frac)));
+      walkT.push(await c.eval(`window.scrollTo(0,${y});await window.__r.settle();return window.__r.active()`));
+    }
+    eq(`and it stays lit the whole way down — ${JSON.stringify(walkT)}`,
+       walkT.length===5&&tall?walkT.filter(a=>a!==String(tall.sec)):['the tall-section walk never ran'],[]);
+    await setViewport(c,1280,900);
+
+    /* THE TAIL. The last card is shorter than the window, so no reading line
+       can ever reach it: at maximum scroll the line is still inside an earlier
+       section. A rule with no bottom-of-document exception lights the wrong
+       row at the one place a reader is certain to look. */
+    const last=cards[cards.length-1];
+    T(`the last section is shorter than the window, so the tail case is real (${last.h}px in ${geo.innerH}px)`,
+      last.h<geo.innerH);
+    const atBottom=await c.eval(`window.scrollTo(0,document.documentElement.scrollHeight);
+      await window.__r.settle();return {a:window.__r.active(),aria:window.__r.ariaActive()}`);
+    eq('scrolled to the very bottom, the LAST section is the active one',atBottom.a,String(last.sec));
+    eq('and aria-current says so too',atBottom.aria,String(last.sec));
+    eq('exactly one row is ever active — never two, never none',
+       [atTop.a,atBottom.a].filter(a=>a===null||/^MULTI/.test(String(a))),[]);
+
+    /* ── the travelling bar ─────────────────────────────────────────────── */
+    const bTop=await c.eval(`window.scrollTo(0,0);await window.__r.settle();
+      await new Promise(r=>setTimeout(r,420));return window.__r.bar()`);
+    const bBot=await c.eval(`window.scrollTo(0,document.documentElement.scrollHeight);
+      await window.__r.settle();await new Promise(r=>setTimeout(r,420));return window.__r.bar()`);
+    T('there is a single travelling bar',!!(bTop&&bBot));
+    T('it is visible when a section is active',!!(bTop&&+bTop.opacity>0.5&&bTop.h>2));
+    T('it MOVES between the first section and the last',!!(bTop&&bBot&&Math.abs(bBot.top-bTop.top)>20));
+    T('and it comes to rest ON the active row, not beside it',
+      await c.eval(`const r=document.querySelector('#rail .railitem.on'),b=document.getElementById('railbar');
+        if(!r||!b)return false;const a=r.getBoundingClientRect(),x=b.getBoundingClientRect();
+        return Math.abs(a.top-x.top)<=8 && Math.abs(a.height-x.height)<=8;`));
+
+    /* …and that it TRAVELS. "A bar visibly moves up and down the sections" is
+       the request; a bar that teleports satisfies every geometric check above
+       and none of the intent. Sampled against the RAIL, not the viewport: the
+       rail is sticky and its own `top` transitions when body.scrolled flips, so
+       a viewport-relative sample shows movement even when the bar has snapped. */
+    const travel=await c.eval(`window.scrollTo(0,0);await window.__r.settle();
+      const bar=document.getElementById('railbar'),rail=document.getElementById('rail');
+      if(!bar||!rail)return null;
+      const rel=()=>+(bar.getBoundingClientRect().top-rail.getBoundingClientRect().top).toFixed(1);
+      const rr=[...document.querySelectorAll('#rail .railitem')];
+      const start=rel();rr[rr.length-1].click();
+      const s=[];for(let i=0;i<10;i++){await new Promise(r=>requestAnimationFrame(r));
+        await new Promise(r=>setTimeout(r,30));s.push(rel());}
+      await new Promise(r=>setTimeout(r,900));const end=rel();
+      return {start:start,end:end,
+        mids:[...new Set(s)].filter(v=>Math.abs(v-start)>1&&Math.abs(v-end)>1).length};`);
+    T('the bar actually goes somewhere',!!(travel&&Math.abs(travel.end-travel.start)>20));
+    T(`and it TRAVELS there rather than teleporting`
+      +(travel?` (${travel.mids} intermediate positions between ${travel.start} and ${travel.end})`:''),
+      !!(travel&&travel.mids>=2));
+
+    /* ── a jump lands the heading VISIBLE ───────────────────────────────── */
+    console.log('\n── jump-to: the heading must clear the bar ────────────');
+    const buried=[],disagree=[];
+    for(const r of rows){
+      const got=await c.eval(`window.scrollTo(0,${geo.maxY});await window.__r.settle();
+        return await window.__r.clickRow(${JSON.stringify(String(r.sec))})`);
+      if(got.err){buried.push(`${r.label}: ${got.err}`);disagree.push(`${r.label}: ${got.err}`);continue;}
+      if(got.headTop<got.ccBottom-0.5)
+        buried.push(`${r.label}: heading top ${got.headTop} is under a bar ending at ${got.ccBottom}`);
+      else if(got.headTop>got.innerH-40)
+        buried.push(`${r.label}: heading top ${got.headTop} is off the bottom of a ${got.innerH}px window`);
+      if(got.active!==String(r.sec))disagree.push(`${r.label} → lit ${got.active}`);
+    }
+    eq(`clicking each of ${rows.length} rows lands its heading clear of the command bar`,buried,[]);
+    /* Clicking a row and watching a DIFFERENT row light up is the most visible
+       way this feature fails, and it comes for free at the foot of the
+       document where the jump cannot complete. */
+    eq('and the row you clicked is the row that lights up',disagree,[]);
+
+    /* THE scrollY-0 TRAP, on its own. From the top the command bar is HIDDEN
+       and slides in DURING the scroll; an offset computed before it appears is
+       short by the bar's whole height. This is the first jump any reader
+       makes. */
+    const far=rows[rows.length-1];
+    const cold=await c.eval(`window.scrollTo(0,0);await window.__r.settle();
+      const before=window.__r.ccbar();
+      const after=await window.__r.clickRow(${JSON.stringify(String(far.sec))});
+      return {barWasHidden:!before.shown,after:after};`);
+    T('the bar really is out of the way at scrollY 0, so the trap is live',cold.barWasHidden);
+    T(`a jump from the very top still clears the bar that slid in during it`
+      +` (heading ${cold.after.headTop} vs bar bottom ${cold.after.ccBottom})`,
+      !cold.after.err&&cold.after.headTop>=cold.after.ccBottom-0.5);
+    const refY=cold.after.y;
+
+    /* A real mouse press, not element.click(): a handler bound to mousedown, or
+       a row a sticky rail has moved out from under the pointer, passes the
+       synthetic call and fails the finger. */
+    const spot=await c.eval(`window.scrollTo(0,0);await window.__r.settle();
+      const e=document.querySelector('#rail .railitem[data-rsec=${JSON.stringify(String(far.sec))}]');
+      if(!e)return null;const r=e.getBoundingClientRect();
+      if(r.width<4||r.height<4||r.top<0)return null;
+      return {x:Math.round(r.left+r.width/2),y:Math.round(r.top+r.height/2)};`);
+    T('the row is where a pointer can reach it',!!spot);
+    if(spot){
+      for(const type of ['mousePressed','mouseReleased'])
+        await c.send('Input.dispatchMouseEvent',{type,x:spot.x,y:spot.y,button:'left',clickCount:1});
+      const landed=await c.eval(`await window.__r.settle();await new Promise(r=>setTimeout(r,280));
+        return {y:Math.round(scrollY),head:window.__r.headTop(${JSON.stringify(String(far.sec))}),
+                cc:window.__r.ccbar().bottom,active:window.__r.active()};`);
+      T(`a real mouse click on the row jumps too (scrollY ${landed.y})`,landed.y>0);
+      T('and lands the heading clear of the bar',landed.head!=null&&landed.head>=landed.cc-0.5);
+    }
+
+    /* ── the pin, and whether it ever lets go ───────────────────────────── */
+    /* A jump PINS the row it jumped to, because the two sections nearest the
+       document foot share one maximum scroll position and the geometry alone
+       cannot tell a click on one from a click on the other. A pin is the right
+       answer and a dangerous one: a pin that never releases means the indicator
+       stops following the reader the moment they use it once, which is worse
+       than the flicker it was added to cure. Both halves are checked. */
+    console.log('\n── the jump pins its answer, and then lets go ─────────');
+    const pinDoor=await c.eval(`return typeof window.__t.railPin`);
+    eq('there is a door onto the pin',pinDoor,'function');
+    const tailTwo=rows.slice(-2);
+    const pinned=[];
+    for(const r of tailTwo){
+      const got=await c.eval(`window.scrollTo(0,0);await window.__r.settle();
+        const a=await window.__r.clickRow(${JSON.stringify(String(r.sec))});
+        return {active:a.active,pin:(typeof window.__t.railPin==='function'?String(window.__t.railPin()):'(no door)')};`);
+      if(got.active!==String(r.sec))pinned.push(`clicking ${r.label} lit ${got.active}`);
+    }
+    /* These are the two rows that land at the same maximum scroll, so without a
+       pin the second of them is unreachable by clicking as well as by
+       scrolling. */
+    eq(`the last two rows each light THEMSELVES when clicked, not the same one twice`,pinned,[]);
+    const released=await c.eval(`window.scrollTo(0,0);await window.__r.settle();
+      await window.__r.clickRow(${JSON.stringify(String(rows[rows.length-1].sec))});
+      const held=window.__r.active();
+      window.scrollTo(0,0);await window.__r.settle();
+      return {held:held,after:window.__r.active(),
+        pin:(typeof window.__t.railPin==='function'?window.__t.railPin():'(no door)')};`);
+    eq('the pin holds the row the reader asked for',released.held,String(rows[rows.length-1].sec));
+    eq('and the reader’s next scroll takes it back — the rail does not freeze after one click',
+       released.after,String(rows[0].sec));
+    eq('with the pin itself cleared, not merely overruled',released.pin,null);
+
+    /* ── keyboard ───────────────────────────────────────────────────────── */
+    /* Real Tab presses, because :focus-visible is the whole point of the ring
+       check and a programmatic focus() does not raise it. */
+    console.log('\n── keyboard: Tab, Enter, Space, and a ring you can see ─');
+    await c.eval(`window.scrollTo(0,0);await window.__r.settle();
+      document.getElementById('bFill').focus();return 1`);
+    /* Tab into the rail rather than assuming it is the next stop: `.chkmore`
+       in the command centre carries tabindex="0" and has since before this
+       branch, so a walk that counted stops from #bFill would report the rail
+       one place out and blame the rail for it. The check is that the rows form
+       a CONTIGUOUS RUN in reading order once reached — which is the thing that
+       actually matters — not that nothing precedes them. */
+    const at=async()=>c.eval(`const a=document.activeElement;
+      return a&&a.classList&&a.classList.contains('railitem')?String(a.getAttribute('data-rsec')):
+        ('['+(a?a.tagName+(a.id?'#'+a.id:''):'none')+']');`);
+    let hops=0,cur=await at();
+    while(/^\[/.test(cur)&&hops<12){await c.key('Tab',{wait:45});cur=await at();hops++;}
+    T(`Tab reaches the rail from the toolbar (${hops} stop(s) on the way)`,!/^\[/.test(cur));
+    const walkRail=[cur];
+    for(let i=1;i<rows.length;i++){await c.key('Tab',{wait:45});walkRail.push(await at());}
+    eq('and then walks every row, in the order they are read, with nothing in between',
+       walkRail,rows.map(r=>String(r.sec)));
+
+    /* A ring the eye can see: the focused row measured against an UNFOCUSED row
+       of the same kind. Comparing to a sibling rather than to the same element
+       blurred is deliberate — blur/refocus does not restore :focus-visible, so
+       that comparison would quietly measure the wrong state and pass. */
+    const rlRing=await c.eval(`const a=document.activeElement;
+      const other=[...document.querySelectorAll('#rail .railitem')].find(e=>e!==a);
+      const S=e=>{const s=getComputedStyle(e);
+        return {outline:s.outlineStyle+' '+s.outlineWidth+' '+s.outlineColor,shadow:s.boxShadow};};
+      return {focused:S(a),plain:S(other),isRow:!!(a&&a.classList&&a.classList.contains('railitem'))};`);
+    /* Every clause below is gated on isRow. Without that gate the comparison is
+       between whatever Tab actually landed on and a rail row — two different
+       kinds of element, which of course compute different styles, and the
+       check reads green while the rail is not in the tab order at all. */
+    T('the focused element is a rail row',rlRing.isRow);
+    T(`a Tab onto a row paints what the unfocused row does not have (${rlRing.focused.outline})`,
+      rlRing.isRow&&(rlRing.focused.outline!==rlRing.plain.outline||rlRing.focused.shadow!==rlRing.plain.shadow));
+    T('and it is a ring with real width, not a hairline',
+      rlRing.isRow&&!/^none/.test(rlRing.focused.outline)
+      &&parseFloat(rlRing.focused.outline.split(' ')[1])>=1.5);
+
+    /* Enter and Space BOTH: a DIV with a click handler answers neither, and a
+       handler that calls preventDefault for Enter only is a real shape. */
+    const keyY={};
+    for(const key of ['Enter',' ']){
+      const name=key===' '?'Space':'Enter';
+      /* No try/catch anywhere in this file, so a missing row has to be answered
+         with a failing check rather than an exception that ends the run before
+         the reduced-motion and narrow-viewport checks below it. */
+      const armed=await c.eval(`window.scrollTo(0,0);await window.__r.settle();
+        const e=document.querySelector('#rail .railitem[data-rsec=${JSON.stringify(String(far.sec))}]');
+        if(!e)return false;e.focus();return document.activeElement===e;`);
+      T(`there is a row for ${name} to press, and it takes focus`,armed);
+      if(armed)await c.key(key,{wait:140});
+      const got=await c.eval(`await window.__r.settle();await new Promise(r=>setTimeout(r,300));
+        return {y:Math.round(scrollY),head:window.__r.headTop(${JSON.stringify(String(far.sec))}),
+                cc:window.__r.ccbar().bottom};`);
+      keyY[name]=got.y;
+      T(`${name} on a focused row jumps (scrollY ${got.y})`,got.y>0);
+      T(`and ${name} lands the heading clear of the bar`,got.head!=null&&got.head>=got.cc-0.5);
+    }
+    /* Space must scroll to the SECTION and nowhere else. A button that forgot
+       preventDefault gives you the jump AND a screenful of page-down. */
+    T(`Space landed where the click landed, not a screenful past it (${keyY.Space} vs ${refY})`,
+      Math.abs(keyY.Space-refY)<=40);
+
+    /* ── the rail does not make the form dirty ──────────────────────────── */
+    eq('navigating the rail changes no data',await c.eval('return window.__t.isDirty()'),false);
+
+    /* ── below 1050px, where the rail stops being sticky ────────────────── */
+    console.log('\n── 860px: the rail goes static, and must still work ───');
+    await setViewport(c,860,900);
+    await c.eval(`window.scrollTo(0,0);await window.__r.settle();return 1`);
+    eq('the rail is static at 860, as the stylesheet says',
+       await c.eval(`return getComputedStyle(document.querySelector('#viewForm .rail')).position`),'static');
+    const nBad=[];
+    for(const r of rows.slice(0,3).concat(rows.slice(-2))){
+      const got=await c.eval(`window.scrollTo(0,0);await window.__r.settle();
+        return await window.__r.clickRow(${JSON.stringify(String(r.sec))})`);
+      if(got.err){nBad.push(`${r.label}: ${got.err}`);continue;}
+      if(got.headTop<got.ccBottom-0.5)nBad.push(`${r.label}: heading ${got.headTop} under a bar ending ${got.ccBottom}`);
+      else if(got.headTop>got.innerH-40)nBad.push(`${r.label}: heading ${got.headTop} off a ${got.innerH}px window`);
+    }
+    eq('jump-to still lands the heading clear of the bar at 860',nBad,[]);
+    const nCards=await c.eval('return window.__r.cards()');
+    const nLast=nCards.length?nCards[nCards.length-1].sec:'(no cards at 860)';
+    eq('and the indicator still tracks the scroll at 860',
+       await c.eval(`window.scrollTo(0,document.documentElement.scrollHeight);
+         await window.__r.settle();return window.__r.active()`),
+       nLast?String(nLast):'(the last card at 860 names no section)');
+
+    /* ── prefers-reduced-motion ─────────────────────────────────────────── */
+    /* The travel must not run — and the active state must still be plainly
+       there. "No animation" is trivially satisfied by an indicator that is not
+       drawn at all, so the visibility half is the half that matters. */
+    console.log('\n── prefers-reduced-motion: still legible, not animated ─');
+    await setViewport(c,1280,900);
+    await c.send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
+    await c.reload();
+    await openForm();
+    await c.eval(RAILKIT);
+    const rm=await c.eval(`window.scrollTo(0,0);await window.__r.settle();
+      const b=document.getElementById('railbar');
+      const on=document.querySelector('#rail .railitem.on');
+      const off=[...document.querySelectorAll('#rail .railitem')].find(e=>e!==on);
+      const S=e=>{const s=getComputedStyle(e);
+        return {bg:s.backgroundColor,color:s.color,weight:s.fontWeight};};
+      return {media:matchMedia('(prefers-reduced-motion: reduce)').matches,
+        barProp:b?getComputedStyle(b).transitionProperty:null,
+        barDur:b?getComputedStyle(b).transitionDuration:null,
+        bar:window.__r.bar(),active:window.__r.active(),
+        onS:on?S(on):null,offS:off?S(off):null};`);
+    T('the browser really is reporting reduced motion',rm.media);
+    /* The question is whether it MOVES, not whether every transition was
+       switched off: a colour or opacity fade is not motion, and demanding
+       transition-duration:0 would fail a correct implementation. So the check
+       is on the properties that displace or resize the bar — and then on the
+       bar's actual path, which is the claim itself rather than a proxy for it. */
+    T(`no property that moves or resizes the bar is transitioned (${rm.barProp})`,
+      rm.barProp!=null&&!/transform|height|width|top|left|translate|inset|margin/.test(rm.barProp));
+    const rmTravel=await c.eval(`window.scrollTo(0,0);await window.__r.settle();
+      const bar=document.getElementById('railbar'),rail=document.getElementById('rail');
+      if(!bar||!rail)return null;
+      const rel=()=>+(bar.getBoundingClientRect().top-rail.getBoundingClientRect().top).toFixed(1);
+      const rr=[...document.querySelectorAll('#rail .railitem')];
+      const start=rel();rr[rr.length-1].click();
+      const s=[];for(let i=0;i<10;i++){await new Promise(r=>requestAnimationFrame(r));
+        await new Promise(r=>setTimeout(r,30));s.push(rel());}
+      await new Promise(r=>setTimeout(r,900));const end=rel();
+      return {start:start,end:end,
+        mids:[...new Set(s)].filter(v=>Math.abs(v-start)>1&&Math.abs(v-end)>1).length};`);
+    T('and the bar still gets where it is going',
+      !!(rmTravel&&Math.abs(rmTravel.end-rmTravel.start)>20));
+    T(`it simply arrives, without travelling`
+      +(rmTravel?` (${rmTravel.mids} intermediate positions, against ${travel?travel.mids:'?'} without the preference)`:''),
+      !!(rmTravel&&rmTravel.mids===0));
+    T('a section is still marked active',rm.active!=null&&!/^MULTI/.test(String(rm.active)));
+    T('the indicator is still drawn',!!(rm.bar&&+rm.bar.opacity>0.5&&rm.bar.h>2));
+    T('and the active row still reads differently from its neighbours',
+      !!(rm.onS&&rm.offS&&(rm.onS.bg!==rm.offS.bg||rm.onS.color!==rm.offS.color||rm.onS.weight!==rm.offS.weight)));
+    const rmJump=await c.eval(`window.scrollTo(0,0);await window.__r.settle();
+      return await window.__r.clickRow(${JSON.stringify(String(far.sec))})`);
+    T('and a jump still arrives under reduced motion',
+      !rmJump.err&&rmJump.headTop>=rmJump.ccBottom-0.5&&rmJump.headTop<=rmJump.innerH-40);
+    await c.send('Emulation.setEmulatedMedia',{features:[]});
+    await c.reload();
+    await openForm();
+
+    /* ── the other views still work ─────────────────────────────────────── */
+    /* The rail lives in #viewForm; nothing it added may leak into the gallery
+       or the launcher, and neither may stop rendering. */
+    const views=await c.eval(`window.__t.openMenu();await new Promise(r=>setTimeout(r,450));
+      const m={shown:getComputedStyle(document.getElementById('viewMenu')).display!=='none',
+        cards:document.querySelectorAll('#menuGrid > *').length,
+        stray:document.querySelectorAll('#viewMenu #railbar, #viewMenu .railitem').length};
+      window.__t.openLauncher(${JSON.stringify(pid)});await new Promise(r=>setTimeout(r,600));
+      const l={shown:getComputedStyle(document.getElementById('viewLauncher')).display!=='none',
+        body:(document.getElementById('viewLauncher').textContent||'').length,
+        stray:document.querySelectorAll('#viewLauncher #railbar, #viewLauncher .railitem').length};
+      return {m:m,l:l};`);
+    T(`the property gallery still renders (${views.m.cards} card(s))`,views.m.shown&&views.m.cards>0);
+    eq('and the rail did not leak into it',views.m.stray,0);
+    T(`the launcher still renders (${views.l.body} chars)`,views.l.shown&&views.l.body>200);
+    eq('and the rail did not leak into that either',views.l.stray,0);
+    await c.send('Emulation.clearDeviceMetricsOverride');
+    await openForm();
 
     console.log('\n── the console stayed quiet ───────────────────────────');
     eq('no console errors and no uncaught exceptions',c.logs.slice(0,3),[]);

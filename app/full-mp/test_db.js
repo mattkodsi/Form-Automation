@@ -5,7 +5,8 @@
    shows it, and MIN_CHECKS catches a run that dies partway — a short count is
    a failure, not a pass. Adding checks? Raise MIN_CHECKS. */
 const { makeDb, memoryAdapter, isPerCycleKey, migrate, computeAnalysis, computeSalutation, CROSSWALK } = require('./db.js');
-const MIN_CHECKS = 186;   // 2026-07-30: +4 current rents and executed UA carry on no programme
+const MIN_CHECKS = 190;   // 2026-07-30 merge: union of both branches, counted off a real run (was ours 169 / main 186)
+                        //;   // 2026-07-30: +4 current rents and executed UA carry on no programme
 let fails = 0, n = 0, verdict = null;
 const BAR = '═'.repeat(68);
 function fail(msg, err) {

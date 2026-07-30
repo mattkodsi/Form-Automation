@@ -1,0 +1,230 @@
+{
+  "_comment": [
+    "GROUND TRUTH, ENTERED BY A PERSON, NOT BY A PARSER.",
+    "",
+    "This file exists to catch the one silent failure mode of the whole corpus",
+    "design: an extractor bug that misreads BOTH sides identically turns a real",
+    "difference into a false match, and no amount of automation can catch it,",
+    "because the automation is what is wrong. Every value below was read off a",
+    "rendered image of the page -- deliberately not through the text layer and",
+    "not through pdf-lib, so that a shared bug in the reading path cannot reach",
+    "both this file and the extractor.",
+    "",
+    "Do not regenerate this file with a script. If a value here is wrong, look",
+    "at the page again and fix it by hand."
+  ],
+  "property": "Lansing Manor",
+  "propertyCode": "75500",
+  "corpusFolder": "75500 - Lansing Manor - Section 8",
+  "year0": 2026,
+  "verifiedOn": "2026-07-29",
+  "verifiedFrom": "150 dpi page renders read visually, page by page",
+
+  "inputs": {
+    "priorRentSchedule": "2025/800010652 - Approved Rent Schedule - 10-8-24 - Lansing Manor.pdf",
+    "study": "2026 - RCS/25-119 - Lansing Manor, 5600 Mall Drive West, Lansing MI (updated).pdf"
+  },
+
+  "priorRentSchedule": {
+    "_page": "page 2 of the PDF; HUD-92458 page 1 of 3",
+    "values": {
+      "property.name": "Lansing Manor",
+      "property.fha": "N/A",
+      "rs.effectiveDate": "02/01/2025",
+      "rs.uaEffectiveDate": "02/01/2025",
+      "unit.0.type": "1Bedroom",
+      "unit.0.count": "32",
+      "unit.0.rent": "892",
+      "unit.0.potential": "28544",
+      "unit.0.ua": "116",
+      "unit.0.gross": "1008",
+      "unit.1.type": "1Bedroom Patio",
+      "unit.1.count": "68",
+      "unit.1.rent": "897",
+      "unit.1.potential": "60996",
+      "unit.1.ua": "116",
+      "unit.1.gross": "1013",
+      "rs.totalUnits": "100",
+      "rs.monthlyContractRentPotential": "89540",
+      "rs.yearlyContractRentPotential": "1074480",
+      "rs.monthlyMarketRentPotential": "0",
+      "rs.maxAllowableMonthlyRentPotential": "89540",
+      "rs.rentLossNonRevenue": "0"
+    },
+    "partB": {
+      "equipment.range": true, "equipment.refrigerator": true,
+      "equipment.airConditioner": true, "equipment.disposal": false,
+      "equipment.dishwasher": false, "equipment.carpet": true,
+      "equipment.drapes": false, "equipment.blinds": true,
+      "utility.heating": "G", "utility.cooling": "E", "utility.hotWater": "E",
+      "utility.cooking": "E", "utility.lights": "E", "utility.waterSewer": true,
+      "service.parking": true, "service.laundryCoin": true,
+      "service.communityRoom": false, "service.swimmingPool": false,
+      "service.tennisCourts": false, "service.nursingCare": false,
+      "service.linenMaid": false
+    }
+  },
+
+  "study": {
+    "_page": "page 2 of the PDF -- the appraiser's transmittal letter",
+    "_note": [
+      "THE BELFRY MISLABEL, CONFIRMED IN THE REAL CORPUS. The letter prints",
+      "'[FHA Project No. MI330005001]'. That number is the SECTION 8 CONTRACT",
+      "number, not an FHA number: the approved rent schedule for the same",
+      "property shows FHA Project Number = N/A and Contract Number =",
+      "MI330005001. Any reader that trusts the label writes the contract number",
+      "into the FHA field and leaves the contract number empty."
+    ],
+    "values": {
+      "letter.date": "10/07/2025",
+      "firm.name": "Belfry Valuation, LLC",
+      "firm.address": "PO BOX 8140, Bartlett, IL 60103",
+      "firm.phone": "(708) 500-2380",
+      "firm.email": "azabel@belfryvaluation.com",
+      "appraiser.name": "Aaron M. Zabel",
+      "appraiser.license": "1205078333",
+      "appraiser.credential": "Michigan Certified General",
+      "addressee.name": "Mr. Mike McKee",
+      "addressee.org": "Related Affordable",
+      "addressee.address": "30 Hudson Yards, New York, New York 10001",
+      "property.nameInStudy": "Lansing Manor / Senior World",
+      "property.address": "5600 Mall Drive West, Lansing, Eaton County, Michigan 48917",
+      "property.s8": "MI330005001",
+      "property.fha": "N/A",
+      "property.parcel": "040-011-400-012",
+      "study.unit.0.type": "1BR/1BA without patio",
+      "study.unit.0.count": "32",
+      "study.unit.0.sqft": "575",
+      "study.unit.0.marketRent": "1190",
+      "study.unit.1.type": "1BR/1BA with patio",
+      "study.unit.1.count": "68",
+      "study.unit.1.sqft": "575",
+      "study.unit.1.marketRent": "1200",
+      "study.totalUnits": "100"
+    }
+  },
+
+  "filed": {
+    "coverLetter": {
+      "_file": "2026 - RCS/1 - Lansing Manor - Cover Letter.pdf",
+      "values": {
+        "letter.date": "10/07/2025",
+        "addressee.name": "Ken Callicutt",
+        "addressee.org": "Michigan Multi-Family Asset Managers",
+        "addressee.address": "2395 Jolly Road, Suite 180, Okemos, MI 48864",
+        "salutation": "Dear Mr. Callicutt,",
+        "property.name": "Lansing Manor",
+        "property.s8": "MI330005001",
+        "contact.name": "Michael McKee",
+        "contact.phone": "(212) 295-9113",
+        "contact.email": "MiMcKee@related.com",
+        "signatory.name": "Matthew Finkle",
+        "signatory.title": "Vice President of Managing General Partner",
+        "letterhead.org": "RELATED AFFORDABLE",
+        "letterhead.address": "30 Hudson Yards, New York, NY 10001",
+        "letterhead.phone": "212-801-1000",
+        "letterhead.fax": "212-801-3731"
+      }
+    },
+    "tenantNotice": {
+      "_file": "2026 - RCS/5 - Lansing Manor - Tenant Notice.pdf",
+      "values": {
+        "notice.date": "10/06/2025",
+        "property.name": "Lansing Manor",
+        "property.address": "5600 Mall Drive West, Lansing, MI 48917",
+        "ca.name": "Michigan Multi-Family Asset Managers",
+        "ca.abbrev": "MMAM",
+        "notice.reason": "Fifth-Year RCS Adjustment",
+        "notice.unit.0.type": "1-Bedroom",
+        "notice.unit.0.currentRent": "892.00",
+        "notice.unit.0.proposedRent": "1190.00",
+        "notice.unit.0.increase": "298.00",
+        "notice.unit.1.type": "1-Bedroom Patio",
+        "notice.unit.1.currentRent": "897.00",
+        "notice.unit.1.proposedRent": "1200.00",
+        "notice.unit.1.increase": "303.00",
+        "notice.officeAddress": "5600 Mall Drive West, Lansing, MI 48917",
+        "signatory.name": "Kia Rosenberg",
+        "signatory.title": "Community Manager, Lansing Manor"
+      }
+    },
+    "checklist": {
+      "_file": "2026 - RCS/3 - Lansing Manor - Owner RCS Checklist.pdf",
+      "_note": "17 items; 15 checked. The two unchecked are Scope of Repair and Copy of RCS Appraiser's License.",
+      "values": {
+        "heading": "Owner's Checklist for RCS Submission",
+        "appendix": "Appendix 9-2-2",
+        "signatory.name": "Matthew Finkle",
+        "signatory.title": "Vice President of Managing General Partner",
+        "checked.count": "15",
+        "unchecked.items": "Scope of Repair; Copy of RCS Appraiser's License (only if relying upon a temporary license)"
+      }
+    },
+    "rentSchedule": {
+      "_file": "2026 - RCS/800010652 - Approved Rent Schedule - 12-29-25 - Lansing Manor (Village Green III) Fully Executed.pdf",
+      "_note": [
+        "This is the APPROVED schedule as returned by the contract administrator,",
+        "which is the closest thing the corpus has to 'what the draft should have",
+        "said'. Its page 1 is a MAM transmittal letter; the HUD-92458 is page 2.",
+        "The transmittal names the property 'Lansing Manor (Village Green III)'",
+        "while the form itself says only 'Lansing Manor' -- the alias case the",
+        "comparison must NOT normalise away."
+      ],
+      "values": {
+        "property.name": "Lansing Manor",
+        "property.nameWithAlias": "Lansing Manor (Village Green III)",
+        "property.fha": "N/A",
+        "property.s8": "MI330005001",
+        "rs.approvalDate": "12/29/2025",
+        "rs.effectiveDate": "02/02/2026",
+        "rs.uaEffectiveDate": "02/02/2026",
+        "unit.0.type": "1Bedroom",
+        "unit.0.count": "32",
+        "unit.0.rent": "1190",
+        "unit.0.potential": "38080",
+        "unit.0.ua": "99",
+        "unit.0.gross": "1289",
+        "unit.1.type": "1Bedroom Patio",
+        "unit.1.count": "68",
+        "unit.1.rent": "1200",
+        "unit.1.potential": "81600",
+        "unit.1.ua": "99",
+        "unit.1.gross": "1299",
+        "rs.totalUnits": "100",
+        "rs.monthlyContractRentPotential": "119680",
+        "rs.yearlyContractRentPotential": "1436160",
+        "rs.monthlyMarketRentPotential": "0",
+        "rs.maxAllowableMonthlyRentPotential": "119680",
+        "rs.rentLossNonRevenue": "0",
+        "ca.signatory": "Boolin Middleton",
+        "ca.signatoryTitle": "Affordable Housing Analyst",
+        "ca.email": "boolin.middleton@mamhousing.com",
+        "ca.phone": "517-267-9277"
+      },
+      "partB": {
+        "equipment.range": true, "equipment.refrigerator": true,
+        "equipment.airConditioner": true, "equipment.disposal": false,
+        "equipment.dishwasher": false, "equipment.carpet": true,
+        "equipment.blinds": true, "equipment.patio1brOnly": true,
+        "equipment.vinylFlooring": true,
+        "utility.heating": "G", "utility.cooling": "E", "utility.hotWater": "E",
+        "utility.cooking": "E", "utility.lights": "E", "utility.waterSewer": true,
+        "service.parking": true, "service.laundryCoin": true,
+        "service.communityRoom": true, "service.businessCenter": true,
+        "service.security": true, "service.emergencyPullCord": true,
+        "service.trashRecycling": true, "service.swimmingPool": false,
+        "service.tennisCourts": false, "service.nursingCare": false,
+        "service.linenMaid": false
+      }
+    }
+  },
+
+  "observations": [
+    "The study's concluded market rents ($1,190 and $1,200) are adopted verbatim as the approved contract rents. The RCS was accepted in full, so a correct app should reproduce these exactly.",
+    "Unit type names are RENAMED between documents: the study says '1BR/1BA without patio' and '1BR/1BA with patio'; every filed document says '1Bedroom'/'1Bedroom Patio' or '1-Bedroom'/'1-Bedroom Patio'. A comparison that expects the study's wording will show two false mismatches on every property that does this.",
+    "The utility allowance FELL from 116 to 99 across the cycle. It is not carried forward from the prior schedule and cannot be derived from the study either -- it comes from the UA Baseline analysis. Expect the app to have no source for it.",
+    "Part B grew between cycles: the year-0 schedule adds Patio, Vinyl Flooring, Business Center, Security, Emergency Pull Cord and Trash/Recycling, and drops Drapes. Part B is therefore NOT a straight carry-forward from the prior schedule.",
+    "The tenant notice is dated 10/06/2025, one day BEFORE the cover letter's 10/07/2025. If the app derives both from a single date, one of them will be wrong by a day.",
+    "Two different people at the contract administrator appear: Ken Callicutt receives the submission, Boolin Middleton signs the approval. Only the first is knowable when the package is generated."
+  ]
+}

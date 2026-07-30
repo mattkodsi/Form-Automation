@@ -94,11 +94,17 @@ ocr = patch(ocr,
   if(!resp.ok||d.error)throw new Error(d.error||('OCR failed (HTTP '+resp.status+')'));
   return d;}""",
     'ocr: invoke → fetch /api/ocr-rs')
-# both ocrParseRs and ocrHalf gate on a signed-in Supabase client
+# ocrHalf still gates on a signed-in Supabase client in one line; ocrParseRs
+# splits the two reasons apart so a refusal can say which one it was, and the
+# RA build simply drops the session half of it.
 ocr = patch(ocr,
     "  if(!window.PDFLib||!supaClient)return null;",
     "  if(!window.PDFLib)return null;",
-    'ocr: drop supabase guard', times=2)
+    'ocr: drop supabase guard (ocrHalf)', times=1)
+ocr = patch(ocr,
+    "  if(!supaClient){OCR_WHY='The figures on this copy are pictures rather than text, so it can only be read by the scanning service \u2014 and this session is not connected to it.';return null;}\n",
+    "",
+    'ocr: drop supabase guard (ocrParseRs)')
 
 # ── 3. auth gate: Supabase email/password → RA Entra session ───────────────
 app = patch(app,

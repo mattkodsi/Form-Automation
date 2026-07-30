@@ -22,9 +22,12 @@ const os=require('os'),path=require('path'),fs=require('fs');
 /* ── the verdict machinery (mirrors test_interactions.js) ───────────────── */
 const MONTHNAMES=['January','February','March','April','May','June','July',
                  'August','September','October','November','December'];
-const MIN_CHECKS=185;   // 2026-07-30: +15 the packages list stops being a chooser — one card for the
-                        // current renewal, one line per earlier one, and one way in
-// 2026-07-29: +12 the schedule — one axis, month headings, the today-line
+const MIN_CHECKS=222;   // 2026-07-30 merge: union of both branches, counted off a real run (was ours 175 / main 185)
+                        //;   // 2026-07-30 merge: the union of both lines, recounted off a real run.
+                        // ours: +10 a fill record belongs to one property, one file, and a form that still shows it (M60, M61)
+                        // main: +15 the packages list stops being a chooser — one card for the
+                        //       current renewal, one line per earlier one, and one way in
+                        // 2026-07-29: +12 the schedule — one axis, month headings, the today-line
                         // 2026-07-28: +32 the home page's filter rail, +24 the primary action
 let n=0,fails=0,verdict=null;
 const BAR='═'.repeat(68);
@@ -668,6 +671,192 @@ const T=(label,v)=>eq(label,!!v,true);
   T('an edit marks the form dirty', app.isDirty());
   app.__revert('property.name');
   T('reverting that edit clears dirty', !app.isDirty());
+
+  /* ── two documents, four variants: the order cannot change the result ─────
+     Matt's case, found by clicking for twenty minutes and invisible to the
+     corpus sweep, because it never shows up in a generated document.
+
+     A study that prices ONE line per bedroom count -- "all studios", "all one
+     beds" -- against a schedule with TWO studio variants and TWO one-bed
+     variants. rcsMatch looks a row up by bedrooms and baths, so one study line
+     is MEANT to price several rows. But it can only price rows that exist, and
+     on an empty form the study builds the roster itself: one row per line. Apply
+     the schedule after that and it writes units.0..N positionally over those
+     rows, so the one-bedroom figure ends up on the SECOND STUDIO and the two
+     real one-bed rows get nothing.
+
+     The chooser under each allowance cell then shows it: the studio row offered
+     "RCS report $75" -- the one-bedroom's allowance -- and had it selected,
+     while the one-bed rows offered no RCS figure at all even though rcsOf could
+     answer 75 for them. That divergence is the last assertion here, because a
+     chooser that disagrees with the matcher is the shape of the whole defect. */
+  console.log('\n─ two documents, four variants, both orders ─');
+  { const STUDY={units:[
+      {type:'Studio',  br:0,ba:1,count:'',proposed:1000,ua:50,safmr:'',safmr_base:''},
+      {type:'1BR/1BA', br:1,ba:1,count:'',proposed:1500,ua:75,safmr:'',safmr_base:''}],scalars:{}};
+    const SCHED={scalars:{'property.name':'Four Variants'},principals:[],ns8:[],nonrev:[],units:[
+      {type:'Studio A',br:'Studio',ba:1,count:10,rent:900, ua:41},
+      {type:'Studio B',br:'Studio',ba:1,count:20,rent:950, ua:42},
+      {type:'1BR A',   br:1,       ba:1,count:30,rent:1400,ua:71},
+      {type:'1BR B',   br:1,       ba:1,count:40,rent:1450,ua:72}]};
+    const offer=(i,kind)=>{const seg=app.__boxes(i).ua.split('data-uaopt=').find(x=>x.indexOf('"'+kind+'"')===0);
+      if(!seg)return null;const m=/\$([\d,]+)/.exec(seg.slice(0,220));return m?m[1]:null;};
+    const drive=async(name,order)=>{
+      const p=(await db.createProperty(name,name)).pid;
+      await app.__openForm(p);app.__newCycle({label:'TEST'});
+      const cs=app.__cids();await app.__openCycleForm(p,cs[cs.length-1]);
+      const rcs=()=>{app.__setRcsParsed(STUDY);app.__rcsFill();};
+      const rs =()=>{app.__setRsParsed(SCHED); app.__rsFill();};
+      if(order==='rcs-first'){rcs();rs();}else{rs();rcs();}
+      const U=app.__UNITS();
+      return {rows:U.length,
+        proposed:U.map(i=>app.getVal('units.'+i+'.proposed')),
+        ua:U.map(i=>app.uaResolvedOf(i)),
+        rcsOffer:U.map(i=>offer(i,'rcs')),
+        rsOffer:U.map(i=>offer(i,'exec')),
+        matcher:U.map(i=>app.__rcsOf('units.'+i+'.ua_rcs'))};};
+
+    const A=await drive('FourVariantsA','rcs-first');
+    eq('study first: the schedule\'s four rows survive',        A.rows,4);
+    eq('study first: each variant takes its own bedroom count\'s rent',A.proposed,['1000','1000','1500','1500']);
+    eq('study first: and its own allowance',                    A.ua,[50,50,75,75]);
+    eq('study first: the chooser offers the study figure on every row',A.rcsOffer,['50','50','75','75']);
+    eq('study first: and the schedule\'s own figure beside it',  A.rsOffer,['41','42','71','72']);
+
+    const B=await drive('FourVariantsB','rs-first');
+    eq('schedule first: four rows',                             B.rows,4);
+    eq('schedule first: the same rents',                        B.proposed,['1000','1000','1500','1500']);
+    eq('schedule first: the same allowances',                   B.ua,[50,50,75,75]);
+    eq('schedule first: the same offers',                       B.rcsOffer,['50','50','75','75']);
+    eq('schedule first: and the same schedule figures',         B.rsOffer,['41','42','71','72']);
+
+    /* The invariant the app already claims for scalar cells and never held for
+       the roster: "the order the two documents happen to be uploaded in cannot
+       change the result". */
+    eq('THE ORDER CANNOT CHANGE THE RESULT',JSON.stringify(A),JSON.stringify(B));
+    eq('and the chooser never disagrees with the matcher',A.rcsOffer,A.matcher.map(v=>v==null?null:String(v)));
+  }
+
+  /* ── a study line the reader could not place ──────────────────────────────
+     Peterson Plaza's shape. Its study prices two 1BR types, and the first
+     arrives as "IBR/1BA" -- a capital I for the digit -- so it has no bedroom
+     count and is not a candidate at all. The readable line was then the only
+     one, read as unanimous, and BOTH 1BR rows took its $2,025: the 100-unit row
+     should have had $2,050, and the schedule went out $2,550 short with nothing
+     said. Now the row whose unit count that unplaced line states is ambiguous,
+     so the form asks instead of guessing. */
+  console.log('\n─ a study line the reader could not place ─');
+  { const STUDY={units:[
+      {type:'IBR/1BA',  br:'',ba:'',  count:100,proposed:2050,ua:86, safmr:'',safmr_base:''},
+      {type:'1BR/1BA',  br:1, ba:1,   count:30, proposed:2025,ua:83, safmr:'',safmr_base:''},
+      {type:'3BR/1.5BA',br:3, ba:1.5, count:16, proposed:3250,ua:131,safmr:'',safmr_base:''}],scalars:{}};
+    const SCHED={scalars:{'property.name':'Peterson-shaped'},principals:[],ns8:[],nonrev:[],units:[
+      {type:'1BR/1BA A',br:1,ba:1,  count:100,rent:1900,ua:60},
+      {type:'1BR/1BA B',br:1,ba:1,  count:30, rent:1880,ua:71},
+      {type:'3BR/1.5BA',br:3,ba:1.5,count:16, rent:2900,ua:125}]};
+    const p=(await db.createProperty('PetersonShaped','PS1')).pid;
+    await app.__openForm(p);app.__newCycle({label:'TEST'});
+    const cs=app.__cids();await app.__openCycleForm(p,cs[cs.length-1]);
+    app.__setRsParsed(SCHED);app.__rsFill();
+    app.__setRcsParsed(STUDY);app.__rcsFill();
+    eq('the unreadable priced line is counted, once',app.__rcsUnplaced().length,1);
+    const m0=app.__rcsMatch(0),m1=app.__rcsMatch(1),m2=app.__rcsMatch(2);
+    T('the 100-unit row is ambiguous, not unanimous',m0.many&&m0.unplaced);
+    eq('and it names both candidates',m0.types,['1BR/1BA','IBR/1BA']);
+    eq('so it takes no rent rather than another type\'s',app.getVal('units.0.proposed'),'');
+    T('the 30-unit row is still unambiguous',!m1.many);
+    eq('and takes the figure its own line states',app.getVal('units.1.proposed'),'2025');
+    T('a bedroom count with one type is untouched',!m2.many);
+    eq('and keeps its rent',app.getVal('units.2.proposed'),'3250');
+    T('the study tile says a priced line could not be read',/could not read/.test(app.__rcsChecks()));
+  }
+
+  /* ── every spelling of a studio ───────────────────────────────────────────
+     '' from rcsBrOf does not mean "unknown", it means THIS LINE MATCHES NO ROW,
+     so anything it fails to recognise disappears from the study silently. */
+  /* ── A FILL RECORD BELONGS TO ONE PROPERTY AND ONE FILE ────────────────
+     The roster re-read that makes the two upload orders agree is gated on
+     _rcsFill, the record that the study has been APPLIED. openCycleForm cleared
+     the READINGS and left the RECORDS standing, so the record crossed from one
+     property to the next: measured on HEAD, property B -- whose study had only
+     been uploaded, never applied -- came out with the study's proposed rents on
+     every row the moment its schedule was filled. Applying a document the user
+     has not asked for, on a property they had not applied it to.
+
+     A page reload is the other half of this and only the browser suite can see
+     it; this is the half that is cheap to keep here. */
+  console.log('\n─ a fill record belongs to one property and one file ─');
+  { const STUDY={units:[
+      {type:'Studio',br:0,ba:1,count:'',proposed:1000,ua:50,safmr:'',safmr_base:''},
+      {type:'1BR',   br:1,ba:1,count:'',proposed:1500,ua:75,safmr:'',safmr_base:''}],scalars:{}};
+    const SCHED={scalars:{},principals:[],ns8:[],nonrev:[],units:[
+      {type:'Studio A',br:'Studio',ba:1,count:10,rent:900, ua:41},
+      {type:'Studio B',br:'Studio',ba:1,count:6, rent:950, ua:42},
+      {type:'1BR A',   br:1,       ba:1,count:12,rent:1400,ua:71},
+      {type:'1BR B',   br:1,       ba:1,count:4, rent:1450,ua:72}]};
+    const open=async name=>{const p=(await db.createProperty(name,name)).pid;
+      await app.__openForm(p);await app.__newCycle({label:'TEST'});
+      const cs=app.__cids();const cid=cs[cs.length-1];
+      await app.__openCycleForm(p,cid);return {p,cid};};
+    const proposed=()=>app.__UNITS().map(i=>String(app.getVal('units.'+i+'.proposed')||''));
+    const counts=()=>app.__UNITS().map(i=>String(app.getVal('units.'+i+'.num_units')||''));
+
+    /* A: the study is applied, then the schedule. M59's own case, as a control. */
+    const A=await open('Record owner A');
+    app.__setRcsParsed(STUDY);app.__rcsFill();
+    app.__setRsParsed(SCHED); app.__rsFill();
+    eq('the study reaches both variants of each type',proposed(),['1000','1000','1500','1500']);
+    const recA=app.__fillRecords();
+    eq('and the fill is recorded against the file it came from',recA.rcs&&recA.rcs.name,'study.pdf');
+    T('the record is stored with the package, not just held in memory',
+      !!((db.getCycleRcs(A.cid)||{}).fill));
+    /* Saved, because a record only outlives the page if what it describes does —
+       see the retirement rule below. This save is part of the setup, not a check. */
+    for(const i of app.__UNITS())
+      for(const f of ['proposed','br','ba','num_units'])await app.__saveField('units.'+i+'.'+f);
+
+    /* B: the study is UPLOADED and never applied. */
+    const B=await open('Record owner B');
+    app.__setRcsParsed(STUDY);
+    T('a study only uploaded claims no fill',!app.__fillRecords().rcs);
+    app.__setRsParsed(SCHED);app.__rsFill();
+    eq('its schedule still lays down the roster',counts(),['10','6','12','4']);
+    eq('but the study it never applied stays unapplied',proposed(),['','','','']);
+
+    /* …and re-opening A finds its own record again, not B's absence.
+       UPDATED 2026-07-30: this check used to pass on an UNSAVED fill, which was
+       the old behaviour and was wrong — a record that outlives the values it
+       describes made the study tile read "Filled 10 values — 3 still to save."
+       over a form showing none of them. A is saved above, so the record is still
+       true and must come back. */
+    await app.__openCycleForm(A.p,A.cid);
+    eq('re-opening the first package restores its own SAVED record',
+       (app.__fillRecords().rcs||{}).name,'study.pdf');
+    /* Replacing the document retires the record: a fill is about the file it
+       names, which is the rule fillNote has always used and the gate now does. */
+    app.__setRcsParsed(STUDY);
+    T('and replacing the study retires it',!app.__fillRecords().rcs);
+
+    /* ── and the record retires itself when the form no longer shows the fill ──
+       The other half of the same rule, and the reason the check above now says
+       SAVED. Applied and never saved, the values go back to what is on file the
+       moment the package is re-opened; the record must go with them. */
+    const D=await open('Record owner D');
+    app.__setRcsParsed(STUDY);app.__rcsFill();
+    eq('a fresh fill is claimed while it is on the form',
+       (app.__fillRecords().rcs||{}).name,'study.pdf');
+    await app.__openCycleForm(D.p,D.cid);
+    T('but an unsaved fill is retired when the package is re-opened',
+      !app.__fillRecords().rcs);
+  }
+
+  console.log('\n─ rcsBrOf ─');
+  eq('a studio arrives as the number 0',      app.__rcsBrOf({br:0}),'Studio');
+  eq('and as the word',                       app.__rcsBrOf({br:'Studio'}),'Studio');
+  eq('and as an efficiency',                  app.__rcsBrOf({br:'efficiency'}),'Studio');
+  eq('one bedroom',                           app.__rcsBrOf({br:1}),'1BR');
+  eq('nine bedrooms is not an option',        app.__rcsBrOf({br:9}),'');
+  eq('and nothing is nothing',                app.__rcsBrOf({br:''}),'');
 
   finish();
 })().catch(e=>fail('the suite threw before reaching its verdict',e));

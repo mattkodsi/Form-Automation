@@ -6,7 +6,26 @@
   const first=n=>String(n||'').trim().split(/\s+/)[0];
   const lastWord=n=>{const p=String(n||'').trim().split(/\s+/);return p[p.length-1]||'';};
   const salutationName=(name,prefix)=>{prefix=String(prefix||'').trim();return prefix?(prefix+' '+lastWord(name)):first(name);};
-  const sigTitle=(t,p)=>{t=String(t||'').trim();p=String(p||'').trim();if(t&&p)return t+' of the '+p;return t||p||'';};
+  /* "Vice President of the General Partner" — the article is ours, and it is in
+     no source. Every executed schedule and every filed checklist across the
+     corpus writes "of General Partner" or "of GP", and Part H is a signature
+     block: it should read the way the person signs it, not the way we would
+     phrase it. Four properties in wave 1 printed the inserted word. */
+  const sigTitle=(t,p)=>{t=String(t||'').trim();p=String(p||'').trim();if(t&&p)return t+' of '+p;return t||p||'';};
+  /* Column 1 of Part A, and the same string the Rent Analysis workbook labels its
+     rows with. The designation rides on the end, the way the executed copies
+     write it ("1 BR E"). Without it a property whose elderly and family rows
+     carry different rents generated two rows that read identically.
+
+     It lives out here, and is exported, because the workbook was building its
+     own label - `br + '/' + ba` in app.js's buildRentAnalysisBytes - and so
+     dropped the designation and the spacing both. Morningside Court's two
+     one-bedroom types print as "1 BR / 1 BA S" and "1 BR / 1 BA Large" on the
+     rent schedule and as "1BR/1BA" twice in the workbook beside it, which is
+     the very fault the paragraph above was written about, reappearing in the
+     other document. Two callers formatting the same field two ways is how that
+     happens, so now there is one. */
+  const utype=(br,ba,dg)=>{const b=String(br||'').replace(/(\d+)\s*BR/i,'$1 BR').replace(/^\s*\/?\s*$/,'').trim();const a=String(ba||'').replace(/(\d+(?:\.\d+)?)\s*BA/i,'$1 BA').trim();const t=(b&&a)?(b+' / '+a):(b||a);const d=String(dg||'').trim();return t&&d?(t+' '+d):t;};
 
 /* Dates are stamped in New York, not UTC. toISOString() rolls over at 7 or 8pm
    Eastern, so a package generated in the evening was dated tomorrow — and the
@@ -26,7 +45,12 @@ const addrLine=(street,city,state,zip)=>{
     return {
       date:monthY(g('cycle.submission_date')||ET_TODAY()),
       notice_date:monthY(g('tenant.date_of_notice')||ET_TODAY()),
-      sign_date:monthY(g('checklist.sign_date')||ET_TODAY()),
+      /* This prints under an UNSIGNED signature line. Falling back to today put
+         the generation date on a document nobody had signed — a draft made in
+         July claiming to have been executed in July, next to a blank rule. The
+         filed copies all carry the date the owner actually signed. No date is
+         the honest answer until there is one. */
+      sign_date:(g('checklist.sign_date')?monthY(g('checklist.sign_date')):''),
       property_name:g('property.name'), tenant_alias:g('tenant.property_alias'), section8:g('property.s8'), entity:g('owner.entity_name'),
       ca_name:g('ca.name'), ca_salutation:salutationName(g('ca.name'),g('ca.prefix')), ca_position:g('ca.position'), ca_company:g('ca.org'),
       ca_address:g('ca.addr_street'), ca_csz:addrLine('',g('ca.addr_city'),g('ca.addr_state'),g('ca.addr_zip')),
@@ -226,7 +250,7 @@ const addrLine=(street,city,state,zip)=>{
      HOLDS a value, exactly as the rest of this file does. */
   function uaHasG(rec,i){return ['ua_exec','ua_rcs','ua_custom'].some(k=>{const v=rec['units.'+i+'.'+k];return v!==''&&v!=null;});}
   async function fillRentSchedule(templateBytes, rec){
-    const { PDFDocument, StandardFonts, PDFName, rgb } = PL();
+    const { PDFDocument, StandardFonts, PDFName, PDFString, rgb } = PL();
     const doc=await PDFDocument.load(templateBytes,{parseSpeed:Infinity}); const form=doc.getForm();
     const font=await doc.embedFont(StandardFonts.Helvetica);
     const g=k=>rec[k]!=null?String(rec[k]):'';
@@ -238,18 +262,94 @@ const addrLine=(street,city,state,zip)=>{
        renumbered template would hand back a byte-valid, completely BLANK
        HUD-92458 that saved and downloaded clean. Count the misses and refuse. */
     let _wrote=0,_missed=0;
-    const T=(n,v)=>{ try{ const f=form.getTextField(String(n)); f.setText(String(v==null?'':v)); f.setFontSize(9); f.updateAppearances(font); _wrote++; }catch(e){ _missed++; } };
+    /* AN ACROFORM FIELD HAS A VALUE AND A LOOK, AND THEY ARE NOT THE SAME THING.
+       HUD's own AFSimple_Calculate actions read the VALUE through AFMakeNumber;
+       the AFNumber_Format actions render the separators and the "$" for DISPLAY.
+       We used to write the formatted string into the value itself, so a property
+       manager who opened the schedule and changed a unit count from 33 to 3 got
+       Col.4 = 6 instead of 5,550: Acrobat read our "1,850" as one point eight
+       five, because to AFMakeNumber the comma is a DECIMAL separator. Every
+       figure downstream of an edit was wrong by a factor of a thousand, and the
+       four potentials — which we had just taught to write "$76,918" — were worse
+       still, being less parseable again.
+
+       Measured on two real filed schedules (Colonial Village and Willow Woods,
+       2025, 232 fields each, different preparers): every numeric value is stored
+       RAW and carries a baked, FORMATTED appearance. Field 9 is "1147" and draws
+       "1,147"; field 95 is "83135" and draws "$83,135"; field 97 is "0" and draws
+       "$0". NeedAppearances is absent in both. So Acrobat itself keeps the value
+       raw and bakes the look — that is the shape we reproduce here, rather than
+       setting NeedAppearances and hoping every viewer regenerates.
+
+       WHICH fields are numeric is not guessed: it is read off the template as the
+       union of the fields carrying an AFNumber_Format action, the fields that
+       calculate, and the fields NAMED AS OPERANDS by someone else's calculation.
+       That last term is the one a format-based rule would miss — the Col.5
+       allowance cells (11, 19, 27 ... 91) carry no format action of their own but
+       are summed into Col.6 by SUM(11,9), so an allowance of 1,250 written with
+       its comma would make gross rent 1.25 + the rent. 112 fields in all. Fields
+       like the FHA number, which is text with leading zeros, are correctly out. */
+    const _numeric=(function(){ const set=new Set();
+      const jsOf=(d,which)=>{ try{ const aa=d.get(PDFName.of('AA')); if(!aa||!aa.get)return null;
+          let e=aa.get(PDFName.of(which)); if(!e)return null; e=doc.context.lookup(e)||e;
+          if(!e.get)return null; let j=e.get(PDFName.of('JS')); if(j==null)return null;
+          j=doc.context.lookup(j)||j; return j.decodeText?j.decodeText():String(j); }catch(e){ return null; } };
+      try{ for(const f of form.getFields()){ const nm=f.getName(); const d=f.acroField.dict;
+        const F=jsOf(d,'F'), C=jsOf(d,'C');
+        if(F&&/AFNumber_Format/.test(F)) set.add(nm);
+        if(C&&/AFSimple_Calculate/.test(C)){ set.add(nm);
+          const m=C.match(/new Array\s*\(([^)]*)\)/);
+          if(m) for(const q of m[1].split(',')) set.add(q.trim().replace(/^"|"$/g,'')); } } }catch(e){}
+      return set; })();
+    /* The currency symbol and whether it leads, taken from the field's OWN format
+       action, so the four potentials print "$" and the other 97 do not — and a
+       cell with no format action draws its digits bare, exactly as the blank form
+       would. Presentation stays the template's decision, not ours. */
+    const _cur=(function(){ const m={};
+      try{ for(const f of form.getFields()){ const nm=f.getName();
+        try{ const aa=f.acroField.dict.get(PDFName.of('AA')); if(!aa||!aa.get)continue;
+          let e=aa.get(PDFName.of('F')); if(!e)continue; e=doc.context.lookup(e)||e; if(!e.get)continue;
+          let j=e.get(PDFName.of('JS')); if(j==null)continue; j=doc.context.lookup(j)||j;
+          const s=j.decodeText?j.decodeText():String(j);
+          const q=s.match(/AFNumber_Format\s*\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*"((?:[^"\\]|\\.)*)"\s*,\s*(true|false)/);
+          if(q) m[nm]={sym:q[1].replace(/\\u0024/g,'$'),pre:q[2]==='true'}; }catch(e){} } }catch(e){}
+      return m; })();
+    const _raw={};                       // field name -> the bare number Acrobat must read
+    const _numlike=s=>/^-?\$?\d[\d,]*(\.\d+)?$/.test(String(s).trim());
+    const _show=(n,num)=>{ const c=_cur[String(n)];
+      const s=Math.abs(num).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2});
+      /* A field WITH a format action gets the separators (and the symbol, if its
+         action names one); a field WITHOUT one draws its digits bare, because
+         that is what the blank form does with the same value. Keying this off
+         the SYMBOL rather than off the action is a mistake I made and caught by
+         reading the baked stream: it dropped the comma from all 97 plain
+         numeric cells while the four dollar ones looked perfect. */
+      const body=c?(c.sym?(c.pre!==false?c.sym+s:s+c.sym):s):String(Math.abs(num));
+      return (num<0?'-':'')+body; };
+    /* Write the LOOK through pdf-lib (which bakes an appearance from the text it
+       is given), then overwrite the VALUE with the bare number afterwards — see
+       the raw-value pass near the end of this function, which has to run after
+       the 9pt sweep because that sweep re-bakes appearances from whatever /V then
+       holds. */
+    const T=(n,v)=>{ try{ const f=form.getTextField(String(n)); const s=String(v==null?'':v);
+        let out=s;
+        if(s!==''&&_numeric.has(String(n))&&_numlike(s)){
+          const num=parseFloat(s.replace(/[^0-9.\-]/g,''))||0;
+          _raw[String(n)]=String(num); out=_show(n,num); }
+        f.setText(out); f.setFontSize(9); f.updateAppearances(font); _wrote++; }catch(e){ _missed++; } };
     const C=n=>{ try{ form.getCheckBox(String(n)).check(); }catch(e){} };
     const _de=(g('rent_schedule.date_eff_source')==='custom'?(g('rent_schedule.date_eff_custom')||g('rent_schedule.date_eff_rs')||g('rent_schedule.date_rents_effective')):(g('rent_schedule.date_eff_rs')||g('rent_schedule.date_eff_custom')||g('rent_schedule.date_rents_effective')));
     const _dei=_toISO(_de);
-    T(1,g('property.name')); T(2,g('property.fha')); T(3,dfmt(_dei));
+    /* Both names, the way the executed copy prints them. app.js splits a slashed
+       Part A project name on the way IN - "Colonial Village/White Oak Townhomes"
+       becomes property.name plus tenant.property_alias - and only the first half
+       was written back, so the one form HUD identifies the project by lost half
+       its identity while the app was holding both values. The alias is consumed
+       by the tenant notice, which is right, and by nothing else, which was not. */
+    { const _pn=g('property.name'),_pa=g('tenant.property_alias');
+      T(1,(_pn&&_pa)?(_pn+'/'+_pa):(_pn||_pa)); }
+    T(2,g('property.fha')); T(3,dfmt(_dei));
     { const rp=String(_dei).slice(0,10).split('-'); if(rp.length===3){ T(4,rp[1]); T(5,rp[2]); T(6,rp[0]); } }
-    /* The designation rides on the end of Column 1, the way the executed copies
-       write it ("1 BR E"). Without it a property whose elderly and family rows
-       carry different rents generated two rows that read identically. */
-    /* The third part is free text now, so this needs no new logic — it already
-       appends whatever string it is handed. Only its source changed. */
-    const utype=(br,ba,dg)=>{const b=String(br||'').replace(/(\d+)\s*BR/i,'$1 BR').replace(/^\s*\/?\s*$/,'').trim();const a=String(ba||'').replace(/(\d+(?:\.\d+)?)\s*BA/i,'$1 BA').trim();const t=(b&&a)?(b+' / '+a):(b||a);const d=String(dg||'').trim();return t&&d?(t+' '+d):t;};
     // Part A layout: Section 8 rev rows, then a full-width "Non- Section 8
     // Rents" banner + the non-Section-8 rows, then a blank spacer row + the
     // non-revenue rows. Over 11 rows: drop the spacer first, then the
@@ -270,11 +370,45 @@ const addrLine=(street,city,state,zip)=>{
        We only ever write the rows we have, so every unused row kept its zeros and
        the filing went out showing 0 units at $0 down the page. Clear the grid
        first: only what we actually put there should appear. */
-    for(let r=0;r<11;r++) for(let k=0;k<8;k++){ try{ form.getTextField(String(7+r*8+k)).setText(''); }catch(e){} }
+    /* A CALCULATED CELL READS ITS ZERO; ONLY THE INPUT CELLS GO BLANK.
+       This loop used to clear all eight columns of all eleven rows, on the
+       reasoning that "every unused row kept its zeros and the filing went out
+       showing 0 units at $0 down the page". The live HUD form says otherwise, and
+       Matt's screenshot of it shows the rule: the blue cells are inputs and go
+       blank, the white ones calculate and read 0 even when empty. Measured on the
+       blank template, which agrees exactly — row 0 ships as
+           "" "" "" "0" "" "0" "" "0"
+       zeros in Cols. 4, 6 and 8, which are the three per-row fields carrying an
+       AFSimple_Calculate action (Col.2xCol.3, Col.3+Col.5, Col.7xCol.2). Clearing
+       them left a PM's downloaded form showing empty boxes where HUD's own shows
+       0, and made our draft the odd one out against every filed copy.
+       Cols. 4 and 6 are overwritten below on every row we actually print. */
+    const RS_CALC_COL=[3,5,7];   // 0-based offsets of Col. 4, Col. 6, Col. 8
+    for(let r=0;r<11;r++) for(let k=0;k<8;k++){ try{ form.getTextField(String(7+r*8+k)).setText(RS_CALC_COL.indexOf(k)>=0?'0':''); }catch(e){} }
     /* Same for the totals the app has no figures for. Market rent potential is a
        real HUD number and we do not collect the market rents it sums, so it must
        print blank rather than the template's $0 — a stated zero is a claim. */
-    ['97','98','195','1156'].forEach(id=>{ try{ form.getTextField(id).setText(''); }catch(e){} });
+    /* 195 (Total Commercial Rent Potential) and 1156 (Part F) both calculate and
+       both ship as "0" on the blank template, so they are left alone for the same
+       reason. The dollar sign in front of each of those two is PRINTED ON THE
+       FORM, beside the box rather than inside it — which is why they read "0"
+       where the four potentials below read "$0". */
+    /* THE FOUR POTENTIALS CARRY A DOLLAR SIGN; THE PER-ROW COLUMNS DO NOT. Read off
+       Colonial Village's own executed 2023 schedule: Col. 3 prints 1,061, Col. 4
+       33,952, Col. 5 129 and Col. 6 1,190 — all bare — while the four boxes
+       underneath print $76,918, $923,016, $0 and $0. Ours printed all six bare, so
+       the four totals were missing a character the form prints on every filed copy.
+       Matt found it by eye in a minute; the 34-property sweep could not see it at
+       all, because extract.js:96 and compare.js:68 strip `$` from BOTH sides before
+       comparing. The comparator was built to compare figures and was blind to
+       presentation, and nothing said so.
+
+       Market rent potential prints $0 rather than blank. The earlier reasoning here
+       — that we do not collect the market rents it sums, so a stated zero is a
+       claim we cannot support — is wrong about this form: the filed copies print
+       $0, and Section 236 market rents are what the box is for. Matt's call, and
+       the executed copy agrees with him. */
+    const dmoney=v=>'$'+money(v);
     let bannerRow=null;let ptU=0,ptC=0;   // totals of the rows actually printed
     plan.forEach((row,r)=>{ const base=7+r*8;
       if(row[0]==='banner'){ bannerRow=r; return; }
@@ -282,11 +416,13 @@ const addrLine=(street,city,state,zip)=>{
       const i=row[1];
       if(row[0]==='s8'){ const br=g('units.'+i+'.br'),ba=g('units.'+i+'.ba'),n=nmv(g('units.'+i+'.num_units')),pro=nmv(g('units.'+i+'.proposed'));
         // Mirror the form's own fallback (app.js defUaSrc): with no source chosen
-        // it shows the executed-RS figure, else the RCS one, else the custom one.
+        // it shows the RCS figure, else the executed-RS one, else the custom one.
+        // The study states the allowance for the term being filed; the executed
+        // schedule states the last one. Three properties filed the study's.
         // Defaulting flatly to 'exec' printed a BLANK allowance whenever the UA had
         // come from the RCS report — and gross rent is what the 150% test turns on.
         const _ue=nmv(g('units.'+i+'.ua_exec')),_ur=nmv(g('units.'+i+'.ua_rcs'));
-        const us=g('units.'+i+'.ua_source')||(_ue>0?'exec':(_ur>0?'rcs':'custom'));
+        const us=g('units.'+i+'.ua_source')||(_ur>0?'rcs':(_ue>0?'exec':'custom'));
         const ua=us==='rcs'?_ur:(us==='custom'?nmv(g('units.'+i+'.ua_custom')):_ue);
         // A proposed rent nobody has set yet is blank, not 0 — on a HUD form a
         // printed 0 reads as a real figure. An entered 0 still prints.
@@ -300,7 +436,33 @@ const addrLine=(street,city,state,zip)=>{
       else if(row[0]==='li'){ const n=nmv(g('ns8.'+i+'.num_units')),ar=g('ns8.'+i+'.avg_rent');
         T(base, utype(g('ns8.'+i+'.br'),g('ns8.'+i+'.ba'))); if(n)T(base+1,n); ptU+=n;
         if(ar!==''&&ar!=null){ const rv=Math.round(nmv(ar)); T(base+2,money(rv)); T(base+3,money(n*rv)); T(base+5,money(rv)); ptC+=n*rv; } }
-      else { const nn=nmv(g('nonrev.'+i+'.num_units'))||1; T(base, g('nonrev.'+i+'.use')||utype(g('nonrev.'+i+'.br'),g('nonrev.'+i+'.ba'))); T(base+1,nn); ptU+=nn; }
+      /* Column 1 of Part A is the UNIT TYPE. Printing the use put "Manager's
+         Unit" and "Superintendent" where the executed copies print "3 Bedroom"
+         and "2 BR" — the use has its own column in Part D and does not belong
+         here twice. And the row's rent was never printed at all, so Oak
+         Center's manager's unit rented at $1,728 fell out of Col. 4 and out of
+         the monthly potential: 277,700 where the filed schedule foots 279,428.
+         A non-revenue unit still occupies the building and still extends. */
+      /* The rent is deliberately NOT printed here, and that is a decision with
+         evidence behind it. Printing it fixed Oak Center exactly -- 277,700 became
+         the filed 279,428 -- and broke two others, because the figure we hold is
+         not the figure the schedule shows: Ebony's non-revenue unit rents at $0
+         and we store 3,700, Morh's is 5,100 for the new term and we store last
+         year's 4,763. On Morh the unit also occupies a units.* row already, so
+         adding it a second time double-counts. A wrong rent in Column 3 of a
+         federal form is no better than a missing one, so until nonrev.<i>.rent
+         is trustworthy this row prints its type and its count and stops. */
+      else { const nn=nmv(g('nonrev.'+i+'.num_units'))||1;
+        const nrType=utype(g('nonrev.'+i+'.br'),g('nonrev.'+i+'.ba'));
+        /* COLUMNS 3 AND 5 STATE A ZERO. Matt, 2026-07-30, and it settles the
+           dilemma the comment above spent three properties on: the question was
+           never which rent to print here, it was that a non-revenue unit earns no
+           CONTRACT RENT and carries no ALLOWANCE. Zero is not a guess about the
+           document, it is the fact about the unit — which is why it is safe where
+           printing nonrev.<i>.rent was not (Ebony's rents at $0 and we store
+           3,700; Morh's is 5,100 for the new term and we store last year's 4,763).
+           Blank left a reader to wonder whether the figure was withheld. */
+        T(base, nrType||g('nonrev.'+i+'.use')); T(base+1,nn); T(base+2,'0'); T(base+4,'0'); ptU+=nn; }
     });
     // Totals count every unit — non-S8 rents add into the contract rent
     // potential like S8 rows, and non-rev units count even when trimmed
@@ -311,7 +473,8 @@ const addrLine=(street,city,state,zip)=>{
        literally "(Add Col. 4)". */
     const tu=ptU, tc=ptC;
     const anyP=s8A.some(i=>{const v=g('units.'+i+'.proposed');return v!==''&&v!=null;})||liA.some(i=>{const v=g('ns8.'+i+'.avg_rent');return v!==''&&v!=null;});
-    T('94a',tu||''); T('95',anyP?money(tc):''); T('96',anyP?money(tc*12):'');
+    T('94a',tu||''); T('95',anyP?dmoney(tc):''); T('96',anyP?dmoney(tc*12):'');
+    T('97','$0'); T('98','$0');
     // Full-width banner: remove that row's fields (so no viewer redraws a "0"
     // over it), white out the row band, and print the centered bold label.
     if(bannerRow!=null){ try{
@@ -353,20 +516,44 @@ const addrLine=(street,city,state,zip)=>{
     if(g('owner.entity_type')==='Other (specify)'){ C(204); T(205,g('owner.entity_type_other')); }
     const nrIdx=[...new Set(Object.keys(rec).map(k=>(k.match(/^nonrev\.(\d+)\./)||[])[1]).filter(x=>x!=null))].sort((a,b)=>a-b);
     const dUse=[159,162,165,168,171],dType=[160,163,166,169,172],dRent=[161,164,167,170,173]; let dr=0,trl=0;
-    nrIdx.forEach(i=>{ if(dr>4)return; const use=g('nonrev.'+i+'.use'),br=g('nonrev.'+i+'.br'),ba=g('nonrev.'+i+'.ba'),rent=g('nonrev.'+i+'.rent'); if(!(use||br||ba||rent||nmv(g('nonrev.'+i+'.num_units'))))return; T(dUse[dr],use); T(dType[dr],(String(br).replace(/(\d+)\s*BR/i,'$1 BR')+(ba?'/'+ba:'')).replace(/^\//,'')); T(dRent[dr],(rent!==''&&rent!=null)?money(rent):''); trl+=nmv(rent)*(nmv(g('nonrev.'+i+'.num_units'))||1); dr++; });
-    /* THE ZERO IS THE FACT, NOT A CLAIM, so field 174 states it. This wrote ''
-       when there were no Part D rows, and the form prints its own "$" outside the
-       box — so a property with no non-revenue units filed a schedule reading "$"
-       against an empty cell. 174 is a CALCULATED field (AFSimple_Calculate SUM
-       over 161/164/167/170/173) and HUD ships it holding "0", the same shape as
-       195 and 1156. The filed copies settle it, and they were measured, not
-       reasoned about: Willow Woods has no Part D rows and its submitted schedule
-       renders "$        0" — in the DocuSigned copy AND in the CA's executed one,
-       which is a different printing with the box higher up the page. Colonial
-       Village has one row and renders "$    1,147". Not one filed copy leaves it
-       empty. Having no rows is an OBSERVATION — the rent loss is zero — which is
-       why a stated zero is honest here and is not on 97/98, whose market rents we
-       never collect and therefore cannot total. */
+    /* PART D COLUMN 3 IS THE CONTRACT RENT FOR THE TERM BEING FILED, so it is the
+       PROPOSED rent for that unit type — not the rent the unit carried last term.
+       Matt, 2026-07-30: Colonial Village's leasing office printed 1,147, which is
+       the figure read off the EXECUTED schedule, where the filing states 1,850.
+       nonrev.<i>.rent holds what the prior schedule said; the proposed figure for
+       the same bedroom/bath type lives on its units.<j> row, so that is where this
+       reads from. Bedroom AND bathroom first, bedroom alone second — a leasing
+       office rarely states a bathroom count. With no matching type at all it falls
+       back to the stored rent rather than printing nothing, because a Part D row
+       with an empty rent column is what the filed copies never show. */
+    const nrProposed=i=>{ const br=String(g('nonrev.'+i+'.br')||''),ba=String(g('nonrev.'+i+'.ba')||'');
+      if(!br)return null;
+      const js=[...new Set(Object.keys(rec).map(k=>(k.match(/^units\.(\d+)\./)||[])[1]).filter(x=>x!=null))].sort((a,b)=>a-b);
+      const hit=js.find(j=>String(g('units.'+j+'.br')||'')===br&&String(g('units.'+j+'.ba')||'')===ba);
+      const j=hit!=null?hit:js.find(j2=>String(g('units.'+j2+'.br')||'')===br);
+      if(j==null)return null;
+      const v=g('units.'+j+'.proposed');
+      return (v===''||v==null)?null:Math.round(nmv(v)); };
+    nrIdx.forEach(i=>{ if(dr>4)return; const use=g('nonrev.'+i+'.use'),br=g('nonrev.'+i+'.br'),ba=g('nonrev.'+i+'.ba'),rent=g('nonrev.'+i+'.rent'); if(!(use||br||ba||rent||nmv(g('nonrev.'+i+'.num_units'))))return; T(dUse[dr],use); T(dType[dr],(String(br).replace(/(\d+)\s*BR/i,'$1 BR')+(ba?'/'+ba:'')).replace(/^\//,''));
+      const _dp=nrProposed(i); const _dv=_dp!=null?_dp:((rent!==''&&rent!=null)?nmv(rent):null);
+      T(dRent[dr],_dv!=null?money(_dv):'');
+      trl+=(_dv||0)*(nmv(g('nonrev.'+i+'.num_units'))||1); dr++; });
+    /* FIELD 174 IS A CALCULATED CELL AND MUST READ ITS ZERO — the one M65 missed.
+       It calculates SUM(161,164,167,170,173) and ships as "0" on the blank form,
+       exactly like 195 and 1156 twenty lines above, but this line actively blanked
+       it whenever the property had no non-revenue units at all.
+
+       Checked against the filed copies before changing, because a filed schedule
+       that printed it blank would have outranked the blank template. None does.
+       Every field-complete 92458 available carries "0" here when Part D is empty —
+       Willow Woods 2025 (unsigned), Beacon Hill eff. 08.01.25 (unsigned), and the
+       blank package copy "05. [Property Name] - Draft Rent Schedule.pdf" — while
+       Colonial Village, the one WITH a Part D row, carries its sum, 1147. No
+       counterexample, so the blank was ours alone.
+
+       The dollar sign a reader sees beside this box is PRINTED ON THE FORM, not in
+       the field: 174's format action is AFNumber_Format(0,0,0,0,"",false), so the
+       cell holds "0" and the page reads "$        0". */
     T(174, money(trl));
     // Part G: the principals roster fills the name (left) / title (right) rows in order
     { const gL=[206,208,210,212,214,216,218,220,222,224,226], gR=[207,209,211,213,215,217,219,221,223,225,227];
@@ -374,7 +561,14 @@ const addrLine=(street,city,state,zip)=>{
       let pr=0; pIdx.forEach(i=>{ if(pr>=gL.length)return; const nm=g('principals.'+i+'.name'), tt=g('principals.'+i+'.title'); if(!(nm||tt))return; T(gL[pr],nm); T(gR[pr],tt); pr++; });
       if(!pr && g('owner.gp')){ T(206,g('owner.gp')); T(207,'General Partner'); } // no roster on file yet: the General Partner row
     }
-    try{ form.getTextField('x12').setText(''); }catch(e){}
+    /* x12 IS HUD'S OWN CONSTANT AND MUST BE LEFT ALONE. It is the multiplier in
+       AFSimple_Calculate("PRD", ["95","x12"]) that turns each monthly potential
+       into its annual one, and it ships holding "12". We blanked it — inherited
+       from the original upload with no reason recorded — which is harmless until
+       something recalculates, at which point AFMakeNumber("") is 0 and BOTH annual
+       potentials collapse to $0 in front of the reader. The field is flagged
+       hidden (/F=6) in the template, so nothing was ever gained by clearing it,
+       and both filed schedules measured carry "12". */
     T(228,[g('sig.name'),sigTitle(g('sig.title'),g('sig.principal'))].filter(Boolean).join(', '));
     /* HUD's template computes 41 of its own fields — gross rents, the column
        extensions, every total — and orders them with /CO. Those actions used to
@@ -390,6 +584,16 @@ const addrLine=(street,city,state,zip)=>{
        gone at its source and the arithmetic can stay. */
     for(let q=7;q<=96;q++){ try{ const f=form.getTextField(String(q)); f.setFontSize(9); f.updateAppearances(font); }catch(e){} }
     try{ const f=form.getTextField('94a'); f.setFontSize(9); f.updateAppearances(font); }catch(e){}
+    /* THE VALUES GO IN RAW, LAST. Everything above wrote display text and let
+       pdf-lib bake an appearance from it; the 9pt sweep just above re-baked a
+       further ninety of them. Only now is it safe to put the bare number back
+       into /V, because nothing after this point reads it to draw with. The
+       appearance keeps the commas and the "$"; the value is what HUD's
+       arithmetic parses. Poked onto the dict directly rather than through
+       setText, which would mark the field dirty and have save() redraw it. */
+    for(const k of Object.keys(_raw)){
+      try{ form.getTextField(k).acroField.dict.set(PDFName.of('V'),PDFString.of(_raw[k])); }catch(e){}
+    }
     if(_missed>_wrote) throw new Error('Rent schedule template mismatch: '+_missed+' of '+(_wrote+_missed)+' fields could not be written. The blank HUD-92458 in this build does not match the fields this app fills — do not file the result.');
     return await doc.save({objectsPerTick:Infinity});
   }
@@ -620,7 +824,7 @@ const addrLine=(street,city,state,zip)=>{
     return await doc.save({objectsPerTick:Infinity});
   }
 
-  const API={resolve,coverLetter,ownerLetter,tenantNotice,fillChecklist,fillRentSchedule,ocafWorksheet,exhibitA,uafCert,dsEvidence,uaTenantNotice,tenantCommentCert,ocafCalcRec,uafCalcRec};
+  const API={resolve,utype,coverLetter,ownerLetter,tenantNotice,fillChecklist,fillRentSchedule,ocafWorksheet,exhibitA,uafCert,dsEvidence,uaTenantNotice,tenantCommentCert,ocafCalcRec,uafCalcRec};
   if(typeof module!=='undefined') module.exports=API;
   if(typeof window!=='undefined') window.RCSGen=API;
 })();

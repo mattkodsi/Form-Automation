@@ -19,7 +19,21 @@ d="$(cd "$(dirname "$0")" && pwd)"     # app/full-mp
 # chromium, pressing real keys. It is the only suite that can see whether a
 # keystroke ever REACHES the code the others test. Where no chromium is
 # installed it skips loudly — never as a pass.
-suites="test_db.js test_interactions.js smoke_combined.js test_gen.js test_rcs.js test_hap.js test_browser.js"
+# The corpus suites live one directory down. They are hermetic: test_extract.js
+# reads the filed Colonial Village package committed under _archive/, and
+# test_compare.js builds its own fixtures. test_safety.js skips its Drive-mount
+# check loudly on a machine that has no mount, so it gates everywhere.
+# corpus/test_look.js is the render-and-look instrument (look.js / rdiff.js).
+# It builds its own PDFs byte by byte so every coordinate it asserts is one it
+# computed, and it skips LOUDLY where poppler is not installed - a missing
+# pdftoppm must never read as a pass, because the whole point of these two
+# tools is that a check which sees nothing has to say so.
+#
+# test_shots.js drives the same headless chromium and PHOTOGRAPHS the app -
+# the one question the DOM cannot answer is what the rendering looks like.
+# It fails loudly where no chromium is installed rather than skipping: a
+# screenshot suite that renders nothing has verified nothing.
+suites="test_crypto.js test_db.js test_interactions.js smoke_combined.js test_gen.js test_rcs.js test_hap.js test_browser.js test_shots.js corpus/test_safety.js corpus/test_compare.js corpus/test_extract.js corpus/test_look.js"
 failed=""
 
 for s in $suites; do
