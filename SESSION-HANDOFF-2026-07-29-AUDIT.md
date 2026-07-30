@@ -206,7 +206,7 @@ A wave marks a property `audited` only when its agent returned rows.
 | 23 | 75708 | Colonial Village | unaudited | |
 | 24 | 75830 | Clinton Manor | **audited** | 1 |
 | 25 | 75831 | Friendship Court | unaudited | |
-| 26 | 75832 | Newberry Arms | unaudited | |
+| 26 | 75832 | Newberry Arms | **audited** | 8 |
 | 27 | 75833 | Circle Park | **audited** | 1 |
 | 28 | 75917 | Peterson Plaza | **audited** | 0 |
 | 29 | 75919 | Northgate Terrace CA | unaudited | |

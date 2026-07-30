@@ -1580,3 +1580,154 @@ and still produces the wrong draft schedule. It also cannot detect that this cyc
 decrease**, which changes the tenant notice's governing rule from 24 CFR 245.310 to **245.410**.
 Same shape on 333 Holly, where FY25 has no UA schedule at all and only Exhibit A states the
 figures.
+
+---
+
+# WAVE 7 — 2026-07-30 · The Pines · Colonial Village · Friendship Court · Newberry Arms · Northgate Terrace CA
+
+Two defects shipped: `1b3b883`, `b68833c` (+ `691d765`, the bundle whose delivery lost a coin toss).
+
+## M41 — a box that reached into the next printed row, and read itself backwards · **FIXED `1b3b883`**
+
+Two faults, one symptom, and the symptom reached every generated document and all three
+filenames on four properties.
+
+**The geometry.** Field 1, the Project Name, is 23pt tall in our own blank where fields 2 and 3
+beside it **on the same printed row** — the FHA number and the effective date — are 19pt. Its
+floor therefore sits 4pt lower, which on this form is most of a row, and the
+`Part A - Apartment Rents` divider prints its baseline 1.95pt **inside** field 1's window.
+
+**The order.** `rsMapRects` sorted its runs by descending baseline. Right for a level page,
+wrong for a scanner's text layer: 333 Holly prints `333 Holly fka Holly Creek II` on one line
+and its OCR layer gives that line four baselines within 2.16pt, so height order returned
+`11 | fka Creek | 333 | Holly Holly`. The `11` is the scanner reading the roman numeral II at a
+third the font size of its neighbours. `rsLines` had already solved this for the HAP-number
+label; `rsMapRects` never got the same treatment.
+
+The clamp needs no threshold: **a box is clamped to the shallowest floor on its own printed
+row.** Only 12 of the 95 rows on page 1 disagree about their floor at all, 11 of them by about a
+point — sloppiness far too small to reach another row, since rows are 10–12pt apart. Field 1's
+row is the only one that disagrees by enough to matter, which is why it was the only one
+misreading.
+
+Measured across all 34 properties: 8 change, none regress. The wins go well past the names —
+
+| | before | after |
+|---|---|---|
+| Shiloh Village, 333 Holly, The Pines — a unit type | `BR3` | `3BR` |
+| Shiloh Village — effective date | `1/5/` | `5/1/` (**month and day were transposed**) |
+| Oaks on North Plaza — first principal | `onPlazaNorthGP, LLC` | `onNorthPlazaGP, LLC` |
+| The Pines — limited partner | `FargoAffordableDevelopmentCorporationLimitedPartnerHousingCommunity` | in order |
+| Shiloh Village — project name | `ShilohVillageApts.      PartA-ApartmentRents` | `ShilohVillageApts.` |
+
+## M50 — the form's own printed lines were arriving as data · **FIXED `b68833c`**
+
+`rsDropTplLabels` drops a label by finding it **where the template prints it**. Right on a page
+laid out like the template; finds nothing on a page that is not. So declining the misaligned
+pages (`43258e0`) only moved the swallow to tier 3 — Shiloh came back from OCR as
+`Shiloh Village Apts. Part A Apartment Rents Show the actual` — and the M41 clamp could not
+reach 333 Holly or The Pines, where the divider prints **above** the row-mates' floor.
+
+Text reaches all of them: whatever coordinates it arrived at, a line reproducing one of the
+blank form's own printed lines is the form talking. One helper, both tiers, so a page cannot be
+scrubbed one way on the text path and another after OCR. An 8-character floor keeps it away
+from short values (the divider normalises to 19 characters, `N/A` to 2), and the match is on a
+whole line, so `Part A Apartments LLC` survives.
+
+The names finish here — 333 Holly `333HollyfkaHollyCreek 11`, The Pines
+`ThePinesfkaWoodGlenApartments` — and **verified end to end through tier 3**: re-driving Shiloh
+Village now names its documents `Shiloh Village Apts.`, exactly what the executed schedule's
+Part A prints.
+
+The larger surprise is how much boilerplate had been arriving as data on 8 properties, with no
+real value lost:
+
+- **`Disposal` and `Tennis Courts` were being read as TICKED Part B boxes** on Westwood Village,
+  Riverwood, Mapleview Towers and Market Square — the form claimed a disposal and a tennis court
+  were included in the rent. This is precisely the fault `rsDropTplLabels`' own comment
+  describes, surviving where position cannot see it.
+- **`NameandTitle`**, the Part G column header, was the name of every **empty** principal row —
+  four each on Shiloh Village and The Pines — and rode on the end of the real ones.
+- `TypeofEntity` as an entity value; `Worksheet (to be completed by HUD or lender)`,
+  `Enter Maximum Allowable Monthly Rent`, `Potential From Rent Computation` and `Potential` as
+  Part F figures; `Total Commercial Rent $0` now reads `$0`.
+
+## M51 — the workbook prints a fabricated rent increase · **OPEN, highest consequence in the wave**
+
+Newberry Arms' prior schedule could not be read (7 of 8 anchors), so Current Rent `D9:D12` is
+empty. The delta cells are unconditional formulas over that column: `J22 = J20-I20` with
+`I20 = 0`, so the delivered workbook prints a monthly increase of **$87,900** against a true
+**$23,748** — the entire gross potential presented as the increase, a **3.7× overstatement** —
+with `M22 = $1,054,800` and `#DIV/0!` in the percentage cells beside it.
+
+**This is the app stating something false rather than omitting it**, and it is why "the prior
+schedule was not read" cannot be filed as merely incomplete output. It generalises to every
+property whose prior schedule is unreadable. A blank would be honest.
+
+## M52 — a two-appraiser signature block loses the appraiser's name · **OPEN, two properties**
+
+`rcs.js readSignature` scans the lines after "Sincerely," and requires a 2–4-token name. Belfry
+signs some letters in **two columns**, so the assembled line carries both appraisers:
+`Aaron M. Zabel   Rachel A Walsh` on Newberry Arms, `Aaron M. Zabel   Matthew A. Polnow` on
+Morningside Court. Five or six tokens, so the regex rejects it, the following lines are caught
+by the `license|certified|president|associate` skips, and the window is exhausted. `appr.firm`
+survives because it comes from the letterhead.
+
+`appr.name` is a requirement of the **owner cover letter**, so on both properties this alone
+withholds a document. Two properties, one mechanism, and the runs carry the x positions needed
+to split the columns.
+
+## M53 — one unreadable source disarms the allowance review gate · **OPEN**
+
+`score.js` raises the allowance caveat only when `ua_exec` **and** `ua_rcs` are both present.
+Newberry Arms' allowance changes on all four types and the 4BR **decreases** $158 → $147 — the
+case where owner review matters most — and because `ua_exec` was empty the study's figure was
+adopted in silence. The team recognised it and served a 24 CFR 245.420 notice. Every gate keyed
+on "both sources present" fails the same way.
+
+## CORRECTION — "Part I HAP number blank (7 properties)" is largely NOT a defect
+
+Page 3 of the schedule prints its own instruction: *"Part I. Do not complete this Part. The HUD
+Field Office/lender will complete this part."* On Newberry Arms the owner's 10/30 copy is
+correctly blank and the contract administrator wrote `SC16-0061-002` on 11/18. So a blank Part I
+in an owner's submission is right, and the HAP number only ever appears in the returned copy.
+Market Square's audit says the same of **Part F** (*"Part F. Do not complete this Part."*).
+Before anything is "fixed" to fill either, read the form's own instruction. What remains of M42
+is Parts **G and H**, which the owner does complete.
+
+## team wrong — a tenant notice names the wrong property
+
+**Newberry Arms' UA-decrease notice tells its residents that "tenants of _Clinton Manor_" may
+inspect the materials and submit comments** — twice, in the two 24 CFR 245.420 participation
+sentences — while the address, property name, contract number and the $158→$147 figure are all
+correctly Newberry's. Clinton Manor is Belfry job 25-093 to Newberry's 25-095, the adjacent job
+in one engagement on the same `SC16-0061-xxx` contract series. Clinton Manor's own notice and
+Friendship Court's are both clean, so this is a one-directional copy-forward that survived to
+service.
+
+It also shows the corpus loop's blind spot: the file sits in a `UA Baseline/` subfolder the
+manifest does not enumerate, in a `.doc` the extract pipeline never opens, in a document type
+the RCS flow does not generate — three independent reasons the sweep could never have reported
+it, on the property the sweep called quietest in the wave. *(Read with a text extractor, not a
+rendered page, because a `.doc` has none. A human should confirm before acting.)*
+
+Also: the filed tenant notice and the decrease letter both drop "Drive" from
+`186 Newberry Arms Drive`; and the contract administrator's own notification page carries a dead
+entity name, `Newberry Arms Limited Partnership`, against Part G's `Newberry SC Preservation,
+L.P.`
+
+## A difference count is not a measure of agreement — twice confirmed
+
+Newberry Arms was the **lowest** count in the wave at 18, and 14 of the 18 are noise: 8 are
+`missing-theirs` on figures the filed workbook plainly carries (its UA header is
+`"Proposed ⏎UA"` with an embedded newline, and its SAFMR column stores the 150% value from a
+`{base*1.5}` formula while the comparator looks for the base), and 4 are the unit-type label
+where ours uses the study's spelling and theirs the HUD Column 1 spelling — both internally
+correct. The comparator ran 26 comparisons and **all 26 were against the workbook**, because
+five of six documents were withheld. Zero wrong dollar figures were found by the comparator on
+a property where the app prints a $87,900 increase that does not exist.
+
+Verified right, and worth stating: the 150% test agrees across all three sides on a **$306/month
+margin** ($95,814 < $96,120), which is the sharpest available test of `592101a`, and the
+`_snap-w6` copy of this workbook shows the pre-fix SAFMR as **787.3333333333334** — a repeating
+decimal in a rent cell.
