@@ -241,6 +241,49 @@ function makeSupabaseDb(client) {
     const e = new Error('A property named \u201c' + String(name).trim() + '\u201d already exists.');
     e.code = 'DUP_PROPERTY_NAME'; e.pid = clash.id; e.dupName = String(name).trim(); throw e;
   };
+  /* ---- one package per programme per effective date ----
+     Matt, on the hierarchy: a year's line holds that year's package, and you pick
+     the latest rather than choosing from a list. That needs a uniqueness rule, and
+     the rule is NOT "one package per year".
+
+     Two reasons it is not. Sample Property (90111) genuinely carries two startable
+     rows in one calendar year — OCAF effective 2026-09-01 and OCAF 2026-12-06 — so
+     a year key would let it hold only one of its two real packages, which is the
+     bug hap.js already goes out of its way to avoid. And the utility allowance can
+     be done either alongside the rent action or on its own, so one effective date
+     may legitimately carry {rcs, uaf} as a single package OR {rcs} and {uaf} as
+     two.
+
+     Both fall out of keying on the PROGRAMME within the date: for one property and
+     one effective date, each programme appears in at most one package. {rcs+uaf}
+     passes. {rcs} then {uaf} passes. {rcs} then {rcs} does not, and neither does
+     {rcs} then {rcs+uaf}.
+
+     A package with no effective date cannot be keyed, so it is not guarded — there
+     is nothing to be unique against. Existing data is not rewritten: this stops new
+     collisions, it does not clean up old ones.
+
+     The error carries the cid of the package already holding the programme, so the
+     caller can open THAT rather than report a failure — the same courtesy
+     assertNameFree extends for a duplicate property name. */
+  const PROGS_OF = c => String((c && c.programs) || '')
+    .split(',').map(x => x.trim().toLowerCase()).filter(Boolean);
+  const assertProgramsFree = (pid, effIn, progs, skipCid) => {
+    const eff = cyISO(effIn); if (!eff) return;
+    const want = (progs || []).map(x => String(x).trim().toLowerCase()).filter(Boolean);
+    if (!want.length) return;
+    for (const cid in D.cycles) {
+      if (cid === skipCid) continue;
+      const c = D.cycles[cid];
+      if (!c || c.property_id !== pid || cyISO(c.effective_date) !== eff) continue;
+      const clash = want.filter(x => PROGS_OF(c).indexOf(x) >= 0);
+      if (!clash.length) continue;
+      const e = new Error('A ' + clash.join(' + ').toUpperCase()
+        + ' package effective ' + eff + ' already exists for this property.');
+      e.code = 'DUP_PACKAGE_PROGRAM'; e.cid = cid; e.programs = clash; e.effective = eff;
+      throw e;
+    }
+  };
   /* The ring is the DOMINANT PACKAGE's score — see score.js. It used to be ten
      durable keys, counted, which is why a property could read 100% with the
      draft rent schedule and the tenant notice unbuildable: those ten were never
@@ -541,6 +584,7 @@ function makeSupabaseDb(client) {
       createCycle(pid, opts) {
         const p = D.props[pid]; if (!p) throw new Error('no property ' + pid);
         const o = opts || {}; const cid = cyUuid(); const cells = {};
+        assertProgramsFree(pid, o.effective_date, o.programs || ['rcs']);
         if (o.full) { const m = merged(pid); for (const k in m) { if (k === 'assets.letterhead_data') continue; cells[k] = { value: m[k].value, saved_at: m[k].saved_at || today() }; } }
         else {
           const domId = dominantCycleId(pid);

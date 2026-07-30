@@ -3079,11 +3079,19 @@ function _pullTick(){
   _pullRaf=null;
   const d=_pullTo-_pull;
   if(Math.abs(d)<0.5){_pull=_pullTo;_pullPaint();return;}
-  /* Faster on the way back than on the way out. Climbing is feedback and wants to
-     feel weighty; retreating is just tidying up after a gesture that is over, and
-     at the climbing rate it lingered about three quarters of a second after the
-     hand had stopped. */
-  _pull+=d*(d<0?0.42:0.2);
+  /* Faster back than out, and the OUT rate matters as much as the back one. At 0.2
+     the rule trailed the accumulated target by a couple of hundred milliseconds, so
+     letting go left it still travelling RIGHT while it caught up, and only then
+     reversing — Matt: "the bar still slides right some after ive already let go
+     before even starting to go back left." Tracking the hand closely leaves nothing
+     to unwind, which is a better fix than making the reversal faster.
+
+     Having the tick DECIDE the hand had stopped was tried and reverted. The only
+     signal available is silence, and silence shorter than the gap between two
+     notches of a real mouse wheel cannot be told apart from the next notch
+     arriving: at 70ms it chopped a two-notch gesture in half and sawtoothed the
+     rule. Shrinking the lag has no such tradeoff. */
+  _pull+=d*(d<0?0.55:0.5);
   _pullPaint();
   _pullGlide();
 }
@@ -3122,7 +3130,7 @@ function _menuPull(dy){
   if(_pullTimer&&typeof clearTimeout==='function')clearTimeout(_pullTimer);
   /* Short. This is "the hand has stopped", not "the gesture might resume": long
      enough to bridge the gap between two notches of the same swipe, no longer. */
-  if(typeof setTimeout==='function')_pullTimer=setTimeout(_pullRelease,170);
+  if(typeof setTimeout==='function')_pullTimer=setTimeout(_pullRelease,120);
   if(_pullTo>=PULL_MAX){
     _pull=0;_pullTo=0;_pullPaint();
     _togglePast();
@@ -4052,9 +4060,14 @@ function bootstrapFirstCycle(p){
   const eff=(m['rent_schedule.date_rents_effective']&&m['rent_schedule.date_rents_effective'].value)||'';
   const yr=(String(eff).match(/(\d{4})/)||[])[1]||String(new Date().getFullYear());
   const pid=activePid;
-  mpdb.createCycle(pid,{full:true,programs:['rcs'],label:yr,effective_date:eff})
+  /* This runs ONCE per property to turn an existing record into package #1. If a
+     package already holds rcs at that date the migration has nothing to do, and
+     saying "save failed" about a no-op would be alarming and wrong. */
+  Promise.resolve(mpdb.createCycle(pid,{full:true,programs:['rcs'],label:yr,effective_date:eff}))
     .then(()=>{if(activePid===pid)renderLauncher();})
-    .catch(e=>saveFailedModal(e));
+    .catch(e=>{
+      if(e&&e.code==='DUP_PACKAGE_PROGRAM'){if(activePid===pid)renderLauncher();return;}
+      saveFailedModal(e);});
 }
 /* `pre` is the tracker's answer, handed in by the card's Start button:
    {program, effective, type, deadline}. It PRE-FILLS this dialog rather than
@@ -4112,7 +4125,20 @@ function newCycleDialog(pre){
     const eff=fmtDateInput((el('cyEff').value||'').trim())||effPh;   // left blank, the package takes the date shown in gray: a year on from the last one
     const label=(eff.match(/(\d{4})/)||[])[1]||String(new Date().getFullYear());
     closeModal();
-    try{const r=await mpdb.createCycle(activePid,{programs,label,effective_date:eff});renderLauncher();await openCycleForm(r.cid);_cyFresh=r.cid;}catch(e){saveFailedModal(e);}
+    try{const r=await mpdb.createCycle(activePid,{programs,label,effective_date:eff});renderLauncher();await openCycleForm(r.cid);_cyFresh=r.cid;}
+    catch(e){
+      /* A clash is not a failure. The rule is one package per programme per
+         effective date, and the data layer hands back the cid of the one already
+         holding it — so the answer to "start an OCAF effective Oct 1" when that
+         package exists is to OPEN it, the same courtesy a duplicate property name
+         already gets. Reporting "save failed" would be a lie about what happened. */
+      if(e&&e.code==='DUP_PACKAGE_PROGRAM'&&e.cid){
+        closeModal();renderLauncher();await openCycleForm(e.cid);
+        setStatus('That package already exists \u2014 opened it.');
+        return;
+      }
+      saveFailedModal(e);
+    }
   };
 }
 async function openCycleForm(cid){
