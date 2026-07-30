@@ -823,8 +823,14 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
    Matt, on the earlier draft: "anything overdue has already been completed" —
    the tracker records the deadline, not the filing. What separates the two sides
    of today is the today-line, which is positional and needs no colour. */
-#viewMenu .mgrid.rows .pcard[data-band="past"],
+/* Blue is what is COMING UP. It was on the behind-the-line rows too, which made two
+   bands look alike and disagreed with the strip, where "already due" is one of the
+   two figures drawn with no colour at all. Nothing new is needed: a row in the
+   drawer is already named by the drawer, and spending a fourth meaning on a fact
+   the container states is how a palette stops meaning anything. So the rows behind
+   the line carry no rule, exactly as the strip has always shown them. */
 #viewMenu .mgrid.rows .pcard[data-band="later"]{box-shadow:inset 3px 0 0 var(--ledger)}
+#viewMenu .mgrid.rows .pcard[data-band="past"]{box-shadow:none}
 /* ---- the two zones ---- */
 #viewMenu .mzones{display:block}
 #viewMenu .zhead{display:flex;align-items:baseline;gap:12px;margin:0 0 14px}
