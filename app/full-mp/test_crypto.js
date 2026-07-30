@@ -8,7 +8,7 @@ const path=require('path');
 /* Default to the sibling module so `node test_crypto.js` works under
    run_tests.sh, which passes no arguments. */
 const C=require(process.argv[2]||path.join(__dirname,'crypto.js'));
-const MIN_CHECKS=81;
+const MIN_CHECKS=98;
 let n=0,fails=0;
 const hex=b=>Buffer.from(b).toString('hex');
 function eq(label,got,want){n++;if(hex(got)!==hex(want)){fails++;
@@ -69,6 +69,24 @@ console.log('-- AES-CBC decrypt, zero IV not prefixed (revision 6 UE/OE) --');
   const c=nc.createCipheriv('aes-256-cbc',key,Buffer.alloc(16));c.setAutoPadding(false);
   const ct=Buffer.concat([c.update(pt),c.final()]);
   eq('aes-256-cbc zero-iv nopad',C.aesDecryptCBC(key,ct,false),pt);
+}
+/* That random check meets the bug it was written for once in sixteen runs, which
+   is how a real defect read as flake. The file key is 32 uniformly random bytes;
+   when the last one falls in 1..16 it looks like a PKCS#7 length, and an unpadder
+   that runs here cuts the key short. Pin every ending that lies. */
+for(let last=1;last<=16;last++){
+  const key=nc.randomBytes(32),pt=nc.randomBytes(32);pt[31]=last;
+  const c=nc.createCipheriv('aes-256-cbc',key,Buffer.alloc(16));c.setAutoPadding(false);
+  const ct=Buffer.concat([c.update(pt),c.final()]);
+  eq('zero-iv nopad keeps all 32 bytes, key ends 0x'+last.toString(16).padStart(2,'0'),
+     C.aesDecryptCBC(key,ct,false),pt);
+}
+{ /* And a tail that is valid PKCS#7 all the way, so a strict unpadder bites too. */
+  const key=nc.randomBytes(32),pt=nc.randomBytes(32);pt.fill(4,28,32);
+  const c=nc.createCipheriv('aes-256-cbc',key,Buffer.alloc(16));c.setAutoPadding(false);
+  const ct=Buffer.concat([c.update(pt),c.final()]);
+  eq('zero-iv nopad keeps all 32 bytes, key ends 04 04 04 04',
+     C.aesDecryptCBC(key,ct,false),pt);
 }
 console.log('-- AES-128-CBC encrypt, no padding (revision 6 hash loop) --');
 for(const s of [16,32,64,4096]){
