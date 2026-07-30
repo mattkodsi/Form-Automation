@@ -5,6 +5,10 @@ Section 8 (Related Affordable). A form-driven tool that pre-fills from stored +
 uploaded data, clears an internal 150%-SAFMR check, and generates the six-document
 renewal package as review-ready drafts. See `RCS Renewal Automation - Project Plan.md`.
 
+**American English everywhere** — chat, code comments, UI copy, commit messages; the
+British spellings already in this repo are legacy, so fix them only on lines you are
+already editing.
+
 > **Latest handoff:** `SESSION-HANDOFF-2026-07-29-AUDIT.md` — the corpus audit: the three-way
 > method (read the SOURCES yourself, then compare app vs filed), the audit-wave / repair-break
 > loop, what is fixed, what is open, and the standing rule that every run writes `ZZ-CORPUS-*`
