@@ -5462,11 +5462,31 @@ function rsAssembleFields(V){
   outp.nonrev=rsPartD(V);
   rsSigInto(outp,V(228));
   outp.partb=rsPartB(V,false);
-  // quality gate: the rows must reconcile against the schedule's own printed total
-  const tot=rsNum(V(95));const all=outp.units.concat(outp.ns8);
+  return rsRecordHolds(outp,V(95))?outp:null;}
+/* THE FLOOR, AND IT BELONGS TO ALL THREE TIERS.
+   This test used to live inside rsAssembleFields, which tiers 2 and 3 call and
+   tier 1 does not — so a copy that still carries the blank form's AcroForm could
+   come back with NO rent rows at all and the app would call it read: a green
+   tile saying “read”, “Fill form from RS” armed, and Enter bound to it. Two real
+   documents do exactly that. Our own blank HUD-92458 template, uploaded by
+   mistake, is one. The other is filed: Mapleview Towers' “HUD Rent Schedule -
+   Mapleview Towers eff. 04.01.26.pdf” carries all 232 fields with 39 of them
+   filled in — and every one of those 39 is the string “0”, including the printed
+   monthly total. Tier 1 returned {scalars:{},units:[],ns8:[]} and the form said
+   the schedule had been read.
+   An empty read is worse than a refusal on a federal filing, because nothing
+   downstream can tell it from a schedule that genuinely has no rows. So the
+   floor is asked once, of whatever produced the record:
+     - at least one Section 8 row carrying a rent, and
+     - those rows reconciling against the total the schedule itself prints. */
+function rsRecordHolds(outp,totalRaw){
+  const tot=rsNum(totalRaw);const all=outp.units.concat(outp.ns8);
   const sum=all.reduce((a,u)=>a+(u.count&&u.rent?u.count*u.rent:0),0);
-  const ok=outp.units.length>0&&(tot===''||Math.abs(sum-tot)<=Math.max(2,all.length));
-  return ok?outp:null;}
+  return outp.units.length>0&&(tot===''||Math.abs(sum-tot)<=Math.max(2,all.length));}
+/* One field's text, by the same accessor rsReadFields uses — so parseRsPdf can
+   ask the schedule for its own printed total without reading it a second way. */
+function rsFieldText(pdfForm,n){
+  try{const v=pdfForm.getTextField(String(n)).getText();return v==null?'':String(v).trim();}catch(e){return '';}}
 /* Part I's HAP contract number IS the property's Section 8 number, and the
    template carries NO field for it — the contract administrator writes it on the
    line under the printed label. So it is found by that label instead of by a box:
@@ -5684,20 +5704,32 @@ async function rsReadTextTier(pages,bytes,onStep){ // flattened copy -> same par
   if(outp&&s8)outp.scalars['property.s8']=s8;
   if(outp&&!gotB)outp.halfB=true;
   return outp;}
+/* A refusal that says nothing is still a refusal the reader cannot act on. Two
+   sentences may be true at once here — why the fields were no use, and why the
+   scan was no use — and both are kept, in that order. */
+function rsWhy(){return Array.prototype.slice.call(arguments).filter(Boolean).join(' ');}
 async function parseRsPdf(bytes,onStep){
   const doc=await window.PDFLib.PDFDocument.load(bytes,{ignoreEncryption:true,parseSpeed:Infinity});
   let n=0,pf=null;try{pf=doc.getForm();n=pf.getFields().length;}catch(e){}
+  let whyFields='';
   if(n>10){const pf1=rsReadFields(pf);
     // Part I has no field on any revision of this form, so even a fully-fielded
     // copy only carries its HAP contract number as printed text.
     if(!pf1.scalars['property.s8']){try{const tp=await rsTextPages(doc);const v=rsS8FromPages(tp)||rsS8FromFields(pf);if(v)pf1.scalars['property.s8']=v;}catch(e){}}
-    return {kind:'fields',parsed:pf1};}
+    if(rsRecordHolds(pf1,rsFieldText(pf,95)))return {kind:'fields',parsed:pf1};
+    /* Fields present and nothing in them. Do not return the empty record and do
+       not stop here either: a copy flattened at signing often keeps the AcroForm
+       skeleton while the values move into the page, and that copy is readable by
+       the printed page. So carry the reason and go on down the tiers — and if
+       none of them reads it either, the reason is what the reader gets told
+       instead of a blank refusal. */
+    whyFields='This copy still carries the blank form\u2019s own fields, but they hold no apartment rents \u2014 every rent row is empty or zero, so there was nothing in them to read.';}
   let pages=null;try{pages=await rsTextPages(doc);}catch(e){}
   const runs=pages?pages.reduce((a,p)=>a+p.length,0):0;
   const scan=async()=>{let oc=null;try{oc=await ocrParseRs(bytes,(i,n)=>onStep&&onStep(i,n,'scan'));}catch(e){}return oc;};
   if(runs<15){ // nothing to read on the page itself: tier 3 sends it out to be OCR'd
     const oc=await scan();
-    return oc?{kind:'fields',parsed:oc,via:'ocr'}:{kind:'scan',parsed:null,why:ocrWhy()};}
+    return oc?{kind:'fields',parsed:oc,via:'ocr'}:{kind:'scan',parsed:null,why:rsWhy(whyFields,ocrWhy())};}
   let tp=null;try{tp=await rsReadTextTier(pages,bytes,onStep);}catch(e){}
   if(tp)return {kind:'fields',parsed:tp,via:'text'};
   /* Text on the page and none of it the values — so OCR, which the runs<15 gate
@@ -5708,7 +5740,7 @@ async function parseRsPdf(bytes,onStep){
      the page reads as maximally readable and yields nothing. "Is there text on
      it" was never the question. "Did we manage to read any of it" is. */
   const oc=await scan();
-  return oc?{kind:'fields',parsed:oc,via:'ocr'}:{kind:'text',parsed:null,why:ocrWhy()};}
+  return oc?{kind:'fields',parsed:oc,via:'ocr'}:{kind:'text',parsed:null,why:rsWhy(whyFields,ocrWhy())};}
 function rsFillFromParsed(){const P=_rsUpload&&_rsUpload.parsed;if(!P)return;
   const _wrote=[];
   const mark=k=>{markCycle(k);if(form[k])form[k].fromParse=true;if(_wrote.indexOf(k)<0)_wrote.push(k);};   // came from the schedule, not typed — tags an override as "parsed", not just "changed", in its note text
@@ -5879,8 +5911,15 @@ function renderSources(){
           +(fillNote(_rsFill,ru)||'No values have been applied to the form yet.'),
       acts:'<button class="btn sm teal" id="rsApply">Fill form from RS</button><button class="btn sm" id="upRs">Replace</button>'});}
   else rs=srcTile({icon:WARN,name:ru.name,state:'could not be read',stateCls:'missing',
+      /* A tile that says only “Enter the values below” tells a property manager
+         nothing about what to do differently, and “could not be read” is the
+         one place the app has to be plainest. When the reader supplied a reason
+         it is shown; when it did not, these two say which of the two shapes of
+         unreadable copy arrived, because they call for different next steps. */
       sub:ru.why?(esc(ru.why)+' Enter the values below.')
-                :(ru.kind==='text'?'Enter the values below.':'Scanned, but the values could not be read. Enter them below.'),
+                :(ru.kind==='text'
+                  ?'This copy carries text, but none of it is the schedule\u2019s own figures — they were flattened into the page when it was signed. It has to be read by the scanning service, and that returned nothing. Enter the values below.'
+                  :'This copy is a scanned image rather than a form, so it can only be read by the scanning service, and that returned nothing. Enter the values below.'),
       acts:'<button class="btn sm" id="upRs">Replace</button>'});
   const foot=`<input type="file" id="rcsFile" accept="application/pdf,.pdf" style="display:none"><input type="file" id="rsFile" accept="application/pdf,.pdf" style="display:none">`;
   /* The executed rent schedule comes first: it is the document that fills the
@@ -8926,7 +8965,12 @@ async function ocrHalf(bytes,tplPg,skip,onStep){
 
 async function ocrParseRs(bytes,onStep){ // scan -> the tier-1 parsed shape, or null
   OCR_WHY='';
-  if(!window.PDFLib||!supaClient)return null;
+  /* The one exit that left OCR_WHY empty, and it is the exit taken whenever
+     there is no session at all. The form then showed a copy it could not read
+     with no reason beside it — the reader could not tell “Azure declined this
+     page” from “we never asked anyone”. Both branches now say which. */
+  if(!window.PDFLib){OCR_WHY='The PDF engine did not load, so this document could not be opened for scanning.';return null;}
+  if(!supaClient){OCR_WHY='The figures on this copy are pictures rather than text, so it can only be read by the scanning service — and this session is not connected to it.';return null;}
   const tpl=await ocrTemplate();if(!tpl){OCR_WHY='The blank HUD-92458 template could not be opened, so there was nothing to line the scan up against.';return null;}
   const rects=await rsFieldRects();if(!Object.keys(rects).length){OCR_WHY='The blank form\u2019s field positions could not be read, so a scan cannot be placed onto it.';return null;}
   let pages;try{pages=await ocrSplitPages(bytes,OCR_MAXPAGES);}catch(e){OCR_WHY='The document\u2019s pages could not be separated for scanning.';return null;}
