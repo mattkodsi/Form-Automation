@@ -2155,56 +2155,143 @@ const FULL=process.argv.includes('--full');
       eq('the banner touches the masthead',d0.flush,0);
       T('and it offers to show them without saying "them"',
         /Show$/.test(d0.label||'')&&!/Show them/.test(d0.label||''));
-      /* ---- the pull ----
-         One notch used to open it, which fired on flicks nobody meant as a
-         gesture. It now stretches and fills, and opens only on a sustained pull
-         within ONE gesture — events less than 180ms apart. The bursts below are
-         paced tightly for that reason: a `read()` round trip between notches is
-         itself long enough to end the gesture and restart the count. */
+      /* ---- the pull, rebuilt on the clock, 2026-07-30 ----
+         Distance was the wrong quantity. Measured against the real portfolio, a
+         thirty-notch wheel-up delivers 3,600px: the drawer opened on notch three
+         and the remaining twenty-seven carried the reader 2,383px up into a
+         3,428px list. Matt: "scrolling too quickly launches you all the way to the
+         top almost all the time, which is basically every time when using a mouse
+         scroll wheel." Distance also made a fast wheel and a slow wheel two
+         different controls.
+
+         So there are two things to prove, and the second is the one he asked for:
+         which gestures open it, and — for every one of them — WHERE THE READER
+         LANDS. Every assertion about landing is written against ONE value, the
+         viewport position of the panel of what is coming, because that is the
+         thing that must not move. */
       const notch=()=>c.send('Input.dispatchMouseEvent',
         {type:'mouseWheel',x:600,y:400,deltaX:0,deltaY:-100});
-      const burst=async n=>{for(let i=0;i<n;i++){await notch();await sleep(25);}};
-      const peek=()=>c.eval(`const b=document.getElementById('mPast');
-        return {pull:+getComputedStyle(b).getPropertyValue('--pull'),
-                hidden:!!document.getElementById('mPastWrap').hidden};`);
-      await c.eval('window.scrollTo(0,0);return 1'); await sleep(220);
-      await notch(); await sleep(70);
-      const p1=await peek();
-      eq('one notch upward does not open it',p1.hidden,true);
-      T('but the bar stretches to say it is listening',p1.pull>0);
-      /* Let that gesture go, then pull properly. */
-      await sleep(620);
-      await burst(5); await sleep(360);
-      const p2=await read();
-      eq('a sustained pull opens it',p2.hidden,false);
-      T('and the arrow points down, because that is where the rows went',
-        /\u2193/.test(p2.label||''));
-      await c.eval('document.getElementById("mPast").click();return 1');
-      await sleep(320);
-      /* ---- the glide ----
-         Sampled IN PAGE at 16ms, because the value is animated frame by frame and
-         a round trip per sample cannot see the shape. Written straight from the
-         wheel handler it jumped a third of the bar per event — staccato — so what
-         is asserted is INTERPOLATION: many distinct values across the gesture, and
-         a release that slides back over time rather than blinking out. */
-      await c.eval('window.scrollTo(0,0);return 1'); await sleep(260);
+      const wheel=dy=>c.send('Input.dispatchMouseEvent',
+        {type:'mouseWheel',x:600,y:400,deltaX:0,deltaY:dy});
+      const burst=async(n,gap)=>{for(let i=0;i<n;i++){await notch();await sleep(gap);}};
+      /* Closed, at the top, and settled there long enough that the next wheel reads
+         as a new gesture rather than as the tail of this one. */
+      const shut=async()=>{
+        if(!(await read()).hidden)
+          await c.eval('document.getElementById("mPast").click();return 1');
+        await c.eval('window.scrollTo(0,0);return 1');await sleep(430);};
+
+      /* (a) You stopped, you looked, you scrolled up again. */
+      await shut();
+      await notch(); await sleep(430);
+      /* Sampled at 16ms through the open, the panel lands on the pixel it started
+         on and then one event leaks 4-17px: Chrome hands a little scroll to the
+         compositor before preventDefault reaches it, and no amount of listener
+         arrangement gets that back. So the bar here is a ROW, not a pixel — the
+         claim being made is that the reader has not travelled up the list, and a
+         row is the unit that would show. It replaces a measured 2,383px. */
+      const ROW=60;
+      const landed=(what,got,want)=>T(what,Math.abs(got-want)<ROW);
+      const a1=await read();
+      eq('a deliberate scroll on a settled top opens it',a1.hidden,false);
+      landed('and what is coming has not moved',a1.panelTop,d0.panelTop);
+      T('the arrow points down, because that is where the rows went',
+        /↓/.test(a1.label||''));
+
+      /* The landing IS the feature. A long fast gesture is the one that used to
+         throw the reader up the list, and the detent absorbs whatever is left of
+         it — so all three of these end in the same place, at the bottom of the
+         backlog, beside today, which is the end it is read from. */
+      await shut();
+      await burst(30,25); await sleep(700);
+      const a2=await read();
+      eq('a thirty-notch gesture opens it too',a2.hidden,false);
+      landed('and lands in the same place, not up the list',a2.panelTop,a1.panelTop);
+      await shut();
+      /* Ten, not thirty: each notch costs a CDP round trip on top of the sleep, so
+         thirty at 90ms is 3.4 seconds of wall time — past DETENT_MAX, which is the
+         NEXT check's subject and would make this one flake against it. */
+      await burst(10,90); await sleep(700);
+      const a3=await read();
+      eq('so does the same gesture at a third the speed',a3.hidden,false);
+      landed('speed changes nothing about where you land',a3.panelTop,a1.panelTop);
+      /* And the detent is a catch, not a lock. A gesture that outlasts DETENT_MAX
+         is released rather than trapped: keep wheeling and you keep going, which is
+         the whole point of the backlog being reachable at all. Thirty notches at
+         90ms is 2.7 seconds of unbroken wheeling — well past the cap. */
+      await shut();
+      await burst(30,90); await sleep(700);
+      const a4=await read();
+      T('but a gesture that outlasts the detent is released, not trapped',
+        a4.panelTop>a1.panelTop);
+      /* Bounded, though. The whole complaint was 2,383px up a 3,428px list. */
+      T('and even then it has gone nowhere near the top of the list',
+        a4.panelTop-a1.panelTop<400);
+
+      /* (b) A hand that never stopped. It reaches the top mid-gesture, so it can
+         never be (a) — and it has to open anyway, or the gate is just a wall. Matt,
+         of the rule before this one: "sometimes it triggers and sometimes im just
+         swiping up and up and up and nothing expands." */
+      await shut();
+      await c.eval('window.scrollTo(0,700);return 1'); await sleep(360);
+      for(let i=0;i<26;i++){await wheel(-120);await sleep(38);}
+      await sleep(700);
+      const b1=await read();
+      eq('a hand that keeps swiping opens it, having started mid-list',b1.hidden,false);
+      landed('and lands where every other gesture does',b1.panelTop,a1.panelTop);
+
+      /* A fling is neither, and what makes it neither is its SHAPE: momentum is a
+         decaying curve, so every event is smaller than the one before it. Nothing a
+         hand does looks like that — a mouse wheel repeats one magnitude exactly and
+         a trackpad under a finger wanders. This tail is long enough to sit at the
+         top well past the hold, so the only thing refusing it is the shape. */
+      await shut();
+      await c.eval('window.scrollTo(0,700);return 1'); await sleep(360);
+      { let dv=-300;
+        for(let i=0;i<44;i++){await wheel(Math.min(-1,Math.round(dv)));dv*=0.92;await sleep(16);} }
+      await sleep(900);
+      const fl=await read();
+      eq('a fling up does not open it, however long its tail runs on',fl.hidden,true);
+      eq('it only returns the page to the top',fl.y,0);
+
+      /* And arriving at the top and stopping there is not a request for anything. */
+      await shut();
+      await c.eval('window.scrollTo(0,900);return 1'); await sleep(360);
+      for(let i=0;i<10;i++){await wheel(-120);await sleep(30);}
+      await sleep(900);
+      eq('scrolling briskly up to the heading and stopping leaves it closed',
+        (await read()).hidden,true);
+
+      /* ---- the fill ----
+         It counts the hold, so it rises on the clock rather than in wheel-sized
+         lumps — which is the whole reason the rule it replaced needed a glide.
+         Sampled IN PAGE at 16ms, because a round trip per sample cannot see the
+         shape; and sampled on a run that stops SHORT of the hold, because a run
+         that completes it opens the drawer and leaves no bar to watch. */
+      await shut();
+      await c.eval('window.scrollTo(0,700);return 1'); await sleep(360);
       await c.eval(`window.__S=[];const b=document.getElementById('mPast');
         window.__si=setInterval(()=>{window.__S.push(
           +getComputedStyle(b).getPropertyValue('--pull'));},16);return 1;`);
-      await notch(); await sleep(60); await notch();
-      await sleep(1250);
+      for(let i=0;i<9;i++){await wheel(-120);await sleep(30);}
+      await sleep(1000);
       const S=await c.eval('clearInterval(window.__si);return window.__S');
       const uniq=[...new Set(S.map(v=>v.toFixed(3)))].length;
-      T('the fill is interpolated, not written straight from the wheel',uniq>=8);
+      T('the fill is animated, not written in wheel-sized lumps',uniq>=8);
       const pk=S.indexOf(Math.max.apply(null,S));
       const zi=S.findIndex((v,i)=>i>pk&&v<0.01);
-      T('and letting go slides it back rather than blinking it out',zi-pk>=6);
-      T('all the way back to nothing',zi>0);
-      await c.eval('window.scrollTo(0,0);return 1'); await sleep(200);
+      T('and it slides back rather than blinking out',zi-pk>=6);
+      T('all the way to nothing',zi>0);
+      eq('and the run that drew it opened nothing',(await read()).hidden,true);
+
+      /* ---- and the banner is still a button ----
+         Everything above is a gesture. This is the way in for a reader who would
+         rather press something, and it has to land in the same place. */
+      await shut();
       await c.eval('document.getElementById("mPast").click();return 1');
       await sleep(340);
       const d1=await read();
-      eq('pressing it opens the drawer',d1.hidden,false);
+      eq('pressing the banner opens the drawer',d1.hidden,false);
       T('the rows behind you are now on the page',d1.shown.includes('Drawer Behind'));
       T('and the banner offers to close it again',/Hide/.test(d1.banner||''));
       eq('opening it does not move what is coming',d1.panelTop,d0.panelTop);
@@ -2217,37 +2304,6 @@ const FULL=process.argv.includes('--full');
       const d2=await read();
       eq('pressing it again closes it',d2.hidden,true);
       eq('and what is coming still has not moved',d2.panelTop,d0.panelTop);
-      /* ---- momentum is not intent ----
-         Two shapes, and the app has to tell them apart.
-
-         A FLING decays: big deltas, then a tail that keeps arriving after the page
-         has already landed. Those were counted as a pull, so scrolling briskly
-         back towards the Portfolio heading opened the drawer by itself.
-
-         A CONTINUOUS SWIPE does not decay — a hand still on the trackpad delivers
-         steady deltas for as long as it keeps moving. The first fix asked where the
-         gesture BEGAN, which disqualified this shape forever: Matt got "swiping up
-         and up and up and nothing expands". What separates them is the dwell right
-         after arriving at the top, where a tail lives and a moving hand does not. */
-      const wheel=dy=>c.send('Input.dispatchMouseEvent',
-        {type:'mouseWheel',x:600,y:400,deltaX:0,deltaY:dy});
-      await c.eval('window.scrollTo(0,700);return 1'); await sleep(340);
-      for(const d of [-260,-240,-220,-200,-170,-140,-110,-80,-55,-38,-24,-15,-9,-5,-3,-2,-1]){
-        await wheel(d); await sleep(14);
-      }
-      await sleep(900);
-      const fl=await read();
-      eq('a fling up does not open the drawer, however long its tail runs on',fl.hidden,true);
-      eq('it only returns the page to the top',fl.y,0);
-      /* The shape the first fix broke: steady deltas, never pausing, begun well
-         down the list. This MUST open — otherwise the gate is just a wall. */
-      await c.eval('window.scrollTo(0,700);return 1'); await sleep(340);
-      for(let i=0;i<26;i++){await wheel(-120);await sleep(38);}
-      await sleep(520);
-      eq('but a hand that keeps swiping does, even having started mid-list',
-        (await read()).hidden,false);
-      await c.eval('document.getElementById("mPast").click();return 1');
-      await sleep(340);
 
       /* ---- the bar stays reachable, and puts itself away ----
          Pinned while open, so Hide can be pressed from anywhere in the drawer
