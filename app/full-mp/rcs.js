@@ -184,6 +184,13 @@ function readSender(txt,S,window){
   for(let i=0;i<Math.min(txt.length,window||8);i++){
     const t=txt[i];
     if(!FIRMY.test(t))continue;
+    /* An address is not a name. Sample Property's letter puts the appraiser's
+       e-mail on line 2, so FIRMY matched "(E) appraiser@example.com" - the
+       domain contains "valuation" - and appr.firm was stored as that whole
+       string, which then went out on the owner cover letter's certifications.
+       The title-page fallback declines to overwrite a firm it thinks it has, so
+       nothing downstream could recover it. */
+    if(/\S+@\S+\.\S+/.test(t))continue;
     if(/^re[:\s]/i.test(t))continue;
     if(/^(real estate|nationwide)/i.test(t))continue;      // taglines, not names
     fi=i;S['appr.firm']=t.replace(/,\s*$/,'').trim();break;
@@ -239,6 +246,9 @@ function readSubject(txt,S,warn){
 }
 
 /* The appraiser who signed it. */
+/* What one printed name looks like: two to four capitalised tokens. Named
+   because readSignature now asks it of a whole line AND of each half of one. */
+const NAME_LINE=/^[A-Z][A-Za-z.'\-]+(\s+[A-Z][A-Za-z.'\-]*){1,3}$/;
 function readSignature(txt,S){
   if(S['appr.name'])return;
   let si=-1;
@@ -249,8 +259,30 @@ function readSignature(txt,S){
     if(!t)continue;
     if(/license|certified|job\s*no|^[A-Z]{2,4}\/[A-Z]{2,4}$|president|associate|appraiser/i.test(t))continue;
     if(FIRMY.test(t))continue;                     // the firm's own name, not the person who signed
-    if(!/^[A-Z][A-Za-z.'\-]+(\s+[A-Z][A-Za-z.'\-]*){1,3}$/.test(t))continue;
-    S['appr.name']=t;return;
+    if(NAME_LINE.test(t)){S['appr.name']=t;return;}
+    /* Two appraisers, side by side, on one printed line.
+       Belfry and Cornerstone both sign some letters in two columns, so the line
+       assembles as "Taylor Reed   Casey Doe" - six tokens where a name
+       is two to four - and the pattern above rejects it. The lines that follow
+       are then eaten by the license/certified/president/associate skips and the
+       window runs out, so appr.name comes back empty. It is a requirement of the
+       OWNER COVER LETTER, so on Sample Property, Sample Property and Northgate
+       Terrace CA this alone withheld a document.
+
+       Split down the MIDDLE, not at the first place that parses. Two columns hold
+       one name each, so a balanced split is the one that reflects the layout -
+       and trying every split position instead would accept "Aaron M." from
+       "Aaron M. | Zabel Morgan Lane", which parses just as well and is not
+       a person. The lead appraiser signs on the left, which is the name the filed
+       letters carry. */
+    const tk=t.split(/\s+/), n=tk.length;
+    if(n>=4&&n<=8){
+      const mid=n%2?[(n+1)/2,(n-1)/2]:[n/2];
+      for(let m=0;m<mid.length;m++){
+        const head=tk.slice(0,mid[m]).join(' '), tail=tk.slice(mid[m]).join(' ');
+        if(NAME_LINE.test(head)&&NAME_LINE.test(tail)){S['appr.name']=head;return;}
+      }
+    }
   }
 }
 
@@ -534,7 +566,7 @@ async function readLetter(rd){
 
 window.RCSParse={norm:norm,lines:lines,money:money,dec:dec,pageKey:pageKey,
   findLetter:findLetter,readLetter:readLetter,parseType:parseType,
-  _splitCityStateZip:splitCityStateZip,_isoDate:isoDate,_s8From:s8From,_detectFirm:detectFirm,_readSender:readSender,
+  _splitCityStateZip:splitCityStateZip,_isoDate:isoDate,_s8From:s8From,_detectFirm:detectFirm,_readSender:readSender,_readSignature:readSignature,
   _caps:{scan:LETTER_SCAN_CAP,tail:LETTER_TAIL},_probeOrder:probeOrder,
   /* The concluded-rent row pattern and the roster's key, exposed so the suite can
      pin them against the exact lines three real studies print. Trimming a fixture
