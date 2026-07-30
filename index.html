@@ -8086,29 +8086,6 @@ function ringColor(pct){const p=Math.max(0,Math.min(100,pct))/100;
    something nobody had asked for yet, on a page nobody opens to fill a
    profile. Where it belongs is the property's own page, next to the fields it
    is talking about. */
-function profileChip(p){
-  const m=(p&&p.profile&&p.profile.missing)||[];
-  if(!m.length)return '';
-  const names=m.map(x=>x.label);
-  /* "4 missing from the profile" named nothing. The count was the whole chip and
-     the four labels lived in a title attribute, so the one question it provoked —
-     which four? — was the one it would not answer without a hover nobody knows to
-     try. It names as many as fit, and the rest are one hover away in a panel of
-     the app's own rather than a native tooltip that makes you wait and then
-     truncates the answer.
-
-     Flat rows, not the generate modal's jump buttons: a property with no package
-     has no form open to jump into, and a control that does nothing is worse than
-     no control at all. */
-  const shown=names.length<=3?andJoin(names):(names.slice(0,2).join(', ')+' and '+(names.length-2)+' more');
-  const rows=m.map(x=>{
-    const w=(typeof whyShort==='function'?whyShort(x.key,x.why):'')||(x.sec?(SECTION_TITLES[x.sec]||''):'');
-    return '<span class="gpf gpf-flat"><span class="gpf-n">'+esc(x.label)+'</span>'
-      +(w?'<span class="gpf-w">'+esc(w)+'</span>':'')+'</span>';}).join('');
-  return '<span class="gpw pchipw"><button type="button" class="pchip" aria-haspopup="true">Needs '
-    +esc(shown)+'</button><div class="gpop"><div class="gpop-in">'
-    +'<div class="gpop-h">Needed before this package can be generated</div>'
-    +'<div class="gpop-l">'+rows+'</div></div></div></span>';}
 function ringSvg(pct,size){size=size||36;const r=size/2-3;const c=2*Math.PI*r;const off=c*(1-Math.max(0,Math.min(100,pct))/100);const col=ringColor(pct);
   return '<svg class="ringsvg" width="'+size+'" height="'+size+'" viewBox="0 0 '+size+' '+size+'"><circle cx="'+size/2+'" cy="'+size/2+'" r="'+r+'" fill="none" stroke="#e9edf4" stroke-width="3.4"/><circle cx="'+size/2+'" cy="'+size/2+'" r="'+r+'" fill="none" stroke="'+col+'" stroke-width="3.4" stroke-linecap="round" stroke-dasharray="'+c.toFixed(1)+'" stroke-dashoffset="'+off.toFixed(1)+'" transform="rotate(-90 '+size/2+' '+size/2+')"/><text x="50%" y="53%" dominant-baseline="middle" text-anchor="middle" font-size="'+(size<44?10:12.5)+'" font-weight="700" fill="#33405c">'+pct+'</text></svg>';}
 function niceDate(d){if(!d)return '—';const m=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];const p=String(d).slice(0,10).split('-');if(p.length!==3)return d;return m[(+p[1])-1]+' '+(+p[2])+', '+p[0];}
@@ -9209,9 +9186,16 @@ function cyclePane(c){
    The reason sentence is shown as prose here, not only as a title: the card has
    no room for it, the profile does, and an unrecognised increase type or an
    expiring contract is exactly the thing that needs reading properly. */
+/* The schedule's answer to "what is next here" — but ONLY while nothing here
+   answers it already. Once a package exists for that renewal the page was printing
+   the same fact twice, a strip saying RCS effective October 1 with a View button
+   over a card saying RCS effective October 1 with the figures in it, and it read as
+   two RCSs. There is one package per programme per date; there is one box. The card
+   takes the deadline line and the strip stands down. */
 function nextUpHtml(){
   const p=hapForPid(activePid);if(!p||!p.action||p.action.kind==='none')return '';
   const a=p.action,lab=actionLabel(a),why=actionReason(a);
+  if(a.cid&&(mpdb.listCycles(activePid)||[]).some(c=>c.id===a.cid))return '';
   /* One fact line, then the deadline underneath it — and the deadline line only
      where there IS a renewal to count down to. Printing both for an expiring
      contract said "Contract expires March 17, 2025" twice, one line under the
@@ -9235,8 +9219,11 @@ function nextUpHtml(){
    is what was filed. So: the current renewal keeps its card and its figures, and
    each earlier package collapses to one line — what it was, when it took effect,
    and whether it went out. */
-function cyclesHtml(hasAction){
+function cyclesHtml(hasAction,hap){
   const cs=mpdb.listCycles(activePid);
+  /* The one the schedule is pointing at. It shows the deadline the strip used to
+     show, because it is now the only thing on the page saying so. */
+  const _due=(hap&&hap.action&&hap.action.cid)?hap.action.cid:null;
   /* Two independent questions, and conflating them labelled a fourth package
      "Start a package". How LOUD the control is answers "is there another way in?"
      — quiet when the schedule offers one above, primary when it does not. What it
@@ -9258,8 +9245,16 @@ function cyclesHtml(hasAction){
     +'<b class="cy-t">'+esc(c.effective_date?('Effective '+fmtDateLong(c.effective_date)):(c.label||'No date'))+'</b>'
     +(c.dominant?'<span class="cy-dom">Current</span>':'')
     +stChip(c)+'</div>'
+    +((_due&&c.id===_due&&hap)?dueLine(hap):'')
     +cyclePane(c)
-    +'<div class="cy-act"><button class="txtbtn del" data-cydel="'+c.id+'">Delete</button></div></div>';
+    /* The action comes INTO the card with the deadline. Merging the strip away
+       without it would have left the one box the schedule points at as the only
+       thing on the page with nothing to press. Same id, so the same wiring reaches
+       the same handler the strip's button used. */
+    +'<div class="cy-act"><button class="txtbtn del" data-cydel="'+c.id+'">Delete</button>'
+    +((_due&&c.id===_due&&hap&&actionLabel(hap.action))
+      ?('<button class="btn p" id="nuGo">'+esc(actionLabel(hap.action))+'</button>'):'')
+    +'</div></div>';
   const row=c=>'<div class="cyrow" data-cyopen="'+c.id+'">'
     +'<span class="cyr-p">'+esc(c.programs.map(x=>PROG_NAMES[x]||String(x).toUpperCase()).join(' + '))+'</span>'
     +'<span class="cyr-e">'+esc(c.effective_date?fmtDateLong(c.effective_date):'No date')+'</span>'
@@ -9274,7 +9269,8 @@ function wireCycles(){
   /* Wrapped, not passed by reference: newCycleDialog now takes a prefill, and a
      bare handler would hand it the click event. */
   const b=el('bNewCycle');if(b)b.onclick=()=>newCycleDialog();
-  const nu=el('nuGo');if(nu)nu.onclick=()=>{const h=hapForPid(activePid);if(h)primaryActionClick(h.code);};
+  const nu=el('nuGo');if(nu)nu.onclick=(e)=>{if(e&&e.stopPropagation)e.stopPropagation();
+    const h=hapForPid(activePid);if(h)primaryActionClick(h.code);};
   document.querySelectorAll('[data-cyopen]').forEach(x=>x.onclick=()=>openCycleForm(x.getAttribute('data-cyopen')));
   document.querySelectorAll('[data-cydel]').forEach(x=>x.onclick=(e)=>{e.stopPropagation();const id=x.getAttribute('data-cydel');
     dialogConfirm('Delete package','This permanently removes the package and its saved data. The property record is untouched.','Delete',true,async()=>{try{await mpdb.deleteCycle(id);renderLauncher();}catch(e){saveFailedModal(e);}});});
@@ -9401,7 +9397,11 @@ function renderLauncher(){
   const rcsLine=(_domCy&&_domCy.programs.indexOf('rcs')<0)?(_domCy.programs.map(x=>PROG_NAMES[x]||x).join(' + ')+' package &middot; see the package card below'):((a.total_units&&a.proposed_gpr)?((a.pass?'PASS':'OVER')+' &middot; '+sPct(a.pct)+' &middot; '+money(a.proposed_gpr)+'/mo'):(a.total_units?'rents not entered yet':'set up units &amp; rents'));
   const _meta=[(p.fha&&p.fha!=='\u2014')?esc(p.fha):'',p.city_state?esc(p.city_state):'',
     p.total_units?(fmtNum(p.total_units)+' units'):''].filter(Boolean).join(' &middot; ');
+  const _hap=hapForPid(activePid);
   const _nu=nextUpHtml();
+  /* "Is there another way in above this?" — the strip is one, and so is a package
+     card that the schedule is pointing at. Either way the start control stays quiet. */
+  const _entry=!!_nu||!!(_hap&&_hap.action&&_hap.action.cid);
   const lhIsPdf=String(lh.data||'').indexOf('data:application/pdf')===0;
   const lhSub=lh.data?(lhIsPdf?'PDF letterhead &middot; the tenant notice prints on it full-page':'Property letterhead &middot; reused on every package'):'<span style="color:#b4552d">Not print-ready &mdash; re-upload the letterhead (PDF, PNG or JPG) so it prints on the tenant notice</span>';
   const letter=lh.name
@@ -9414,9 +9414,9 @@ function renderLauncher(){
          line under the name and read as a rendering fault. */
       +(_meta?('<div class="lh-meta">'+_meta+'</div>'):'')
       +(p.entity?'<div class="lh-entity">'+esc(p.entity)+'</div>':'')+'</div>'
-      +'<div class="lh-right"><div class="lh-tools"><button class="txtbtn" id="pRename">Rename</button><span class="dotsep">&middot;</span><button class="txtbtn del" id="pDelete">Delete</button></div><div class="lh-prof">'+(profileChip(p)||'<span class="pchip ok">Profile complete</span>')+'</div></div></div>'
+      +'<div class="lh-right"><div class="lh-tools"><button class="txtbtn" id="pRename">Rename</button><span class="dotsep">&middot;</span><button class="txtbtn del" id="pDelete">Delete</button></div></div></div>'
     +'<div class="lsec"><div class="lsec-t">Property letterhead</div>'+letter+'<div class="lh-note">The uploaded letterhead appears on the tenant notice. All other letterheads are built into the document templates.</div><input type="file" id="lhFile" accept="image/*,.pdf,application/pdf" style="display:none"></div>'
-    +'<div class="lsec"><div class="lsec-t">Packages</div>'+_nu+cyclesHtml(!!_nu)
+    +'<div class="lsec"><div class="lsec-t">Packages</div>'+_nu+cyclesHtml(_entry,_hap)
       +'<div class="cysoon">BBRA \u00b7 Budget-Based Rent Adjustment \u2014 not yet available</div></div>';
   wireCycles();
   bootstrapFirstCycle(p);
