@@ -830,11 +830,10 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
    one that can be reasoned about, so it is the one that stays. */
 #viewMenu{overflow-anchor:none}
 #viewMenu #menuPastBar{background:var(--paper)}
-#viewMenu .mpast{--pull:0;--stretch:0;width:100%;display:flex;align-items:center;
+#viewMenu .mpast{width:100%;display:flex;align-items:center;
   justify-content:space-between;gap:16px;position:relative;overflow:hidden;
   background:var(--card);border:0;border-bottom:1px solid var(--ln);
-  border-radius:0;cursor:pointer;font:inherit;text-align:left;
-  padding:calc(13px + (var(--stretch) * 20px)) 40px}
+  border-radius:0;cursor:pointer;font:inherit;text-align:left;padding:13px 40px}
 /* Pinned while OPEN, so Hide is reachable from anywhere in the drawer instead of
    only from the very top of it. Static when closed, where it already sits at the
    top of the page and has nothing to stick to. Its containing block is the bar,
@@ -844,29 +843,29 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
 #viewMenu .mpast:hover{background:var(--sunk)}
 #viewMenu .mpast .mp-n{font-size:13.5px;font-weight:600;color:var(--i1)}
 #viewMenu .mpast .mp-a{font-size:12px;font-weight:600;color:var(--ledger);white-space:nowrap}
-/* How far the pull has got. A rule across the foot of the bar, not a spinner:
-   it is the same hairline the bar already ends in, filling from the left. */
-/* No CSS transition: the width is driven frame by frame from a rAF glide, and a
-   transition on top of that fights it — the rule lagged its own animation and
-   read as staccato. */
-/* "There is more up here." Played once on ARRIVING at the top, and deliberately
-   not the blue rule — that one means a pull is going to unlock the rows, and
-   spending it on merely reaching the top was Matt's first complaint: the whole
-   animation ran, right and back again, in answer to nothing.
-   On min-height, which raises the box without touching the padding the pull
-   drives, so the two can never fight. The overshoot in the easing is the bounce. */
-/* On PADDING, which is the box, not min-height, which was a no-op: the banner is
-   45px tall and a 15px minimum raises nothing. The class went on, the animation
-   ran, and not one pixel moved — on either platform. The test asserted the class,
-   which is the whole reason it shipped. It asserts the HEIGHT now. */
-@keyframes mpNudge{
-  0%{padding-top:13px;padding-bottom:13px}
-  42%{padding-top:20px;padding-bottom:20px}
-  100%{padding-top:13px;padding-bottom:13px}}
-#viewMenu .mpast.nudge{animation:mpNudge .42s cubic-bezier(.33,1.3,.5,1)}
-@media (prefers-reduced-motion:reduce){#viewMenu .mpast.nudge{animation:none}}
-#viewMenu .mpast .mp-fill{position:absolute;left:0;bottom:0;height:2px;
-  width:calc(var(--pull) * 100%);background:var(--ledger)}
+/* ---- the bob: "there is more up here" ----
+   Played once, the instant the page reaches the top, and it is the ONLY thing this
+   bar animates. What it replaces: a progress rule that filled while you scrolled
+   and a banner that stretched under the pull, both of which drew something on
+   gestures that opened nothing, at times that had no relation to what the reader
+   had just done.
+
+   A TRANSFORM of the text, not the box. Transforms are composited, so this cannot
+   judder; animating the banner's padding relaid out 229 rows for four hundred
+   milliseconds every time anyone reached the top, and it moved the whole list while
+   it did. This moves eleven pixels of type and nothing else.
+
+   Upward, because up is where the rows are. One rise, one soft settle, done in
+   under half a second. */
+@keyframes mpBob{
+  0%{transform:translateY(0)}
+  40%{transform:translateY(-5px)}
+  72%{transform:translateY(1.5px)}
+  100%{transform:translateY(0)}}
+#viewMenu .mpast.nudge .mp-n,#viewMenu .mpast.nudge .mp-a{
+  animation:mpBob .44s cubic-bezier(.33,.9,.4,1)}
+@media (prefers-reduced-motion:reduce){
+  #viewMenu .mpast.nudge .mp-n,#viewMenu .mpast.nudge .mp-a{animation:none}}
 #viewMenu .mpastwrap{margin:0}
 #viewMenu .mpastwrap .mgrid.rows{border-radius:0;border-left:0;border-right:0;
   border-top:0;background:var(--card)}
