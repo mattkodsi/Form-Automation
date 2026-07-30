@@ -1750,7 +1750,11 @@ schedule the app was handed. **A fix that anchors each page's rects to found tex
 anything closes all three; a fix aimed at one box closes one.** The M41 row-mate clamp was the
 right first step and is not the general answer.
 
-## M55 — the two upload orders disagree, and the harness says they do not · **OPEN, high**
+## M55 — the two upload orders disagree, and the harness says they do not · **FIXED `04d0609`**
+
+> Closed by M54's table reader, not by anything aimed at it: the disagreement was tier 3 placing
+> The Pines' rows through a fit that held to 3.4pt on a 12pt pitch. Read as a table the two orders
+> agree exactly and `fillOrder` went 12 -> 0. The original diagnosis below stands as written.
 
 On The Pines in **`rs-first` order only**, the study's rows attach one row early: row 9 (40 units,
 current $1,350) gets $1,820, row 10 gets $2,230, row 11 comes out **blank**, and a **phantom row 12
