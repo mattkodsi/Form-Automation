@@ -69,7 +69,36 @@ Object.entries(PARTB).forEach(([g,items])=>items.forEach((it,i)=>{SEED['partb.'+
 Object.entries(PB_FUEL).forEach(([i,f])=>SEED['partb.fuel.'+i]=[f,D]);
 ['e1','e2','e3','e4','e5','u1','s1','s2','s3','s4','s5','s6'].forEach(id=>{SEED['partb.writein.'+id]=['',D];SEED['partb.writein.'+id+'.on']=['',D];});
 SEED['partb.writein.u1.fuel']=['',D];
-CHECKLIST_FLAT.forEach((it,i)=>{const off=/scope of repair/i.test(it)||/scope of work/i.test(it);SEED['check.'+i]=[off?'':'1',D];});
+/* Where the owner's checklist starts, and why each item starts there.
+   Appendix 9-2-2 has seventeen items. TWO are conditional - they describe
+   material that exists only in some packages - and the other fifteen describe
+   material every RCS submission contains.
+
+   This used to be a regex over the LABEL text: /scope of repair/ OR /scope of
+   work/. One net, two very different items, and both came out wrong:
+
+   * "Scope of Work" (4) was left OFF on every property, though all 34 studies in
+     the corpus carry the section - Belfry heads it "Scope of Assignment", which
+     is why looking for the literal phrase finds nothing. HUD lists it as
+     required RCS material, and the team's own 2026 checklist for Colonial
+     Village ticks it. The older filed exhibits leave it blank; they under-report
+     material that is in the package, and the app does not copy that.
+   * "Copy of RCS Appraiser's License (only if relying upon a temporary license)"
+     (14) was ticked ON on every property. HUD prints the condition inside the
+     item; the STUDY answers it (readChecklist in rcs.js), and an unanswered
+     conditional stays OFF. Five filed checklists read by eye tick this item on
+     all five - true on Sample Property and Sample Property, whose appraiser held a
+     New Jersey temporary practice permit, and false on Walden, Sample Property
+     and Sample Property, whose appraisers held permanent licences. The app
+     ticks the two and leaves the rest for the study to answer.
+
+   One helper, used by BOTH the key manifest and the new-property default -
+   which disagreed with it: the manifest tested the label, the default hardcoded
+   (i===2||i===4), and only the default is read at runtime. */
+const CHECK_CONDITIONAL={2:'repairs are required',
+                         14:'the appraiser relied on a temporary licence'};
+const checkSeed=i=>CHECK_CONDITIONAL[i]?'':'1';
+CHECKLIST_FLAT.forEach((it,i)=>{SEED['check.'+i]=[checkSeed(i),D];});
 const ALL_KEYS=Object.keys(SEED).map(k=>({key:k}));
 
 let mpdb=null, activePid=null, activeCid=null, _cyFresh=null;
@@ -247,8 +276,28 @@ function computeSecPos(){_secPos={};visibleSections().forEach((n,ix)=>_secPos[n]
 function secRef(n){return 'Section '+(_secPos[n]||n);}
 function deriveUnits(){const u=new Set([0]),nr=new Set(),lh=new Set(),pr=new Set([0]);Object.keys(form).forEach(k=>{let m=k.match(/^units\.(\d+)\./);if(m)u.add(+m[1]);m=k.match(/^nonrev\.(\d+)\./);if(m)nr.add(+m[1]);m=k.match(/^ns8\.(\d+)\./);if(m)lh.add(+m[1]);m=k.match(/^principals\.(\d+)\./);if(m)pr.add(+m[1]);});UNITS=[...u].sort((a,b)=>a-b);NONREV=[...nr].sort((a,b)=>a-b);NS8=[...lh].sort((a,b)=>a-b);PRINCIPALS=[...pr].sort((a,b)=>a-b);}
 
-function defUaSrc(i){return uaHas('units.'+i+'.ua_exec')?'exec':(uaHas('units.'+i+'.ua_rcs')?'rcs':'custom');}
-function defSafmrSrc(i){const h=numf(get('units.'+i+'.safmr_hud')),r=numf(get('units.'+i+'.safmr_rcs'));return h>0?'hud':(r>0?'rcs':'custom');}
+/* The STUDY comes first, not the prior schedule. Column 5 of the HUD-92458 is
+   the allowance in effect for the NEW term; the executed schedule states last
+   term's. Preferring it printed the prior year's allowance on every property in
+   the corpus, and on Sample Property, Sample Property I and Northcross the study's own
+   table is exactly what the team filed -- the right figure was in a file the app
+   had been handed, and it used the other one. Where a third document governs
+   (a CA exhibit, a UA workbook, a UAF notice) the study is still the nearer of
+   the two. The disagreement is still flagged either way; only the default moved. */
+function defUaSrc(i){return uaHas('units.'+i+'.ua_rcs')?'rcs':(uaHas('units.'+i+'.ua_exec')?'exec':'custom');}
+/* The STUDY's own printed table comes first, not the HUD pull, and there are two
+   independent reasons. The team used the study's figure on every property audited
+   -- Westwood's study prints 1,120/1,570/1,850 and the pull gave 1,254/1,743/2,104,
+   Sycamore's prints 990/1,230 and the pull gave 1,149/1,427, Hampshire's prints
+   1,500/1,810 and the pull gave 1,590/1,916, and in each case the filed workbook
+   used the study. And the pull is not stable: driving Ebony twice in one afternoon
+   returned 2,511/2,780/3,465 and then 2,655/2,910/3,644, neither matching its
+   study's 2,490/2,730/3,420.
+
+   The 150% test turns on this figure. Sample Property passes it by $12. A number
+   that moves between runs cannot be the default for a federal filing when the
+   appraiser has printed one in the document. */
+function defSafmrSrc(i){const h=numf(get('units.'+i+'.safmr_hud')),r=numf(get('units.'+i+'.safmr_rcs'));return r>0?'rcs':(h>0?'hud':'custom');}
 function uaResolvedOf(i){const src=get('units.'+i+'.ua_source')||defUaSrc(i);if(src==='rcs')return numf(get('units.'+i+'.ua_rcs'));if(src==='custom')return numf(get('units.'+i+'.ua_custom'));return numf(get('units.'+i+'.ua_exec'));}
 /* A property with every utility owner-paid has a real $0 allowance. Testing
    >0 threw it away: the schedule's own $0 was unreadable, a $0-vs-$50
@@ -557,10 +606,21 @@ function mgmtCell(){const src=get('tenant.mgmt_source')||'property';const propHa
   // mirroring the property address: report that address's record, since that is what prints
   const ovSrc=srcOf('tenant.mgmt_source')==='overridden';const c=ovSrc?CLR.overridden:groupColors(ADDR);
   return '<div class="field"><div class="flabel">Management address</div><div class="fbox mgmtcell" data-box="tenant.mgmt_address" style="background:'+c[1]+';border-left-color:'+c[0]+'"><div class="uadrop"><div class="uatrigger" tabindex="0"><span class="ualab">'+inner+'</span><span class="cvx">▾</span></div>'+menu+'</div>'+(ovSrc?ovIcons('tenant.mgmt_source'):'')+'</div></div>';}
+/* The cells are emitted COLUMN by column, because Tab follows the DOM and the
+   form is read down one column and then down the next — not zigzagged across
+   the page a field at a time, which is what interleaving the two columns into
+   grid rows produced: fifty-two of the form's stops landed somewhere other than
+   where the eye had just been. Placing by column costs nothing visually,
+   because `.cols` is `grid-auto-flow:column` over an explicit
+   `grid-template-rows`: the two columns still share their row heights, so an
+   override note appearing under a left-hand box still carries its right-hand
+   neighbour down with it. Both columns are padded to `n` — auto-flow counts
+   items, not intentions, and a short first column would otherwise swallow the
+   first cell of the second one. */
 function renderFieldSection(sec){const cols=[[],[]];sec.fields.forEach(f=>cols[f.col].push(fieldCell(f)));
-  const n=Math.max(cols[0].length,cols[1].length),rows=[];
-  for(let i=0;i<n;i++){rows.push(cols[0][i]||'<div></div>');rows.push(cols[1][i]||'<div></div>');}
-  return card(sec.n,sectionPill(sec.n),`<div class="cols">${rows.join('')}</div>`);}
+  const n=Math.max(cols[0].length,cols[1].length);
+  const cells=cols.map(c=>{const a=c.slice();while(a.length<n)a.push('<div></div>');return a.join('');}).join('');
+  return card(sec.n,sectionPill(sec.n),`<div class="cols" style="grid-template-rows:repeat(${n},auto)">${cells}</div>`);}
 function principalHasData(i){return ['name','title'].some(s=>{const v=get('principals.'+i+'.'+s);return v!==''&&v!=null;});}
 function renderPrincipals(){
   const rows=PRINCIPALS.map(i=>{const nk='principals.'+i+'.name',tk='principals.'+i+'.title';const nc=cellColors(nk),tc=cellColors(tk);
@@ -600,6 +660,37 @@ function brbaBox(brK,baK){const c=groupColors([brK,baK]);
     const row=rsCsRow(k)||'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>';
     return d.replace('<div class="uamenu">','<div class="uamenu">'+row);};
   return `<div class="rbox brba" data-box="${brK}" style="background:${c[1]};border-left-color:${c[0]}">${withRs(brK,BR_OPTS,'BR')}<span class="slash">/</span>${withRs(baK,BA_OPTS,'BA')}</div>`;}
+/* THE COLOUR OF A SOURCE-BACKED CELL IS A QUESTION ABOUT A FAMILY OF KEYS — the
+   two offers, the custom value, and which source is chosen — and never about the
+   box's own key alone. It was computed inside the renderer, so the REPAINT could
+   not ask it: paintCell handed 'units.0.ua_source' to srcCellState, which wants a
+   *_custom key, got null, fell through to that cell's own history and answered
+   'new'. Measured in a browser over all 60 boxes of a four-row package, the two
+   painters disagreed by a whole colour on exactly these cells:
+
+       units.0.ua_source     render #b45309 overridden -> repaint #64748b new
+       units.0.safmr_source  render #0f766e this-cycle -> repaint #64748b new
+
+   which is the disagreement the address cells already solved with groupOf /
+   paintGroup. One computation, both painters. */
+function uaCellColors(i){
+  const src=get('units.'+i+'.ua_source')||defUaSrc(i),exec=get('units.'+i+'.ua_exec'),rcs=get('units.'+i+'.ua_rcs'),custom=get('units.'+i+'.ua_custom');
+  const hasAny=numf(exec)>0||numf(rcs)>0||numf(custom)>0;
+  if(src==='custom'){const _st=srcCellState('units.'+i+'.ua_custom');return provColors(_st==='overridden'?'overridden':(_st==='database'?'database':'new'),'units.'+i+'.ua_source');}
+  let state=hasAny?srcOf(src==='rcs'?('units.'+i+'.ua_rcs'):('units.'+i+'.ua_exec')):'new';
+  const overSrc=srcOf('units.'+i+'.ua_source')==='overridden';const _cs=srcCellState('units.'+i+'.ua_custom');
+  if(_cs==='overridden')state='overridden';else if(_cs==='database'&&state==='new')state='database';
+  if(uaUnresolved(i)||overSrc)state='overridden';
+  return provColors(state,'units.'+i+'.ua_source');}
+function safmrCellColors(i){
+  const src=get('units.'+i+'.safmr_source')||defSafmrSrc(i),hud=get('units.'+i+'.safmr_hud'),rcs=get('units.'+i+'.safmr_rcs'),custom=get('units.'+i+'.safmr_custom');
+  const hasAny=numf(hud)>0||numf(rcs)>0||numf(custom)>0;
+  if(src==='custom'){const _st=srcCellState('units.'+i+'.safmr_custom');return provColors(_st==='overridden'?'overridden':(_st==='database'?'database':'new'),'units.'+i+'.safmr_source');}
+  let state=hasAny?srcOf(src==='rcs'?('units.'+i+'.safmr_rcs'):('units.'+i+'.safmr_hud')):'new';
+  const overSrc=srcOf('units.'+i+'.safmr_source')==='overridden';const _cs=srcCellState('units.'+i+'.safmr_custom');
+  if(_cs==='overridden')state='overridden';else if(_cs==='database'&&state==='new')state='database';
+  if(safmrUnresolved(i)||overSrc)state='overridden';
+  return provColors(state,'units.'+i+'.safmr_source');}
 function uaBox(i){const src=get('units.'+i+'.ua_source')||defUaSrc(i),exec=get('units.'+i+'.ua_exec'),rcs=get('units.'+i+'.ua_rcs'),custom=get('units.'+i+'.ua_custom');
   const hasAny=numf(exec)>0||numf(rcs)>0||numf(custom)>0;
   const lab=src==='rcs'?('$<input class="uac-in srcedit" data-srcedit="ua" data-si="'+i+'" data-money="1" value="'+esc(fmtMoney(rcs))+'"><span class="srctag">· RCS</span>'):(src==='custom'?('$<input class="uac-in" data-money="1" data-k="units.'+i+'.ua_custom" value="'+esc(fmtMoney(custom))+'" placeholder="0">'):('$<input class="uac-in srcedit" data-srcedit="ua" data-si="'+i+'" data-money="1" value="'+esc(fmtMoney(exec))+'"><span class="srctag">· RS</span>'));
@@ -609,7 +700,7 @@ function uaBox(i){const src=get('units.'+i+'.ua_source')||defUaSrc(i),exec=get('
    "clears" it, leaving a custom source with no value and a blank cell. The source
    key is the one that knows an on-file value was displaced, so the badge carries
    both: coupledKeys already saves and reverts them together. */
-  let state,c;if(src==='custom'){const _st=srcCellState('units.'+i+'.ua_custom');c=provColors(_st==='overridden'?'overridden':(_st==='database'?'database':'new'),'units.'+i+'.ua_source');}else{state=hasAny?srcOf(src==='rcs'?('units.'+i+'.ua_rcs'):('units.'+i+'.ua_exec')):'new';const overSrc=srcOf('units.'+i+'.ua_source')==='overridden';const _cs=srcCellState('units.'+i+'.ua_custom');if(_cs==='overridden')state='overridden';else if(_cs==='database'&&state==='new')state='database';if(uaUnresolved(i)||overSrc)state='overridden';c=provColors(state,'units.'+i+'.ua_source');}const boxKeyUA=src==='custom'?('units.'+i+'.ua_custom'):('units.'+i+'.ua_source');
+  const c=uaCellColors(i);const boxKeyUA=src==='custom'?('units.'+i+'.ua_custom'):('units.'+i+'.ua_source');
   const menu='<div class="uamenu">'+srcOptRow('data-uaopt="exec" data-uai="'+i+'"',(exec!==''&&exec!=null)?('$'+fmtMoney(exec)):'','Executed RS',src==='exec')+srcOptRow('data-uaopt="rcs" data-uai="'+i+'"',(rcs!==''&&rcs!=null)?('$'+fmtMoney(rcs)):'','RCS report',src==='rcs')+'<div class="uaopt'+(src==='custom'?' sel':'')+'" data-uaopt="custom" data-uai="'+i+'">Custom…</div></div>';
   return '<div class="rbox uacell" data-box="'+boxKeyUA+'" style="background:'+c[1]+';border-left-color:'+c[0]+'"><div class="uadrop"><div class="uatrigger" tabindex="0"><span class="ualab">'+lab+'</span><span class="cvx">▾</span></div>'+menu+'</div></div>';}
 function uaNoteCell(i){const conf=uaConflict(i),overSrc=srcOf('units.'+i+'.ua_source')==='overridden';if(!conf&&!overSrc)return '';const ex=get('units.'+i+'.ua_exec'),rc=get('units.'+i+'.ua_rcs');
@@ -652,7 +743,7 @@ function _numNoteUnused(i){if(!numConflict(i))return '';const n=get('units.'+i+'
 function safmrBox(i){const src=get('units.'+i+'.safmr_source')||defSafmrSrc(i),hud=get('units.'+i+'.safmr_hud'),rcs=get('units.'+i+'.safmr_rcs'),custom=get('units.'+i+'.safmr_custom');
   const hasAny=numf(hud)>0||numf(rcs)>0||numf(custom)>0;
   const lab=src==='rcs'?('$<input class="uac-in srcedit" data-srcedit="safmr" data-si="'+i+'" data-money="1" value="'+esc(fmtMoney(rcs))+'"><span class="srctag">· RCS</span>'):(src==='custom'?('$<input class="uac-in" data-money="1" data-k="units.'+i+'.safmr_custom" value="'+esc(fmtMoney(custom))+'" placeholder="0">'):('$<input class="uac-in srcedit" data-srcedit="safmr" data-si="'+i+'" data-money="1" value="'+esc(fmtMoney(hud))+'"><span class="srctag">· HUD</span>'));
-  let state,c;if(src==='custom'){const _st=srcCellState('units.'+i+'.safmr_custom');c=provColors(_st==='overridden'?'overridden':(_st==='database'?'database':'new'),'units.'+i+'.safmr_source');}else{state=hasAny?srcOf(src==='rcs'?('units.'+i+'.safmr_rcs'):('units.'+i+'.safmr_hud')):'new';const overSrc=srcOf('units.'+i+'.safmr_source')==='overridden';const _cs=srcCellState('units.'+i+'.safmr_custom');if(_cs==='overridden')state='overridden';else if(_cs==='database'&&state==='new')state='database';if(safmrUnresolved(i)||overSrc)state='overridden';c=provColors(state,'units.'+i+'.safmr_source');}const boxKeySA=src==='custom'?('units.'+i+'.safmr_custom'):('units.'+i+'.safmr_source');
+  const c=safmrCellColors(i);const boxKeySA=src==='custom'?('units.'+i+'.safmr_custom'):('units.'+i+'.safmr_source');
   const menu='<div class="uamenu">'+srcOptRow('data-safmropt="hud" data-safmri="'+i+'"',(hud!==''&&hud!=null)?('$'+fmtMoney(hud)):'','HUD API',src==='hud')+srcOptRow('data-safmropt="rcs" data-safmri="'+i+'"',(rcs!==''&&rcs!=null)?('$'+fmtMoney(rcs)):'','RCS report',src==='rcs')+'<div class="uaopt'+(src==='custom'?' sel':'')+'" data-safmropt="custom" data-safmri="'+i+'">Custom…</div></div>';
   return '<div class="rbox uacell" data-box="'+boxKeySA+'" style="background:'+c[1]+';border-left-color:'+c[0]+'"><div class="uadrop"><div class="uatrigger" tabindex="0"><span class="ualab">'+lab+'</span><span class="cvx">▾</span></div>'+menu+'</div></div>';}
 function safmrNote(i){const res=safmrResolvedOf(i),hud=numf(get('units.'+i+'.safmr_hud')),rcs=numf(get('units.'+i+'.safmr_rcs'));
@@ -1046,13 +1137,40 @@ function rsVal(k){try{const p=_rsUpload&&_rsUpload.parsed;const v=p&&p.scalars?p
    The reading is stored with its package; the PDF bytes are not, because nothing
    downstream reads _rsUpload.bytes and a schedule is a megabyte the record does
    not need. */
+/* WHAT WAS APPLIED IS PART OF THE READING. _rsFill/_rcsFill are the app's only
+   record that a document has been APPLIED and not merely read, and they were
+   module variables — so a page reload, which is a thing a person does, threw
+   them away while rsRecall/rcsRecall faithfully restored the readings beside
+   them. Two consequences, both measured: the source tile went back to saying no
+   values had been applied, and the roster re-read in rsFillFromParsed — the
+   whole of M59 — is GATED on _rcsFill, so after a reload Matt's studio /
+   one-bedroom defect came straight back (proved in real chromium: the second
+   studio variant took the one-bedroom's rent and both 1BR variants took
+   nothing). The record belongs with the reading, per cycle, which also stops it
+   leaking from one property to the next. */
 function rsRemember(){if(!(activeCid&&mpdb&&mpdb.setCycleRs))return;const u=_rsUpload;
-  const doc=u?{name:u.name,kind:u.kind,via:u.via,at:u.at,parsed:u.parsed}:{};
+  const doc=u?{name:u.name,kind:u.kind,via:u.via,at:u.at,parsed:u.parsed,fill:_rsFill}:{};
   try{Promise.resolve(mpdb.setCycleRs(activeCid,doc)).catch(()=>{});}catch(e){}}
 function rsRecall(){if(!(activeCid&&mpdb&&mpdb.getCycleRs))return null;
   let d=null;try{d=mpdb.getCycleRs(activeCid);}catch(e){return null;}
   if(!d||!d.name)return null;
-  return {name:d.name,bytes:null,kind:d.kind||'scan',via:d.via,parsed:d.parsed||null,at:d.at||'',stored:true};}
+  return {name:d.name,bytes:null,kind:d.kind||'scan',via:d.via,parsed:d.parsed||null,at:d.at||'',fill:d.fill||null,stored:true};}
+/* A permissions-locked PDF needs no password to open -- Preview shows one
+   instantly -- but pdf-lib has no decryption at all, and ignoreEncryption does
+   not skip encryption, it defers the failure to the page tree. So a study that
+   a human can plainly read arrived here as "Expected instance of e". Six of the
+   portfolio's properties file their studies this way, Sample Property's current
+   cycle among them. Unlock before anything tries to read, and fall back to the
+   original bytes rather than fail the upload: a file we cannot unlock is no
+   worse off than before. */
+async function unlockPdf(bytes){
+  try{
+    const D=window.RCSPdfDecrypt;
+    if(!D||!D.isEncrypted(bytes))return bytes;
+    const r=await D.decrypt(bytes);
+    return (r&&r.ok&&r.bytes&&r.bytes.length)?r.bytes:bytes;
+  }catch(e){return bytes;}
+}
 /* ===================== the RCS study, read =====================
    The reader is in rcs.js and is pure. This is the app side of it: pull the
    pages it asks for, keep the reading with the package, and answer the source
@@ -1103,8 +1221,35 @@ function pocMatchRcs(){
    matching a row and building one must never disagree about what a line is.
    A shape the form has no word for returns '', and a line the form cannot
    express is a line it will not invent a row for. */
-function rcsBrOf(u){const b=u&&u.br;if(b==null||b==='')return '';const t=(Number(b)===0)?'Studio':(String(b)+'BR');return BR_OPTS.indexOf(t)>=0?t:'';}
+/* A studio arrives as the NUMBER 0 from rcs.js, and this used to assume that.
+   Given the string "Studio" it computed "StudioBR", found no such option and
+   returned '' -- and '' here does not mean "unknown", it means THIS LINE MATCHES
+   NO ROW, which is the silent drop that P4 below exists to catch. Defensive
+   rather than a fixed defect: no path in the app is known to put the string
+   there today. Cheap to hold anyway, because the cost of being wrong is a rent
+   that vanishes without a word. */
+function rcsBrOf(u){const b=u&&u.br;if(b==null||b==='')return '';
+  const raw=String(b).trim();
+  if(/^(studio|efficiency)$/i.test(raw))return 'Studio';
+  const t=(Number(b)===0)?'Studio':(String(b)+'BR');return BR_OPTS.indexOf(t)>=0?t:'';}
 function rcsBaOf(u){const b=u&&u.ba;if(b==null||b==='')return '';const t=String(b)+'BA';return BA_OPTS.indexOf(t)>=0?t:'';}
+/* THE LINES THE READER COULD NOT PLACE.
+   A study line with a figure on it but no usable bedroom count is invisible to
+   the matching below -- it is not a candidate, so the remaining line for that
+   bedroom count reads as the ONLY one, the count tiebreak never runs, and its
+   rent is written into every row of that shape. Sample Property's schedule came
+   out $2,550 short exactly that way: "IBR/1BA" (capital I) and "2BR /1BA"
+   (internal space) both failed to parse, so both 1BR rows took the other 1BR
+   line's $2,025 and both 2BR rows took $2,650. A parse miss became a wrong
+   number on a HUD form with nothing said.
+   The parser now understands 97 of the 98 priced lines in the corpus, so this is
+   the net under it rather than the fix -- the remaining one is a scanner's
+   misread, and there will always be a next one. */
+function rcsUnplaced(){
+  const p=_rcsUpload&&_rcsUpload.parsed;if(!p||!p.units)return [];
+  return p.units.filter(function(u){
+    if(rcsBrOf(u))return false;                       // placed, or placeable
+    return (u.proposed!==''&&u.proposed!=null)||(u.ua!==''&&u.ua!=null);});}
 function rcsMatch(i){
   const p=_rcsUpload&&_rcsUpload.parsed;if(!p||!p.units)return {u:null,many:false,all:[]};
   const br=String(get('units.'+i+'.br')||''),ba=String(get('units.'+i+'.ba')||'');
@@ -1129,6 +1274,19 @@ function rcsMatch(i){
       if(byIx.length===1)return {u:p.units[byIx[0]],many:false,by:'count',idx:byIx[0],all:ix};
     }
     return {u:null,many:true,types:hit.map(function(u){return u.type;}),all:ix};
+  }
+  /* One candidate looks unanimous -- unless a line the reader could not place
+     states THIS ROW'S unit count, in which case the study prices two types for
+     this shape and we cannot tell which is which. The unit count is the only
+     thing both documents state independently, which is why it is the test here
+     as well as in the tiebreak above. Ambiguous, so the form asks. */
+  if(hit.length===1){
+    const n=numf(get('units.'+i+'.num_units'));
+    if(n>0){
+      const un=rcsUnplaced().filter(function(u){return u.count!==''&&u.count!=null&&Number(u.count)===n;});
+      if(un.length)return {u:null,many:true,unplaced:true,
+        types:hit.map(function(u){return u.type;}).concat(un.map(function(u){return String(u.type||'').trim()||'an unreadable line';})),
+        all:ix};}
   }
   return {u:hit[0]||null,many:false,idx:ix.length?ix[0]:-1,all:ix};
 }
@@ -1257,6 +1415,27 @@ function rcsFillFromParsed(){
     const _b=rcsBrOf(m.u),_a=rcsBaOf(m.u);
     if(_b)setk('units.'+i+'.br_rcs',_b);
     if(_a)setk('units.'+i+'.ba_rcs',_a);
+    /* And ADOPT, not merely offer, a shape the schedule never stated at all.
+       Sitting these beside the form's own br/ba is right when both documents
+       describe the cell -- that is what makes the conflict visible instead of
+       letting one overwrite the other. But an executed schedule that names no
+       bathroom is not in conflict about it; it is silent, and the study is the
+       only source there is.
+
+       Leaving it silent made the SAME TWO FILES produce different packages
+       depending on which was uploaded first: a study line that matched an
+       existing row wrote only the shadow keys, while a line the form had no row
+       for went down the homeless path below, which writes br and ba outright.
+       So the bathroom reached the printed unit type only when the study
+       happened to CREATE the row -- schedule-first printed "1BR", study-first
+       "1BR/1BA". The homeless path's own comment already states the rule this
+       restores: precedence is about a cell both documents describe, not about
+       an index that collides.
+
+       setk still declines wherever the schedule DID state a value, and the
+       emptiness test keeps a figure someone typed by hand. */
+    if(_b&&!get('units.'+i+'.br'))setk('units.'+i+'.br',_b);
+    if(_a&&!get('units.'+i+'.ba'))setk('units.'+i+'.ba',_a);
     if(m.u.count!=='')setk('units.'+i+'.num_rcs',m.u.count);
   });
 
@@ -1299,11 +1478,31 @@ function rcsFillFromParsed(){
     if(reuse<0)UNITS.push(ni);added.push(u.type||_b);
   });
 
-  (NONREV||[]).forEach(function(i){const v=rcsNonrevVal(i);if(v)setk('nonrev.'+i+'.rent',v);});
+  /* The study prices a non-revenue unit by its shape, which is a reasonable guess
+     when nothing better is on file -- but the executed schedule STATES that unit's
+     rent, and a guess must not overwrite a statement. Without this, the upload
+     order decided Part D: schedule-then-study printed the study's figure, and
+     study-then-schedule printed nothing at all, on the same two documents. */
+  (NONREV||[]).forEach(function(i){
+    const cur=get('nonrev.'+i+'.rent');
+    if(cur!==''&&cur!=null)return;
+    const v=rcsNonrevVal(i);if(v)setk('nonrev.'+i+'.rent',v);});
+
+  /* Item 14 of the owner's checklist, from the study. Only ever a TICK: the
+     study can prove a temporary licence was relied on, and silence proves
+     nothing, so a box the PM ticked by hand is never cleared from here.
+
+     Not in rcsFillKeys, deliberately. That list drives rcsTag, which paints a
+     source badge beside a VALUE; a checkbox has no room for one and says where
+     it came from by its colour, which put() sets. Adding it there would make
+     the suite's "every key the fill writes is covered by rcsTag" check fail on
+     an unticked box - a cell whose value is empty can carry no tag. */
+  if(P.scalars&&P.scalars['check.14']==='1')put('check.14','1');
 
   deriveUnits();renderBody();scheduleHudRefresh();
   const n=rcsFillKeys().length;
-  _rcsFill=fillRecord(_rcsUpload,_wrote);  setStatus('Form filled from the RCS study — '+n+' value'+(n===1?'':'s')+' marked “RCS report”.'
+  _rcsFill=fillRecord(_rcsUpload,_wrote);rcsRemember();
+  setStatus('Form filled from the RCS study — '+n+' value'+(n===1?'':'s')+' marked “RCS report”.'
     +(added.length?' Added '+added.length+' unit row'+(added.length===1?'':'s')+' the study prices and the form did not have ('+added.join(', ')+') — check the count and type against the executed schedule.':'')
     +(ambiguous?' '+ambiguous+' unit row'+(ambiguous===1?'':'s')+' matched more than one line in the study and '+(ambiguous===1?'was':'were')+' left for you — the study prices them separately and the form cannot tell which is which.':'')
     +' Review the highlighted cells, then “Update property profile”.');
@@ -1320,6 +1519,17 @@ function rcsChecks(){
   const out=[];const M=v=>'$'+Number(v).toLocaleString('en-US');
   const lab=i=>esc(get('units.'+i+'.br')||('row '+(i+1)));
 
+  /* A priced line the reader could not place is the study telling us about a
+     unit type we did not manage to read. Silence there is the worst outcome,
+     because the rows it belongs to will look confidently filled from another
+     line -- see rcsUnplaced. */
+  { const un=(typeof rcsUnplaced==='function')?rcsUnplaced():[];
+    if(un.length)out.push(chk('warn','The study prices a unit type we could not read',
+      un.length+' priced line'+(un.length===1?'':'s')+' in the study '
+      +(un.length===1?'gives':'give')+' no readable bedroom count \u2014 '
+      +un.map(function(u){return '\u201c'+esc(String(u.type||'').trim()||'(blank)')+'\u201d';}).join(', ')
+      +'. Check every proposed rent against the study by hand: a line we cannot place cannot be matched to a row.')); }
+
   /* The Section 8 number, across every document that carries one. Belfry
      prints it under an "FHA Project No." label and Riverside Gardens's own grid
      disagrees with its own letter, so this is not a formality. */
@@ -1332,6 +1542,18 @@ function rcsChecks(){
       agree?('agrees · '+src.map(function(x){return x[0];}).join(', '))
            :src.map(function(x){return esc(x[1])+' per '+x[0];}).join(' · ')));
   }
+
+  /* The one checklist item HUD makes conditional in its own wording: "Copy of
+     RCS Appraiser's License (only if relying upon a temporary license)". Both
+     sides exist here - the study's answer and the box as it stands - so the
+     comparison is real. It renders only when the study answered; a study that
+     never mentions a licence has not said no. */
+  { const tv=P.scalars?P.scalars['check.14']:undefined, on=get('check.14')==='1';
+    if(tv==='1')out.push(chk(on?'ok':'warn','Appraiser\u2019s licence \u00b7 temporary',
+      on?'the study names a temporary licence \u00b7 item 14 ticked'
+        :'the study names a temporary licence \u2014 item 14 is not ticked, and the copy is required'));
+    else if(tv===''&&on)out.push(chk('warn','Appraiser\u2019s licence \u00b7 temporary',
+      'the study answers \u201cno\u201d \u00b7 item 14 is ticked, which certifies a copy that is not required')); }
 
   /* Utility allowance: the study against the executed schedule. */
   let same=0;const diff=[];
@@ -1377,12 +1599,12 @@ function rcsChecks(){
 }
 /* The reading outlives the page that made it, exactly as the schedule's does. */
 function rcsRemember(){if(!(activeCid&&mpdb&&mpdb.setCycleRcs))return;const u=_rcsUpload;
-  const doc=u?{name:u.name,at:u.at,parsed:u.parsed}:{};
+  const doc=u?{name:u.name,at:u.at,parsed:u.parsed,fill:_rcsFill}:{};
   try{Promise.resolve(mpdb.setCycleRcs(activeCid,doc)).catch(()=>{});}catch(e){}}
 function rcsRecall(){if(!(activeCid&&mpdb&&mpdb.getCycleRcs))return null;
   let d=null;try{d=mpdb.getCycleRcs(activeCid);}catch(e){return null;}
   if(!d||!d.name)return null;
-  return {name:d.name,bytes:null,parsed:d.parsed||null,at:d.at||'',stored:true};}
+  return {name:d.name,bytes:null,parsed:d.parsed||null,at:d.at||'',fill:d.fill||null,stored:true};}
 function rsNum(v){let s=String(v==null?'':v).replace(/[^0-9.,\-]/g,'');
   /* A dot is not always a decimal point. These schedules are typed by hand and
      real copies use both conventions: White Oak's prints 1.147 / 36.704 /
@@ -1398,7 +1620,32 @@ function rsNum(v){let s=String(v==null?'':v).replace(/[^0-9.,\-]/g,'');
   const n=parseFloat(s);return isFinite(n)?n:'';}
 function rsDateISO(v){v=String(v||'').trim();let m=v.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);if(m)return m[3]+'-'+('0'+m[1]).slice(-2)+'-'+('0'+m[2]).slice(-2);m=v.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m)return v.slice(0,10);const MN={january:1,february:2,march:3,april:4,may:5,june:6,july:7,august:8,september:9,october:10,november:11,december:12};m=v.toLowerCase().match(/([a-z]+)\s+(\d{1,2}),?\s+(\d{4})/);if(m&&MN[m[1]])return m[3]+'-'+('0'+MN[m[1]]).slice(-2)+'-'+('0'+m[2]).slice(-2);return '';}
 function rsYearOn(iso){const m=String(iso||'').match(/^(\d{4})-(\d{2})-(\d{2})/);return m?((+m[1])+1)+'-'+m[2]+'-'+m[3]:'';}   // the uploaded schedule is the one in force; this package renews it
-function rsParseUnitType(t){t=String(t||'');let br='',ba='';if(/studio|efficiency/i.test(t))br='Studio';else{const m=t.match(/(\d+)\s*(?:br\b|bed)/i);if(m&&BR_OPTS.indexOf(m[1]+'BR')>=0)br=m[1]+'BR';else{const bare=t.trim().match(/^(\d+)$/);if(bare&&BR_OPTS.indexOf(bare[1]+'BR')>=0)br=bare[1]+'BR';}}const b=t.match(/(\d+(?:\.\d+)?)\s*(?:ba\b|bath)/i);if(b&&BA_OPTS.indexOf(b[1]+'BA')>=0)ba=b[1]+'BA';
+/* Three spellings the real corpus uses that the first pass could not read, each
+   found by parsing all 34 filed schedules rather than by imagining them:
+
+   "BR3"      puts the number AFTER the letters — Sample Property, 333 Holly and
+              The Pines all write it that way.
+   "2BR2BA"   runs the bath count straight on, so the \b after "br" never fires
+              because the next character is a digit — 333 Holly, Oaks on North
+              Plaza.
+   "0 BEDROOM" is how Sample Property writes a studio. One property, but the reader
+              on the other side of the form, rcsBrOf, has always mapped zero
+              bedrooms to Studio, so this is the same asymmetry rather than one
+              document's quirk. It cost real money: an unparseable type makes a
+              row rcsMatch skips, the study's studio line then goes down the
+              homeless path and adds a SECOND row for the same 17 units, and the
+              generated HUD form claims 100 units instead of 83.
+
+   Not fixed, deliberately: "3613", "16R", "2BIRMBA-ADA" and "2lBA", all from
+   Sample Property, which are OCR misreads of a poor scan and not a naming
+   convention. Guessing at those would be inventing unit types. */
+function rsParseUnitType(t){t=String(t||'');let br='',ba='';
+  const asBr=n=>(String(n)==='0')?'Studio':(BR_OPTS.indexOf(n+'BR')>=0?n+'BR':'');
+  if(/studio|efficiency/i.test(t))br='Studio';else{
+    const m=t.match(/(\d+)\s*(?:br|bed(?:room)?s?)(?![a-z])/i)   // "1BR", "1 Bedroom", "2BR2BA"
+         ||t.match(/\bbr\s*(\d+)/i);                            // "BR3"
+    if(m)br=asBr(m[1]);
+    if(!br){const bare=t.trim().match(/^(\d+)$/);if(bare)br=asBr(bare[1]);}}const b=t.match(/(\d+(?:\.\d+)?)\s*(?:ba\b|bath)/i);if(b&&BA_OPTS.indexOf(b[1]+'BA')>=0)ba=b[1]+'BA';
   /* Both spellings appear across the real corpus: "1 BR E" / "1 BR F" at Beacon
      Hill, "1 Bedroom, Elderly" / "1 Bedroom, Family" at Sample Property. A bare
      letter counts only at the very end of the string, so an F inside a word can
@@ -1411,8 +1658,11 @@ function rsParseUnitType(t){t=String(t||'');let br='',ba='';if(/studio|efficienc
      off br, and none of that may move. */
   let label=String(t)
     .replace(/studio|efficiency/ig,'')
-    .replace(/\d+\s*(?:br\b|bedrooms?\b|beds?\b)/ig,'')
-    .replace(/\d+(?:\.\d+)?\s*(?:ba\b|bathrooms?\b|baths?\b)/ig,'')
+    /* the same three spellings, so a type the reader now understands does not
+       leave its own bedroom count behind as a "label" */
+    .replace(/\d+(?:\.\d+)?\s*(?:ba|bathrooms?|baths?)(?![a-z])/ig,'')
+    .replace(/\d+\s*(?:br|bed(?:room)?s?)(?![a-z])/ig,'')
+    .replace(/\bbr\s*\d+/ig,'')
     .replace(/[\s,\/\u2013\u2014-]+/g,' ')
     .trim();
   if(/^\d+$/.test(label))label='';        // a bare number is the bedroom count, not a label
@@ -1478,7 +1728,55 @@ async function rsRuns(txt,ctx){ // content stream -> ctx.runs [{s,x,y,d}] in pag
   const P=window.PDFLib;
   let cm=ctx.ctm.slice(),stack=[],tm=null,tlm=null,TL=0,font=null;
   const fonts=await rsFontMaps(ctx.res);
-  const emit=str=>{if(!str)return;const m=rsMul(tm||[1,0,0,1,0,0],cm);ctx.runs.push({s:str,x:+m[4].toFixed(2),y:+m[5].toFixed(2),d:ctx.depth});};
+  /* A gap the page draws by MOVING THE PEN rather than by printing spaces.
+     The TJ rule below restores the gaps a producer expresses as displacements
+     inside one array; this restores the ones expressed as Td moves between
+     separate show operations, which emit no characters at all and so were
+     invisible. Same fault, other spelling:
+
+       [(1)-96 ( BR)-71.9 ( /)-103.7 ( 1)-96 ( BA)]TJ
+       0 Tc 0 Tw 10.482 -0 0 10.4221 216.5607 309.732 Tm
+       (51)Tj  4.071 0 Td  (632)Tj  5.643 0 Td  [($1,)-35.7 (710)]TJ
+
+     welded to "1 BR / 1 BA51632$1,710" and every row pattern needs \s+ between
+     the count and the next column, so 333 Holly and Sample Property read as ZERO
+     unit types and their whole packages went unwritten. Their sibling Cornerstone
+     studies, The Pines and Sample Property, read fine only because Acrobat
+     emitted the same row as one TJ array. One template, two PDFMaker outputs.
+
+     The threshold comes from measuring the corpus, and it is deliberately high.
+     Cell gaps are an order of magnitude wider than anything inside a cell: their
+     medians run 44 to 125pt across the Cornerstone studies, while intra-cell
+     moves reach about 22pt. 25pt sits in that gap. A lower value was tried first
+     and rejected with evidence - at 1.5pt the reader began splitting figures, and
+     the suite caught it on Sample Property.
+
+     So this only ever separates CELLS, never words. A page that positions each
+     word with its own small Td gets no spaces from this rule, which is a real
+     limitation and not an oversight: the rule exists to stop a table row welding
+     into one string, and buying word spacing too would cost the margin that
+     makes the cell case safe. Belfry's studies use no horizontal Td moves at all,
+     so nothing this rule does can reach them.
+
+     Note the fix is here and NOT in the row patterns. Relaxing \s+ to \s* would
+     read "1 BR / 1 BA51632" as type "1 BR / 1 BA5", count 1, area 632 - filing a
+     confidently wrong unit mix in place of an honest zero. */
+  const RS_TD_GAP=25;   // device points; above kerning, below a word space
+  let gap=false,prevS='';
+  const devXY=t=>{const m=rsMul(t||[1,0,0,1,0,0],cm);return [m[4],m[5]];};
+  const emit=str=>{if(!str)return;
+    if(gap){gap=false;
+      /* One boundary no width rule can judge: the inside of a printed figure.
+         Sample Property draws "$1,580" as "$1," then a pen move then "580", and that
+         move is as wide as the moves between its own table cells - the same page
+         prints the same figure unsplit a few columns later. So no threshold can
+         separate them there. A digit-comma-digit boundary can only be one number
+         though: a thousands separator is never followed by a space. Note this is
+         deliberately NOT "both sides are digits", which would weld the genuinely
+         adjacent cells "30" and "537" into 30537 - the very ambiguity the TJ rule
+         above exists to prevent. */
+      if(!(/\d,$/.test(prevS)&&/^\d/.test(str)))str=' '+str;}
+    const m=rsMul(tm||[1,0,0,1,0,0],cm);ctx.runs.push({s:str,x:+m[4].toFixed(2),y:+m[5].toFixed(2),d:ctx.depth});prevS=str;};
   const deLit=b=>b.replace(/\\([nrtbf()\\]|[0-7]{1,3})/g,(mm,g)=>{if(g==='n')return'\n';if(g==='r')return'\r';if(g==='t')return'\t';if(g==='b')return'\b';if(g==='f')return'\f';if(/^[0-7]+$/.test(g))return String.fromCharCode(parseInt(g,8));return g;});
   const deHex=h=>{h=h.replace(/\s+/g,'').toLowerCase();const fi=font&&fonts[font]?fonts[font]:null;
     const step=(fi?fi.bytes===2:(h.length>=4&&/^00/.test(h)))?4:2;let o='';
@@ -1510,12 +1808,16 @@ async function rsRuns(txt,ctx){ // content stream -> ctx.runs [{s,x,y,d}] in pag
       case 'Q':cm=stack.pop()||ctx.ctm.slice();break;
       case 'cm':if(nums.length>=6)cm=rsMul(nums.slice(-6),cm);break;
       case 'Tf':font=lastName;break;
-      case 'BT':tm=[1,0,0,1,0,0];tlm=tm.slice();break;
+      case 'BT':tm=[1,0,0,1,0,0];tlm=tm.slice();gap=false;break;
       case 'ET':tm=null;break;
-      case 'Tm':if(nums.length>=6){tlm=nums.slice(-6);tm=tlm.slice();}break;
-      case 'Td':if(nums.length>=2){tlm=rsMul([1,0,0,1,nums[nums.length-2],nums[nums.length-1]],tlm||[1,0,0,1,0,0]);tm=tlm.slice();}break;
+      case 'Tm':if(nums.length>=6){tlm=nums.slice(-6);tm=tlm.slice();gap=false;}break;
+      case 'Td':if(nums.length>=2){const _p0=devXY(tlm);tlm=rsMul([1,0,0,1,nums[nums.length-2],nums[nums.length-1]],tlm||[1,0,0,1,0,0]);tm=tlm.slice();
+        const _p1=devXY(tlm);
+        // along ONE baseline only: a move that also drops a line is a new line,
+        // which lines() already separates by y, and must not read as a space
+        if(Math.abs(_p1[1]-_p0[1])<=0.5&&_p1[0]-_p0[0]>=RS_TD_GAP)gap=true;}break;
       case 'TD':if(nums.length>=2){TL=-nums[nums.length-1];tlm=rsMul([1,0,0,1,nums[nums.length-2],nums[nums.length-1]],tlm||[1,0,0,1,0,0]);tm=tlm.slice();}break;
-      case 'T*':tlm=rsMul([1,0,0,1,0,-TL],tlm||[1,0,0,1,0,0]);tm=tlm.slice();break;
+      case 'T*':tlm=rsMul([1,0,0,1,0,-TL],tlm||[1,0,0,1,0,0]);tm=tlm.slice();gap=false;break;
       case 'TL':if(nums.length)TL=nums[nums.length-1];break;
       case 'Tj':emit(lastStr);lastStr=null;break;
       case "'":tlm=rsMul([1,0,0,1,0,-TL],tlm||[1,0,0,1,0,0]);tm=tlm.slice();emit(lastStr);lastStr=null;break;
@@ -1557,7 +1859,112 @@ async function rsFieldRects(){ // field id -> {pg,x,y,w,h} from our own template
   const bin=atob(b64);const tb=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)tb[i]=bin.charCodeAt(i);
   const doc=await window.PDFLib.PDFDocument.load(tb,{parseSpeed:Infinity});const pf=doc.getForm();const pgs=doc.getPages();
   const map={};pf.getFields().forEach(f=>{try{const w=f.acroField.getWidgets()[0];const r=w.getRectangle();let pg=-1;pgs.forEach((p,i)=>{if(p.ref===w.P())pg=i;});map[f.getName()]={pg:pg,x:r.x,y:r.y,w:r.width,h:r.height};}catch(e){}});
+  /* Boxes on ONE printed row hold ONE printed row.
+     Field 1, the Project Name, is 23pt tall where fields 2 and 3 beside it on
+     the same row - the FHA number and the effective date - are 19pt. Its floor
+     therefore sits 4pt lower than theirs, which on this form is most of a row:
+     the "Part A - Apartment Rents" divider prints its baseline 1.95pt INSIDE
+     field 1's window. So the divider was collected as part of the project name
+     and four schedules filed themselves under names like
+       ShilohVillageApts.      PartA-ApartmentRents
+       11fkaCreek333HollyHollyPartA-ApartmentRents
+       ThePinesfkaWoodGlenApartmentsPartA-ApartmentRents
+       OaksonINorthP,lazafkaNorthPlazaApartmentsPartA-ApartmentRents
+     - the name reaching every generated document and all three filenames.
+
+     Declining the misaligned pages did NOT fix this, which is worth recording:
+     it only moved the same swallow to tier 3, because both tiers look up the
+     very rects this function hands out. Clamping here fixes both at once, and
+     nothing else reads them - gen.js writes through the AcroForm by field name.
+
+     No threshold and no magic number: a box is clamped to the shallowest floor
+     on its own printed row, which is a statement about the form rather than
+     about this one field. Twelve of the 95 rows on page 1 disagree about their
+     floor at all, and eleven disagree by about a point - ordinary template
+     sloppiness, far too little to reach another row, since the rows themselves
+     are 10 to 12pt apart. Field 1's row is the only one that disagrees by
+     enough to matter, which is exactly why it was the only one misreading. */
+  { const row={};
+    Object.keys(map).forEach(id=>{const r=map[id];
+      const k=r.pg+':'+(Math.round((r.y+r.h)*2)/2);(row[k]=row[k]||[]).push(id);});
+    Object.keys(row).forEach(k=>{const ids=row[k];
+      let floor=-Infinity;ids.forEach(id=>{if(map[id].y>floor)floor=map[id].y;});
+      ids.forEach(id=>{const r=map[id];if(r.y>=floor)return;
+        r.h=(r.y+r.h)-floor;r.y=floor;});});}
   _rsRectCache=map;return map;}
+/* The form's own printed lines, by text rather than by position.
+   rsDropTplLabels drops a label by finding it where the template prints it, and
+   that is the right test on a page laid out like the template. On a page that is
+   NOT - a scanner's text layer, or the third printing of HUD-92458 whose rows sit
+   on a different pitch - it finds nothing, so the labels flow into the boxes.
+   Position cannot rescue those pages, which is the whole reason tier 2 now
+   declines them. But TEXT can: whatever coordinates it arrived at, a line that
+   reproduces one of the blank form's own printed lines is the form talking.
+
+   This is the complement the positional dropper lacks, and it is what finishes
+   the project names. Clamping field 1 to its row-mates' floor fixed Shiloh
+   Village and improved Sample Property, and could not reach 333 Holly or The
+   Pines, where the divider prints ABOVE that floor. It also could not reach tier
+   3 at all, which is where declining the misaligned pages sent them: Shiloh came
+   back from OCR as "Sample Property Apts. Part A Apartment Rents Show the actual".
+
+   The 8-character floor keeps this away from short values. "Part A - Apartment
+   Rents" normalises to 19 characters and "Show the actual" to 13, while a value
+   like "N/A" is 2 and can never match. A real value long enough to reproduce a
+   whole printed line of the form exactly is not a case that arises. */
+let _rsFormLines=null;
+function rsFormLineKey(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');}
+function rsFormLines(tplPg){
+  if(!_rsFormLines){
+    _rsFormLines=[];
+    const pages=_rsTplRuns||[];
+    for(let p=0;p<pages.length;p++){
+      const set=new Set(),lines=[];
+      (pages[p]||[]).slice().sort((x,y)=>(y.y-x.y)||(x.x-y.x)).forEach(r=>{
+        const L=lines[lines.length-1];
+        if(L&&Math.abs(L.y-r.y)<=RS_LINE)L.runs.push(r);else lines.push({y:r.y,runs:[r]});});
+      lines.forEach(L=>{const k=rsFormLineKey(L.runs.sort((x,y)=>x.x-y.x).map(r=>r.s).join(''));
+        if(k.length>=8)set.add(k);});
+      _rsFormLines.push(set);}}
+  return _rsFormLines[tplPg]||new Set();}
+/* Shared by both tiers, so a page cannot be scrubbed one way on the text path
+   and another way after OCR. */
+function rsDropFormLines(lines,tplPg){
+  const set=rsFormLines(tplPg);
+  if(!set.size)return lines;
+  return lines.filter(t=>!set.has(rsFormLineKey(t)));}
+/* What one box says, in READING order.
+   Sorting the runs by descending baseline and joining them was right for a page
+   whose lines are exactly level, and wrong for a page carrying a scanner's own
+   text layer, where one printed line arrives as several baselines a fraction of
+   a point apart. 333 Holly's project name prints as "333 Holly fka Holly Creek
+   II" on one line, and its OCR layer gives that line four baselines - 693.36,
+   693.24, 693.12, 691.20 - so ordering by height returned
+     11 | fka Creek | 333 | Holly Holly
+   which is where "11fkaCreek333HollyHolly" came from. The "11" is the scanner's
+   reading of the roman numeral II, at a third the font size of its neighbours.
+   rsLines already solved exactly this for the HAP-number label - "sorting each
+   line by x removes the dependency instead of widening it" - and rsMapRects
+   never got the same treatment.
+   So: group the runs into lines, order each line left to right, and take the
+   lines top to bottom. The tolerance is well under the form's 10-12pt row pitch,
+   so two genuinely separate printed lines stay separate. */
+function rsBoxText(inside,tplPg){
+  const lines=[];
+  inside.slice().sort((a,b)=>b.y-a.y).forEach(r=>{
+    const L=lines[lines.length-1];
+    if(L&&Math.abs(L.y-r.y)<=RS_LINE)L.runs.push(r);
+    else lines.push({y:r.y,runs:[r]});});
+  const txt=lines.map(L=>L.runs.sort((a,b)=>a.x-b.x).map(r=>r.s).join('')
+    /* One space, however many the page drew. Sample Property's name arrived as
+       "Friendship  Court" once the Td-gap rule started restoring a space beside
+       one the run already carried, and that reached the stored name, the workbook
+       title and every output filename. rcs.js's own lines() has collapsed
+       whitespace this way from the start; this is the same treatment, not a new
+       idea, and the six spaces inside "Sample Property Apts.      " were only ever
+       trailing, so nothing legible is lost. */
+    .replace(/\s+/g,' ').trim()).filter(Boolean);
+  return rsDropFormLines(txt,tplPg).join(' ').trim();}
 function rsMapRects(pageRuns,rects,tplPg){ // one page's runs -> {fieldId: text}
   const out={};if(!pageRuns)return out;
   // A flattened copy draws its values inside form XObjects (depth > 0) while the
@@ -1567,9 +1974,152 @@ function rsMapRects(pageRuns,rects,tplPg){ // one page's runs -> {fieldId: text}
   const deep=pageRuns.filter(r=>r.d>0);const runs=deep.length?deep:pageRuns;
   for(const id in rects){const rc=rects[id];if(rc.pg!==tplPg)continue;
     const inside=runs.filter(r=>r.x>=rc.x-2&&r.x<=rc.x+rc.w+2&&r.y>=rc.y-1&&r.y<=rc.y+rc.h);
-    const v=inside.sort((a,b)=>(b.y-a.y)||(a.x-b.x)).map(r=>r.s).join('').trim();
+    const v=rsBoxText(inside,tplPg);
     if(v)out[id]=v;}
   return out;}
+/* ---- a printing that is NOT ours: Part A, read from the form's own table ----
+   Eight of the corpus's prior schedules print HUD-92458 at coordinates that are
+   not our template's, and the premise above rightly declines them. What the
+   register recorded as "measure the offset and correct for it -- refused" is
+   worth restating precisely, because it decides the shape of everything below.
+   Fitting each axis independently over a page's own label correspondences --
+   which is a more generous model than the similarity fit tier 3 uses -- still
+   leaves a median error of 3.2 to 9.0 points on those pages, with maxima of 13
+   to 16: more than one printed row. On Sample Property the implied shift walks
+   from -1.4pt at the top of the page to -45pt at the bottom, because that
+   printing sets Part B's rows on a 14.4pt pitch where ours uses 10.92. These
+   are different PRINTINGS of the form, not displaced copies of ours, so no
+   transform of any order will put our boxes over their cells. Nine pages, four
+   distinct printings, each shared by two or more properties.
+
+   What every printing does share is the form's own text. HUD numbers the
+   columns of Part A on the page -- "Col. 1" through "Col. 8" -- names the Part
+   above them and its totals below, and prints one unit type per line. So Part A
+   can be read with no reference to our geometry at all: columns from the page's
+   own headings, rows from the page's own baselines, and the result handed to the
+   same rsAssembleFields, whose reconciliation against the schedule's own
+   printed monthly total is what decides whether the read is believed. That gate
+   is why this can be attempted at all on a scanner's text layer, where the
+   characters are themselves a guess: Sample Property's read $111,198 where
+   the page prints $91,922, and a row set that does not add up to the printed
+   total is refused rather than filed.
+
+   Reached ONLY where the reader returns null today, so no copy that reads now
+   can read differently. */
+const RS_TBL_TOL=2.2;      // runs within this many points of one baseline are one printed line
+const RS_TBL_SPLIT=40;     // an x gap this wide separates two entries on the head row
+const RS_TBL_MINGAP=25;    // narrower than this, two "columns" are one column and a stray
+const RS_TBL_SPAN=380;     // Col. 1 to Col. 8 measures 471-494pt on every printing seen
+const rsTblFlat=s=>String(s==null?'':s).replace(/\s+/g,'');
+const RS_TBL_NUM=/^\$?\(?-?[\d,]*\d(?:\.\d{1,2})?\)?$/;
+const rsTblIsNum=s=>{const t=rsTblFlat(s);return t!==''&&RS_TBL_NUM.test(t);};
+function rsColHeads(runs){
+  /* The form prints its own column numbers over Part A. On one printing each is
+     a single run ("Col. 4"); on a scanner's text layer the word and its digit
+     are separate runs, and the same two fragments occur again further down
+     inside "(Col. 2 x Col. 3)" and "(Col. 4 Sum x 12)*". So every candidate is
+     collected and the columns are then taken in order, each the leftmost that
+     still sits right of the one before -- the only assignment a table admits,
+     which discards the strays without having to recognise them as strays. On
+     The Pines that alone is the difference between reading Col. 4 at x 258,
+     where its figures are, and at x 169, where the yearly-total caption is. */
+  const cand={};
+  const add=(n,x)=>{if(n>=1&&n<=8)(cand[n]=cand[n]||[]).push(x);};
+  runs.forEach(r=>{const t=String(r.s).trim();
+    const m=t.match(/^col[.,]?\s*([1-8])$/i);
+    if(m){add(+m[1],r.x);return;}
+    if(!/^col[.,]?$/i.test(t))return;
+    let best=null;
+    runs.forEach(o=>{if(o===r||Math.abs(o.y-r.y)>RS_TBL_TOL)return;
+      const d=o.x-r.x;if(d<=0||d>22)return;
+      if(!/^[1-8]$/.test(String(o.s).trim()))return;
+      if(!best||o.x<best.x)best=o;});
+    if(best)add(+String(best.s).trim(),r.x);});
+  const heads=[];let prev=-1e9;
+  for(let n=1;n<=8;n++){
+    const xs=(cand[n]||[]).filter(x=>x>prev+(n>1?RS_TBL_MINGAP:0)).sort((a,b)=>a-b);
+    if(!xs.length)return null;
+    heads.push(xs[0]);prev=xs[0];}
+  return (heads[7]-heads[0])>=RS_TBL_SPAN?heads:null;}
+function rsTblCells(lineRuns,heads){ // one printed line -> one string per column
+  const cells=[];for(let i=0;i<8;i++)cells.push([]);
+  lineRuns.forEach(r=>{let c=0;
+    for(let i=1;i<8;i++)if(r.x>=(heads[i-1]+heads[i])/2)c=i;
+    cells[c].push(r);});
+  /* Joined with a space and then measured, because a scanner's layer breaks one
+     number across runs -- "1," then "350" -- while a unit type genuinely reads
+     "1 BR". A numeric cell has its spaces taken back out (rsNum reads
+     "1,350"); a text cell keeps them. */
+  return cells.map(rs=>rs.sort((a,b)=>a.x-b.x).map(r=>String(r.s)).join(' ').replace(/\s+/g,' ').trim());}
+function rsTableA(runs){ // a page's positioned runs -> {fieldId: text} for Part A, or null
+  if(!runs||runs.length<20)return null;
+  const L=rsLines(runs,RS_TBL_TOL);
+  const at=re=>L.find(l=>re.test(l.t));
+  const pa=at(/^\s*part\s*a\b/i);if(!pa)return null;
+  const pb=at(/^\s*part\s*b\b/i), yBot=pb?pb.y:0;
+  const heads=rsColHeads(runs.filter(r=>r.y<pa.y&&r.y>yBot));
+  if(!heads)return null;
+  /* Where Part A's rows stop: the form's own totals caption. Taking the higher
+     of the two it prints matters -- "Total Units 76 $118,712" sits BELOW
+     "Monthly Contract Rent Potential" and carries three numeric cells, so a row
+     test alone would file the schedule's total as a twelfth unit type. */
+  let yTot=0;
+  L.forEach(l=>{if(l.y<=yBot)return;
+    if(/monthly\s*contract\s*rent\s*potential/i.test(l.t)||/total\s*units/i.test(l.t))
+      if(l.y>yTot)yTot=l.y;});
+  if(!yTot)return null;
+  const F={};
+  /* A row of the table, told from the header block above it by content: three or
+     more of columns 2-8 holding nothing but a figure. Every caption line fails
+     that test, including the fragmented ones, and no unit row does. */
+  let slot=0;
+  L.forEach(l=>{
+    if(l.y>=pa.y||l.y<=yTot||slot>=11)return;
+    const c=rsTblCells(l.r,heads);
+    if(/non[\s\-\u2010-\u2015]*section\s*8/i.test(l.t)){
+      // the divider itself occupies a row, because rsRows reads it to know that
+      // everything below it is unassisted
+      F[String(7+slot*8)]=l.t.replace(/\s+/g,' ').trim();slot++;return;}
+    let nums=0;for(let i=1;i<8;i++)if(rsTblIsNum(c[i]))nums++;
+    if(nums<3)return;
+    if(!(rsNum(rsTblFlat(c[2]))>0))return;   // an all-zero row is a blank row on the form
+    const b=7+slot*8;
+    for(let i=0;i<8;i++){const v=i===0?c[i]:rsTblFlat(c[i]);
+      if(v)F[String(b+i)]=v;}
+    slot++;});
+  if(!slot)return null;
+  // the printed monthly potential: the first figure the totals band carries in
+  // Col. 4. rsAssembleFields reconciles the rows against it, and refuses them if
+  // they do not agree.
+  for(let i=0;i<L.length;i++){const l=L[i];
+    if(l.y>yTot||l.y<=yBot)continue;
+    const c=rsTblCells(l.r,heads);
+    if(rsTblIsNum(c[3])){F['95']=rsTblFlat(c[3]);break;}}
+  const h=rsTableHead(L);if(h)Object.keys(h).forEach(k=>{F[k]=h[k];});
+  return F;}
+function rsTableHead(L){ // the head row: project name, FHA number, effective date
+  /* Read off the page's own label line rather than out of a box, which is also
+     what finally settles the swallowed project names: there is no box to
+     over-reach, so "Part A - Apartment Rents" cannot join the name. */
+  const i=L.findIndex(l=>/project\s*name/i.test(l.t));
+  if(i<0)return null;
+  const lab=L[i],val=L[i+1];
+  if(!val||lab.y-val.y>26)return null;
+  const fha=lab.r.filter(r=>/fha/i.test(String(r.s))).map(r=>r.x).sort((a,b)=>a-b)[0];
+  const cut=(fha==null?300:fha)-8;
+  const rs=val.r.slice().sort((a,b)=>a.x-b.x);
+  const name=rs.filter(r=>r.x<cut).map(r=>String(r.s)).join(' ').replace(/\s+/g,' ').trim();
+  const rest=[];                            // the two entries right of the name, split on a wide gap
+  rs.filter(r=>r.x>=cut).forEach(r=>{const g=rest[rest.length-1];
+    if(g&&r.x-g.x<=RS_TBL_SPLIT){g.t+=String(r.s);g.x=r.x;}
+    else rest.push({x:r.x,t:String(r.s)});});
+  const out={};
+  if(name)out['1']=name;
+  const di=rest.findIndex(g=>/^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(rsTblFlat(g.t)));
+  if(di>=0)out['3']=rsTblFlat(rest[di].t);
+  const fi=rest.findIndex((g,k)=>k!==di&&rsTblFlat(g.t));
+  if(fi>=0)out['2']=rest[fi].t.replace(/\s+/g,' ').trim();
+  return Object.keys(out).length?out:null;}
 function rsPartD(V){ // Part D non-revenue-producing space: gen.js's dUse/dType/dRent ids
   const dUse=[159,162,165,168,171],dType=[160,163,166,169,172],dRent=[161,164,167,170,173];
   const out=[];
@@ -1620,11 +2170,31 @@ function rsAssembleFields(V){
   outp.nonrev=rsPartD(V);
   rsSigInto(outp,V(228));
   outp.partb=rsPartB(V,false);
-  // quality gate: the rows must reconcile against the schedule's own printed total
-  const tot=rsNum(V(95));const all=outp.units.concat(outp.ns8);
+  return rsRecordHolds(outp,V(95))?outp:null;}
+/* THE FLOOR, AND IT BELONGS TO ALL THREE TIERS.
+   This test used to live inside rsAssembleFields, which tiers 2 and 3 call and
+   tier 1 does not — so a copy that still carries the blank form's AcroForm could
+   come back with NO rent rows at all and the app would call it read: a green
+   tile saying “read”, “Fill form from RS” armed, and Enter bound to it. Two real
+   documents do exactly that. Our own blank HUD-92458 template, uploaded by
+   mistake, is one. The other is filed: Sample Property' “HUD Rent Schedule -
+   Sample Property eff. 04.01.26.pdf” carries all 232 fields with 39 of them
+   filled in — and every one of those 39 is the string “0”, including the printed
+   monthly total. Tier 1 returned {scalars:{},units:[],ns8:[]} and the form said
+   the schedule had been read.
+   An empty read is worse than a refusal on a federal filing, because nothing
+   downstream can tell it from a schedule that genuinely has no rows. So the
+   floor is asked once, of whatever produced the record:
+     - at least one Section 8 row carrying a rent, and
+     - those rows reconciling against the total the schedule itself prints. */
+function rsRecordHolds(outp,totalRaw){
+  const tot=rsNum(totalRaw);const all=outp.units.concat(outp.ns8);
   const sum=all.reduce((a,u)=>a+(u.count&&u.rent?u.count*u.rent:0),0);
-  const ok=outp.units.length>0&&(tot===''||Math.abs(sum-tot)<=Math.max(2,all.length));
-  return ok?outp:null;}
+  return outp.units.length>0&&(tot===''||Math.abs(sum-tot)<=Math.max(2,all.length));}
+/* One field's text, by the same accessor rsReadFields uses — so parseRsPdf can
+   ask the schedule for its own printed total without reading it a second way. */
+function rsFieldText(pdfForm,n){
+  try{const v=pdfForm.getTextField(String(n)).getText();return v==null?'':String(v).trim();}catch(e){return '';}}
 /* Part I's HAP contract number IS the property's Section 8 number, and the
    template carries NO field for it — the contract administrator writes it on the
    line under the printed label. So it is found by that label instead of by a box:
@@ -1694,6 +2264,55 @@ async function rsTplRuns(){ // the blank template's own printed text, read once
   const bin=atob(b64);const tb=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)tb[i]=bin.charCodeAt(i);
   const doc=await window.PDFLib.PDFDocument.load(tb,{parseSpeed:Infinity});
   _rsTplRuns=await rsTextPages(doc);return _rsTplRuns;}
+/* ---- tier 2's premise, and the one pass that checks it -------------------
+   Both of tier 2's moves rest on a single assumption. It reads a value out of
+   the blank template's own field rectangle, and rsDropTplLabels below tells a
+   printed label from an entered value by finding that label at the template's
+   own coordinates. Both are only valid if THIS COPY PRINTS THE FORM WHERE THE
+   BLANK FORM PRINTS IT.
+
+   For a flattened digital copy that is exactly true -- measured at 0.0pt over 84
+   matches. For a page carrying a SCANNER'S text layer it is false, because those
+   coordinates describe where the words landed on the glass, not where the form
+   puts them. Nothing checked which kind of page had arrived, so four schedules
+   were read through boxes sitting over the wrong printing and the reader
+   reported success on all four. Sample Property came back with the form's
+   own heading swallowed into the Project Name box -- a project called
+   "OaksonINorthP,lazafkaNorthPlazaApartmentsPartA-ApartmentRents" -- a 14-unit
+   row at $111,198 a month, and a monthly potential of $1,642,642 where the page
+   prints $91,922. Sample Property, 333 Holly and The Pines each did the same, and
+   each of them named itself "...PartA-ApartmentRents" too.
+
+   Measured over the whole corpus the premise is not marginal, it is binary. A
+   copy that shares the template's geometry puts 28 to 128 of the form's own
+   labels exactly where the form puts them -- 78% to 99% of the ones present on
+   the page. A copy that does not puts at most THREE there, 4% to 10%. There is
+   no document in the corpus between 10% and 78%, so one pass settles it.
+
+   Note what this is NOT: an attempt to measure the offset and correct for it.
+   That was tried first and the measurement refused it -- on the eight misaligned
+   schedules the displaced labels do not agree on any single shift (4 of 56, 5 of
+   62, 2 of 22, 6 of 27 landing within 2pt of the best one). They are not shifted
+   copies of our template, they are a different printing of the form. Correcting
+   a shift that is not there would have placed values with false confidence. */
+const RS_TPL_MIN=8;   // labels at template coordinates; the aligned copies show 28 at worst
+function rsTplAlign(runs,tplRuns){ // -> {at, seen}: how much of the form's own printing sits where the form puts it
+  if(!runs||!tplRuns)return {at:0,seen:0};
+  const by=new Map();
+  runs.forEach(r=>{const t=String(r.s).trim();if(!t)return;
+    if(!by.has(t))by.set(t,[]);by.get(t).push(r);});
+  let at=0,seen=0;
+  for(let i=0;i<tplRuns.length;i++){const L=tplRuns[i],t=String(L.s).trim();
+    // the same two rules rsDropTplLabels applies, so this measures that predicate
+    // and not a near relative of it: a printed rule is not a label, and +/-4pt is
+    // what counts as the same spot
+    if(!t||/^[_\-–—.]+$/.test(t))continue;
+    const c=by.get(t);if(!c)continue;
+    seen++;
+    for(let j=0;j<c.length;j++)
+      if(Math.abs(c[j].y-L.y)<=4&&Math.abs(c[j].x-L.x)<=4){at++;break;}}
+  return {at:at,seen:seen};}
+function rsTplPremiseHolds(al){return !!al&&al.at>=RS_TPL_MIN&&al.at>=al.seen*0.5;}
 function rsDropTplLabels(runs,tplRuns){
   /* The form's own printed text is not an entered value. Depth alone cannot tell
      them apart here: this copy draws everything at depth 0, so "Heating ________"
@@ -1717,15 +2336,43 @@ async function rsReadTextTier(pages,bytes,onStep){ // flattened copy -> same par
   const {pg0,pg1}=rsClassifyPages(pages.map(rs=>rs.map(r=>r.s).join(' ')));
   if(pg0<0)return null;
   const tplr=await rsTplRuns();
+  /* Decline rather than misplace. A page that does not print the form where the
+     form prints it cannot be read out of the form's own boxes, and asking anyway
+     is how $91,922 became $1,642,642. Returning null sends it down to tier 3,
+     which registers a page onto the template before reading it and so is the tier
+     that can take an arbitrary geometry.
+     This comes BEFORE the checkbox assist below on purpose: a page we have
+     already decided we cannot place must not be sent out to be scanned for ticks
+     we could not have located anyway. */
   const clean=(rs,tp)=>rsDropTplLabels(rs,tplr&&tplr[tp]);
-  const F=Object.assign(rsMapRects(clean(pages[pg0],0),rects,0),pg1>=0?rsMapRects(clean(pages[pg1],1),rects,1):{});
+  const okA=rsTplPremiseHolds(rsTplAlign(pages[pg0],tplr&&tplr[0]));
+  /* The premise is asked of EACH half, because each half is read through our
+     own rectangles. Sample Property and Mapleview are the case that requires it
+     from the other side: their page 1 is a printing we cannot place, while
+     their page 2 is ours exactly (43 of 43 labels), so the halves have to be
+     judged apart or the certification page is lost with the rent roll. On
+     every copy in the corpus whose front half passes, the back half passes
+     too, so this costs nothing that reads today. */
+  const okB=pg1>=0&&rsTplPremiseHolds(rsTplAlign(pages[pg1],tplr&&tplr[1]));
+  let F=null,viaTable=false;
+  if(okA)F=rsMapRects(clean(pages[pg0],0),rects,0);
+  else{
+    /* Not our printing. Read Part A out of the form's own table instead of
+       declining the document outright -- and if that cannot be done either,
+       decline exactly as before. */
+    F=rsTableA(pages[pg0]);if(!F)return null;viaTable=true;}
+  if(okB)Object.assign(F,rsMapRects(clean(pages[pg1],1),rects,1));
   let s8=rsS8FromPages(pages);
   // Ticks are often drawings rather than glyphs — this copy's Part B boxes hold no
   // text whatsoever — so a page that reads perfectly well can still be blind to
   // every checkbox on it. When not one is found, ask Azure for that page's
   // selection marks and take ONLY the boxes from it; the values stay with the
   // text layer, which reads them better than OCR does.
-  if(bytes&&typeof ocrHalf==='function'&&typeof OCR_CHECKBOX!=='undefined'
+  /* Never on a page the table reader had to read: registration is what ocrHalf
+     does first, and it fails on these printings by the same measurement that
+     sent us to the table. Asking anyway spends Azure calls to place values by a
+     fit we have already shown does not hold. */
+  if(!viaTable&&bytes&&typeof ocrHalf==='function'&&typeof OCR_CHECKBOX!=='undefined'
      &&!OCR_CHECKBOX.some(id=>rects[String(id)]&&rects[String(id)].pg===0&&F[String(id)])){
     let ticks=null;try{ticks=await ocrHalf(bytes,0,[],(i,n)=>onStep&&onStep(i,n,'ticks'));}catch(e){}
     if(ticks){
@@ -1765,20 +2412,32 @@ async function rsReadTextTier(pages,bytes,onStep){ // flattened copy -> same par
   if(outp&&s8)outp.scalars['property.s8']=s8;
   if(outp&&!gotB)outp.halfB=true;
   return outp;}
+/* A refusal that says nothing is still a refusal the reader cannot act on. Two
+   sentences may be true at once here — why the fields were no use, and why the
+   scan was no use — and both are kept, in that order. */
+function rsWhy(){return Array.prototype.slice.call(arguments).filter(Boolean).join(' ');}
 async function parseRsPdf(bytes,onStep){
   const doc=await window.PDFLib.PDFDocument.load(bytes,{ignoreEncryption:true,parseSpeed:Infinity});
   let n=0,pf=null;try{pf=doc.getForm();n=pf.getFields().length;}catch(e){}
+  let whyFields='';
   if(n>10){const pf1=rsReadFields(pf);
     // Part I has no field on any revision of this form, so even a fully-fielded
     // copy only carries its HAP contract number as printed text.
     if(!pf1.scalars['property.s8']){try{const tp=await rsTextPages(doc);const v=rsS8FromPages(tp)||rsS8FromFields(pf);if(v)pf1.scalars['property.s8']=v;}catch(e){}}
-    return {kind:'fields',parsed:pf1};}
+    if(rsRecordHolds(pf1,rsFieldText(pf,95)))return {kind:'fields',parsed:pf1};
+    /* Fields present and nothing in them. Do not return the empty record and do
+       not stop here either: a copy flattened at signing often keeps the AcroForm
+       skeleton while the values move into the page, and that copy is readable by
+       the printed page. So carry the reason and go on down the tiers — and if
+       none of them reads it either, the reason is what the reader gets told
+       instead of a blank refusal. */
+    whyFields='This copy still carries the blank form\u2019s own fields, but they hold no apartment rents \u2014 every rent row is empty or zero, so there was nothing in them to read.';}
   let pages=null;try{pages=await rsTextPages(doc);}catch(e){}
   const runs=pages?pages.reduce((a,p)=>a+p.length,0):0;
   const scan=async()=>{let oc=null;try{oc=await ocrParseRs(bytes,(i,n)=>onStep&&onStep(i,n,'scan'));}catch(e){}return oc;};
   if(runs<15){ // nothing to read on the page itself: tier 3 sends it out to be OCR'd
     const oc=await scan();
-    return oc?{kind:'fields',parsed:oc,via:'ocr'}:{kind:'scan',parsed:null,why:ocrWhy()};}
+    return oc?{kind:'fields',parsed:oc,via:'ocr'}:{kind:'scan',parsed:null,why:rsWhy(whyFields,ocrWhy())};}
   let tp=null;try{tp=await rsReadTextTier(pages,bytes,onStep);}catch(e){}
   if(tp)return {kind:'fields',parsed:tp,via:'text'};
   /* Text on the page and none of it the values — so OCR, which the runs<15 gate
@@ -1789,7 +2448,7 @@ async function parseRsPdf(bytes,onStep){
      the page reads as maximally readable and yields nothing. "Is there text on
      it" was never the question. "Did we manage to read any of it" is. */
   const oc=await scan();
-  return oc?{kind:'fields',parsed:oc,via:'ocr'}:{kind:'text',parsed:null,why:ocrWhy()};}
+  return oc?{kind:'fields',parsed:oc,via:'ocr'}:{kind:'text',parsed:null,why:rsWhy(whyFields,ocrWhy())};}
 function rsFillFromParsed(){const P=_rsUpload&&_rsUpload.parsed;if(!P)return;
   const _wrote=[];
   const mark=k=>{markCycle(k);if(form[k])form[k].fromParse=true;if(_wrote.indexOf(k)<0)_wrote.push(k);};   // came from the schedule, not typed — tags an override as "parsed", not just "changed", in its note text
@@ -1815,26 +2474,94 @@ function rsFillFromParsed(){const P=_rsUpload&&_rsUpload.parsed;if(!P)return;
   P.principals.forEach((p,ix)=>{setk('principals.'+ix+'.name',p.name);setk('principals.'+ix+'.title',p.title);});
   P.units.forEach((u,ix)=>{const bb=rsParseUnitType(u.type);setk('units.'+ix+'.br',bb.br);setk('units.'+ix+'.ba',bb.ba);setk('units.'+ix+'.label',bb.label);
     setk('units.'+ix+'.num_units',u.count);setk('units.'+ix+'.current',u.rent);
-    if(u.ua!==''&&u.ua>0){setk('units.'+ix+'.ua_exec',u.ua);if(!get('units.'+ix+'.ua_source')){srcSetSource('units.'+ix+'.ua_custom','exec');mark('units.'+ix+'.ua_source');}}});
+    /* Record the figure, do not pin the choice. Writing 'exec' here made the
+       upload ORDER decide the allowance: schedule-first nailed the source to the
+       prior year before the study had been read, and study-first left it free.
+       Leaving it unset lets defUaSrc answer the same way whichever file arrived
+       first, which is what a source dropdown the PM never touched should do. */
+    if(u.ua!==''&&u.ua>0)setk('units.'+ix+'.ua_exec',u.ua);});
   if(P.ns8&&P.ns8.length){form=store.editForm(form,'ns8.enabled','1');mark('ns8.enabled');
     P.ns8.forEach((u,ix)=>{const bb=rsParseUnitType(u.type);setk('ns8.'+ix+'.br',bb.br);setk('ns8.'+ix+'.ba',bb.ba);
       setk('ns8.'+ix+'.num_units',u.count);setk('ns8.'+ix+'.avg_rent',u.rent);});}
   if(P.nonrev&&P.nonrev.length){form=store.editForm(form,'nonrev.enabled','1');mark('nonrev.enabled');
     P.nonrev.forEach((u,ix)=>{setk('nonrev.'+ix+'.use',u.use);setk('nonrev.'+ix+'.br',u.br);setk('nonrev.'+ix+'.ba',u.ba);
-      if(u.rent!==''&&u.rent>0)setk('nonrev.'+ix+'.rent',u.rent);
+      /* A superintendent's apartment that earns nothing has a real rent of $0,
+         and the executed schedule states it. Testing >0 threw that away, and the
+         empty cell was then filled by the study's figure for the same bedroom
+         count -- so Part D charged rent loss that does not exist: Ebony 3,700
+         where the schedule says 0, Sycamore 1,450, Woodbury 2,075, each of them
+         the contract rent of a DIFFERENT, revenue-earning unit. Same lesson the
+         allowance learned three fixes ago: a stated zero is a figure. */
+      if(u.rent!==''&&u.rent!=null)setk('nonrev.'+ix+'.rent',u.rent);
       /* Part D has no unit-count field on the schedule (each row is one named
          space), so 1 is derived rather than read — and derived is still parsed,
          the same way the effective date is derived by adding a year. Marked, it
          paints as this-cycle and its pair can save it; unmarked it wore the grey
          of an untouched cell and could not be saved at all. */
       if(get('nonrev.'+ix+'.num_units')===''){form=store.editForm(form,'nonrev.'+ix+'.num_units','1');mark('nonrev.'+ix+'.num_units');}});}
-  _rsFill=fillRecord(_rsUpload,_wrote);
-  deriveUnits();renderBody();scheduleHudRefresh();scheduleFactorRefresh();
+  _rsFill=fillRecord(_rsUpload,_wrote);rsRemember();
+  deriveUnits();
+  /* THE SCHEDULE OWNS THE ROSTER, SO THE STUDY MUST BE RE-READ AGAINST IT.
+     rcsMatch looks a row up by its bedrooms and baths, which means one study
+     line can price SEVERAL rows -- a study that quotes one figure for "all
+     1BR" fills both 1BR variants on the schedule. But it can only do that for
+     rows that already exist: on an empty form every study line is homeless, so
+     the study BUILDS the roster, one row per line. Apply the schedule after
+     that and the loop above writes units.0..N positionally straight over those
+     rows, and the study's proposed rents stay where they were put.
+
+     Measured, real, and the shape Matt found independently: a study with two
+     lines (all studios, all one-bedrooms) against a schedule with four rows
+     (two studio variants, two 1BR variants) leaves the one-bedroom figure
+     sitting on the SECOND STUDIO. Across the corpus this order-dependence
+     moved Sample Property's total contract rent by $143,950 between the two
+     orders, on the document that goes to HUD.
+
+     So once the schedule has laid down the real roster, the study is read
+     again against it. Only when the study was ALREADY applied -- re-running it
+     here otherwise would apply a document the user has not asked for, and the
+     two Apply buttons are deliberately separate. setk still declines every
+     cell the schedule offers, so this cannot walk back anything the schedule
+     just wrote; it only moves the study's own values onto the right rows.
+     This is the rule the precedence comment above already states: the order
+     the two documents happen to be uploaded in cannot change the result. */
+  /* fillNote() has always required the record to name the SAME file before it
+     will say anything about it; the gate did not, so a fill recorded against one
+     document could re-apply another. Same rule, one place: a fill record is
+     about the file it names. */
+  if(_rcsFill&&_rcsUpload&&_rcsUpload.parsed&&_rcsFill.name===(_rcsUpload.name||'')){
+    rcsFillFromParsed();   // renders, and reports its own count
+    setStatus('Form filled from the executed rent schedule, and the RCS study re-read against its unit types \u2014 review the highlighted values, then \u201cUpdate property profile\u201d.');
+    return;}
+  renderBody();scheduleHudRefresh();scheduleFactorRefresh();
   setStatus('Form filled from the executed rent schedule \u2014 review the highlighted values, then \u201cUpdate property profile\u201d.');}
 /* A fill is remembered against the FILE it came from, so replacing the
    document — or opening another property — leaves nothing behind claiming a
    fill that did not happen here. */
 function fillRecord(up,keys){return up?{name:up.name||'',n:keys.length,keys:keys.slice()}:null;}
+/* …AND IT IS ONLY TRUE WHILE THE FORM STILL SHOWS THE FILL. Making the record
+   durable (M60) fixed the reload but introduced its own wrong: a fill applied
+   and never saved does not survive the reload, yet the record did, so the study
+   tile read "Filled 10 values — 3 still to save." over a form holding one empty
+   row and none of the study's figures. The 3 was not even a count of anything —
+   fillNote counts keys whose cell is not on file, and after a reload those are
+   residual keys with no connection to the fill.
+
+   So a recalled record is checked against the form before it is believed: at
+   least one of the keys it names must still carry the value the document gives.
+   rsTag / rcsTag are exactly that question, already written and already asserted
+   by two suites. Nothing is invented and nothing is stored twice — this is rule
+   15 again, an indicator computes rather than asserts.
+
+   One key is the threshold rather than all of them because a fill is one act:
+   the user may have corrected any number of the values afterwards and the study
+   was still applied. If they have corrected EVERY one, the record has nothing
+   left to describe, and retiring it is also the safer answer — the roster
+   re-read would otherwise write the study back over all of those corrections. */
+function fillSurvived(rec,tag){
+  if(!rec||!rec.keys||!rec.keys.length)return false;
+  for(let j=0;j<rec.keys.length;j++)if(tag(rec.keys[j]))return true;
+  return false;}
 function fillNote(rec,up){
   if(!rec||!up||rec.name!==(up.name||''))return null;
   const left=rec.keys.filter(k=>form[k]&&form[k].source!=='database').length;
@@ -1892,8 +2619,15 @@ function renderSources(){
           +(fillNote(_rsFill,ru)||'No values have been applied to the form yet.'),
       acts:'<button class="btn sm teal" id="rsApply">Fill form from RS</button><button class="btn sm" id="upRs">Replace</button>'});}
   else rs=srcTile({icon:WARN,name:ru.name,state:'could not be read',stateCls:'missing',
+      /* A tile that says only “Enter the values below” tells a property manager
+         nothing about what to do differently, and “could not be read” is the
+         one place the app has to be plainest. When the reader supplied a reason
+         it is shown; when it did not, these two say which of the two shapes of
+         unreadable copy arrived, because they call for different next steps. */
       sub:ru.why?(esc(ru.why)+' Enter the values below.')
-                :(ru.kind==='text'?'Enter the values below.':'Scanned, but the values could not be read. Enter them below.'),
+                :(ru.kind==='text'
+                  ?'This copy carries text, but none of it is the schedule\u2019s own figures — they were flattened into the page when it was signed. It has to be read by the scanning service, and that returned nothing. Enter the values below.'
+                  :'This copy is a scanned image rather than a form, so it can only be read by the scanning service, and that returned nothing. Enter the values below.'),
       acts:'<button class="btn sm" id="upRs">Replace</button>'});
   const foot=`<input type="file" id="rcsFile" accept="application/pdf,.pdf" style="display:none"><input type="file" id="rsFile" accept="application/pdf,.pdf" style="display:none">`;
   /* The executed rent schedule comes first: it is the document that fills the
@@ -1920,7 +2654,7 @@ function sectionStatus(n){if(n!==1&&sectionEmpty(n))return 'empty';
 function sectionPill(n){const st=sectionStatus(n);
   if(st==='empty')return '<span class="pill empty" data-pill="'+n+'">not started</span>';
   return st==='warn'?'<span class="pill warn" data-pill="'+n+'">review</span>':'<span class="pill ok" data-pill="'+n+'">confirmed</span>';}
-function card(n,pill,body){return `<div class="card"><div class="chead"><span class="cnum">${_secPos[n]||n}</span><span class="ctitle">${SECTION_TITLES[n]}</span>${pill}<span class="chev">▾</span></div><div class="cbody">${body}</div></div>`;}
+function card(n,pill,body){return `<div class="card" data-sec="${n}"><div class="chead"><span class="cnum">${_secPos[n]||n}</span><span class="ctitle">${SECTION_TITLES[n]}</span>${pill}<span class="chev">▾</span></div><div class="cbody">${body}</div></div>`;}
 
 
 /* ================== OCAF (Section 10) — transparent HUD-9625 ==================
@@ -2280,13 +3014,163 @@ function attnFlags(){const f=[];const u=UNITS.filter(uaUnresolved).length;if(u)f
     if(UA.dec.length)f.push('UA decrease detected — tenant notice + comment certification join the package');}
   return f;}
 function renderRail(){const vis=visibleSections();const st={};vis.forEach(n=>st[n]=(n===7?'ok':sectionStatus(n)));let conf=0;vis.forEach(n=>{if(st[n]!=='warn')conf++;});const need=vis.length-conf;
-  el('rail').innerHTML=vis.map(n=>`<div class="railitem"><span class="ri ${st[n]==='warn'?'warn':'ok'}">${st[n]==='warn'?'!':'✓'}</span><span class="rname">${_secPos[n]||n}. ${SECTION_TITLES[n]}</span></div>`).join('');
+  /* refreshFlags redraws this rail on every keystroke, so a row that HAS focus
+     has to get it back — otherwise a keyboard reader standing in the rail is
+     thrown out of it by somebody else's repaint. */
+  const _af=document.activeElement;const _afs=(_af&&_af.classList&&_af.classList.contains('railitem'))?_af.getAttribute('data-rsec'):null;
+  el('rail').innerHTML='<div class="railbar nofx" id="railbar" aria-hidden="true"></div>'+vis.map(n=>`<button type="button" class="railitem" data-rsec="${n}"><span class="ri ${st[n]==='warn'?'warn':'ok'}">${st[n]==='warn'?'!':'✓'}</span><span class="rname">${_secPos[n]||n}. ${SECTION_TITLES[n]}</span></button>`).join('');
+  if(_afs){const _r=document.querySelector('#rail .railitem[data-rsec="'+_afs+'"]');if(_r&&_r.focus)_r.focus({preventScroll:true});}
+  railApply();const _rb=el('railbar');if(_rb&&window.requestAnimationFrame)requestAnimationFrame(()=>{if(_rb.classList)_rb.classList.remove('nofx');});
   el('railprog').innerHTML=`<b>${conf} of ${vis.length} confirmed</b>${need?`<div class="warnt">${need} section${need===1?"":"s"} still to confirm</div>`:''}<div class="track sm"><div style="width:${conf/vis.length*100}%;background:#166534"></div></div>`;
   const fl=attnFlags();el('railattn').style.display=fl.length?'block':'none';el('railattn').innerHTML=fl.length?`⚠ <b>${fl.length} thing${fl.length===1?"":"s"} to look at</b>${fl.map(x=>`<div class="sub" style="margin-top:6px">${x}</div>`).join('')}`:'';}
 function renderAttention(){/* the section rail carries the attention list; the old top banner duplicated it */}
 
+/* ============== the section rail: one bar that travels ======================
+   THE RULE. The active section is the one crossing the READING LINE — a
+   horizontal line RAIL_LINE px below the top of the viewport, just under the
+   command bar. Deliberately NOT "the last heading scrolled past": that rule
+   hands the highlight on the moment a heading clears the top, so a section
+   taller than the window (Rents & unit mix measures 1001px against a 900px
+   viewport) goes dark while you are still reading it, and a final section
+   shorter than the window can never win it at all.
+   THE TAIL SHARES THE LAST STRETCH OF SCROLL. The page stops scrolling with
+   the final sections still on screen — Tenant notice is 218px at the bottom of
+   a 4170px page in a 900px window, and scrolling stops 3270px down — so their
+   tops can never be brought to the line at all. Those cards are the TAIL, and
+   they divide the scroll that is left between them, one equal slice each, in
+   their own order. Everything above the tail is answered by the line as usual.
+   Two earlier attempts are worth recording, because each looked right:
+     · "at the foot of the document, the LAST section" rescued the last row and
+       left the SECOND to last unreachable by any scroll position whatever. A
+       row that can never light is dead state, and it took a check that walked
+       EVERY row — not a spot check — to see it.
+     · a reading line that descended to the foot of the window over the last
+       screenful reached every row, but it handed the highlight on too early:
+       scroll a section's heading to the very top of the window and the line had
+       already sunk past that section into the next one. A rule that disagrees
+       with the heading under your eye is not a rule anybody will trust.
+   ONE exception remains: nothing crosses the line — the top of the page, the
+   gap between two cards -> the first card whose top is below the line, else the
+   last one above it.
+   A JUMP PINS ITS ANSWER, and at the foot of the page that pin is the only
+   thing keeping the rail honest. The last two sections both land at the same
+   max scroll, so exception (a) answers "the last one" to a click on either —
+   the rail lit Tenant notice for a reader who had just asked for the Owner's
+   checklist. Everywhere else the pin agrees with the reading line by
+   construction, because the jump places the card's top above it.
+   The pin is dropped by the reader's NEXT scroll, not by a timer. Timing it was
+   the first attempt and it was wrong for a reason worth keeping: a smooth
+   scroll the length of the form outlasts any fixed window, so the pin's
+   reference position got recorded mid-flight and the very next animation frame
+   read as "the reader has scrolled". The jump therefore watches the scroll
+   until it STOPS moving, and only then takes its reading.
+   IntersectionObserver is the TRIGGER, not the answer. It fires on scroll and
+   also on the layout changes that move a card WITHOUT one — a section
+   collapsing, renderBody redrawing — which a scroll handler alone cannot see.
+   The answer is recomputed from geometry every time it fires, so a coalesced or
+   dropped notification cannot strand the bar on the wrong row. The
+   rAF-throttled scroll listener beside it covers the last pixels into the page
+   foot, where no boundary is crossed and so the observer never fires.
+   Rows are matched to cards by SECTION NUMBER, never by index: _secPos
+   renumbers the visible sections (Principals is section 12 and displays as
+   "3."), so an index match would light the wrong row for most of the rail. */
+const RAIL_LINE=88;       // px below the top of the viewport: clear of the 32px bar
+const RAIL_SETTLE_MS=50;  // how often a jump asks whether the scroll has stopped
+const RAIL_SETTLE_MAX=40; // …and how long it will wait before giving up (2s)
+let _railActive=null,_railObs=null,_railRaf=0,_railJump=false,_railSettleId=0,_railPinSec=null,_railPinY=0;
+function railCards(){return [].slice.call(document.querySelectorAll('#sections .card[data-sec]'));}
+/* The scroll at which each card's top would arrive at the reading line, and
+   the last scroll the document allows. A card whose figure exceeds that is in
+   the tail: the page runs out before it can get there. */
+function railTail(){
+  const cards=railCards(),y=window.scrollY,de=document.documentElement;
+  const maxY=Math.max(0,(de?de.scrollHeight:0)-(window.innerHeight||0));
+  const at=cards.map(c=>c.getBoundingClientRect().top+y-RAIL_LINE);
+  let k=0;for(let i=0;i<cards.length;i++)if(at[i]<=maxY)k=i;
+  return {cards,maxY,start:Math.max(0,at[k]),k};}
+function railPick(){
+  const T=railTail(),cards=T.cards;if(!cards.length)return null;
+  const y=window.scrollY;
+  if(y>T.start&&T.maxY>T.start){
+    const n=cards.length-T.k;
+    const j=Math.min(n-1,Math.max(0,Math.floor((y-T.start)/(T.maxY-T.start)*n)));
+    return +cards[T.k+j].getAttribute('data-sec');}
+  let above=null,below=null;
+  for(let i=0;i<cards.length;i++){const r=cards[i].getBoundingClientRect();
+    if(r.top<=RAIL_LINE&&r.bottom>RAIL_LINE)return +cards[i].getAttribute('data-sec');
+    if(r.bottom<=RAIL_LINE)above=cards[i];else if(!below&&r.top>RAIL_LINE)below=cards[i];}
+  const c=below||above;return c?+c.getAttribute('data-sec'):null;}
+function railSet(n){
+  const rows=[].slice.call(document.querySelectorAll('#rail .railitem'));let row=null;
+  rows.forEach(r=>{const on=(+r.getAttribute('data-rsec'))===n;r.classList.toggle('on',on);
+    if(on){row=r;r.setAttribute('aria-current','true');}else r.removeAttribute('aria-current');});
+  const bar=el('railbar');if(!bar)return;
+  if(!row){bar.style.opacity='0';return;}
+  bar.style.opacity='1';bar.style.height=row.offsetHeight+'px';bar.style.transform='translateY('+row.offsetTop+'px)';
+  /* Keep the lit row inside a rail that has had to scroll itself — through
+     .rail's OWN scrollTop, never the window's, so following the page can never
+     move the page. */
+  const rl=row.closest?row.closest('.rail'):null;const rc=el('rail');
+  if(rl&&rc&&rl.scrollHeight>rl.clientHeight+1){const t=rc.offsetTop+row.offsetTop,b=t+row.offsetHeight;
+    if(t<rl.scrollTop)rl.scrollTop=t;else if(b>rl.scrollTop+rl.clientHeight)rl.scrollTop=b-rl.clientHeight;}}
+function railApply(){
+  if(_railJump&&_railActive!=null){railSet(_railActive);return;}
+  if(_railPinSec!=null){
+    if(Math.abs(window.scrollY-_railPinY)<=2){_railActive=_railPinSec;railSet(_railActive);return;}
+    _railPinSec=null;}
+  _railActive=railPick();railSet(_railActive);}
+/* rAF called through window, never as a bare reference: an unbound
+   requestAnimationFrame is an Illegal invocation in Chrome, and the throw would
+   be swallowed inside an IntersectionObserver callback — the bar would simply
+   stop following the page, with nothing in the console to say why. */
+function railSync(){if(_railRaf)return;
+  _railRaf=window.requestAnimationFrame?window.requestAnimationFrame(()=>{_railRaf=0;railApply();}):setTimeout(()=>{_railRaf=0;railApply();},16);}
+function railObserve(){
+  if(_railObs){_railObs.disconnect();_railObs=null;}
+  if(typeof IntersectionObserver!=='function')return;
+  /* The band is the WHOLE strip the line can occupy, not the line's resting
+     place: over the last screenful the line descends through it, and a 1px band
+     pinned at the top would stop firing exactly where the ramp does its work.
+     The observer is only a trigger, so a generous band costs a few extra
+     callbacks and buys never missing one. */
+  _railObs=new IntersectionObserver(()=>railSync(),{rootMargin:(-RAIL_LINE)+'px 0px 0px 0px',threshold:0});
+  railCards().forEach(c=>_railObs.observe(c));}
+function railReduced(){try{return !!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion:reduce)').matches);}catch(e){return false;}}
+/* The jump. scroll-margin-top on #sections .card is what places the heading
+   clear of #ccbar; it is CSS rather than a computed offset because at scrollY 0
+   the bar is translated out of sight and measures as covering nothing — yet
+   the jump is exactly what brings it in. A reserved margin is right whether the
+   bar has arrived yet or not.
+   _railJump is why the bar does not narrate the journey: a smooth jump from the
+   top to the last section would otherwise run it through every row in between.
+   Reduced motion takes the jump instantly too — scrollIntoView('smooth') does
+   NOT consult the media query on its own. */
+function railGoto(n){
+  const c=document.querySelector('#sections .card[data-sec="'+n+'"]');if(!c)return false;
+  c.classList.remove('collapsed');
+  _railActive=n;_railPinSec=n;_railJump=true;railSet(n);
+  try{c.scrollIntoView({behavior:railReduced()?'auto':'smooth',block:'start'});}catch(e){c.scrollIntoView(true);}
+  railSettle();
+  return true;}
+/* Wait for the scroll to stop, then take the pin's reference reading. The token
+   is so a second click cannot be overruled by the first click's watcher still
+   ticking. */
+function railSettle(){
+  const id=++_railSettleId;let last=NaN,still=0,n=0;
+  const tick=()=>{if(id!==_railSettleId)return;
+    const y=window.scrollY;if(y===last)still++;else{still=0;last=y;}
+    if(still>=2||++n>RAIL_SETTLE_MAX){_railJump=false;_railPinY=window.scrollY;railApply();return;}
+    setTimeout(tick,RAIL_SETTLE_MS);};
+  setTimeout(tick,RAIL_SETTLE_MS);}
+/* Delegated, because renderRail replaces every row on every repaint. A real
+   <button> means this one listener answers the mouse, Enter and Space alike. */
+document.addEventListener('click',e=>{const b=(e.target&&e.target.closest)?e.target.closest('#rail .railitem'):null;
+  if(b)railGoto(+b.getAttribute('data-rsec'));});
+window.addEventListener('scroll',railSync,{passive:true});
+window.addEventListener('resize',()=>{railObserve();railSync();});
+
 function renderBar(){const a=analysis();const conf=UNITS.filter(uaConflict).length,unres=UNITS.filter(uaUnresolved).length;const uaOk=conf===0||unres===0;
- const bc=(st,l)=>{const ic=st==='warn'?'⚠':(st==='info'?'ⓘ':'✓');const c=st==='warn'?'#b45309':(st==='info'?'#2563eb':'#166534');return `<span class="bchip"><b style="color:${c}">${ic}</b> ${l}</span>`;};
+ const bc=(st,l)=>{const ic=st==='warn'?'⚠':(st==='info'?'ⓘ':'✓');const c=st==='warn'?'#b45309':(st==='info'?'#2563eb':'#166534');return `<span class="bchip ${st}" title="${l}"><b style="color:${c}">${ic}</b> <span class="bcl">${l}</span></span>`;};
  const chks=`${bc(hasReal('property.name')?'ok':'warn','Name')}${bc(hasReal('property.s8')?'ok':'warn','Section 8 #')}${bc(hasReal('sig.name')?'ok':'warn','Signatory')}${bc(uaOk?'ok':'warn','UA')}`;
  if(!hasProg('rcs')){
    const C=ocafCalc();let dMo=0;UNITS.forEach(i=>{const n=numf(get('units.'+i+'.num_units')),cur=numf(get('units.'+i+'.current'));if(n&&cur&&C.R>0)dMo+=n*(Math.round(cur*C.R)-cur);});
@@ -2318,7 +3202,10 @@ function syncReviewed(){const held=k=>{const c=form[k];return !!(c&&c.db_value==
 function renderBody(){syncReviewed();const _sy=window.scrollY;const _anchorSel=(_refocusSel&&!_mouseFocus)?_refocusSel:(((Date.now()-_lastClickAt)<2000)?_lastClickSel:null);let _anchorTop=null;if(_anchorSel){try{const _ac=document.querySelector(_anchorSel);if(_ac)_anchorTop=_ac.getBoundingClientRect().top;}catch(e){}}computeSecPos();const _SR={1:renderSources,2:()=>renderFieldSection(FIELD_SECTIONS[0]),3:()=>renderFieldSection(FIELD_SECTIONS[1]),4:()=>renderFieldSection(FIELD_SECTIONS[2]),5:()=>renderFieldSection(FIELD_SECTIONS[3]),6:renderRents,7:renderPartB,8:renderChecklist,9:()=>renderFieldSection(FIELD_SECTIONS[4]),10:renderOcaf,11:renderUaf,12:renderPrincipals};el('sections').innerHTML=visibleSections().map(n=>_SR[n]()).join('');
   renderFormHeader();wireBody();renderCommand();renderBar();renderRail();renderAttention();refreshFooter();
   if(_refocusSel&&!_mouseFocus){try{const _f=document.querySelector(_refocusSel);if(_f&&_f.focus){_f.focus({preventScroll:true});if(/^(INPUT|TEXTAREA)$/.test(_f.tagName)&&typeof _f.setSelectionRange==='function'){const _L=(_f.value||'').length;try{_f.setSelectionRange(_L,_L);}catch(_e){}}}}catch(e){}}_refocusSel=null;
-  if(_anchorSel&&_anchorTop!=null){try{const _a2=document.querySelector(_anchorSel);if(_a2){const _nt=_a2.getBoundingClientRect().top;window.scrollTo(0,window.scrollY+(_nt-_anchorTop));}else window.scrollTo(0,_sy);}catch(e){try{window.scrollTo(0,_sy);}catch(_z){}}}else{try{window.scrollTo(0,_sy);}catch(e){}}}
+  if(_anchorSel&&_anchorTop!=null){try{const _a2=document.querySelector(_anchorSel);if(_a2){const _nt=_a2.getBoundingClientRect().top;window.scrollTo(0,window.scrollY+(_nt-_anchorTop));}else window.scrollTo(0,_sy);}catch(e){try{window.scrollTo(0,_sy);}catch(_z){}}}else{try{window.scrollTo(0,_sy);}catch(e){}}
+  /* after the scroll restore, not before: the observer's band and the bar's
+     answer are both geometry, and renderBody's last act moves the page. */
+  railObserve();railApply();}
 async function commitPending(){if(!_pending||!_pending.length)return;const keys=_pending;_pending=null;if(handleZeroUnitCommit(keys))return;for(const _pk of ['poc.phone','appr.phone'])if(keys.indexOf(_pk)>=0){const _d=(get(_pk)||'').replace(/\D/g,'');if(_d.length!==0&&_d.length!==10){setStatus('Enter a complete 10-digit phone before saving.');return;}}keys.forEach(k=>{const m=k.match(/^partb\.writein\.(e1|e2|e3|e4|e5|s1|s2|s3|s4|s5|s6)(\.on)?$/);if(m)clearUncheckedWriteins([m[1]]);});const _sk=[];keys.forEach(k=>{const gb=groupOf(k);(gb?ADDR_GROUPS[gb]:coupledKeys(k)).forEach(kk=>{if(_sk.indexOf(kk)<0)_sk.push(kk);});});try{form=await store.saveFields(form,_sk);}catch(e){saveFailed(e);return;}await refreshSnap();snapForm(_sk);_pendingSnap=null;clearUndoChain();_refocusSel=refocusSelForKey(keys[0]);renderBody();setStatus('Saved this field to the database.');}
 /* A cell's save/revert pair sits in one of three places: inside the cell for a
    roomy one (.ovic), beside it for a plain text field (.ovnote), or below the row
@@ -2521,7 +3408,17 @@ function paintCaName(){const keys=['ca.prefix','ca.name'];const c=groupColors(ke
   if(box){box.style.background=c[1];box.style.borderLeftColor=c[0];const inp=box.querySelector('input[data-k="ca.name"]');
     if(inp)applyTint(inp,'ca.name');}
   const ov=document.querySelector('.ovnote[data-ov="ca.prefix,ca.name"]');if(ov){const m=modeOf(keys);ov.setAttribute('data-mode',m);ov.style.display=m?'flex':'none';}}
-function paintCell(k){const gb=groupOf(k);if(gb)return paintGroup(gb);if(k==='ca.name'||k==='ca.prefix')return paintCaName();const s=form[k];if(!s)return;
+function paintCell(k){const gb=groupOf(k);if(gb)return paintGroup(gb);
+  /* A utility-allowance or SAFMR cell is a family, exactly like an address group,
+     so it is repainted by the computation that renders it rather than by this
+     function's generic path. Before this the two disagreed by a whole colour, and
+     the generic path also declined the rows whose source key the record does not
+     hold yet (`if(!s)return` below), leaving them unrepaintable. */
+  const _fam=/^units\.(\d+)\.(ua|safmr)_(source|custom)$/.exec(k);
+  if(_fam){const fc=_fam[2]==='ua'?uaCellColors(+_fam[1]):safmrCellColors(+_fam[1]);
+    const fb=document.querySelector('[data-box="'+k+'"]');
+    if(fb){fb.style.background=fc[1];fb.style.borderLeftColor=fc[0];}return;}
+  if(k==='ca.name'||k==='ca.prefix')return paintCaName();const s=form[k];if(!s)return;
   /* A *_custom cell is half of a pair, and the SOURCE key is the one that knows an
      on-file value was displaced. Painting from this key alone turned an emptied
      override gray — disagreeing with the badge sitting in the same cell, which has
@@ -2806,14 +3703,17 @@ function wireBody(){
   const upR=el('upRcs');if(upR)upR.onclick=()=>{const f=el('rcsFile');if(f)f.click();};
   const rf=el('rcsFile');if(rf)rf.onchange=()=>{const f=rf.files&&rf.files[0];if(!f)return;
     if(_rcsBusy){setStatus('Still reading the last study \u2014 one moment.');rf.value='';return;}
-    f.arrayBuffer().then(async buf=>{const b=new Uint8Array(buf);
+    f.arrayBuffer().then(async buf=>{let b=new Uint8Array(buf);
       if(!(b.length>4&&b[0]===0x25&&b[1]===0x50&&b[2]===0x44&&b[3]===0x46)){setStatus('That file isn\u2019t a PDF \u2014 upload the completed RCS report as a PDF.');rf.value='';return;}
+      b=await unlockPdf(b);
       /* A 52-page valuation report is not a 3-page form. Reading it is fast
          because only the letter is read, but the row still says so rather than
          sitting unchanged while it happens. */
       _rcsBusy={name:f.name};renderBody();setStatus('Reading the RCS study\u2026');
       let r=null;try{r=await parseRcsPdf(b);}catch(e){r=null;}finally{_rcsBusy=null;}
-      _rcsUpload={name:f.name,bytes:b,parsed:r,at:new Date().toISOString()};rf.value='';
+      /* A new file has had nothing applied from it yet, and the record must say
+         so before it is written down beside the new reading. */
+      _rcsUpload={name:f.name,bytes:b,parsed:r,at:new Date().toISOString()};rf.value='';_rcsFill=null;
       rcsRemember();renderBody();
       const nu=r&&r.units?r.units.length:0;
       setStatus(nu
@@ -2826,8 +3726,9 @@ function wireBody(){
   const upS=el('upRs');if(upS)upS.onclick=()=>{const f=el('rsFile');if(f)f.click();};
   const sf=el('rsFile');if(sf)sf.onchange=()=>{const f=sf.files&&sf.files[0];if(!f)return;
     if(_rsBusy){setStatus('Still reading the last rent schedule \u2014 one moment.');sf.value='';return;} // OCR takes seconds; a second upload mid-flight would race the first
-    f.arrayBuffer().then(async buf=>{const b=new Uint8Array(buf);
+    f.arrayBuffer().then(async buf=>{let b=new Uint8Array(buf);
       if(!(b.length>4&&b[0]===0x25&&b[1]===0x50&&b[2]===0x44&&b[3]===0x46)){setStatus('That file isn\u2019t a PDF \u2014 upload the executed rent schedule as a PDF.');sf.value='';return;}
+      b=await unlockPdf(b);
       setStatus('Reading the rent schedule\u2026');
       // Tiers 1 and 2 are instant, so the row would flick past; OCR takes seconds
       // per page, and without a visible row the upload line just sat there
@@ -2849,7 +3750,7 @@ function wireBody(){
         setStatus('Rent schedule \u2014 '+SHORT[w]+' (page '+i+' of '+n+')\u2026');};
       busy('Reading…','Reading the document’s text.');
       let r;try{r=await parseRsPdf(b,step);}catch(e){r={kind:'scan',parsed:null};}finally{_rsBusy=null;}
-      _rsUpload={name:f.name,bytes:b,kind:r.kind,via:r.via,why:r.why||'',parsed:r.parsed,at:new Date().toISOString()};sf.value='';_rsArm=(r.kind==='fields'&&!!r.parsed);rsRemember();renderBody();
+      _rsUpload={name:f.name,bytes:b,kind:r.kind,via:r.via,why:r.why||'',parsed:r.parsed,at:new Date().toISOString()};sf.value='';_rsArm=(r.kind==='fields'&&!!r.parsed);_rsFill=null;rsRemember();renderBody();
       setStatus(r.kind==='fields'
         ?((r.via==='ocr'?'Rent schedule scanned — check the values against the document. ':'Rent schedule read. ')+'Press Enter to fill the form, or use “Fill form from RS” in '+secRef(1)+'.')
         :((r.why?r.why+' ':'')+'The values in this copy could not be read — enter them by hand below.'));});};
@@ -2888,6 +3789,10 @@ document.addEventListener('click',e=>{document.querySelectorAll('.uadrop.open').
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){const _p=document.querySelectorAll('.gpw.open,.chkmore.open,.gpmore.open');
     if(_p.length){_p.forEach(x=>{x.classList.remove('open');if(x.blur)x.blur();});e.stopPropagation();return;}}const vis=v=>{const x=el('view'+v);return x&&x.style&&x.style.display!=='none';};if(e.key==='Tab'){_pending=null;_pendingSnap=null;_rsArm=false;return;}if(e.key==='Enter'){const ae=document.activeElement;const inText=!!ae&&/^(INPUT|TEXTAREA)$/.test(ae.tagName)&&ae.type!=='checkbox';
+    /* A rail row is a button, and Enter on it is its own activation. Without
+       this the commitPending branch below would preventDefault the keypress and
+       swallow the jump — saving a cell the reader is not even looking at. */
+    if(ae&&ae.classList&&ae.classList.contains('railitem'))return;
     if(_dlgEnter&&el('scrim')&&el('scrim').classList.contains('open')){e.preventDefault();_dlgEnter();return;}
     if(_rsArm&&!inText){const ra=el('rsApply');if(ra){e.preventDefault();_rsArm=false;ra.click();return;}}
     if(!inText&&_pending&&_pending.length){e.preventDefault();commitPending();}return;}if(e.key!=='Escape')return;if(el('scrim')&&el('scrim').classList&&el('scrim').classList.contains('open')){closeModal();_pending=null;_pendingSnap=null;return;}const openD=document.querySelector('.uadrop.open');if(openD){e.preventDefault();openD.classList.remove('open');return;}if(vis('Form')){if(_pending&&_pending.length){e.preventDefault();revertPending();return;}if(_undoChain.length&&undoStep()){e.preventDefault();return;}const ae=document.activeElement;const cell=(ae&&ae.closest)?ae.closest('[data-box],.cb,.wi'):null;if(cell){let _sel=null;if(ae.getAttribute){if(ae.getAttribute('data-k'))_sel='[data-k="'+ae.getAttribute('data-k')+'"]';else if(ae.getAttribute('data-cb'))_sel='[data-cb="'+ae.getAttribute('data-cb')+'"]';else if(ae.classList&&ae.classList.contains('uatrigger'))_sel=ae.getAttribute('data-trigfor')?('[data-trigfor="'+ae.getAttribute('data-trigfor')+'"]'):('[data-box="'+(cell.getAttribute('data-box')||'')+'"] .uatrigger');}_refocusSel=_sel;if(revertCellIfOver(cell,(ae.getAttribute&&ae.getAttribute('data-trigfor'))||null)){e.preventDefault();return;}_refocusSel=null;}requestExit();return;}if(vis('Launcher')||vis('Contacts')){openMenu();}});
@@ -4242,9 +5147,20 @@ async function openCycleForm(cid){
   activeCid=cid;_cyFresh=null;
   const cy=mpdb.listCycles(activePid).find(c=>c.id===cid);
   activeProgram=cy?cy.programs.map(x=>PROG_NAMES[x]||x).join(' + '):'RCS';
-  _undoStack=[];_undoNR=[];_undoLI=[];_undoPR=[];_undoChain=[];_rcsUpload=null;_rsUpload=null;_rsArm=false;
-  await mpdb.setActive(activePid);_rsUpload=rsRecall();_rcsUpload=rcsRecall();await refreshSnap();form=await store.fillForm();
-  fixSavedToggles();applyChecklistDefaults();deriveUnits();snapForm();renderFormHeader();renderBody();
+  _undoStack=[];_undoNR=[];_undoLI=[];_undoPR=[];_undoChain=[];_rcsUpload=null;_rsUpload=null;_rsArm=false;_rsFill=null;_rcsFill=null;
+  await mpdb.setActive(activePid);_rsUpload=rsRecall();_rcsUpload=rcsRecall();
+  /* …and the fill records come back with them, or stay null. Measured on HEAD:
+     with these left alone, a study APPLIED on one property re-applied itself to
+     the NEXT property whose study had only been uploaded — the one thing the
+     gate's own comment says must never happen. */
+  _rsFill=(_rsUpload&&_rsUpload.fill)||null;_rcsFill=(_rcsUpload&&_rcsUpload.fill)||null;
+  await refreshSnap();form=await store.fillForm();
+  fixSavedToggles();applyChecklistDefaults();deriveUnits();
+  /* …and now that there is a form to check them against, a record that describes
+     nothing on it is retired. deriveUnits() first: every unit key a record names
+     is read through UNITS. */
+  if(!fillSurvived(_rsFill,rsTag))_rsFill=null;
+  if(!fillSurvived(_rcsFill,rcsTag))_rcsFill=null;snapForm();renderFormHeader();renderBody();
   show('Form');window.scrollTo(0,0);
   if(cy&&cy.dominant&&cy.programs.indexOf('rcs')>=0)ensureHudSafmr({});   // auto-pull: dominant RCS cycles only
   if(cy&&cy.programs.indexOf('ocaf')>=0)pullOcafFactor({auto:true});      // year-verified; empty fields only
@@ -4366,10 +5282,13 @@ function requestSave(afterSave){
   if(total){const parts=[];if(mu.length)parts.push(mu.length+' revenue');if(mn.length)parts.push(mn.length+' non-revenue');if(ml.length)parts.push(ml.length+' non-Section 8');
     dialogConfirm('Delete '+total+' unit type'+(total>1?'s':'')+' with no unit count?','Saving will remove '+parts.join(', ')+' row'+(total>1?'s that have':' that has')+' entered data but no unit count. This cannot be undone after saving.','Save anyway',true,()=>saveNow(afterSave,firstZero));}
   else saveNow(afterSave,firstZero);}
-// New-property checklist default: all §8 boxes on except Scope of repair(2) & Scope of work(4),
-// applied as source 'new' (gray/unsaved) only when the property has never saved a checklist.
-function applyChecklistDefaults(){if(Object.keys(DBSNAP).some(k=>/^check\.\d+$/.test(k)))return;for(let i=0;i<17;i++)form=store.editForm(form,'check.'+i,(i===2||i===4)?'':'1');}
-async function openForm(program){activeProgram=program||'RCS';_undoStack=[];_undoNR=[];_undoLI=[];_undoPR=[];_undoChain=[];_rcsUpload=null;_rsUpload=null;_rsArm=false;await mpdb.setActive(activePid);await refreshSnap();form=await store.fillForm();fixSavedToggles();applyChecklistDefaults();deriveUnits();snapForm();renderFormHeader();renderBody();show('Form');window.scrollTo(0,0);ensureHudSafmr({});}
+/* The new-property default, applied as source 'new' (grey/unsaved) and only
+   when the property has never saved a checklist. checkSeed is the one rule -
+   see CHECK_CONDITIONAL. The count comes off CHECKLIST_FLAT rather than a
+   literal 17, because a list that grows and a loop that does not is how the
+   last item of a form goes quietly unset. */
+function applyChecklistDefaults(){if(Object.keys(DBSNAP).some(k=>/^check\.\d+$/.test(k)))return;for(let i=0;i<CHECKLIST_FLAT.length;i++)form=store.editForm(form,'check.'+i,checkSeed(i));}
+async function openForm(program){activeProgram=program||'RCS';_undoStack=[];_undoNR=[];_undoLI=[];_undoPR=[];_undoChain=[];_rcsUpload=null;_rsUpload=null;_rsArm=false;_rsFill=null;_rcsFill=null;await mpdb.setActive(activePid);await refreshSnap();form=await store.fillForm();fixSavedToggles();applyChecklistDefaults();deriveUnits();snapForm();renderFormHeader();renderBody();show('Form');window.scrollTo(0,0);ensureHudSafmr({});}
 function renderFormHeader(){
   if(el('hdrProp'))el('hdrProp').textContent=(get('property.name')||'(unnamed property)');
   if(el('hdrProgram'))el('hdrProgram').textContent=activeProgram+' Package';
@@ -4452,7 +5371,30 @@ function dlFile(bytes,name,mime){const blob=new Blob([bytes],{type:mime||'applic
 function dlPdf(bytes,name){dlFile(bytes,name,'application/pdf');}
 function formRec(){const rec={};for(const k in form)rec[k]=form[k].value;return rec;}
 function dataUrlToBytes(u){try{const i=String(u||'').indexOf(',');if(i<0)return null;return b64ToBytes(u.slice(i+1));}catch(e){return null;}}
-async function combinePdfs(list){const {PDFDocument}=window.PDFLib;const out=await PDFDocument.create();for(const b of list){if(!b)continue;const src=await PDFDocument.load(b,{ignoreEncryption:true,parseSpeed:Infinity});const pages=await out.copyPages(src,src.getPageIndices());pages.forEach(p=>out.addPage(p));}return await out.save({objectsPerTick:Infinity});}
+/* One unusable source must not cost the whole package. Sample Property's study is
+   AES-256 encrypted -- revision 6, streams and strings, extraction disabled -- and
+   pdf-lib loads it under ignoreEncryption but cannot copy a page out of it. It
+   throws "Expected instance of e, but got instance of undefined", and that
+   exception propagated out of generation, so the property produced NOTHING: no
+   cover letter, no checklist, no schedule, no workbook, on four runs across three
+   commits. Three of the corpus's chosen studies carry that encryption.
+
+   The study is perfectly readable on its own; only the merge fails. So a source
+   that cannot be copied is skipped, its label is reported to the caller, and the
+   rest still combine. Every document is offered individually either way, so
+   nothing is lost that was not already unmergeable. */
+async function combinePdfs(list,skipped){const {PDFDocument}=window.PDFLib;const out=await PDFDocument.create();
+  for(const it of list){ const b=(it&&it.bytes!==undefined)?it.bytes:it; if(!b)continue;
+    const label=(it&&it.label)||'';
+    try{
+      const src=await PDFDocument.load(b,{ignoreEncryption:true,parseSpeed:Infinity});
+      /* Ask before trying: an encrypted document copies as undefined objects, and
+         the throw that follows names a minified class, which tells a PM nothing. */
+      if(src.isEncrypted)throw new Error('the file is encrypted, so its pages cannot be merged');
+      const pages=await out.copyPages(src,src.getPageIndices());pages.forEach(p=>out.addPage(p));
+    }catch(e){ if(skipped)skipped.push({label:label,why:(e&&e.message)||String(e)}); }
+  }
+  return await out.save({objectsPerTick:Infinity});}
 /* What each document cannot be written without. Generating regardless produced
    real sentences like "submitting to in support of our request", "Dear ,", and a
    bare "7." — a package that looks finished and is not. Anything short of its
@@ -4658,7 +5600,13 @@ function showPackageModal(nm,docs,combined,missingRcs,missingLh,capMsgs,blocked,
      All six rows stay 46px whatever is missing. */
   const gapOf=lab=>{const b=blkBy[lab];
     if(b)return (b.missing||[]);
-    return byLabel[lab]?[]:[{key:'',label:'the RCS report, uploaded in '+secRef(1),sec:1}];};
+    if(byLabel[lab])return [];
+    /* A reopened package HAS the study — its name, its parse and its figures are
+       all on the record — so "upload the RCS report" reads as false to someone
+       looking at the tile that names it. What is actually absent is the file. */
+    if(_rcsUpload&&!_rcsUpload.bytes)
+      return [{key:'',label:'the RCS report file itself — its reading was saved, the PDF was not, so re-attach it in '+secRef(1),sec:1}];
+    return [{key:'',label:'the RCS report, uploaded in '+secRef(1),sec:1}];};
   const sugOf=lab=>[].concat(((warnOf||{})[lab])||((blkBy[lab]||{}).warns)||[],extraWarn[lab]||[]);
   /* The whole row is the download, not the word "Download": a 46px-tall row
      whose only target was eight characters of text at the far right. */
@@ -4708,7 +5656,14 @@ async function dlPackageFolder(nm,docs,combined){
   }catch(e){setStatus('Folder download failed: '+((e&&e.message)||e));}}
 function buildRentAnalysisBytes(){
   const nn=v=>{const n=numf(v);return n>0?n:null;};
-  const rows=UNITS.map(i=>({type:(get('units.'+i+'.br')||'')+(get('units.'+i+'.ba')?'/'+get('units.'+i+'.ba'):''),
+  /* The same label the rent schedule prints, from the same function, so the two
+     documents in one package cannot disagree about what a unit type is called.
+     Built here by hand this dropped the designation entirely: Morningside
+     Court's "1 BR / 1 BA S" and "1 BR / 1 BA Large" both came out "1BR/1BA",
+     two different unit types at two different rents wearing one label. */
+  const ut=(window.RCSGen&&window.RCSGen.utype)
+    ||((br,ba)=>String(br||'')+(ba?'/'+ba:''));   // the old shape, if gen.js has not loaded yet
+  const rows=UNITS.map(i=>({type:ut(get('units.'+i+'.br'),get('units.'+i+'.ba'),get('units.'+i+'.label')),
     units:nn(get('units.'+i+'.num_units')),cur:nn(get('units.'+i+'.current')),pro:nn(get('units.'+i+'.proposed')),
     ua:uaHas('units.'+i+'.ua_exec')||uaHas('units.'+i+'.ua_rcs')||uaHas('units.'+i+'.ua_custom')?uaResolvedOf(i):null,safmr150:safmrResolvedOf(i)>0?safmrResolvedOf(i):null}));
   return window.RCSXlsx.rentAnalysis({propertyName:get('property.name')||'Property',apprFirm:get('appr.firm')||'',rows});}
@@ -4903,10 +5858,17 @@ async function __genOcafUafRun(){
       await add('uanotice','30-day tenant notice (UA decrease)','UA Decrease Tenant Notice',()=>window.RCSGen.uaTenantNotice(rec,lh,logo));
       await add('tcert','Tenant-comment certification','Tenant Comment Certification',()=>window.RCSGen.tenantCommentCert(rec));
     }
-    if(_rcsUpload){order.push('CA package (uploaded)');docs.push({label:'CA package (uploaded)',file:pre()+N+' - CA Package (as received)',bytes:_rcsUpload.bytes});}
-    const combined=docs.length?await combinePdfs(docs.map(d=>d.bytes)):null;
+    if(_rcsUpload&&_rcsUpload.bytes){order.push('CA package (uploaded)');docs.push({label:'CA package (uploaded)',file:pre()+N+' - CA Package (as received)',bytes:_rcsUpload.bytes});}
+    const _skipped=[];
+    const combined=docs.length?await combinePdfs(docs,_skipped):null;
+    _skipped.forEach(k=>{ warnOf[k.label]=(warnOf[k.label]||[]).concat(
+      ['it is in the folder but not in the combined PDF \u2014 '+k.why]); });
     const warns=[];
     if(hasProg('ocaf')&&!_rcsUpload)warns.push('The CA’s auto-OCAF package isn’t uploaded — add it in '+secRef(1)+' for the file.');
+    /* Attached but not stored is a different sentence from never attached, and
+       telling someone to upload a file the page shows as already there is how a
+       true warning reads as a broken one. */
+    else if(hasProg('ocaf')&&!_rcsUpload.bytes)warns.push('The CA’s auto-OCAF package is on file but only its reading was saved, not the PDF — re-attach it in '+secRef(1)+' to include it in this package.');
     if(needsDerivedRents(C))warns.push('Proposed rents were derived from the worksheet (×'+C.R.toFixed(3)+') — use “Apply as proposed rents” + “Update property profile” to save them.');
     if(hasProg('uaf')&&A.mismatch.length)warns.push(A.mismatch.length+' unit type'+(A.mismatch.length>1?'s':'')+': UA components don’t total the current UA.');
     showOcafUafModal(N,tag,docs,combined,warns,blocked,warnOf,order);
@@ -4963,10 +5925,21 @@ async function __genPackageRun(){
     await add('cover','Cover letter (CA)','01. '+N+' - Cover Letter',()=>window.RCSGen.coverLetter(rec,logo));
     await add('owner','Owner cover letter','02. '+N+' - RCS Owner Cover Letter',()=>window.RCSGen.ownerLetter(rec));
     if(T.checklist)await add('checklist',"Owner's checklist","03. "+N+" - RCS Owner's Checklist",()=>window.RCSGen.fillChecklist(b64ToBytes(T.checklist),rec));
-    if(_rcsUpload)docs.push({label:'RCS report',file:'04. '+N+' - RCS Report',bytes:_rcsUpload.bytes});
+    /* bytes, not just presence. rcsRecall() returns bytes:null by design — a
+       reopened package has the study's READING persisted on the cycle but not
+       the PDF itself — and pushing that null put a document into the package
+       that had no content: combinePdfs silently skipped it (`if(!b)continue`),
+       so the merged PDF quietly lost the RCS report, and buildZip read
+       f.data.length off null and threw, making the folder undownloadable for
+       anyone who closed a package and came back to it. Leaving it out instead
+       costs the same document and says so on the row. */
+    if(_rcsUpload&&_rcsUpload.bytes)docs.push({label:'RCS report',file:'04. '+N+' - RCS Report',bytes:_rcsUpload.bytes});
     if(T.rentSchedule)await add('schedule','Draft rent schedule','05. '+N+' - Draft Rent Schedule',()=>window.RCSGen.fillRentSchedule(b64ToBytes(T.rentSchedule),rec));
     await add('notice','Tenant notice','06. '+N+' - RCS Tenant Notice',()=>window.RCSGen.tenantNotice(rec,lh,logo));
-    const combined=docs.length?await combinePdfs(docs.map(d=>d.bytes)):null;
+    const _skipped=[];
+    const combined=docs.length?await combinePdfs(docs,_skipped):null;
+    _skipped.forEach(k=>{ warnOf[k.label]=(warnOf[k.label]||[]).concat(
+      ['it is in the folder but not in the combined PDF \u2014 '+k.why]); });
     let _lhOk=false;try{const L2=(mpdb&&activePid)?mpdb.getLetterhead(activePid):null;_lhOk=!!(L2&&L2.data);}catch(e){}
     showPackageModal(get('property.name')||'Property',docs,combined,!_rcsUpload,!_lhOk,rsCapacity().msgs,blocked,warnOf);
     try{ if(activeCid&&mpdb)await mpdb.setCycleGenerated(activeCid,docs.map(d=>d.label)); }catch(e){}
@@ -5145,7 +6118,7 @@ function contactDialog(c){c=c||{};
    ReferenceError at load and took three suites down with zero checks run. An
    arrow defers the lookup to the call, which only ever happens in the browser
    suite, which has the whole bundle. */
-const __API={LABEL_HINTS,rsParseUnitType,rsNum,ocrMapPages:(p)=>ocrMapPages(p),ocrWhy:()=>ocrWhy(),fmtPhone,fmtPhoneInput,fmtDate,sMoney,sPct,sK,analysis,uaResolvedOf,uaConflict,uaUnresolved,renderMenu,renderLauncher,openMenu,openForm,openLauncher,ringSvg,niceDate,isDirty,overrideCount,isStateKey,attnFlags,pbUtil,clearUncheckedWriteins,srcOf:(k)=>srcOf(k),__openForm:(pid)=>{activePid=pid;return openForm('RCS');},__openCycleForm:(pid,cid)=>{activePid=pid;return openCycleForm(cid);},__renderBody:()=>renderBody(),__docMissing:(id)=>docMissing(id).map(x=>x.label),__docWarns:(id)=>docWarns(id).map(x=>x.label),__edit:(k,v)=>{form=store.editForm(form,k,v);},getVal:(k)=>get(k),modeOf:(kk)=>modeOf(kk),fieldKeys:(k)=>fieldKeys(k),keysCanSave:(ks)=>keysCanSave(ks),keysCanRevert:(ks)=>keysCanRevert(ks),keysNewDirty:(ks)=>keysNewDirty(ks),__revert:(k)=>store.revertForm(form,k),coupledKeys:(k)=>coupledKeys(k),__firstPid:()=>{const ps=mpdb?mpdb.listProperties():[];return ps.length?ps[0].id:null;},__listProps:()=>(mpdb?mpdb.listProperties():[]),__cycles:()=>(mpdb?mpdb.listCycles(activePid):[]),packageScore:()=>packageScore(),packageDocs:()=>packageDocs(),scoreCtx:()=>scoreCtx(),__pkgCard:()=>pkgCard(),__boxes:(i)=>({ua:uaBox(i),safmr:safmrBox(i)}),__saveField:async(k)=>{form=await store.saveField(form,k);},__set:(f,u)=>{form=f;UNITS=u;},__cell:(k)=>form[k],
+const __API={LABEL_HINTS,rsParseUnitType,rsNum,ocrMapPages:(p)=>ocrMapPages(p),ocrWhy:()=>ocrWhy(),fmtPhone,fmtPhoneInput,fmtDate,sMoney,sPct,sK,analysis,uaResolvedOf,safmrResolvedOf,uaConflict,uaUnresolved,renderMenu,renderLauncher,openMenu,openForm,openLauncher,ringSvg,niceDate,isDirty,overrideCount,isStateKey,attnFlags,pbUtil,clearUncheckedWriteins,srcOf:(k)=>srcOf(k),__openForm:(pid)=>{activePid=pid;return openForm('RCS');},__openCycleForm:(pid,cid)=>{activePid=pid;return openCycleForm(cid);},__renderBody:()=>renderBody(),__docMissing:(id)=>docMissing(id).map(x=>x.label),__docWarns:(id)=>docWarns(id).map(x=>x.label),__edit:(k,v)=>{form=store.editForm(form,k,v);},getVal:(k)=>get(k),modeOf:(kk)=>modeOf(kk),fieldKeys:(k)=>fieldKeys(k),keysCanSave:(ks)=>keysCanSave(ks),keysCanRevert:(ks)=>keysCanRevert(ks),keysNewDirty:(ks)=>keysNewDirty(ks),__revert:(k)=>store.revertForm(form,k),coupledKeys:(k)=>coupledKeys(k),__firstPid:()=>{const ps=mpdb?mpdb.listProperties():[];return ps.length?ps[0].id:null;},__listProps:()=>(mpdb?mpdb.listProperties():[]),__cycles:()=>(mpdb?mpdb.listCycles(activePid):[]),packageScore:()=>packageScore(),packageDocs:()=>packageDocs(),scoreCtx:()=>scoreCtx(),__pkgCard:()=>pkgCard(),__boxes:(i)=>({ua:uaBox(i),safmr:safmrBox(i)}),__saveField:async(k)=>{form=await store.saveField(form,k);},__set:(f,u)=>{form=f;UNITS=u;},__cell:(k)=>form[k],
   /* The whole record, and the snapshot isDirty() measures against. The round-trip
      sweep needs a key-by-key diff (FORM-RULES "Before you deliver" 6): isDirty()
      compares VALUES ONLY, so a hidden side-effect key strands the form dirty with
@@ -5160,17 +6133,26 @@ const __API={LABEL_HINTS,rsParseUnitType,rsNum,ocrMapPages:(p)=>ocrMapPages(p),o
      are no program pills to drive. Make one. */
   __newCycle:(o)=>mpdb.createCycle(activePid,Object.assign({full:true,programs:['rcs'],label:'TEST'},o||{})),
   __progsOf:(cid)=>{const c=(mpdb?mpdb.listCycles(activePid):[]).find(x=>x.id===cid);return c?c.programs.slice():[];},
-__setRcsParsed:(rec)=>{_rcsUpload={name:'study.pdf',bytes:null,parsed:rec,at:''};},
+/* The handler at #upRcs sets _rcsUpload, clears the fill record and calls
+     rcsRemember(); a door that skipped the last two left every suite testing a
+     state the app never actually holds — and in particular left no suite able to
+     see a reload, because nothing had been stored for the reload to recall. */
+  __setRcsParsed:(rec)=>{_rcsUpload={name:'study.pdf',bytes:null,parsed:rec,at:''};_rcsFill=null;rcsRemember();},
 __rcsFill:()=>rcsFillFromParsed(),/* The same door for the rent schedule. Filling FROM a parse is the state where
      the save affordances have to be right — every cell it touches is unsaved by
      definition — and it was the one state no suite could set up. Passing null
      clears the reading, which is how a test says "no schedule was ever read".
      kind:'fields' matches what parseRsPdf returns for a readable copy. */
-  __setRsParsed:(rec)=>{_rsUpload=rec?{name:'rs.pdf',bytes:null,kind:'fields',parsed:rec,at:''}:null;},
+  __setRsParsed:(rec)=>{_rsUpload=rec?{name:'rs.pdf',bytes:null,kind:'fields',parsed:rec,at:''}:null;_rsFill=null;rsRemember();},
   /* The whole ladder, on real bytes: which tier answered, and with what. The
      only way to ask that question of a document without a Supabase session. */
   __parseRsPdf:(by,onStep)=>parseRsPdf(by,onStep),
-  __rsFill:()=>rsFillFromParsed(),__UNITS:()=>UNITS.slice(),__moneySrcRows:(k)=>moneySrcRows(k),__rcsChecks:()=>rcsChecks(),__rcsTag:(k)=>rcsTag(k),__rsTag:(k)=>rsTag(k),__srcTags:(k)=>srcTags(k),__rcsFillKeys:()=>rcsFillKeys(),__rcsMatch:(i)=>rcsMatch(i),__rcsOf:(k)=>rcsOf(k),
+  __rsFill:()=>rsFillFromParsed(),__UNITS:()=>UNITS.slice(),__moneySrcRows:(k)=>moneySrcRows(k),__rcsChecks:()=>rcsChecks(),__rcsTag:(k)=>rcsTag(k),__rsTag:(k)=>rsTag(k),__srcTags:(k)=>srcTags(k),__rcsFillKeys:()=>rcsFillKeys(),__fillRecords:()=>({rs:_rsFill,rcs:_rcsFill}),
+  /* The repaint, as its own door. Provenance is painted TWICE — once by the
+     full render and once by paintCell on a keystroke — and every colour defect
+     in this register so far has been the two disagreeing. A suite cannot compare
+     them without being able to fire the second one on demand. */
+  __paintCell:(k)=>paintCell(k),__rcsMatch:(i)=>rcsMatch(i),__rcsBrOf:(u)=>rcsBrOf(u),__rcsUnplaced:()=>rcsUnplaced(),__rcsOf:(k)=>rcsOf(k),
   /* The undo run. __editCell is the text box's input handler in miniature —
      push the cell, then write it the way that handler does — so a suite can
      build a run of edits without synthesising DOM events. */
@@ -5199,6 +6181,18 @@ __rcsFill:()=>rcsFillFromParsed(),/* The same door for the rent schedule. Fillin
   __setMenuView:(v)=>{menuView=v;renderMenu();},
   __menuCounts:()=>Object.assign({},_menuCounts),
   __hapProps:()=>hapProperties(),
+  /* The rail's doors. railBar reads the LIVE box, so it is mid-flight during the
+     travel animation — read it after the transition, not during. */
+  railRows:()=>[].slice.call(document.querySelectorAll('#rail .railitem')).map(r=>({sec:+r.getAttribute('data-rsec'),label:(r.textContent||'').trim(),active:r.classList.contains('on'),tabIndex:r.tabIndex,ariaCurrent:r.getAttribute('aria-current'),top:r.offsetTop,height:r.offsetHeight})),
+  activeSection:()=>_railActive,
+  railPin:()=>_railPinSec,
+  railBar:()=>{const b=el('railbar'),r=el('rail');if(!b||!r)return null;const bb=b.getBoundingClientRect(),rr=r.getBoundingClientRect();return {top:bb.top-rr.top,height:bb.height,opacity:+getComputedStyle(b).opacity};},
+  railGoto:(n)=>railGoto(n),
+  railLine:()=>RAIL_LINE,
+  /* What the tail is, so a check can compute the expected answer near the foot
+     of the page instead of hardcoding this file's arithmetic. */
+  railTail:()=>{const T=railTail();return {line:RAIL_LINE,maxY:T.maxY,tailStart:T.start,
+    tailSecs:T.cards.slice(T.k).map(c=>+c.getAttribute('data-sec'))};},
   /* The route that was unreachable: a record already in the registry under
      the schedule's own name, carrying no tracker code. */
   __openHap:(code)=>openHapProperty(code),
