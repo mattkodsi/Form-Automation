@@ -822,6 +822,13 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
    The stretch: --pull is a 0..1 progress written by the wheel handler, and the
    bar grows and fills as it climbs. Opening on the first upward notch fired on a
    flick nobody meant as a gesture, so it now takes a sustained pull. */
+/* The browser's own scroll anchoring, off for this view only. Opening the drawer
+   inserts 3,428px above the reader; _togglePast scrolls by exactly that, and then
+   Chrome ADJUSTED AGAIN on top of it — measured settling 25px over the four frames
+   after the open, which is why the panel came to rest 22px from where it started
+   however the drawer was opened. Two compensations for one insertion. Ours is the
+   one that can be reasoned about, so it is the one that stays. */
+#viewMenu{overflow-anchor:none}
 #viewMenu #menuPastBar{background:var(--paper)}
 #viewMenu .mpast{--pull:0;--stretch:0;width:100%;display:flex;align-items:center;
   justify-content:space-between;gap:16px;position:relative;overflow:hidden;
@@ -6329,109 +6336,183 @@ let _pastOpen=false;
 /* Wired once for the life of the page, not once per render. */
 let _menuWheel=false;
 /* ---- the pull ----
-   Opening on the first upward notch fired on flicks nobody meant as a gesture,
-   so the drawer takes a SUSTAINED pull: upward wheel delta accumulates while the
-   page is already at the top, and it opens on crossing PULL_MAX.
+   Rebuilt on the clock, 2026-07-30. Matt: "scrolling too quickly launches you all
+   the way to the top almost all the time, which is basically every time when using
+   a mouse scroll wheel."
 
-   Two values, because they answer two different questions. The FILL is linear —
-   it is a progress rule and progress must not flatter. The STRETCH is eased so
-   the bar yields less the further it is pulled, which is what resistance is: the
-   first inch is free and the last one is work.
+   The old rule accumulated wheel DISTANCE and opened at 340px. Measured in a real
+   browser: a thirty-notch wheel-up delivers 3,600px, the drawer opened on notch
+   three, and the remaining twenty-seven carried the reader 2,383px up into a
+   3,428px list. So the fault was never the threshold. It was that opening happens
+   in the MIDDLE of a gesture, and the rest of that gesture then lands on a document
+   3,428px taller. Distance also made a fast wheel and a slow wheel two different
+   controls, which is the inconsistency he felt.
 
-   Both are driven by a rAF glide toward a target rather than written straight
-   from the wheel handler. Wheel events arrive in coarse discrete lumps, so
-   painting them directly made the rule jump from a third to two thirds in one
-   frame — staccato. The glide also gives release for free: the target drops to
-   zero and the rule slides back to the left over about a quarter second instead
-   of blinking out. */
-const PULL_MAX=340;
-/* Wheel events closer together than this are one continuous gesture. Long enough
-   to span trackpad momentum, short enough that a deliberate second pull reads as
-   a second gesture. */
-/* How long the page must have been AT the top before an upward wheel counts as a
-   pull. A fling's momentum tail arrives in the first couple of hundred
-   milliseconds after it lands and decays to nothing; a hand still moving does
-   not. This is the only thing separating the two, and it replaced a rule that
-   asked where the GESTURE began — which sounded right and failed in practice:
-   a trackpad swipe can deliver events under 180ms apart for as long as you keep
-   moving, so a swipe that began mid-page stayed disqualified however long you
-   kept swiping. Matt: "sometimes it triggers and sometimes im just swiping up and
-   up and up and nothing expands." */
-const TOP_DWELL=220;
-let _pull=0,_pullTo=0,_pullAt=0,_pullTimer=null,_pullRaf=null;
-/* When the page last ARRIVED at the top, measured off the scroll event rather
-   than the wheel, because that is the thing that actually happened. Zero means
-   "not recently", which is the state on load — so the first pull of a session is
-   not made to serve a dwell it never earned. */
+   Two changes, and the second one is the one that matters.
+
+   FIRST the trigger is time, so speed cannot change it. Two ways in, because there
+   are two hands:
+     (a) an upward wheel that STARTS a gesture while the page is already settled at
+         the top — you stopped, you looked, you scrolled up again. Opens at once,
+         and by construction there is no gesture left to carry you anywhere.
+     (b) an unbroken upward run that has been pinned AT the top for PULL_HOLD — you
+         never stopped. This is the one the fill bar counts.
+
+   A fling's momentum tail satisfies neither. It cannot be (a): its events arrive
+   closer together than GESTURE_GAP, so it never starts a gesture. And it cannot be
+   (b), because of what momentum IS: a decaying curve, which means every event is
+   smaller than the one before it. Nothing a hand does looks like that. A mouse
+   wheel repeats one magnitude exactly; a trackpad under a finger wanders up and
+   down. So (b) refuses a run that has only ever fallen.
+
+   Asking instead that the run merely be long enough was the previous attempt, and a
+   hard fling outlasts any duration worth making a reader wait. Asking that the
+   wheel still deliver half its arriving strength was the attempt after that, and it
+   was measured opening on a fling at 0.57 — any ratio is a guess at a curve, where
+   the direction is a fact about it.
+
+   SECOND, opening sets a DETENT. The scroll is pinned at the boundary until the
+   gesture that opened it is over, so the reader lands at the BOTTOM of the past
+   list, beside today, which is the end they read from. Carrying on up is one more
+   scroll away, and it is theirs to ask for rather than something a flick did to
+   them. */
+const GESTURE_GAP=250;   /* silence that makes the next wheel a new gesture */
+const PULL_HOLD=450;     /* how long an unbroken run must sit at the top */
+const PULL_FALLS=4;      /* this many straight falls with no rise is a decaying curve */
+const PULL_FLOOR=8;      /* and a run still worth reading is delivering more than this */
+const TOP_SETTLE=250;    /* how long the page must have been at the top for (a) */
+const DETENT_MAX=1600;   /* the detent never holds longer than this, whatever happens */
+const _now=()=>(typeof performance!=='undefined'&&performance.now)?performance.now():0;
+/* _atTopFrom: when the current unbroken upward run first reached the top. Zero
+   means there is no run. _pullFalls / _pullRises: how many of its events have been
+   strictly smaller, and strictly larger, than the one before. That shape is the
+   only thing that tells a hand from a fling. _pullMag is the last magnitude, both
+   as the term to compare against and as the floor a live run has to clear. */
+let _atTopFrom=0,_pullLast=0,_pullPrev=0,_pullMag=0,_pullFalls=0,_pullRises=0;
+let _pullShown=0,_pullTimer=null,_pullRaf=null;
+/* When the page last ARRIVED at the top, off the scroll event rather than the
+   wheel, because that is the thing that actually happened. Zero means "not
+   recently", which is the state on load — so the first pull of a session is not
+   made to serve a settle it never earned. */
 let _topAt=0,_leftTop=false;
-function _pullPaint(){
+/* Where the detent holds, and since when. -1 is no detent. */
+let _detentY=-1,_detentAt=0,_detentTimer=null;
+function _pullWrite(){
   const b=el('mPast');
   if(!b||!b.style||!b.style.setProperty)return;
-  const t=Math.max(0,Math.min(1,_pull/PULL_MAX));
+  const t=Math.max(0,Math.min(1,_pullShown));
   b.style.setProperty('--pull',String(t));
-  /* Concave: steep at first, then grudging. */
+  /* Concave: steep at first, then grudging. That is what resistance is. */
   b.style.setProperty('--stretch',String(1-Math.pow(1-t,2)));
 }
+/* The fill reads the CLOCK, so it rises smoothly on its own and needs no easing
+   toward a target — which is what the old glide existed to fix, wheel events
+   arriving in lumps too coarse to paint straight. Only the RETURN is eased, and
+   only because sliding back reads better than blinking out. */
 function _pullTick(){
   _pullRaf=null;
-  const d=_pullTo-_pull;
-  if(Math.abs(d)<0.5){_pull=_pullTo;_pullPaint();return;}
-  /* Faster back than out, and the OUT rate matters as much as the back one. At 0.2
-     the rule trailed the accumulated target by a couple of hundred milliseconds, so
-     letting go left it still travelling RIGHT while it caught up, and only then
-     reversing — Matt: "the bar still slides right some after ive already let go
-     before even starting to go back left." Tracking the hand closely leaves nothing
-     to unwind, which is a better fix than making the reversal faster.
-
-     Having the tick DECIDE the hand had stopped was tried and reverted. The only
-     signal available is silence, and silence shorter than the gap between two
-     notches of a real mouse wheel cannot be told apart from the next notch
-     arriving: at 70ms it chopped a two-notch gesture in half and sawtoothed the
-     rule. Shrinking the lag has no such tradeoff. */
-  _pull+=d*(d<0?0.55:0.5);
-  _pullPaint();
+  const target=_atTopFrom?Math.max(0,Math.min(1,(_now()-_atTopFrom)/PULL_HOLD)):0;
+  const d=target-_pullShown;
+  if(!_atTopFrom&&Math.abs(d)<0.004){_pullShown=0;_pullWrite();return;}
+  _pullShown+=(d>0?d:d*0.28);
+  _pullWrite();
   _pullGlide();
 }
 function _pullGlide(){
-  if(_pullRaf||typeof requestAnimationFrame!=='function'){if(_pullRaf)return;_pull=_pullTo;_pullPaint();return;}
+  if(typeof requestAnimationFrame!=='function'){_pullShown=_atTopFrom?1:0;_pullWrite();return;}
+  if(_pullRaf)return;
   _pullRaf=requestAnimationFrame(_pullTick);
 }
-function _pullRelease(){_pullTo=0;_pullGlide();}
+/* The run is over: the bar slides home and the next event starts from nothing. */
+function _pullEnd(){_atTopFrom=0;_pullMag=0;_pullFalls=0;_pullRises=0;_pullGlide();}
+/* Returns true when THIS event is the one that opened the drawer, which the wheel
+   handler needs in order to cancel it — see _menuWheelEvent. */
 function _menuPull(dy){
+  const now=_now();
+  const gap=_pullLast?(now-_pullLast):1e9;
+  /* Both stamps recorded before every early return: the detent asks how long the
+     wheel has been quiet, and a wheel that opened the drawer keeps firing after. */
+  _pullPrev=_pullLast;_pullLast=now;
   const v=el('viewMenu');
-  if(_pastOpen||!v||v.style.display==='none'||!el('mPast')){if(_pullTo)_pullRelease();return;}
-  const now=(typeof performance!=='undefined'&&performance.now)?performance.now():0;
+  if(_pastOpen||!v||v.style.display==='none'||!el('mPast')){_pullEnd();return false;}
   const atTop=(typeof window==='undefined')||(window.pageYOffset||0)<=0;
-  /* ---- momentum is not intent, and the dwell is how you tell ----
-     A fast flick up from halfway down the list keeps delivering wheel events for
-     a few hundred ms AFTER it has landed, and those were counted as a pull:
-     scrolling briskly back towards the Portfolio heading opened the drawer by
-     itself. What is swallowed is the window right after ARRIVING at the top —
-     where a fling's tail lives and a moving hand does not. */
-  _pullAt=now;
-  if(dy>=0||!atTop){
-    if(_pullTo)_pullRelease();
-    return;
-  }
-  if(_topAt&&now&&(now-_topAt)<TOP_DWELL){
-    /* Swallowed, and not accumulated — but the bar is only zeroed, not released,
-       so a hand carrying straight on through the dwell picks up from nothing
-       without a flicker. */
-    if(_pullTo)_pullTo=0;
-    return;
-  }
-  /* The THRESHOLD reads the target, not the animated value: gating on the glide
-     would make the drawer open a beat after the pull that earned it. */
-  _pullTo=Math.min(PULL_MAX,_pullTo-dy);
+  if(gap>=GESTURE_GAP)_pullEnd();
+  if(dy>=0||!atTop){_pullEnd();return false;}
+  /* (a) a deliberate second scroll, on a page that has been sitting at the top. */
+  if(gap>=GESTURE_GAP&&(!_topAt||now-_topAt>=TOP_SETTLE)){_openPast();return true;}
+  /* (b) a hand that has not stopped. */
+  const mag=Math.abs(dy);
+  if(!_atTopFrom){_atTopFrom=now;_pullMag=0;_pullFalls=0;_pullRises=0;}
+  if(_pullMag){ if(mag<_pullMag)_pullFalls++; else if(mag>_pullMag)_pullRises++; }
+  _pullMag=mag;
   _pullGlide();
   if(_pullTimer&&typeof clearTimeout==='function')clearTimeout(_pullTimer);
-  /* Short. This is "the hand has stopped", not "the gesture might resume": long
-     enough to bridge the gap between two notches of the same swipe, no longer. */
-  if(typeof setTimeout==='function')_pullTimer=setTimeout(_pullRelease,120);
-  if(_pullTo>=PULL_MAX){
-    _pull=0;_pullTo=0;_pullPaint();
-    _togglePast();
+  if(typeof setTimeout==='function')_pullTimer=setTimeout(_pullEnd,GESTURE_GAP);
+  const decaying=(_pullRises===0&&_pullFalls>=PULL_FALLS);
+  if(now-_atTopFrom>=PULL_HOLD&&!decaying&&mag>=PULL_FLOOR){_openPast();return true;}
+  return false;
+}
+/* Open, and then HOLD. _togglePast leaves the reader exactly where they were, with
+   the past list stacked above them — but the gesture that opened it is still
+   running, and it is that remainder, not the threshold, that used to throw them up
+   the list. The detent absorbs it. */
+function _openPast(){
+  _pullEnd();
+  _pullShown=0;_pullWrite();
+  const before=_menuAnchor();
+  _togglePast();
+  if(typeof window==='undefined')return;
+  _detentY=Math.max(0,window.pageYOffset||0);
+  _detentAt=_now();
+  /* One correction on the next frame. _togglePast compensates synchronously off a
+     measurement taken mid-gesture, and on the (b) path — a hand that reached the
+     top without stopping — the page can still be settling when it is read: measured
+     landing 5 to 13px out, where the click path is exact to the pixel. Re-reading
+     the SAME anchor converges rather than drifts, which is the difference between
+     this and the two-compensations bug it looks like. Safe because the detent is
+     holding: there is no reader scroll for it to fight. */
+  if(typeof requestAnimationFrame==='function'&&before!=null)requestAnimationFrame(()=>{
+    if(_detentY<0)return;
+    const now=_menuAnchor();
+    if(now==null)return;
+    const d=Math.round(now-before);
+    if(!d||Math.abs(d)>200)return;
+    _detentY=Math.max(0,(window.pageYOffset||0)+d);
+    if(typeof window.scrollTo==='function')window.scrollTo(0,_detentY);
+  });
+  /* Released on the clock as well, because a reader who simply stops scrolling
+     produces no further wheel events to release it with. HELD, and cleared before
+     the next one is set: an untracked timer from a PREVIOUS open goes on running
+     and cancels the detent of the open after it. Measured — a thirty-notch gesture
+     had its detent cut at 392ms by the timer belonging to an open 1,600ms earlier,
+     and the remaining twenty-two notches took the reader 2,200px up the list. The
+     symptom was indistinguishable from the detent not working at all. */
+  if(_detentTimer&&typeof clearTimeout==='function')clearTimeout(_detentTimer);
+  if(typeof setTimeout==='function')_detentTimer=setTimeout(()=>{_detentY=-1;},DETENT_MAX);
+}
+/* The detent CANCELS the wheel rather than undoing what it did. Putting the scroll
+   back afterwards was measured leaving 178px of drift on a thirty-notch gesture and
+   20px on a single notch: a scroll handler runs after the browser has already
+   scrolled, so every event leaks a little and the correction is itself a jitter.
+   Refusing the event leaks nothing.
+
+   ONE listener, and non-passive, because the wheel that OPENS the drawer has to be
+   the first one cancelled. Split across two listeners it could not be — whichever
+   ran first either had no detent to enforce yet or had no previous timestamp left
+   to measure quiet against — and that one escaped notch was the last 24px of drift,
+   enough that the panel came to rest in a different place every time.
+
+   Upward only: a reader whose next move is DOWN is putting the drawer away, and
+   that has to work at once. */
+function _menuWheelEvent(e){
+  const dy=e.deltaY;
+  const opened=_menuPull(dy);
+  if(_detentY<0)return;
+  if(!opened){
+    const now=_now();
+    if(now-_detentAt>DETENT_MAX||(_pullPrev&&now-_pullPrev>=GESTURE_GAP)){_detentY=-1;return;}
   }
+  if(dy<0&&e.cancelable)e.preventDefault();
 }
 /* ---- and it puts itself away ----
    Scrolling back down past the drawer closes it, so the page returns to the
@@ -6448,9 +6529,11 @@ function _menuScrollBack(){
     if(y>0)_leftTop=true;
     else if(_leftTop){
       _leftTop=false;
-      _topAt=(typeof performance!=='undefined'&&performance.now)?performance.now():0;
+      _topAt=_now();
     }
   }
+  /* The auto-close must not fire on a drawer that is being held in place. */
+  if(_detentY>=0)return;
   if(!_pastOpen)return;
   const w=el('mPastWrap');
   if(!w||!w.getBoundingClientRect)return;
@@ -6462,11 +6545,12 @@ function _menuScrollBack(){
    and the drawer brings 40px), so measuring the drawer left the panel 26px from
    where it had been. Measuring the thing that must not move cannot drift,
    whatever the boxes above it do. */
+function _menuAnchor(){
+  const g=el('menuGrid');if(!g||!g.querySelector)return null;
+  const a=g.querySelector('.mgrid.rows.live')||g.querySelector('.zhead')||g;
+  return (a&&a.getBoundingClientRect)?a.getBoundingClientRect().top:null;}
 function _togglePast(){
-  const anchor=()=>{
-    const g=el('menuGrid');if(!g||!g.querySelector)return null;
-    const a=g.querySelector('.mgrid.rows.live')||g.querySelector('.zhead')||g;
-    return (a&&a.getBoundingClientRect)?a.getBoundingClientRect().top:null;};
+  const anchor=_menuAnchor;
   const before=anchor();
   _pastOpen=!_pastOpen;
   renderMenu();
@@ -7209,7 +7293,7 @@ function renderMenu(){
   if(_pb)_pb.onclick=()=>_togglePast();
   if(!_menuWheel&&typeof window!=='undefined'&&window.addEventListener){
     _menuWheel=true;
-    window.addEventListener('wheel',e=>_menuPull(e.deltaY),{passive:true});
+    window.addEventListener('wheel',_menuWheelEvent,{passive:false});
     window.addEventListener('scroll',_menuScrollBack,{passive:true});
   }
 

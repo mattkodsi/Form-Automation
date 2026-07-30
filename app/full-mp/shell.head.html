@@ -822,6 +822,13 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
    The stretch: --pull is a 0..1 progress written by the wheel handler, and the
    bar grows and fills as it climbs. Opening on the first upward notch fired on a
    flick nobody meant as a gesture, so it now takes a sustained pull. */
+/* The browser's own scroll anchoring, off for this view only. Opening the drawer
+   inserts 3,428px above the reader; _togglePast scrolls by exactly that, and then
+   Chrome ADJUSTED AGAIN on top of it — measured settling 25px over the four frames
+   after the open, which is why the panel came to rest 22px from where it started
+   however the drawer was opened. Two compensations for one insertion. Ours is the
+   one that can be reasoned about, so it is the one that stays. */
+#viewMenu{overflow-anchor:none}
 #viewMenu #menuPastBar{background:var(--paper)}
 #viewMenu .mpast{--pull:0;--stretch:0;width:100%;display:flex;align-items:center;
   justify-content:space-between;gap:16px;position:relative;overflow:hidden;
