@@ -890,6 +890,26 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
 #viewMenu .mgrid.rows .pc-act .btn:disabled{background:none;border-color:transparent;color:var(--i4)}
 #viewMenu .mcols{grid-template-columns:minmax(0,1fr) 110px 150px 150px 90px 116px}
 #viewMenu .mcols .r{text-align:right}
+/* ---- the manager column, in the everyone scope only ----
+   One extra column rather than a second layout: the grid template is restated
+   with 160px inserted after the name, and every cell after it shifts one over.
+   The cell is written into the row only when the class is on the grid, so the
+   markup and the columns cannot disagree — a hidden cell in a 6-column grid is
+   how a row silently gains a 7th. */
+#viewMenu .pc-pm{display:none}
+#viewMenu .mgrid.rows.pm .pcard{
+  grid-template-columns:minmax(0,1fr) 160px 110px 150px 150px 90px 116px}
+#viewMenu .mgrid.rows.pm .pc-body{grid-column:1/7;
+  grid-template-columns:minmax(0,1fr) 160px 110px 150px 150px 90px}
+#viewMenu .mgrid.rows.pm .pc-pm{display:block;grid-column:2;grid-row:1;
+  font-size:13px;color:var(--i3);white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis;padding-right:12px}
+#viewMenu .mgrid.rows.pm .pc-prog{grid-column:3}
+#viewMenu .mgrid.rows.pm .pc-due{grid-column:4}
+#viewMenu .mgrid.rows.pm .pc-eff{grid-column:5}
+#viewMenu .mgrid.rows.pm .pc-units{grid-column:6}
+#viewMenu .mgrid.rows.pm .pc-act{grid-column:7}
+#viewMenu .mcols.pm{grid-template-columns:minmax(0,1fr) 160px 110px 150px 150px 90px 116px}
 /* the sweep, offered where the population is named */
 #viewMenu .mgroup .txtbtn.del{font-size:11px;font-weight:600;letter-spacing:0;text-transform:none;padding:0}
 .olist{margin-top:11px;border:1px solid var(--line-2);border-radius:8px;max-height:250px;overflow:auto}
@@ -1151,7 +1171,16 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
    enough for the schedule's six columns, narrow enough that a line of prose is
    still a readable measure, and centred so the page has two equal gutters instead
    of one large one. */
-:is(#viewContacts,#viewLauncher) .lwrap{max-width:1480px;margin:0 auto;padding:36px 40px 80px}
+/* 1080, not the gallery's 1480. These two pages are documents — a name, a
+   letterhead, a list of packages — and none of it has six columns to fill. At
+   1480 every action sat most of a screen-width from the words that explain it:
+   Start 2026 OCAF, Upload, Delete, Edit. Capping only the row I was asked about
+   left a ragged edge down the column, which reads worse than the reach it fixed,
+   so the frame carries the measure and everything inside it lines up.
+   Still centred, which is what the 2026-07-29 note below was really about: the
+   fault then was a page that slid SIDEWAYS on the way in, not one that narrowed.
+   Two centred columns share a centre line; a left-flush one does not. */
+:is(#viewContacts,#viewLauncher) .lwrap{max-width:1080px;margin:0 auto;padding:36px 40px 80px}
 
 /* ---- the page head is a title ON the paper, not a card laid on it ---- */
 :is(#viewContacts,#viewLauncher) .lhead{background:none;border:0;border-radius:0;padding:0;

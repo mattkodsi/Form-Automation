@@ -890,6 +890,26 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
 #viewMenu .mgrid.rows .pc-act .btn:disabled{background:none;border-color:transparent;color:var(--i4)}
 #viewMenu .mcols{grid-template-columns:minmax(0,1fr) 110px 150px 150px 90px 116px}
 #viewMenu .mcols .r{text-align:right}
+/* ---- the manager column, in the everyone scope only ----
+   One extra column rather than a second layout: the grid template is restated
+   with 160px inserted after the name, and every cell after it shifts one over.
+   The cell is written into the row only when the class is on the grid, so the
+   markup and the columns cannot disagree — a hidden cell in a 6-column grid is
+   how a row silently gains a 7th. */
+#viewMenu .pc-pm{display:none}
+#viewMenu .mgrid.rows.pm .pcard{
+  grid-template-columns:minmax(0,1fr) 160px 110px 150px 150px 90px 116px}
+#viewMenu .mgrid.rows.pm .pc-body{grid-column:1/7;
+  grid-template-columns:minmax(0,1fr) 160px 110px 150px 150px 90px}
+#viewMenu .mgrid.rows.pm .pc-pm{display:block;grid-column:2;grid-row:1;
+  font-size:13px;color:var(--i3);white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis;padding-right:12px}
+#viewMenu .mgrid.rows.pm .pc-prog{grid-column:3}
+#viewMenu .mgrid.rows.pm .pc-due{grid-column:4}
+#viewMenu .mgrid.rows.pm .pc-eff{grid-column:5}
+#viewMenu .mgrid.rows.pm .pc-units{grid-column:6}
+#viewMenu .mgrid.rows.pm .pc-act{grid-column:7}
+#viewMenu .mcols.pm{grid-template-columns:minmax(0,1fr) 160px 110px 150px 150px 90px 116px}
 /* the sweep, offered where the population is named */
 #viewMenu .mgroup .txtbtn.del{font-size:11px;font-weight:600;letter-spacing:0;text-transform:none;padding:0}
 .olist{margin-top:11px;border:1px solid var(--line-2);border-radius:8px;max-height:250px;overflow:auto}
@@ -1151,7 +1171,16 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
    enough for the schedule's six columns, narrow enough that a line of prose is
    still a readable measure, and centred so the page has two equal gutters instead
    of one large one. */
-:is(#viewContacts,#viewLauncher) .lwrap{max-width:1480px;margin:0 auto;padding:36px 40px 80px}
+/* 1080, not the gallery's 1480. These two pages are documents — a name, a
+   letterhead, a list of packages — and none of it has six columns to fill. At
+   1480 every action sat most of a screen-width from the words that explain it:
+   Start 2026 OCAF, Upload, Delete, Edit. Capping only the row I was asked about
+   left a ragged edge down the column, which reads worse than the reach it fixed,
+   so the frame carries the measure and everything inside it lines up.
+   Still centred, which is what the 2026-07-29 note below was really about: the
+   fault then was a page that slid SIDEWAYS on the way in, not one that narrowed.
+   Two centred columns share a centre line; a left-flush one does not. */
+:is(#viewContacts,#viewLauncher) .lwrap{max-width:1080px;margin:0 auto;padding:36px 40px 80px}
 
 /* ---- the page head is a title ON the paper, not a card laid on it ---- */
 :is(#viewContacts,#viewLauncher) .lhead{background:none;border:0;border-radius:0;padding:0;
@@ -2294,22 +2323,26 @@ async function makeDb(adapter, opts) {
      conflict between two numbers that are no longer the numbers in front of
      them. The owner's checklist goes the same way: it is signed per package.
 
-     Current rents and utility allowances depend on the programs. An RCS year
-     uploads an executed rent schedule that supplies both, so inheriting them
-     puts last year's figures on the form in the colour of saved truth. An
-     OCAF or UAF year has no schedule to upload and the prior contract rent is
-     the starting point — cycleAnalysis already falls back to it.
+     Current rents and utility allowances never carry, on any programme.
+     They were dropped on RCS years only, on the reasoning that an OCAF year
+     has no executed schedule to upload and last year's figures are the best
+     starting point. Both halves were wrong. Nothing in the app ever rolls
+     proposed into current, so an OCAF built from an OCAF inherited a rent one
+     full cycle stale and computed this year's factor against it. And rolling
+     proposed forward would not have fixed it: what took effect is whatever the
+     CA returned after the owner submitted, and the only record of that is the
+     executed schedule. A figure we cannot observe must not arrive wearing the
+     colour of saved truth. The column starts empty and the schedule fills it.
 
      Still pre-filled either way: unit mix, Part B, non-S8 and non-revenue
      rows, debt service, and everything about the property itself. */
-  const cyNoCarry = (k, progs) => /^units\.\d+\.proposed$/.test(k)
+  const cyNoCarry = (k) => /^units\.\d+\.proposed$/.test(k)
+    || /^units\.\d+\.(current|ua_exec|ua_source|ua_custom)$/.test(k)
     || /^units\.\d+\.(br_rcs|ba_rcs|num_rcs|ua_rcs)$/.test(k)
     || /^units\.\d+\.safmr_(hud|rcs|source|custom)$/.test(k)
     || /^units\.\d+\.(ua|safmr|num|type)_reviewed$/.test(k)
     || /^units\.\d+\.uac_[a-z]+$/.test(k)
     || /^check\.\d+$/.test(k)
-    || ((progs || []).indexOf('rcs') >= 0
-        && /^units\.\d+\.(current|ua_exec|ua_source|ua_custom)$/.test(k))
     || /^appr\./.test(k)
     || /^ocaf\.(factor_|ds_t12$|ds_f12$)/.test(k)
     || /^uaf\./.test(k)
@@ -2499,8 +2532,7 @@ async function makeDb(adapter, opts) {
       else {
         const domId = dominantCycleId(pid);
         const src = domId ? D.cycles[domId].cells : bucketsOf(pid);
-        const _pg = o.programs || ['rcs'];
-          for (const k in src) { if (cyNoCarry(k, _pg)) continue; const v = src[k].value; if (v == null || v === '') continue; cells[k] = { value: String(v), saved_at: today() }; }
+          for (const k in src) { if (cyNoCarry(k)) continue; const v = src[k].value; if (v == null || v === '') continue; cells[k] = { value: String(v), saved_at: today() }; }
         for (const k in p.durable) { if (!isTemplateKey(k)) continue; cells[k] = { value: p.durable[k].value, saved_at: today() }; } // property record stays authoritative for identity
       }
       // The date picked when the package is created is a statement about this
@@ -2950,22 +2982,26 @@ function makeSupabaseDb(client) {
      conflict between two numbers that are no longer the numbers in front of
      them. The owner's checklist goes the same way: it is signed per package.
 
-     Current rents and utility allowances depend on the programs. An RCS year
-     uploads an executed rent schedule that supplies both, so inheriting them
-     puts last year's figures on the form in the colour of saved truth. An
-     OCAF or UAF year has no schedule to upload and the prior contract rent is
-     the starting point — cycleAnalysis already falls back to it.
+     Current rents and utility allowances never carry, on any programme.
+     They were dropped on RCS years only, on the reasoning that an OCAF year
+     has no executed schedule to upload and last year's figures are the best
+     starting point. Both halves were wrong. Nothing in the app ever rolls
+     proposed into current, so an OCAF built from an OCAF inherited a rent one
+     full cycle stale and computed this year's factor against it. And rolling
+     proposed forward would not have fixed it: what took effect is whatever the
+     CA returned after the owner submitted, and the only record of that is the
+     executed schedule. A figure we cannot observe must not arrive wearing the
+     colour of saved truth. The column starts empty and the schedule fills it.
 
      Still pre-filled either way: unit mix, Part B, non-S8 and non-revenue
      rows, debt service, and everything about the property itself. */
-  const cyNoCarry = (k, progs) => /^units\.\d+\.proposed$/.test(k)
+  const cyNoCarry = (k) => /^units\.\d+\.proposed$/.test(k)
+    || /^units\.\d+\.(current|ua_exec|ua_source|ua_custom)$/.test(k)
     || /^units\.\d+\.(br_rcs|ba_rcs|num_rcs|ua_rcs)$/.test(k)
     || /^units\.\d+\.safmr_(hud|rcs|source|custom)$/.test(k)
     || /^units\.\d+\.(ua|safmr|num|type)_reviewed$/.test(k)
     || /^units\.\d+\.uac_[a-z]+$/.test(k)
     || /^check\.\d+$/.test(k)
-    || ((progs || []).indexOf('rcs') >= 0
-        && /^units\.\d+\.(current|ua_exec|ua_source|ua_custom)$/.test(k))
     || /^appr\./.test(k)
     || /^ocaf\.(factor_|ds_t12$|ds_f12$)/.test(k)
     || /^uaf\./.test(k)
@@ -3177,8 +3213,7 @@ function makeSupabaseDb(client) {
         else {
           const domId = dominantCycleId(pid);
           const src = domId ? D.cycles[domId].cells : merged(pid);
-          const _pg = o.programs || ['rcs'];
-          for (const k in src) { if (cyNoCarry(k, _pg)) continue; const v = src[k].value; if (v == null || v === '') continue; cells[k] = { value: String(v), saved_at: today() }; }
+            for (const k in src) { if (cyNoCarry(k)) continue; const v = src[k].value; if (v == null || v === '') continue; cells[k] = { value: String(v), saved_at: today() }; }
           for (const k in p.durable) { if (!isTemplateKey(k)) continue; cells[k] = { value: p.durable[k].value, saved_at: today() }; } // property record stays authoritative for identity
         }
         // The date picked when the package is created is a statement about this
@@ -6906,7 +6941,10 @@ async function primaryActionClick(code){
 function renderMenu(){
   const q=((el('menuSearch')&&el('menuSearch').value)||'').toLowerCase();
   const hp=hapProperties();
-  const lensed=hp.filter(p=>menuLens==='all'||!pmName||p.pm===pmName);
+  /* The same condition the filter below runs on, named once: showing everyone
+     is either the explicit lens or no name chosen yet. */
+  const _pmCol=(menuLens==='all'||!pmName);
+  const lensed=hp.filter(p=>_pmCol||p.pm===pmName);
   const orphans=(mpdb.listProperties()||[]).filter(p=>!hp.some(h=>h.id===p.id));
   const all=hp.length?lensed.concat(orphans.map(p=>Object.assign({},p,{hap:false}))):(mpdb.listProperties()||[]);
   /* The rail is conditional on the tracker having supplied properties. With
@@ -7002,6 +7040,11 @@ function renderMenu(){
     const _pg=p.hap?(String(p.program||'').trim()||(p.action&&p.action.kind==='unsupported'?'no type stated':'')):'';
     const prog=_pg?('<span class="pc-prog'+(_pg==='OCAF'?' ocaf':_pg==='RCS'?'':' unk')+'">'+esc(_pg)+'</span>'):'';
     const body='<button class="pc-body" data-open="'+p.id+'"'+(p.caption?' title="'+esc(p.caption)+'"':'')+'><div class="pc-top"><div class="pc-name">'+esc(p.name)+(showAl?'<span class="pc-alias">&ldquo;'+esc(al)+'&rdquo;</span>':'')+'</div></div>'
+      /* Only in the everyone scope. Reading one manager's list, a column
+         repeating that manager on every row is 229 restatements of what the
+         masthead already says. Reading all of them, it is the fact that tells
+         you whose row it is. */
+      +(_pmCol?('<div class="pc-pm">'+esc(p.hap?(p.pm||'Unassigned'):'')+'</div>'):'')
       +'<div class="pc-meta">'+(p.hap?(esc(p.pm||'Unassigned')+(p.city_state?' &middot; '+esc(p.city_state):'')):(esc(p.fha)+(p.city_state?' &middot; '+esc(p.city_state):'')))+'</div>'
       +(p.hap?dueLine(p):'')
       /* The ledger printed a "Rents effective" header over an empty column. */
@@ -7059,9 +7102,11 @@ function renderMenu(){
   const _zone=list=>{let k=null;return list.map(x=>{
     const h=(x.b.key!==k)?('<div class="mgroup">'+esc(x.b.label)+'</div>'):'';
     k=x.b.key;return h+card(x.p,x.b.behind?'past':(x.p.days<=MENU_WINDOW?'now':'later'));}).join('');};
-  const _cols='<div class="mcols"><span>Property</span><span>Program</span>'
+  const _cols='<div class="mcols'+(_pmCol?' pm':'')+'"><span>Property</span>'
+    +(_pmCol?'<span>Manager</span>':'')+'<span>Program</span>'
     +'<span>Due to HUD</span><span>Rents effective</span><span class="r">Units</span>'
     +'<span></span></div>';
+  const _rowsCls='mgrid rows'+(_pmCol?' pm':'');
   const _pastRows=_banded.filter(x=>x.b.key!=='none'&&x.b.behind);
   const _liveRows=_banded.filter(x=>x.b.key!=='none'&&!x.b.behind&&x.p.days<=MENU_WINDOW);
   const _restRows=_banded.filter(x=>x.b.key!=='none'&&!x.b.behind&&x.p.days>MENU_WINDOW);
@@ -7082,7 +7127,7 @@ function renderMenu(){
      is for a list you are browsing, never for one you are searching. */
   const _drawer=(!q&&view!=='past'&&_pastRows.length>0);
   const _pastGrid=_pastRows.length?('<div class="mpastwrap" id="mPastWrap"'
-      +((_drawer&&!_pastOpen)?' hidden':'')+'><div class="mgrid rows">'
+      +((_drawer&&!_pastOpen)?' hidden':'')+'><div class="'+_rowsCls+'">'
       +_cols+_zone(_pastRows)+'</div></div>'):'';
   const _banner=_drawer?('<button class="mpast'+(_pastOpen?' open':'')
       +'" id="mPast" aria-expanded="'+(_pastOpen?'true':'false')+'">'
@@ -7105,7 +7150,7 @@ function renderMenu(){
       +' days</h3><span>'+(_liveRows.length?(_pl(_liveRows.length)
         +' &middot; earliest deadline first'):'Nothing in this window')+'</span>'
     +'<span class="zsp"></span>'+windowPickHtml()+'</div>'
-    +(_liveRows.length?('<div class="mgrid rows live">'+_cols+_zone(_liveRows)+'</div>')
+    +(_liveRows.length?('<div class="'+_rowsCls+' live">'+_cols+_zone(_liveRows)+'</div>')
       :(view==='now'?'':'<div class="mempty win0">Nothing is due in the next '+_bandNow()
         +' days. Try a wider window, or read on below.</div>')));
 
@@ -7117,7 +7162,7 @@ function renderMenu(){
   const _restN=_ledgerRows.length+_offRows.length+_or.length;
   const _restHtml=_restN?('<div class="zhead"><h3>'+(_liveRows.length?'Further out':'The schedule')
       +'</h3><span>'+_pl(_restN)+(_ledgerRows.length?' &middot; earliest deadline first':'')+'</span></div>'
-    +'<div class="mgrid rows">'+_cols+_zone(_ledgerRows)
+    +'<div class="'+_rowsCls+'">'+_cols+_zone(_ledgerRows)
     /* Off the axis, so below every month rather than inside the last one — a
        property with no deadline cannot sit on a deadline timeline. */
     +(_offRows.length?('<div class="mgroup">'+esc(_offRows[0].b.label)+'</div>'
