@@ -6093,7 +6093,11 @@ let _menuWheel=false;
    zero and the rule slides back to the left over about a quarter second instead
    of blinking out. */
 const PULL_MAX=340;
-let _pull=0,_pullTo=0,_pullAt=0,_pullTimer=null,_pullRaf=null;
+/* Wheel events closer together than this are one continuous gesture. Long enough
+   to span trackpad momentum, short enough that a deliberate second pull reads as
+   a second gesture. */
+const GESTURE_GAP=180;
+let _pull=0,_pullTo=0,_pullAt=0,_pullTimer=null,_pullRaf=null,_gestPull=false;
 function _pullPaint(){
   const b=el('mPast');
   if(!b||!b.style||!b.style.setProperty)return;
@@ -6118,15 +6122,29 @@ function _pullRelease(){_pullTo=0;_pullGlide();}
 function _menuPull(dy){
   const v=el('viewMenu');
   if(_pastOpen||!v||v.style.display==='none'||!el('mPast')){if(_pullTo)_pullRelease();return;}
-  /* Only at the very top, and only pulling up. Anywhere else this is an ordinary
-     scroll, and the accumulator has to be empty when the reader gets back here. */
-  if(dy>=0||(typeof window!=='undefined'&&(window.pageYOffset||0)>0)){
+  const now=(typeof performance!=='undefined'&&performance.now)?performance.now():0;
+  const atTop=(typeof window==='undefined')||(window.pageYOffset||0)<=0;
+  /* ---- where the gesture STARTED, not where the page is now ----
+     A fast flick up from halfway down the list keeps delivering wheel events for
+     a few hundred milliseconds AFTER it has hit the top, and those were counted
+     as a pull: scrolling briskly back to the Portfolio heading opened the drawer
+     by itself and threw the reader to the top of eighty rows they had not asked
+     for. Momentum is not intent.
+
+     So continuity is tracked. Events less than GESTURE_GAP apart are one gesture,
+     and a gesture is only a PULL if it began with the page already at rest at the
+     top. One that began further down stays a scroll for its whole life, however
+     long its tail runs on. Lift off, pause, and pull again — that is a new
+     gesture, and it counts. */
+  const cont=now&&_pullAt&&(now-_pullAt)<GESTURE_GAP;
+  if(!cont){_gestPull=atTop;if(_pullTo)_pullTo=0;}
+  _pullAt=now;
+  /* Only pulling up, only at the top, and only within a gesture that began
+     there. */
+  if(dy>=0||!atTop||!_gestPull){
     if(_pullTo)_pullRelease();
     return;
   }
-  const now=(typeof performance!=='undefined'&&performance.now)?performance.now():0;
-  if(now&&_pullAt&&(now-_pullAt)>420)_pullTo=0;   /* a pause ends the gesture */
-  _pullAt=now;
   /* The THRESHOLD reads the target, not the animated value: gating on the glide
      would make the drawer open a beat after the pull that earned it. */
   _pullTo=Math.min(PULL_MAX,_pullTo-dy);
@@ -6312,14 +6330,37 @@ function actionBtnHtml(p,short){
 /* The total leads. It is the view the page opens on, and reading the strip
    left to right should start with what you are looking at and then break it
    down, not arrive at it after four qualifications. */
+/* ---- the window the page treats as "coming" ----
+   90 days, not 30. The tracker sets its deadline about 120 days ahead of the rent
+   increase, so a 30-day window was only the last quarter of the time you actually
+   have to work in — it made the prominent panel a list of near-emergencies and
+   left the rest of the working window down in "later". hap.js already carried 90
+   as its `soon` band. Read from here by the strip, the panel heading and the ledge
+   copy alike, so the figure and the words can never disagree.
+
+   hap.js's own BAND_DAYS is deliberately NOT changed: it is held to the real
+   corpus by test_hap.js, and this is a decision about what the page emphasises,
+   not about what a band means to the tracker. */
+const MENU_WINDOW=90;
+function _bandNow(){return MENU_WINDOW;}
+/* Read left to right this is now the order of the work: everything, then what is
+   coming, then what is beyond it, then what is behind, then what is off the
+   schedule entirely. Matt set it. What is BEHIND comes fourth rather than second
+   because it is not the thing to look at first — it drains on its own as each
+   increase date arrives.
+
+   "past due to HUD" is gone. It borrowed a billing phrase, and billing's "past
+   due" means somebody has not paid: the tracker records the deadline and NOT the
+   filing, so the app cannot know whether anything is outstanding, and a word that
+   implies it is putting an accusation in HUD's mouth. "already due" says the only
+   thing that is actually true — the date has arrived. */
 const MENU_VIEWS=[
  {k:'all',    t:'properties',          c:''},
- {k:'past',   t:'past due to HUD',     c:''},
- {k:'now',    t:'due within 30 days',  c:'now'},
+ {k:'now',    t:'within '+MENU_WINDOW+' days', c:'now'},
  {k:'later',  t:'later',               c:'soon'},
+ {k:'past',   t:'already due',         c:''},
  {k:'undated',t:'not in the schedule', c:''},
 ];
-function _bandNow(){return (window.RCSHap&&window.RCSHap._bandDays&&window.RCSHap._bandDays.now)||30;}
 /* The words live here, not in a click handler (FORM-RULES 17): the lede under
    the heading and the copy shown when a view is empty are two halves of one
    explanation and must be edited together. Every empty state names the next
@@ -6330,14 +6371,16 @@ function menuViewCopy(k){
   const M={
    now:{lede:'Due in the next '+N+' days. Earliest first.',
         empty:'Nothing is due in the next '+N+' days.'},
+   /* Not "more than N days out": the reader has just pressed a figure labelled
+      "later" and needs to know what it is later THAN. */
    /* Not an alarm, and the lede says why \u2014 twice over. The tracker carries
       the deadline, not the filing, so a date in the past usually means the
       package went in and the row has not caught up. And the band is STRUCTURAL:
       HUD wants the paperwork about four months before the rents move, so every
       property spends those four months here whether or not anything is late.
       It drains on its own as each increase date arrives. */
-   past:{lede:'The date HUD wanted the paperwork by has passed, and the rents have not moved yet \u2014 a window every property passes through, since the tracker sets that date about four months ahead of the increase.',
-        empty:'Nothing is past its date.'},
+   past:{lede:'The date on the schedule has arrived and the rents have not moved yet \u2014 a window every property passes through, since the tracker sets that date about four months ahead of the increase. It records the date, not the filing.',
+        empty:'No date has arrived yet.'},
    later:{lede:'Due more than '+N+' days out. Earliest first.',
         empty:'Nothing further out is waiting.'},
    /* Three reasons, not two. The schedule can end on the contract's own expiry,
@@ -6384,7 +6427,7 @@ function bandOf(p){
   const d=p.hap?p.days:null;
   if(!p.hap||d==null||!p.deadline)return {view:'undated',rank:9,key:'none',label:'No renewal scheduled'};
   const iso=String(p.deadline).slice(0,10).split('-');
-  return {view:(d<0?'past':(d<=30?'now':'later')),rank:0,
+  return {view:(d<0?'past':(d<=MENU_WINDOW?'now':'later')),rank:0,
           key:'m'+iso[0]+iso[1],label:MONTHS[(+iso[1])-1]+' '+iso[0],behind:d<0};
 }
 function _menuToday(){try{return (mpdb&&mpdb.today)?mpdb.today():new Date().toISOString().slice(0,10);}
@@ -6685,10 +6728,10 @@ function renderMenu(){
        twice the width. One label, and the column that holds it is the same on
        every row of one table. */
     return '<div class="pcard"'+(_band?' data-band="'+esc(_band)+'"':'')+'>'+body+actionBtnHtml(p,true)+'</div>';};
-  /* A "+ New property" tile sitting inside "Needs you" would imply it belongs to
-     that band. #bNewProperty in the toolbar is always there, so the tile appears
-     only where it means what it looks like. */
-  const newTile='<button class="pcard newcard" id="tileNew"><span class="plus">+</span><span>New property</span></button>';
+  /* No "+ New property" tile. "New property" lives in the masthead, on every
+     view, which is one place rather than two — and a dashed slab at the foot of a
+     renewal SCHEDULE invited making a record the tracker does not carry, which is
+     the population the dev sweep exists to clear up after. */
   const empty='<div class="mempty">No properties match &ldquo;'+esc(q)+'&rdquo;. <span class="link" id="mClear">Clear search</span></div>';
   const viewEmpty='<div class="mempty">'+esc(menuViewCopy(view).empty)+'</div>';
   /* Two populations, and they must be told apart on sight: mixed together, a
@@ -6720,13 +6763,13 @@ function renderMenu(){
      take, under a zone heading that already said which thirty days it took. */
   const _zone=list=>{let k=null;return list.map(x=>{
     const h=(x.b.key!==k)?('<div class="mgroup">'+esc(x.b.label)+'</div>'):'';
-    k=x.b.key;return h+card(x.p,x.b.behind?'past':(x.p.days<=30?'now':'later'));}).join('');};
+    k=x.b.key;return h+card(x.p,x.b.behind?'past':(x.p.days<=MENU_WINDOW?'now':'later'));}).join('');};
   const _cols='<div class="mcols"><span>Property</span><span>Program</span>'
     +'<span>Due to HUD</span><span>Rents effective</span><span class="r">Units</span>'
     +'<span></span></div>';
   const _pastRows=_banded.filter(x=>x.b.key!=='none'&&x.b.behind);
-  const _liveRows=_banded.filter(x=>x.b.key!=='none'&&!x.b.behind&&x.p.days<=30);
-  const _restRows=_banded.filter(x=>x.b.key!=='none'&&!x.b.behind&&x.p.days>30);
+  const _liveRows=_banded.filter(x=>x.b.key!=='none'&&!x.b.behind&&x.p.days<=MENU_WINDOW);
+  const _restRows=_banded.filter(x=>x.b.key!=='none'&&!x.b.behind&&x.p.days>MENU_WINDOW);
   const _offRows=_banded.filter(x=>x.b.key==='none');
   const _pl=n=>fmtNum(n)+(n===1?' property':' properties');
 
@@ -6749,7 +6792,7 @@ function renderMenu(){
   const _banner=_drawer?('<button class="mpast'+(_pastOpen?' open':'')
       +'" id="mPast" aria-expanded="'+(_pastOpen?'true':'false')+'">'
       +'<span class="mp-n">'+(_pastOpen?'\u2193 ':'')+'<b>'+fmtNum(_pastRows.length)
-      +'</b> past due to HUD</span>'
+      +'</b> already due</span>'
       +'<span class="mp-a">'+(_pastOpen?'Hide':'Show')+'</span>'
       +'<span class="mp-fill"></span></button>'):'';
 
@@ -6788,7 +6831,7 @@ function renderMenu(){
   el('menuGrid').className='mzones';
   el('menuGrid').innerHTML=_body+(q&&!props.length?empty:'')
     +((hasRail&&!q&&!props.length)?viewEmpty:'')
-    +((!q&&(!hasRail||view==='all'))?newTile:'');
+    ;
   document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>{const v=b.getAttribute('data-open');
     if(v.indexOf('hap:')===0)openHapProperty(v.slice(4));else openLauncher(v);});
   /* No e.stopPropagation(): the two buttons are siblings, and adding one would
@@ -6820,7 +6863,6 @@ function renderMenu(){
   document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{
     menuView=b.getAttribute('data-view');
     if(el('menuSearch'))el('menuSearch').value='';renderMenu();});
-  const tn=el('tileNew');if(tn)tn.onclick=createProperty;
   const mc=el('mClear');if(mc)mc.onclick=()=>{if(el('menuSearch'))el('menuSearch').value='';renderMenu();};
 }
 function existingPropByName(nm){nm=String(nm||'').trim().toLowerCase();if(!nm)return null;try{return (mpdb.listProperties()||[]).find(p=>String(p.name||'').trim().toLowerCase()===nm)||null;}catch(e){return null;}}

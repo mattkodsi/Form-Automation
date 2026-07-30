@@ -35,7 +35,7 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=324;   // 2026-07-29: +12 — three zones: the past-due drawer closed on arrival, and
+const MIN_CHECKS=327;   // 2026-07-29: +12 — three zones: the past-due drawer closed on arrival, and
                         // opening it without moving the panel below (measured in a real layout).
                         // 2026-07-29: -3 — the rail's eight rows became the strip's five figures.
                        // 2026-07-28: +35 — the home page's filter rail, driven by real clicks.
@@ -2061,10 +2061,19 @@ const FULL=process.argv.includes('--full');
          A SECOND seed, because the fixture above deliberately leaves the past
          band empty so an empty band can be pressed, and there is no drawer
          without something to put in it. */
+      /* Deliberately TALL. Everything below turns on the page being able to
+         scroll — the compensation that holds the panel still, a flick that starts
+         well down the list, and an auto-close that needs the drawer entirely above
+         the viewport. On a four-row fixture the document is shorter than the
+         scroll being asked for, the browser clamps, and all three read as bugs in
+         the app rather than as a fixture too small to show them. The extra rows
+         are all far future, so what is coming stays a panel of one. */
       const rows2=[trow('B010','Drawer Behind','OCAF',-40),
                    trow('B011','Drawer Behind Two','OCAF',-9),
                    trow('B012','Drawer Now','OCAF',9),
-                   trow('B013','Drawer Far','OCAF',200)];
+                   trow('B013','Drawer Far','OCAF',200)]
+        .concat(Array.from({length:14},(_,i)=>
+          trow('B1'+(20+i),'Drawer Filler '+(i+1),'OCAF',300+i*30)));
       await c.eval('await window.__t.__seedHap('+JSON.stringify(rows2)+');'
         +'window.__t.__setMenuView("all");window.scrollTo(0,0);return 1');
       await sleep(280);
@@ -2090,7 +2099,7 @@ const FULL=process.argv.includes('--full');
          page whether you wanted it or not. */
       eq('the drawer is closed when the page opens',d0.hidden,true);
       eq('and it says so to a screen reader too',d0.expanded,'false');
-      T('the banner says how many are behind',/2 past due/.test(d0.banner||''));
+      T('the banner says how many are behind',/2 already due/.test(d0.banner||''));
       T('and none of those rows is on the page',
         !d0.shown.includes('Drawer Behind')&&!d0.shown.includes('Drawer Behind Two'));
       T('while what is coming is',d0.shown.includes('Drawer Now'));
@@ -2102,35 +2111,42 @@ const FULL=process.argv.includes('--full');
         /Show$/.test(d0.label||'')&&!/Show them/.test(d0.label||''));
       /* ---- the pull ----
          One notch used to open it, which fired on flicks nobody meant as a
-         gesture. It now stretches and fills, and opens only on a sustained pull. */
+         gesture. It now stretches and fills, and opens only on a sustained pull
+         within ONE gesture — events less than 180ms apart. The bursts below are
+         paced tightly for that reason: a `read()` round trip between notches is
+         itself long enough to end the gesture and restart the count. */
       const notch=()=>c.send('Input.dispatchMouseEvent',
         {type:'mouseWheel',x:600,y:400,deltaX:0,deltaY:-100});
-      await notch(); await sleep(140);
-      const p1=await read();
+      const burst=async n=>{for(let i=0;i<n;i++){await notch();await sleep(25);}};
+      const peek=()=>c.eval(`const b=document.getElementById('mPast');
+        return {pull:+getComputedStyle(b).getPropertyValue('--pull'),
+                hidden:!!document.getElementById('mPastWrap').hidden};`);
+      await c.eval('window.scrollTo(0,0);return 1'); await sleep(220);
+      await notch(); await sleep(70);
+      const p1=await peek();
       eq('one notch upward does not open it',p1.hidden,true);
-      T('but the bar stretches to say it is listening',parseFloat(p1.pull||'0')>0);
-      for(let i=0;i<3;i++){await notch();await sleep(70);}
-      await sleep(200);
+      T('but the bar stretches to say it is listening',p1.pull>0);
+      /* Let that gesture go, then pull properly. */
+      await sleep(620);
+      await burst(5); await sleep(360);
       const p2=await read();
       eq('a sustained pull opens it',p2.hidden,false);
       T('and the arrow points down, because that is where the rows went',
         /\u2193/.test(p2.label||''));
       await c.eval('document.getElementById("mPast").click();return 1');
-      await sleep(280);
-      /* Opening it. The one check the DOM alone cannot make: inserting rows above
-         the panel must not move the panel. Measured in the viewport, before and
-         after, in a real layout. */
+      await sleep(320);
       /* ---- the glide ----
          Sampled IN PAGE at 16ms, because the value is animated frame by frame and
          a round trip per sample cannot see the shape. Written straight from the
          wheel handler it jumped a third of the bar per event — staccato — so what
          is asserted is INTERPOLATION: many distinct values across the gesture, and
          a release that slides back over time rather than blinking out. */
+      await c.eval('window.scrollTo(0,0);return 1'); await sleep(260);
       await c.eval(`window.__S=[];const b=document.getElementById('mPast');
         window.__si=setInterval(()=>{window.__S.push(
           +getComputedStyle(b).getPropertyValue('--pull'));},16);return 1;`);
-      await notch(); await sleep(90); await notch();
-      await sleep(1150);
+      await notch(); await sleep(60); await notch();
+      await sleep(1250);
       const S=await c.eval('clearInterval(window.__si);return window.__S');
       const uniq=[...new Set(S.map(v=>v.toFixed(3)))].length;
       T('the fill is interpolated, not written straight from the wheel',uniq>=8);
@@ -2138,9 +2154,9 @@ const FULL=process.argv.includes('--full');
       const zi=S.findIndex((v,i)=>i>pk&&v<0.01);
       T('and letting go slides it back rather than blinking it out',zi-pk>=6);
       T('all the way back to nothing',zi>0);
-      await c.eval('window.scrollTo(0,0);return 1'); await sleep(140);
+      await c.eval('window.scrollTo(0,0);return 1'); await sleep(200);
       await c.eval('document.getElementById("mPast").click();return 1');
-      await sleep(320);
+      await sleep(340);
       const d1=await read();
       eq('pressing it opens the drawer',d1.hidden,false);
       T('the rows behind you are now on the page',d1.shown.includes('Drawer Behind'));
@@ -2151,10 +2167,35 @@ const FULL=process.argv.includes('--full');
       T('and the drawer runs earliest-due first',
         d1.shown.indexOf('Drawer Behind')<d1.shown.indexOf('Drawer Behind Two'));
       await c.eval('document.getElementById("mPast").click();return 1');
-      await sleep(300);
+      await sleep(340);
       const d2=await read();
       eq('pressing it again closes it',d2.hidden,true);
       eq('and what is coming still has not moved',d2.panelTop,d0.panelTop);
+      /* ---- momentum is not intent ----
+         A fast flick up from halfway down the list keeps delivering wheel events
+         for a few hundred ms AFTER it has hit the top, and those were counted as a
+         pull: scrolling briskly back towards the Portfolio heading opened the
+         drawer by itself and threw the reader to the top of eighty rows they had
+         not asked for. Continuity is tracked now, and a gesture that began below
+         the top stays a scroll for its whole life however long its tail runs on.
+
+         Fired with NO sleep between events, which is what makes it one gesture. */
+      await c.eval('window.scrollTo(0,1200);return 1'); await sleep(280);
+      for(let i=0;i<24;i++){await notch();}
+      await sleep(700);
+      const fl=await read();
+      eq('a fast flick up from mid-list does not open the drawer',fl.hidden,true);
+      eq('it only returns the page to the top',fl.y,0);
+      /* And the same pull, once the flick has been let go of, does open it \u2014 so
+         what is being tested is the gesture boundary and not merely a raised
+         threshold. */
+      await sleep(520);
+      for(let i=0;i<4;i++){await notch();await sleep(80);}
+      await sleep(560);
+      eq('but a deliberate pull once settled there does',(await read()).hidden,false);
+      await c.eval('document.getElementById("mPast").click();return 1');
+      await sleep(320);
+
       /* ---- the bar stays reachable, and puts itself away ----
          Pinned while open, so Hide can be pressed from anywhere in the drawer
          rather than only from the top of it. And scrolling back down past the

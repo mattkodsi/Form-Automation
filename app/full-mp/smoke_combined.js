@@ -22,7 +22,7 @@ const os=require('os'),path=require('path'),fs=require('fs');
 /* ── the verdict machinery (mirrors test_interactions.js) ───────────────── */
 const MONTHNAMES=['January','February','March','April','May','June','July',
                  'August','September','October','November','December'];
-const MIN_CHECKS=169;   // 2026-07-29: +12 the schedule — one axis, month headings, the today-line
+const MIN_CHECKS=170;   // 2026-07-29: +12 the schedule — one axis, month headings, the today-line
                         // 2026-07-28: +32 the home page's filter rail, +24 the primary action
 let n=0,fails=0,verdict=null;
 const BAR='═'.repeat(68);
@@ -112,9 +112,9 @@ const T=(label,v)=>eq(label,!!v,true);
     'Increase Type':type,'Rent Increase':us(dueIn+122),'Due to HUD':us(dueIn)});
   await db._setHapRows([
     trow('R001','Rail Overdue','RCS',-10),      // deadline passed  -> band overdue
-    trow('R002','Rail Now','OCAF',10),          // inside 30 days   -> band now
-    trow('R003','Rail Soon','OCAF',60),         // inside 90 days   -> band soon
-    trow('R004','Rail Later','OCAF',200),       // beyond 90 days   -> band later
+    trow('R002','Rail Now','OCAF',10),          // inside the window -> coming
+    trow('R003','Rail Soon','OCAF',60),         // inside the window -> coming
+    trow('R004','Rail Later','OCAF',200),       // beyond it         -> later
     /* In scope (it has had an OCAF) but with nothing ahead of it: the shape the
        schedule's horizon makes, and the one that must never read as finished. */
     trow('R005','Rail Awaiting','OCAF',-500),
@@ -124,13 +124,22 @@ const T=(label,v)=>eq(label,!!v,true);
   const c1=app.__menuCounts();
   T('the figures strip renders once the tracker supplies properties', /class="fig/.test(strip1));
   T('nothing undefined leaked into the strip', !/undefined/.test(strip1));
-  T('the strip names every band', /past due to HUD/.test(strip1)&&/due within 30 days/.test(strip1)
+  T('the strip names every band', /already due/.test(strip1)&&/within \d+ days/.test(strip1)
     &&/later/.test(strip1)&&/not in the schedule/.test(strip1)&&/properties/.test(strip1));
   T('and every figure is a control, not a caption', (strip1.match(/data-view=/g)||[]).length===5);
+  /* The order is the order of the work: everything, what is coming, what is
+     beyond it, what is behind, what is off the schedule. Asserted because it is a
+     decision rather than an accident, and nothing else on the page would show it
+     had drifted. */
+  eq('the figures run in the order of the work',
+    (strip1.match(/data-view="([a-z]+)"/g)||[]).map(x=>x.slice(11,-1)),
+    ['all','now','later','past','undated']);
   T('the lede explains the view on screen', lede1.length>20);
-  eq('a deadline already passed lands in past due to HUD', c1.past, 1);
-  eq('inside 30 days lands in due within 30 days',          c1.now, 1);
-  eq('further out lands in later',                          c1.later, 2);
+  eq('a deadline already passed lands in already due', c1.past, 1);
+  /* Two, not one: the page's window is MENU_WINDOW (90 days), so the row at
+     +60 is coming rather than later. */
+  eq('inside the window lands in what is coming',           c1.now, 2);
+  eq('further out lands in later',                          c1.later, 1);
   /* Gates Manor carries no tracker code and Rail Awaiting has no future
      startable row: two different reasons, one honest answer — no date. */
   eq('a property with no future renewal, and the uncoded record, are not in the schedule', c1.undated, 2);
@@ -147,13 +156,13 @@ const T=(label,v)=>eq(label,!!v,true);
      the page, but 82 of it is countable ON THE BANNER rather than as rows. Cards
      drawn plus the number the banner names must be the figure pressed — a total
      that silently exceeded both would be the drawer hiding rows from the count. */
-  const _inDrawer=+(((els.menuPastBar.innerHTML||'').match(/>(\d+)<\/b> past due/)||[])[1]||0);
+  const _inDrawer=+(((els.menuPastBar.innerHTML||'').match(/>(\d+)<\/b> already due/)||[])[1]||0);
   eq('the total equals the cards drawn plus the number the banner names',
     cardsIn(g1)+_inDrawer, c1.all);
   app.__setMenuView('later');
   eq('pressing a figure redraws the grid to match it', cardsIn(els.menuGrid.innerHTML), c1.later);
   app.__setMenuView('past');
-  eq('and past due to HUD draws only what is past', cardsIn(els.menuGrid.innerHTML), c1.past);
+  eq('and already due draws only what is past', cardsIn(els.menuGrid.innerHTML), c1.past);
   app.__setMenuView('undated');
   eq('not in the schedule draws both populations',    cardsIn(els.menuGrid.innerHTML), c1.undated);
   T('and separates them under the heading that says so',
@@ -188,7 +197,7 @@ const T=(label,v)=>eq(label,!!v,true);
      drawer's own container and would pass with no banner rendered at all. */
   T('the past-due rows are behind a banner', /id="mPast"/.test(bar));
   T('and it is closed on arrival', /id="mPastWrap"[^>]*hidden/.test(bar));
-  T('the banner says how many are back there', new RegExp('>'+c1.past+'</b> past due').test(bar));
+  T('the banner says how many are back there', new RegExp('>'+c1.past+'</b> already due').test(bar));
   T('and it is a control, not a caption', /aria-expanded="false"/.test(bar));
   T('it offers to show them without saying "them"', /Show</.test(bar)&&!/Show them/.test(bar));
   /* The arrow points DOWN when open, because on a disclosure control an arrow is
