@@ -406,9 +406,16 @@ const T=(label,v)=>eq(label,!!v,true);
   T('an uncoded property gets no next-renewal strip', !/NEXT RENEWAL/.test(lb1));
   app.openLauncher(rpid);
   const lbT=els.launcherBody.innerHTML;
-  T('a tracker property gets one',        /NEXT RENEWAL/.test(lbT));
-  T('naming the program and the date',    /OCAF · effective/.test(lbT));
-  T('and offering the same action the card does', /id="nuGo"/.test(lbT));
+  /* And a tracker property whose renewal ALREADY HAS a package gets no strip
+     either — the card is that renewal. The page was printing the same fact twice,
+     a strip saying RCS effective October 1 over a card saying RCS effective
+     October 1, and it read as two RCSs. The deadline and the action move into the
+     card; there is one box per renewal because there is one package per programme
+     per date. */
+  T('a tracker property whose renewal has a package gets no strip either',
+    !/NEXT RENEWAL/.test(lbT));
+  T('the card carries the deadline the strip used to',   /pc-due/.test(lbT));
+  T('and the action, so the one box still has something to press', /id="nuGo"/.test(lbT));
   T('nothing undefined leaked into it',   !/undefined/.test(lbT));
   app.openLauncher(pid);
 

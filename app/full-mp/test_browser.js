@@ -2343,8 +2343,12 @@ const FULL=process.argv.includes('--full');
         return {strip:/NEXT RENEWAL/.test(document.getElementById('launcherBody').innerHTML),
                 label:(document.getElementById('nuGo')||{}).textContent||'',
                 newcy:!!document.getElementById('bNewCycle')};`);
-      T('the property profile shows the next renewal',nu.strip);
-      eq('and its button says what the card says',nu.label,'Continue 2030 OCAF');
+      /* No strip where the renewal already has a package — that card IS the
+         renewal, and the strip over it said the same thing a second time. The
+         button moves into the card and keeps saying what the gallery card says. */
+      T('no second box for a renewal that already has a package',!nu.strip);
+      eq('the card carries the action, saying what the gallery card says',
+        nu.label,'Continue 2030 OCAF');
       T('while "+ Start new package" survives beside it',nu.newcy);
     }
 
