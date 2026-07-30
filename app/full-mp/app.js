@@ -3019,6 +3019,37 @@ let _menuCounts={};
 let _pastOpen=false;
 /* Wired once for the life of the page, not once per render. */
 let _menuWheel=false;
+/* ---- the pull ----
+   Opening on the first upward notch fired on flicks nobody meant as a gesture,
+   so the drawer now takes a SUSTAINED pull: upward wheel delta accumulates while
+   the page is already at the top, the bar stretches and fills as it climbs, and
+   it opens on crossing PULL_MAX. Scrolling down, or pausing, gives it all back —
+   an abandoned gesture must not leave the bar half-stretched, and must not add to
+   the next one. */
+const PULL_MAX=300;
+let _pull=0,_pullAt=0,_pullTimer=null;
+function _setPull(v){
+  _pull=Math.max(0,Math.min(PULL_MAX,v));
+  const b=el('mPast');
+  if(b&&b.style&&b.style.setProperty)b.style.setProperty('--pull',String(_pull/PULL_MAX));
+}
+function _menuPull(dy){
+  const v=el('viewMenu');
+  if(_pastOpen||!v||v.style.display==='none'||!el('mPast')){if(_pull)_setPull(0);return;}
+  /* Only at the very top, and only pulling up. Anywhere else this is an ordinary
+     scroll and the accumulator has to be empty when the reader gets back here. */
+  if(dy>=0||(typeof window!=='undefined'&&(window.pageYOffset||0)>0)){
+    if(_pull)_setPull(0);
+    return;
+  }
+  const now=(typeof performance!=='undefined'&&performance.now)?performance.now():0;
+  if(now&&_pullAt&&(now-_pullAt)>420)_setPull(0);   /* a pause ends the gesture */
+  _pullAt=now;
+  _setPull(_pull-dy);
+  if(_pullTimer&&typeof clearTimeout==='function')clearTimeout(_pullTimer);
+  if(typeof setTimeout==='function')_pullTimer=setTimeout(()=>_setPull(0),450);
+  if(_pull>=PULL_MAX){_setPull(0);_togglePast();}
+}
 /* Open or close the past-due drawer, holding everything below it still.
    Anchored on the live panel and not on the drawer's own height: offsetHeight
    excludes margins, and opening changes two of them (the banner sheds its 14px
@@ -3028,7 +3059,7 @@ let _menuWheel=false;
 function _togglePast(){
   const anchor=()=>{
     const g=el('menuGrid');if(!g||!g.querySelector)return null;
-    const a=g.querySelector('.mgrid.rows.live')||g.querySelector('.zhead');
+    const a=g.querySelector('.mgrid.rows.live')||g.querySelector('.zhead')||g;
     return (a&&a.getBoundingClientRect)?a.getBoundingClientRect().top:null;};
   const before=anchor();
   _pastOpen=!_pastOpen;
@@ -3603,14 +3634,24 @@ function renderMenu(){
      A drawer only where it has something to hide. Filtered TO what is past, the
      rows ARE the list, and a banner over them would be a control that closes the
      view you just chose. */
-  const _drawer=(view!=='past'&&_pastRows.length>0);
-  const _pastHtml=_pastRows.length?((_drawer?('<button class="mpast'+(_pastOpen?' open':'')
+  /* The arrow points DOWN when the drawer is open. It pointed up in the first
+     draft, meaning "those rows are above you" — which is a compass reading, and
+     on a disclosure control the arrow is read as the ACTION or the state, not as
+     a direction to look in. Open means it dropped down. */
+  /* Not while searching. Search is a find-within that forces the All view, so a
+     past-due property matching the query was being routed into a CLOSED drawer:
+     you typed a name you knew existed and the page showed you nothing. A drawer
+     is for a list you are browsing, never for one you are searching. */
+  const _drawer=(!q&&view!=='past'&&_pastRows.length>0);
+  const _pastGrid=_pastRows.length?('<div class="mpastwrap" id="mPastWrap"'
+      +((_drawer&&!_pastOpen)?' hidden':'')+'><div class="mgrid rows">'
+      +_cols+_zone(_pastRows)+'</div></div>'):'';
+  const _banner=_drawer?('<button class="mpast'+(_pastOpen?' open':'')
       +'" id="mPast" aria-expanded="'+(_pastOpen?'true':'false')+'">'
-      +'<span class="mp-n">'+(_pastOpen?'\u2191 ':'')+'<b>'+fmtNum(_pastRows.length)
+      +'<span class="mp-n">'+(_pastOpen?'\u2193 ':'')+'<b>'+fmtNum(_pastRows.length)
       +'</b> past due to HUD</span>'
-      +'<span class="mp-a">'+(_pastOpen?'Hide':'Show them')+'</span></button>'):'')
-    +'<div class="mpastwrap" id="mPastWrap"'+((_drawer&&!_pastOpen)?' hidden':'')+'>'
-      +'<div class="mgrid rows">'+_cols+_zone(_pastRows)+'</div></div>'):'';
+      +'<span class="mp-a">'+(_pastOpen?'Hide':'Show')+'</span>'
+      +'<span class="mp-fill"></span></button>'):'';
 
   /* ---- zone 2: what is coming ----
      "Due to HUD by Jul 31" over a row due Aug 1 is a heading asserting something
@@ -3637,7 +3678,13 @@ function renderMenu(){
           +(_or.length===1?'this record':'these '+fmtNum(_or.length)+' records')+'</button>'):'')
         +'</div>'+_or.map(p=>card(p,'none')).join('')):'')
     +'</div>'):'';
-  const _body=_pastHtml+_liveHtml+_restHtml;
+  /* The drawer lives in its own bar, flush under the masthead, so it is not the
+     first item of a list it is not part of. But ONLY while it is a drawer:
+     filtered TO what is past, those rows are the whole list, and leaving them in
+     the top bar put every row of the chosen view above the page's own heading
+     and left the list below it empty. */
+  if(el('menuPastBar'))el('menuPastBar').innerHTML=_drawer?(_banner+_pastGrid):'';
+  const _body=(_drawer?'':_pastGrid)+_liveHtml+_restHtml;
   el('menuGrid').className='mzones';
   el('menuGrid').innerHTML=_body+(q&&!props.length?empty:'')
     +((hasRail&&!q&&!props.length)?viewEmpty:'')
@@ -3662,12 +3709,7 @@ function renderMenu(){
   if(_pb)_pb.onclick=()=>_togglePast();
   if(!_menuWheel&&typeof window!=='undefined'&&window.addEventListener){
     _menuWheel=true;
-    window.addEventListener('wheel',e=>{
-      if(_pastOpen)return;
-      const v=el('viewMenu');
-      if(!v||v.style.display==='none')return;
-      if(e.deltaY<-4&&(window.pageYOffset||0)<=0&&el('mPast'))_togglePast();
-    },{passive:true});
+    window.addEventListener('wheel',e=>_menuPull(e.deltaY),{passive:true});
   }
 
   /* Wired here rather than in boot(): the rail is rebuilt on every render, so a

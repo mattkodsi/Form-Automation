@@ -805,22 +805,35 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
 #viewMenu .mgrid.rows.live .pc-act .btn:hover:not(:disabled){background:var(--ledger);border-color:var(--ledger)}
 #viewMenu .mgrid.rows.live .pc-act .btn:disabled{background:transparent;border-color:var(--ln);color:var(--i4)}
 /* ---- the past-due drawer ----
-   Collapsed on load, so the page opens on what is coming rather than on eighty
-   rows of what is behind. The banner is the whole affordance: it says how many
-   are back there and opens them. Scrolling up at the top of the page opens it
-   too, and the scroll is compensated by the height that appeared, so the panel
-   below does not jump — the list simply exists above you, to scroll into. */
-#viewMenu .mpast{width:100%;display:flex;align-items:center;justify-content:space-between;
-  gap:16px;background:var(--card);border:1px solid var(--ln);border-radius:var(--r-card);
-  padding:11px 18px;margin:0 0 14px;cursor:pointer;font:inherit;text-align:left}
-#viewMenu .mpast:hover{border-color:var(--i4);background:var(--sunk)}
-#viewMenu .mpast .mp-n{font-size:13px;font-weight:600;color:var(--i1)}
-#viewMenu .mpast .mp-n b{font-weight:600}
+   Flush under the masthead and edge to edge, so it reads as attached to the
+   navy rather than as the first item of the list. It sits ABOVE the page's own
+   heading: opening it pushes Renewals, the strip and the panel down together,
+   which is the "drop down" it is meant to be. Its inner padding matches .mwrap's
+   40px so the count lines up with everything below it.
+
+   The stretch: --pull is a 0..1 progress written by the wheel handler, and the
+   bar grows and fills as it climbs. Opening on the first upward notch fired on a
+   flick nobody meant as a gesture, so it now takes a sustained pull. */
+#viewMenu #menuPastBar{background:var(--paper)}
+#viewMenu .mpast{--pull:0;width:100%;display:flex;align-items:center;
+  justify-content:space-between;gap:16px;position:relative;overflow:hidden;
+  background:var(--card);border:0;border-bottom:1px solid var(--ln);
+  border-radius:0;cursor:pointer;font:inherit;text-align:left;
+  padding:calc(13px + (var(--pull) * 18px)) 40px}
+#viewMenu .mpast:hover{background:var(--sunk)}
+#viewMenu .mpast .mp-n{font-size:13.5px;font-weight:600;color:var(--i1)}
 #viewMenu .mpast .mp-a{font-size:12px;font-weight:600;color:var(--ledger);white-space:nowrap}
-#viewMenu .mpast.open{border-radius:var(--r-card) var(--r-card) 0 0;margin-bottom:0;
-  border-bottom-color:var(--ln-soft)}
-#viewMenu .mpastwrap{margin:0 0 40px}
-#viewMenu .mpastwrap .mgrid.rows{border-radius:0 0 var(--r-card) var(--r-card);border-top:0}
+/* How far the pull has got. A rule across the foot of the bar, not a spinner:
+   it is the same hairline the bar already ends in, filling from the left. */
+#viewMenu .mpast .mp-fill{position:absolute;left:0;bottom:0;height:2px;
+  width:calc(var(--pull) * 100%);background:var(--ledger);
+  transition:width .08s linear}
+#viewMenu .mpastwrap{margin:0}
+#viewMenu .mpastwrap .mgrid.rows{border-radius:0;border-left:0;border-right:0;
+  border-top:0;background:var(--card)}
+#viewMenu .mpastwrap .mgrid.rows .pcard{padding-left:40px;padding-right:40px}
+#viewMenu .mpastwrap .mgrid.rows .mcols,
+#viewMenu .mpastwrap .mgrid.rows .mgroup{padding-left:40px;padding-right:40px}
 /* the ledger row: quiet, and its action is a text affordance not a slab */
 /* 116px, not 104. Every row's action is the short label ("Start 2026"), and the
    rows nearest today draw it as a bordered button — which the ledger's 104px,
@@ -1274,6 +1287,7 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
  <!-- ===================== PROPERTY MENU ===================== -->
  <div id="viewMenu" style="display:none">
    <div class="mtop"><div class="brand"><div class="bname">Section 8 Rent Adjustments</div><div class="btag">Related Affordable</div></div><div class="mtoprightwrap"><button class="backlink mtopright" id="bContacts">Contacts</button><button class="backlink mtopright" id="bNewProperty">New property</button><button class="backlink mtopright whochip" id="menuWho"></button><button class="backlink mtopright" id="bSignOut">Sign out</button></div></div>
+   <div id="menuPastBar"></div>
    <div class="mwrap">
      <div class="mhead">
        <div><h2 class="mtitle"><span class="eyebrow" id="menuEyebrow">Portfolio</span>Renewals</h2><div class="msub" id="menuCount"></div></div>
