@@ -2895,3 +2895,58 @@ and labelled.
 
 `174` Total Rent Loss Due to Non-Revenue Units and Part C's charge column were not audited against
 the screenshot — page 2 has not been read yet, and Part G (Matt's principals defect) is on it.
+
+---
+
+# M66 — the "flaky" crypto check was not flaky; a padding stripper was cutting one file key in sixteen
+
+Merged from branch `crypto-nopad-fix` (commit `6b52af9`), which ran in its own session on Matt's
+instruction. Recorded here because the finding corrects something **I** said twice.
+
+## What I claimed, and what was true
+
+I twice wrote that `test_crypto.js`'s `aes-256-cbc zero-iv nopad` check *"has failed under load and
+passed unchanged"*, and told Matt to retry a red delivery once on that basis. The wave-5 handoff
+softened it to *"load-independent, fails ~1 in 10 on branch and on pristine HEAD."* **Both readings
+were wrong in the same way: I treated a failing test as a property of the harness rather than of the
+code, and never opened `crypto.js`.** The retry-once instruction I wrote into the loop prompt was a
+standing instruction to ignore a real defect.
+
+## The defect
+
+`aesDecryptCBC(key, data, ivIncluded)` stripped PKCS#7 padding on **every** path, including the one
+`ivIncluded===false` selects — the revision 6 `UE`/`OE` strings, which per ISO 32000-2 are zero-IV
+and **unpadded**, and whose plaintext *is* the 32-byte file encryption key.
+
+A file key is 32 uniformly random bytes. One in sixteen ends on a byte in `1..16`; the unpadder reads
+that as a length and returns a short key. Measured over 20,000 trials: **6.26%** against the 6.25%
+the explanation predicts. Nothing raises — `expandKey` takes the short key and the document decrypts
+to plausible garbage. `pdfdecrypt.js:224` already carried the comment `// zero IV, no padding` beside
+the call, so the intent was right and only the implementation disagreed.
+
+## The fix and the proof
+
+`crypto.js` now hoists `const raw=(ivIncluded===false)` and returns before the unpadder when `raw`.
+The random check stays — it is the one that found this — and beside it sit **seventeen** that cannot
+flake: every ending `0x01..0x10`, plus a tail that is valid PKCS#7 the whole way so a strict unpadder
+would bite too.
+
+Proven against `ed0be74`'s `crypto.js`, extracted to a temp dir and run with the new suite:
+
+```
+X CRYPTO SUITE FAILED (17 of 98)
+```
+
+Exactly the seventeen new checks, all seventeen, every run. Then **60 consecutive runs** of the fixed
+suite: 0 failures — if the bug were still there, P(zero in 60) = (15/16)^60 ≈ 2.1%.
+
+`test_crypto.js` 81 → **98**; `MIN_CHECKS` raised to match. `index.html` rebuilt (crypto.js ships in
+the bundle) and the merged bundle **cmp-verifies byte-for-byte** against a fresh `deliver.sh` build,
+which is the check that says the merge did not paper over a stale bundle.
+
+## What this cost, and the standing lesson
+
+Deliveries aborted at random for weeks, and each abort taught the retry habit rather than the reading
+habit. **A test that fails intermittently is a claim about the code until someone reads the code.**
+The suite was the only thing in the project that ever said a PDF was decrypting wrong, and the
+instruction I wrote told everyone to run it again.

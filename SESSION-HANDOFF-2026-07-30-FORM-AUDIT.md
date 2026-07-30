@@ -209,12 +209,26 @@ are vector outlines.
   in the cell, 10:1+ contrast on all five provenance backgrounds.
 - 13 new checks, `MIN_CHECKS` 333 → 346, nine fail on pristine HEAD.
 
-### Flaky crypto check — spawned as its own session, running independently
+### The crypto check was never flaky — MERGED AND CLOSED (M66)
 
-`test_crypto.js`'s `aes-256-cbc zero-iv nopad` fails **~1 run in 10 — 3/30 on the tab branch and
-3/30 on pristine HEAD**, so it randomly aborts `deliver.sh`. **Correction: the handoff previously
-called this "fails under load and passes unchanged". That was too generous — it is a genuine flaky
-test on main, independent of load.**
+`crypto-nopad-fix` (`6b52af9`) is **merged into `worktree-rcs-corpus`**. The check that "randomly
+aborted `deliver.sh`" was reporting a real defect the whole time: `aesDecryptCBC` stripped PKCS#7
+padding on the `ivIncluded===false` path too — the revision 6 `UE`/`OE` strings, which are zero-IV,
+**unpadded**, and whose plaintext *is* the 32-byte file key. One random key in sixteen ends on a
+byte in `1..16`, gets read as a padding length, and comes back short; nothing raises and the
+document decrypts to plausible garbage. Measured: **6.26% over 20,000 trials** against the 6.25%
+predicted.
+
+**Withdraw two things this handoff said.** "Fails under load and passes unchanged" and its
+correction "a genuine flaky test on main, independent of load" were both wrong in the same way — a
+failing test treated as a property of the harness, with nobody reading `crypto.js`. **The
+`retry a red delivery ONCE` line in the loop prompt was a standing instruction to ignore this
+defect and must not be carried forward.**
+
+Seventeen deterministic checks now pin every ending `0x01..0x10` plus an all-valid-PKCS#7 tail; all
+seventeen fail on `ed0be74`'s `crypto.js` (`X CRYPTO SUITE FAILED (17 of 98)`) and 60 consecutive
+runs of the fixed suite are clean. `test_crypto.js` 81 → **98**. Bundle rebuilt and cmp-verified
+byte-for-byte after the merge.
 
 ---
 

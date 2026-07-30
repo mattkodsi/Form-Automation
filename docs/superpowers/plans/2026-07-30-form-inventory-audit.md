@@ -580,7 +580,7 @@ authority, exactly as CLAUDE.md says.
 
 | suite | now | phases it gains | needs |
 |---|---:|---|---|
-| `test_crypto.js` | 81 | — | |
+| `test_crypto.js` | 98 | — | closed by M66; the "flake" was a real unpadding defect |
 | `test_db.js` | 169 | — | |
 | `test_interactions.js` | 144 | **3a, 3b, 3c (node half), 4, 6** — the bulk of this plan | node only |
 | `smoke_combined.js` | 165 | **2, 3d (render half)** — and it already owns the `a2b6be3` chooser-vs-matcher assertion, so 3b's reopen case belongs beside it | node only |
