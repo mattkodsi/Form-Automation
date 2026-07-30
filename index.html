@@ -887,9 +887,12 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
    just as well — and it keeps its own card edges so it reads as the head of the
    thing it opens rather than as a strip of chrome. */
 #viewMenu #menuPastBar{max-width:1480px;margin:0 auto;padding:0 40px}
-#viewMenu .mpast{border:1px solid var(--ln);border-bottom-width:1px;
-  border-radius:var(--r-card) var(--r-card) 0 0;padding:13px 18px}
-#viewMenu .mpast.open{border-radius:var(--r-card) var(--r-card) 0 0}
+/* Square where it MEETS the masthead, round where it ends. Closed, the bar is a
+   card hanging off the navy, so the round is at its foot. Open, its foot is a seam
+   with the drawer and the round belongs to the bottom of the drawer instead. */
+#viewMenu .mpast{border:1px solid var(--ln);
+  border-radius:0 0 var(--r-card) var(--r-card);padding:13px 18px}
+#viewMenu .mpast.open{border-radius:0}
 #viewMenu .mpastwrap{margin:0}
 #viewMenu .mpastwrap .mgrid.rows{border-radius:0 0 var(--r-card) var(--r-card);
   border-top:0;background:var(--card)}
