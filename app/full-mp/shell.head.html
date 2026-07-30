@@ -765,29 +765,62 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
    of today is the today-line, which is positional and needs no colour. */
 #viewMenu .mgrid.rows .pcard[data-band="past"],
 #viewMenu .mgrid.rows .pcard[data-band="later"]{box-shadow:inset 3px 0 0 var(--ledger)}
-/* ---- the schedule: one grid, one axis ---- */
+/* ---- the two zones ---- */
 #viewMenu .mzones{display:block}
+#viewMenu .zhead{display:flex;align-items:baseline;gap:12px;margin:0 0 14px}
+#viewMenu .zhead h3{font-size:11px;font-weight:600;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--i3);margin:0}
+#viewMenu .zhead span{font-size:12.5px;color:var(--i3)}
 #viewMenu .mgrid.rows{margin-bottom:0}
+#viewMenu .mgrid.rows.live{margin-bottom:48px}
+/* the live row: the name leads and says what the package is, the columns are
+   programme, countdown, size, action — as in the mockup */
+#viewMenu .mgrid.rows.live .pcard{grid-template-columns:minmax(0,1fr) 90px 130px 110px 150px;
+  padding:0 22px}
+#viewMenu .mgrid.rows.live .pc-body{grid-column:1/5;column-gap:24px;
+  grid-template-columns:minmax(0,1fr) 90px 130px 110px;padding:16px 0}
 /* .pc-units and .pc-prog live inside .pc-foot, so they cannot be placed in the
    row's grid while the footer is a box. display:contents dissolves the box and
    lets each fact take its own column. */
 #viewMenu .mgrid.rows .pc-foot{display:contents}
-/* ---- the today-line ----
-   A row of the list, spanning it, pinned to the top of the viewport while you
-   are below it. The masthead is static and scrolls away, so top:0 is the top of
-   the screen. Its 2px rule in the darkest ink outranks a month heading's
-   hairline, because it is the one divider on the page that is not a month. */
-#viewMenu .mgrid.rows .mtoday{grid-column:1/-1;position:sticky;top:0;z-index:4;
-  display:flex;align-items:center;justify-content:space-between;gap:16px;
-  background:var(--card);border-top:2px solid var(--i1);
-  border-bottom:1px solid var(--ln);padding:9px 18px}
-#viewMenu .mtoday .mt-d{font-size:10.5px;font-weight:600;letter-spacing:.12em;
-  text-transform:uppercase;color:var(--i1)}
-#viewMenu .mtoday .mt-up{font:inherit;font-size:12px;font-weight:600;color:var(--i3);
-  background:none;border:1px solid transparent;border-radius:var(--r-ctl);
-  padding:3px 9px;margin-left:-9px;cursor:pointer;letter-spacing:0}
-#viewMenu .mtoday .mt-up:hover{color:var(--ledger);border-color:var(--ln);background:var(--sunk)}
-#viewMenu .mtoday .mt-up.none{color:var(--i4);font-weight:500;cursor:default;padding-left:0;margin-left:0}
+#viewMenu .mgrid.rows.live .pc-name{font-size:17px;font-weight:600;letter-spacing:-.015em}
+#viewMenu .mgrid.rows.live .pc-meta{font-size:12.5px}
+#viewMenu .mgrid.rows.live .pc-due{grid-column:3;grid-row:1/3;font-size:13px;
+  font-weight:600;color:var(--stamp);white-space:nowrap}
+#viewMenu .mgrid.rows.live .pc-prog{grid-column:2;grid-row:1/3;justify-self:start}
+#viewMenu .mgrid.rows.live .pc-prog{background:none;color:var(--i3);font-size:10.5px;
+  letter-spacing:.09em;padding:0}
+#viewMenu .mgrid.rows.live .pc-units{grid-column:4;grid-row:1/3;justify-self:end;
+  font-size:13px;color:var(--i2);white-space:nowrap}
+#viewMenu .mgrid.rows.live .pc-act{grid-column:5}
+/* Hidden HERE and only here. The live panel carries no column headers, so a
+   second bare date beside the countdown read as part of it — "Jul 31 · 1 day
+   left   Oct 31" with nothing saying which was which, and on a narrow name it
+   overprinted the unit count outright ("Jan 1, 2027" over "51 units"). The panel
+   is about the deadline; the ledger below prints both dates under labels. */
+#viewMenu .mgrid.rows.live .pc-eff{display:none}
+#viewMenu .mgrid.rows.live .pc-act .btn{min-height:40px;padding:0 18px;font-size:13px;
+  font-weight:600;border-radius:var(--r-ctl);background:#101d2b;border-color:#101d2b;
+  letter-spacing:0;text-transform:none}
+#viewMenu .mgrid.rows.live .pc-act .btn:hover:not(:disabled){background:var(--ledger);border-color:var(--ledger)}
+#viewMenu .mgrid.rows.live .pc-act .btn:disabled{background:transparent;border-color:var(--ln);color:var(--i4)}
+/* ---- the past-due drawer ----
+   Collapsed on load, so the page opens on what is coming rather than on eighty
+   rows of what is behind. The banner is the whole affordance: it says how many
+   are back there and opens them. Scrolling up at the top of the page opens it
+   too, and the scroll is compensated by the height that appeared, so the panel
+   below does not jump — the list simply exists above you, to scroll into. */
+#viewMenu .mpast{width:100%;display:flex;align-items:center;justify-content:space-between;
+  gap:16px;background:var(--card);border:1px solid var(--ln);border-radius:var(--r-card);
+  padding:11px 18px;margin:0 0 14px;cursor:pointer;font:inherit;text-align:left}
+#viewMenu .mpast:hover{border-color:var(--i4);background:var(--sunk)}
+#viewMenu .mpast .mp-n{font-size:13px;font-weight:600;color:var(--i1)}
+#viewMenu .mpast .mp-n b{font-weight:600}
+#viewMenu .mpast .mp-a{font-size:12px;font-weight:600;color:var(--ledger);white-space:nowrap}
+#viewMenu .mpast.open{border-radius:var(--r-card) var(--r-card) 0 0;margin-bottom:0;
+  border-bottom-color:var(--ln-soft)}
+#viewMenu .mpastwrap{margin:0 0 40px}
+#viewMenu .mpastwrap .mgrid.rows{border-radius:0 0 var(--r-card) var(--r-card);border-top:0}
 /* the ledger row: quiet, and its action is a text affordance not a slab */
 /* 116px, not 104. Every row's action is the short label ("Start 2026"), and the
    rows nearest today draw it as a bordered button — which the ledger's 104px,
