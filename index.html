@@ -10349,7 +10349,7 @@ const addrLine=(street,city,state,zip)=>{
      HOLDS a value, exactly as the rest of this file does. */
   function uaHasG(rec,i){return ['ua_exec','ua_rcs','ua_custom'].some(k=>{const v=rec['units.'+i+'.'+k];return v!==''&&v!=null;});}
   async function fillRentSchedule(templateBytes, rec){
-    const { PDFDocument, StandardFonts, PDFName, rgb } = PL();
+    const { PDFDocument, StandardFonts, PDFName, PDFString, rgb } = PL();
     const doc=await PDFDocument.load(templateBytes,{parseSpeed:Infinity}); const form=doc.getForm();
     const font=await doc.embedFont(StandardFonts.Helvetica);
     const g=k=>rec[k]!=null?String(rec[k]):'';
@@ -10361,7 +10361,81 @@ const addrLine=(street,city,state,zip)=>{
        renumbered template would hand back a byte-valid, completely BLANK
        HUD-92458 that saved and downloaded clean. Count the misses and refuse. */
     let _wrote=0,_missed=0;
-    const T=(n,v)=>{ try{ const f=form.getTextField(String(n)); f.setText(String(v==null?'':v)); f.setFontSize(9); f.updateAppearances(font); _wrote++; }catch(e){ _missed++; } };
+    /* AN ACROFORM FIELD HAS A VALUE AND A LOOK, AND THEY ARE NOT THE SAME THING.
+       HUD's own AFSimple_Calculate actions read the VALUE through AFMakeNumber;
+       the AFNumber_Format actions render the separators and the "$" for DISPLAY.
+       We used to write the formatted string into the value itself, so a property
+       manager who opened the schedule and changed a unit count from 33 to 3 got
+       Col.4 = 6 instead of 5,550: Acrobat read our "1,850" as one point eight
+       five, because to AFMakeNumber the comma is a DECIMAL separator. Every
+       figure downstream of an edit was wrong by a factor of a thousand, and the
+       four potentials — which we had just taught to write "$76,918" — were worse
+       still, being less parseable again.
+
+       Measured on two real filed schedules (Colonial Village and Willow Woods,
+       2025, 232 fields each, different preparers): every numeric value is stored
+       RAW and carries a baked, FORMATTED appearance. Field 9 is "1147" and draws
+       "1,147"; field 95 is "83135" and draws "$83,135"; field 97 is "0" and draws
+       "$0". NeedAppearances is absent in both. So Acrobat itself keeps the value
+       raw and bakes the look — that is the shape we reproduce here, rather than
+       setting NeedAppearances and hoping every viewer regenerates.
+
+       WHICH fields are numeric is not guessed: it is read off the template as the
+       union of the fields carrying an AFNumber_Format action, the fields that
+       calculate, and the fields NAMED AS OPERANDS by someone else's calculation.
+       That last term is the one a format-based rule would miss — the Col.5
+       allowance cells (11, 19, 27 ... 91) carry no format action of their own but
+       are summed into Col.6 by SUM(11,9), so an allowance of 1,250 written with
+       its comma would make gross rent 1.25 + the rent. 112 fields in all. Fields
+       like the FHA number, which is text with leading zeros, are correctly out. */
+    const _numeric=(function(){ const set=new Set();
+      const jsOf=(d,which)=>{ try{ const aa=d.get(PDFName.of('AA')); if(!aa||!aa.get)return null;
+          let e=aa.get(PDFName.of(which)); if(!e)return null; e=doc.context.lookup(e)||e;
+          if(!e.get)return null; let j=e.get(PDFName.of('JS')); if(j==null)return null;
+          j=doc.context.lookup(j)||j; return j.decodeText?j.decodeText():String(j); }catch(e){ return null; } };
+      try{ for(const f of form.getFields()){ const nm=f.getName(); const d=f.acroField.dict;
+        const F=jsOf(d,'F'), C=jsOf(d,'C');
+        if(F&&/AFNumber_Format/.test(F)) set.add(nm);
+        if(C&&/AFSimple_Calculate/.test(C)){ set.add(nm);
+          const m=C.match(/new Array\s*\(([^)]*)\)/);
+          if(m) for(const q of m[1].split(',')) set.add(q.trim().replace(/^"|"$/g,'')); } } }catch(e){}
+      return set; })();
+    /* The currency symbol and whether it leads, taken from the field's OWN format
+       action, so the four potentials print "$" and the other 97 do not — and a
+       cell with no format action draws its digits bare, exactly as the blank form
+       would. Presentation stays the template's decision, not ours. */
+    const _cur=(function(){ const m={};
+      try{ for(const f of form.getFields()){ const nm=f.getName();
+        try{ const aa=f.acroField.dict.get(PDFName.of('AA')); if(!aa||!aa.get)continue;
+          let e=aa.get(PDFName.of('F')); if(!e)continue; e=doc.context.lookup(e)||e; if(!e.get)continue;
+          let j=e.get(PDFName.of('JS')); if(j==null)continue; j=doc.context.lookup(j)||j;
+          const s=j.decodeText?j.decodeText():String(j);
+          const q=s.match(/AFNumber_Format\s*\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*"((?:[^"\\]|\\.)*)"\s*,\s*(true|false)/);
+          if(q) m[nm]={sym:q[1].replace(/\\u0024/g,'$'),pre:q[2]==='true'}; }catch(e){} } }catch(e){}
+      return m; })();
+    const _raw={};                       // field name -> the bare number Acrobat must read
+    const _numlike=s=>/^-?\$?\d[\d,]*(\.\d+)?$/.test(String(s).trim());
+    const _show=(n,num)=>{ const c=_cur[String(n)];
+      const s=Math.abs(num).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2});
+      /* A field WITH a format action gets the separators (and the symbol, if its
+         action names one); a field WITHOUT one draws its digits bare, because
+         that is what the blank form does with the same value. Keying this off
+         the SYMBOL rather than off the action is a mistake I made and caught by
+         reading the baked stream: it dropped the comma from all 97 plain
+         numeric cells while the four dollar ones looked perfect. */
+      const body=c?(c.sym?(c.pre!==false?c.sym+s:s+c.sym):s):String(Math.abs(num));
+      return (num<0?'-':'')+body; };
+    /* Write the LOOK through pdf-lib (which bakes an appearance from the text it
+       is given), then overwrite the VALUE with the bare number afterwards — see
+       the raw-value pass near the end of this function, which has to run after
+       the 9pt sweep because that sweep re-bakes appearances from whatever /V then
+       holds. */
+    const T=(n,v)=>{ try{ const f=form.getTextField(String(n)); const s=String(v==null?'':v);
+        let out=s;
+        if(s!==''&&_numeric.has(String(n))&&_numlike(s)){
+          const num=parseFloat(s.replace(/[^0-9.\-]/g,''))||0;
+          _raw[String(n)]=String(num); out=_show(n,num); }
+        f.setText(out); f.setFontSize(9); f.updateAppearances(font); _wrote++; }catch(e){ _missed++; } };
     const C=n=>{ try{ form.getCheckBox(String(n)).check(); }catch(e){} };
     const _de=(g('rent_schedule.date_eff_source')==='custom'?(g('rent_schedule.date_eff_custom')||g('rent_schedule.date_eff_rs')||g('rent_schedule.date_rents_effective')):(g('rent_schedule.date_eff_rs')||g('rent_schedule.date_eff_custom')||g('rent_schedule.date_rents_effective')));
     const _dei=_toISO(_de);
@@ -10563,14 +10637,37 @@ const addrLine=(street,city,state,zip)=>{
       const _dp=nrProposed(i); const _dv=_dp!=null?_dp:((rent!==''&&rent!=null)?nmv(rent):null);
       T(dRent[dr],_dv!=null?money(_dv):'');
       trl+=(_dv||0)*(nmv(g('nonrev.'+i+'.num_units'))||1); dr++; });
-    T(174, dr?money(trl):'');
+    /* FIELD 174 IS A CALCULATED CELL AND MUST READ ITS ZERO — the one M65 missed.
+       It calculates SUM(161,164,167,170,173) and ships as "0" on the blank form,
+       exactly like 195 and 1156 twenty lines above, but this line actively blanked
+       it whenever the property had no non-revenue units at all.
+
+       Checked against the filed copies before changing, because a filed schedule
+       that printed it blank would have outranked the blank template. None does.
+       Every field-complete 92458 available carries "0" here when Part D is empty —
+       Willow Woods 2025 (unsigned), Beacon Hill eff. 08.01.25 (unsigned), and the
+       blank package copy "05. [Property Name] - Draft Rent Schedule.pdf" — while
+       Colonial Village, the one WITH a Part D row, carries its sum, 1147. No
+       counterexample, so the blank was ours alone.
+
+       The dollar sign a reader sees beside this box is PRINTED ON THE FORM, not in
+       the field: 174's format action is AFNumber_Format(0,0,0,0,"",false), so the
+       cell holds "0" and the page reads "$        0". */
+    T(174, money(trl));
     // Part G: the principals roster fills the name (left) / title (right) rows in order
     { const gL=[206,208,210,212,214,216,218,220,222,224,226], gR=[207,209,211,213,215,217,219,221,223,225,227];
       const pIdx=[...new Set(Object.keys(rec).map(k=>(k.match(/^principals\.(\d+)\./)||[])[1]).filter(x=>x!=null))].sort((a,b)=>a-b);
       let pr=0; pIdx.forEach(i=>{ if(pr>=gL.length)return; const nm=g('principals.'+i+'.name'), tt=g('principals.'+i+'.title'); if(!(nm||tt))return; T(gL[pr],nm); T(gR[pr],tt); pr++; });
       if(!pr && g('owner.gp')){ T(206,g('owner.gp')); T(207,'General Partner'); } // no roster on file yet: the General Partner row
     }
-    try{ form.getTextField('x12').setText(''); }catch(e){}
+    /* x12 IS HUD'S OWN CONSTANT AND MUST BE LEFT ALONE. It is the multiplier in
+       AFSimple_Calculate("PRD", ["95","x12"]) that turns each monthly potential
+       into its annual one, and it ships holding "12". We blanked it — inherited
+       from the original upload with no reason recorded — which is harmless until
+       something recalculates, at which point AFMakeNumber("") is 0 and BOTH annual
+       potentials collapse to $0 in front of the reader. The field is flagged
+       hidden (/F=6) in the template, so nothing was ever gained by clearing it,
+       and both filed schedules measured carry "12". */
     T(228,[g('sig.name'),sigTitle(g('sig.title'),g('sig.principal'))].filter(Boolean).join(', '));
     /* HUD's template computes 41 of its own fields — gross rents, the column
        extensions, every total — and orders them with /CO. Those actions used to
@@ -10586,6 +10683,16 @@ const addrLine=(street,city,state,zip)=>{
        gone at its source and the arithmetic can stay. */
     for(let q=7;q<=96;q++){ try{ const f=form.getTextField(String(q)); f.setFontSize(9); f.updateAppearances(font); }catch(e){} }
     try{ const f=form.getTextField('94a'); f.setFontSize(9); f.updateAppearances(font); }catch(e){}
+    /* THE VALUES GO IN RAW, LAST. Everything above wrote display text and let
+       pdf-lib bake an appearance from it; the 9pt sweep just above re-baked a
+       further ninety of them. Only now is it safe to put the bare number back
+       into /V, because nothing after this point reads it to draw with. The
+       appearance keeps the commas and the "$"; the value is what HUD's
+       arithmetic parses. Poked onto the dict directly rather than through
+       setText, which would mark the field dirty and have save() redraw it. */
+    for(const k of Object.keys(_raw)){
+      try{ form.getTextField(k).acroField.dict.set(PDFName.of('V'),PDFString.of(_raw[k])); }catch(e){}
+    }
     if(_missed>_wrote) throw new Error('Rent schedule template mismatch: '+_missed+' of '+(_wrote+_missed)+' fields could not be written. The blank HUD-92458 in this build does not match the fields this app fills — do not file the result.');
     return await doc.save({objectsPerTick:Infinity});
   }

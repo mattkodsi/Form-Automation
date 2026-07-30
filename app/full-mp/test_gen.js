@@ -13,7 +13,52 @@ const G=require(D+'gen.js');
    DecompressionStream, Blob and atob, all of which node has had since 18. */
 new Function('window',fs.readFileSync(D+'xlsx.js','utf8'))(global.window);
 
-const MIN_CHECKS=75;                 // the count this file is known to run to the end
+const zlib=require('zlib');
+/* WHAT A FIELD STORES AND WHAT IT DRAWS ARE DIFFERENT QUESTIONS, and until now
+   this file could only ask the first. getText() returns /V — the value HUD's
+   AFSimple_Calculate actions parse — while the separators and the "$" a reader
+   sees live in the widget's baked appearance stream. Fifteen checks in here
+   demanded a comma from /V and got one, and the suite stayed green through a
+   defect that made the form miscalculate by a factor of a thousand. This reads
+   the appearance, so the two can be asserted apart. */
+function apText(form,id){
+  /* PDFName is destructured inside the async IIFE below, not here, so reach it
+     off the library. Writing `PDFName` bare cost an hour: the ReferenceError went
+     into the catch and came back as null, and null read as "the appearance has no
+     text" — a broken helper wearing the costume of a real defect. Hence also the
+     catch returning its reason rather than null. */
+  const PDFName=global.PDFLib.PDFName;
+  try{
+    const f=form.getTextField(String(id));
+    const ctx=f.acroField.dict.context;
+    const w=f.acroField.getWidgets()[0];
+    let ap=w.dict.get(PDFName.of('AP')); ap=ctx.lookup(ap)||ap;
+    if(!ap||!ap.get)return null;
+    let n=ap.get(PDFName.of('N')); n=ctx.lookup(n)||n;
+    if(!n)return null;
+    let bytes=n.contents||(n.getContents&&n.getContents());
+    if(!bytes)return null;
+    let buf=Buffer.from(bytes);
+    const filt=n.dict&&n.dict.get(PDFName.of('Filter'));
+    if(filt&&/Fl/.test(String(filt))){
+      try{buf=zlib.inflateSync(buf);}catch(e){try{buf=zlib.inflateRawSync(buf);}catch(e2){return '(inflate failed)';}}}
+    const s=buf.toString('latin1');
+    let out='';
+    for(const m of s.matchAll(/<([0-9A-Fa-f\s]*)>\s*Tj|\(((?:[^()\\]|\\.)*)\)\s*Tj/g)){
+      if(m[1]!=null){const h=m[1].replace(/\s/g,'');
+        for(let i=0;i+1<h.length;i+=2) out+=String.fromCharCode(parseInt(h.substr(i,2),16));}
+      else out+=m[2].replace(/\\([()\\])/g,'$1');
+    }
+    return out;
+  }catch(e){ return '(apText failed: '+(e&&e.message||e)+')'; }
+}
+/* Acrobat reads a field value with AFMakeNumber, which under the US convention
+   (sepStyle 0, what this template specifies) takes a comma as a DECIMAL point.
+   That is the whole defect in one function: it turns "1,850" into 1.85. */
+const afMakeNumber=v=>{ const s=String(v==null?'':v).replace(/[^0-9.,\-]/g,'').replace(/,/g,'.');
+  const n=parseFloat(s); return isNaN(n)?0:n; };
+
+const MIN_CHECKS=123;                // the count this file is known to run to the end
 let n=0,fails=0,verdict=null;
 const BAR='═'.repeat(68);
 function fail(msg,err){
@@ -110,8 +155,15 @@ function record(extra){
   const out2=await G.fillRentSchedule(rsBytes,record({'units.0.proposed':'1250'}));
   const f2=(await PDFDocument.load(Buffer.from(out2))).getForm();
   const t2=f=>{try{return f2.getTextField(String(f)).getText()||'';}catch(e){return null;}};
-  eq('column 3 carries the proposed rent, with its comma', t2(9), '1,250');
-  eq('column 6 carries rent + allowance',                  t2(12), '1,325');
+  /* CORRECTED 2026-07-30. These two read getText() — the VALUE — and demanded
+     "1,250" there. That was the defect written down as a requirement, and it is
+     why the suite stayed green while a property manager who changed a unit count
+     watched Col.4 compute 6 instead of 5,550. The comma is still required; it is
+     required of the drawn appearance, which is where a reader sees it. */
+  eq('column 3 stores the proposed rent as a bare number', t2(9), '1250');
+  eq('and draws it with its comma',                   apText(f2,9), '1,250');
+  eq('column 6 stores rent + allowance as a bare number', t2(12), '1325');
+  eq('and draws that with its comma',                apText(f2,12), '1,325');
 
   console.log('\n─ an allowance of $0 is a figure, not an empty cell ─');
   /* Every utility owner-paid is a real $0. Printing a blank reads as "not filled
@@ -145,7 +197,8 @@ function record(extra){
     const by=await G.fillRentSchedule(rsBytes,r);
     const f=(await PDFDocument.load(by)).getForm();
     const V=id=>{try{return f.getTextField(String(id)).getText()||'';}catch(e){return '(no field '+id+')';}};
-    eq('Part D reports the rent lost by every non-revenue unit',V(174),'2,400');
+    eq('Part D reports the rent lost by every non-revenue unit',V(174),'2400');
+    eq('and draws it with its comma',apText(f,174),'2,400');
     /* Its Part A row is wherever the plan put it — after the two Section 8 rows
        and the blank spacer — so find it by what it says, not by counting.
        Column 1 says the unit TYPE now, not the use, and this record's type is
@@ -241,7 +294,8 @@ function record(extra){
        nothing. My reasoning was about what we can assert; the form's is about
        which cells are inputs and which are arithmetic. */
     eq('and the extension calculates to a zero, as the live form does',V(row+3),'0');
-    eq('so the potential is the Section 8 rows alone',V('95'),'$'+(10*900+6*1100).toLocaleString('en-US'));
+    eq('so the potential is the Section 8 rows alone',V('95'),String(10*900+6*1100));
+    eq('and draws it with its dollar sign',apText(f,'95'),'$'+(10*900+6*1100).toLocaleString('en-US'));
     eq('and the unit count still counts it',V('94a'),'17');
     eq('while Part D still names the use',V(159),"Manager's Unit"); }
   /* A non-revenue unit with no rent of its own must not invent one — Ebony's
@@ -255,7 +309,7 @@ function record(extra){
     /* UPDATED 2026-07-30, same instruction. Ebony's non-revenue unit rents at $0,
        and a printed 0 is now what the form says rather than a blank. */
     eq('a non-revenue row states a zero rent rather than nothing',V(row+2),'0');
-    eq('and adds nothing to the potential',V('95'),'$'+(10*900+6*1100).toLocaleString('en-US'));
+    eq('and adds nothing to the potential',V('95'),String(10*900+6*1100));
     eq('and column 1 is still the type, not the use',V(row),'2 BR / 1 BA'); }
 
   /* ── PART D COLUMN 3 IS THE RENT BEING FILED, NOT LAST TERM'S ────────────
@@ -307,19 +361,25 @@ function record(extra){
     const f=(await PDFDocument.load(await G.fillRentSchedule(rsBytes,r))).getForm();
     const V=id=>{try{return f.getTextField(String(id)).getText()||'';}catch(e){return null;}};
     const mo=32*1061+33*1302;
-    eq('monthly contract rent potential carries it',V('95'),'$'+mo.toLocaleString('en-US'));
-    eq('and the yearly one',V('96'),'$'+(mo*12).toLocaleString('en-US'));
+    /* The dollar sign was M64's point and it still holds — of the appearance.
+       The value underneath is the number, which is M67's. */
+    eq('monthly contract rent potential carries it',apText(f,'95'),'$'+mo.toLocaleString('en-US'));
+    eq('and stores it bare',V('95'),String(mo));
+    eq('and the yearly one',apText(f,'96'),'$'+(mo*12).toLocaleString('en-US'));
+    eq('and stores that bare too',V('96'),String(mo*12));
     /* Not blank. The old reasoning — that a stated zero is a claim we cannot
        support — is wrong about this box: the filed copies print $0. */
-    eq('monthly market rent potential states $0 rather than nothing',V('97'),'$0');
-    eq('and the yearly one likewise',V('98'),'$0');
+    eq('monthly market rent potential states $0 rather than nothing',apText(f,'97'),'$0');
+    eq('and the yearly one likewise',apText(f,'98'),'$0');
+    eq('each stored as a plain zero',[V('97'),V('98')].join('/'),'0/0');
     /* …and the per-row columns stay bare, which is the half a blanket fix breaks. */
     const b=7+0*8;
-    eq('Col. 3 stays bare',V(b+2),'1,061');
-    eq('Col. 4 stays bare',V(b+3),(32*1061).toLocaleString('en-US'));
+    eq('Col. 3 stays bare',apText(f,b+2),'1,061');
+    eq('Col. 4 stays bare',apText(f,b+3),(32*1061).toLocaleString('en-US'));
+    eq('and both store bare numbers',[V(b+2),V(b+3)].join('/'),'1061/'+(32*1061));
     /* Col. 6 is Col.3 + Col.5, so its figure depends on the fixture's allowance —
        what matters here is that it carries no sign. */
-    eq('Col. 6 stays bare',/^\$/.test(V(b+5)||''),false); }
+    eq('Col. 6 stays bare',/^\$/.test(apText(f,b+5)||''),false); }
 
   console.log('\n─ Part D column 3 is the proposed rent for that unit type ─');
   { const r=record({'nonrev.0.use':'Leasing Office','nonrev.0.br':'1BR','nonrev.0.ba':'1BA',
@@ -330,7 +390,8 @@ function record(extra){
     const f=(await PDFDocument.load(by)).getForm();
     const V=id=>{try{return f.getTextField(String(id)).getText()||'';}catch(e){return null;}};
     eq('Part D names the use',V(159),'Leasing Office');
-    eq('and prints the PROPOSED rent for its unit type, not the executed one',V(161),'1,850');
+    eq('and prints the PROPOSED rent for its unit type, not the executed one',V(161),'1850');
+    eq('drawn with its comma',apText(f,161),'1,850');
     /* The bathroom is what distinguishes two variants of a bedroom count, so a
        type that states one must not match a row that states a different one. */
     const r2=record({'nonrev.0.use':'Model','nonrev.0.br':'2BR','nonrev.0.ba':'1BA',
@@ -339,7 +400,7 @@ function record(extra){
       'units.1.br':'2BR','units.1.ba':'1BA','units.1.num_units':'6','units.1.proposed':'2200'});
     const f2=(await PDFDocument.load(await G.fillRentSchedule(rsBytes,r2))).getForm();
     const V2=id=>{try{return f2.getTextField(String(id)).getText()||'';}catch(e){return null;}};
-    eq('a two-bedroom non-revenue unit takes the two-bedroom figure',V2(161),'2,200');
+    eq('a two-bedroom non-revenue unit takes the two-bedroom figure',V2(161),'2200');
     /* And with no unit type to match, the stored rent is better than an empty
        column — the filed copies never show one. */
     const r3=record({'nonrev.0.use':'Storage','nonrev.0.br':'4BR','nonrev.0.ba':'2BA',
@@ -364,8 +425,9 @@ function record(extra){
     const V=id=>{try{return f.getTextField(String(id)).getText()||'';}catch(e){return null;}};
     eq('the study\'s allowance, not the prior schedule\'s',V(7+4),'51');
     eq('and on the second row too',V(7+8+4),'64');
-    eq('so gross rent follows the study',V(7+5),'1,251');
-    eq('and on the second row',V(7+8+5),'1,514'); }
+    eq('so gross rent follows the study',V(7+5),'1251');
+    eq('and on the second row',V(7+8+5),'1514');
+    eq('and gross rent draws its comma',apText(f,7+5),'1,251'); }
   /* A source the PM HAS chosen still wins -- the default moved, the override
      did not. */
   { const r=record({'units.0.ua_exec':'42','units.0.ua_rcs':'51',
@@ -484,6 +546,125 @@ function record(extra){
     eq('and the bad one is named, not swallowed',skipped.length,1);
     eq('by the label the package uses',skipped[0].label,'RCS report');
     T('with a reason a person can read',/[a-z]{4}/.test(skipped[0].why||'')); }
+
+  /* ══ THE VALUE IS A NUMBER, AND THE LOOK IS A FORMATTING ═══════════════════
+     Matt generated a schedule, opened it in Acrobat and changed one unit count
+     from 33 to 3 — the ordinary thing a property manager does. Col.4 read 6
+     where it should read 5,550; Col.6 read 162 where it should read 2,010. Both
+     are what you get from 3 x 1.85 and 160 + 1.85, because we wrote "1,850"
+     into the field VALUE and AFMakeNumber takes that comma for a decimal point.
+
+     The suite could not see it. It asserted that 41 calculating fields exist,
+     which is structure, and the structure was perfect the whole time. What
+     follows tests the arithmetic those fields will actually do.
+
+     The shape of the fix is not invented here either. Two real filed schedules —
+     Colonial Village and Willow Woods, 2025, 232 fields each, different
+     preparers — store every numeric value RAW and carry a baked FORMATTED
+     appearance: field 9 is "1147" and draws "1,147"; field 95 is "83135" and
+     draws "$83,135". Neither sets NeedAppearances. That is what is asserted. */
+  console.log('\n─ every numeric field stores a number, not a picture of one ─');
+  { const r=record({'units.0.br':'2BR','units.0.ba':'1BA','units.0.num_units':'33',
+      'units.0.proposed':'1850','units.0.ua_exec':'160','units.0.ua_source':'exec'});
+    const by=await G.fillRentSchedule(rsBytes,r);
+    const doc=await PDFDocument.load(by); const f=doc.getForm();
+    const V=id=>{try{const v=f.getTextField(String(id)).acroField.dict.get(PDFName.of('V'));
+      return v==null?null:(v.decodeText?v.decodeText():String(v));}catch(e){return null;}};
+
+    /* Which fields Acrobat will parse as numbers is read off the template, not
+       listed by hand: the ones carrying a format action, the ones that
+       calculate, and — the term a format-based rule misses — the ones NAMED AS
+       OPERANDS by someone else's calculation. Col.5 carries no format action of
+       its own but is summed into Col.6 by SUM(11,9). */
+    const tmpl=await PDFDocument.load(rsBytes); const tf=tmpl.getForm();
+    const jsOf=(d,which)=>{try{const aa=d.get(PDFName.of('AA'));if(!aa||!aa.get)return null;
+      let e=aa.get(PDFName.of(which));if(!e)return null;e=tmpl.context.lookup(e)||e;
+      if(!e.get)return null;let j=e.get(PDFName.of('JS'));if(j==null)return null;
+      j=tmpl.context.lookup(j)||j;return j.decodeText?j.decodeText():String(j);}catch(e){return null;}};
+    const numeric=new Set();
+    for(const fl of tf.getFields()){ const d=fl.acroField.dict;
+      const F=jsOf(d,'F'), C=jsOf(d,'C');
+      if(F&&/AFNumber_Format/.test(F)) numeric.add(fl.getName());
+      if(C&&/AFSimple_Calculate/.test(C)){ numeric.add(fl.getName());
+        const m=C.match(/new Array\s*\(([^)]*)\)/);
+        if(m) for(const q of m[1].split(',')) numeric.add(q.trim().replace(/^"|"$/g,'')); } }
+    eq('the template names 112 fields that Acrobat reads as numbers',numeric.size,112);
+    T('and Col.5, which no format action covers, is one of them',numeric.has('11'));
+
+    /* The assertion that would have caught this on day one: a stored value must
+       round-trip as a number. "1850" does. "1,850" and "$61,050" do not. */
+    const bad=[];
+    for(const id of numeric){ const v=V(id);
+      if(v==null||v==='')continue;
+      if(!/^-?\d+(\.\d+)?$/.test(v)) bad.push(id+'='+JSON.stringify(v)); }
+    eq('and not one of them stores a comma or a dollar sign',bad.join(', '),'');
+    const filled=[...numeric].filter(id=>{const v=V(id);return v!=null&&v!=='';});
+    T('with enough of them actually filled for that to mean something',filled.length>=8);
+
+    /* The look survives, which is what M64 and M65 were each about. */
+    eq('Col.3 draws its separator',apText(f,9),'1,850');
+    eq('Col.4 draws its separator',apText(f,10),'61,050');
+    eq('Col.6 draws its separator',apText(f,12),'2,010');
+    eq('and the potential draws its dollar sign',apText(f,'95'),'$61,050');
+    eq('Col.5 draws bare, as the blank form does with no format action',apText(f,11),'160');
+
+    /* x12 IS HUD'S OWN CONSTANT: PRD("95","x12") is how each monthly potential
+       becomes its annual one. We used to blank it, which is invisible until
+       something recalculates and then takes BOTH annual potentials to $0. Both
+       filed schedules carry "12". */
+    eq('HUD\'s hidden x12 multiplier is left holding 12',V('x12'),'12');
+
+    /* FIELD 174 READS ITS ZERO — the calculated cell M65 missed. It ships as "0"
+       on the blank form and we used to blank it whenever a property had no
+       non-revenue units. Checked against the filed copies first: Willow Woods
+       2025, Beacon Hill eff. 08.01.25 and the blank package copy all carry "0"
+       here with an empty Part D, and Colonial Village — the one with a Part D row
+       — carries its sum. No filed copy prints it blank. */
+    { const none=record({'units.0.proposed':'1250'});
+      const nf=(await PDFDocument.load(await G.fillRentSchedule(rsBytes,none))).getForm();
+      const NV=id=>{try{const v=nf.getTextField(String(id)).acroField.dict.get(PDFName.of('V'));
+        return v==null?'(absent)':(v.decodeText?v.decodeText():String(v));}catch(e){return null;}};
+      eq('total rent loss reads 0 with no non-revenue units, not blank',NV(174),'0');
+      eq('and draws that zero',apText(nf,174),'0');
+      /* The "$" beside it is printed on the form, not in the field — 174's format
+         action names no currency, so a dollar sign here would be a second one. */
+      T('with no dollar sign of its own',!/\$/.test(apText(nf,174)||'')); }
+    /* And with a Part D row it foots that row — still raw, still with its comma
+       drawn rather than stored. */
+    { const one=record({'units.0.br':'2BR','units.0.ba':'1BA','units.0.num_units':'33',
+        'units.0.proposed':'1850','nonrev.0.use':"Manager's Unit",
+        'nonrev.0.br':'2BR','nonrev.0.ba':'1BA','nonrev.0.num_units':'1'});
+      const of=(await PDFDocument.load(await G.fillRentSchedule(rsBytes,one))).getForm();
+      const OV=id=>{try{const v=of.getTextField(String(id)).acroField.dict.get(PDFName.of('V'));
+        return v==null?'(absent)':(v.decodeText?v.decodeText():String(v));}catch(e){return null;}};
+      eq('and with a non-revenue unit it carries the sum, bare',OV(174),'1850');
+      eq('drawn with its comma',apText(of,174),'1,850'); }
+
+    console.log('\n─ and now the form computes what Matt would compute ─');
+    /* MATT\'S REPRODUCTION, run against the stored values. He changed the unit
+       count from 33 to 3; Acrobat then re-runs Col.4 = PRD(8,9) and
+       Col.6 = SUM(11,9) over what the fields HOLD. */
+    const edited='3';
+    const col4=afMakeNumber(edited)*afMakeNumber(V(9));
+    const col6=afMakeNumber(V(11))+afMakeNumber(V(9));
+    const pot =col4;
+    eq('Col. 4 = 3 x 1,850 comes out at 5,550',col4,5550);
+    eq('Col. 6 = 1,850 + 160 comes out at 2,010',col6,2010);
+    eq('and the monthly contract rent potential at 5,550',pot,5550);
+    eq('the annual one follows through HUD\'s own multiplier',pot*afMakeNumber(V('x12')),66600);
+
+    /* And the same reading applied to what we USED to store, so the check above
+       cannot quietly pass for the wrong reason. These are the three numbers off
+       Matt\'s screenshot. */
+    /* These cells specify zero decimals, so what Acrobat DRAWS is the rounded
+       figure — 5.55 shows as 6, 161.85 as 162. Those are the two numbers off
+       his screenshot, reproduced from the strings we used to store. */
+    const shown=x=>Math.round(x);
+    eq('while the strings we used to store still read as his 6',
+       shown(afMakeNumber(edited)*afMakeNumber('1,850')),6);
+    eq('and his 162',shown(afMakeNumber('160')+afMakeNumber('1,850')),162);
+    T('so a formatted value and a raw one are not interchangeable',
+       afMakeNumber('1,850')!==afMakeNumber('1850')); }
 
   finish();
 })().catch(e=>fail('the suite threw before reaching its verdict',e));
