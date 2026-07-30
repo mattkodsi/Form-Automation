@@ -5,45 +5,50 @@ production deploy).
 
 ---
 
-> **WAVE 6 DONE 2026-07-30 — 26 of 34 audited, 17 defects fixed.** All five wave-5
-> properties are audited (Market Square, Barnum House, Shiloh Village, Morningside Court,
-> 333 Holly) and three defects shipped: `43258e0` tier 2 now checks that a page prints the
-> form where the form prints it; `c23b161` the workbook and the rent schedule share one
-> unit-type label; `da46f05` a column gap drawn as a pen move is a column gap, which took
-> **Shiloh Village and 333 Holly from ZERO unit types to a complete, correct unit mix.**
-> Verified end to end: Shiloh's workbook now carries 1,830/2,235/2,535, allowances
-> 102/124/133 and SAFMR bases 1,590/2,000/2,550 — every figure matching the eye-read
-> source — where before it had none and printed a false "NO" on the 150% test.
+> **WAVE 7 DONE 2026-07-30 — 31 of 34 audited, 21 defects fixed.** All five wave-7
+> properties audited (The Pines, Colonial Village, Friendship Court, Newberry Arms,
+> Northgate Terrace CA). Four defects shipped: `1b3b883` a box no longer reaches into the
+> next printed row and reads left to right; `b68833c` the form's own printed lines are not
+> values, whatever coordinates they arrive at; `03a5452` a property with two names keeps
+> both on the form HUD identifies it by. The project names are **finished on all four**
+> affected properties, verified end to end through tier 3.
 >
-> **I owe a correction on my own commit message.** `43258e0` claims it stops the
-> contaminated property names. It does not. Re-driving Shiloh showed the name is still
-> wrong and now differently wrong — `Shiloh Village Apts. Part A Apartment Rents Show the
-> actual` — because declining tier 2 sends the page to tier 3, which swallows the same
-> heading. The real cause is **M41**: our own template's Project Name box is 23pt tall and
-> reaches 1.95pt below the next printed row. That is the top repair for wave 7 and the
-> register has both candidate fixes.
+> **Three properties left: Fairview Homes (75920), Walden (75921), Marine Terrace (75922).**
 >
-> **Two queue items were misdiagnosed and are now resolved as understanding, not code.**
-> The "7.1 points" is a third printing of HUD-92458 whose Part B rows sit on a 14.4pt pitch
-> against our 10.85pt — Market Square and Mapleview measure identical to five decimals, so
-> the residual measures *the blank*, not the document, and tier 3's refusal is **correct**.
-> Loosening that threshold would have been actively harmful. The real fix is a
-> label-relative reader, which is new work rather than a tuning.
+> ⚠️ **Read M54 and M55 in the register before the next repair.** M54 turns M41 from a fixed
+> field into a recognised class: The Pines measured our blank against a filed rendition in
+> three places and every one is out — the Project Name rect over-reaches its drawn cell by
+> 12–13pt, the Part A grid is 7.92pt out of phase at an identical 12pt pitch, and field 228
+> sits **4.9pt below the signatory line it exists to capture, zero overlap, every tier,
+> every run**. That last one alone is why five documents were withheld on a property whose
+> checklist needed only three fields, two of them printed in clean 10pt type on the page it
+> was handed. A fix that anchors each page's rects to found text closes all three; the
+> row-mate clamp I shipped closes one. **M55: the two upload orders disagree on The Pines —
+> `rs-first` attaches the study's rows one row early and invents a phantom fourth row,
+> reading $298,960 monthly against a true $285,840 — while the harness prints "both orders
+> produce comparable packages".**
 >
-> Eight properties remain unaudited: The Pines (75705), Colonial Village (75708),
-> Friendship Court (75831), Newberry Arms (75832), Northgate Terrace CA (75919),
-> Fairview Homes (75920), Walden (75921), Marine Terrace (75922).
+> Cheap and now multiply-confirmed: **M52** (a two-column signature block loses `appr.name`,
+> **three** properties, and it withholds the owner cover letter on each), **M42** (a page that
+> registered perfectly and was billed is discarded because Part A failed — **two** properties,
+> two different causes), **M56** (`appr.firm` stored as `"(E) azabel@belfryvaluation.com"`,
+> because the firm regex matched an email address).
 >
-> Scratch properties are cleaned (**0** `ZZ-CORPUS-*`). Snapshot of the pre-fix output is at
-> `_archive/corpus-cache/_snap-w5/`. Everything is committed and pushed.
+> **Corrections recorded, not buried.** "Part I HAP number blank" is largely **not a defect** —
+> the form prints *"Part I. Do not complete this Part."* and Market Square says the same of
+> Part F. "Checklist Scope of Work unticked" **is** ours, not a team habit: the *signed* filed
+> copies tick it. And I introduced a regression this wave — `Friendship  Court` with two
+> spaces, reaching every output filename — which the Friendship Court audit caught and
+> `03a5452` fixes.
 >
-> ⚠️ **Two things for Matt.** (1) The account is now down to **2 properties**; it held 14 on
-> 2026-07-29, then 4, now 2. My cleanup provably cannot do this — it returns before deleting
-> when no name matches the prefix, and it reports exactly what it removes. If this is not you
-> tidying up, it is data loss and it should jump the whole queue. (2) `git` could not
-> auto-detect an identity this session because the machine's hostname changed to `Mac.(none)`;
-> rather than write to your config I passed the same name and address your earlier commits
-> already used. Setting `user.name`/`user.email` in the repo would make that unnecessary.
+> Scratch properties cleaned (**0** `ZZ-CORPUS-*`). Snapshot at `_archive/corpus-cache/_snap-w6/`.
+>
+> ⚠️ **Still open for Matt, third wave running:** the account holds **2 properties**; it held 14
+> on 2026-07-29, then 4, then 2. The cleanup provably cannot cause this — it returns before
+> deleting when no name matches the prefix. If that is not you tidying up, it is data loss and
+> it jumps the whole queue. Also: `git` cannot auto-detect an identity since the hostname
+> became `Mac.(none)`; I pass your existing name and address per-commit rather than writing to
+> your config.
 
 > **WAVE 4 AUDITS NEED RE-RUNNING.** On 2026-07-29 four of the five wave-4 audit
 > agents — Noble Tower, Oaks on North Plaza, Oceanport, Holly House — died on
@@ -202,14 +207,14 @@ A wave marks a property `audited` only when its agent returned rows.
 | 19 | 75572 | Shiloh Village | **audited** | 11 |
 | 20 | 75573 | Morningside Court | **audited** | 12 |
 | 21 | 75704 | 333 Holly | **audited** | 8 |
-| 22 | 75705 | The Pines | unaudited | |
-| 23 | 75708 | Colonial Village | unaudited | |
+| 22 | 75705 | The Pines | **audited** | 12 |
+| 23 | 75708 | Colonial Village | **audited** | 14 |
 | 24 | 75830 | Clinton Manor | **audited** | 1 |
-| 25 | 75831 | Friendship Court | unaudited | |
+| 25 | 75831 | Friendship Court | **audited** | 14 |
 | 26 | 75832 | Newberry Arms | **audited** | 8 |
 | 27 | 75833 | Circle Park | **audited** | 1 |
 | 28 | 75917 | Peterson Plaza | **audited** | 0 |
-| 29 | 75919 | Northgate Terrace CA | unaudited | |
+| 29 | 75919 | Northgate Terrace CA | **audited** | 11 |
 | 30 | 75920 | Fairview Homes | unaudited | |
 | 31 | 75921 | Walden | unaudited | |
 | 32 | 75922 | Marine Terrace | unaudited | |

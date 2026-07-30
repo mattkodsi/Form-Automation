@@ -1731,3 +1731,133 @@ Verified right, and worth stating: the 150% test agrees across all three sides o
 margin** ($95,814 < $96,120), which is the sharpest available test of `592101a`, and the
 `_snap-w6` copy of this workbook shows the pre-fix SAFMR as **787.3333333333334** — a repeating
 decimal in a rent cell.
+
+## M54 — our blank's vertical metrics do not match the filed rendition, in THREE places · **OPEN, and this is the shape of the remaining work**
+
+The Pines' audit measured every one of them on one page, which turns M41 from a fixed field into a
+recognised class:
+
+| where | our blank | this scan | consequence |
+|---|---|---|---|
+| Project Name box | rect 23pt tall, y 90.41→113.41 | the drawn cell's bottom rule is at y≈100 | the rect over-reaches the printed cell by **12–13pt**, so it takes the divider printed **10.32pt** below at the **identical 24.24pt** left margin |
+| Part A grid | starts y 200.41, pitch 12.00 | starts y 208.33, pitch 12.00 | same pitch, **+7.92pt out of phase** — two-thirds of a row |
+| Part H name/title, field 228 | rect y 601.51→636.51 | `Flynann Janisse, President/Chairman of the Board` occupies y 587.3→596.6 | the rect sits **4.9pt BELOW the line it exists to capture — zero overlap, every tier, every run** |
+
+That last one is the whole difference between "the app generated no document the filed package also
+has" and a real comparison on this property: `DOC_REQS.checklist` needs only `property.name`,
+`sig.name`, `sig.title`, and the two missing ones are printed in clean 10pt type on page 2 of the
+schedule the app was handed. **A fix that anchors each page's rects to found text before placing
+anything closes all three; a fix aimed at one box closes one.** The M41 row-mate clamp was the
+right first step and is not the general answer.
+
+## M55 — the two upload orders disagree, and the harness says they do not · **OPEN, high**
+
+On The Pines in **`rs-first` order only**, the study's rows attach one row early: row 9 (40 units,
+current $1,350) gets $1,820, row 10 gets $2,230, row 11 comes out **blank**, and a **phantom row 12
+with no unit count** carries $1,640. Monthly proposed reads **$298,960** against a true $285,840,
+annual **$3,587,520** against $3,430,080, and the delta 23.1% against 17.72%. `rcs-first` is
+correct. The 150% verdict still reads YES by luck.
+
+Two things make this worse than one property's arithmetic. The harness prints *"both orders produce
+comparable packages"* — which is false here. And in **both** orders the workbook's unit-type cells
+are wrong (`2 BR / 1 BA`, `3 BR / 1 BA`, `3 BR / 1.5 BA BR`, that last from a stray
+`units.2.label = "BR"`), which is consistent with the +7.92pt phase error above putting Column 1's
+text over the wrong row while the numeric columns still reconcile. Suspected as to cause, confirmed
+as to effect.
+
+## M52 confirmed on a THIRD property
+
+`readSignature` requires a 2–4-token name after "Sincerely,"/"Respectfully submitted,". Belfry and
+Cornerstone both sign some letters in two columns, so the line carries both people:
+
+- Newberry Arms — `Aaron M. Zabel   Rachel A Walsh`
+- Morningside Court — `Aaron M. Zabel   Matthew A. Polnow`
+- Northgate Terrace CA — `Aaron M. Zabel   Rachel A Walsh`
+
+Six tokens, rejected; the following lines are then eaten by the `license|certified|president|
+associate` skips and the window is exhausted. `appr.name` is a requirement of the **owner cover
+letter**, so on each of the three this alone withholds a document. The runs carry the x positions
+needed to split the columns.
+
+## M56 — an email address was read as the appraisal firm · **OPEN, one line**
+
+`readSender` takes the first of the letter's first 8 lines matching
+`/valuation|appraisal|appraiser|associates/i`. On Northgate Terrace **line 2 is the e-mail**, so
+`appr.firm` was stored as **`"(E) azabel@belfryvaluation.com"`** — it contains "valuation". No `@`
+guard anywhere, and the title-page fallback then declines to overwrite it. `DOC_REQS.owner`'s own
+comment warns about this exact print.
+
+## M42 confirmed on a SECOND property, with a different cause
+
+Northgate Terrace's page 1 is a 600-dpi scan sliced into **360 JPEG bands**, ~4.24 MB — about **5%
+over** the OCR function's own 4 MB pre-flight guard, so it was rejected. **Page 2 is 0.33 MB, cannot
+trip that guard, and was successfully read and billed — then discarded**, because `ocrPlace` returns
+null the moment Part A fails. It carries the entity, the principals, the signatory, the title and
+the HAP number: 3 of the 4 fields blocking the draft schedule and both blocking the checklist.
+Raising the size cap is the hard half; **keeping the half already paid for is the easy half**, and
+alone it moves this property from 1-of-6 to within reach of ready with no new OCR call.
+
+## M57 — a utility-allowance DECREASE needs a second notice the app cannot produce · **DECISION FOR MATT**
+
+Friendship Court's 2BR allowance fell $85 → $83, and the team served a separate
+`UA decrease letter 01.27.26.pdf` under **24 CFR 245.420** — subpart D, not the subpart B
+rent-increase notice at §245.310 — signed by a **different person** (Amy Bence, Regional Manager)
+from the rent-increase notice (Joy Walker, Community Manager). Shiloh Village is the same shape.
+`score.js` has a `uanotice` document but it belongs to the UAF program, so in the RCS flow the app
+models one tenant notice, has no input for the allowance schedule, and no way to detect a decrease.
+
+And the governing figures are not merely unread — they are a **human judgement** the app could not
+reproduce even with the spreadsheet: Friendship Court's utility-analysis workbook computes
+108.91 and 124.47, and the signed UA Summary filed **105** and **118**.
+
+## CORRECTION — "checklist Scope of Work unticked" is the app's fault, not a team habit
+
+Recorded earlier as possibly a team convention because the *unsigned* filed copies leave it blank.
+Colonial Village's **signed** `Owners Checklist v2` ticks it, and so does Newberry Arms' and
+Friendship Court's signed copy. The app hard-codes it off (`app.js` seeds all 17 ticks on except
+indices 2 and 4) and never consults the study — which carries the section under Belfry's own
+heading **"Scope of Assignment"**, so a literal phrase match would miss it even if it looked.
+The appraiser-licence item is the mirror image: ours ticks it, the study answers **N** to "did you
+prepare the RCS under a temporary license?", and on Friendship Court ours and theirs each tick 15
+of 17 — **but not the same 15**.
+
+## The comparator, a third and fourth time
+
+Friendship Court's **98 differences are 8 real ones**: 69 rows are `missing-theirs` on a
+DocuSign-flattened rent schedule from which it extracted **zero of 69** fields, 19 are the
+retyped checklist yielding **zero of 17** ticks, and 30 are drift on unchecked static labels.
+Colonial Village's 39 are **7 real**: 20 are the rig failing to read DocuSign vector ✓ glyphs on the
+signed checklist, and because that copy carries no property name the extractor's anchor fell through
+to the DocuSign date and filed `ours "ColonialVillage" / theirs "7/7/2026"` at severity **high**.
+Northgate Terrace's manifest is wrong in the other direction: `problems` says "no filed
+submittalLetter, checklist" and `hasCombined: false`, but both documents exist, signed, inside a
+66-page PDF classified only as "Option 1 Renewal" — so its "zero overlap" was measured against an
+incomplete `docs` list. **Four properties now: the count measures the comparator, not the app.**
+
+## team wrong, this wave
+
+- **Colonial Village's filed draft prints a $160 utility allowance on the 2BR row** which matches
+  nothing — not its own UAF letter (which computes 93 + 68 = **161**), not the study, not the team's
+  own workbook, all three of which say 161. It also labels the 33-unit $2,400 row **`1 BR`** where it
+  is the three-bedroom line, and its Part H names **Matthew Finkle** where every other document and
+  every signature is David Pearson.
+- **Friendship Court's countersigned Part I reads `SC16M000084`** against the contract's
+  `SC16-M000-048` — a digit transposition written in by the contract administrator.
+- Friendship Court's study prints `$133,744 > $138,060` under a heading that reads
+  `RCS GROSS RENT < SAFMR GROSS RENT`, in **all three** revisions; the arithmetic is right.
+- The Pines' team files the Section 8 contract number in the **FHA Project Number** box on both
+  schedules, while their own Exhibit A and the CA's notice both say the FHA number is **N/A**.
+- One person, three titles in one cycle on The Pines: `President/Chairman of the Board`,
+  `Executive Director of General Partner`, `Director of the GP`. Two phone numbers for one point of
+  contact on The Pines and on Northgate Terrace both.
+- Northgate Terrace's signed submittal letter says **"Northgate Village Apartments"**.
+
+## Verified right, on the sharpest margins in the corpus
+
+Newberry Arms clears the 150% ceiling by **$306 a month** and all three sides agree
+($95,814 < $96,120) — the best available test of `592101a`, and the `_snap-w6` copy of that same
+workbook shows the pre-fix SAFMR as **787.3333333333334**, a repeating decimal in a rent cell.
+Northgate Terrace clears by $58,290 and agrees exactly. Colonial Village, Friendship Court and
+Northgate Terrace each reproduce their study's 150% figures to the dollar. And Colonial Village's
+$0 allowance is genuine on three documents, with the reason printed on study p.33 — every utility
+is included in the rent.
