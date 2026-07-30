@@ -251,3 +251,73 @@ ends.
    *different* mechanism than M59: the schedule says `2BR` with no bathroom while the study prices
    `2BR/1BA` and `2BR/1.5BA` separately, so the two orders build **different rosters**. Worth
    $27,850/month on Peterson's HUD form. Needs the two source documents read by eye.
+
+---
+
+# ADDENDUM — the calculation defect is SOLVED, and it is ours
+
+Matt changed row 1's unit count from 33 to 3 in a generated schedule and photographed the result.
+The arithmetic names the bug outright:
+
+| cell | should be | our form computed |
+|---|---|---|
+| Col. 4 = Col.2 × Col.3 = 3 × 1,850 | 5,550 | **6** |
+| Col. 6 = Col.3 + Col.5 = 1,850 + 160 | 2,010 | **162** |
+| Monthly Contract Rent Potential | $5,550 | **$85** |
+
+`3 × 1.85 = 5.55 → 6`. `1.85 + 160 = 161.85 → 162`. **Acrobat is reading our `1,850` as 1.85.**
+
+## The mechanism
+
+`AFNumber_Format(0, 0, 0, 0, "", false)` on the per-row cells and
+`AFNumber_Format(0, 0, 0, 0, "$", true)` on fields 95–98. sepStyle **0** — the US convention.
+
+A correctly filled form keeps the **raw number in `/V`** (`1850`) and lets the format action
+*display* `1,850`. **We write the formatted string into `/V` itself.** `AFMakeNumber("1,850")`
+returns 1.85, and every calculation downstream is wrong by a factor of a thousand.
+
+Matt's second screenshot is the control: HUD's untouched template, his own typed input of 3 units
+at 1850, computes 5,550 and $66,600 correctly — because typing leaves `/V` raw.
+
+## THIS MAKES M64 WRONG, AND IT MUST BE REPLACED
+
+M64 added `$` by writing `"$76,918"` into `/V`. That is an even less parseable string. The correct
+fix is the one considered and wrongly rejected that morning: **write the raw number into `/V` and
+let HUD's own format action render the separators AND the dollar sign.** The reason it was rejected
+— that pdf-lib's baked appearance would then show bare digits in Preview/Chrome — is real but
+secondary, and is solved by either setting `NeedAppearances`, or by keeping `/V` raw while baking a
+formatted appearance stream (which is exactly what Acrobat itself produces).
+
+**Do this before anything else in the queue.** It is the difference between a form a PM can work in
+and a form that silently computes rents a thousandfold wrong on a federal filing.
+
+Note the interaction with M65: the calculated cells now correctly read `0`, which is right, but the
+*values we write into input cells* are what poison the arithmetic. Both must be raw.
+
+---
+
+# ADDENDUM — the executed copies are flattened, and the draft beside them is not
+
+Matt uploaded the **2025** Colonial Village RS. Measured, that folder:
+
+| file | fields | Part G |
+|---|---:|---:|
+| `White Oak Townhomes - Executed RS - FY2025.pdf` | **0** | 0 |
+| `Colonial Village - Draft RS 2025 - (SIGNED).pdf` | 1 | 0 |
+| **`Colonial Village - Draft RS 2025 - Unsigned.pdf`** | **232** | **2 principals, both intact** |
+
+So the missing second principal is not a reader bug in the code paths traced earlier — **it is that
+the executed copy carries no form fields at all**, and Part G is only recoverable from fields. The
+unsigned draft in the same folder has everything.
+
+**Matt's challenge — "your attempt to scan the text and not RCS is a bad move, been causing a lot
+of issues, no?" — is correct**, and sharper than it sounds. Prior measurement: only ~9 of 34
+executed schedules are text-readable at all; the rest are vector outlines needing OCR. The whole
+tier-2/tier-3 apparatus exists to read a photograph of a document whose field-complete original is
+often sitting in the same folder.
+
+**Open design question for Matt, worth raising explicitly:** should the app ask for (or prefer) the
+**unsigned draft** rather than the executed copy, falling back to scanning only when no draft
+exists? That would make tier 1 the normal path instead of the exception. It needs a census — how
+many of the 34 have a field-complete draft beside the executed copy — before it becomes a
+recommendation. **That census is cheap and should be the next measurement.**
