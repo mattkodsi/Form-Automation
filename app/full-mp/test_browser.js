@@ -35,7 +35,9 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=356;   // 2026-07-29: +12 — three zones: the past-due drawer closed on arrival, and
+const MIN_CHECKS=373;   // 2026-07-30: +17 — the two package modals join the dialog audit, and every
+                        // dialog is now checked against the three colours the desk replaced
+// 2026-07-29: +12 — three zones: the past-due drawer closed on arrival, and
                         // opening it without moving the panel below (measured in a real layout).
                         // 2026-07-29: -3 — the rail's eight rows became the strip's five figures.
                        // 2026-07-28: +35 — the home page's filter rail, driven by real clicks.
@@ -2313,19 +2315,40 @@ const FULL=process.argv.includes('--full');
         d.querySelectorAll('*').forEach(e=>{const s=getComputedStyle(e);
           if(s.borderTopLeftRadius!=='0px')R.add(s.borderTopLeftRadius);
           F.add(s.fontFamily.split(',')[0].replace(/"/g,''));});
+        const C=new Set();
+        d.querySelectorAll('*').forEach(e=>{const s=getComputedStyle(e);
+          C.add(s.color); if(s.accentColor&&s.accentColor!=='auto')C.add(s.accentColor);});
         return {open:document.getElementById('scrim').classList.contains('open'),
-          radii:[...R],fonts:[...F],
+          radii:[...R],fonts:[...F],colors:[...C],
           prim:d.querySelectorAll('.btn.p,.btn.danger').length,
           fits:b.top>=-1&&b.bottom<=window.innerHeight+1};`);
       const ALLOWED=['4px','8px','999px','50%'];
+      /* The three colours the desk replaced, by their computed value: #b45309 amber,
+         #0f766e teal, #1e3a5f navy. Named rather than inferred, because a whitelist
+         of the palette would have to allow white on navy, currentColor on every SVG
+         and the browser's own greys — and would then pass on anything new. These
+         three are what the old chrome actually painted, and all three survived into
+         the package modals until 2026-07-30: the amber on the not-ready count, the
+         teal on Download, the navy on the UAF checkbox. */
+      const LEGACY=['rgb(180, 83, 9)','rgb(15, 118, 110)','rgb(30, 58, 95)'];
+      /* Synthetic arguments, not a generated package: what is under audit is the
+         dialog's own paint, and reaching these two for real needs six templates,
+         an upload and a letterhead. Both are pure record -> markup. */
+      const DOCS='[{label:"Cover letter (CA)",file:"01",bytes:new Uint8Array(9)}]';
+      const BLK='[{label:"Tenant notice",missing:[{key:"tenant.name",label:"Addressee",sec:8,why:"x"}],warns:[]}]';
       for(const [open,name] of [
         ['document.getElementById("bNewProperty").click()','New property'],
-        ['document.getElementById("menuWho").click()','the portfolio picker']]){
+        ['document.getElementById("menuWho").click()','the portfolio picker'],
+        ['showPackageModal("Fair Oaks",'+DOCS+',new Uint8Array(9),true,true,["A caveat."],'+BLK+',{})',
+         'the RCS package modal'],
+        ['showOcafUafModal("Fair Oaks","OCAF",'+DOCS+',new Uint8Array(9),["A caveat."],'+BLK+',{},[["Cover letter (CA)"],["Tenant notice"]])',
+         'the OCAF package modal']]){
         await c.eval(open+';return 1'); await sleep(380);
         const a=await dlgAudit();
         eq(name+' opens',a.open,true);
         eq('and uses only the radii the system has',a.radii.filter(r=>ALLOWED.indexOf(r)<0),[]);
         eq('and one typeface',a.fonts,['IBM Plex Sans']);
+        eq('and none of the colours the desk replaced',a.colors.filter(x=>LEGACY.indexOf(x)>=0),[]);
         T('and offers at most one primary action',a.prim<=1);
         T('and fits on the screen',a.fits);
         await c.eval('document.getElementById("scrim").classList.remove("open");return 1');

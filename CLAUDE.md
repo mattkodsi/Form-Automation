@@ -169,7 +169,7 @@ a new suite needs registering (`deliver.sh` calls it).
   they arrive — renamed columns, ISO dates, Excel serials, a promise, a bare array — and that when we
   cannot, `diagnose()` says why instead of showing an empty list.
 
-**1325 checks across seven suites** (185 · 144 · 170 · 33 · 245 · 189 · 359) as of 2026-07-30. These
+**1354 checks across seven suites** (185 · 144 · 185 · 33 · 245 · 189 · 373) as of 2026-07-30. These
 numbers go stale the moment a suite grows — `MIN_CHECKS` in each file is the binding floor; this list
 is a map.
 ⚠️ **Don't pipe a suite through `| tail`.** A pipeline's exit status is the LAST command's, so node's

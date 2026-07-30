@@ -1192,6 +1192,7 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
 :is(#viewContacts,#viewLauncher) .mempty{background:var(--card);border:1px dashed var(--ln);border-radius:var(--r-card);
   color:var(--i3);font-size:13px}
 :is(#viewContacts,#viewLauncher) .addrow{display:inline-flex;align-items:center;min-height:32px;padding:0 11px;
+  font-family:inherit;cursor:pointer;
   margin-top:12px;border:1px solid var(--ln);border-radius:var(--r-ctl);background:var(--card);
   color:var(--i2);font-size:12.5px;font-weight:600}
 :is(#viewContacts,#viewLauncher) .addrow:hover{border-color:var(--ledger);color:var(--ledger);background:var(--sunk)}
@@ -1258,6 +1259,30 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
 #viewLauncher .cy-st.ok{color:var(--filed);border-color:var(--filed)}
 #viewLauncher .cy-line{color:var(--i3)}
 #viewLauncher .cy-act{margin-top:6px}
+/* An unfilled worksheet is empty, not failing: it reads as ink, not as a stamp. */
+#viewLauncher .aff-note{font-size:11.5px;color:var(--i4)}
+/* Earlier packages are a ledger of lines, the same document the gallery's list is:
+   one hairline-ruled card, a row per package, three facts and a way out. */
+#viewLauncher .cyhist{margin-top:24px}
+#viewLauncher .cyh-t{font-size:11px;font-weight:600;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--i4);margin-bottom:10px}
+#viewLauncher .cyledger{background:var(--card);border:1px solid var(--ln);
+  border-radius:var(--r-card);overflow:clip}
+#viewLauncher .cyrow{display:grid;align-items:center;gap:16px;
+  grid-template-columns:104px minmax(0,1fr) 104px 74px;
+  padding:12px 18px;border-top:1px solid var(--ln-soft);cursor:pointer;
+  transition:background .12s ease}
+#viewLauncher .cyrow:first-child{border-top:0}
+#viewLauncher .cyrow:hover{background:var(--sunk)}
+#viewLauncher .cyr-p{font-size:10.5px;font-weight:600;letter-spacing:.09em;color:var(--i3)}
+#viewLauncher .cyr-e{font-size:13px;color:var(--i2)}
+#viewLauncher .cyrow .cy-st{justify-self:start}
+#viewLauncher .cyrow .txtbtn{justify-self:end}
+#viewLauncher #bNewCycle{margin-top:16px}
+/* BBRA is a note about the app, not a package on this property, so it sits under
+   a rule as one line instead of posing as a fifth card in the list. */
+#viewLauncher .cysoon{margin-top:28px;padding-top:15px;border-top:1px solid var(--ln);
+  font-size:12px;color:var(--i4)}
 /* the affordability check: the ledger's own figures, and one colour that means
    pass or fail. The gauge kept two greens and an amber tick from the form. */
 #viewLauncher .aff{border-top:1px solid var(--ln-soft);margin-top:13px;padding-top:12px}
@@ -1362,7 +1387,17 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
 .dialog .cyc-s{color:var(--i3);font-weight:400;font-size:11.5px;line-height:1.45}
 .dialog .cypg{border-radius:var(--r-ctl);border-color:var(--ln)}
 .dialog .cypg:has(input:checked){border-color:var(--i2);background:var(--sunk)}
-.dialog .cyopt,.dialog .cyaddl{border-radius:var(--r-ctl);border-color:var(--ln)}
+/* The UAF row is a <label> inside .dlg-field, and the base `.dlg-field label`
+   rule makes every one of those display:block — so .cyopt's flex never applied
+   and its 8px gap did nothing: the 3px between box and text was the whitespace
+   in the markup. Restated at the dialog's own specificity, with the desk's own
+   navy on the box in place of the old palette's. */
+.dialog .cyopt{display:flex;align-items:center;gap:9px;padding:10px 12px;
+  background:var(--card);border:1px solid var(--ln);border-radius:var(--r-ctl);
+  font-size:12.5px;color:var(--i2)}
+.dialog .cyopt input{accent-color:#101d2b}
+.dialog .cyopt b{font-weight:600;color:var(--i1)}
+.dialog .cyaddl{border-radius:var(--r-ctl);border-color:var(--ln)}
 .dialog .cyaddl{font-size:12.5px;font-weight:400;color:var(--i2)}
 .dialog .cyaddl b{font-weight:600;color:var(--i1)}
 /* ---- the package modals ----
@@ -1390,6 +1425,21 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
 .dialog .gpf{border-radius:var(--r-ctl)}
 .dialog .gpf-n{color:var(--i1);font-weight:600}
 .dialog .gpf-w{color:var(--i3)}
+/* Verified in a real browser 2026-07-30 by calling both modals directly, which is
+   what the note above said had not been done. What it found: a hardcoded #b45309
+   amber on the count, a legacy teal on Download and a legacy green on the tick —
+   three colours the palette does not contain, on the last screen of the job. */
+.dialog .gwarn{color:var(--stamp)}
+.dialog .gtick{color:var(--filed)}
+.dialog .gtick-off{color:var(--i4)}
+.dialog .gdoc-on{background:var(--card);border-color:var(--ln)}
+.dialog .gdoc-on:hover{background:var(--sunk);border-color:var(--ln)}
+.dialog .gdoc-on:active{background:var(--sunk)}
+.dialog .gdoc-on:focus-visible{outline-color:var(--ledger);background:var(--sunk);border-color:var(--ln)}
+.dialog .gdoc-off{background:var(--sunk);border-color:var(--ln);color:var(--i4)}
+.dialog .gdoc-need{color:var(--i3)}
+/* Download is an action, so it is a link: the tick beside it is what says done. */
+.dialog .gdoc-a{color:var(--ledger);font-weight:600}
 </style></head>
 <body>
  <!-- ===================== SIGN IN ===================== -->
@@ -1397,7 +1447,6 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
    <div class="mtop"><div class="brand"><div class="bname">Section 8 Rent Adjustments</div><div class="btag">Related Affordable</div></div></div>
    <div class="authwrap"><div class="authcard">
      <h2 class="authtitle">Sign in</h2>
-     <div class="authsub">Sign in to view your properties.</div>
      <div class="dlg-field"><label>Email</label><input id="authEmail" type="email" autocomplete="username"></div>
      <div class="dlg-field"><label>Password</label><input id="authPassword" type="password" autocomplete="current-password"></div>
      <div class="autherr" id="authErr"></div>

@@ -3995,10 +3995,10 @@ function cyclePane(c){
   let rows='';
   if(c.programs.indexOf('ocaf')>=0){const C=G.ocafCalcRec(rec);let dMo=0;(C.rows||[]).forEach(r=>{if(r.n&&r.c&&C.R>0)dMo+=r.n*(Math.round(r.c*C.R)-r.c);});
     rows+=C.R>0?('<div class="aff-top"><span class="aff-k">OCAF</span><span class="aff-pass ok">\u00d7'+C.R.toFixed(3)+' effective \u00b7 '+sMoney(dMo)+'/mo \u00b7 '+sK(dMo*12)+'/yr</span></div>')
-              :'<div class="aff-top"><span class="aff-k">OCAF</span><span class="aff-pass over">worksheet incomplete \u2014 open the package</span></div>';}
+              :'<div class="aff-top"><span class="aff-k">OCAF</span><span class="aff-note">Worksheet not filled in</span></div>';}
   if(c.programs.indexOf('uaf')>=0){const U=G.uafCalcRec(rec);let uaMo=0;U.rows.forEach(r=>{uaMo+=(r.n||0)*(r.newSum-r.curSum);});
     rows+=U.rows.length?('<div class="aff-top"><span class="aff-k">UAF</span><span class="aff-pass '+(U.dec.length?'over':'ok')+'">'+U.rows.length+' unit type'+(U.rows.length>1?'s':'')+' \u00b7 '+sMoney(uaMo)+' UA/mo'+(U.dec.length?' \u00b7 '+U.dec.length+' decrease'+(U.dec.length>1?'s':''):'')+'</span></div>')
-              :'<div class="aff-top"><span class="aff-k">UAF</span><span class="aff-pass over">UA components not entered \u2014 open the package</span></div>';}
+              :'<div class="aff-top"><span class="aff-k">UAF</span><span class="aff-note">Allowances not entered</span></div>';}
   return '<div class="aff">'+rows+'</div>';
 }
 /* The tracker's answer to "what is next here", on the property's own page. It
@@ -4027,19 +4027,47 @@ function nextUpHtml(){
     +(why?'<div class="lh-note">'+esc(why)+'</div>':'')+'</div>'
     +(lab?'<button class="btn p" id="nuGo"'+(a.disabled?' disabled':'')+'>'+esc(lab)+'</button>':'')+'</div>';
 }
-function cyclesHtml(){
+/* The list was a chooser: four equal cards, each one a candidate. That is no
+   longer what it is. The renewal schedule decides which package you work on, and
+   a programme can be started only once per effective date, so nothing here is a
+   choice — the current renewal is the current renewal, and everything before it
+   is what was filed. So: the current renewal keeps its card and its figures, and
+   each earlier package collapses to one line — what it was, when it took effect,
+   and whether it went out. */
+function cyclesHtml(hasAction){
   const cs=mpdb.listCycles(activePid);
-  const btn='<button class="btn p" id="bNewCycle" style="margin-bottom:10px">+ Start new package</button>';
-  if(!cs.length)return btn+'<div class="lh-note">No packages yet \u2014 start one to work on this property\u2019s renewal.</div>';
-  return btn+cs.map(c=>{
-    const gen=c.generated&&c.generated.at;
-    return '<div class="cycard'+(c.dominant?' dom':'')+'" data-cyopen="'+c.id+'">'
-      +'<div class="cy-h">'+progChips(c.programs)+'<b class="cy-t">'+esc(c.label||'(no year)')+(c.effective_date?' \u00b7 effective '+esc(fmtDateLong(c.effective_date)):'')+'</b>'
-      +(c.dominant?'<span class="cy-dom">current \u00b7 sets the property record</span>':'')
-      +'<span class="cy-st'+(gen?' ok':'')+'">'+(gen?'Package generated':'Draft')+'</span></div>'
-      +cyclePane(c)
-      +'<div class="cy-act"><button class="txtbtn del" data-cydel="'+c.id+'">Delete</button></div></div>';
-  }).join('');
+  /* Two independent questions, and conflating them labelled a fourth package
+     "Start a package". How LOUD the control is answers "is there another way in?"
+     — quiet when the schedule offers one above, primary when it does not. What it
+     SAYS answers "is this the first?". */
+  const start='<button class="'+(hasAction?'addrow':'btn p')+'" id="bNewCycle">'
+    +(hasAction?'+ ':'')+(cs.length?'Start another package':'Start a package')+'</button>';
+  if(!cs.length)return '<div class="lh-note" style="margin-top:0;margin-bottom:12px">No packages yet.</div>'+start;
+  /* Current is the dominant package's effective DATE, not the dominant package
+     alone. An RCS and a UA effective the same day are one renewal done in two
+     packages, and filing the UA under "Earlier" would date it a year wrong. */
+  const dom=cs.find(c=>c.dominant)||cs[0];
+  const eff=c=>String((c&&c.effective_date)||'');
+  const cur=eff(dom)?cs.filter(c=>eff(c)===eff(dom)):[dom];
+  const past=cs.filter(c=>cur.indexOf(c)<0);
+  const gen=c=>!!(c.generated&&c.generated.at);
+  const stChip=c=>'<span class="cy-st'+(gen(c)?' ok':'')+'">'+(gen(c)?'Generated':'Draft')+'</span>';
+  const card=c=>'<div class="cycard'+(c.dominant?' dom':'')+'" data-cyopen="'+c.id+'">'
+    +'<div class="cy-h">'+progChips(c.programs)
+    +'<b class="cy-t">'+esc(c.effective_date?('Effective '+fmtDateLong(c.effective_date)):(c.label||'No date'))+'</b>'
+    +(c.dominant?'<span class="cy-dom">Current</span>':'')
+    +stChip(c)+'</div>'
+    +cyclePane(c)
+    +'<div class="cy-act"><button class="txtbtn del" data-cydel="'+c.id+'">Delete</button></div></div>';
+  const row=c=>'<div class="cyrow" data-cyopen="'+c.id+'">'
+    +'<span class="cyr-p">'+esc(c.programs.map(x=>PROG_NAMES[x]||String(x).toUpperCase()).join(' + '))+'</span>'
+    +'<span class="cyr-e">'+esc(c.effective_date?fmtDateLong(c.effective_date):'No date')+'</span>'
+    +stChip(c)
+    +'<button class="txtbtn del" data-cydel="'+c.id+'">Delete</button></div>';
+  return cur.map(card).join('')
+    +(past.length?('<div class="cyhist"><div class="cyh-t">Earlier</div>'
+      +'<div class="cyledger">'+past.map(row).join('')+'</div></div>'):'')
+    +start;
 }
 function wireCycles(){
   /* Wrapped, not passed by reference: newCycleDialog now takes a prefill, and a
@@ -4104,11 +4132,11 @@ function newCycleDialog(pre){
     +'<div class="dlg-sub">'+esc((((mpdb.listProperties()||[]).find(p=>p.id===activePid))||{}).name||'')+(effPh?(' \u00b7 the next one after '+esc(String(effPh).slice(-4))):'')+'</div>'
     +((pre&&pre.effective)?'<div class="lh-note" style="margin:-4px 0 12px">'+esc('The renewal schedule has this as an '+(pre.type||'')+' effective '+fmtDateLong(pre.effective)+'.')+'</div>':'')
     +'<div class="dlg-field"><label>How are the rents being set?</label>'
-    +'<div class="cypgs">'+card('cyRCS','RCS','Market reset','A rent comparability study sets the rents. Every fifth year.')
-                            +card('cyOCAF','OCAF','Factor adjustment','HUD\u2019s published operating-cost factor sets the rents.')+'</div></div>'
-    +'<div class="dlg-field"><label class="cyaddl">And alongside it</label>'
-    +'<label class="cyopt cyadd"><input type="checkbox" id="cyUAF"> <span><b>UAF</b> \u2014 revise the utility allowances in the same package</span></label></div>'
-    +'<div class="dlg-field"><label>Rents effective (mm/dd/yyyy)</label><input id="cyEff" autocomplete="off" value="'+esc((pre&&pre.effective)?fmtDate(pre.effective):effPh)+'" placeholder="'+esc(effPh)+'"></div>'
+    +'<div class="cypgs">'+card('cyRCS','RCS','Market reset','A rent comparability study sets the rents.')
+                            +card('cyOCAF','OCAF','Factor adjustment','HUD\u2019s published factor sets the rents.')+'</div></div>'
+    +'<div class="dlg-field"><label class="cyaddl">Also in this package</label>'
+    +'<label class="cyopt cyadd"><input type="checkbox" id="cyUAF"> <span><b>UAF</b> \u2014 revise the utility allowances</span></label></div>'
+    +'<div class="dlg-field"><label>Rents effective</label><input id="cyEff" autocomplete="off" value="'+esc((pre&&pre.effective)?fmtDate(pre.effective):effPh)+'" placeholder="'+esc(effPh||'mm/dd/yyyy')+'"></div>'
     +'<div class="autherr" id="cyErr"></div>'
     +'<div class="dlg-row"><button class="btn" id="dlgCancel">Cancel</button><span class="dlg-sp"></span><button class="btn p" id="dlgOk">Create</button></div>');
   const rcs=el('cyRCS'),ocaf=el('cyOCAF'),uaf=el('cyUAF'),err=el('cyErr');
@@ -4159,7 +4187,9 @@ function renderLauncher(){
   const pct=Math.round(p.completeness*100);const a=mpdb.propertyAnalysis(activePid);const lh=mpdb.getLetterhead(activePid);
   const _domCy=mpdb.listCycles(activePid).find(c=>c.dominant);
   const rcsLine=(_domCy&&_domCy.programs.indexOf('rcs')<0)?(_domCy.programs.map(x=>PROG_NAMES[x]||x).join(' + ')+' package &middot; see the package card below'):((a.total_units&&a.proposed_gpr)?((a.pass?'PASS':'OVER')+' &middot; '+sPct(a.pct)+' &middot; '+money(a.proposed_gpr)+'/mo'):(a.total_units?'rents not entered yet':'set up units &amp; rents'));
-  const soon=(code,name)=>'<div class="progcard soon"><div class="pg-h"><span class="pg-code">'+code+'</span><span class="soonchip">Coming soon</span></div><div class="pg-name">'+name+'</div></div>';
+  const _meta=[(p.fha&&p.fha!=='\u2014')?esc(p.fha):'',p.city_state?esc(p.city_state):'',
+    p.total_units?(fmtNum(p.total_units)+' units'):''].filter(Boolean).join(' &middot; ');
+  const _nu=nextUpHtml();
   const lhIsPdf=String(lh.data||'').indexOf('data:application/pdf')===0;
   const lhSub=lh.data?(lhIsPdf?'PDF letterhead &middot; the tenant notice prints on it full-page':'Property letterhead &middot; reused on every package'):'<span style="color:#b4552d">Not print-ready &mdash; re-upload the letterhead (PDF, PNG or JPG) so it prints on the tenant notice</span>';
   const letter=lh.name
@@ -4167,11 +4197,15 @@ function renderLauncher(){
     :'<div class="letter empty"><div class="lh-doc">'+docIcon()+'</div><div class="lh-info"><b>Add the property letterhead</b><i>Used on the tenant notice &middot; PDF, PNG or JPG, kept with the property</i></div><button class="btn sm" id="lhAdd">Upload</button></div>';
   el('launcherBody').innerHTML=
     '<div class="lhead"><div class="lh-left"><div class="lh-name">'+esc(p.name)+(_showAl?'<span class="lh-alias">&ldquo;'+esc(_al)+'&rdquo;</span>':'')+'</div>'
-      +'<div class="lh-meta">'+esc(p.fha)+(p.city_state?' &middot; '+esc(p.city_state):'')+(p.total_units?' &middot; '+fmtNum(p.total_units)+' units':'')+'</div>'
+      /* Built from the parts that exist. The data layer hands back an em dash
+         when a property has no number, which printed as a lone "\u2014" on its own
+         line under the name and read as a rendering fault. */
+      +(_meta?('<div class="lh-meta">'+_meta+'</div>'):'')
       +(p.entity?'<div class="lh-entity">'+esc(p.entity)+'</div>':'')+'</div>'
       +'<div class="lh-right"><div class="lh-tools"><button class="txtbtn" id="pRename">Rename</button><span class="dotsep">&middot;</span><button class="txtbtn del" id="pDelete">Delete</button></div><div class="lh-prof">'+(profileChip(p)||'<span class="pchip ok">Profile complete</span>')+'</div></div></div>'
     +'<div class="lsec"><div class="lsec-t">Property letterhead</div>'+letter+'<div class="lh-note">The uploaded letterhead appears on the tenant notice. All other letterheads are built into the document templates.</div><input type="file" id="lhFile" accept="image/*,.pdf,application/pdf" style="display:none"></div>'
-    +'<div class="lsec"><div class="lsec-t">Packages</div>'+nextUpHtml()+cyclesHtml()+'<div class="progrow" style="margin-top:10px">'+soon('BBRA','Budget-Based Rent Adjustment')+'</div></div>';
+    +'<div class="lsec"><div class="lsec-t">Packages</div>'+_nu+cyclesHtml(!!_nu)
+      +'<div class="cysoon">BBRA \u00b7 Budget-Based Rent Adjustment \u2014 not yet available</div></div>';
   wireCycles();
   bootstrapFirstCycle(p);
   el('pRename').onclick=async()=>{
@@ -4563,7 +4597,7 @@ function showPackageModal(nm,docs,combined,missingRcs,missingLh,capMsgs,blocked,
 
 
   const notes=[].concat(capMsgs||[]);
-  const noteHtml=notes.length?'<div class="gnotes">'+notes.map(m=>'<div class="gnote">⚠ '+esc(m)+'</div>').join('')+'</div>':'';
+  const noteHtml=notes.length?'<div class="gnotes">'+notes.map(m=>'<div class="gnote">'+esc(m)+'</div>').join('')+'</div>':'';
   const folderIcon='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>';
   // stacked sheets: one file holding all of them
   const pdfIcon='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto"><path d="M8 3h7l5 5v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M15 3v5h5"/><path d="M4 7v12a2 2 0 0 0 2 2h10" opacity=".45"/></svg>';
@@ -4571,7 +4605,7 @@ function showPackageModal(nm,docs,combined,missingRcs,missingLh,capMsgs,blocked,
   const xlIcon='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>';
 
   modal('<div class="dlg-t">Package generated</div>'
-    +'<div class="dlg-b">'+esc(nm)+' · '+(nGap?nReady+' of '+ORDER.length+' ready · <b style="color:#b45309">'+nGap+' need'+(nGap===1?'s':'')+' more information</b>':'all '+ORDER.length+' documents ready')+'</div>'
+    +'<div class="dlg-b">'+esc(nm)+' \u00b7 '+(nGap?nReady+' of '+ORDER.length+' ready \u00b7 <b class="gwarn">'+nGap+' not ready</b>':'all '+ORDER.length+' documents ready')+'</div>'
     +'<div class="gdocs">'+rows+'</div>'
     +noteHtml
     /* Everything you can leave with, at the end. The folder is the whole package
@@ -4821,11 +4855,11 @@ function showOcafUafModal(nm,tag,docs,combined,warns,blocked,warnOf,order){
   const ORDER=(order&&order.length)?order:docs.map(d=>d.label);
   const nReady=ORDER.filter(l=>byLabel[l]).length,nGap=ORDER.length-nReady;
   const rows=gdocRows(ORDER,byLabel,blkBy,warnOf,null,null);
-  const noteHtml=(warns||[]).length?'<div class="gnotes">'+warns.map(m=>'<div class="gnote">\u26a0 '+esc(m)+'</div>').join('')+'</div>':'';
+  const noteHtml=(warns||[]).length?'<div class="gnotes">'+warns.map(m=>'<div class="gnote">'+esc(m)+'</div>').join('')+'</div>':'';
   const folderIcon='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>';
   const pdfIcon='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto"><path d="M8 3h7l5 5v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M15 3v5h5"/><path d="M4 7v12a2 2 0 0 0 2 2h10" opacity=".45"/></svg>';
   modal('<div class="dlg-t">Package generated</div>'
-    +'<div class="dlg-b">'+esc(nm)+' \u00b7 '+esc(tag)+' \u00b7 '+(nGap?nReady+' of '+ORDER.length+' ready \u00b7 <b style="color:#b45309">'+nGap+' need'+(nGap===1?'s':'')+' more information</b>':'all '+ORDER.length+' documents ready')+'</div>'
+    +'<div class="dlg-b">'+esc(nm)+' \u00b7 '+esc(tag)+' \u00b7 '+(nGap?nReady+' of '+ORDER.length+' ready \u00b7 <b class="gwarn">'+nGap+' not ready</b>':'all '+ORDER.length+' documents ready')+'</div>'
     +'<div class="gdocs">'+rows+'</div>'
     +noteHtml
     +(nReady?('<button class="gprim" id="dlFolder">'+folderIcon+'<span><span class="gprim-t">Download the '+esc(tag)+' Package folder</span>'

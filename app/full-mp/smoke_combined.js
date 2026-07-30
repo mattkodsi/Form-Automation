@@ -22,7 +22,9 @@ const os=require('os'),path=require('path'),fs=require('fs');
 /* ── the verdict machinery (mirrors test_interactions.js) ───────────────── */
 const MONTHNAMES=['January','February','March','April','May','June','July',
                  'August','September','October','November','December'];
-const MIN_CHECKS=170;   // 2026-07-29: +12 the schedule — one axis, month headings, the today-line
+const MIN_CHECKS=185;   // 2026-07-30: +15 the packages list stops being a chooser — one card for the
+                        // current renewal, one line per earlier one, and one way in
+// 2026-07-29: +12 the schedule — one axis, month headings, the today-line
                         // 2026-07-28: +32 the home page's filter rail, +24 the primary action
 let n=0,fails=0,verdict=null;
 const BAR='═'.repeat(68);
@@ -392,8 +394,7 @@ const T=(label,v)=>eq(label,!!v,true);
   T('launcher names the property',        /Gates Manor Apartments/.test(lb1));
   T('launcher has a Packages section',    /lsec-t">Packages/.test(lb1));
   T('launcher offers "start new package"',/id="bNewCycle"/.test(lb1));
-  T('launcher lists coming-soon programs',/Coming soon/.test(lb1));
-  T('BBRA is one of them',                /Budget-Based Rent Adjustment/.test(lb1));
+  T('BBRA is named as not yet available', /BBRA · Budget-Based Rent Adjustment — not yet available/.test(lb1));
   T('launcher has the letterhead slot',   /letterhead/i.test(lb1));
   T('a property with no packages says so',/No packages yet/.test(lb1));
   T('nothing undefined leaked into the launcher', !/undefined/.test(lb1));
@@ -415,12 +416,61 @@ const T=(label,v)=>eq(label,!!v,true);
   const lb2=els.launcherBody.innerHTML;
   T('the existing record is migrated into package #1', /class="cycard/.test(lb2));
   T('that package is marked as the current one',       /cy-dom/.test(lb2));
-  T('it is labelled by its effective year',            /2026 · effective September 1, 2026/.test(lb2));
+  T('it is labelled by the date it takes effect',      /Effective September 1, 2026/.test(lb2));
   T('the affordability check renders inside the card', /AFFORDABILITY CHECK/.test(lb2));
   T('and reports the headroom',                        /\$37,689 headroom/.test(lb2));
   T('nothing undefined leaked into the re-render',     !/undefined/.test(lb2));
   eq('the data layer agrees there is one package', db.listCycles(pid).length, 1);
   eq('and reports its programs as an array',      db.listCycles(pid)[0].programs, ['rcs']);
+
+  /* ─ THE CURRENT RENEWAL LEADS, THE REST IS A RECORD ─
+     The list was a chooser: N equal cards, each one a candidate. It is not that
+     any more — the schedule decides which package you work on, and a programme
+     can be started only once per effective date — so what it has to hold is the
+     current renewal expanded with its figures and every earlier package as one
+     line. Asserted on its own property so the phases above keep their fixture. */
+  console.log('\n─ THE CURRENT RENEWAL LEADS, THE REST IS A RECORD ─');
+  const hpid=(await db.createProperty('Hollis Court')).pid;
+  await db.createCycle(hpid,{programs:['rcs'],label:'2026',effective_date:'2026-09-01'});
+  await db.createCycle(hpid,{programs:['uaf'],label:'2026',effective_date:'2026-09-01'});
+  await db.createCycle(hpid,{programs:['ocaf'],label:'2025',effective_date:'2025-09-01'});
+  await db.createCycle(hpid,{programs:['ocaf'],label:'2024',effective_date:'2024-09-01'});
+  app.openLauncher(hpid);
+  const lb3=els.launcherBody.innerHTML;
+  const nCard=(lb3.match(/class="cycard/g)||[]).length;
+  const nRow=(lb3.match(/class="cyrow"/g)||[]).length;
+  eq('the two packages sharing the current date stay cards', nCard, 2);
+  eq('the two earlier ones collapse to a line each',         nRow,  2);
+  eq('every package is drawn exactly once',      nCard+nRow, db.listCycles(hpid).length);
+  T('the earlier ones sit under their own heading', /cyh-t">Earlier</.test(lb3));
+  eq('exactly one package is marked current',   (lb3.match(/cy-dom/g)||[]).length, 1);
+  T('and the chip says it in one word',         />Current</.test(lb3));
+  /* A UA effective the same day is the same renewal done in two packages. Filed
+     under Earlier it would read as a year older than it is. */
+  const hist=lb3.slice(lb3.indexOf('class="cyledger"'));
+  T('a UA effective the current date is not filed as earlier', !/UAF/.test(hist));
+  T('the earlier lines name their programme',   /OCAF/.test(hist));
+  T('and the date it took effect',              /September 1, 2025/.test(hist));
+  /* Two independent questions. How loud the control is answers whether there is
+     another way in; what it says answers whether this is the first. */
+  T('with the schedule silent, starting one is the primary control',
+    /class="btn p" id="bNewCycle"/.test(lb3));
+  T('and it says another, because three exist already', /Start another package/.test(lb3));
+  app.openLauncher(rpid);
+  const lb4=els.launcherBody.innerHTML;
+  T('where the schedule offers a way in, starting one is quiet',
+    /class="addrow" id="bNewCycle"/.test(lb4));
+  eq('leaving the schedule\u2019s own action as the only primary',
+    (lb4.match(/class="btn p"/g)||[]).length, 1);
+  /* The data layer hands back an em dash for a property with no number. Printed
+     straight it was a line holding one dash, which reads as a rendering fault. */
+  const bpid=(await db.createProperty('Bare Record')).pid;
+  app.openLauncher(bpid);
+  const lb5=els.launcherBody.innerHTML;
+  eq('a property with nothing but a name reports an em dash',
+    (db.listProperties().find(p=>p.id===bpid)||{}).fha, '\u2014');
+  T('and the page prints no meta line at all',  !/class="lh-meta"/.test(lb5));
+  T('nothing undefined leaked into either',     !/undefined/.test(lb3+lb5));
 
   console.log('\n─ FORM opens and renders the RCS package ─');
   await app.__openForm(pid);
