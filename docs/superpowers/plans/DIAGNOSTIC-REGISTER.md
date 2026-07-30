@@ -2052,3 +2052,87 @@ Temporary Visiting Practice Permit TP018-25 **and** typing that temporary number
 labelled "Permanent License No". So the study's literal answer is silence and its material answer is
 yes. A rule that reads the answer must handle a blank, and the safe default for an
 unanswered conditional is **not ticked**.
+
+---
+
+# MATT'S ANSWERS, 2026-07-30 — three findings withdrawn, one authorised
+
+## WITHDRAWN — Part F and Part I are not a defect and not an ambiguity
+
+I framed this as "the form says don't, your team does" and offered it as a decision. Matt's answer
+settles it and I had the wrong model: **he does not believe his team completes them. Those filed
+schedules are copies sent BACK from the contract administrators, who completed them.**
+
+The corpus corroborates him everywhere I had read it as team behaviour, and I should have seen it:
+
+- Newberry Arms — the owner's 10/30 copy has Part I **blank**; `SC16-0061-002` appears only on the
+  `Final Copies` copy, written **11/18/2025** by the CA.
+- Friendship Court — Part I is **countersigned**, by Lisa T. Wilkerson, 29-Jan-2026.
+- Marine Terrace — Part I reads `NY36H110071, CS CGI 07/17/2026`. **"CS CGI" is the contract
+  administrator.**
+- Fairview Homes — Part F reads `$416,000.00 RD`, and the copy carrying it is the NJHMFA-returned one.
+
+**So the app is RIGHT to leave both blank, and every "Part F blank (8 properties)" and "Part I HAP
+number blank (7 properties)" row in this register is withdrawn.** Market Square's audit had already
+quoted the form's own instruction — *"Part I. Do not complete this Part. The HUD Field Office/lender
+will complete this part."* — and I treated the printed instruction as being in tension with practice
+when it simply describes it.
+
+**The method consequence is bigger than the finding, and it applies to every property.** Much of what
+this corpus calls "filed" is a **CA-returned** copy, not what the owner submitted. Comparing our
+*draft* rent schedule against a CA-returned one will always show Parts F and I as differences, and
+they are not differences — they are the CA's work, added after we were done. Any future comparison
+should either exclude those Parts or say which copy it is reading. This is the same class of error as
+the "(updated)" filename trap: the corpus contains documents from several points in a workflow, and
+the rig treats them all as one ground truth.
+
+## TABLED — the allowance source and the UA-decrease notice are UAF-feature work
+
+Both of my top two "decisions" turn out to be the wrong question for this phase. **The UAF (Utility
+Allowance Factor) feature is not built yet**, and that is where an allowance schedule as a third
+input, and a §245.410 decrease notice, belong. Matt has tabled both.
+
+**They are not wasted — they are training data for that phase, and this is the place to find it
+again.** What the corpus already establishes about the UAF work, before a line of it is written:
+
+- **The governing allowance can postdate the submission.** Fairview Homes' figures ($81/$114/$134)
+  come from an NJHMFA M2M letter dated **19 May 2025**, six weeks after the 4 April filing. Any UAF
+  design that assumes the allowance is known at submission time is wrong.
+- **The figure is sometimes a human judgement, not a calculation.** Friendship Court's utility-analysis
+  workbook computes 108.9060 and 124.4663; the signed UA Summary filed **105** and **118**. A parser
+  cannot derive those.
+- **The study routinely carries the PRIOR year's allowance and says so in its own footnote** —
+  *"Utility Allowances From Rent Schedule."* (Shiloh Village, 333 Holly, The Pines, Fairview Homes).
+  So the study is a witness to last year's number, never this year's.
+- **Where the real figures live, per property:** a signed UA Summary letter (Friendship Court), an
+  `OA_UA WORKBOOK` sheet's "Proposed Utility Allowance" column (Walden), a `UAF.pdf` applying state
+  factors to the prior components (Marine Terrace: Electric 1.095 / Gas 1.058), an NJHMFA M2M approval
+  letter (Fairview Homes), an `Exhibit A` (333 Holly, where FY25 has **no** UA workbook at all).
+- **A decrease is common and it changes the legal basis.** Walden 1BR-A **51 → 45** across 27 units;
+  Friendship Court 2BR **85 → 83**; Shiloh Village 102/124/133 → **101/103/111**. 24 CFR §245.405(a)
+  and §245.410 require the notice; **§245.430 bars collecting the new tenant rent until it expires** —
+  quoted verbatim in Walden's own 2024 UAF. The notice has a **different signer** from the
+  rent-increase notice (Friendship Court: Amy Bence, Regional Manager, against Joy Walker, Community
+  Manager).
+- **A decrease can affect one unit type only** (Friendship Court, Walden), so the trigger is per-type,
+  not per-property.
+- **`score.js` already has a `uanotice` document** — it belongs to the UAF program and is not reached
+  by the RCS flow.
+- And the trap: a study can **print a state UA schedule in its addenda** that is not the subject's
+  allowance. Marine Terrace's study p.54 carries NY HCR's 2026 schedule (1BR $108, 2BR $142, 3BR
+  $176) purely to adjust comparables; the subject's are 116/152/178. Never read the subject's
+  allowance from a printed schedule inside the study.
+
+## AUTHORISED — the checklist ticks are to be driven from the study (M47)
+
+Matt: *"if you feel confident about this, then sure, make the box ticks for the checklist actually
+pull from the RCS survey."* I am confident about the mechanism and the two items; the design and its
+one real hazard are written up as the next task in the handoff.
+
+## CONFIRMED, not data loss
+
+The account went 14 → 4 → 2 because **Matt deleted the properties and replaced them with the
+company's actual property list from the CSV HAP tracker.** By design. Two consequences worth keeping:
+the `ZZ-CORPUS-` prefix discipline now matters *more*, because scratch records sit alongside the real
+portfolio; and any future corpus run should expect the account to hold real properties it must not
+touch.

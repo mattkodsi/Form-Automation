@@ -5,90 +5,157 @@ production deploy).
 
 ---
 
-> # STOPPED 2026-07-30 — ALL 34 PROPERTIES AUDITED. 24 defects fixed.
+> # RESUME HERE — 2026-07-30. All 34 properties audited, 24 defects fixed.
 >
-> **The loop stopped itself, and here is the reason: what is left is one redesign and
-> three decisions that are yours, not mine.** Every property has been driven, read by
-> eye against its own sources, and compared three ways. HEAD `c7d6451`, pushed,
-> working tree clean, **0** `ZZ-CORPUS-*` in the account.
+> HEAD `86df74e` (+ this record), pushed, tree clean, **0** `ZZ-CORPUS-*` in the account.
+> Eleven suites, 1,766 checks, all green. The corpus loop is **finished** — every property
+> has been driven through the real app, read by eye against its own sources, and compared
+> three ways against what was filed. Matt has answered the open questions; three findings
+> are withdrawn or tabled as a result. See the last section of
+> `docs/superpowers/plans/DIAGNOSTIC-REGISTER.md` for all of it.
 >
-> ## The three decisions only you can make
+> ---
 >
-> **1. The utility allowance is set by a document the app never receives — five
-> properties.** It is not a parsing gap, it is a timing gap. Fairview Homes settles it:
-> the governing figures ($81/$114/$134) come from an NJHMFA letter dated **19 May
-> 2025**, six weeks *after* the 4 April submission. The app reproduces the study's
-> figures, the study reproduces the prior year's, and nobody in that chain is
-> arithmetically wrong — but the schedule that gets executed carries different numbers
-> in Columns 5 and 6. On Friendship Court the governing figures were a **human
-> judgement** (the spreadsheet computes 108.91 and 124.47; the signed summary filed 105
-> and 118), so no parser reaches them. **Does the app take an allowance schedule as a
-> third input, or does it print the study's figure and flag the column for override?**
+> ## DO THIS FIRST — the one authorised code change
 >
-> **2. A utility-allowance DECREASE needs a second tenant notice the app cannot
-> produce — three properties.** Walden's 1-BR-A allowance falls 51 → 45 across 27
-> units; Friendship Court's 2BR falls 85 → 83; Shiloh Village likewise. That triggers
-> 24 CFR §245.405/§245.410 and §245.430 — and the rule is quoted verbatim in Walden's
-> own 2024 UAF. The app models one tenant notice under §245.310. **On Walden neither the
-> app nor the filed package produced the decrease notice**, so this is a compliance gap
-> in the process, not only in the tool.
+> **M47: drive the owner's checklist from the study instead of a hard-coded seed.** Matt
+> approved it explicitly. It is the highest-consequence defect left and it is cheap.
 >
-> **3. Part F and Part I: the form says don't, your team does.** The form's page 3
-> prints *"Do not complete this Part"* for both. Ours leaves them blank and is
-> form-correct; Walden's team fills Part F ($196,075) and HUD signed it, and Marine
-> Terrace's fills both. **Which convention should the app follow?** I have deliberately
-> not chosen.
+> Today `app.js:72` reads
+> `const off=/scope of repair/i.test(it)||/scope of work/i.test(it); SEED['check.'+i]=[off?'':'1',D]`
+> — all seventeen items ticked except two hand-picked exceptions, and the study is never
+> consulted. Two items are wrong across the corpus:
 >
-> ## The one large piece of engineering left — M54, and it is a redesign
+> - **The appraiser-licence item is seeded ON**, so the app certifies that a copy of a
+>   *temporary* licence is enclosed on every property that does not use one — six confirmed
+>   (Walden, Marine Terrace, Morningside Court, Newberry Arms, Friendship Court, Colonial
+>   Village). It is a false statement on a form the owner signs under 18 U.S.C. §1001, and
+>   it is the app's worst act found anywhere in this corpus.
+> - **"Scope of Work" is seeded OFF** on every property, though every study carries the
+>   section — under Belfry's own heading **"Scope of Assignment"**, listed in the study's
+>   table of contents, and referred to as "the Scope of Work section of this report" in the
+>   appraiser's own certification. Wrong on Walden, Colonial Village, Friendship Court,
+>   Fairview Homes. **A literal "Scope of Work" match will miss it** — match the section, not
+>   the phrase.
 >
-> Our blank HUD-92458's vertical metrics do not match the filed renditions, in three
-> places The Pines measured exactly: the Project Name rect over-reaches its drawn cell
-> by 12–13pt; the Part A grid is 7.92pt out of phase at an identical 12.00pt pitch; and
-> field 228 sits **4.9pt below the signatory line it exists to capture — zero overlap,
-> every tier, every run**. That last alone withheld five documents on a property whose
-> checklist needed three fields, two of them printed in clean 10pt type on the page the
-> app was handed. The row-mate clamp in `1b3b883` closes one of the three. The real fix
-> anchors each page's rects to found text before placing anything, and it deserves a
-> session of its own with the corpus-wide before/after harness (scratchpad
-> `cmp-fields.js`) as its verifier — that harness has twice been decisive.
+> **The hazard to design around, and it is real:** on **Fairview Homes** the appraiser left
+> the printed question *"Did you prepare the RCS under a temporary license? ___"* **blank**
+> while attaching Temporary Visiting Practice Permit TP018-25 **and** typing that temporary
+> number into the field labelled "Permanent License No". So the study's literal answer is
+> silence and its material answer is yes. Walden and Marine Terrace answer a clean **N** with
+> permanent licences (NY 1553109, NY 4600054504). **The safe default for an unanswered
+> conditional item is NOT ticked** — and say so in a comment, because the next person will
+> want to "tidy" it the other way.
 >
-> ## The highest-consequence defect still open, and it is cheap — M47
+> Where the answer lives: study Appendix 9-1-4, item 12. `rcs.js` already reaches that
+> appendix on some properties. Add a test pinned to the three real shapes — a clean `N`, a
+> clean `Y`, and Fairview's blank-with-a-permit.
 >
-> `app.js:72` seeds all seventeen checklist ticks on except two hand-picked exceptions
-> and never reads the study. So the app **certifies that a copy of a temporary
-> appraiser's licence is enclosed on every property that does not use one** — six
-> confirmed — on a form signed under 18 U.S.C. §1001. And "Scope of Work" is seeded off
-> everywhere though every study carries the section under the heading *"Scope of
-> Assignment"*. Read the register before fixing: on Fairview Homes the appraiser left
-> the question **blank** while attaching a temporary permit, so the rule must handle
-> silence, and the safe default for an unanswered conditional is **not ticked**.
+> ---
 >
-> ## What the corpus taught about its own instruments
+> ## THE ONE LARGE JOB — M54, and it wants its own session
 >
-> **A difference count measures the comparator, not the app.** Six properties now:
-> Fairview Homes 95 → 4 real (62 rows are the extractor reading a transmittal letter's
-> lines as Part A rows, because DocuSign rasterised the filed schedule to one character
-> of text on page 2); Walden 97 → 7; Friendship Court 98 → 8; Colonial Village 39 → 7;
-> Barnum House 79 → mostly a one-field offset; Marine Terrace 14 → **0**, low only
-> because five of six documents were withheld. And the **rig's study-selection rule
-> trusts the filename token "(updated)" over the letter date printed inside** — on
-> Market Square that picked the oldest of three revisions, so our figure matched the
-> filed Submission exactly and *scored as correct* while the executed schedule said
-> something else. **The executed rent schedule, not the Submission PDF, is the authority
-> on what was approved.**
+> Our blank HUD-92458's vertical metrics do not match the filed renditions, in three places
+> The Pines measured exactly:
 >
-> ## Still unanswered, asked in four waves now
+> | where | the mismatch |
+> |---|---|
+> | Project Name box | rect over-reaches its drawn cell by **12–13pt**, so it swallows the divider printed 10.32pt below at the identical 24.24pt left margin |
+> | Part A grid | starts **7.92pt out of phase** at an identical 12.00pt pitch — same pitch, wrong phase |
+> | field 228, Part H name and title | rect y 601.51–636.51 against a signatory line at y 587.3–596.6 — **4.9pt clear, zero overlap, every tier, every run** |
 >
-> The account holds **2 properties**; it held 14 on 2026-07-29, then 4, then 2. The
-> cleanup provably cannot cause it — it returns before deleting when no name matches
-> the prefix, and it reports every deletion. **If that is not you tidying up, it is data
-> loss and it outranks everything above.**
+> That last one alone withheld five documents on a property whose checklist needs only three
+> fields, two of them printed in clean 10pt type on the page the app was handed. The row-mate
+> clamp in `1b3b883` closes one of the three. **The real fix anchors each page's rects to
+> found text before placing anything.** Its verifier already exists:
+> `scratchpad/cmp-fields.js` runs a field-level before/after over every prior schedule in the
+> corpus and has twice been decisive — once proving a fix moved 8 properties and regressed
+> none, once catching a double-space I had introduced.
 >
-> Also: `git` cannot auto-detect an identity since this machine's hostname became
-> `Mac.(none)`. I passed your existing name and address per-commit rather than writing
-> to your config; setting `user.name` and `user.email` in the repo would end that.
+> Related and open: **M55**, the two upload orders disagree on The Pines (`rs-first` attaches
+> the study's rows one row early and invents a phantom fourth row, reading $298,960 monthly
+> against a true $285,840) while the harness prints *"both orders produce comparable
+> packages"*. Probably the same 7.92pt phase error. **M42**, a page that registered at
+> residual 0.00 and was billed is discarded because Part A failed — two properties, two
+> causes. **M58**, an HTTP 429 is rendered as a permanent verdict: Marine Terrace read the
+> same file successfully nine hours earlier, and the message sends the PM to hand-key thirty
+> values that were machine-read that afternoon, after three retries in 2,076ms.
 >
-> To resume, `/loop` with the prompt in the last iteration — it carries the full queue.
+> ---
+>
+> ## WITHDRAWN — do not re-open these
+>
+> - **Part F and Part I are not defects.** Matt: those filed schedules are copies sent **back
+>   from the contract administrators, who completed them**. The corpus agrees everywhere —
+>   Newberry Arms' owner copy is blank and the CA wrote Part I on 11/18; Friendship Court's is
+>   countersigned; Marine Terrace's reads `CS CGI 07/17/2026`; Fairview's Part F reads `RD`.
+>   **The app is right to leave both blank**, and the "Part F blank (8)" / "Part I blank (7)"
+>   rows are gone. **The method consequence is larger:** much of what this corpus calls
+>   "filed" is a CA-returned copy, not what the owner submitted, so a draft-vs-filed comparison
+>   will always show those Parts as differences that are not differences.
+> - **OakCenter1** — the app writes `Oak Center 1` correctly.
+> - **"the UA comes from the study"** — a third document governs, and it has twice confirmed a
+>   genuine **$0** that must survive any fix.
+> - **"the workbook is missing formulas"** — they are Excel **shared** formulas the reader
+>   could not resolve. Three separate agents nearly filed this; two caught themselves.
+> - **"checklist Scope of Work unticked is a team habit"** — the *signed* filed copies tick it.
+> - **The 7.1-point tier-2 refusals** are a **third printing of HUD-92458**, discriminated by
+>   its footer's page count and not its OMB date, whose Part B rows sit on a 14.4pt pitch
+>   against our 10.85pt. Market Square and Mapleview measure identical to five decimals, so
+>   the residual measures **the blank**, not the document, and tier 3's refusal is **correct**.
+>   Loosening `OCR_MAXRESID` would be actively harmful. The real fix is a label-relative reader.
+> - **Correcting the tier-2 offset** was tried and refused by measurement: on the eight
+>   misaligned schedules the displaced labels agree on **no single shift**.
+> - **A plausibility bound on parsed values** was rejected with evidence: the garbage included
+>   a rent of **11,918**, inside any bound loose enough to accept real rents of 1,198–2,875.
+>
+> ## TABLED — UAF-feature work, and the corpus is its training data
+>
+> The allowance-source problem (5 properties) and the §245.410 decrease notice (3 properties)
+> both belong to the **UAF feature, which is not built yet**. Matt has tabled them and wants
+> the findings kept. The register's last section lists what the corpus already establishes for
+> that phase: the governing allowance can **postdate the submission by six weeks**, it is
+> sometimes a **human judgement** a parser cannot derive (108.9060 → 105), the study is only
+> ever a witness to *last* year's figure, a decrease can affect **one unit type only**, the
+> decrease notice has a **different signer**, and a study's addenda can print a state UA
+> schedule that is **not** the subject's allowance.
+>
+> ## The instruments, and why a difference count means little
+>
+> **Six properties now: the count measures the comparator, not the app.** Fairview Homes 95 →
+> **4** real (62 rows are the extractor reading an NJHMFA transmittal letter's lines as Part A
+> rows, because DocuSign rasterised the filed schedule to one character of text on page 2);
+> Walden 97 → 7; Friendship Court 98 → 8; Colonial Village 39 → 7; Barnum House 79 → mostly a
+> one-field offset; **Marine Terrace 14 → 0**, low only because five of six documents were
+> withheld. A low or falling count is a signal to go looking.
+>
+> Two rig faults worth fixing before the next comparison run: the study-selection rule trusts
+> the filename token **"(updated)"** over the letter date printed inside — on Market Square
+> that picked the **oldest** of three revisions, so our figure matched the filed Submission
+> exactly and *scored as correct* while the executed schedule said $50/unit less. And the rig
+> prefers **owner-signed** prior schedules over **HUD-countersigned** ones (Barnum House,
+> Friendship Court), forfeiting the contract number and Part F for free. **The executed rent
+> schedule, not the Submission PDF, is the authority on what was approved.**
+>
+> ## The account is fine
+>
+> 14 → 4 → 2 was **Matt**: he deleted the properties and replaced them with the company's
+> actual property list from the CSV HAP tracker. Not data loss. Two consequences: the
+> `ZZ-CORPUS-` prefix discipline now matters **more**, because scratch records sit beside the
+> real portfolio, and `--cleanup --prefix ZZ-CORPUS-` reporting **0** remains the only safety
+> check — a property total never was one.
+>
+> ## Housekeeping
+>
+> `git` cannot auto-detect an identity on this machine since its hostname became
+> `Mac.(none)`. Every commit in this run passed `GIT_AUTHOR_NAME/EMAIL` and
+> `GIT_COMMITTER_NAME/EMAIL` from `git log -1 --format='%an'` / `'%ae'` rather than writing to
+> Matt's config. Setting `user.name` and `user.email` in the repo would end that.
+>
+> `deliver.sh` fails intermittently on `test_crypto.js` under load and passes unchanged on
+> retry. Note that **the commit can land while the build does not**, leaving `index.html` a
+> build behind its own sources — check, and confirm the shipped bundle actually carries the
+> change rather than trusting a byte count.
 
 > **WAVE 4 AUDITS NEED RE-RUNNING.** On 2026-07-29 four of the five wave-4 audit
 > agents — Noble Tower, Oaks on North Plaza, Oceanport, Holly House — died on
