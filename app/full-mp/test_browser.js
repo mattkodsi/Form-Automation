@@ -35,7 +35,7 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=318;   // 2026-07-29: +12 — three zones: the past-due drawer closed on arrival, and
+const MIN_CHECKS=324;   // 2026-07-29: +12 — three zones: the past-due drawer closed on arrival, and
                         // opening it without moving the panel below (measured in a real layout).
                         // 2026-07-29: -3 — the rail's eight rows became the strip's five figures.
                        // 2026-07-28: +35 — the home page's filter rail, driven by real clicks.
@@ -2186,6 +2186,28 @@ const FULL=process.argv.includes('--full');
       await c.eval('await window.__t.__seedHap('+JSON.stringify(rows)+');'
         +'window.__t.__setMenuView("all");return 1');
       await sleep(220);
+
+      /* ---- it stays centred on a wide display ----
+         `margin:0` where the base rule said `margin:0 auto` pinned the launcher
+         and the contacts page to the left edge of anything wider than 1480px,
+         with the whole right-hand third of the screen empty. Nothing in the
+         markup shows it and every narrow-window screenshot looks correct, so it
+         is asserted at a width that can actually expose it. */
+      for(const W of [1680,2560]){
+        await c.send('Emulation.setDeviceMetricsOverride',
+          {width:W,height:900,deviceScaleFactor:1,mobile:false});
+        await sleep(240);
+        const g=await c.eval(`const e=document.querySelector('#viewMenu .mwrap');
+          const b=e.getBoundingClientRect();
+          return {l:Math.round(b.left),r:Math.round(window.innerWidth-b.right),
+            w:Math.round(b.width),
+            over:document.documentElement.scrollWidth>document.documentElement.clientWidth+1};`);
+        T('at '+W+'px the page is centred, not pinned left',Math.abs(g.l-g.r)<=1);
+        T('and capped rather than stretched across the whole display',g.w<=1480);
+        T('with nothing spilling sideways',!g.over);
+      }
+      await c.send('Emulation.clearDeviceMetricsOverride');
+      await sleep(240);
 
       /* Whose portfolio you are reading is one control now, and changing it
          releases the band — the bands are not the same shape for one manager

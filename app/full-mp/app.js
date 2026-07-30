@@ -2958,13 +2958,25 @@ function profileChip(p){
   const m=(p&&p.profile&&p.profile.missing)||[];
   if(!m.length)return '';
   const names=m.map(x=>x.label);
-  /* "4 missing from the profile" named nothing. The count was the whole chip
-     and the four labels lived in a title attribute, so the one question it
-     provoked — which four? — was the one it would not answer without a hover
-     nobody knows to try. It says them. */
+  /* "4 missing from the profile" named nothing. The count was the whole chip and
+     the four labels lived in a title attribute, so the one question it provoked —
+     which four? — was the one it would not answer without a hover nobody knows to
+     try. It names as many as fit, and the rest are one hover away in a panel of
+     the app's own rather than a native tooltip that makes you wait and then
+     truncates the answer.
+
+     Flat rows, not the generate modal's jump buttons: a property with no package
+     has no form open to jump into, and a control that does nothing is worse than
+     no control at all. */
   const shown=names.length<=3?andJoin(names):(names.slice(0,2).join(', ')+' and '+(names.length-2)+' more');
-  return '<span class="pchip" title="'+esc('Missing: '+andJoin(names))+'">Needs '
-    +esc(shown)+'</span>';}
+  const rows=m.map(x=>{
+    const w=(typeof whyShort==='function'?whyShort(x.key,x.why):'')||(x.sec?(SECTION_TITLES[x.sec]||''):'');
+    return '<span class="gpf gpf-flat"><span class="gpf-n">'+esc(x.label)+'</span>'
+      +(w?'<span class="gpf-w">'+esc(w)+'</span>':'')+'</span>';}).join('');
+  return '<span class="gpw pchipw"><button type="button" class="pchip" aria-haspopup="true">Needs '
+    +esc(shown)+'</button><div class="gpop"><div class="gpop-in">'
+    +'<div class="gpop-h">Needed before this package can be generated</div>'
+    +'<div class="gpop-l">'+rows+'</div></div></div></span>';}
 function ringSvg(pct,size){size=size||36;const r=size/2-3;const c=2*Math.PI*r;const off=c*(1-Math.max(0,Math.min(100,pct))/100);const col=ringColor(pct);
   return '<svg class="ringsvg" width="'+size+'" height="'+size+'" viewBox="0 0 '+size+' '+size+'"><circle cx="'+size/2+'" cy="'+size/2+'" r="'+r+'" fill="none" stroke="#e9edf4" stroke-width="3.4"/><circle cx="'+size/2+'" cy="'+size/2+'" r="'+r+'" fill="none" stroke="'+col+'" stroke-width="3.4" stroke-linecap="round" stroke-dasharray="'+c.toFixed(1)+'" stroke-dashoffset="'+off.toFixed(1)+'" transform="rotate(-90 '+size/2+' '+size/2+')"/><text x="50%" y="53%" dominant-baseline="middle" text-anchor="middle" font-size="'+(size<44?10:12.5)+'" font-weight="700" fill="#33405c">'+pct+'</text></svg>';}
 function niceDate(d){if(!d)return '—';const m=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];const p=String(d).slice(0,10).split('-');if(p.length!==3)return d;return m[(+p[1])-1]+' '+(+p[2])+', '+p[0];}
