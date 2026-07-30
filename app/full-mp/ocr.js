@@ -259,7 +259,12 @@ async function ocrHalf(bytes,tplPg,skip,onStep){
 
 async function ocrParseRs(bytes,onStep){ // scan -> the tier-1 parsed shape, or null
   OCR_WHY='';
-  if(!window.PDFLib||!supaClient)return null;
+  /* The one exit that left OCR_WHY empty, and it is the exit taken whenever
+     there is no session at all. The form then showed a copy it could not read
+     with no reason beside it — the reader could not tell “Azure declined this
+     page” from “we never asked anyone”. Both branches now say which. */
+  if(!window.PDFLib){OCR_WHY='The PDF engine did not load, so this document could not be opened for scanning.';return null;}
+  if(!supaClient){OCR_WHY='The figures on this copy are pictures rather than text, so it can only be read by the scanning service — and this session is not connected to it.';return null;}
   const tpl=await ocrTemplate();if(!tpl){OCR_WHY='The blank HUD-92458 template could not be opened, so there was nothing to line the scan up against.';return null;}
   const rects=await rsFieldRects();if(!Object.keys(rects).length){OCR_WHY='The blank form\u2019s field positions could not be read, so a scan cannot be placed onto it.';return null;}
   let pages;try{pages=await ocrSplitPages(bytes,OCR_MAXPAGES);}catch(e){OCR_WHY='The document\u2019s pages could not be separated for scanning.';return null;}
