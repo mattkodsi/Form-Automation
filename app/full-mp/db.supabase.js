@@ -388,7 +388,12 @@ function makeSupabaseDb(client) {
     || /^units\.\d+\.(ua|safmr|num|type)_reviewed$/.test(k)
     || /^units\.\d+\.uac_[a-z]+$/.test(k)
     || /^check\.\d+$/.test(k)
-    || /^appr\./.test(k)
+    /* The appraiser carries. The same firm usually comes back, and retyping five
+       fields a year is the kind of work this tool exists to remove; a new one is
+       a five-field correction. It is a rent, not a name, that we refuse to guess
+       — a stale name is visible on the transmittal letter, a stale rent is not.
+       (Matt, 2026-07-30.) */
+    || /^nonrev\.\d+\.rent$/.test(k)   /* a contract rent is a contract rent, whoever lives there */
     || /^ocaf\.(factor_|ds_t12$|ds_f12$)/.test(k)
     || /^uaf\./.test(k)
     || /^rent_schedule\./.test(k)
