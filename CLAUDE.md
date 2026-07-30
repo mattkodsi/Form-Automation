@@ -209,7 +209,7 @@ a new suite needs registering (`deliver.sh` calls it).
   computed, and both tools exit 3 with a banner where poppler is absent rather than exiting 0 having
   rendered nothing.
 
-**RECOUNT-PENDING checks across thirteen suites** as of 2026-07-30, counted off a real run. These
+**2147 checks across thirteen suites** (98 · 169 · 144 · 175 · 123 · 444 · 189 · 341 · 83 · 11 · 91 · 120 · 159) as of 2026-07-30, counted off a real run. These
 numbers go stale the moment a suite grows — `MIN_CHECKS` in each file is the binding floor; this list
 is a map.
 ⚠️ **Don't pipe a suite through `| tail`.** A pipeline's exit status is the LAST command's, so node's
