@@ -5018,6 +5018,47 @@ async function rsFieldRects(){ // field id -> {pg,x,y,w,h} from our own template
       ids.forEach(id=>{const r=map[id];if(r.y>=floor)return;
         r.h=(r.y+r.h)-floor;r.y=floor;});});}
   _rsRectCache=map;return map;}
+/* The form's own printed lines, by text rather than by position.
+   rsDropTplLabels drops a label by finding it where the template prints it, and
+   that is the right test on a page laid out like the template. On a page that is
+   NOT - a scanner's text layer, or the third printing of HUD-92458 whose rows sit
+   on a different pitch - it finds nothing, so the labels flow into the boxes.
+   Position cannot rescue those pages, which is the whole reason tier 2 now
+   declines them. But TEXT can: whatever coordinates it arrived at, a line that
+   reproduces one of the blank form's own printed lines is the form talking.
+
+   This is the complement the positional dropper lacks, and it is what finishes
+   the project names. Clamping field 1 to its row-mates' floor fixed Shiloh
+   Village and improved Oaks on North Plaza, and could not reach 333 Holly or The
+   Pines, where the divider prints ABOVE that floor. It also could not reach tier
+   3 at all, which is where declining the misaligned pages sent them: Shiloh came
+   back from OCR as "Shiloh Village Apts. Part A Apartment Rents Show the actual".
+
+   The 8-character floor keeps this away from short values. "Part A - Apartment
+   Rents" normalises to 19 characters and "Show the actual" to 13, while a value
+   like "N/A" is 2 and can never match. A real value long enough to reproduce a
+   whole printed line of the form exactly is not a case that arises. */
+let _rsFormLines=null;
+function rsFormLineKey(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');}
+function rsFormLines(tplPg){
+  if(!_rsFormLines){
+    _rsFormLines=[];
+    const pages=_rsTplRuns||[];
+    for(let p=0;p<pages.length;p++){
+      const set=new Set(),lines=[];
+      (pages[p]||[]).slice().sort((x,y)=>(y.y-x.y)||(x.x-y.x)).forEach(r=>{
+        const L=lines[lines.length-1];
+        if(L&&Math.abs(L.y-r.y)<=RS_LINE)L.runs.push(r);else lines.push({y:r.y,runs:[r]});});
+      lines.forEach(L=>{const k=rsFormLineKey(L.runs.sort((x,y)=>x.x-y.x).map(r=>r.s).join(''));
+        if(k.length>=8)set.add(k);});
+      _rsFormLines.push(set);}}
+  return _rsFormLines[tplPg]||new Set();}
+/* Shared by both tiers, so a page cannot be scrubbed one way on the text path
+   and another way after OCR. */
+function rsDropFormLines(lines,tplPg){
+  const set=rsFormLines(tplPg);
+  if(!set.size)return lines;
+  return lines.filter(t=>!set.has(rsFormLineKey(t)));}
 /* What one box says, in READING order.
    Sorting the runs by descending baseline and joining them was right for a page
    whose lines are exactly level, and wrong for a page carrying a scanner's own
@@ -5034,14 +5075,14 @@ async function rsFieldRects(){ // field id -> {pg,x,y,w,h} from our own template
    So: group the runs into lines, order each line left to right, and take the
    lines top to bottom. The tolerance is well under the form's 10-12pt row pitch,
    so two genuinely separate printed lines stay separate. */
-function rsBoxText(inside){
+function rsBoxText(inside,tplPg){
   const lines=[];
   inside.slice().sort((a,b)=>b.y-a.y).forEach(r=>{
     const L=lines[lines.length-1];
     if(L&&Math.abs(L.y-r.y)<=RS_LINE)L.runs.push(r);
     else lines.push({y:r.y,runs:[r]});});
-  return lines.map(L=>L.runs.sort((a,b)=>a.x-b.x).map(r=>r.s).join('').trim())
-    .filter(Boolean).join(' ').trim();}
+  const txt=lines.map(L=>L.runs.sort((a,b)=>a.x-b.x).map(r=>r.s).join('').trim()).filter(Boolean);
+  return rsDropFormLines(txt,tplPg).join(' ').trim();}
 function rsMapRects(pageRuns,rects,tplPg){ // one page's runs -> {fieldId: text}
   const out={};if(!pageRuns)return out;
   // A flattened copy draws its values inside form XObjects (depth > 0) while the
@@ -5051,7 +5092,7 @@ function rsMapRects(pageRuns,rects,tplPg){ // one page's runs -> {fieldId: text}
   const deep=pageRuns.filter(r=>r.d>0);const runs=deep.length?deep:pageRuns;
   for(const id in rects){const rc=rects[id];if(rc.pg!==tplPg)continue;
     const inside=runs.filter(r=>r.x>=rc.x-2&&r.x<=rc.x+rc.w+2&&r.y>=rc.y-1&&r.y<=rc.y+rc.h);
-    const v=rsBoxText(inside);
+    const v=rsBoxText(inside,tplPg);
     if(v)out[id]=v;}
   return out;}
 function rsPartD(V){ // Part D non-revenue-producing space: gen.js's dUse/dType/dRent ids
@@ -8373,7 +8414,15 @@ function ocrMap(words,rects,tplPg,f){ // registered words -> {fieldId: text}
     const ws=hit[id].slice().sort((a,b)=>b.y-a.y), lines=[];
     ws.forEach(w=>{const L=lines[lines.length-1];
       if(L&&Math.abs(L.y-w.y)<=OCR_LINE)L.w.push(w);else lines.push({y:w.y,w:[w]});});
-    const v=lines.map(L=>L.w.sort((a,b)=>a.x-b.x).map(o=>o.s).join(' ')).join(' ').trim();
+    /* And the form's own printed lines come out here too, by text. A scan is
+       registered onto the template before it is read, so ocrDropLabels can drop a
+       label it recognises AT its own position - but a label OCR read slightly
+       differently, or one printed at a pitch our blank does not share, survives
+       that test and lands in a box. Shiloh Village came back from OCR as
+       "Shiloh Village Apts. Part A Apartment Rents Show the actual". Same helper
+       as the text tier, so one page cannot be scrubbed two ways. */
+    const txt=lines.map(L=>L.w.sort((a,b)=>a.x-b.x).map(o=>o.s).join(' '));
+    const v=(typeof rsDropFormLines==='function'?rsDropFormLines(txt,tplPg):txt).join(' ').trim();
     if(v)out[id]=v;});
   return out;}
 
