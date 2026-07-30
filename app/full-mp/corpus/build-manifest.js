@@ -43,6 +43,7 @@ fs.writeFileSync(_b,
   +'if(typeof module!=="undefined")Object.assign(module.exports,{__rsTextPageAt:rsTextPageAt});\n');
 const app=require(_b);
 const R=global.window.RCSParse;
+const DEC=require(path.join(SRC,'pdfdecrypt.js'));
 
 const args=process.argv.slice(2).filter(a=>!a.startsWith('--'));
 const ROOT=args[0], OUT=args[1]||path.join(__dirname,'corpus.json');
@@ -116,9 +117,25 @@ async function readsAsStudy(f){
      outside a catch that only wrapped load(). No single document may end the
      sweep -- an unreadable one is a result, recorded and moved past. */
   let rec=null, rd=null;
-  const src=readable(f.abs), unlocked=src!==f.abs;
+  const src=readable(f.abs);
+  let unlocked=src!==f.abs;
   try{
-    const doc=await P.PDFDocument.load(new Uint8Array(fs.readFileSync(src)),{ignoreEncryption:true,throwOnInvalidObject:false});
+    /* DECRYPT IN PROCESS, rather than depending on a cache of unlocked copies.
+       Twenty of these studies carry a permissions handler with an empty user
+       password; pdf-lib cannot open them and fails downstream as "Expected
+       instance of e, but got instance of undefined", which is why they used to
+       be pre-decrypted into the cache by decrypt-cache.js. The app already
+       ships the decryptor, so the manifest can simply use it — and then the
+       5 GB cache is nothing this pass needs, which matters for running
+       detached from the machine that holds it. */
+    let bytes=new Uint8Array(fs.readFileSync(src));
+    /* decrypt() answers {ok, bytes, reason} — NOT a byte array. Reading .length
+       off the wrapper was silently falsy, so every locked study fell through
+       still encrypted and the run looked exactly like having no decryptor at
+       all: twenty unchanged read errors. */
+    try{ if(DEC.isEncrypted(bytes)){ const d=await DEC.decrypt(bytes); if(d&&d.ok&&d.bytes){bytes=new Uint8Array(d.bytes);unlocked=true;} } }
+    catch(e){ /* an undecryptable file is still handed to the reader, which reports its own failure */ }
+    const doc=await P.PDFDocument.load(bytes,{ignoreEncryption:true,throwOnInvalidObject:false});
     rd={pageCount:doc.getPageCount(),hits:0,
         getPage:async i=>{rd.hits++;return await app.__rsTextPageAt(doc,i);}};
     rec=await R.readLetter(rd);
