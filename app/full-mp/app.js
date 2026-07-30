@@ -2636,7 +2636,7 @@ function sectionStatus(n){if(n!==1&&sectionEmpty(n))return 'empty';
 function sectionPill(n){const st=sectionStatus(n);
   if(st==='empty')return '<span class="pill empty" data-pill="'+n+'">not started</span>';
   return st==='warn'?'<span class="pill warn" data-pill="'+n+'">review</span>':'<span class="pill ok" data-pill="'+n+'">confirmed</span>';}
-function card(n,pill,body){return `<div class="card"><div class="chead"><span class="cnum">${_secPos[n]||n}</span><span class="ctitle">${SECTION_TITLES[n]}</span>${pill}<span class="chev">▾</span></div><div class="cbody">${body}</div></div>`;}
+function card(n,pill,body){return `<div class="card" data-sec="${n}"><div class="chead"><span class="cnum">${_secPos[n]||n}</span><span class="ctitle">${SECTION_TITLES[n]}</span>${pill}<span class="chev">▾</span></div><div class="cbody">${body}</div></div>`;}
 
 
 /* ================== OCAF (Section 10) — transparent HUD-9625 ==================
@@ -2996,13 +2996,163 @@ function attnFlags(){const f=[];const u=UNITS.filter(uaUnresolved).length;if(u)f
     if(UA.dec.length)f.push('UA decrease detected — tenant notice + comment certification join the package');}
   return f;}
 function renderRail(){const vis=visibleSections();const st={};vis.forEach(n=>st[n]=(n===7?'ok':sectionStatus(n)));let conf=0;vis.forEach(n=>{if(st[n]!=='warn')conf++;});const need=vis.length-conf;
-  el('rail').innerHTML=vis.map(n=>`<div class="railitem"><span class="ri ${st[n]==='warn'?'warn':'ok'}">${st[n]==='warn'?'!':'✓'}</span><span class="rname">${_secPos[n]||n}. ${SECTION_TITLES[n]}</span></div>`).join('');
+  /* refreshFlags redraws this rail on every keystroke, so a row that HAS focus
+     has to get it back — otherwise a keyboard reader standing in the rail is
+     thrown out of it by somebody else's repaint. */
+  const _af=document.activeElement;const _afs=(_af&&_af.classList&&_af.classList.contains('railitem'))?_af.getAttribute('data-rsec'):null;
+  el('rail').innerHTML='<div class="railbar nofx" id="railbar" aria-hidden="true"></div>'+vis.map(n=>`<button type="button" class="railitem" data-rsec="${n}"><span class="ri ${st[n]==='warn'?'warn':'ok'}">${st[n]==='warn'?'!':'✓'}</span><span class="rname">${_secPos[n]||n}. ${SECTION_TITLES[n]}</span></button>`).join('');
+  if(_afs){const _r=document.querySelector('#rail .railitem[data-rsec="'+_afs+'"]');if(_r&&_r.focus)_r.focus({preventScroll:true});}
+  railApply();const _rb=el('railbar');if(_rb&&window.requestAnimationFrame)requestAnimationFrame(()=>{if(_rb.classList)_rb.classList.remove('nofx');});
   el('railprog').innerHTML=`<b>${conf} of ${vis.length} confirmed</b>${need?`<div class="warnt">${need} section${need===1?"":"s"} still to confirm</div>`:''}<div class="track sm"><div style="width:${conf/vis.length*100}%;background:#166534"></div></div>`;
   const fl=attnFlags();el('railattn').style.display=fl.length?'block':'none';el('railattn').innerHTML=fl.length?`⚠ <b>${fl.length} thing${fl.length===1?"":"s"} to look at</b>${fl.map(x=>`<div class="sub" style="margin-top:6px">${x}</div>`).join('')}`:'';}
 function renderAttention(){/* the section rail carries the attention list; the old top banner duplicated it */}
 
+/* ============== the section rail: one bar that travels ======================
+   THE RULE. The active section is the one crossing the READING LINE — a
+   horizontal line RAIL_LINE px below the top of the viewport, just under the
+   command bar. Deliberately NOT "the last heading scrolled past": that rule
+   hands the highlight on the moment a heading clears the top, so a section
+   taller than the window (Rents & unit mix measures 1001px against a 900px
+   viewport) goes dark while you are still reading it, and a final section
+   shorter than the window can never win it at all.
+   THE TAIL SHARES THE LAST STRETCH OF SCROLL. The page stops scrolling with
+   the final sections still on screen — Tenant notice is 218px at the bottom of
+   a 4170px page in a 900px window, and scrolling stops 3270px down — so their
+   tops can never be brought to the line at all. Those cards are the TAIL, and
+   they divide the scroll that is left between them, one equal slice each, in
+   their own order. Everything above the tail is answered by the line as usual.
+   Two earlier attempts are worth recording, because each looked right:
+     · "at the foot of the document, the LAST section" rescued the last row and
+       left the SECOND to last unreachable by any scroll position whatever. A
+       row that can never light is dead state, and it took a check that walked
+       EVERY row — not a spot check — to see it.
+     · a reading line that descended to the foot of the window over the last
+       screenful reached every row, but it handed the highlight on too early:
+       scroll a section's heading to the very top of the window and the line had
+       already sunk past that section into the next one. A rule that disagrees
+       with the heading under your eye is not a rule anybody will trust.
+   ONE exception remains: nothing crosses the line — the top of the page, the
+   gap between two cards -> the first card whose top is below the line, else the
+   last one above it.
+   A JUMP PINS ITS ANSWER, and at the foot of the page that pin is the only
+   thing keeping the rail honest. The last two sections both land at the same
+   max scroll, so exception (a) answers "the last one" to a click on either —
+   the rail lit Tenant notice for a reader who had just asked for the Owner's
+   checklist. Everywhere else the pin agrees with the reading line by
+   construction, because the jump places the card's top above it.
+   The pin is dropped by the reader's NEXT scroll, not by a timer. Timing it was
+   the first attempt and it was wrong for a reason worth keeping: a smooth
+   scroll the length of the form outlasts any fixed window, so the pin's
+   reference position got recorded mid-flight and the very next animation frame
+   read as "the reader has scrolled". The jump therefore watches the scroll
+   until it STOPS moving, and only then takes its reading.
+   IntersectionObserver is the TRIGGER, not the answer. It fires on scroll and
+   also on the layout changes that move a card WITHOUT one — a section
+   collapsing, renderBody redrawing — which a scroll handler alone cannot see.
+   The answer is recomputed from geometry every time it fires, so a coalesced or
+   dropped notification cannot strand the bar on the wrong row. The
+   rAF-throttled scroll listener beside it covers the last pixels into the page
+   foot, where no boundary is crossed and so the observer never fires.
+   Rows are matched to cards by SECTION NUMBER, never by index: _secPos
+   renumbers the visible sections (Principals is section 12 and displays as
+   "3."), so an index match would light the wrong row for most of the rail. */
+const RAIL_LINE=88;       // px below the top of the viewport: clear of the 32px bar
+const RAIL_SETTLE_MS=50;  // how often a jump asks whether the scroll has stopped
+const RAIL_SETTLE_MAX=40; // …and how long it will wait before giving up (2s)
+let _railActive=null,_railObs=null,_railRaf=0,_railJump=false,_railSettleId=0,_railPinSec=null,_railPinY=0;
+function railCards(){return [].slice.call(document.querySelectorAll('#sections .card[data-sec]'));}
+/* The scroll at which each card's top would arrive at the reading line, and
+   the last scroll the document allows. A card whose figure exceeds that is in
+   the tail: the page runs out before it can get there. */
+function railTail(){
+  const cards=railCards(),y=window.scrollY,de=document.documentElement;
+  const maxY=Math.max(0,(de?de.scrollHeight:0)-(window.innerHeight||0));
+  const at=cards.map(c=>c.getBoundingClientRect().top+y-RAIL_LINE);
+  let k=0;for(let i=0;i<cards.length;i++)if(at[i]<=maxY)k=i;
+  return {cards,maxY,start:Math.max(0,at[k]),k};}
+function railPick(){
+  const T=railTail(),cards=T.cards;if(!cards.length)return null;
+  const y=window.scrollY;
+  if(y>T.start&&T.maxY>T.start){
+    const n=cards.length-T.k;
+    const j=Math.min(n-1,Math.max(0,Math.floor((y-T.start)/(T.maxY-T.start)*n)));
+    return +cards[T.k+j].getAttribute('data-sec');}
+  let above=null,below=null;
+  for(let i=0;i<cards.length;i++){const r=cards[i].getBoundingClientRect();
+    if(r.top<=RAIL_LINE&&r.bottom>RAIL_LINE)return +cards[i].getAttribute('data-sec');
+    if(r.bottom<=RAIL_LINE)above=cards[i];else if(!below&&r.top>RAIL_LINE)below=cards[i];}
+  const c=below||above;return c?+c.getAttribute('data-sec'):null;}
+function railSet(n){
+  const rows=[].slice.call(document.querySelectorAll('#rail .railitem'));let row=null;
+  rows.forEach(r=>{const on=(+r.getAttribute('data-rsec'))===n;r.classList.toggle('on',on);
+    if(on){row=r;r.setAttribute('aria-current','true');}else r.removeAttribute('aria-current');});
+  const bar=el('railbar');if(!bar)return;
+  if(!row){bar.style.opacity='0';return;}
+  bar.style.opacity='1';bar.style.height=row.offsetHeight+'px';bar.style.transform='translateY('+row.offsetTop+'px)';
+  /* Keep the lit row inside a rail that has had to scroll itself — through
+     .rail's OWN scrollTop, never the window's, so following the page can never
+     move the page. */
+  const rl=row.closest?row.closest('.rail'):null;const rc=el('rail');
+  if(rl&&rc&&rl.scrollHeight>rl.clientHeight+1){const t=rc.offsetTop+row.offsetTop,b=t+row.offsetHeight;
+    if(t<rl.scrollTop)rl.scrollTop=t;else if(b>rl.scrollTop+rl.clientHeight)rl.scrollTop=b-rl.clientHeight;}}
+function railApply(){
+  if(_railJump&&_railActive!=null){railSet(_railActive);return;}
+  if(_railPinSec!=null){
+    if(Math.abs(window.scrollY-_railPinY)<=2){_railActive=_railPinSec;railSet(_railActive);return;}
+    _railPinSec=null;}
+  _railActive=railPick();railSet(_railActive);}
+/* rAF called through window, never as a bare reference: an unbound
+   requestAnimationFrame is an Illegal invocation in Chrome, and the throw would
+   be swallowed inside an IntersectionObserver callback — the bar would simply
+   stop following the page, with nothing in the console to say why. */
+function railSync(){if(_railRaf)return;
+  _railRaf=window.requestAnimationFrame?window.requestAnimationFrame(()=>{_railRaf=0;railApply();}):setTimeout(()=>{_railRaf=0;railApply();},16);}
+function railObserve(){
+  if(_railObs){_railObs.disconnect();_railObs=null;}
+  if(typeof IntersectionObserver!=='function')return;
+  /* The band is the WHOLE strip the line can occupy, not the line's resting
+     place: over the last screenful the line descends through it, and a 1px band
+     pinned at the top would stop firing exactly where the ramp does its work.
+     The observer is only a trigger, so a generous band costs a few extra
+     callbacks and buys never missing one. */
+  _railObs=new IntersectionObserver(()=>railSync(),{rootMargin:(-RAIL_LINE)+'px 0px 0px 0px',threshold:0});
+  railCards().forEach(c=>_railObs.observe(c));}
+function railReduced(){try{return !!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion:reduce)').matches);}catch(e){return false;}}
+/* The jump. scroll-margin-top on #sections .card is what places the heading
+   clear of #ccbar; it is CSS rather than a computed offset because at scrollY 0
+   the bar is translated out of sight and measures as covering nothing — yet
+   the jump is exactly what brings it in. A reserved margin is right whether the
+   bar has arrived yet or not.
+   _railJump is why the bar does not narrate the journey: a smooth jump from the
+   top to the last section would otherwise run it through every row in between.
+   Reduced motion takes the jump instantly too — scrollIntoView('smooth') does
+   NOT consult the media query on its own. */
+function railGoto(n){
+  const c=document.querySelector('#sections .card[data-sec="'+n+'"]');if(!c)return false;
+  c.classList.remove('collapsed');
+  _railActive=n;_railPinSec=n;_railJump=true;railSet(n);
+  try{c.scrollIntoView({behavior:railReduced()?'auto':'smooth',block:'start'});}catch(e){c.scrollIntoView(true);}
+  railSettle();
+  return true;}
+/* Wait for the scroll to stop, then take the pin's reference reading. The token
+   is so a second click cannot be overruled by the first click's watcher still
+   ticking. */
+function railSettle(){
+  const id=++_railSettleId;let last=NaN,still=0,n=0;
+  const tick=()=>{if(id!==_railSettleId)return;
+    const y=window.scrollY;if(y===last)still++;else{still=0;last=y;}
+    if(still>=2||++n>RAIL_SETTLE_MAX){_railJump=false;_railPinY=window.scrollY;railApply();return;}
+    setTimeout(tick,RAIL_SETTLE_MS);};
+  setTimeout(tick,RAIL_SETTLE_MS);}
+/* Delegated, because renderRail replaces every row on every repaint. A real
+   <button> means this one listener answers the mouse, Enter and Space alike. */
+document.addEventListener('click',e=>{const b=(e.target&&e.target.closest)?e.target.closest('#rail .railitem'):null;
+  if(b)railGoto(+b.getAttribute('data-rsec'));});
+window.addEventListener('scroll',railSync,{passive:true});
+window.addEventListener('resize',()=>{railObserve();railSync();});
+
 function renderBar(){const a=analysis();const conf=UNITS.filter(uaConflict).length,unres=UNITS.filter(uaUnresolved).length;const uaOk=conf===0||unres===0;
- const bc=(st,l)=>{const ic=st==='warn'?'⚠':(st==='info'?'ⓘ':'✓');const c=st==='warn'?'#b45309':(st==='info'?'#2563eb':'#166534');return `<span class="bchip"><b style="color:${c}">${ic}</b> ${l}</span>`;};
+ const bc=(st,l)=>{const ic=st==='warn'?'⚠':(st==='info'?'ⓘ':'✓');const c=st==='warn'?'#b45309':(st==='info'?'#2563eb':'#166534');return `<span class="bchip ${st}" title="${l}"><b style="color:${c}">${ic}</b> <span class="bcl">${l}</span></span>`;};
  const chks=`${bc(hasReal('property.name')?'ok':'warn','Name')}${bc(hasReal('property.s8')?'ok':'warn','Section 8 #')}${bc(hasReal('sig.name')?'ok':'warn','Signatory')}${bc(uaOk?'ok':'warn','UA')}`;
  if(!hasProg('rcs')){
    const C=ocafCalc();let dMo=0;UNITS.forEach(i=>{const n=numf(get('units.'+i+'.num_units')),cur=numf(get('units.'+i+'.current'));if(n&&cur&&C.R>0)dMo+=n*(Math.round(cur*C.R)-cur);});
@@ -3034,7 +3184,10 @@ function syncReviewed(){const held=k=>{const c=form[k];return !!(c&&c.db_value==
 function renderBody(){syncReviewed();const _sy=window.scrollY;const _anchorSel=(_refocusSel&&!_mouseFocus)?_refocusSel:(((Date.now()-_lastClickAt)<2000)?_lastClickSel:null);let _anchorTop=null;if(_anchorSel){try{const _ac=document.querySelector(_anchorSel);if(_ac)_anchorTop=_ac.getBoundingClientRect().top;}catch(e){}}computeSecPos();const _SR={1:renderSources,2:()=>renderFieldSection(FIELD_SECTIONS[0]),3:()=>renderFieldSection(FIELD_SECTIONS[1]),4:()=>renderFieldSection(FIELD_SECTIONS[2]),5:()=>renderFieldSection(FIELD_SECTIONS[3]),6:renderRents,7:renderPartB,8:renderChecklist,9:()=>renderFieldSection(FIELD_SECTIONS[4]),10:renderOcaf,11:renderUaf,12:renderPrincipals};el('sections').innerHTML=visibleSections().map(n=>_SR[n]()).join('');
   renderFormHeader();wireBody();renderCommand();renderBar();renderRail();renderAttention();refreshFooter();
   if(_refocusSel&&!_mouseFocus){try{const _f=document.querySelector(_refocusSel);if(_f&&_f.focus){_f.focus({preventScroll:true});if(/^(INPUT|TEXTAREA)$/.test(_f.tagName)&&typeof _f.setSelectionRange==='function'){const _L=(_f.value||'').length;try{_f.setSelectionRange(_L,_L);}catch(_e){}}}}catch(e){}}_refocusSel=null;
-  if(_anchorSel&&_anchorTop!=null){try{const _a2=document.querySelector(_anchorSel);if(_a2){const _nt=_a2.getBoundingClientRect().top;window.scrollTo(0,window.scrollY+(_nt-_anchorTop));}else window.scrollTo(0,_sy);}catch(e){try{window.scrollTo(0,_sy);}catch(_z){}}}else{try{window.scrollTo(0,_sy);}catch(e){}}}
+  if(_anchorSel&&_anchorTop!=null){try{const _a2=document.querySelector(_anchorSel);if(_a2){const _nt=_a2.getBoundingClientRect().top;window.scrollTo(0,window.scrollY+(_nt-_anchorTop));}else window.scrollTo(0,_sy);}catch(e){try{window.scrollTo(0,_sy);}catch(_z){}}}else{try{window.scrollTo(0,_sy);}catch(e){}}
+  /* after the scroll restore, not before: the observer's band and the bar's
+     answer are both geometry, and renderBody's last act moves the page. */
+  railObserve();railApply();}
 async function commitPending(){if(!_pending||!_pending.length)return;const keys=_pending;_pending=null;if(handleZeroUnitCommit(keys))return;for(const _pk of ['poc.phone','appr.phone'])if(keys.indexOf(_pk)>=0){const _d=(get(_pk)||'').replace(/\D/g,'');if(_d.length!==0&&_d.length!==10){setStatus('Enter a complete 10-digit phone before saving.');return;}}keys.forEach(k=>{const m=k.match(/^partb\.writein\.(e1|e2|e3|e4|e5|s1|s2|s3|s4|s5|s6)(\.on)?$/);if(m)clearUncheckedWriteins([m[1]]);});const _sk=[];keys.forEach(k=>{const gb=groupOf(k);(gb?ADDR_GROUPS[gb]:coupledKeys(k)).forEach(kk=>{if(_sk.indexOf(kk)<0)_sk.push(kk);});});try{form=await store.saveFields(form,_sk);}catch(e){saveFailed(e);return;}await refreshSnap();snapForm(_sk);_pendingSnap=null;clearUndoChain();_refocusSel=refocusSelForKey(keys[0]);renderBody();setStatus('Saved this field to the database.');}
 /* A cell's save/revert pair sits in one of three places: inside the cell for a
    roomy one (.ovic), beside it for a plain text field (.ovnote), or below the row
@@ -3618,6 +3771,10 @@ document.addEventListener('click',e=>{document.querySelectorAll('.uadrop.open').
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){const _p=document.querySelectorAll('.gpw.open,.chkmore.open,.gpmore.open');
     if(_p.length){_p.forEach(x=>{x.classList.remove('open');if(x.blur)x.blur();});e.stopPropagation();return;}}const vis=v=>{const x=el('view'+v);return x&&x.style&&x.style.display!=='none';};if(e.key==='Tab'){_pending=null;_pendingSnap=null;_rsArm=false;return;}if(e.key==='Enter'){const ae=document.activeElement;const inText=!!ae&&/^(INPUT|TEXTAREA)$/.test(ae.tagName)&&ae.type!=='checkbox';
+    /* A rail row is a button, and Enter on it is its own activation. Without
+       this the commitPending branch below would preventDefault the keypress and
+       swallow the jump — saving a cell the reader is not even looking at. */
+    if(ae&&ae.classList&&ae.classList.contains('railitem'))return;
     if(_dlgEnter&&el('scrim')&&el('scrim').classList.contains('open')){e.preventDefault();_dlgEnter();return;}
     if(_rsArm&&!inText){const ra=el('rsApply');if(ra){e.preventDefault();_rsArm=false;ra.click();return;}}
     if(!inText&&_pending&&_pending.length){e.preventDefault();commitPending();}return;}if(e.key!=='Escape')return;if(el('scrim')&&el('scrim').classList&&el('scrim').classList.contains('open')){closeModal();_pending=null;_pendingSnap=null;return;}const openD=document.querySelector('.uadrop.open');if(openD){e.preventDefault();openD.classList.remove('open');return;}if(vis('Form')){if(_pending&&_pending.length){e.preventDefault();revertPending();return;}if(_undoChain.length&&undoStep()){e.preventDefault();return;}const ae=document.activeElement;const cell=(ae&&ae.closest)?ae.closest('[data-box],.cb,.wi'):null;if(cell){let _sel=null;if(ae.getAttribute){if(ae.getAttribute('data-k'))_sel='[data-k="'+ae.getAttribute('data-k')+'"]';else if(ae.getAttribute('data-cb'))_sel='[data-cb="'+ae.getAttribute('data-cb')+'"]';else if(ae.classList&&ae.classList.contains('uatrigger'))_sel=ae.getAttribute('data-trigfor')?('[data-trigfor="'+ae.getAttribute('data-trigfor')+'"]'):('[data-box="'+(cell.getAttribute('data-box')||'')+'"] .uatrigger');}_refocusSel=_sel;if(revertCellIfOver(cell,(ae.getAttribute&&ae.getAttribute('data-trigfor'))||null)){e.preventDefault();return;}_refocusSel=null;}requestExit();return;}if(vis('Launcher')||vis('Contacts')){openMenu();}});
@@ -5391,6 +5548,18 @@ __rcsFill:()=>rcsFillFromParsed(),/* The same door for the rent schedule. Fillin
   __menuView:()=>menuView,
   __setMenuView:(v)=>{menuView=v;renderMenu();},
   __menuCounts:()=>Object.assign({},_menuCounts),
-  __hapProps:()=>hapProperties()};
+  __hapProps:()=>hapProperties(),
+  /* The rail's doors. railBar reads the LIVE box, so it is mid-flight during the
+     travel animation — read it after the transition, not during. */
+  railRows:()=>[].slice.call(document.querySelectorAll('#rail .railitem')).map(r=>({sec:+r.getAttribute('data-rsec'),label:(r.textContent||'').trim(),active:r.classList.contains('on'),tabIndex:r.tabIndex,ariaCurrent:r.getAttribute('aria-current'),top:r.offsetTop,height:r.offsetHeight})),
+  activeSection:()=>_railActive,
+  railPin:()=>_railPinSec,
+  railBar:()=>{const b=el('railbar'),r=el('rail');if(!b||!r)return null;const bb=b.getBoundingClientRect(),rr=r.getBoundingClientRect();return {top:bb.top-rr.top,height:bb.height,opacity:+getComputedStyle(b).opacity};},
+  railGoto:(n)=>railGoto(n),
+  railLine:()=>RAIL_LINE,
+  /* What the tail is, so a check can compute the expected answer near the foot
+     of the page instead of hardcoding this file's arithmetic. */
+  railTail:()=>{const T=railTail();return {line:RAIL_LINE,maxY:T.maxY,tailStart:T.start,
+    tailSecs:T.cards.slice(T.k).map(c=>+c.getAttribute('data-sec'))};}};
 if(typeof module!=='undefined')module.exports=__API;
 if(SELFTEST)window.__t=__API;   // browser gets the identical surface, flag-gated

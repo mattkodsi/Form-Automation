@@ -7,7 +7,20 @@
 body.scrolled #ccbar{transform:translateY(0);opacity:1}
 #ccbar .bl{display:flex;align-items:center;gap:12px;flex:0 0 auto} #ccbar .minigauge{position:relative;width:150px;height:9px;background:#e9ecf1;border-radius:3px} #ccbar .seg{position:absolute;top:0;height:100%} #ccbar .seg.dark{background:#2f7d57;border-radius:3px 0 0 3px} #ccbar .seg.light{background:#8fd2ab} #ccbar .oend{position:absolute;right:-1px;top:-2px;width:2px;height:13px;background:#f59e0b}
 #ccbar .mn{font-size:11.5px;color:#8791a5} #ccbar .mn b{font-size:12.5px}
-#ccbar .bchks{display:flex;gap:16px;flex:1;justify-content:center;flex-wrap:wrap} #ccbar .bchip{font-size:11.5px;color:#5b6577} #ccbar .bpass{font-weight:700;font-size:12.5px;flex:0 0 auto}
+/* The bar is ONE LINE at every width, and that is structural, not cosmetic: the
+   rail's jump offset is a scroll-margin sized to this bar, and a margin cannot
+   be correct against a bar of unpredictable height. Wrapping took it from 32px
+   at 1440 to 64 at 1050 and 154 at 860 — five chips on five lines, a sixth of
+   the window, sitting over the heading of whatever section you had just jumped
+   to. nowrap on the chips is what makes the height constant; .bchks is also the
+   one flexible track (flex:1 1 0, min-width:0), so the squeeze lands on the
+   chips rather than pushing the verdict off the right edge.
+   Under 1180px the chips COLLAPSE to their icon rather than being dropped: the
+   label goes, the icon and the chip's title attribute stay, so no check
+   silently vanishes — five icons fit where five labels never could. */
+#ccbar{overflow:hidden}
+#ccbar .bchks{display:flex;gap:16px;flex:1 1 0;min-width:0;overflow:hidden;justify-content:center;flex-wrap:nowrap} #ccbar .bchip{font-size:11.5px;color:#5b6577;white-space:nowrap;flex:0 0 auto} #ccbar .bpass{font-weight:700;font-size:12.5px;flex:0 0 auto;white-space:nowrap} #ccbar .bl{min-width:0} #ccbar .mn{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:1180px){#ccbar .bchks{gap:11px} #ccbar .bcl{display:none}}
 .toolbar{display:flex;gap:9px;align-items:center;padding:12px 26px 0;flex-wrap:wrap}
 .btn{font:inherit;font-size:12.5px;padding:7px 13px;border-radius:7px;border:1px solid #c7cede;background:#fff;cursor:pointer;font-weight:600;color:#33405c}
 .btn:hover{background:#f4f7fb} .btn.p{background:#1e3a5f;color:#fff;border-color:#1e3a5f} .btn.sm{padding:5px 10px;font-size:11.5px} .btn.teal{background:#0f766e;color:#fff;border-color:#0f766e} .btn:disabled{opacity:.5;cursor:default} .btn.excel{background:#217346;color:#fff;border-color:#1a5c38} .btn.excel:hover{background:#1a5c38} .btn.ghost{background:#e9edf4;color:#9aa4b8;border-color:#e9edf4;cursor:default}
@@ -76,13 +89,39 @@ body.scrolled #ccbar{transform:translateY(0);opacity:1}
 .layout{display:grid;grid-template-columns:212px minmax(0,1fr);gap:20px;align-items:start}
 .rail{position:sticky;top:14px;align-self:start;max-height:calc(100vh - 28px);overflow:auto;transition:top .2s} body.scrolled .rail{top:56px}
 .rail .kick{font-size:10px;font-weight:800;letter-spacing:.6px;color:#8791a5;margin:4px 0 8px}
-.railitem{display:flex;gap:8px;align-items:center;padding:5px 6px;font-size:12px;color:#5b6577}
+/* ONE bar that travels, not ten highlights switching on and off — that is the
+   whole of what makes it read as a single thing sliding down the page. It is
+   absolutely positioned inside #rail and moves by transform, so nothing in the
+   rail reflows as it goes. .nofx is worn for exactly one frame after the rail is
+   rebuilt (refreshFlags redraws it on every keystroke): without it the bar would
+   re-animate from the top on every repaint, which is a lot of movement for a
+   form that has not moved. Reduced motion keeps the bar — position IS the
+   indicator, and losing it would leave the state colour-only — and drops only
+   the travel. */
+#rail{position:relative}
+.railbar{position:absolute;left:0;top:0;width:3px;height:0;border-radius:2px;background:#1e3a5f;opacity:0;pointer-events:none;transition:transform .26s cubic-bezier(.4,0,.2,1),height .26s cubic-bezier(.4,0,.2,1),opacity .18s ease}
+.railbar.nofx{transition:none}
+@media (prefers-reduced-motion:reduce){.railbar{transition:opacity .18s ease}}
+/* A row is a real <button>: native role, native Enter AND Space, native focus.
+   The reset is what a button costs; the focus ring is the navy the rest of the
+   app focuses with (.pc-body, .searchbox, .uatrigger). */
+.railitem{display:flex;gap:8px;align-items:center;padding:5px 6px 5px 12px;font-size:12px;color:#5b6577;width:100%;background:none;border:0;font-family:inherit;text-align:left;cursor:pointer;border-radius:7px;transition:background-color .15s,color .15s}
+.railitem:hover{background:#f1f4f9;color:#33405c}
+.railitem:focus-visible{outline:2px solid #1e3a5f;outline-offset:-2px}
+.railitem.on{background:#eef2f8;color:#1e3a5f}
 .ri{width:17px;height:17px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex:0 0 auto} .ri.ok{background:#dcfce7;color:#166534} .ri.warn{background:#fdecd2;color:#b45309}
 .railattn{background:#fdf6e7;border:1px solid #ecd9a6;border-radius:8px;padding:8px 10px;margin:11px 0;font-size:11.5px;color:#8a5a12} .railattn .sub{color:#a9803a;font-size:10.5px;margin-top:2px}
 .railprog{margin:10px 0;font-size:11.5px;color:#6b7280} .warnt{color:#b45309;font-size:11px}
 .track{height:11px;background:#e5e7eb;border-radius:6px;overflow:hidden} .track.sm{height:6px;margin-top:5px} .track>div{height:100%;border-radius:6px}
 .key{display:grid;gap:6px;font-size:11.5px;color:#4b5563} .key span{display:flex;gap:7px;align-items:center} .sw{width:16px;height:14px;border-radius:3px;border:1px solid #e6ebf3;border-left:4px solid #cbd2de;flex:0 0 auto}
 .card{background:#fff;border:1px solid #e6ebf3;border-radius:11px;margin-bottom:13px}
+/* The rail's jump is a plain scrollIntoView; this margin is what keeps the
+   heading it lands on clear of #ccbar. It has to be CSS rather than a computed
+   scrollTo because of the trap at the top of the page: at scrollY 0 the bar is
+   translated out of sight and measures as covering nothing, yet the jump itself
+   is what brings it in. A reserved margin is right whether the bar is there yet
+   or not. 48 = the bar's constant 32 plus 16 of air. */
+#sections .card{scroll-margin-top:48px}
 .chead{display:flex;align-items:center;gap:11px;padding:12px 17px;border-bottom:1px solid #eef1f6;cursor:pointer;user-select:none}
 .card.collapsed .chead{border-bottom:none} .card.collapsed .cbody{display:none}
 .cnum{width:24px;height:24px;border-radius:50%;background:#1e3a5f;color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;font-weight:600}
