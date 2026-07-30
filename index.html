@@ -2284,6 +2284,35 @@ async function makeDb(adapter, opts) {
     return cs[0].id;
   }
   const cyISO = v => { v = String(v || '').trim(); if (/^\d{4}-\d{2}-\d{2}/.test(v)) return v.slice(0, 10); const m = v.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/); return m ? (m[3] + '-' + ('0' + m[1]).slice(-2) + '-' + ('0' + m[2]).slice(-2)) : ''; };
+  /* ---- one package per programme per effective date ----
+     API PARITY with db.supabase.js — same rule, same error code, same fields. The
+     rule is NOT "one package per year": Luther Towers (90111) carries two startable
+     rows in one calendar year (OCAF 2026-09-01 and OCAF 2026-12-06), and the utility
+     allowance may be done alongside the rent action or on its own, so one date may
+     legitimately hold {rcs, uaf} as one package or {rcs} and {uaf} as two. Keying on
+     the PROGRAMME within the date allows both and rejects a programme twice.
+
+     Undated packages are not guarded: there is no key to be unique against. The
+     error carries the cid already holding the programme so the caller can open that
+     one instead of reporting a failure. */
+  const PROGS_OF = c => String((c && c.programs) || '')
+    .split(',').map(x => x.trim().toLowerCase()).filter(Boolean);
+  const assertProgramsFree = (pid, effIn, progs, skipCid) => {
+    const eff = cyISO(effIn); if (!eff) return;
+    const want = (progs || []).map(x => String(x).trim().toLowerCase()).filter(Boolean);
+    if (!want.length) return;
+    for (const cid in D.cycles) {
+      if (cid === skipCid) continue;
+      const c = D.cycles[cid];
+      if (!c || c.property_id !== pid || cyISO(c.effective_date) !== eff) continue;
+      const clash = want.filter(x => PROGS_OF(c).indexOf(x) >= 0);
+      if (!clash.length) continue;
+      const e = new Error('A ' + clash.join(' + ').toUpperCase()
+        + ' package effective ' + eff + ' already exists for this property.');
+      e.code = 'DUP_PACKAGE_PROGRAM'; e.cid = cid; e.programs = clash; e.effective = eff;
+      throw e;
+    }
+  };
   function cySyncEff(c) {
     // the form's date-rents-effective drives the cycle's date + year label
     const src = (c.cells['rent_schedule.date_eff_source'] || {}).value;
@@ -2416,6 +2445,7 @@ async function makeDb(adapter, opts) {
     createCycle(pid, opts) {
       const p = D.props[pid]; if (!p) throw new Error('no property ' + pid);
       const o = opts || {}; const cid = nid('cy'); const cells = {};
+      assertProgramsFree(pid, o.effective_date, o.programs || ['rcs']);
       if (o.full) { const m = bucketsOf(pid); for (const k in m) { if (k === 'assets.letterhead_data') continue; cells[k] = { value: m[k].value, saved_at: m[k].saved_at || today() }; } }
       else {
         const domId = dominantCycleId(pid);
@@ -2750,6 +2780,49 @@ function makeSupabaseDb(client) {
     const e = new Error('A property named \u201c' + String(name).trim() + '\u201d already exists.');
     e.code = 'DUP_PROPERTY_NAME'; e.pid = clash.id; e.dupName = String(name).trim(); throw e;
   };
+  /* ---- one package per programme per effective date ----
+     Matt, on the hierarchy: a year's line holds that year's package, and you pick
+     the latest rather than choosing from a list. That needs a uniqueness rule, and
+     the rule is NOT "one package per year".
+
+     Two reasons it is not. Luther Towers (90111) genuinely carries two startable
+     rows in one calendar year — OCAF effective 2026-09-01 and OCAF 2026-12-06 — so
+     a year key would let it hold only one of its two real packages, which is the
+     bug hap.js already goes out of its way to avoid. And the utility allowance can
+     be done either alongside the rent action or on its own, so one effective date
+     may legitimately carry {rcs, uaf} as a single package OR {rcs} and {uaf} as
+     two.
+
+     Both fall out of keying on the PROGRAMME within the date: for one property and
+     one effective date, each programme appears in at most one package. {rcs+uaf}
+     passes. {rcs} then {uaf} passes. {rcs} then {rcs} does not, and neither does
+     {rcs} then {rcs+uaf}.
+
+     A package with no effective date cannot be keyed, so it is not guarded — there
+     is nothing to be unique against. Existing data is not rewritten: this stops new
+     collisions, it does not clean up old ones.
+
+     The error carries the cid of the package already holding the programme, so the
+     caller can open THAT rather than report a failure — the same courtesy
+     assertNameFree extends for a duplicate property name. */
+  const PROGS_OF = c => String((c && c.programs) || '')
+    .split(',').map(x => x.trim().toLowerCase()).filter(Boolean);
+  const assertProgramsFree = (pid, effIn, progs, skipCid) => {
+    const eff = cyISO(effIn); if (!eff) return;
+    const want = (progs || []).map(x => String(x).trim().toLowerCase()).filter(Boolean);
+    if (!want.length) return;
+    for (const cid in D.cycles) {
+      if (cid === skipCid) continue;
+      const c = D.cycles[cid];
+      if (!c || c.property_id !== pid || cyISO(c.effective_date) !== eff) continue;
+      const clash = want.filter(x => PROGS_OF(c).indexOf(x) >= 0);
+      if (!clash.length) continue;
+      const e = new Error('A ' + clash.join(' + ').toUpperCase()
+        + ' package effective ' + eff + ' already exists for this property.');
+      e.code = 'DUP_PACKAGE_PROGRAM'; e.cid = cid; e.programs = clash; e.effective = eff;
+      throw e;
+    }
+  };
   /* The ring is the DOMINANT PACKAGE's score — see score.js. It used to be ten
      durable keys, counted, which is why a property could read 100% with the
      draft rent schedule and the tenant notice unbuildable: those ten were never
@@ -3050,6 +3123,7 @@ function makeSupabaseDb(client) {
       createCycle(pid, opts) {
         const p = D.props[pid]; if (!p) throw new Error('no property ' + pid);
         const o = opts || {}; const cid = cyUuid(); const cells = {};
+        assertProgramsFree(pid, o.effective_date, o.programs || ['rcs']);
         if (o.full) { const m = merged(pid); for (const k in m) { if (k === 'assets.letterhead_data') continue; cells[k] = { value: m[k].value, saved_at: m[k].saved_at || today() }; } }
         else {
           const domId = dominantCycleId(pid);
@@ -6218,11 +6292,19 @@ function _pullTick(){
   _pullRaf=null;
   const d=_pullTo-_pull;
   if(Math.abs(d)<0.5){_pull=_pullTo;_pullPaint();return;}
-  /* Faster on the way back than on the way out. Climbing is feedback and wants to
-     feel weighty; retreating is just tidying up after a gesture that is over, and
-     at the climbing rate it lingered about three quarters of a second after the
-     hand had stopped. */
-  _pull+=d*(d<0?0.42:0.2);
+  /* Faster back than out, and the OUT rate matters as much as the back one. At 0.2
+     the rule trailed the accumulated target by a couple of hundred milliseconds, so
+     letting go left it still travelling RIGHT while it caught up, and only then
+     reversing — Matt: "the bar still slides right some after ive already let go
+     before even starting to go back left." Tracking the hand closely leaves nothing
+     to unwind, which is a better fix than making the reversal faster.
+
+     Having the tick DECIDE the hand had stopped was tried and reverted. The only
+     signal available is silence, and silence shorter than the gap between two
+     notches of a real mouse wheel cannot be told apart from the next notch
+     arriving: at 70ms it chopped a two-notch gesture in half and sawtoothed the
+     rule. Shrinking the lag has no such tradeoff. */
+  _pull+=d*(d<0?0.55:0.5);
   _pullPaint();
   _pullGlide();
 }
@@ -6261,7 +6343,7 @@ function _menuPull(dy){
   if(_pullTimer&&typeof clearTimeout==='function')clearTimeout(_pullTimer);
   /* Short. This is "the hand has stopped", not "the gesture might resume": long
      enough to bridge the gap between two notches of the same swipe, no longer. */
-  if(typeof setTimeout==='function')_pullTimer=setTimeout(_pullRelease,170);
+  if(typeof setTimeout==='function')_pullTimer=setTimeout(_pullRelease,120);
   if(_pullTo>=PULL_MAX){
     _pull=0;_pullTo=0;_pullPaint();
     _togglePast();
@@ -7191,9 +7273,14 @@ function bootstrapFirstCycle(p){
   const eff=(m['rent_schedule.date_rents_effective']&&m['rent_schedule.date_rents_effective'].value)||'';
   const yr=(String(eff).match(/(\d{4})/)||[])[1]||String(new Date().getFullYear());
   const pid=activePid;
-  mpdb.createCycle(pid,{full:true,programs:['rcs'],label:yr,effective_date:eff})
+  /* This runs ONCE per property to turn an existing record into package #1. If a
+     package already holds rcs at that date the migration has nothing to do, and
+     saying "save failed" about a no-op would be alarming and wrong. */
+  Promise.resolve(mpdb.createCycle(pid,{full:true,programs:['rcs'],label:yr,effective_date:eff}))
     .then(()=>{if(activePid===pid)renderLauncher();})
-    .catch(e=>saveFailedModal(e));
+    .catch(e=>{
+      if(e&&e.code==='DUP_PACKAGE_PROGRAM'){if(activePid===pid)renderLauncher();return;}
+      saveFailedModal(e);});
 }
 /* `pre` is the tracker's answer, handed in by the card's Start button:
    {program, effective, type, deadline}. It PRE-FILLS this dialog rather than
@@ -7251,7 +7338,20 @@ function newCycleDialog(pre){
     const eff=fmtDateInput((el('cyEff').value||'').trim())||effPh;   // left blank, the package takes the date shown in gray: a year on from the last one
     const label=(eff.match(/(\d{4})/)||[])[1]||String(new Date().getFullYear());
     closeModal();
-    try{const r=await mpdb.createCycle(activePid,{programs,label,effective_date:eff});renderLauncher();await openCycleForm(r.cid);_cyFresh=r.cid;}catch(e){saveFailedModal(e);}
+    try{const r=await mpdb.createCycle(activePid,{programs,label,effective_date:eff});renderLauncher();await openCycleForm(r.cid);_cyFresh=r.cid;}
+    catch(e){
+      /* A clash is not a failure. The rule is one package per programme per
+         effective date, and the data layer hands back the cid of the one already
+         holding it — so the answer to "start an OCAF effective Oct 1" when that
+         package exists is to OPEN it, the same courtesy a duplicate property name
+         already gets. Reporting "save failed" would be a lie about what happened. */
+      if(e&&e.code==='DUP_PACKAGE_PROGRAM'&&e.cid){
+        closeModal();renderLauncher();await openCycleForm(e.cid);
+        setStatus('That package already exists \u2014 opened it.');
+        return;
+      }
+      saveFailedModal(e);
+    }
   };
 }
 async function openCycleForm(cid){

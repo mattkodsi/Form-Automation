@@ -403,6 +403,35 @@ async function makeDb(adapter, opts) {
     return cs[0].id;
   }
   const cyISO = v => { v = String(v || '').trim(); if (/^\d{4}-\d{2}-\d{2}/.test(v)) return v.slice(0, 10); const m = v.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/); return m ? (m[3] + '-' + ('0' + m[1]).slice(-2) + '-' + ('0' + m[2]).slice(-2)) : ''; };
+  /* ---- one package per programme per effective date ----
+     API PARITY with db.supabase.js — same rule, same error code, same fields. The
+     rule is NOT "one package per year": Luther Towers (90111) carries two startable
+     rows in one calendar year (OCAF 2026-09-01 and OCAF 2026-12-06), and the utility
+     allowance may be done alongside the rent action or on its own, so one date may
+     legitimately hold {rcs, uaf} as one package or {rcs} and {uaf} as two. Keying on
+     the PROGRAMME within the date allows both and rejects a programme twice.
+
+     Undated packages are not guarded: there is no key to be unique against. The
+     error carries the cid already holding the programme so the caller can open that
+     one instead of reporting a failure. */
+  const PROGS_OF = c => String((c && c.programs) || '')
+    .split(',').map(x => x.trim().toLowerCase()).filter(Boolean);
+  const assertProgramsFree = (pid, effIn, progs, skipCid) => {
+    const eff = cyISO(effIn); if (!eff) return;
+    const want = (progs || []).map(x => String(x).trim().toLowerCase()).filter(Boolean);
+    if (!want.length) return;
+    for (const cid in D.cycles) {
+      if (cid === skipCid) continue;
+      const c = D.cycles[cid];
+      if (!c || c.property_id !== pid || cyISO(c.effective_date) !== eff) continue;
+      const clash = want.filter(x => PROGS_OF(c).indexOf(x) >= 0);
+      if (!clash.length) continue;
+      const e = new Error('A ' + clash.join(' + ').toUpperCase()
+        + ' package effective ' + eff + ' already exists for this property.');
+      e.code = 'DUP_PACKAGE_PROGRAM'; e.cid = cid; e.programs = clash; e.effective = eff;
+      throw e;
+    }
+  };
   function cySyncEff(c) {
     // the form's date-rents-effective drives the cycle's date + year label
     const src = (c.cells['rent_schedule.date_eff_source'] || {}).value;
@@ -535,6 +564,7 @@ async function makeDb(adapter, opts) {
     createCycle(pid, opts) {
       const p = D.props[pid]; if (!p) throw new Error('no property ' + pid);
       const o = opts || {}; const cid = nid('cy'); const cells = {};
+      assertProgramsFree(pid, o.effective_date, o.programs || ['rcs']);
       if (o.full) { const m = bucketsOf(pid); for (const k in m) { if (k === 'assets.letterhead_data') continue; cells[k] = { value: m[k].value, saved_at: m[k].saved_at || today() }; } }
       else {
         const domId = dominantCycleId(pid);

@@ -5,7 +5,7 @@
    shows it, and MIN_CHECKS catches a run that dies partway — a short count is
    a failure, not a pass. Adding checks? Raise MIN_CHECKS. */
 const { makeDb, memoryAdapter, isPerCycleKey, migrate, computeAnalysis, computeSalutation, CROSSWALK } = require('./db.js');
-const MIN_CHECKS = 169;
+const MIN_CHECKS = 182;
 let fails = 0, n = 0, verdict = null;
 const BAR = '═'.repeat(68);
 function fail(msg, err) {
@@ -192,6 +192,54 @@ function jsonAdapter() { let s = null; return { get: async () => (s ? JSON.parse
   ok('generated is recorded', cdb.listCycles(cpid).find(c => c.id === cid2).generated.docs, ['Cover letter']);
   await cdb.deleteCycle(cid3);
   ok('deleting a cycle removes it', cdb.listCycles(cpid).length, 2);
+
+  /* ---- one package per programme per effective date ----
+     Matt's rule for the new hierarchy: a year's line holds that year's package.
+     NOT one per year, for two reasons the corpus and the process both insist on.
+     Luther Towers (90111) carries two startable rows in ONE calendar year — OCAF
+     2026-09-01 and OCAF 2026-12-06 — so a year key would let it hold one of its two
+     real packages. And the utility allowance can be done alongside the rent action
+     or on its own, so one date may legitimately carry {rcs,uaf} as a single package
+     or {rcs} and {uaf} as two. Keying on the programme WITHIN the date permits both
+     and rejects a programme twice. */
+  console.log('\n─ 8c1b · ONE PACKAGE PER PROGRAMME PER DATE ─');
+  const gdA = cdb.createProperty('Guard Alpha').pid;
+  const gdB = cdb.createProperty('Guard Beta').pid;
+  const mk = async (pid, o) => { try { await cdb.createCycle(pid, o); return 'made'; }
+    catch (e) { return (e && e.code) ? e : String((e && e.message) || e); } };
+  const gd1 = await cdb.createCycle(gdA, { programs: ['rcs'], effective_date: '2028-04-01' });
+  ok('a first RCS at a date is made', typeof gd1.cid === 'string' && !!gd1.cid, true);
+  const gd2 = await mk(gdA, { programs: ['rcs'], effective_date: '2028-04-01' });
+  ok('a second RCS at the same date is refused', gd2.code, 'DUP_PACKAGE_PROGRAM');
+  ok('and it names the package already holding it', gd2.cid, gd1.cid);
+  ok('and says which programme clashed', gd2.programs, ['rcs']);
+  /* Matt: "you can do RCS/OCAF + UA separately in a given year". */
+  ok('a UA package alongside it IS allowed',
+    await mk(gdA, { programs: ['uaf'], effective_date: '2028-04-01' }), 'made');
+  /* Which means the date now holds both, so BOTH are taken. */
+  ok('and then a second UA at that date is refused',
+    (await mk(gdA, { programs: ['uaf'], effective_date: '2028-04-01' })).code, 'DUP_PACKAGE_PROGRAM');
+  /* A combined package is the other legitimate shape of the same year. */
+  ok('the two together as one package is allowed',
+    await mk(gdB, { programs: ['rcs', 'uaf'], effective_date: '2028-04-01' }), 'made');
+  ok('after which neither half can be started again',
+    (await mk(gdB, { programs: ['rcs'], effective_date: '2028-04-01' })).code, 'DUP_PACKAGE_PROGRAM');
+  ok('but a programme the date does not hold still can',
+    await mk(gdB, { programs: ['ocaf'], effective_date: '2028-04-01' }), 'made');
+  /* The Luther Towers shape: same programme, same YEAR, different date. */
+  ok('the same programme at a different date in the same year is allowed',
+    await mk(gdA, { programs: ['rcs'], effective_date: '2028-12-06' }), 'made');
+  /* Nothing to be unique against. */
+  ok('an undated package is not guarded', await mk(gdA, { programs: ['rcs'] }), 'made');
+  /* The rule has to be the same rule in the layer the app actually runs on. */
+  {
+    const _fs = require('fs'), _p = require('path');
+    const sup = _fs.readFileSync(_p.join(__dirname, 'db.supabase.js'), 'utf8');
+    ok('db.supabase.js carries the same guard',
+      /assertProgramsFree/.test(sup) && /DUP_PACKAGE_PROGRAM/.test(sup), true);
+    ok('and calls it from createCycle',
+      /createCycle\(pid, opts\)[\s\S]{0,400}?assertProgramsFree\(/.test(sup), true);
+  }
 
   console.log('\n─ 8c2 · THE PARSED RENT SCHEDULE ─');
   /* The reading of the executed schedule used to live in a page-load variable,
