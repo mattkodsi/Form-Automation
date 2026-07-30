@@ -58,7 +58,8 @@ function apText(form,id){
 const afMakeNumber=v=>{ const s=String(v==null?'':v).replace(/[^0-9.,\-]/g,'').replace(/,/g,'.');
   const n=parseFloat(s); return isNaN(n)?0:n; };
 
-const MIN_CHECKS=123;                // the count this file is known to run to the end
+const MIN_CHECKS=125;   // 2026-07-30 merge: union of both branches, counted off a real run (was ours 123 / main 34)
+                        //;                // the count this file is known to run to the end
 let n=0,fails=0,verdict=null;
 const BAR='═'.repeat(68);
 function fail(msg,err){
@@ -206,6 +207,22 @@ function record(extra){
     let nrRow=-1;for(let r=0;r<11;r++)if(V(7+r*8)==='2 BR / 1 BA'&&V(7+r*8+1)==='2')nrRow=r;
     eq('and Part A carries the count with it',nrRow<0?'(row not found)':V(7+nrRow*8+1),'2');
     eq('and column 1 does not repeat the use',V(7+(nrRow<0?0:nrRow)*8),'2 BR / 1 BA'); }
+
+  /* And with NO Part D rows it must still STATE that zero. It wrote '', and the
+     "$" is PRINTED on the form outside the box, so every property without a
+     non-revenue unit filed a schedule reading "$" against an empty cell. Nothing
+     that reads values could see it — both sides compare as empty — so this was
+     found by rendering the page. Measured, not reasoned: Willow Woods has no
+     Part D rows and its submitted schedule renders "$        0", in the
+     DocuSigned copy and in the CA's executed one alike; Colonial Village has one
+     row and renders "$    1,147". No filed copy leaves the box empty. 174 is a
+     calculated cell — SUM of 161/164/167/170/173 — and HUD ships it holding the
+     zero, exactly as 195 and 1156 do. */
+  { eq('HUD ships field 174 holding its zero', bForm.getTextField('174').getText(), '0');
+    const by=await G.fillRentSchedule(rsBytes,record());
+    const f=(await PDFDocument.load(by)).getForm();
+    eq('and a schedule with no non-revenue units states that zero, not a blank',
+       f.getTextField('174').getText()||'', '0'); }
 
   /* .replace(/, $/,'') strips a trailing comma, so an empty TITLE was handled and
      an empty NAME was not: Part G read ", Vice President of the General Partner". */

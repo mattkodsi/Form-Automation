@@ -5,7 +5,8 @@
    shows it, and MIN_CHECKS catches a run that dies partway — a short count is
    a failure, not a pass. Adding checks? Raise MIN_CHECKS. */
 const { makeDb, memoryAdapter, isPerCycleKey, migrate, computeAnalysis, computeSalutation, CROSSWALK } = require('./db.js');
-const MIN_CHECKS = 169;
+const MIN_CHECKS = 190;   // 2026-07-30 merge: union of both branches, counted off a real run (was ours 169 / main 186)
+                        //;   // 2026-07-30: +4 current rents and executed UA carry on no programme
 let fails = 0, n = 0, verdict = null;
 const BAR = '═'.repeat(68);
 function fail(msg, err) {
@@ -155,12 +156,13 @@ function jsonAdapter() { let s = null; return { get: async () => (s ? JSON.parse
   console.log('\n─ 8b · WHAT CARRIES INTO A NEW CYCLE ─');
   const { cid: cid2 } = await cdb.createCycle(cpid, { programs: ['rcs'], effective_date: '2027-09-01' });
   const c2 = cdb.getFlatCycle(cid2);
-  /* An RCS year uploads an executed rent schedule that states the current
-     rents and the utility allowances. Inheriting last year's put them on the
-     form wearing the colour of saved truth, which is the one thing they are
-     not. OCAF and UAF years have no schedule to upload, so there they still
-     carry — cycleAnalysis already falls back to the current rent for the
-     proposed. */
+  /* What took effect is whatever the CA returned after the owner submitted, and
+     the only record of that is the executed schedule. So a rent or an allowance
+     we have not read from one must never arrive wearing the colour of saved
+     truth — on ANY programme. These two were dropped on RCS years only until
+     2026-07-30, which meant an OCAF built from an OCAF inherited a rent one full
+     cycle stale (nothing rolls proposed into current) and computed this year's
+     factor against it. */
   ok('an RCS year does NOT inherit last year\'s current rents', c2['units.0.current'], undefined);
   ok('nor its utility allowances', c2['units.0.ua_exec'], undefined);
   ok('nor what LAST year\'s study read', c2['units.0.br_rcs'], undefined);
@@ -192,6 +194,54 @@ function jsonAdapter() { let s = null; return { get: async () => (s ? JSON.parse
   ok('generated is recorded', cdb.listCycles(cpid).find(c => c.id === cid2).generated.docs, ['Cover letter']);
   await cdb.deleteCycle(cid3);
   ok('deleting a cycle removes it', cdb.listCycles(cpid).length, 2);
+
+  /* ---- one package per programme per effective date ----
+     Matt's rule for the new hierarchy: a year's line holds that year's package.
+     NOT one per year, for two reasons the corpus and the process both insist on.
+     Luther Towers (90111) carries two startable rows in ONE calendar year — OCAF
+     2026-09-01 and OCAF 2026-12-06 — so a year key would let it hold one of its two
+     real packages. And the utility allowance can be done alongside the rent action
+     or on its own, so one date may legitimately carry {rcs,uaf} as a single package
+     or {rcs} and {uaf} as two. Keying on the programme WITHIN the date permits both
+     and rejects a programme twice. */
+  console.log('\n─ 8c1b · ONE PACKAGE PER PROGRAMME PER DATE ─');
+  const gdA = cdb.createProperty('Guard Alpha').pid;
+  const gdB = cdb.createProperty('Guard Beta').pid;
+  const mk = async (pid, o) => { try { await cdb.createCycle(pid, o); return 'made'; }
+    catch (e) { return (e && e.code) ? e : String((e && e.message) || e); } };
+  const gd1 = await cdb.createCycle(gdA, { programs: ['rcs'], effective_date: '2028-04-01' });
+  ok('a first RCS at a date is made', typeof gd1.cid === 'string' && !!gd1.cid, true);
+  const gd2 = await mk(gdA, { programs: ['rcs'], effective_date: '2028-04-01' });
+  ok('a second RCS at the same date is refused', gd2.code, 'DUP_PACKAGE_PROGRAM');
+  ok('and it names the package already holding it', gd2.cid, gd1.cid);
+  ok('and says which programme clashed', gd2.programs, ['rcs']);
+  /* Matt: "you can do RCS/OCAF + UA separately in a given year". */
+  ok('a UA package alongside it IS allowed',
+    await mk(gdA, { programs: ['uaf'], effective_date: '2028-04-01' }), 'made');
+  /* Which means the date now holds both, so BOTH are taken. */
+  ok('and then a second UA at that date is refused',
+    (await mk(gdA, { programs: ['uaf'], effective_date: '2028-04-01' })).code, 'DUP_PACKAGE_PROGRAM');
+  /* A combined package is the other legitimate shape of the same year. */
+  ok('the two together as one package is allowed',
+    await mk(gdB, { programs: ['rcs', 'uaf'], effective_date: '2028-04-01' }), 'made');
+  ok('after which neither half can be started again',
+    (await mk(gdB, { programs: ['rcs'], effective_date: '2028-04-01' })).code, 'DUP_PACKAGE_PROGRAM');
+  ok('but a programme the date does not hold still can',
+    await mk(gdB, { programs: ['ocaf'], effective_date: '2028-04-01' }), 'made');
+  /* The Luther Towers shape: same programme, same YEAR, different date. */
+  ok('the same programme at a different date in the same year is allowed',
+    await mk(gdA, { programs: ['rcs'], effective_date: '2028-12-06' }), 'made');
+  /* Nothing to be unique against. */
+  ok('an undated package is not guarded', await mk(gdA, { programs: ['rcs'] }), 'made');
+  /* The rule has to be the same rule in the layer the app actually runs on. */
+  {
+    const _fs = require('fs'), _p = require('path');
+    const sup = _fs.readFileSync(_p.join(__dirname, 'db.supabase.js'), 'utf8');
+    ok('db.supabase.js carries the same guard',
+      /assertProgramsFree/.test(sup) && /DUP_PACKAGE_PROGRAM/.test(sup), true);
+    ok('and calls it from createCycle',
+      /createCycle\(pid, opts\)[\s\S]{0,400}?assertProgramsFree\(/.test(sup), true);
+  }
 
   console.log('\n─ 8c2 · THE PARSED RENT SCHEDULE ─');
   /* The reading of the executed schedule used to live in a page-load variable,
@@ -280,6 +330,37 @@ function jsonAdapter() { let s = null; return { get: async () => (s ? JSON.parse
    db.supabase.js writes against it is static, needs no credentials, and would
    have caught both. If it fails: add the column and record it in schema.sql,
    or stop writing it. */
+/* ---- a column written and never read back is a column that vanishes -------
+   ra_property_code was written by createProperty, stored correctly, present in
+   the row, and dropped by the loader: it is not a form cell, so it is in no
+   PSCALAR map and nothing else picked it up. In one session everything worked.
+   On the next page load propByRaCode() answered null for every property, so a
+   scheduled property already opened came back as a record the schedule does not
+   carry — a copy at the bottom of the menu, and a name clash on reopening.
+
+   The rule, not the column: every column any write path puts on `property` must
+   appear in the block that reads `property` rows back. Static, no credentials.
+   PSCALAR columns are exempt because the loader walks PSCALAR_REV over all of
+   them; these are the ones written by hand, which is where this can happen. */
+(function propertyRoundTrip(){
+  const _fs=require('fs'),_p=require('path'),_d=__dirname;
+  const sup=_fs.readFileSync(_p.join(_d,'db.supabase.js'),'utf8');
+  const li=sup.indexOf('(pr.data || []).forEach(r => {');
+  const lj=sup.indexOf('D.props[r.id] = p;',li);
+  ok('the property loader can be located',li>0&&lj>li,true);
+  const loader=sup.slice(li,lj);
+  const scalars=new Set();
+  { const i=sup.indexOf('const PSCALAR'),j=sup.indexOf('};',i);
+    (sup.slice(i,j).match(/'([a-z_0-9]+)'/g)||[]).forEach(x=>scalars.add(x.replace(/'/g,''))); }
+  const written=new Set();
+  { const i=sup.indexOf('function buildPropRow('),j=sup.indexOf('\n  }',i);
+    (sup.slice(i,j).match(/row\.([a-z_0-9]+)\s*=/g)||[]).forEach(x=>written.add(x.match(/row\.([a-z_0-9]+)/)[1])); }
+  const re=/from\('property'\)\s*\.\s*(?:upsert|update)\(\{([^}]*)\}/g; let m;
+  while((m=re.exec(sup)))(m[1].match(/([a-z_0-9]+)\s*:/g)||[]).forEach(x=>written.add(x.replace(/\s*:$/,'')));
+  ok('the write paths were found',written.size>=3,true);
+  const missed=[...written].filter(c=>!scalars.has(c)&&loader.indexOf('r.'+c)<0);
+  ok('every hand-written property column is read back on load',missed,[]);
+})();
 (function schemaParity(){
   const _fs=require('fs'),_p=require('path'),_d=__dirname;
   const sql=_fs.readFileSync(_p.join(_d,'..','..','schema.sql'),'utf8');
@@ -483,6 +564,32 @@ function jsonAdapter() { let s = null; return { get: async () => (s ? JSON.parse
     ndb.listProperties().find(p => p.id === bh).name, 'Beacon Hill');
   ok('and a property saving its OWN name is never in its own way',
     await grabA(() => ndb.saveFlat(bh, { 'property.name': { value: 'Beacon Hill' } })), null);
+
+  /* ─ AN OCAF INHERITS NO RENT EITHER ─
+     Last, and on its own property, because every cycle created on the shared
+     fixture shifts the ids that section 8c asserts by name — which is how this
+     block failed seven checks in three sections it never touched.
+
+     The rule these prove: what took effect is whatever the CA returned after the
+     owner submitted, and the only record of that is the executed schedule. An
+     OCAF year has no schedule to upload, which was the reason it kept last
+     year's figures and is the reason it must not — with nothing read, there is
+     nothing behind the number. Nothing rolls proposed into current either, so
+     what an OCAF-from-an-OCAF inherited was a rent one full cycle stale, and the
+     factor was computed against it. */
+  console.log('\n─ 11 · AN OCAF INHERITS NO RENT EITHER ─');
+  const opid = (await cdb.createProperty('Ormsby Place')).pid;
+  const { cid: oc1 } = await cdb.createCycle(opid, { programs: ['ocaf'], effective_date: '2026-09-01' });
+  await cdb.saveFlatCycle(oc1, {
+    'units.0.num_units': { value: '40' }, 'units.0.current': { value: '1150' },
+    'units.0.ua_exec': { value: '62' },   'units.0.ua_source': { value: 'executed' } });
+  ok('the earlier OCAF holds a current rent', cdb.getFlatCycle(oc1)['units.0.current'].value, '1150');
+  const { cid: oc2 } = await cdb.createCycle(opid, { programs: ['ocaf'], effective_date: '2027-09-01' });
+  const o2 = cdb.getFlatCycle(oc2);
+  ok('the next OCAF does not inherit it', o2['units.0.current'], undefined);
+  ok('nor the executed utility allowance', o2['units.0.ua_exec'], undefined);
+  ok('nor how that allowance was sourced', o2['units.0.ua_source'], undefined);
+  ok('while the unit mix still carries', o2['units.0.num_units'].value, '40');
 
   /* API PARITY (CLAUDE.md): db.js is the harness's stand-in, db.supabase.js is
      what actually runs, db.cosmos.js is what the RA port runs. A guard in one

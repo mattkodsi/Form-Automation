@@ -20,7 +20,15 @@ global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>
 const os=require('os'),path=require('path'),fs=require('fs');
 
 /* ── the verdict machinery (mirrors test_interactions.js) ───────────────── */
-const MIN_CHECKS=175;   // 2026-07-30: +10 — a fill record belongs to one property, one file, and a form that still shows it (M60, M61)
+const MONTHNAMES=['January','February','March','April','May','June','July',
+                 'August','September','October','November','December'];
+const MIN_CHECKS=222;   // 2026-07-30 merge: union of both branches, counted off a real run (was ours 175 / main 185)
+                        //;   // 2026-07-30 merge: the union of both lines, recounted off a real run.
+                        // ours: +10 a fill record belongs to one property, one file, and a form that still shows it (M60, M61)
+                        // main: +15 the packages list stops being a chooser — one card for the
+                        //       current renewal, one line per earlier one, and one way in
+                        // 2026-07-29: +12 the schedule — one axis, month headings, the today-line
+                        // 2026-07-28: +32 the home page's filter rail, +24 the primary action
 let n=0,fails=0,verdict=null;
 const BAR='═'.repeat(68);
 function fail(msg,err){
@@ -73,13 +81,16 @@ const T=(label,v)=>eq(label,!!v,true);
      fields — a state, which the chip names, and which says nothing at all when
      there is nothing to say. */
   T('menu draws no ring on a property card', !/<svg/.test(grid));
-  T('a short profile says what it is short of', !/missing from the profile/.test(grid)||/pchip/.test(grid));
+  /* The menu is a list of what is owed and when. What a profile is short of is
+     the property page's subject, not this one's, and asserting its ABSENCE here
+     is what keeps it from drifting back onto a row. */
+  T('the menu does not tell a row what it needs', !/class="pchip/.test(grid));
   T('menu count chip counts properties', /propert/.test(els.menuCount.textContent));
   T('nothing undefined leaked into the menu', !/undefined/.test(grid));
   /* The guard the rail rests on. With no tracker rows the page keeps the flat
      grid it had — which is what keeps a pre-tracker deployment working, and the
      RA port, whose build does not concatenate hap.js at all. */
-  T('with no renewal schedule the page keeps its flat grid', els.menuRail.innerHTML==='');
+  T('with no renewal schedule the page keeps its flat grid', !/data-view=/.test(els.menuCount.innerHTML));
   T('and offers no action on a record the schedule does not carry', !/data-pact/.test(grid));
 
   /* ── THE RAIL ─────────────────────────────────────────────────────────
@@ -106,57 +117,138 @@ const T=(label,v)=>eq(label,!!v,true);
     'Increase Type':type,'Rent Increase':us(dueIn+122),'Due to HUD':us(dueIn)});
   await db._setHapRows([
     trow('R001','Rail Overdue','RCS',-10),      // deadline passed  -> band overdue
-    trow('R002','Rail Now','OCAF',10),          // inside 30 days   -> band now
-    trow('R003','Rail Soon','OCAF',60),         // inside 90 days   -> band soon
-    trow('R004','Rail Later','OCAF',200),       // beyond 90 days   -> band later
+    trow('R002','Rail Now','OCAF',10),          // inside the window -> coming
+    trow('R003','Rail Soon','OCAF',60),         // inside the window -> coming
+    trow('R004','Rail Later','OCAF',200),       // beyond it         -> later
     /* In scope (it has had an OCAF) but with nothing ahead of it: the shape the
        schedule's horizon makes, and the one that must never read as finished. */
     trow('R005','Rail Awaiting','OCAF',-500),
   ]);
   app.openMenu();
-  const rail1=els.menuRail.innerHTML, lede1=els.menuLede.textContent, g1=els.menuGrid.innerHTML;
+  const strip1=els.menuCount.innerHTML, lede1=els.menuLede.textContent, g1=els.menuGrid.innerHTML;
   const c1=app.__menuCounts();
-  T('the rail renders once the tracker supplies properties', /mr-row/.test(rail1));
-  T('nothing undefined leaked into the rail', !/undefined/.test(rail1));
-  T('the rail names every view', /Needs you/.test(rail1)&&/Coming up/.test(rail1)&&/In flight/.test(rail1)
-    &&/Done for the year/.test(rail1)&&/Undated/.test(rail1)&&/All properties/.test(rail1));
-  T('and groups the two programs under their own heading', /Programs/.test(rail1)&&/RCS years/.test(rail1)&&/OCAF years/.test(rail1));
+  T('the figures strip renders once the tracker supplies properties', /class="fig/.test(strip1));
+  T('nothing undefined leaked into the strip', !/undefined/.test(strip1));
+  T('the strip names every band', /already due/.test(strip1)&&/within \d+ days/.test(strip1)
+    &&/later/.test(strip1)&&/not in the schedule/.test(strip1)&&/properties/.test(strip1));
+  T('and every figure is a control, not a caption', (strip1.match(/data-view=/g)||[]).length===5);
+  /* The order is the order of the work: everything, what is coming, what is
+     beyond it, what is behind, what is off the schedule. Asserted because it is a
+     decision rather than an accident, and nothing else on the page would show it
+     had drifted. */
+  eq('the figures run in the order of the work',
+    (strip1.match(/data-view="([a-z]+)"/g)||[]).map(x=>x.slice(11,-1)),
+    ['all','now','later','past','undated']);
   T('the lede explains the view on screen', lede1.length>20);
-  eq('overdue and due-now land in Needs you', c1.needs, 2);
-  eq('soon and later land in Coming up',      c1.coming, 2);
+  eq('a deadline already passed lands in already due', c1.past, 1);
+  /* Two, not one: the page's window is MENU_WINDOW (90 days), so the row at
+     +60 is coming rather than later. */
+  eq('inside the window lands in what is coming',           c1.now, 2);
+  eq('further out lands in later',                          c1.later, 1);
   /* Gates Manor carries no tracker code and Rail Awaiting has no future
      startable row: two different reasons, one honest answer — no date. */
-  eq('a property with no future renewal, and the uncoded record, are Undated', c1.undated, 2);
-  eq('nothing is in flight before a package exists', c1.flight, 0);
-  eq('and nothing is done',                            c1.done, 0);
-  eq('the five views sum to All properties', c1.needs+c1.coming+c1.flight+c1.done+c1.undated, c1.all);
-  /* Three, not four: Rail Awaiting has no target, so it has no program either.
-     The Programs group asks what the NEXT renewal is, and a property with no
-     next renewal has no answer — putting it under OCAF because it once had one
-     would assert work that is not scheduled. */
-  eq('the Programs group cross-cuts on the target program', [c1.rcs,c1.ocaf], [1,3]);
-  /* The badge and the grid answer one question. A rail saying 6 above a grid of
-     5 is the defect this pass exists to make impossible. */
+  eq('a property with no future renewal, and the uncoded record, are not in the schedule', c1.undated, 2);
+  /* The strip's whole claim. Four disjoint bands and their sum, all countable
+     on the page under them. */
+  eq('the four bands sum to the total', c1.past+c1.now+c1.later+c1.undated, c1.all);
+  /* The figure and the grid answer one question. A strip saying 6 above a grid
+     of 5 is the defect this pass exists to make impossible. */
   const cardsIn=h=>(h.match(/class="pcard"/g)||[]).length;
-  eq('the rail opens on the first non-empty view', app.__menuView(), 'needs');
-  eq('and the badge on that row equals the cards drawn', cardsIn(g1), c1.needs);
-  app.__setMenuView('coming');
-  eq('switching view redraws the grid to match its badge', cardsIn(els.menuGrid.innerHTML), c1.coming);
+  eq('the page opens on everything', app.__menuView(), 'all');
+  T('and the figure holding that view is marked current',
+    /data-view="all"[^>]*aria-current/.test(strip1));
+  /* The strip's claim, restated for the drawer: the total is still countable on
+     the page, but 82 of it is countable ON THE BANNER rather than as rows. Cards
+     drawn plus the number the banner names must be the figure pressed — a total
+     that silently exceeded both would be the drawer hiding rows from the count. */
+  const _inDrawer=+(((els.menuPastBar.innerHTML||'').match(/>(\d+)<\/b> already due/)||[])[1]||0);
+  eq('the total equals the cards drawn plus the number the banner names',
+    cardsIn(g1)+_inDrawer, c1.all);
+  app.__setMenuView('later');
+  eq('pressing a figure redraws the grid to match it', cardsIn(els.menuGrid.innerHTML), c1.later);
+  app.__setMenuView('past');
+  eq('and already due draws only what is past', cardsIn(els.menuGrid.innerHTML), c1.past);
   app.__setMenuView('undated');
-  eq('Undated draws both populations',                    cardsIn(els.menuGrid.innerHTML), c1.undated);
+  eq('not in the schedule draws both populations',    cardsIn(els.menuGrid.innerHTML), c1.undated);
   T('and separates them under the heading that says so',
     /Not in the renewal schedule/.test(els.menuGrid.innerHTML));
-  app.__setMenuView('flight');
-  T('an empty view says what is empty and where to look instead',
-    /class="mempty"/.test(els.menuGrid.innerHTML)&&!/Clear search/.test(els.menuGrid.innerHTML));
+
+  /* ── THREE ZONES ───────────────────────────────────────────────────────
+     What is coming leads the page; what is behind waits in a drawer. The flat
+     single-list version this replaced opened on eighty rows of what was already
+     past, with the twenty-one workable today somewhere down the middle. */
+  console.log('\n─ WHAT IS COMING LEADS, WHAT IS BEHIND WAITS ─');
+  app.__setMenuView('all');
+  const sch=els.menuGrid.innerHTML;
+  const heads=(sch.match(/class="mgroup"[^>]*>([^<]*)</g)||[]).map(x=>x.replace(/^[^>]*>/,'').replace(/<$/,''));
+  /* Captured, not string-surgeried: `[^>]*` cannot cross the `>` in
+     `class="zhead">`, so the tidy-up version of this returned the whole match. */
+  const zh=[];{const re=/class="zhead"><h3>([^<]*)</g;let m;while((m=re.exec(sch)))zh.push(m[1]);}
+  const bar=els.menuPastBar.innerHTML;
+  eq('what is coming and the rest are two grids in the list',
+    (sch.match(/class="mgrid rows/g)||[]).length, 2);
+  /* The drawer is not in the list. It sits in its own bar flush under the
+     masthead — it is not the first item of a list it is not part of, and opening
+     it pushes the page's own heading down with everything else. */
+  eq('and the drawer is a third, in its own bar above the heading',
+    (bar.match(/class="mgrid rows/g)||[]).length, 1);
+  T('the list holds none of it', !/id="mPast"/.test(sch)&&!/mpastwrap/.test(sch));
+  T('and what is coming is named by the window it holds, not by a date inside it',
+    /^Due within \d+ days$/.test(zh[0]||''));
+  eq('with the rest of the schedule under it', zh[1], 'Further out');
+  /* The drawer. Closed, so the page opens on the work rather than on the
+     backlog — and the banner is the only thing standing where 82 rows would. */
+  /* id, not class: "mpastwrap" starts with "mpast", so a class test matches the
+     drawer's own container and would pass with no banner rendered at all. */
+  T('the past-due rows are behind a banner', /id="mPast"/.test(bar));
+  T('and it is closed on arrival', /id="mPastWrap"[^>]*hidden/.test(bar));
+  T('the banner says how many are back there', new RegExp('>'+c1.past+'</b> already due').test(bar));
+  T('and it is a control, not a caption', /aria-expanded="false"/.test(bar));
+  T('it offers to show them without saying "them"', /Show</.test(bar)&&!/Show them/.test(bar));
+  /* The arrow points DOWN when open, because on a disclosure control an arrow is
+     read as the action, not as a compass bearing on where the rows are. */
+  T('and closed it carries no arrow at all', !/\u2191/.test(bar)&&!/\u2193/.test(bar));
+  /* Filtered TO what is past, the rows ARE the list. Left in the top bar they
+     put every row of the chosen view above the page's own heading and left the
+     list below it empty — and a banner over them would be a control that closes
+     the view just chosen. */
+  app.__setMenuView('past');
+  const sp=els.menuGrid.innerHTML;
+  T('filtered to what is past, the rows are the list and not a drawer',
+    !/id="mPast"/.test(sp)&&!/hidden/.test(sp));
+  eq('and every one of them is drawn in the list', cardsIn(sp), c1.past);
+  eq('with the bar emptied, not left holding them', els.menuPastBar.innerHTML, '');
+  app.__setMenuView('all');
+  /* Months inside a zone run forward. Read off the markup, because ordering is
+     the one thing a count cannot catch: headings in the wrong sequence still sum
+     to the same total. */
+  const months=heads.filter(h=>/^[A-Z][a-z]+ \d{4}$/.test(h));
+  T('each month a zone reaches is headed by its own name', months.length>=2);
+  const mi=h=>{const p=h.split(' ');return (+p[1])*12+MONTHNAMES.indexOf(p[0]);};
+  const restM=months.slice(months.indexOf(heads.filter(h=>/^[A-Z][a-z]+ \d{4}$/.test(h))[0]));
+  eq('and no zone lists its months out of order',
+    restM.map(mi).slice().sort((a,b)=>a-b).length, restM.length);
+  T('no heading anywhere names a state instead of a date or a window',
+    !/Past their date|Remaining|All of them/.test(sch));
+  /* Off the axis, so below every month rather than inside the last one. */
+  const _sIdx=sch.indexOf('No renewal scheduled');
+  const _mLast=sch.lastIndexOf(months[months.length-1]);
+  T('a property with no deadline is drawn below the last month, not inside it', _sIdx>_mLast);
 
   /* ── THE PRIMARY ACTION ────────────────────────────────────────────── */
   console.log('\n─ ONE ACTION PER CARD, DERIVED NOT DECORATED ─');
   app.__setMenuView('all');
   const gall=els.menuGrid.innerHTML;
   T('a tracker card carries an action',     /data-pact=/.test(gall));
-  T('and the label names the year and the program it will start',
-    new RegExp('Start '+new Date(T0+132*DAY).getUTCFullYear()+' OCAF').test(gall));
+  /* The year on the button, the programme in the column headed Program. It used
+     to be "Start 2026 OCAF" on a row already reading OCAF one cell to the left \u2014
+     the same fact twice, and only because rows inside thirty days once sat in a
+     panel with twice the width to spend. Both halves are still asserted; what is
+     no longer asserted is that they sit in the same place. */
+  T('the action names the year it will start',
+    new RegExp('Start '+new Date(T0+132*DAY).getUTCFullYear()+'<').test(gall));
+  T('and the programme is named once, in the column headed Program',
+    /class="pc-prog[^"]*">OCAF</.test(gall)&&!/Start \d{4} OCAF/.test(gall));
   /* The nested-button trap. <button> inside <button> is invalid HTML: the parser
      closes the outer element and re-parents the inner one as a sibling, so the
      card silently loses its bottom half in a real browser while an innerHTML
@@ -174,36 +266,87 @@ const T=(label,v)=>eq(label,!!v,true);
      rendering it disabled, greyed or absent retires it on the tracker's say-so. */
   app.__setMenuView('undated');
   const gund=els.menuGrid.innerHTML;
-  T('a property whose schedule runs out is still startable', /Start a package/.test(gund));
+  /* In the ledger the action is the verb and the year; a property with no
+     scheduled renewal has no year, so the verb stands alone. What matters is
+     that it HAS one — rendering it disabled, greyed or absent would retire
+     the property on the tracker's say-so. */
+  T('a property whose schedule runs out is still startable', /data-pact="R005"[^>]*>Start</.test(gund));
   T('and its button is not disabled', !/data-pact="R005"[^>]*disabled/.test(gund));
 
-  /* In flight and Done for the year come from the app's own packages, never
-     from the tracker: every workflow column in the export is empty. */
+  /* How far along a package is comes from the app's own cycles, never from the
+     tracker: every workflow column in the export is empty. And it is NOT a
+     band. Starting one does not change when the renewal is owed, so it must
+     not move the property — the rail used to lift it out of "Needs you" the
+     moment a draft existed, which is how a generated-but-rejected package read
+     as finished. The band says when; the button says how far. */
   const rpid=(await db.createProperty('Rail Now','R002')).pid;
   const rcid=(await db.createCycle(rpid,{programs:['ocaf'],label:String(new Date(T0+132*DAY).getUTCFullYear()),
     effective_date:us(132)})).cid;
-  app.openMenu();
+  app.openMenu();app.__setMenuView('all');
   const c2=app.__menuCounts();
-  eq('a matching draft moves that property into In flight', c2.flight, 1);
-  eq('and takes it out of Needs you',                       c2.needs, c1.needs-1);
-  eq('the partition still sums',                            c2.needs+c2.coming+c2.flight+c2.done+c2.undated, c2.all);
+  eq('starting a package moves no property between bands',
+     [c2.past,c2.now,c2.later,c2.undated], [c1.past,c1.now,c1.later,c1.undated]);
+  T('and the row offers to continue what was started', /Continue /.test(els.menuGrid.innerHTML));
+  eq('the partition still sums', c2.past+c2.now+c2.later+c2.undated, c2.all);
   await db.setCycleGenerated(rcid,['cover']);
-  app.openMenu();
+  app.openMenu();app.__setMenuView('all');
   const c3=app.__menuCounts();
-  eq('generating it moves the property on to Done for the year', [c3.done,c3.flight], [1,0]);
-  eq('and the partition still sums', c3.needs+c3.coming+c3.flight+c3.done+c3.undated, c3.all);
+  eq('generating it moves nothing either',
+     [c3.past,c3.now,c3.later,c3.undated], [c1.past,c1.now,c1.later,c1.undated]);
+  T('and the row offers to view what was generated', /View /.test(els.menuGrid.innerHTML));
+  eq('and the partition still sums', c3.past+c3.now+c3.later+c3.undated, c3.all);
+
+  /* ── OPENING A PROPERTY THE REGISTRY ALREADY HOLDS ──────────────────
+     A record can predate the schedule: imported by hand, or named before the
+     tracker code existed. Opening its row then tried to CREATE a second
+     property under the same name, hit the one-name rule, and reported "that
+     name is already taken" — so the only route into that property was the one
+     that refused. It binds the code to the record that is already there. */
+  const twin=(await db.createProperty('Rail Later')).pid;
+  const before=(db.listProperties()||[]).length;
+  const got=await app.__openHap('R004');
+  eq('opening a scheduled property finds the record already under that name', got, twin);
+  eq('and makes no second one',(db.listProperties()||[]).length, before);
+  eq('the tracker code is bound to it', db.propByRaCode('R004'), twin);
+
+  /* ── THE DEV SWEEP, AND WHAT IT MUST NOT TAKE ───────────────────────
+     "Not in the schedule" holds two populations: records the tracker never
+     carried, and properties it DOES carry whose schedule has run out. The
+     sweep is offered on the first and must never reach the second — taking
+     both would delete live properties on the tracker's silence. */
+  app.__setMenuView('undated');
+  const _ug=els.menuGrid.innerHTML;
+  T('the sweep is offered where the records the schedule does not carry are named',
+    /id="orphPurge"/.test(_ug));
+  T('and it is named for the population, not for the view', /Not in the renewal schedule/.test(_ug));
+  /* R005's schedule has run out. It is in the tracker, so it is not the
+     sweep's business, and it has no record to delete in any case. */
+  T('a property whose schedule ran out is under its own heading', /No renewal scheduled/.test(_ug));
+
+  /* ── DISPLAY FORMATTING ─────────────────────────────────────────────
+     Formatted where it is shown, never in the record. A units column reading
+     1689 is a database dump; this product files with HUD. */
+  const F=app.__fmt;
+  eq('figures carry thousands separators', [F.num(1689),F.num(51),F.num(1234567)], ['1,689','51','1,234,567']);
+  eq('and a blank stays blank rather than becoming a zero', F.num(''), '');
+  eq('phone numbers take one shape', F.phone('5551234567'), '(555) 123-4567');
+  eq('a leading country code is dropped, not counted', F.phone('1-555-123-4567'), '(555) 123-4567');
+  /* Inventing a shape for digits we cannot read would assert a phone number
+     where the record holds something else. */
+  eq('and anything that is not a phone number is shown verbatim', F.phone('x1234'), 'x1234');
+  eq('email addresses are lower case', F.email('  Claire.Beatty@Related.COM '), 'claire.beatty@related.com');
 
   /* Search is a find-within: it forces the All view so a name is never hidden by
      the filter, and it does not overwrite the view you were in. */
-  app.__setMenuView('coming');
+  app.__setMenuView('later');
   els.menuSearch.value='Overdue';
   app.renderMenu();
   T('searching finds a property outside the current view', /Rail Overdue/.test(els.menuGrid.innerHTML));
-  eq('without moving the view you were in', app.__menuView(), 'coming');
+  eq('without moving the view you were in', app.__menuView(), 'later');
   els.menuSearch.value='';
   app.renderMenu();
-  eq('clearing the search returns you there', app.__menuView(), 'coming');
-  T('and draws that view again', cardsIn(els.menuGrid.innerHTML)===app.__menuCounts().coming);
+  eq('clearing the search returns you there', app.__menuView(), 'later');
+  T('and draws that view again', cardsIn(els.menuGrid.innerHTML)===app.__menuCounts().later);
 
   /* An increase type nobody has seen must not leave a card describing two
      different renewals. Before this was pinned, a property with an unreadable
@@ -254,8 +397,7 @@ const T=(label,v)=>eq(label,!!v,true);
   T('launcher names the property',        /Gates Manor Apartments/.test(lb1));
   T('launcher has a Packages section',    /lsec-t">Packages/.test(lb1));
   T('launcher offers "start new package"',/id="bNewCycle"/.test(lb1));
-  T('launcher lists coming-soon programs',/Coming soon/.test(lb1));
-  T('BBRA is one of them',                /Budget-Based Rent Adjustment/.test(lb1));
+  T('BBRA is named as not yet available', /BBRA · Budget-Based Rent Adjustment — not yet available/.test(lb1));
   T('launcher has the letterhead slot',   /letterhead/i.test(lb1));
   T('a property with no packages says so',/No packages yet/.test(lb1));
   T('nothing undefined leaked into the launcher', !/undefined/.test(lb1));
@@ -277,12 +419,61 @@ const T=(label,v)=>eq(label,!!v,true);
   const lb2=els.launcherBody.innerHTML;
   T('the existing record is migrated into package #1', /class="cycard/.test(lb2));
   T('that package is marked as the current one',       /cy-dom/.test(lb2));
-  T('it is labelled by its effective year',            /2026 · effective September 1, 2026/.test(lb2));
+  T('it is labelled by the date it takes effect',      /Effective September 1, 2026/.test(lb2));
   T('the affordability check renders inside the card', /AFFORDABILITY CHECK/.test(lb2));
   T('and reports the headroom',                        /\$37,689 headroom/.test(lb2));
   T('nothing undefined leaked into the re-render',     !/undefined/.test(lb2));
   eq('the data layer agrees there is one package', db.listCycles(pid).length, 1);
   eq('and reports its programs as an array',      db.listCycles(pid)[0].programs, ['rcs']);
+
+  /* ─ THE CURRENT RENEWAL LEADS, THE REST IS A RECORD ─
+     The list was a chooser: N equal cards, each one a candidate. It is not that
+     any more — the schedule decides which package you work on, and a programme
+     can be started only once per effective date — so what it has to hold is the
+     current renewal expanded with its figures and every earlier package as one
+     line. Asserted on its own property so the phases above keep their fixture. */
+  console.log('\n─ THE CURRENT RENEWAL LEADS, THE REST IS A RECORD ─');
+  const hpid=(await db.createProperty('Hollis Court')).pid;
+  await db.createCycle(hpid,{programs:['rcs'],label:'2026',effective_date:'2026-09-01'});
+  await db.createCycle(hpid,{programs:['uaf'],label:'2026',effective_date:'2026-09-01'});
+  await db.createCycle(hpid,{programs:['ocaf'],label:'2025',effective_date:'2025-09-01'});
+  await db.createCycle(hpid,{programs:['ocaf'],label:'2024',effective_date:'2024-09-01'});
+  app.openLauncher(hpid);
+  const lb3=els.launcherBody.innerHTML;
+  const nCard=(lb3.match(/class="cycard/g)||[]).length;
+  const nRow=(lb3.match(/class="cyrow"/g)||[]).length;
+  eq('the two packages sharing the current date stay cards', nCard, 2);
+  eq('the two earlier ones collapse to a line each',         nRow,  2);
+  eq('every package is drawn exactly once',      nCard+nRow, db.listCycles(hpid).length);
+  T('the earlier ones sit under their own heading', /cyh-t">Earlier</.test(lb3));
+  eq('exactly one package is marked current',   (lb3.match(/cy-dom/g)||[]).length, 1);
+  T('and the chip says it in one word',         />Current</.test(lb3));
+  /* A UA effective the same day is the same renewal done in two packages. Filed
+     under Earlier it would read as a year older than it is. */
+  const hist=lb3.slice(lb3.indexOf('class="cyledger"'));
+  T('a UA effective the current date is not filed as earlier', !/UAF/.test(hist));
+  T('the earlier lines name their programme',   /OCAF/.test(hist));
+  T('and the date it took effect',              /September 1, 2025/.test(hist));
+  /* Two independent questions. How loud the control is answers whether there is
+     another way in; what it says answers whether this is the first. */
+  T('with the schedule silent, starting one is the primary control',
+    /class="btn p" id="bNewCycle"/.test(lb3));
+  T('and it says another, because three exist already', /Start another package/.test(lb3));
+  app.openLauncher(rpid);
+  const lb4=els.launcherBody.innerHTML;
+  T('where the schedule offers a way in, starting one is quiet',
+    /class="addrow" id="bNewCycle"/.test(lb4));
+  eq('leaving the schedule\u2019s own action as the only primary',
+    (lb4.match(/class="btn p"/g)||[]).length, 1);
+  /* The data layer hands back an em dash for a property with no number. Printed
+     straight it was a line holding one dash, which reads as a rendering fault. */
+  const bpid=(await db.createProperty('Bare Record')).pid;
+  app.openLauncher(bpid);
+  const lb5=els.launcherBody.innerHTML;
+  eq('a property with nothing but a name reports an em dash',
+    (db.listProperties().find(p=>p.id===bpid)||{}).fha, '\u2014');
+  T('and the page prints no meta line at all',  !/class="lh-meta"/.test(lb5));
+  T('nothing undefined leaked into either',     !/undefined/.test(lb3+lb5));
 
   console.log('\n─ FORM opens and renders the RCS package ─');
   await app.__openForm(pid);

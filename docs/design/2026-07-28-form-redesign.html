@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en" data-t="day"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Form — redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#d8dde4; --card:#ffffff; --sunk:#eef1f5;
+  --ink:#101822; --ink-2:#41505f; --ink-3:#556270; --ink-4:#636c77;
+  --rule:#c2cbd6; --rule-soft:#e4e9ef;
+  --stamp:#9c2b18; --ledger:#1f5480; --filed:#2f6a45;
+  --chrome:#101d2b; --on-chrome:#fff; --on-chrome-wash:rgba(255,255,255,.10);
+  --on-chrome-line:rgba(255,255,255,.26);
+  --btn:#101d2b; --btn-hover:#1f5480;
+  /* provenance — values unchanged, they are a contract with tests behind them */
+  --prov-db:#2563eb;    --prov-db-fill:#e8f0fe;
+  --prov-cycle:#0f766e; --prov-cycle-fill:#e9f5f2;
+  --prov-over:#b45309;  --prov-over-fill:#fbf1e6;
+  --prov-new:#64748b;   --prov-new-fill:#f6f7f9;
+  --r-ctl:4px; --r-card:8px; --ease:cubic-bezier(.23,1,.32,1);
+}
+html[data-t="night"]{
+  --paper:#0a0e14; --card:#161c25; --sunk:#11161e;
+  --ink:#eef2f7; --ink-2:#a9b6c4; --ink-3:#8796a7; --ink-4:#75869a;
+  --rule:rgba(255,255,255,.13); --rule-soft:rgba(255,255,255,.08);
+  --stamp:#e8836d; --ledger:#5b9dd4; --filed:#4fb383;
+  --chrome:#080c11; --btn:#2d6ca8; --btn-hover:#3d81c2;
+  --prov-db:#6ea0f5;    --prov-db-fill:#141f33;
+  --prov-cycle:#4fb3a5; --prov-cycle-fill:#0f2320;
+  --prov-over:#dd9245;  --prov-over-fill:#2a1d0d;
+  --prov-new:#8794a6;   --prov-new-fill:#151a21;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-font-smoothing:antialiased}
+body{background:var(--paper);color:var(--ink);font-family:'IBM Plex Sans',sans-serif;
+     font-size:13.5px;line-height:1.5;font-variant-numeric:tabular-nums}
+button{font:inherit;cursor:pointer;transition:background .14s var(--ease),
+       border-color .14s var(--ease),color .14s var(--ease),transform .1s var(--ease)}
+button:active{transform:scale(.975)}
+:focus-visible{outline:2px solid var(--ledger);outline-offset:-2px;border-radius:var(--r-ctl)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;transform:none!important}}
+
+header{background:var(--chrome);color:var(--on-chrome);padding:0 28px;height:60px;
+       display:flex;align-items:center;justify-content:space-between}
+.bd b{font-size:15px;font-weight:600}
+.bd span{font-size:10px;letter-spacing:.17em;text-transform:uppercase;opacity:.55;
+         font-weight:600;margin-left:11px}
+.hr{display:flex;align-items:center;gap:16px}
+.hr .prop{font-size:13.5px;font-weight:600}
+.pills{display:flex;gap:4px;background:var(--on-chrome-wash);padding:4px;border-radius:999px}
+.pills button{background:none;border:none;color:var(--on-chrome);opacity:.6;font-size:11.5px;
+              font-weight:600;padding:0 14px;min-height:30px;border-radius:999px}
+.pills button[aria-pressed="true"]{background:var(--on-chrome);color:var(--chrome);opacity:1}
+.tog{display:flex;border:1px solid var(--on-chrome-line);border-radius:999px;overflow:hidden}
+.tog button{background:none;border:none;color:var(--on-chrome);opacity:.6;font-size:11.5px;
+            padding:0 14px;min-height:34px}
+.tog button[aria-pressed="true"]{background:var(--on-chrome-wash);opacity:1;font-weight:600}
+
+.cmd{display:flex;align-items:center;gap:10px;padding:14px 28px;border-bottom:1px solid var(--rule)}
+.lnk{background:none;border:1px solid var(--rule);color:var(--ink-2);border-radius:var(--r-ctl);
+     padding:0 14px;min-height:36px;font-size:12.5px;font-weight:600}
+.lnk:hover{background:var(--card);border-color:var(--ledger);color:var(--ledger)}
+
+/* ---- the answer the product exists to give, at the size it deserves ---- */
+.strip{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr) minmax(0,.9fr);
+       background:var(--card);border:1px solid var(--rule);border-radius:var(--r-card);
+       margin:20px 28px 0;overflow:hidden}
+.seg{padding:18px 22px;border-left:1px solid var(--rule-soft)}
+.seg:first-child{border-left:none;box-shadow:inset 3px 0 0 var(--filed)}
+.seg.warn{box-shadow:inset 3px 0 0 var(--prov-over)}
+.seg .k{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
+        color:var(--ink-3)}
+.big{font-size:30px;font-weight:600;letter-spacing:-.025em;line-height:1.1;margin-top:6px;
+     color:var(--filed)}
+.big span{color:var(--ink)}
+.sub{font-size:12.5px;color:var(--ink-3);margin-top:5px}
+.gauge{margin-top:12px}
+.gauge .track{height:8px;border-radius:4px;background:var(--sunk);overflow:hidden;display:flex;
+              border:1px solid var(--rule-soft)}
+.gauge .track i{display:block;height:100%}
+.gauge .cur{background:var(--filed)}
+.gauge .add{background:var(--filed);opacity:.45}
+.gauge .cap{display:flex;justify-content:space-between;font-size:11px;color:var(--ink-4);margin-top:5px}
+.arith{display:flex;gap:18px;margin-top:12px;padding-top:11px;border-top:1px solid var(--rule-soft)}
+.arith div{font-size:12px;color:var(--ink-3)}
+.arith b{display:block;font-size:13.5px;font-weight:600;color:var(--ink-2)}
+.seg .v{font-size:15px;font-weight:600;margin-top:6px}
+.issue{display:flex;gap:9px;align-items:baseline;font-size:12.5px;color:var(--ink-2);margin-top:9px}
+.issue s{text-decoration:none;color:var(--prov-over);font-weight:700}
+.issue em{font-style:normal;color:var(--ink-3)}
+.docs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px 14px;margin-top:9px}
+.docs span{display:flex;gap:7px;align-items:baseline;font-size:12.5px;color:var(--ink-2)}
+.docs .ok{color:var(--filed);font-weight:700}
+.docs .no{color:var(--ink-4);font-weight:700}
+.docs .miss{color:var(--ink-4)}
+.jump{background:none;border:none;color:var(--ledger);font-size:12.5px;font-weight:600;
+      padding:0;text-decoration:underline;text-underline-offset:2px}
+
+.body{display:grid;grid-template-columns:206px minmax(0,1fr);gap:24px;padding:24px 28px 90px}
+.rail{position:sticky;top:20px;align-self:start;background:var(--card);
+       border:1px solid var(--rule);border-radius:var(--r-card);padding:16px 14px}
+.rail h4{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
+         color:var(--ink-3);margin-bottom:10px}
+.rail a{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:var(--r-ctl);
+        font-size:13px;color:var(--ink-2);text-decoration:none;box-shadow:inset 2px 0 0 transparent}
+.rail a:hover{background:var(--sunk)}
+.rail a.on{background:var(--sunk);color:var(--ink);font-weight:600;
+           box-shadow:inset 2px 0 0 var(--ledger)}
+.rail a.todo{box-shadow:inset 2px 0 0 var(--prov-over)}
+.rail a i{font-style:normal;font-size:11px;color:var(--ink-4);width:14px}
+.rail a.done i{color:var(--filed)} .rail a.todo i{color:var(--prov-over)}
+.alert{margin-top:16px;background:var(--prov-over-fill);border-radius:var(--r-ctl);
+       padding:11px 12px;box-shadow:inset 3px 0 0 var(--prov-over)}
+.alert h5{font-size:12px;font-weight:600;color:var(--prov-over)}
+.alert a{display:block;padding:0;font-size:12px;color:var(--ink-2);text-decoration:none;
+         line-height:1.45;margin-top:6px;box-shadow:none}
+.alert a:hover{background:none;color:var(--prov-over);text-decoration:underline}
+.prog{margin-top:16px;padding-top:16px;border-top:1px solid var(--rule)}
+.prog .n{font-size:13px;font-weight:600}
+.prog .m{font-size:12.5px;color:var(--ink-3);margin-top:2px}
+.bar{height:6px;border-radius:3px;background:var(--sunk);margin-top:9px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--ledger)}
+.key{margin-top:18px;padding-top:16px;border-top:1px solid var(--rule)}
+.key div{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--ink-3);margin-top:7px}
+.key s{text-decoration:none;width:3px;height:14px;border-radius:2px;flex:none}
+
+.card{background:var(--card);border:1px solid var(--rule);border-radius:var(--r-card);
+      margin-bottom:14px;overflow:hidden}
+.chead{display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--rule-soft)}
+.cnum{width:22px;height:22px;border-radius:50%;background:var(--sunk);color:var(--ink-3);
+      font-size:11px;font-weight:600;display:grid;place-items:center;flex:none}
+.card.done .cnum{background:var(--filed);color:#fff}
+.card.todo .cnum{background:var(--prov-over);color:#fff}
+.ctitle{font-size:15px;font-weight:600;letter-spacing:-.01em}
+.tag{margin-left:auto;font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+     color:var(--ink-3)}
+.card.done .tag{color:var(--filed)} .card.todo .tag{color:var(--prov-over)}
+.cbody{padding:18px 20px}
+
+/* ---- the cell ----
+   A field is INSET — darker than the surface holding it, because it is a box
+   you write in. Plain-white cells on a white card had no figure against
+   ground, which is how removing the provenance fill produced something
+   flatter than the wall of blue it replaced.
+   The 3px rule still states the save state for every cell. Hue is still
+   reserved for the states that need your hands. */
+.cell{display:flex;align-items:center;gap:8px;width:100%;min-height:38px;padding:0 11px;
+      border:1px solid var(--rule);border-radius:var(--r-ctl);background:var(--sunk);
+      font-size:13.5px;color:var(--ink);box-shadow:inset 3px 0 0 var(--prov-new)}
+.cell:focus-within{background:var(--card);border-color:var(--ledger)}
+.cell.db{box-shadow:inset 3px 0 0 var(--prov-db)}
+.cell.cy{background:var(--prov-cycle-fill);box-shadow:inset 3px 0 0 var(--prov-cycle)}
+.cell.ov{background:var(--prov-over-fill);box-shadow:inset 3px 0 0 var(--prov-over)}
+.cell .ph{color:var(--ink-4)}
+.cell .src{margin-left:auto;font-size:10.5px;font-weight:600;letter-spacing:.06em;
+           color:var(--ink-4)}
+.cell.num{justify-content:flex-end;font-variant-numeric:tabular-nums}
+.cell.num .src{margin-left:12px}
+
+/* ---- Part B: a checkbox matrix ----
+   Positions stay fixed so muscle memory holds. What changes is weight:
+   an included item reads as present, an excluded one recedes, so the
+   "what's in the rent" answer can be scanned without reading 24 labels.
+   The ten empty write-in slots collapse to one add per group. */
+.pb-grp{margin-top:16px}
+.pb-grp:first-child{margin-top:0}
+.pb-h{display:flex;align-items:baseline;gap:10px;padding-bottom:7px;
+      border-bottom:1px solid var(--rule-soft);margin-bottom:6px}
+.pb-h h4{font-size:11px;font-weight:600;letter-spacing:.11em;text-transform:uppercase;
+         color:var(--ink-3)}
+.pb-h span{margin-left:auto;font-size:12px;color:var(--ink-4)}
+.pb-h b{color:var(--ink-2);font-weight:600}
+.pb{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 24px;
+     grid-auto-flow:column}
+.wi{display:flex;align-items:center;gap:9px;min-height:30px}
+.wi i{width:16px;height:16px;border-radius:3px;border:1.5px solid var(--rule);flex:none;
+      background:var(--card)}
+.wi input{flex:1;min-width:0;border:none;border-bottom:1px dashed var(--rule);
+          background:none;font:inherit;font-size:13.5px;color:var(--ink);padding:2px 0}
+.wi input::placeholder{color:var(--ink-4)}
+.wi input:focus{outline:none;border-bottom-color:var(--ledger);border-bottom-style:solid}
+.ck{display:flex;align-items:center;gap:9px;min-height:30px;font-size:13.5px;
+    color:var(--ink-4);cursor:pointer}
+.ck i{width:16px;height:16px;border-radius:3px;border:1.5px solid var(--rule);flex:none;
+      display:grid;place-items:center;font-style:normal;font-size:11px;color:transparent;
+      background:var(--card)}
+.ck.on{color:var(--ink);font-weight:500}
+.ck.on i{background:var(--prov-db);border-color:var(--prov-db);color:#fff}
+.ck:hover i{border-color:var(--ledger)}
+.fuel{margin-left:auto;font-size:10.5px;font-weight:600;letter-spacing:.06em;
+      color:var(--ink-3);background:var(--sunk);border:1px solid var(--rule);
+      border-radius:var(--r-ctl);padding:2px 7px}
+.ck:not(.on) .fuel{opacity:.45}
+.pb-add:hover{text-decoration:underline}
+
+/* ---- the owner's checklist: 17 items, four groups ---- */
+.cl-top{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.cl-top .n{font-size:15px;font-weight:600}
+.cl{display:grid;grid-template-columns:1fr 1fr;gap:0 32px;align-items:start}
+.cl-col{min-width:0}
+.cl-g{break-inside:avoid}
+.cl-g h5{font-size:11px;font-weight:600;letter-spacing:.11em;text-transform:uppercase;
+         color:var(--ink-3);margin:14px 0 4px;padding-bottom:6px;
+         border-bottom:1px solid var(--rule-soft)}
+.cl-g:first-child h5{margin-top:0}
+
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px 20px}
+.f label,.lb{display:block;font-size:11.5px;font-weight:600;color:var(--ink-3);margin-bottom:5px}
+
+/* ---- the unit mix ---- */
+.mix{width:100%;border-collapse:collapse}
+.mix th{font-size:10px;font-weight:600;letter-spacing:.11em;text-transform:uppercase;
+        color:var(--ink-3);text-align:left;padding:0 8px 8px;border-bottom:1px solid var(--rule)}
+.mix th.r{text-align:right}
+.mix th small{display:block;font-size:9.5px;letter-spacing:.04em;text-transform:none;
+              color:var(--ink-4);font-weight:500;margin-top:2px}
+.mix td{padding:7px 8px;vertical-align:top}
+.mix tbody tr+tr td{border-top:1px solid var(--rule-soft)}
+.mix tbody tr:hover td{background:rgba(31,84,128,.035)}
+.ut{font-size:13.5px;font-weight:600}
+/* the designation is its own control with its own source tag — collapsing it
+   to inline text lost both. Two stacked cells, as on the real form. */
+.utwrap{display:flex;flex-direction:column;gap:4px}
+/* the designation sits under the unit type and is deliberately shorter than a
+   main cell — 28px against 38px in the real app. It is a qualifier on the row
+   above, not a peer of it, and equal heights read as two equal fields. */
+.utwrap .cell.desig{min-height:28px;font-size:12.5px}
+.tagline{margin-left:auto;display:flex;align-items:center;gap:7px}
+.rcstag{font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--prov-cycle);
+        background:var(--prov-cycle-fill);border:1px solid var(--prov-cycle);
+        border-radius:var(--r-ctl);padding:1px 6px}
+.cvx{color:var(--ink-4);font-size:10px}
+.delta{font-size:11.5px;color:var(--filed);font-weight:600;margin-top:4px;text-align:right}
+.clear{font-size:11.5px;color:var(--ink-4);margin-top:4px;text-align:right}
+.conflict{font-size:11.5px;color:var(--prov-over);margin-top:5px;display:flex;gap:8px;
+          align-items:center;justify-content:flex-end}
+.approve{background:var(--card);border:1px solid var(--prov-over);color:var(--prov-over);
+         border-radius:var(--r-ctl);padding:3px 9px;font-size:11px;font-weight:600}
+.approve:hover{background:var(--prov-over);color:#fff}
+.addrow{background:none;border:none;color:var(--ledger);font-size:12.5px;font-weight:600;
+        padding:10px 8px 0}
+.addrow:hover{text-decoration:underline}
+
+.foot{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--rule);
+      padding:12px 28px;display:flex;justify-content:center;gap:10px}
+.go{background:var(--btn);color:#fff;border:1px solid var(--btn);border-radius:var(--r-ctl);
+    padding:0 18px;min-height:40px;font-size:13px;font-weight:600}
+.go:hover{background:var(--btn-hover);border-color:var(--btn-hover)}
+</style></head>
+<body>
+
+<header>
+  <div class="bd"><b>Package Builder</b><span>HUD Section 8</span></div>
+  <div class="hr">
+    <div class="tog"><button aria-pressed="true" onclick="T('day',this)">Day</button>
+      <button aria-pressed="false" onclick="T('night',this)">Night</button></div>
+    <span class="prop">Beacon Hill Apartments</span>
+    <div class="pills"><button aria-pressed="true">RCS</button><button aria-pressed="false">OCAF</button>
+      <button aria-pressed="false">UAF</button><button aria-pressed="false">BBRA</button></div>
+  </div>
+</header>
+
+<div class="cmd">
+  <button class="lnk">← Back to property</button>
+  <button class="lnk">↺ Revert to saved</button>
+</div>
+
+<div class="strip">
+  <div class="seg">
+    <div class="k">Affordability</div>
+    <div class="big">$30,338 <span>of headroom</span></div>
+    <div class="sub">The proposed rents clear the 150% SAFMR ceiling.</div>
+    <div class="gauge">
+      <div class="track"><i class="cur" style="width:75.4%"></i><i class="add" style="width:7.2%"></i></div>
+      <div class="cap"><span>current $131,582</span><span>proposed $144,062</span><span>ceiling $174,400</span></div>
+    </div>
+    <div class="arith">
+      <div><b>$131,582</b>current</div><div><b>$144,062</b>proposed</div>
+      <div><b>$174,400</b>ceiling</div><div><b>+10%</b>increase</div>
+    </div>
+  </div>
+  <div class="seg warn">
+    <div class="k">Needs you</div>
+    <div class="v">2 conflicts</div>
+    <div class="issue"><s>!</s><span>One unit type has no utility-allowance source.
+      <em>Section 7</em></span></div>
+    <div class="issue"><s>!</s><span>HUD and the RCS disagree on the SAFMR. Using HUD.
+      <em>Section 7</em></span></div>
+  </div>
+  <div class="seg">
+    <div class="k">This package</div>
+    <div class="v">5 of 6 documents ready</div>
+    <div class="docs">
+      <span><b class="ok">✓</b>Cover letter (CA)</span>
+      <span><b class="ok">✓</b>Owner cover letter</span>
+      <span><b class="ok">✓</b>Owner’s checklist</span>
+      <span><b class="ok">✓</b>Draft rent schedule</span>
+      <span><b class="ok">✓</b>Tenant notice</span>
+      <span class="miss"><b class="no">○</b>RCS report</span>
+    </div>
+    <div class="sub">The RCS report is uploaded in
+      <button class="jump">Source documents</button>.</div>
+  </div>
+</div>
+
+<div class="body">
+  <div class="rail">
+    <h4>Sections</h4>
+    <a href="#" class="todo"><i>!</i>Source documents</a>
+    <a href="#" class="done"><i>✓</i>Property</a>
+    <a href="#" class="done"><i>✓</i>Principals</a>
+    <a href="#" class="done"><i>✓</i>Point of contact</a>
+    <a href="#" class="done"><i>✓</i>Contract administrator</a>
+    <a href="#" class="done"><i>✓</i>Appraiser</a>
+    <a href="#" class="on todo"><i>!</i>Rents &amp; unit mix</a>
+    <a href="#" class="done"><i>✓</i>Items included in rent</a>
+    <a href="#" class="done"><i>✓</i>Owner’s checklist</a>
+    <a href="#" class="done"><i>✓</i>Tenant notice</a>
+    <div class="alert">
+      <h5>⚠ 3 things to look at</h5>
+      <a href="#">1 UA conflict to resolve</a>
+      <a href="#">1 SAFMR conflict to resolve</a>
+      <a href="#">The completed RCS report isn’t uploaded (Section 1)</a>
+    </div>
+    <div class="prog"><div class="n">8 of 10 confirmed</div>
+      <div class="m">2 sections still to confirm</div>
+      <div class="bar"><i style="width:80%"></i></div></div>
+    <div class="key">
+      <div><s style="background:var(--prov-db)"></s>On file</div>
+      <div><s style="background:var(--prov-cycle)"></s>From a source, not saved</div>
+      <div><s style="background:var(--prov-over)"></s>Overridden</div>
+      <div><s style="background:var(--prov-new)"></s>New</div>
+    </div>
+  </div>
+
+  <div>
+    <div class="card todo">
+      <div class="chead"><span class="cnum">7</span><span class="ctitle">Rents &amp; unit mix</span>
+        <span class="tag">Needs you</span></div>
+      <div class="cbody">
+        <div style="max-width:280px;margin-bottom:20px">
+          <span class="lb">Date rents will be effective</span>
+          <div class="cell db">09/01/2026<span class="src">A YEAR AFTER THE RS</span></div>
+        </div>
+
+        <table class="mix">
+          <thead><tr>
+            <th style="width:26%">Unit type</th>
+            <th class="r" style="width:8%">Units</th>
+            <th class="r" style="width:14%">Current rent</th>
+            <th class="r" style="width:16%">Proposed rent</th>
+            <th class="r" style="width:16%">Utility allowance</th>
+            <th class="r" style="width:20%">150% SAFMR<small>ceiling on rent + UA</small></th>
+          </tr></thead>
+          <tbody>
+            <tr>
+              <td><div class="utwrap"><div class="cell db"><span class="ut">1BR / 1BA</span><span class="tagline"><span class="rcstag">RCS</span><span class="cvx">&#9662;</span></span></div><div class="cell cy desig"><span>Elderly</span><span class="tagline"><span class="src">&middot; RS</span><span class="cvx">&#9662;</span></span></div></div></td>
+              <td><div class="cell db num">24</div></td>
+              <td><div class="cell db num">$1,045</div></td>
+              <td><div class="cell db num">$1,146</div><div class="delta">+$101 · +10%</div></td>
+              <td><div class="cell ov num">$31<span class="src">RS</span></div>
+                  <div class="conflict"><span>exec $31 · RCS $34</span>
+                  <button class="approve">Approve $31</button></div></td>
+              <td><div class="cell ov num">$1,420<span class="src">HUD</span></div>
+                  <div class="conflict"><span>HUD $1,420 · RCS $3,435</span>
+                  <button class="approve">Approve HUD</button></div></td>
+            </tr>
+            <tr>
+              <td><div class="utwrap"><div class="cell db"><span class="ut">2BR / 1BA</span><span class="tagline"><span class="cvx">&#9662;</span></span></div><div class="cell cy desig"><span>Elderly</span><span class="tagline"><span class="src">&middot; RS</span><span class="cvx">&#9662;</span></span></div></div></td>
+              <td><div class="cell db num">36</div></td>
+              <td><div class="cell db num">$1,240</div></td>
+              <td><div class="cell db num">$1,362</div><div class="delta">+$122 · +10%</div></td>
+              <td><div class="cell db num">$38<span class="src">RS</span></div></td>
+              <td><div class="cell db num">$1,690<span class="src">HUD</span></div>
+                  <div class="clear">$1,400 clears by $290</div></td>
+            </tr>
+            <tr>
+              <td><div class="utwrap"><div class="cell db"><span class="ut">2BR / 2BA</span><span class="tagline"><span class="cvx">&#9662;</span></span></div><div class="cell cy desig"><span>Family</span><span class="tagline"><span class="src">&middot; RS</span><span class="cvx">&#9662;</span></span></div></div></td>
+              <td><div class="cell db num">18</div></td>
+              <td><div class="cell db num">$1,310</div></td>
+              <td><div class="cell db num">$1,438</div><div class="delta">+$128 · +10%</div></td>
+              <td><div class="cell db num">$38<span class="src">RS</span></div></td>
+              <td><div class="cell db num">$1,690<span class="src">HUD</span></div>
+                  <div class="clear">$1,476 clears by $214</div></td>
+            </tr>
+            <tr>
+              <td><div class="utwrap"><div class="cell db"><span class="ut">3BR / 2BA</span><span class="tagline"><span class="cvx">&#9662;</span></span></div><div class="cell cy desig"><span>Family</span><span class="tagline"><span class="src">&middot; RS</span><span class="cvx">&#9662;</span></span></div></div></td>
+              <td><div class="cell db num">12</div></td>
+              <td><div class="cell db num">$1,495</div></td>
+              <td><div class="cell db num">$1,641</div><div class="delta">+$146 · +10%</div></td>
+              <td><div class="cell db num">$47<span class="src">RS</span></div></td>
+              <td><div class="cell db num">$2,180<span class="src">HUD</span></div>
+                  <div class="clear">$1,688 clears by $492</div></td>
+            </tr>
+            <tr>
+              <td><div class="utwrap"><div class="cell db"><span class="ut">3BR / 2.5BA</span><span class="tagline"><span class="cvx">&#9662;</span></span></div><div class="cell cy desig"><span>Family</span><span class="tagline"><span class="src">&middot; RS</span><span class="cvx">&#9662;</span></span></div></div></td>
+              <td><div class="cell db num">6</div></td>
+              <td><div class="cell db num">$1,560</div></td>
+              <td><div class="cell db num">$1,712</div><div class="delta">+$152 · +10%</div></td>
+              <td><div class="cell db num">$47<span class="src">RS</span></div></td>
+              <td><div class="cell db num">$2,180<span class="src">HUD</span></div>
+                  <div class="clear">$1,759 clears by $421</div></td>
+            </tr>
+            <tr>
+              <td><div class="utwrap"><div class="cell db"><span class="ut">4BR / 2BA</span><span class="tagline"><span class="cvx">&#9662;</span></span></div><div class="cell cy desig"><span>Family</span><span class="tagline"><span class="src">&middot; RS</span><span class="cvx">&#9662;</span></span></div></div></td>
+              <td><div class="cell db num">4</div></td>
+              <td><div class="cell db num">$1,780</div></td>
+              <td><div class="cell db num">$1,954</div><div class="delta">+$174 · +10%</div></td>
+              <td><div class="cell db num">$55<span class="src">RS</span></div></td>
+              <td><div class="cell db num">$2,455<span class="src">HUD</span></div>
+                  <div class="clear">$2,009 clears by $446</div></td>
+            </tr>
+          </tbody>
+        </table>
+        <button class="addrow">+ Add unit type</button>
+      </div>
+    </div>
+    <div class="card done">
+      <div class="chead"><span class="cnum">8</span>
+        <span class="ctitle">Items included in rent (Part B)</span>
+        <span class="tag">Confirmed</span></div>
+      <div class="cbody">
+        <div class="pb-grp">
+          <div class="pb-h"><h4>Equipment &amp; furnishings</h4><span><b>6</b> of 9 included</span></div>
+          <div class="pb" style="grid-template-rows:repeat(4,auto)">
+          <div class="ck on"><i>✓</i>Range</div>
+          <div class="ck on"><i>✓</i>Refrigerator</div>
+          <div class="ck on"><i>✓</i>Air conditioner</div>
+          <div class="ck"><i>✓</i>Disposal</div>
+          <div class="ck"><i>✓</i>Dishwasher</div>
+          <div class="ck on"><i>✓</i>Carpet</div>
+          <div class="ck"><i>✓</i>Drapes</div>
+          <div class="ck on"><i>✓</i>Microwave</div>
+          <div class="ck on"><i>✓</i>Mini blinds</div>
+          <div class="wi"><i></i><input placeholder="write-in…"></div>
+          <div class="wi"><i></i><input placeholder="write-in…"></div>
+          <div class="wi"><i></i><input placeholder="write-in…"></div>
+          </div>
+        </div>
+        <div class="pb-grp">
+          <div class="pb-h"><h4>Utilities included · fuel type</h4><span><b>3</b> of 5 included</span></div>
+          <div class="pb" style="grid-template-rows:repeat(2,auto)">
+          <div class="ck on"><i>✓</i>Heating<span class="fuel">G</span></div>
+          <div class="ck"><i>✓</i>Cooling<span class="fuel">–</span></div>
+          <div class="ck on"><i>✓</i>Hot water<span class="fuel">G</span></div>
+          <div class="ck on"><i>✓</i>Cooking<span class="fuel">G</span></div>
+          <div class="ck"><i>✓</i>Lights, etc.<span class="fuel">–</span></div>
+          <div class="wi"><i></i><input placeholder="write-in…"><span class="fuel">–</span></div>
+          </div>
+        </div>
+        <div class="pb-grp">
+          <div class="pb-h"><h4>Services &amp; facilities</h4><span><b>2</b> of 8 included</span></div>
+          <div class="pb" style="grid-template-rows:repeat(4,auto)">
+          <div class="ck"><i>✓</i>Parking</div>
+          <div class="ck"><i>✓</i>Laundry</div>
+          <div class="ck"><i>✓</i>Swimming pool</div>
+          <div class="ck"><i>✓</i>Tennis courts</div>
+          <div class="ck on"><i>✓</i>Fitness center</div>
+          <div class="ck on"><i>✓</i>Community RM</div>
+          <div class="wi"><i></i><input placeholder="write-in…"></div>
+          <div class="wi"><i></i><input placeholder="write-in…"></div>
+          <div class="ck"><i>✓</i>Nursing care</div>
+          <div class="ck"><i>✓</i>Linen / maid service</div>
+          <div class="wi"><i></i><input placeholder="write-in…"></div>
+          <div class="wi"><i></i><input placeholder="write-in…"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card done">
+      <div class="chead"><span class="cnum">9</span><span class="ctitle">Owner’s checklist</span>
+        <span class="tag">Confirmed</span></div>
+      <div class="cbody">
+        <div class="cl-top"><span class="n">15 of 17 selected</span>
+          <button class="lnk">✓ Check all</button><button class="lnk">Clear</button></div>
+        <div class="cl">
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="foot">
+  <button class="lnk">↺ Revert to saved</button>
+  <button class="go">Update property profile</button>
+  <button class="go">Generate package</button>
+</div>
+
+<script>
+function T(m,btn){document.documentElement.dataset.t=m;
+  [...btn.parentNode.children].forEach(b=>b.setAttribute('aria-pressed',b===btn));}
+</script>
+</body></html>

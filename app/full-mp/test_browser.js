@@ -35,14 +35,17 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=435;   // 2026-07-30: +81 for the section rail — the indicator's choice of
-                       // section swept across the whole document, the jump landing clear of a
-                       // #ccbar that is now one constant line, the pin and its release, Tab /
-                       // Enter / Space / focus ring, prefers-reduced-motion, and 860px. 49 of
-                       // them fail against 8fc25a1, measured, before any were believed.
-                       // 2026-07-30: the union of two branches, counted off a real run —
-                       // 341 (M61 reload + M62 repaint) plus tab-order’s 13 (Tab walks the
-                       // columns in reading order, and a dropdown you land on says so).
+const MIN_CHECKS=539;   // 2026-07-30 merge: union of both branches, counted off a real run (was ours 435 / main 399)
+                        //;   // 2026-07-30 merge: the union of both branches, counted off a real run.
+                        // ours: +81 for the section rail — the indicator's choice of section swept
+                        //   across the whole document, the jump landing clear of a #ccbar that is now
+                        //   one constant line, the pin and its release, Tab / Enter / Space / focus
+                        //   ring, prefers-reduced-motion, and 860px; plus tab-order's 13.
+                        // main: the pull cut to two rules — at rest at the top it opens, arriving at
+                        //   the top it bobs, and the bob is the same length however you arrived;
+                        //   +10 the swipe rebuilt on the clock; +25 the two package modals join the
+                        //   dialog audit; +12 three zones and the past-due drawer; -3 the rail's
+                        //   eight rows became the strip's five figures.
                        // 2026-07-28: +35 — the home page's filter rail, driven by real clicks.
                        // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
                        // pristine (three seeds, two checks each). 2026-07-27: the unit-type cell
@@ -2264,6 +2267,7 @@ const FULL=process.argv.includes('--full');
           buttons:card.querySelectorAll('button').length,
           nested:!!card.querySelector('button button'),
           label:(card.querySelector('[data-pact]')||{}).textContent||'',
+          prog:(card.querySelector('.pc-prog')||{}).textContent||'',
           body:!!card.querySelector('.pc-body'),
           tag:card.tagName}:{found:0};`);
       T('the tracker property has a card',st.found===1);
@@ -2273,7 +2277,10 @@ const FULL=process.argv.includes('--full');
          string and is a different tree in the browser. */
       eq('and neither is inside the other',await c.eval('return document.querySelector("#menuGrid .pcard button button")===null'),true);
       T('the card body is its own button',st.body);
-      eq('the action names the year and program the tracker gave',st.label,'Start 2030 OCAF');
+      /* In the ledger the programme is a column of its own, so the action names
+         the verb and the year and stops repeating the header beside it. */
+      eq('the action names the verb and the year',st.label,'Start 2030');
+      eq('and the programme is the column it is headed with',st.prog,'OCAF');
 
       /* Both halves must be tab-reachable — that is the reason for two siblings
          rather than a span with a click handler. */
@@ -2306,15 +2313,16 @@ const FULL=process.argv.includes('--full');
       const cy=await c.eval('return (window.__t.__cycles()||[]).map(c=>({e:c.effective_date,p:c.programs}))');
       eq('confirming creates the package the tracker described',cy,[{e:'2030-01-01',p:['ocaf']}]);
 
-      /* Starting it moves the property out of Coming up and into In flight —
-         the rail's whole argument, seen from the other end. */
-      await c.eval('window.__t.openMenu();window.__t.__setMenuView("coming");return 1');await sleep(300);
-      T('the property has left the view it was waiting in',
-        !(await c.eval('return /Selftest Gardens/.test(document.getElementById("menuGrid").innerHTML)')));
-      await c.eval('window.__t.__setMenuView("flight");return 1');await sleep(200);
-      eq('and its card, now in flight, offers to continue it',
+      /* Starting a package is not a deadline, so it moves nothing. The rail
+         lifted the property out of "Needs you" the moment a draft existed,
+         which is how a generated-but-rejected package read as finished. The
+         band is when it is owed; the button is how far along it is. */
+      await c.eval('window.__t.openMenu();window.__t.__setMenuView("later");return 1');await sleep(300);
+      T('the property stays in the band its deadline puts it in',
+        await c.eval('return /Selftest Gardens/.test(document.getElementById("menuGrid").innerHTML)'));
+      eq('and its row now offers to continue what was started',
         await c.eval(`const card=[...document.querySelectorAll('#menuGrid .pcard')].find(x=>/Selftest Gardens/.test(x.textContent));
-          return card?((card.querySelector('[data-pact]')||{}).textContent||''):'(no card)';`),'Continue 2030 OCAF');
+          return card?((card.querySelector('[data-pact]')||{}).textContent||''):'(no card)';`),'Continue 2030');
 
       /* Continue goes all the way through: record, then the package the tracker
          named, then the form open on it. Checking only the label would leave the
@@ -2356,26 +2364,30 @@ const FULL=process.argv.includes('--full');
       const us=n=>{const d=new Date(T0+n*DAY);return (d.getUTCMonth()+1)+'/'+d.getUTCDate()+'/'+d.getUTCFullYear();};
       const trow=(code,name,type,dueIn)=>({'Property Code':code,'Property Name':name,'Portfolio Mgr':'Claire Beatty',
         'Increase Type':type,'Rent Increase':us(dueIn+122),'Due to HUD':us(dueIn)});
-      const rows=[trow('B001','Rail Overdue','RCS',-10),trow('B002','Rail Now','OCAF',10),
+      /* No overdue row on purpose: one band must come out empty, because a
+         band that empties has to stay pressable and say so rather than
+         vanishing from the strip. Selftest Gardens has no row here, so it
+         falls out of the schedule and fills the undated band. */
+      const rows=[trow('B002','Rail Now','OCAF',10),
                   trow('B003','Rail Soon','OCAF',60),trow('B004','Rail Later','OCAF',200)];
       await c.eval('await window.__t.__seedHap('+JSON.stringify(rows)+');window.__t.openMenu();return 1');
       await sleep(250);
-      const railN=await c.eval('return document.querySelectorAll("#menuRail [data-view]").length');
-      eq('the rail draws six views and a Programs group of two',railN,8);
-      T('nothing undefined reached the rail',
-        !(await c.eval('return /undefined/.test(document.getElementById("menuRail").innerHTML)')));
+      const railN=await c.eval('return document.querySelectorAll("#menuCount [data-view]").length');
+      eq('the strip draws four bands and their total',railN,5);
+      T('nothing undefined reached the strip',
+        !(await c.eval('return /undefined/.test(document.getElementById("menuCount").innerHTML)')));
 
       /* Clicking each row: the click reaches the state, exactly one row reads as
          current, and the badge on it equals the cards actually drawn. The last
          is the check a pure unit test cannot make — it is two renderers being
          asked the same question. */
-      const views=await c.eval('return [...document.querySelectorAll("#menuRail [data-view]")].map(b=>b.getAttribute("data-view"))');
+      const views=await c.eval('return [...document.querySelectorAll("#menuCount [data-view]")].map(b=>b.getAttribute("data-view"))');
       for(const v of views){
-        await c.eval('document.querySelector(\'#menuRail [data-view="'+v+'"]\').click();return 1');
+        await c.eval('document.querySelector(\'#menuCount [data-view="'+v+'"]\').click();return 1');
         await sleep(140);
         const st=await c.eval('return {view:window.__t.__menuView(),'
-          +'on:document.querySelectorAll("#menuRail .mr-row.on").length,'
-          +'badge:+(document.querySelector(\'#menuRail [data-view="'+v+'"] .mr-n\').textContent||0),'
+          +'on:document.querySelectorAll("#menuCount .fig.on").length,'
+          +'badge:+(document.querySelector(\'#menuCount [data-view="'+v+'"] b\').textContent||0),'
           +'cards:document.querySelectorAll("#menuGrid .pcard:not(.newcard)").length,'
           +'lede:(document.getElementById("menuLede").textContent||"").length};');
         eq('clicking "'+v+'" selects it, alone',[st.view,st.on],[v,1]);
@@ -2386,10 +2398,39 @@ const FULL=process.argv.includes('--full');
       /* A zero-count row stays on the rail, dimmed and still clickable: a rail
          whose rows come and go means the row you clicked yesterday is not where
          it was, and "Needs you · 0" is the best news the page can give. */
-      await c.eval('document.querySelector(\'#menuRail [data-view="done"]\').click();return 1');
+      /* Disjointness, read off the rendered page rather than off the counts
+         object: four bands and their sum, and the arithmetic has to hold in the
+         DOM the user is actually looking at. */
+      const sum=await c.eval(`const b={};[...document.querySelectorAll('#menuCount [data-view]')]
+        .forEach(x=>b[x.getAttribute('data-view')]=+x.querySelector('b').textContent);
+        return {parts:b.past+b.now+b.later+b.undated,total:b.all};`);
+      eq('the four bands sum to the total, on screen',sum.parts,sum.total);
+      /* A heading asserts a fact, so only its members may sit under it — and on
+         this page every heading is a MONTH, because a month tiles the schedule
+         where a state does not. The two-zone version this replaced headed 83
+         rows "Past their date" and drew them BELOW the rows due within thirty
+         days: later dates above earlier ones, on a list whose whole claim is
+         that it runs in date order. */
+      await c.eval('document.querySelector(\'#menuCount [data-view="all"]\').click();return 1');
+      await sleep(200);
+      const _sh=await c.eval(`const g=document.getElementById('menuGrid');
+        return {grids:g.querySelectorAll('.mgrid.rows').length,
+                heads:[...g.querySelectorAll('.mgroup')].map(x=>x.textContent.trim()),
+                zh:[...g.querySelectorAll('.zhead h3')].map(x=>x.textContent.trim()),
+                states:/Past their date|Remaining|All of them/.test(g.innerHTML)};`);
+      T('what is coming is named by the window it holds, not by a date inside it',
+        /^Due within \d+ days$/.test(_sh.zh[0]||''));
+      T('and no heading anywhere names a state instead of a date or a window',!_sh.states);
+      T('every month a zone reaches is headed by its own name',
+        _sh.heads.filter(h=>/^[A-Z][a-z]+ \d{4}$/.test(h)).length>=1);
+
+      const zv=await c.eval('return ([...document.querySelectorAll("#menuCount [data-view]")]'
+        +'.find(b=>+b.querySelector("b").textContent===0)||{getAttribute:()=>""}).getAttribute("data-view")');
+      T('the fixture leaves a band empty, so the empty state can be pressed',!!zv);
+      await c.eval('document.querySelector(\'#menuCount [data-view="'+zv+'"]\').click();return 1');
       await sleep(140);
-      const z=await c.eval('return {zero:document.querySelector(\'#menuRail [data-view="done"]\').classList.contains("zero"),'
-        +'on:document.querySelector(\'#menuRail [data-view="done"]\').classList.contains("on"),'
+      const z=await c.eval('return {zero:document.querySelector(\'#menuCount [data-view="'+zv+'"]\').classList.contains("zero"),'
+        +'on:document.querySelector(\'#menuCount [data-view="'+zv+'"]\').classList.contains("on"),'
         +'empty:document.querySelectorAll("#menuGrid .mempty").length,'
         +'clear:/Clear search/.test(document.getElementById("menuGrid").innerHTML),'
         +'cards:document.querySelectorAll("#menuGrid .pcard:not(.newcard)").length};');
@@ -2400,27 +2441,427 @@ const FULL=process.argv.includes('--full');
 
       /* Search is a find-within. It forces All so a name is never hidden by the
          filter, without overwriting the view you were in. */
-      await c.eval('document.querySelector(\'#menuRail [data-view="coming"]\').click();return 1');
+      await c.eval('document.querySelector(\'#menuCount [data-view="later"]\').click();return 1');
       await sleep(140);
       await c.eval('const s=document.getElementById("menuSearch");s.focus();s.value="";return 1');
-      await c.type('Overdue');
+      await c.type('Rail Now');
       await sleep(220);
       const s1=await c.eval('return {view:window.__t.__menuView(),'
-        +'found:/Rail Overdue/.test(document.getElementById("menuGrid").innerHTML)};');
+        +'found:/Rail Now/.test(document.getElementById("menuGrid").innerHTML)};');
       T('typing a name finds a property outside the current view',s1.found);
-      eq('and leaves the chosen view alone',s1.view,'coming');
+      eq('and leaves the chosen view alone',s1.view,'later');
       await c.eval('const s=document.getElementById("menuSearch");s.value="";s.dispatchEvent(new Event("input"));return 1');
       await sleep(200);
       const s2=await c.eval('return {view:window.__t.__menuView(),'
-        +'on:(document.querySelector("#menuRail .mr-row.on")||{}).getAttribute("data-view")};');
-      eq('clearing the box returns you where you were',[s2.view,s2.on],['coming','coming']);
+        +'on:(document.querySelector("#menuCount .fig.on")||{}).getAttribute("data-view")};');
+      eq('clearing the box returns you where you were',[s2.view,s2.on],['later','later']);
 
-      /* Mine and All are a different question, so the rail re-resolves rather
-         than stranding you in a view emptied by the lens. */
-      await c.eval('document.querySelector(\'[data-lens="all"]\').click();return 1');
-      await sleep(200);
-      eq('switching the lens re-resolves the view',
-        await c.eval('return window.__t.__menuView()'),'needs');
+      /* ---- how far ahead ----
+         Three settings, and everything on the page that names the window has to
+         move together: the heading, the strip figure, and the rows in the panel.
+         The four bands must also still be disjoint and still sum at EVERY setting
+         — the window moves the line between "coming" and "later", so a figure that
+         did not move with it would double-count or drop rows. */
+      /* Back to the view that HAS the control: it lives in the heading of the panel
+         it resizes, so it is drawn only where that panel is. The checks above leave
+         the page filtered to a band that has no panel. */
+      await c.eval('window.__t.__setMenuView("all");return 1'); await sleep(280);
+      T('the window control is drawn where the panel it resizes is',
+        await c.eval('return !!document.querySelector("#menuGrid .winsel")'));
+      T('and not where that panel is not',
+        await c.eval(`window.__t.__setMenuView("past");return new Promise(r=>setTimeout(()=>
+          r(!document.querySelector('#menuGrid .winsel')),240));`));
+      await c.eval('window.__t.__setMenuView("all");return 1'); await sleep(280);
+      for(const N of [30,60,90]){
+        await c.eval('document.querySelector(\'#menuGrid [data-win="'+N+'"]\').click();return 1');
+        await sleep(300);
+        const w=await c.eval(`const s=document.getElementById('menuCount'),o={};
+          [...s.querySelectorAll('[data-view]')].forEach(b=>
+            o[b.getAttribute('data-view')]=+b.querySelector('b').textContent.replace(/,/g,''));
+          return {on:(s&&document.querySelector('#menuGrid .winb.on')||{}).textContent,
+            head:(document.querySelector('#menuGrid .zhead h3')||{}).textContent.trim(),
+            fig:(document.querySelector('#menuCount [data-view="now"]')||{}).textContent.trim(),
+            rows:document.querySelectorAll('#menuGrid .mgrid.rows.live .pcard').length,
+            now:o.now, sums:(o.now+o.later+o.past+o.undated)===o.all};`);
+        eq(N+' days: the control shows which window is on',w.on,String(N));
+        eq('and the heading names it',w.head,'Due within '+N+' days');
+        T('and the strip figure names it too',w.fig.indexOf('within '+N+' days')>=0);
+        eq('and the panel holds exactly that many rows',w.rows,w.now);
+        T('and the bands still sum to the total at this window',w.sums);
+      }
+      /* Choosing a window while filtered to a band the window redefines would leave
+         the reader looking at a figure they never pressed. */
+      await c.eval('document.querySelector(\'#menuCount [data-view="now"]\').click();return 1');
+      await sleep(240);
+      await c.eval('document.querySelector(\'#menuGrid [data-win="30"]\').click();return 1');
+      await sleep(300);
+      eq('changing the window releases a band the window redefines',
+        await c.eval('return window.__t.__menuView()'),'all');
+      await c.eval('document.querySelector(\'#menuGrid [data-win="90"]\').click();return 1');
+      await sleep(280);
+
+      /* ---- the past-due drawer ----
+         A SECOND seed, because the fixture above deliberately leaves the past
+         band empty so an empty band can be pressed, and there is no drawer
+         without something to put in it. */
+      /* Deliberately TALL. Everything below turns on the page being able to
+         scroll — the compensation that holds the panel still, a flick that starts
+         well down the list, and an auto-close that needs the drawer entirely above
+         the viewport. On a four-row fixture the document is shorter than the
+         scroll being asked for, the browser clamps, and all three read as bugs in
+         the app rather than as a fixture too small to show them. The extra rows
+         are all far future, so what is coming stays a panel of one. */
+      const rows2=[trow('B010','Drawer Behind','OCAF',-40),
+                   trow('B011','Drawer Behind Two','OCAF',-9),
+                   trow('B012','Drawer Now','OCAF',9),
+                   trow('B013','Drawer Far','OCAF',200)]
+        .concat(Array.from({length:14},(_,i)=>
+          trow('B1'+(20+i),'Drawer Filler '+(i+1),'OCAF',300+i*30)));
+      await c.eval('await window.__t.__seedHap('+JSON.stringify(rows2)+');'
+        +'window.__t.__setMenuView("all");window.scrollTo(0,0);return 1');
+      await sleep(280);
+      const read=()=>c.eval(`const g=document.getElementById('menuGrid');
+        const w=document.getElementById('mPastWrap'),b=document.getElementById('mPast');
+        const p=g.querySelector('.mgrid.rows.live');
+        return {banner:b?b.textContent.replace(/\\s+/g,' ').trim():null,
+                expanded:b?b.getAttribute('aria-expanded'):null,
+                hidden:w?!!w.hidden:null,
+                grids:g.querySelectorAll('.mgrid.rows').length,
+                live:g.querySelectorAll('.mgrid.rows.live .pcard').length,
+                flush:(()=>{const m=document.querySelector('#viewMenu .mtop');
+                  return (b&&m)?Math.round(b.getBoundingClientRect().top-m.getBoundingClientRect().bottom):null;})(),
+                label:b?b.textContent.replace(/\\s+/g,' ').trim():null,
+                pull:b?getComputedStyle(b).getPropertyValue('--pull').trim():null,
+                shown:[...document.querySelectorAll('#viewMenu .pcard .pc-name')]
+                  .filter(n=>n.getBoundingClientRect().height>0).map(n=>n.textContent.trim()),
+                panelTop:p?Math.round(p.getBoundingClientRect().top):null,
+                y:Math.round(window.pageYOffset)};`);
+      const d0=await read();
+      /* Closed on arrival, and CLOSED means not rendered to the reader — the
+         whole complaint about the flat version was that the backlog was on the
+         page whether you wanted it or not. */
+      eq('the drawer is closed when the page opens',d0.hidden,true);
+      eq('and it says so to a screen reader too',d0.expanded,'false');
+      T('the banner says how many are behind',/2 already due/.test(d0.banner||''));
+      T('and none of those rows is on the page',
+        !d0.shown.includes('Drawer Behind')&&!d0.shown.includes('Drawer Behind Two'));
+      T('while what is coming is',d0.shown.includes('Drawer Now'));
+      eq('what is coming is a panel of its own',d0.live,1);
+      /* Flush under the masthead, and edge to edge: it reads as attached to the
+         navy rather than as the first item of the list it is not part of. */
+      eq('the banner touches the masthead',d0.flush,0);
+      T('and it offers to show them without saying "them"',
+        /Show$/.test(d0.label||'')&&!/Show them/.test(d0.label||''));
+      /* ---- the pull: two rules, and nothing else ----
+         What was here read the SHAPE of a gesture — how fast it arrived, whether
+         its deltas decayed, how long the wheel had been moving — and decided from
+         that whether to open, how hard to resist and what to draw. All of it
+         behaved differently on a trackpad and a mouse. Matt: "sometimes displays a
+         bob and line, sometimes does not, sometimes delayed/late, and sometimes is
+         glitchy as shit."
+
+             1. AT the top, at rest, and you scroll up  ->  it opens.
+             2. You scroll UP TO the top                ->  it bobs, once, at once.
+
+         The whole point of what follows is that rule 2 does the SAME THING however
+         you arrive. So each shape is driven and compared, rather than one shape
+         being driven and the rest assumed. */
+      const wheel=dy=>c.send('Input.dispatchMouseEvent',
+        {type:'mouseWheel',x:600,y:400,deltaX:0,deltaY:dy});
+      const notch=()=>wheel(-100);
+      /* Closed, parked, and still for longer than REST_GAP. */
+      const shut=async y=>{
+        if(!(await read()).hidden)
+          await c.eval('document.getElementById("mPast").click();return 1');
+        await c.eval('window.scrollTo(0,'+y+');return 1');await sleep(1700);};
+      /* The bob is a transform on the banner's own text — composited, so it cannot
+         judder. It replaced an animation on PADDING that relaid out 229 rows every
+         time anyone reached the top, and before that one on min-height that moved
+         nothing at all because the banner is taller than the minimum it set. That
+         one shipped because the test asserted the CLASS. This reads the transform. */
+      const IDENT=/^(none|matrix\(1, 0, 0, 1, 0, 0\))$/;
+      const bobbed=async fn=>{
+        await c.eval(`window.__B=[];window.__bi=setInterval(()=>{
+          const n=document.querySelector('#viewMenu .mp-n');
+          const b=document.getElementById('mPast');
+          window.__B.push([n?getComputedStyle(n).transform:'none',
+            Math.round(b.getBoundingClientRect().height)]);},16);return 1`);
+        await fn(); await sleep(700);
+        const B=await c.eval('clearInterval(window.__bi);return window.__B');
+        const H=B.map(r=>r[1]);
+        return {moved:B.filter(r=>!IDENT.test(r[0])).length,
+                rests:IDENT.test(B[B.length-1][0]),
+                grew:Math.max.apply(null,H)-Math.min.apply(null,H),
+                back:H[H.length-1]===Math.min.apply(null,H)};};
+
+      /* ---- rule 1: a PUSH, not a pause ----
+         It used to want a quarter second of silence first, and on a trackpad that
+         silence does not exist — momentum fires for over a second after the fingers
+         lift, so a second swipe lands inside the tail of the first. It worked for
+         Matt only with the pointer parked over the banner, where nothing under the
+         cursor scrolls and so no momentum is made. A distance cannot be starved by
+         a stream of events. */
+      await shut(0);
+      await notch(); await notch(); await notch(); await sleep(500);
+      const a1=await read();
+      eq('pushing up against the top opens it',a1.hidden,false);
+      /* Within a few pixels, not exactly: the push that opens it is several wheel
+         events, and the compensation is measured during one of them. Measured at 8
+         to 19px where the click path is exact. The claim is that the reader has not
+         travelled — a third of a row is not travel. */
+      T('and what is coming has not moved',Math.abs(a1.panelTop-d0.panelTop)<25);
+      T('the arrow points down, because that is where the rows went',
+        /↓/.test(a1.label||''));
+
+      /* ---- rule 2, three ways in ---- */
+      const arrivals=[];
+      for(const [name,fn] of [
+        ['a decaying fling',async()=>{let d=-320;
+          for(let i=0;i<40;i++){await wheel(Math.min(-1,Math.round(d)));d*=0.9;await sleep(16);}}],
+        ['a steady wheel',async()=>{for(let i=0;i<22;i++){await wheel(-120);await sleep(30);}}],
+        ['a fast wheel',async()=>{for(let i=0;i<30;i++){await wheel(-120);await sleep(12);}}]]){
+        await shut(2400);
+        const b=await bobbed(fn);
+        const r=await read();
+        T('arriving at the top by '+name+' bobs the banner',b.moved>0);
+        /* The BAR opens downward too. Text alone was too quiet to read as an
+           invitation, and a hint nobody notices is a hint that is not there. */
+        T('and the bar itself opens downward, not just the type',b.grew>=10);
+        T('and both settle back where they started',b.rests&&b.back);
+        eq('and opens nothing',r.hidden,true);
+        eq('and leaves the page at the top',r.y,0);
+        arrivals.push(b.moved);
+      }
+      /* The claim the whole rewrite rests on. Three gestures with nothing in common
+         but where they end up, and the hint is the same length every time. */
+      T('and every arrival bobs for the same length, whatever brought it there',
+        Math.max.apply(null,arrivals)-Math.min.apply(null,arrivals)<=3);
+
+      /* Nothing else on this bar animates now. The progress rule is gone: it drew
+         on gestures that opened nothing, at times with no relation to what the
+         reader had just done. */
+      T('and no progress rule is drawn anywhere any more',
+        await c.eval('return !document.querySelector("#viewMenu .mp-fill")'));
+
+      /* ---- the burst that opens it cannot also ride it up ---- */
+      await shut(0);
+      for(let i=0;i<12;i++){await wheel(-120);await sleep(15);}
+      await sleep(600);
+      const bu=await read();
+      eq('a fast burst from rest opens it too',bu.hidden,false);
+      T('and the third of a second after it opens keeps the burst from riding up',
+        bu.panelTop-d0.panelTop<1000);
+      /* And that third of a second is over by the time anyone reacts to it. Read
+         off defaultPrevented rather than off the scroll position, because this
+         fixture's backlog is two rows tall: a burst pins it to zero and there is
+         nowhere left for a later scroll to go, which fails a rule that works. */
+      await c.eval(`window.__C=[];window.addEventListener('wheel',
+        e=>window.__C.push(e.defaultPrevented?1:0),{passive:true});return 1`);
+      await shut(0);
+      await c.eval('window.__C=[];return 1');
+      await notch(); await notch();        /* the push */
+      await notch();                       /* opens it, and is swallowed */
+      await sleep(60);  await notch();     /* inside the hold */
+      await sleep(600); await notch();     /* long after it */
+      const C=await c.eval('return window.__C');
+      eq('the wheel that opens it is swallowed, so its scroll cannot land',C[2],1);
+      eq('and so is one that follows straight after',C[3],1);
+      eq('but a scroll a moment later is the reader scrolling, and it scrolls',C[4],0);
+
+      /* ---- Escape puts the list back the way it was found ---- */
+      await shut(0);
+      await notch(); await notch(); await notch(); await sleep(500);
+      await c.eval('window.scrollTo(0,1200);return 1'); await sleep(300);
+      await c.key('Escape'); await sleep(400);
+      const esc=await read();
+      eq('Escape puts the backlog away again',esc.hidden,true);
+      eq('and returns the reader to the start of the list',esc.y,0);
+
+      /* Pressing Hide scrolls back to the top, which is an arrival — the bob must
+         not fire for the page rearranging itself under a button. */
+      await shut(0);
+      await c.eval('document.getElementById("mPast").click();return 1'); await sleep(400);
+      const hb=await bobbed(async()=>{
+        await c.eval('document.getElementById("mPast").click();return 1');});
+      eq('pressing Hide does not wink at you',hb.moved,0);
+
+      /* ---- and the banner is still a button ----
+         Everything above is a gesture. This is the way in for a reader who would
+         rather press something, and it has to land in the same place. */
+      await shut();
+      await c.eval('document.getElementById("mPast").click();return 1');
+      await sleep(340);
+      const d1=await read();
+      eq('pressing the banner opens the drawer',d1.hidden,false);
+      T('the rows behind you are now on the page',d1.shown.includes('Drawer Behind'));
+      T('and the banner offers to close it again',/Hide/.test(d1.banner||''));
+      eq('opening it does not move what is coming',d1.panelTop,d0.panelTop);
+      T('the page scrolled by exactly what appeared above it',d1.y>d0.y);
+      /* Earliest first inside the drawer, same as everywhere else. */
+      T('and the drawer runs earliest-due first',
+        d1.shown.indexOf('Drawer Behind')<d1.shown.indexOf('Drawer Behind Two'));
+      await c.eval('document.getElementById("mPast").click();return 1');
+      await sleep(340);
+      const d2=await read();
+      eq('pressing it again closes it',d2.hidden,true);
+      eq('and what is coming still has not moved',d2.panelTop,d0.panelTop);
+
+      /* ---- the bar stays reachable, and puts itself away ----
+         Pinned while open, so Hide can be pressed from anywhere in the drawer
+         rather than only from the top of it. And scrolling back down past the
+         drawer closes it, returning the page to the configuration it opened in —
+         only once the drawer is entirely above the viewport, where removing it and
+         compensating the scroll leaves every visible pixel where it was. */
+      await c.eval('window.scrollTo(0,0);return 1'); await sleep(140);
+      await c.eval('document.getElementById("mPast").click();return 1');
+      await sleep(320);
+      const pin=await c.eval(`window.scrollTo(0,240);return new Promise(r=>setTimeout(()=>{
+        const b=document.getElementById('mPast');
+        r({pos:getComputedStyle(b).position,top:Math.round(b.getBoundingClientRect().top),
+           hidden:!!document.getElementById('mPastWrap').hidden});},420));`);
+      eq('the bar is pinned while the drawer is open',pin.pos,'sticky');
+      /* Within a pixel or two of the top, not exactly 0: the scroll that got here
+         can still be settling when this is read, and the failure this guards
+         against is the bar riding away with the rows (-180, -1440), not a
+         subpixel. */
+      T('and sits at the top of the screen, not scrolled off it',Math.abs(pin.top)<=2);
+      eq('with the drawer still open at that point',pin.hidden,false);
+      await c.eval('window.scrollTo(0,document.body.scrollHeight);return 1');
+      await sleep(420);
+      const back=await read();
+      eq('scrolling down past the drawer puts it away again',back.hidden,true);
+      T('and the bar goes back to sitting in the flow',
+        await c.eval('return getComputedStyle(document.getElementById("mPast")).position!=="sticky"'));
+      /* Back to the first fixture, so the checks after this read the portfolio
+         they were written against. */
+      await c.eval('await window.__t.__seedHap('+JSON.stringify(rows)+');'
+        +'window.__t.__setMenuView("all");return 1');
+      await sleep(220);
+
+      /* ---- it stays centred on a wide display ----
+         `margin:0` where the base rule said `margin:0 auto` pinned the launcher
+         and the contacts page to the left edge of anything wider than 1480px,
+         with the whole right-hand third of the screen empty. Nothing in the
+         markup shows it and every narrow-window screenshot looks correct, so it
+         is asserted at a width that can actually expose it. */
+      for(const W of [1680,2560]){
+        await c.send('Emulation.setDeviceMetricsOverride',
+          {width:W,height:900,deviceScaleFactor:1,mobile:false});
+        await sleep(240);
+        const g=await c.eval(`const e=document.querySelector('#viewMenu .mwrap');
+          const b=e.getBoundingClientRect();
+          return {l:Math.round(b.left),r:Math.round(window.innerWidth-b.right),
+            w:Math.round(b.width),
+            over:document.documentElement.scrollWidth>document.documentElement.clientWidth+1};`);
+        T('at '+W+'px the page is centred, not pinned left',Math.abs(g.l-g.r)<=1);
+        T('and capped rather than stretched across the whole display',g.w<=1480);
+        T('with nothing spilling sideways',!g.over);
+      }
+      await c.send('Emulation.clearDeviceMetricsOverride');
+      await sleep(240);
+
+      /* ---- the dialogs are on the system too ----
+         One dialog was in the new look and eight were in the old, and the eight are
+         reached from pages that are entirely new. Promoting .dialog.desk to .dialog
+         fixed the shell; what this asserts is that each dialog's CONTENTS came with
+         it, because a shared shell is exactly the thing that makes you stop looking
+         at what is inside it. Radii from the three the system has, one typeface, one
+         primary action, and it fits on the screen. */
+      const dlgAudit=()=>c.eval(`const d=document.getElementById('dialog');
+        const b=d.getBoundingClientRect(),R=new Set(),F=new Set();
+        d.querySelectorAll('*').forEach(e=>{const s=getComputedStyle(e);
+          if(s.borderTopLeftRadius!=='0px')R.add(s.borderTopLeftRadius);
+          F.add(s.fontFamily.split(',')[0].replace(/"/g,''));});
+        const C=new Set();
+        d.querySelectorAll('*').forEach(e=>{const s=getComputedStyle(e);
+          C.add(s.color); if(s.accentColor&&s.accentColor!=='auto')C.add(s.accentColor);});
+        return {open:document.getElementById('scrim').classList.contains('open'),
+          radii:[...R],fonts:[...F],colors:[...C],
+          prim:d.querySelectorAll('.btn.p,.btn.danger').length,
+          fits:b.top>=-1&&b.bottom<=window.innerHeight+1};`);
+      const ALLOWED=['4px','8px','999px','50%'];
+      /* The three colours the desk replaced, by their computed value: #b45309 amber,
+         #0f766e teal, #1e3a5f navy. Named rather than inferred, because a whitelist
+         of the palette would have to allow white on navy, currentColor on every SVG
+         and the browser's own greys — and would then pass on anything new. These
+         three are what the old chrome actually painted, and all three survived into
+         the package modals until 2026-07-30: the amber on the not-ready count, the
+         teal on Download, the navy on the UAF checkbox. */
+      const LEGACY=['rgb(180, 83, 9)','rgb(15, 118, 110)','rgb(30, 58, 95)'];
+      /* Synthetic arguments, not a generated package: what is under audit is the
+         dialog's own paint, and reaching these two for real needs six templates,
+         an upload and a letterhead. Both are pure record -> markup. */
+      const DOCS='[{label:"Cover letter (CA)",file:"01",bytes:new Uint8Array(9)}]';
+      const BLK='[{label:"Tenant notice",missing:[{key:"tenant.name",label:"Addressee",sec:8,why:"x"}],warns:[]}]';
+      for(const [open,name] of [
+        ['document.getElementById("bNewProperty").click()','New property'],
+        ['document.getElementById("menuWho").click()','the portfolio picker'],
+        ['showPackageModal("Fair Oaks",'+DOCS+',new Uint8Array(9),true,true,["A caveat."],'+BLK+',{})',
+         'the RCS package modal'],
+        ['showOcafUafModal("Fair Oaks","OCAF",'+DOCS+',new Uint8Array(9),["A caveat."],'+BLK+',{},[["Cover letter (CA)"],["Tenant notice"]])',
+         'the OCAF package modal']]){
+        await c.eval(open+';return 1'); await sleep(380);
+        const a=await dlgAudit();
+        eq(name+' opens',a.open,true);
+        eq('and uses only the radii the system has',a.radii.filter(r=>ALLOWED.indexOf(r)<0),[]);
+        eq('and one typeface',a.fonts,['IBM Plex Sans']);
+        eq('and none of the colours the desk replaced',a.colors.filter(x=>LEGACY.indexOf(x)>=0),[]);
+        T('and offers at most one primary action',a.prim<=1);
+        T('and fits on the screen',a.fits);
+        await c.eval('document.getElementById("scrim").classList.remove("open");return 1');
+        await sleep(160);
+      }
+
+      /* Whose portfolio you are reading is one control now, and changing it
+         releases the band — the bands are not the same shape for one manager
+         as for everyone, so a chosen band would sit on a bucket that emptied
+         only because the scope moved. */
+      await c.eval('document.getElementById("menuWho").click();return 1');
+      await sleep(250);
+      T('the name in the masthead opens the portfolio picker',
+        await c.eval('return !!document.querySelector(\'[data-who="*"]\')'));
+      await c.eval('document.querySelector(\'[data-who="*"]\').click();return 1');
+      await sleep(300);
+      eq('choosing Everyone releases the chosen band',
+        await c.eval('return window.__t.__menuView()'),'all');
+      T('and the masthead says which portfolio is on screen',
+        await c.eval('return /All portfolios/.test(document.getElementById("menuWho").textContent)'));
+
+      /* ---- the manager column belongs to the everyone scope ----
+         Reading one manager's list, a column repeating that manager on every row
+         restates what the masthead says 229 times. Reading all of them, it is the
+         fact that says whose row it is. Driven through the real picker rather
+         than by setting the lens, because the two grids and the header row have
+         to agree about the column count — a cell hidden by CSS inside a six
+         column grid is how a row silently gains a seventh. */
+      const cols=()=>c.eval(`const g=document.querySelector('#menuGrid .mgrid.rows');
+        const h=document.querySelector('#menuGrid .mcols');
+        return {pm:g.className.split(' ').indexOf('pm')>=0,
+          head:[...h.querySelectorAll('span')].map(x=>x.textContent),
+          cell:!!document.querySelector('#menuGrid .pc-pm'),
+          agree:getComputedStyle(document.querySelector('#menuGrid .pcard')).gridTemplateColumns
+               ===getComputedStyle(h).gridTemplateColumns,
+          over:document.documentElement.scrollWidth>document.documentElement.clientWidth+1};`);
+      const everyone=await cols();
+      T('showing everyone, the list names the manager on every row',everyone.pm&&everyone.cell);
+      eq('under a header of its own',everyone.head[1],'Manager');
+      T('the rows and the header agree on the columns',everyone.agree);
+      T('and nothing spills sideways',!everyone.over);
+      await c.eval('document.getElementById("menuWho").click();return 1');
+      await sleep(300);
+      const picked=await c.eval(`const r=[...document.querySelectorAll('[data-who]')]
+        .filter(x=>x.getAttribute('data-who')!=='*')[0];
+        const n=r.getAttribute('data-who');r.click();return n;`);
+      await sleep(400);
+      T('a manager was there to choose',!!picked);
+      const one=await cols();
+      T('narrowed to one, the column goes',!one.pm&&!one.cell);
+      eq('and the header goes with it',one.head[1],'Program');
+      T('the rows and the header still agree',one.agree);
+      await c.eval('document.getElementById("menuWho").click();return 1');
+      await sleep(300);
+      await c.eval('document.querySelector(\'[data-who="*"]\').click();return 1');
+      await sleep(300);
     }
 
     /* ── Tab walks the form the way the form is read ────────────────────────

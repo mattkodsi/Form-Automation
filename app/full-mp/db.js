@@ -368,22 +368,26 @@ async function makeDb(adapter, opts) {
      conflict between two numbers that are no longer the numbers in front of
      them. The owner's checklist goes the same way: it is signed per package.
 
-     Current rents and utility allowances depend on the programs. An RCS year
-     uploads an executed rent schedule that supplies both, so inheriting them
-     puts last year's figures on the form in the colour of saved truth. An
-     OCAF or UAF year has no schedule to upload and the prior contract rent is
-     the starting point — cycleAnalysis already falls back to it.
+     Current rents and utility allowances never carry, on any programme.
+     They were dropped on RCS years only, on the reasoning that an OCAF year
+     has no executed schedule to upload and last year's figures are the best
+     starting point. Both halves were wrong. Nothing in the app ever rolls
+     proposed into current, so an OCAF built from an OCAF inherited a rent one
+     full cycle stale and computed this year's factor against it. And rolling
+     proposed forward would not have fixed it: what took effect is whatever the
+     CA returned after the owner submitted, and the only record of that is the
+     executed schedule. A figure we cannot observe must not arrive wearing the
+     colour of saved truth. The column starts empty and the schedule fills it.
 
      Still pre-filled either way: unit mix, Part B, non-S8 and non-revenue
      rows, debt service, and everything about the property itself. */
-  const cyNoCarry = (k, progs) => /^units\.\d+\.proposed$/.test(k)
+  const cyNoCarry = (k) => /^units\.\d+\.proposed$/.test(k)
+    || /^units\.\d+\.(current|ua_exec|ua_source|ua_custom)$/.test(k)
     || /^units\.\d+\.(br_rcs|ba_rcs|num_rcs|ua_rcs)$/.test(k)
     || /^units\.\d+\.safmr_(hud|rcs|source|custom)$/.test(k)
     || /^units\.\d+\.(ua|safmr|num|type)_reviewed$/.test(k)
     || /^units\.\d+\.uac_[a-z]+$/.test(k)
     || /^check\.\d+$/.test(k)
-    || ((progs || []).indexOf('rcs') >= 0
-        && /^units\.\d+\.(current|ua_exec|ua_source|ua_custom)$/.test(k))
     || /^appr\./.test(k)
     || /^ocaf\.(factor_|ds_t12$|ds_f12$)/.test(k)
     || /^uaf\./.test(k)
@@ -407,6 +411,35 @@ async function makeDb(adapter, opts) {
     return cs[0].id;
   }
   const cyISO = v => { v = String(v || '').trim(); if (/^\d{4}-\d{2}-\d{2}/.test(v)) return v.slice(0, 10); const m = v.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/); return m ? (m[3] + '-' + ('0' + m[1]).slice(-2) + '-' + ('0' + m[2]).slice(-2)) : ''; };
+  /* ---- one package per programme per effective date ----
+     API PARITY with db.supabase.js — same rule, same error code, same fields. The
+     rule is NOT "one package per year": Luther Towers (90111) carries two startable
+     rows in one calendar year (OCAF 2026-09-01 and OCAF 2026-12-06), and the utility
+     allowance may be done alongside the rent action or on its own, so one date may
+     legitimately hold {rcs, uaf} as one package or {rcs} and {uaf} as two. Keying on
+     the PROGRAMME within the date allows both and rejects a programme twice.
+
+     Undated packages are not guarded: there is no key to be unique against. The
+     error carries the cid already holding the programme so the caller can open that
+     one instead of reporting a failure. */
+  const PROGS_OF = c => String((c && c.programs) || '')
+    .split(',').map(x => x.trim().toLowerCase()).filter(Boolean);
+  const assertProgramsFree = (pid, effIn, progs, skipCid) => {
+    const eff = cyISO(effIn); if (!eff) return;
+    const want = (progs || []).map(x => String(x).trim().toLowerCase()).filter(Boolean);
+    if (!want.length) return;
+    for (const cid in D.cycles) {
+      if (cid === skipCid) continue;
+      const c = D.cycles[cid];
+      if (!c || c.property_id !== pid || cyISO(c.effective_date) !== eff) continue;
+      const clash = want.filter(x => PROGS_OF(c).indexOf(x) >= 0);
+      if (!clash.length) continue;
+      const e = new Error('A ' + clash.join(' + ').toUpperCase()
+        + ' package effective ' + eff + ' already exists for this property.');
+      e.code = 'DUP_PACKAGE_PROGRAM'; e.cid = cid; e.programs = clash; e.effective = eff;
+      throw e;
+    }
+  };
   function cySyncEff(c) {
     // the form's date-rents-effective drives the cycle's date + year label
     const src = (c.cells['rent_schedule.date_eff_source'] || {}).value;
@@ -478,6 +511,13 @@ async function makeDb(adapter, opts) {
     getActive() { return { pid: D.meta.activePid }; },
     setActive(pid) { if (D.props[pid]) D.meta.activePid = pid; return Promise.resolve(); }, // pointer only; nav must not write (real saves persist it)
     createProperty(name, raMasterId) { assertNameFree(name); const r = _createProperty(name || '', raMasterId); persist(); return r; },
+    /* API PARITY with db.supabase.js. Binding, not creating: a record can
+       predate the schedule, and then opening its tracker row tried to make a
+       SECOND property under the same name and hit the one-name rule. */
+    setRaCode(pid, code) { const p = D.props[pid]; if (!p) return;
+      const c = String(code == null ? '' : code).trim();
+      if (!c || String(p.ra_property_code || '') === c) return;
+      p.ra_property_code = c; touch(pid); return persist(); },
     renameProperty(pid, name) { const p = D.props[pid]; if (!p) return; assertNameFree(name, pid); p.durable['property.name'] = cell(name); touch(pid); return persist(); },
     deleteProperty(pid) {
       delete D.props[pid];
@@ -532,12 +572,12 @@ async function makeDb(adapter, opts) {
     createCycle(pid, opts) {
       const p = D.props[pid]; if (!p) throw new Error('no property ' + pid);
       const o = opts || {}; const cid = nid('cy'); const cells = {};
+      assertProgramsFree(pid, o.effective_date, o.programs || ['rcs']);
       if (o.full) { const m = bucketsOf(pid); for (const k in m) { if (k === 'assets.letterhead_data') continue; cells[k] = { value: m[k].value, saved_at: m[k].saved_at || today() }; } }
       else {
         const domId = dominantCycleId(pid);
         const src = domId ? D.cycles[domId].cells : bucketsOf(pid);
-        const _pg = o.programs || ['rcs'];
-          for (const k in src) { if (cyNoCarry(k, _pg)) continue; const v = src[k].value; if (v == null || v === '') continue; cells[k] = { value: String(v), saved_at: today() }; }
+          for (const k in src) { if (cyNoCarry(k)) continue; const v = src[k].value; if (v == null || v === '') continue; cells[k] = { value: String(v), saved_at: today() }; }
         for (const k in p.durable) { if (!isTemplateKey(k)) continue; cells[k] = { value: p.durable[k].value, saved_at: today() }; } // property record stays authoritative for identity
       }
       // The date picked when the package is created is a statement about this

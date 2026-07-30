@@ -124,8 +124,25 @@ function sK(n){const a=Math.abs(n),sg=(n<0?'-$':'+$');return a>=1e6?sg+(a/1e6).t
    caption follows it, so a decrease is never captioned "increase". */
 const liftClr=n=>n>0?'#0f766e':(n<0?'#b91c1c':'#64748b');
 const liftWord=n=>n<0?'decrease':'increase';
+/* ---- display formatting -------------------------------------------------
+   Every figure this product shows is formatted at the point of display; the
+   record keeps the raw value so parsing, comparison and generation are
+   untouched. A units column reading 1689 looks like a database dump, and the
+   authority of a document that files with HUD is that its numbers read exact. */
+function fmtNum(n){const v=String(n==null?'':n).trim();if(!v)return '';
+  const neg=v.charAt(0)==='-',d=v.replace(/[^0-9.]/g,'');if(!d)return '';
+  const parts=d.split('.');
+  return (neg?'-':'')+parts[0].replace(/\B(?=(\d{3})+(?!\d))/g,',')+(parts[1]?('.'+parts[1]):'');}
+/* Ten digits, or eleven led by a country code, get the shape. Anything else is
+   shown verbatim — inventing a format for a number we cannot read would assert
+   a phone number where the record holds something else. */
+function fmtPhone(v){const s=String(v==null?'':v).trim();if(!s)return '';
+  let d=s.replace(/\D/g,'');if(d.length===11&&d.charAt(0)==='1')d=d.slice(1);
+  if(d.length!==10)return s;
+  return '('+d.slice(0,3)+') '+d.slice(3,6)+'-'+d.slice(6);}
+function fmtEmail(v){return String(v==null?'':v).trim().toLowerCase();}
 function fmtDate(d){if(!d)return '';const p=String(d).split('-');return p.length===3?p[1]+'/'+p[2]+'/'+p[0]:d;}
-function fmtPhone(x){const d=String(x).replace(/\D/g,'').slice(0,10);if(!d)return '';if(d.length<4)return '('+d;if(d.length<7)return '('+d.slice(0,3)+') '+d.slice(3);return '('+d.slice(0,3)+') '+d.slice(3,6)+'-'+d.slice(6);}
+function fmtPhoneInput(x){const d=String(x).replace(/\D/g,'').slice(0,10);if(!d)return '';if(d.length<4)return '('+d;if(d.length<7)return '('+d.slice(0,3)+') '+d.slice(3);return '('+d.slice(0,3)+') '+d.slice(3,6)+'-'+d.slice(6);}
 function cleanNum(x){return String(x==null?'':x).replace(/[^0-9]/g,'');}
 function fmtMoney(x){const d=cleanNum(x);return d?(+d).toLocaleString('en-US'):'';}
 function fmtDateInput(x){const d=String(x==null?'':x).replace(/\D/g,'').slice(0,8);if(!d)return '';let o=d.slice(0,2);if(d.length>=3)o+='/'+d.slice(2,4);if(d.length>=5)o+='/'+d.slice(4,8);return o;}
@@ -346,7 +363,7 @@ function dateEffCell(){const rs=get('rent_schedule.date_eff_rs');const src=get('
   const _bad=(src==='custom')&&String(custom||'').trim()!==''&&!dateParts(custom);
   return `<div class="field"><div class="flabel">Date rents will be effective</div>${_bad?'<div class="ucnote warn" style="margin:0 0 4px">\u26a0 That is not a date \u2014 enter it as mm/dd/yyyy.</div>':''}<div class="fbox uacell" data-box="${boxKey}" style="background:${c[1]};border-left-color:${c[0]}"><div class="uadrop" style="flex:1;min-width:0"><div class="uatrigger" tabindex="0">${lab}<span class="cvx">▾</span></div>${menu}</div>${ovIcons(['rent_schedule.date_eff_custom','rent_schedule.date_eff_source','rent_schedule.date_eff_rs'])}</div></div>`;}
 const POC_PICK_KEYS=['poc.name','poc.email','poc.phone'];
-function pocSelectContact(ct){form=store.editForm(form,'poc.name',ct.name||'');form=store.editForm(form,'poc.email',ct.email||'');form=store.editForm(form,'poc.phone',fmtPhone(ct.phone||''));
+function pocSelectContact(ct){form=store.editForm(form,'poc.name',ct.name||'');form=store.editForm(form,'poc.email',ct.email||'');form=store.editForm(form,'poc.phone',fmtPhoneInput(ct.phone||''));
   POC_PICK_KEYS.forEach(k=>{if(form[k])form[k].fromPick=true;});}
 // The name cell's save/revert buttons bundle the whole contact group ONLY while
 // the pick is still intact (the name key itself still carries fromPick — a plain
@@ -379,7 +396,7 @@ function caDir(modeKeys,sub){return {kind:'ca',one:'contract administrator',
   sub:sub};}
 const DIR_PICK={
  'appr.name':{kind:'appraiser',one:'appraiser',keys:['appr.name','appr.firm','appr.email','appr.phone','appr.addr_street','appr.addr_city','appr.addr_state','appr.addr_zip'],modeKeys:['appr.name'],
-  apply:ct=>dirFill([['appr.name',ct.name],['appr.firm',ct.firm],['appr.email',ct.email],['appr.phone',fmtPhone(ct.phone||'')],['appr.addr_street',ct.addr_street],['appr.addr_city',ct.addr_city],['appr.addr_state',ct.addr_state],['appr.addr_zip',ct.addr_zip]]),
+  apply:ct=>dirFill([['appr.name',ct.name],['appr.firm',ct.firm],['appr.email',ct.email],['appr.phone',fmtPhoneInput(ct.phone||'')],['appr.addr_street',ct.addr_street],['appr.addr_city',ct.addr_city],['appr.addr_state',ct.addr_state],['appr.addr_zip',ct.addr_zip]]),
   sub:ct=>[ct.firm,dirAddrLine(ct)].filter(Boolean).join(' \u00b7 ')||ct.email||''},
  'ca.name':caDir(['ca.prefix','ca.name'],ct=>[ct.title,ct.org,dirAddrLine(ct)].filter(Boolean).join(' \u00b7 ')),
  /* The same entry, reached from the cell you happen to be looking at. Each
@@ -440,6 +457,7 @@ function srcDisp(k,v){
   if(SRC_MONEY.test(k)){const f=fmtMoney(v);return f?('$'+f):String(v);}   // a value we cannot read as a number prints as it came
   if(SRC_COUNT.test(k)){const f=fmtMoney(v);return f||String(v);}          // separators, no currency
   if(/\.phone$/.test(k))return fmtPhone(v)||String(v);
+  if(/\.email$/.test(k))return fmtEmail(v);
   return v;}
 function srcOptRow(attrs,val,tag,sel){const _c='uaopt srcopt'+(sel?' sel':'');return val?('<div class="'+_c+'" '+attrs+'>'+val+'<span class="uasub">'+esc(tag)+'</span></div>'):('<div class="'+_c+' srcdim">\u2014<span class="uasub">'+esc(tag)+' \u00b7 not available</span></div>');}
 function srcPick(k,rows){
@@ -466,7 +484,7 @@ const SRCPICK_ROWS={
  'tenant.sender_title':()=>[{tag:'Related Affordable',val:raVal('tenant.sender_title')}],
  'appr.firm':()=>[{tag:'RCS report',val:rcsVal('appr.firm')}],
  'appr.email':()=>[{tag:'RCS report',val:rcsVal('appr.email')}],
- 'appr.phone':()=>[{tag:'RCS report',val:rcsVal('appr.phone')?fmtPhone(rcsVal('appr.phone')):null}],
+ 'appr.phone':()=>[{tag:'RCS report',val:rcsVal('appr.phone')?fmtPhoneInput(rcsVal('appr.phone')):null}],
  'tenant.sender_name':()=>[{tag:'Related Affordable',val:raVal('tenant.sender_name')}],
 };
 /* Address groups: one dropdown pulls the whole street/city/state/zip group. */
@@ -536,7 +554,7 @@ function fieldCell(f){if(f.type==='sigtitle')return sigTitleCell(f);if(f.type===
   const s=form[f.k]||{value:'',source:'new'};
   const c=f.prefix?groupColors([f.prefix,f.k]):cellColors(f.k);
   const pre=f.prefix?csDrop(f.prefix,['Ms.','Mr.','Dr.','Mx.'],'—','csnarrow',true,partHot(f.prefix)?tintStyle(f.prefix):''):'';
-  return `<div class="field"><div class="flabel">${f.label}</div><div class="fbox" data-box="${f.k}" style="background:${c[1]};border-left-color:${c[0]}">${pre}<input type="text" data-k="${f.k}" style="${f.prefix&&partHot(f.k)?tintStyle(f.k):''}"${f.type==='phone'?' data-phone="1" inputmode="tel" maxlength="14"':''} value="${esc(f.type==='phone'?fmtPhone(s.value):s.value)}" autocomplete="off">${srcTags(f.k)}${SRCPICK_ROWS[f.k]?srcPick(f.k,SRCPICK_ROWS[f.k]()):''}</div>${ovNote(f.prefix?[f.prefix,f.k]:f.k)}</div>`;}
+  return `<div class="field"><div class="flabel">${f.label}</div><div class="fbox" data-box="${f.k}" style="background:${c[1]};border-left-color:${c[0]}">${pre}<input type="text" data-k="${f.k}" style="${f.prefix&&partHot(f.k)?tintStyle(f.k):''}"${f.type==='phone'?' data-phone="1" inputmode="tel" maxlength="14"':''} value="${esc(f.type==='phone'?fmtPhoneInput(s.value):s.value)}" autocomplete="off">${srcTags(f.k)}${SRCPICK_ROWS[f.k]?srcPick(f.k,SRCPICK_ROWS[f.k]()):''}</div>${ovNote(f.prefix?[f.prefix,f.k]:f.k)}</div>`;}
 function addrCell(){return compAddrCell(ADDR,'property.addr','Address');}
 function caAddrCell(){return compAddrCell(CA_ADDR,'ca.addr','CA address');}
 function apprAddrCell(){return compAddrCell(APPR_ADDR,'appr.addr','Appraiser address');}
@@ -1370,7 +1388,7 @@ function rcsFillFromParsed(){
      person's name, not a scalar, and it is worth more once matched against the
      contact list. */
   RCS_SCALARS.forEach(function(k){if(k!=='appr.phone')setk(k,P.scalars[k]);});
-  if(P.scalars['appr.phone'])setk('appr.phone',fmtPhone(P.scalars['appr.phone']));
+  if(P.scalars['appr.phone'])setk('appr.phone',fmtPhoneInput(P.scalars['appr.phone']));
   /* The addressee, and the contact it names. Where the name matches exactly one
      saved contact the email and phone come with it; where it matches none, or
      more than one, only the name is written — the study told us who, not how to
@@ -1379,7 +1397,7 @@ function rcsFillFromParsed(){
     if(pm.name){
       setk('poc.name',pm.contact?pm.contact.name:pm.name);
       if(pm.contact){setk('poc.email',pm.contact.email);
-        if(pm.contact.phone)setk('poc.phone',fmtPhone(pm.contact.phone));}} }
+        if(pm.contact.phone)setk('poc.phone',fmtPhoneInput(pm.contact.phone));}} }
 
   let ambiguous=0;
   const claimed=new Set(),ambig=new Set();
@@ -3504,7 +3522,7 @@ function srcEditKey(k,val){
 }
 function wireBody(){
   document.querySelectorAll('input[data-k]').forEach(inp=>{const k=inp.getAttribute('data-k'),wion=inp.getAttribute('data-wion');
-    inp.addEventListener('input',()=>{pushCellUndo(k);let v=inp.value;if(inp.getAttribute('data-phone')){v=fmtPhone(v);inp.value=v;}else if(inp.getAttribute('data-money')){v=cleanNum(v);inp.value=fmtMoney(v);}else if(inp.getAttribute('data-date')){
+    inp.addEventListener('input',()=>{pushCellUndo(k);let v=inp.value;if(inp.getAttribute('data-phone')){v=fmtPhoneInput(v);inp.value=v;}else if(inp.getAttribute('data-money')){v=cleanNum(v);inp.value=fmtMoney(v);}else if(inp.getAttribute('data-date')){
       /* Keep the caret where the reader left it. The mask lays the digits out
          again from scratch, which moves every character after the one just
          typed — so without this a correction to the month left the caret in the
@@ -3836,12 +3854,34 @@ function ringColor(pct){const p=Math.max(0,Math.min(100,pct))/100;
    short specific fields. That is a state, not a percentage: there is no such
    thing as a property being 65% of a property. The chip names what is missing,
    and says nothing at all when nothing is. */
+/* The launcher only. On the menu this hung a "needs" off rows whose whole
+   subject is when a renewal is owed and how big the job is — a demand for
+   something nobody had asked for yet, on a page nobody opens to fill a
+   profile. Where it belongs is the property's own page, next to the fields it
+   is talking about. */
 function profileChip(p){
   const m=(p&&p.profile&&p.profile.missing)||[];
   if(!m.length)return '';
   const names=m.map(x=>x.label);
-  return '<span class="pchip" title="'+esc('Missing: '+andJoin(names))+'">'
-    +m.length+' missing from the profile</span>';}
+  /* "4 missing from the profile" named nothing. The count was the whole chip and
+     the four labels lived in a title attribute, so the one question it provoked —
+     which four? — was the one it would not answer without a hover nobody knows to
+     try. It names as many as fit, and the rest are one hover away in a panel of
+     the app's own rather than a native tooltip that makes you wait and then
+     truncates the answer.
+
+     Flat rows, not the generate modal's jump buttons: a property with no package
+     has no form open to jump into, and a control that does nothing is worse than
+     no control at all. */
+  const shown=names.length<=3?andJoin(names):(names.slice(0,2).join(', ')+' and '+(names.length-2)+' more');
+  const rows=m.map(x=>{
+    const w=(typeof whyShort==='function'?whyShort(x.key,x.why):'')||(x.sec?(SECTION_TITLES[x.sec]||''):'');
+    return '<span class="gpf gpf-flat"><span class="gpf-n">'+esc(x.label)+'</span>'
+      +(w?'<span class="gpf-w">'+esc(w)+'</span>':'')+'</span>';}).join('');
+  return '<span class="gpw pchipw"><button type="button" class="pchip" aria-haspopup="true">Needs '
+    +esc(shown)+'</button><div class="gpop"><div class="gpop-in">'
+    +'<div class="gpop-h">Needed before this package can be generated</div>'
+    +'<div class="gpop-l">'+rows+'</div></div></div></span>';}
 function ringSvg(pct,size){size=size||36;const r=size/2-3;const c=2*Math.PI*r;const off=c*(1-Math.max(0,Math.min(100,pct))/100);const col=ringColor(pct);
   return '<svg class="ringsvg" width="'+size+'" height="'+size+'" viewBox="0 0 '+size+' '+size+'"><circle cx="'+size/2+'" cy="'+size/2+'" r="'+r+'" fill="none" stroke="#e9edf4" stroke-width="3.4"/><circle cx="'+size/2+'" cy="'+size/2+'" r="'+r+'" fill="none" stroke="'+col+'" stroke-width="3.4" stroke-linecap="round" stroke-dasharray="'+c.toFixed(1)+'" stroke-dashoffset="'+off.toFixed(1)+'" transform="rotate(-90 '+size/2+' '+size/2+')"/><text x="50%" y="53%" dominant-baseline="middle" text-anchor="middle" font-size="'+(size<44?10:12.5)+'" font-weight="700" fill="#33405c">'+pct+'</text></svg>';}
 function niceDate(d){if(!d)return '—';const m=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];const p=String(d).slice(0,10).split('-');if(p.length!==3)return d;return m[(+p[1])-1]+' '+(+p[2])+', '+p[0];}
@@ -3891,6 +3931,206 @@ let _hapCache=null;
 /* The counts the last render put on the rail. A suite asserts the badge and the
    grid agree without having to scrape two DOMs for one number. */
 let _menuCounts={};
+/* One-shot, per session. See the scroll block at the end of renderMenu. */
+/* Closed on load: the page opens on what is coming, not on what is behind. */
+let _pastOpen=false;
+/* Wired once for the life of the page, not once per render. */
+let _menuWheel=false;
+/* ---- the pull ----
+   Rewritten small, 2026-07-30. What was here read the SHAPE of a gesture — how
+   fast it arrived, whether its deltas were decaying, how long the wheel had been
+   moving — and decided from that whether to open, how hard to resist, and what to
+   draw. Every one of those was a judgement about the reader's hand, every one
+   behaved differently on a trackpad and a mouse, and Matt got a hint that
+   "sometimes displays a bob and line, sometimes does not, sometimes delayed/late,
+   and sometimes is glitchy as shit."
+
+   Two rules now, and nothing else:
+
+     1. AT the top, at rest, and you scroll up  ->  it opens.
+     2. You scroll UP TO the top                ->  it bobs, once, at once.
+
+   Rule 1 is a DISTANCE, not a stillness. It was a quarter-second gap with no wheel
+   in it, and on a trackpad that gap does not exist: momentum keeps firing for over
+   a second after the fingers lift, so a second swipe arrives inside the tail of the
+   first. Matt: "the scroll up on a trackpad like mac doesnt work at all... scrolling
+   up only does something when i navigate my mouse directly on top of the banner and
+   then scroll up." Over the banner there is nothing under the cursor to scroll, so
+   no momentum is generated, so the gap appears — the rule was working by accident of
+   where the pointer happened to be.
+
+   So: keep pushing up against the top and it opens, at PUSH_OPEN pixels of push. A
+   distance cannot be starved by a stream of events. The flick that brought you here
+   is excluded by zeroing the count for ARRIVE_HOLD after you land, which is long
+   enough that what is still arriving afterwards is a hand and not the last fling.
+
+   Nothing is drawn while scrolling. No progress rule, no resistance, no damping,
+   no cooldown. Opening cancels the one wheel event that opened it, so the reader
+   lands where they were with the backlog stacked above; anything they scroll after
+   that is scrolling, and it moves the page, because that is what scrolling does. */
+const PUSH_OPEN=240;     /* pixels of upward push against the top before it opens */
+const ARM_QUIET=120;     /* the flick that landed you here is over once the wheel pauses this long */
+const ARM_MAX=2500;      /* and in any case it is over by then — a momentum tail dies
+                            well inside 1.5s, and a hand that never once pauses for
+                            120ms across two and a half seconds is asking to be let in */
+const HOLD_AFTER=350;    /* upward wheels do nothing for this long after it opens */
+const NUDGE_GAP=1500;    /* and the bob does not replay more often than this */
+const _now=()=>(typeof performance!=='undefined'&&performance.now)?performance.now():0;
+/* _wasTop starts TRUE because the page starts at the top: a reader who scrolls up
+   on arrival has flown in from nowhere and there is no flick to wait out. It is set
+   false by any wheel that sees the page below the top, which is what makes the next
+   wheel at zero a LANDING. Programmatic scrolls to the top set it back themselves. */
+let _push=0,_openedAt=0,_armAt=0,_wheelAt=0,_wasTop=true;
+/* When the page last ARRIVED at the top, off the scroll event rather than the
+   wheel, because that is the thing that actually happened. Zero means "not
+   recently", which is the state on load. */
+let _topAt=0,_leftTop=false,_nudgeAt=0;
+/* Rule 2. In CSS, on a TRANSFORM of the banner's own text: a transform is
+   composited, so it cannot judder, where the padding animation this replaces
+   relaid out 229 rows for four hundred milliseconds every time you reached the
+   top. Rate-limited, because a reader who bumps the top twice in a second is not
+   asking to be told twice. */
+function _menuNudge(){
+  if(_pastOpen)return;
+  const b=el('mPast');
+  if(!b||!b.classList)return;
+  const now=_now();
+  if(_nudgeAt&&now-_nudgeAt<NUDGE_GAP)return;
+  _nudgeAt=now;
+  b.classList.remove('nudge');
+  if(b.offsetWidth!==undefined)void b.offsetWidth;   // restart the animation
+  b.classList.add('nudge');
+  if(typeof setTimeout==='function')setTimeout(()=>{if(b.classList)b.classList.remove('nudge');},700);
+}
+/* Rule 1. Returns true when this event opened the drawer, so the wheel handler can
+   cancel it — otherwise the scroll it carries lands on a page 3,400px taller. */
+function _menuPull(dy){
+  const v=el('viewMenu');
+  if(_pastOpen||!v||v.style.display==='none'||!el('mPast')){_push=0;return false;}
+  /* Anything but an upward wheel at the top ends the push. */
+  if(dy>=0){_push=0;return false;}
+  if(typeof window!=='undefined'&&(window.pageYOffset||0)>0){_push=0;_wasTop=false;return false;}
+  /* The landing is observed HERE, in the wheel handler, and not left to the scroll
+     handler that follows it. A gapless stream delivers several more wheels before
+     the scroll event fires, and those saw a page already at the top with no window
+     armed yet — 240px of "push" arrived and the drawer opened on arrival, which is
+     exactly what the window exists to prevent. Whoever sees the transition first
+     has to be the one that arms it. */
+  if(!_wasTop){_wasTop=true;_armAt=_now();_push=0;_wheelAt=_armAt;return false;}
+  /* The flick that landed you here is not a push, and it is over when it STOPS —
+     not after some fixed number of milliseconds. A fixed window was tried at 450ms
+     and a long tail simply outlived it, delivering another 1,200px of "push" and
+     opening the drawer on arrival. A pause is what ends a flick, and lifting your
+     fingers to swipe again always makes one. ARM_MAX is only a backstop, for a hand
+     that never pauses at all. */
+  const now=_now();
+  const gap=_wheelAt?(now-_wheelAt):1e9;
+  _wheelAt=now;
+  if(_armAt){
+    if(gap>=ARM_QUIET||now-_armAt>=ARM_MAX)_armAt=0;
+    else{_push=0;return false;}
+  }
+  _push+=Math.abs(dy);
+  if(_push<PUSH_OPEN)return false;
+  _push=0;
+  _openPast();
+  return true;
+}
+function _openPast(){
+  _openedAt=_now();
+  const before=_menuAnchor();
+  _togglePast();
+  /* One correction on the next frame, against the SAME anchor, because a layout
+     read taken in the middle of a wheel event can be a few pixels stale. Measured
+     at 5 to 13px where the click path is exact. */
+  if(typeof requestAnimationFrame!=='function'||before==null||typeof window==='undefined')return;
+  requestAnimationFrame(()=>{
+    const at=_menuAnchor();
+    if(at==null)return;
+    const d=Math.round(at-before);
+    if(!d||Math.abs(d)>200)return;
+    if(typeof window.scrollTo==='function')window.scrollTo(0,Math.max(0,(window.pageYOffset||0)+d));
+  });
+}
+function _menuWheelEvent(e){
+  if(_menuPull(e.deltaY)){if(e.cancelable)e.preventDefault();return;}
+  /* Flat and short, and all it does is ignore. No damping curve, no resistance that
+     loosens, no release that has to work out whether the hand has stopped — for a
+     third of a second after the rows appear an upward wheel does nothing, so the
+     burst that opened it cannot carry the reader into the middle of the backlog.
+     Without it a twelve-notch burst from rest landed 1,320px up a 3,428px list.
+     Downward is never touched: that is the reader putting the drawer away. */
+  if(_openedAt&&e.deltaY<0&&_now()-_openedAt<HOLD_AFTER&&e.cancelable)e.preventDefault();
+}
+/* ---- and it puts itself away ----
+   Scrolling back down past the drawer closes it, so the page returns to the
+   configuration it opened in rather than carrying eighty rows around for the rest
+   of the session. Only once the drawer is ENTIRELY above the viewport: at that
+   point removing it and compensating the scroll leaves every visible pixel where
+   it was, so the restore cannot be seen happening. */
+function _menuScrollBack(){
+  /* Arrival at the top, which is what the dwell is measured from. Recorded only on
+     the transition INTO it: sitting there does not keep re-arming the dwell, so a
+     deliberate pull on a page that has not moved responds at once. */
+  if(typeof window!=='undefined'){
+    const y=window.pageYOffset||0;
+    if(y>0)_leftTop=true;
+    else if(_leftTop){
+      _leftTop=false;
+      _topAt=_now();
+      /* Landing arms the window: what arrives next is the flick finishing, until it
+         pauses. */
+      _armAt=_topAt;_push=0;
+      _menuNudge();
+    }
+  }
+  if(!_pastOpen)return;
+  const w=el('mPastWrap');
+  if(!w||!w.getBoundingClientRect)return;
+  if(w.getBoundingClientRect().bottom<=0)_togglePast();
+}
+/* Open or close the past-due drawer, holding everything below it still.
+   Anchored on the live panel and not on the drawer's own height: offsetHeight
+   excludes margins, and opening changes two of them (the banner sheds its 14px
+   and the drawer brings 40px), so measuring the drawer left the panel 26px from
+   where it had been. Measuring the thing that must not move cannot drift,
+   whatever the boxes above it do. */
+function _menuAnchor(){
+  const g=el('menuGrid');if(!g||!g.querySelector)return null;
+  const a=g.querySelector('.mgrid.rows.live')||g.querySelector('.zhead')||g;
+  return (a&&a.getBoundingClientRect)?a.getBoundingClientRect().top:null;}
+function _togglePast(){
+  /* Closing scrolls back to the top, which is an arrival — so the bob would fire
+     the instant Hide was pressed. Stamping the rate limiter here swallows it: the
+     bob is for reaching the top by SCROLLING, not for the page rearranging itself
+     under a button. */
+  _nudgeAt=_now();
+  /* A toggle moves the page itself. Nothing flew in, so nothing has to be waited
+     out — the reader's next scroll is theirs. */
+  _wasTop=true;_push=0;_armAt=0;
+  const anchor=_menuAnchor;
+  const before=anchor();
+  _pastOpen=!_pastOpen;
+  /* The rows are ALREADY in the page — renderMenu writes them on every render and
+     hides them — so opening the drawer is a hidden attribute and one word on a
+     button. Rebuilding all 229 rows to change those two things is where the lag
+     came from: Matt, "its still a tiny bit laggy". renderMenu stays as the fallback
+     for a toggle on a render that has not drawn the drawer. */
+  const w=el('mPastWrap'),b=el('mPast');
+  if(w&&b&&b.classList&&w.hasAttribute){
+    if(_pastOpen)w.removeAttribute('hidden');else w.setAttribute('hidden','');
+    b.classList.toggle('open',_pastOpen);
+    b.setAttribute('aria-expanded',_pastOpen?'true':'false');
+    const n=b.querySelector('.mp-n'),a=b.querySelector('.mp-a');
+    if(n)n.innerHTML=(_pastOpen?'\u2193 ':'')+n.innerHTML.replace(/^\u2193\s*/,'');
+    if(a)a.textContent=_pastOpen?'Hide':'Show';
+  }else renderMenu();
+  if(before==null||typeof window==='undefined'||typeof window.scrollTo!=='function')return;
+  const after=anchor();
+  if(after==null)return;
+  const d=Math.round(after-before);
+  if(d)window.scrollTo({top:Math.max(0,(window.pageYOffset||0)+d)});
+}
 
 /* One card's worth of fact per tracker property, merged with the app record if
    one exists yet. */
@@ -3924,7 +4164,11 @@ function hapProperties(){
       id:pid||('hap:'+code), code:code, hap:true, started:!!pid,
       name:(rec&&rec.name)||any.name, alias:(rec&&rec.alias)||'',
       fha:(rec&&rec.fha)||'—', city_state:(rec&&rec.city_state)||'',
-      total_units:(rec&&rec.total_units)||0, unit_types:(rec&&rec.unit_types)||0,
+      /* The schedule carries a unit count, so a property the app has never
+         opened still knows how big the job is. Reading only the record printed
+         "0 units" on every unstarted row — a figure, and wrong. */
+      total_units:(rec&&rec.total_units)||(+String(any.units||'').replace(/[^0-9]/g,'')||0),
+      unit_types:(rec&&rec.unit_types)||0,
       completeness:rec?rec.completeness:0, updated_at:(rec&&rec.updated_at)||'',
       /* Carried, not recomputed. Without these two the profile chip and the
          card's hover caption were dead on every scheduled property — the chip
@@ -4001,9 +4245,10 @@ function actionReason(a){
    message about rings. A record with no tracker row gets no button at all: it
    already sits under its own "Not in the renewal schedule" heading, and its
    action is #bNewCycle on the launcher. */
-function actionBtnHtml(p){
+function actionBtnHtml(p,short){
   const a=p.hap&&p.action;if(!a||a.kind==='none')return '';
-  const lab=actionLabel(a);if(!lab)return '';
+  let lab=actionLabel(a);if(!lab)return '';
+  if(short){const m=lab.match(/^(\S+)\s+(\d{4})\b/);lab=m?(m[1]+' '+m[2]):lab.split(' ')[0];}
   const why=actionReason(a);
   /* The reason hangs on the WRAPPER. A disabled <button> swallows its own
      tooltip in Firefox and Safari, and "disabled, with a reason" is the one
@@ -4013,23 +4258,94 @@ function actionBtnHtml(p){
     +(a.disabled?' disabled':'')+'>'+esc(lab)+'</button></div>';
 }
 
-/* ---- the filter rail: named views over one portfolio ------------------
-   Six rows, then a Programs group. Every property lands in exactly ONE of the
-   first five, so the counts sum to "All properties" — which is why viewOf()
-   below is evaluated once per property per render and its answer stored, rather
-   than the predicate being asked again by whatever needs it next. A rail whose
-   badge says 6 above a grid of 5 cards is the same defect as a ring and a
-   document list disagreeing about one number. */
+/* ---- the figures line IS the filter -------------------------------------
+   One partition of the portfolio, stated once. The rail asked the same
+   question in a second vocabulary and got a different answer: "Needs you"
+   welded past-their-date onto due-within-30 and then subtracted whatever had
+   a package open, so on a portfolio where an overdue row means the package
+   already went in, its headline counted 20 finished properties as work — and
+   that view opened by default.
+
+   These five are the bands the list is grouped by, so every figure is
+   countable on the page beneath it, they are disjoint, and they sum to the
+   total. Chronological order, no editorial: the strip reports when things are
+   due, it does not rank them by how much they should worry you. */
+/* The total leads. It is the view the page opens on, and reading the strip
+   left to right should start with what you are looking at and then break it
+   down, not arrive at it after four qualifications. */
+/* ---- the window the page treats as "coming" ----
+   90 days, not 30. The tracker sets its deadline about 120 days ahead of the rent
+   increase, so a 30-day window was only the last quarter of the time you actually
+   have to work in — it made the prominent panel a list of near-emergencies and
+   left the rest of the working window down in "later". hap.js already carried 90
+   as its `soon` band. Read from here by the strip, the panel heading and the ledge
+   copy alike, so the figure and the words can never disagree.
+
+   hap.js's own BAND_DAYS is deliberately NOT changed: it is held to the real
+   corpus by test_hap.js, and this is a decision about what the page emphasises,
+   not about what a band means to the tracker. */
+const MENU_WINDOWS=[30,60,90];
+let MENU_WINDOW=90;
+/* Remembered, because a window you have to re-pick on every reload is not a
+   setting. localStorage rather than the record: it is how this reader likes to
+   look at the list, not a fact about the portfolio, and it must not travel to
+   anyone else opening the same properties. */
+try{const _w=+((typeof localStorage!=='undefined'&&localStorage.getItem('rcs.menuWindow'))||0);
+  if(MENU_WINDOWS.indexOf(_w)>=0)MENU_WINDOW=_w;}catch(e){}
+function _bandNow(){return MENU_WINDOW;}
+function setMenuWindow(n){
+  n=+n;
+  if(MENU_WINDOWS.indexOf(n)<0||n===MENU_WINDOW)return;
+  MENU_WINDOW=n;
+  try{if(typeof localStorage!=='undefined')localStorage.setItem('rcs.menuWindow',String(n));}catch(e){}
+  /* The chosen band is released. "within 30 days" and "within 90 days" are not the
+     same set, so a band chosen under one window and kept under the other leaves the
+     reader looking at a figure they never pressed. */
+  if(menuView==='now'||menuView==='later')menuView='all';
+  renderMenu();
+}
+/* Three buttons, in the heading of the panel they resize. A control belongs beside
+   the thing it changes: put in the strip it would have been a fourth kind of
+   element in a row of filters, and put in the toolbar it would have been a setting
+   with no visible subject. Here the heading states the window and the control
+   changes it, one inch apart. */
+function windowPickHtml(){
+  return '<span class="winsel" role="group" aria-label="How far ahead to show">'
+    +MENU_WINDOWS.map(n=>'<button type="button" class="winb'+(n===MENU_WINDOW?' on':'')
+      +'" data-win="'+n+'"'+(n===MENU_WINDOW?' aria-current="true"':'')
+      +'>'+n+'</button>').join('')
+    +'<span class="winu">days</span></span>';
+}
+/* Read left to right this is now the order of the work: everything, then what is
+   coming, then what is beyond it, then what is behind, then what is off the
+   schedule entirely. Matt set it. What is BEHIND comes fourth rather than second
+   because it is not the thing to look at first — it drains on its own as each
+   increase date arrives.
+
+   "past due to HUD" is gone. It borrowed a billing phrase, and billing's "past
+   due" means somebody has not paid: the tracker records the deadline and NOT the
+   filing, so the app cannot know whether anything is outstanding, and a word that
+   implies it is putting an accusation in HUD's mouth. "already due" says the only
+   thing that is actually true — the date has arrived. */
 const MENU_VIEWS=[
- {k:'needs',  t:'Needs you'},
- {k:'coming', t:'Coming up'},
- {k:'flight', t:'In flight'},
- {k:'done',   t:'Done for the year'},
- {k:'undated',t:'Undated'},
- {k:'all',    t:'All properties'},
+ {k:'all',    c:''},
+ {k:'now',    c:'now'},
+ {k:'later',  c:'soon'},
+ {k:'past',   c:''},
+ {k:'undated',c:''},
 ];
-const MENU_PROG_VIEWS=[{k:'rcs',t:'RCS years'},{k:'ocaf',t:'OCAF years'}];
-function _bandNow(){return (window.RCSHap&&window.RCSHap._bandDays&&window.RCSHap._bandDays.now)||30;}
+/* COMPUTED, never stored on the entry above. As a literal in that array the label
+   was baked at load, so choosing 60 days left the strip reading "52 within 90
+   days" beside a heading reading DUE WITHIN 60 DAYS — the count moved and the
+   words did not, which is the worst of the two failures because the figure looks
+   authoritative. Matt caught it on screen; the suite caught it the same minute. */
+function viewLabel(k,n){
+  if(k==='all')return n===1?'property':'properties';
+  if(k==='now')return 'within '+MENU_WINDOW+' days';
+  if(k==='later')return 'later';
+  if(k==='past')return 'already due';
+  return 'not in the schedule';
+}
 /* The words live here, not in a click handler (FORM-RULES 17): the lede under
    the heading and the copy shown when a view is empty are two halves of one
    explanation and must be edited together. Every empty state names the next
@@ -4038,26 +4354,28 @@ function _bandNow(){return (window.RCSHap&&window.RCSHap._bandDays&&window.RCSHa
 function menuViewCopy(k){
   const N=_bandNow();
   const M={
-   needs:{lede:'Due in the next '+N+' days, or already late — and no package started yet. Earliest first.',
-          empty:'Nothing is due in the next '+N+' days. Coming up has what is next.'},
-   coming:{lede:'Due more than '+N+' days out, with no package started yet. Earliest first.',
-          empty:'Nothing further out is waiting on you.'},
-   flight:{lede:'A package is already open for the renewal that is next due. Earliest first.',
-          empty:'No package is open. Start one from Needs you or Coming up.'},
-   done:{lede:'This renewal’s package has been generated. Nothing further is owed until the next one comes due.',
-          empty:'No package has been generated for a current renewal yet.'},
+   now:{lede:'Due in the next '+N+' days. Earliest first.',
+        empty:'Nothing is due in the next '+N+' days.'},
+   /* Not "more than N days out": the reader has just pressed a figure labelled
+      "later" and needs to know what it is later THAN. */
+   /* Not an alarm, and the lede says why \u2014 twice over. The tracker carries
+      the deadline, not the filing, so a date in the past usually means the
+      package went in and the row has not caught up. And the band is STRUCTURAL:
+      HUD wants the paperwork about four months before the rents move, so every
+      property spends those four months here whether or not anything is late.
+      It drains on its own as each increase date arrives. */
+   past:{lede:'The date on the schedule has arrived and the rents have not moved yet \u2014 a window every property passes through, since the tracker sets that date about four months ahead of the increase. It records the date, not the filing.',
+        empty:'No date has arrived yet.'},
+   later:{lede:'Due more than '+N+' days out. Earliest first.',
+        empty:'Nothing further out is waiting.'},
    /* Three reasons, not two. The schedule can end on the contract's own expiry,
       it can simply stop, or the record can carry no tracker code at all — and a
       lede that named only the last two read as though an expiring contract were
       a data problem. */
    undated:{lede:'No renewal scheduled — the schedule ends at a contract expiry, it stops without one, or the record is not in the schedule at all.',
-          empty:'Every property has a date.'},
+        empty:'Every property has a date.'},
    all:{lede:'Every property: those in the schedule by deadline, then the records the schedule does not carry.',
-          empty:'No properties yet.'},
-   rcs:{lede:'Properties whose next renewal sets rents from a market study. Earliest first.',
-          empty:'No market resets are next up.'},
-   ocaf:{lede:'Properties whose next renewal applies HUD’s published operating-cost factor. Earliest first.',
-          empty:'No factor adjustments are next up.'},
+        empty:'No properties yet.'},
   };
   return M[k]||M.all;
 }
@@ -4077,27 +4395,36 @@ function menuViewCopy(k){
    effective whenever due is missing, so an undated property is one with no row
    to be about — awaiting, a gap, or an expiring contract — and none of those can
    have a matching package. */
-function viewOf(p){
-  if(!p.hap)return 'undated';                          // no tracker code: no deadline to have
-  const a=p.action||{};
-  if(a.kind==='continue')return 'flight';
-  if(a.kind==='view')return 'done';
-  if(!p.deadline)return 'undated';
-  return (p.band==='overdue'||p.band==='now')?'needs':'coming';
+const MONTHS=['January','February','March','April','May','June','July',
+              'August','September','October','November','December'];
+/* The strip's buckets and the list's group headings are the same function, so
+   they cannot disagree. When they were two functions they did: the strip said
+   one property was undated while the rail said two. */
+/* One axis, and every division on it is a point in time. `past`/`now`/`later`
+   survive as STRIP FILTERS \u2014 they are disjoint and they still sum \u2014 but none of
+   them is a group any more: a group heading on this page names a month, and a
+   month tiles the schedule where a state does not. Before this, all 83 overdue
+   properties shared one heading called "Past their date", which put five months
+   of the calendar under a heading that was not a date, and rendered them BELOW
+   the rows due in thirty days \u2014 later dates above earlier ones on a list whose
+   whole claim is that it runs in date order. */
+function bandOf(p){
+  const d=p.hap?p.days:null;
+  if(!p.hap||d==null||!p.deadline)return {view:'undated',rank:9,key:'none',label:'No renewal scheduled'};
+  const iso=String(p.deadline).slice(0,10).split('-');
+  return {view:(d<0?'past':(d<=MENU_WINDOW?'now':'later')),rank:0,
+          key:'m'+iso[0]+iso[1],label:MONTHS[(+iso[1])-1]+' '+iso[0],behind:d<0};
 }
-function railHtml(counts,late,view){
-  const row=v=>{const C=menuViewCopy(v.k);
-    return '<button class="mr-row'+(v.k===view?' on':'')+(counts[v.k]?'':' zero')+'" data-view="'+v.k+'"'
-    +(v.k===view?' aria-current="true"':'')+' title="'+esc(C.lede)+'">'
-    +'<span class="mr-t">'+esc(v.t)+'</span>'
-    /* Only In flight can carry this. The partition puts local progress above the
-       deadline, so a package that is late but started sits here rather than in
-       Needs you — without the dot it would be invisible. Coming up cannot hold a
-       late one by construction, and Done owes nothing. */
-    +(late[v.k]?'<span class="mr-late" title="'+late[v.k]+' of these is already late or due within '+_bandNow()+' days"></span>':'')
-    +'<span class="mr-n">'+counts[v.k]+'</span></button>';};
-  return '<div class="mr-g">'+MENU_VIEWS.map(row).join('')+'</div>'
-    +'<div class="mr-g"><div class="mr-gt">Programs</div>'+MENU_PROG_VIEWS.map(row).join('')+'</div>';
+function _menuToday(){try{return (mpdb&&mpdb.today)?mpdb.today():new Date().toISOString().slice(0,10);}
+  catch(e){return new Date().toISOString().slice(0,10);}}
+/* Each figure is a button. The number you press is the number of rows you get
+   — the invariant the whole strip rests on, and the one the suite asserts. */
+function figuresHtml(counts,view){
+  return MENU_VIEWS.map(v=>{const C=menuViewCopy(v.k);
+    return '<button class="fig'+(v.c?' '+v.c:'')+(v.k===view?' on':'')+(counts[v.k]?'':' zero')
+      +'" data-view="'+v.k+'"'+(v.k===view?' aria-current="true"':'')
+      +' title="'+esc(C.lede)+'"><b>'+fmtNum(counts[v.k])+'</b> '
+      +esc(viewLabel(v.k,counts[v.k]))+'</button>';}).join('');
 }
 
 /* The deadline, said the way a person would say it. */
@@ -4113,14 +4440,26 @@ function dueLine(p){
      asserting rather than computing (FORM-RULES 15). What says there is nothing
      to do here is the absence of an action button. */
   if(a&&a.kind==='expiring')return '<div class="pc-due ok">Contract expires '+esc(fmtDateShort(a.effective))+'</div>';
-  if(a&&a.kind==='gap')return '<div class="pc-due ok">No renewal scheduled after '+esc(fmtDateShort(a.effective))+'</div>';
+  /* A gap is a CONTRADICTION, and the line has to carry both halves or it
+     reads as a wind-down. "No renewal scheduled after Apr 1, 2027" printed the
+     horizon and hid the reason: the tracker's last row is an EXPIRES in 2027
+     while its own Contract Exp column runs to 2045. Naming only the first date
+     said "this property is ending" about a property with eighteen years of
+     contract left, and gave no hint why the row still has a live Start. */
+  if(a&&a.kind==='gap')return '<div class="pc-due ok">Schedule ends '+esc(fmtDateShort(a.effective))
+    +(a.contractExp?(' &middot; contract runs to '+esc(fmtDateShort(a.contractExp))):'')+'</div>';
   if(p.status==='awaiting-schedule')return '<div class="pc-due ok">Awaiting the next schedule</div>';
   if(!p.deadline)return '<div class="pc-due ok">No date scheduled</div>';
   const d=p.days;
   if(d==null)return '<div class="pc-due ok">No date scheduled</div>';
-  if(d<0)return '<div class="pc-due over">Was due '+esc(fmtDateShort(p.deadline))+' · '+(-d)+' day'+(-d===1?'':'s')+' late</div>';
-  if(d<=30)return '<div class="pc-due now">Due '+esc(fmtDateShort(p.deadline))+' · '+d+' day'+(d===1?'':'s')+' left</div>';
-  return '<div class="pc-due ok">Due '+esc(fmtDateShort(p.deadline))+' · '+d+' days</div>';
+  /* Overdue is not an alarm. Matt: "anything overdue has already been
+     completed" — the tracker carries the deadline, not the filing, so a past
+     date means the package went in and the row has not caught up. Shouting
+     "119 days late" in red across a hundred and three rows buried the handful
+     that are genuinely live. It states the date and stops there. */
+  if(d<0)return '<div class="pc-due past">Was due '+esc(fmtDateShort(p.deadline))+'</div>';
+  if(d<=30)return '<div class="pc-due now">'+esc(fmtDateShort(p.deadline))+' · '+d+' day'+(d===1?'':'s')+' left</div>';
+  return '<div class="pc-due ok">'+esc(fmtDateShort(p.deadline))+' · '+d+' days</div>';
 }
 function fmtDateShort(iso){
   const m=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -4134,37 +4473,101 @@ function pickWhoDialog(){
   const H=window.RCSHap,rows=hapAll();
   const names=(H&&rows)?H.managers(rows):[];
   if(!names.length){setStatus('The renewal schedule has not loaded, so there are no names to choose from.');return;}
-  const rowsHtml=names.map(nm=>'<div class="uaopt" data-who="'+esc(nm)+'" style="padding:9px 12px;cursor:pointer'
-    +(nm===pmName?';font-weight:700':'')+'">'+esc(nm)+(nm===pmName?'<span class="uasub">current</span>':'')+'</div>').join('');
-  modal('<div class="dlg-t">Which portfolio manager are you?</div>'
-    +'<div class="lh-note" style="margin-bottom:10px">Your name decides which properties show under <b>Mine</b>. '
-    +'These are the managers named in the renewal schedule.</div>'
-    +'<div id="whoList" style="max-height:230px;overflow:auto;border:1px solid #e0e5ee;border-radius:8px">'+rowsHtml+'</div>'
-    +'<div class="dlg-row"><button class="btn" id="dlgCancel">Cancel</button><span class="dlg-sp"></span></div>');
+  /* The same condition the list itself filters on. Asking only whether the
+     lens is 'all' left the picker marking nothing as current on a page whose
+     eyebrow already read \u201call managers\u201d \u2014 no name chosen is showing
+     everyone, and the picker has to say the same thing the page does. */
+  const _everyone=(menuLens==='all'||!pmName);
+  const _cur=nm=>_everyone?(nm==='*'):(nm===pmName);
+  const _row=(k,lab)=>'<div class="uaopt'+(_cur(k)?' cur':'')+'" data-who="'+esc(k)+'">'
+    +esc(lab)+(_cur(k)?'<span class="uasub">current</span>':'')+'</div>';
+  const rowsHtml=_row('*','Everyone')+names.map(nm=>_row(nm,nm)).join('');
+  modal('<div class="dlg-t">Whose properties should the list show?</div>'
+    +'<div class="lh-note" style="margin-bottom:12px">These are the managers named in the renewal schedule. '
+    +'Choosing a name also records who you are.</div>'
+    +'<div id="whoList" class="wholist">'+rowsHtml+'</div>'
+    +'<div class="dlg-row"><button class="btn" id="dlgCancel">Cancel</button><span class="dlg-sp"></span></div>','desk');
   el('dlgCancel').onclick=closeModal;
   document.querySelectorAll('[data-who]').forEach(r=>r.onclick=async()=>{
     const nm=r.getAttribute('data-who');closeModal();
-    pmName=nm;renderWho();renderMenu();
+    /* The bands are not the same shape for one manager as for the portfolio, so
+       the chosen view is released rather than left pointing at a bucket that
+       only emptied because the scope moved. */
+    menuView='';
+    if(nm==='*'){menuLens='all';renderWho();renderMenu();return;}
+    menuLens='mine';pmName=nm;renderWho();renderMenu();
     try{if(mpdb&&mpdb.setPmName)await mpdb.setPmName(nm);}catch(e){saveFailedModal(e);}
   });
 }
 function renderWho(){
   const w=el('menuWho');if(!w)return;
-  w.textContent=pmName||'Who are you?';
-  w.classList.toggle('unset',!pmName);
-  w.title=pmName?('Signed in as '+pmName+' — click to change'):'Choose which portfolio manager you are';
+  w.textContent=(menuLens==='all')?'All portfolios':(pmName||'Choose a portfolio');
+  w.classList.toggle('unset',menuLens!=='all'&&!pmName);
+  w.title=(menuLens==='all')?'Showing every manager\u2019s properties — click to choose one'
+    :(pmName?('Showing '+pmName+'\u2019s properties — click to change'):'Choose whose properties to show');
 }
 
 /* Opening a tracker property for the first time is what brings its record into
    existence. Everything downstream — cycles, the form, generation — already
    works on a record, so this is the only new step. */
+/* ============================ DEV ONLY ==================================
+   TEMPORARY. This exists to clear the records left over from before the
+   tracker became the source of truth, and it goes away once that is done.
+   To remove it: set DEV_PURGE to false and delete this function, the
+   `#orphPurge` heading button in renderMenu, its one-line wiring below the
+   [data-pact] loop, and the .olist/.orow rules in shell.head.html. The
+   purge-guard checks in smoke_combined.js go with it.
+   ======================================================================== */
+const DEV_PURGE=true;
+/* Removing records is the user's decision, so the app's whole job is to make
+   it an informed one. "13 records" is not something anyone can decide on: these
+   are the only copy of whatever was entered by hand, nothing in the tracker
+   will recreate them, and one of them may be the one holding a finished
+   package. So the confirm lists them and says what each one holds. */
+function purgeOrphans(list){
+  if(!list||!list.length)return;
+  const cyOf=p=>((mpdb&&mpdb.listCycles&&p.id)?(mpdb.listCycles(p.id)||[]):[]);
+  const rows=list.map(p=>{
+    const n=cyOf(p).length,bits=[];
+    if(n)bits.push(fmtNum(n)+' package'+(n===1?'':'s'));
+    if(p.total_units)bits.push(fmtNum(p.total_units)+' units');
+    if(p.completeness)bits.push(Math.round(p.completeness*100)+'% complete');
+    return '<div class="orow"><b>'+esc(p.name||'(unnamed)')+'</b><span>'
+      +esc(bits.length?bits.join(' \u00b7 '):'nothing saved')+'</span></div>';}).join('');
+  const held=list.filter(p=>cyOf(p).length).length;
+  dialogConfirm('Remove '+fmtNum(list.length)+' record'+(list.length===1?'':'s'),
+    '<div class="dlg-sub">The renewal schedule does not carry these, so nothing will bring them back. This cannot be undone.</div>'
+    +'<div class="olist">'+rows+'</div>'
+    +(held?('<div class="dlg-sub" style="margin-top:9px"><b>'+fmtNum(held)+'</b> of them hold '
+      +(held===1?'a package':'packages')+'. Those go too.</div>'):''),
+    'Remove them',true,async()=>{
+      /* Stop at the first failure rather than carrying on. A partial sweep that
+         reported success would leave the menu disagreeing with the database. */
+      for(let i=0;i<list.length;i++){
+        try{await mpdb.deleteProperty(list[i].id);}
+        catch(e){setStatus('');saveFailedModal(e);openMenu();return;}
+      }
+      setStatus('Removed '+fmtNum(list.length)+' record'+(list.length===1?'':'s')+' the schedule does not carry.');
+      openMenu();
+    });
+}
 async function openHapProperty(code){
   const p=hapProperties().find(x=>x.code===code);
   if(!p)return;
   let pid=(mpdb&&mpdb.propByRaCode)?mpdb.propByRaCode(code):null;
   if(!pid){
     try{const r=await mpdb.createProperty(p.name,code);pid=r&&r.pid;}
-    catch(e){saveFailedModal(e);return;}
+    catch(e){
+      /* The building is already in the record under this name, carrying no
+         tracker code — imported by hand, or named before the code existed. The
+         schedule's row and that record are the same property, so the code goes
+         onto it. Reporting "that name is taken" here made every such property
+         unopenable: the only route in was the one that refused. */
+      if(e&&e.code==='DUP_PROPERTY_NAME'&&e.pid){
+        pid=e.pid;
+        try{if(mpdb.setRaCode)await mpdb.setRaCode(pid,code);}catch(_){}
+      }else{saveFailedModal(e);return;}
+    }
   }
   if(pid)openLauncher(pid);
   return pid;                    // callers chain a package action onto the record it just made
@@ -4193,7 +4596,10 @@ async function primaryActionClick(code){
 function renderMenu(){
   const q=((el('menuSearch')&&el('menuSearch').value)||'').toLowerCase();
   const hp=hapProperties();
-  const lensed=hp.filter(p=>menuLens==='all'||!pmName||p.pm===pmName);
+  /* The same condition the filter below runs on, named once: showing everyone
+     is either the explicit lens or no name chosen yet. */
+  const _pmCol=(menuLens==='all'||!pmName);
+  const lensed=hp.filter(p=>_pmCol||p.pm===pmName);
   const orphans=(mpdb.listProperties()||[]).filter(p=>!hp.some(h=>h.id===p.id));
   const all=hp.length?lensed.concat(orphans.map(p=>Object.assign({},p,{hap:false}))):(mpdb.listProperties()||[]);
   /* The rail is conditional on the tracker having supplied properties. With
@@ -4207,20 +4613,22 @@ function renderMenu(){
      query: the lens changes whose work it is, so a manager reading "12" must
      find 12 cards, while search is a find-within and a rail that renumbers under
      the cursor as you type is a moving target. */
-  const counts={},late={};
-  MENU_VIEWS.concat(MENU_PROG_VIEWS).forEach(v=>{counts[v.k]=0;late[v.k]=0;});
-  if(hasRail)all.forEach(p=>{p._view=viewOf(p);counts[p._view]++;counts.all++;
-    if(p.program==='RCS')counts.rcs++;else if(p.program==='OCAF')counts.ocaf++;
-    if(p._view==='flight'&&(p.band==='overdue'||p.band==='now'))late.flight++;});
+  const counts={};
+  MENU_VIEWS.forEach(v=>{counts[v.k]=0;});
+  if(hasRail)all.forEach(p=>{p._band=bandOf(p);p._view=p._band.view;counts[p._view]++;counts.all++;});
   /* Resolved only while unset. A view chosen explicitly and then emptied STAYS
      chosen and shows its empty state \u2014 finishing the last item in Needs you
      should show you an empty Needs you, not teleport you somewhere else. */
-  if(hasRail&&!menuView)menuView=(MENU_VIEWS.find(v=>counts[v.k])||{k:'all'}).k;
+  /* The page opens on everything. The two zones already put what is live at
+     the top, so opening pre-filtered hid the portfolio to answer a question
+     nobody had asked yet. A view chosen explicitly and then emptied STAYS
+     chosen and shows its empty state. */
+  if(hasRail&&!menuView)menuView='all';
   /* Searching forces All without overwriting the stored view, so clearing the
      box returns you where you were and "I know it exists, where is it?" cannot
      happen inside a filtered view. */
   const view=q?'all':menuView;
-  const inView=p=>!hasRail||view==='all'||(view==='rcs'?p.program==='RCS':view==='ocaf'?p.program==='OCAF':p._view===view);
+  const inView=p=>!hasRail||view==='all'||p._view===view;
   const props=all.filter(inView).filter(p=>!q||(p.name+' '+(p.alias||'')+' '+p.fha+' '+(p.city_state||'')).toLowerCase().indexOf(q)>=0);
   if(q){const _sc=p=>{const nm=String(p.name||'').toLowerCase();if(nm.startsWith(q))return 0;if(nm.split(/\s+/).some(w=>w.startsWith(q)))return 1;if(nm.indexOf(q)>=0)return 2;const al=String(p.alias||'').toLowerCase();if(al.startsWith(q)||al.split(/\s+/).some(w=>w.startsWith(q)))return 3;return 4;};props.sort((a,b)=>_sc(a)-_sc(b)||String(a.name||'').localeCompare(String(b.name||'')));}
   else if(hasRail)props.sort((a,b)=>String(a.deadline||'9999-99-99').localeCompare(String(b.deadline||'9999-99-99'))||String(a.name||'').localeCompare(String(b.name||'')));
@@ -4243,13 +4651,29 @@ function renderMenu(){
       bits.push(all.length+(all.length===1?' property':' properties'));
       if(need)bits.push(need+' need'+(need===1?'s':'')+' review');
     }
-    el('menuCount').textContent=bits.join('  \u00b7  ');
+    /* ---- the figures line ----
+       Every figure here is countable on the page below it: the bands are the
+       same ones the list is grouped by, so "21 due within 30 days" is the
+       length of the band headed "Due within 30 days" and nothing else. They are
+       disjoint and they sum to the total. A count the reader cannot verify by
+       looking is worse than no count, because they cannot tell whether the
+       figure or the grouping is wrong. */
+    if(hasRail){
+      /* Over every property, not only the tracked ones. Counted over the
+         tracked subset the four buckets came to 229 beside a total that
+         printed 230, and the rail one column away called two properties
+         undated where this line called one — the same word, two answers,
+         on one screen. A record the schedule does not carry is undated;
+         that is what undated means. */
+      el('menuCount').innerHTML=figuresHtml(counts,view);
+      document.querySelectorAll('#menuCount [data-view]').forEach(b=>b.onclick=()=>{
+        menuView=b.getAttribute('data-view');renderMenu();});
+    }else el('menuCount').textContent=bits.join('  \u00b7  ');
   }
-  if(el('menuRail'))el('menuRail').innerHTML=hasRail?railHtml(counts,late,view):'';
-  /* Emptying the rail does not collapse the column it sits in. Without this the
-     no-tracker fallback — the path that is supposed to look like the old flat
-     grid — draws every card behind 222px of nothing. */
-  if(el('menuBody'))el('menuBody').classList.toggle('norail',!hasRail);
+  /* Whose work this is, said once, where the control that changes it lives. */
+  if(el('menuEyebrow'))el('menuEyebrow').textContent=
+    'Portfolio'+(hasRail?((menuLens==='all'||!pmName)?' \u00b7 all managers':' \u00b7 '+pmName):'');
+  renderWho();
   if(el('menuLede'))el('menuLede').textContent=hasRail?menuViewCopy(view).lede:'';
   /* The card is a CONTAINER holding two sibling buttons, not a button with
      another inside it. A <button> nested in a <button> is invalid: the parser
@@ -4259,7 +4683,7 @@ function renderMenu(){
      stopPropagation anywhere — and a stopPropagation guarding against a DOM
      shape is the first thing to break when the shape changes — and both halves
      are tab-reachable. */
-  const card=p=>{const pct=Math.round(p.completeness*100);
+  const card=(p,_band)=>{const pct=Math.round(p.completeness*100);
     const al=(p.alias||'').trim();const showAl=al&&al.toLowerCase()!==String(p.name||'').trim().toLowerCase();
     /* The gallery is read by scanning it — six cards, and the eye is looking
        for a name and a ring. A sentence under every one of them is a line of
@@ -4270,34 +4694,192 @@ function renderMenu(){
        the card's most important fact (we cannot read this row) nowhere. */
     const _pg=p.hap?(String(p.program||'').trim()||(p.action&&p.action.kind==='unsupported'?'no type stated':'')):'';
     const prog=_pg?('<span class="pc-prog'+(_pg==='OCAF'?' ocaf':_pg==='RCS'?'':' unk')+'">'+esc(_pg)+'</span>'):'';
-    const body='<button class="pc-body" data-open="'+p.id+'"'+(p.caption?' title="'+esc(p.caption)+'"':'')+'><div class="pc-top"><div class="pc-name">'+esc(p.name)+(showAl?'<span class="pc-alias">&ldquo;'+esc(al)+'&rdquo;</span>':'')+'</div>'+profileChip(p)+'</div>'
+    const body='<button class="pc-body" data-open="'+p.id+'"'+(p.caption?' title="'+esc(p.caption)+'"':'')+'><div class="pc-top"><div class="pc-name">'+esc(p.name)+(showAl?'<span class="pc-alias">&ldquo;'+esc(al)+'&rdquo;</span>':'')+'</div></div>'
+      /* Only in the everyone scope. Reading one manager's list, a column
+         repeating that manager on every row is 229 restatements of what the
+         masthead already says. Reading all of them, it is the fact that tells
+         you whose row it is. */
+      +(_pmCol?('<div class="pc-pm">'+esc(p.hap?(p.pm||'Unassigned'):'')+'</div>'):'')
       +'<div class="pc-meta">'+(p.hap?(esc(p.pm||'Unassigned')+(p.city_state?' &middot; '+esc(p.city_state):'')):(esc(p.fha)+(p.city_state?' &middot; '+esc(p.city_state):'')))+'</div>'
       +(p.hap?dueLine(p):'')
+      /* The ledger printed a "Rents effective" header over an empty column. */
+      /* Only where the column's own header is true of it. For an expiring or
+         abandoned schedule p.action.effective is a CONTRACT EXPIRY, and
+         printing it under "Rents effective" restated the due cell one column
+         over as a different fact. */
+      +'<div class="pc-eff">'+((p.hap&&p.action&&p.action.effective&&p.action.kind!=='expiring'&&p.action.kind!=='gap')?esc(fmtDateShort(p.action.effective)):'')+'</div>'
       +'<div class="pc-div"></div>'
       +'<div class="pc-foot">'+prog
-      +'<span class="pc-units">'+(p.hap&&!p.started?'Not started':(p.total_units+' unit'+(p.total_units===1?'':'s')+(p.unit_types?' &middot; '+p.unit_types+' type'+(p.unit_types===1?'':'s'):'')))+'</span>'
+      /* Always the unit count. "Not started" stood here instead, which is the
+         progress question the row's own button already answers — and it took
+         the slot the size of the job belongs in. */
+      +'<span class="pc-units">'+(p.total_units?(fmtNum(p.total_units)+' unit'+(p.total_units===1?'':'s')+(p.unit_types?' &middot; '+p.unit_types+' type'+(p.unit_types===1?'':'s'):'')):'')+'</span>'
       +(p.hap&&!p.started?'':'<span class="pc-upd" title="'+esc(updTitle(p.updated_at))+'">Updated '+relTime(p.updated_at)+'</span>')+'</div></button>';
-    return '<div class="pcard">'+body+actionBtnHtml(p)+'</div>';};
-  /* A "+ New property" tile sitting inside "Needs you" would imply it belongs to
-     that band. #bNewProperty in the toolbar is always there, so the tile appears
-     only where it means what it looks like. */
-  const newTile='<button class="pcard newcard" id="tileNew"><span class="plus">+</span><span>New property</span></button>';
+    /* Short on EVERY row. The full label repeats the programme \u2014 "Start 2026
+       OCAF" beside a Program column already reading OCAF \u2014 and it only ever
+       differed because rows inside thirty days used to live in a panel with
+       twice the width. One label, and the column that holds it is the same on
+       every row of one table. */
+    return '<div class="pcard"'+(_band?' data-band="'+esc(_band)+'"':'')+'>'+body+actionBtnHtml(p,true)+'</div>';};
+  /* No "+ New property" tile. "New property" lives in the masthead, on every
+     view, which is one place rather than two — and a dashed slab at the foot of a
+     renewal SCHEDULE invited making a record the tracker does not carry, which is
+     the population the dev sweep exists to clear up after. */
   const empty='<div class="mempty">No properties match &ldquo;'+esc(q)+'&rdquo;. <span class="link" id="mClear">Clear search</span></div>';
   const viewEmpty='<div class="mempty">'+esc(menuViewCopy(view).empty)+'</div>';
   /* Two populations, and they must be told apart on sight: mixed together, a
      record with no renewal date reads as a property with nothing due. */
   const _tr=props.filter(p=>p.hap),_or=props.filter(p=>!p.hap);
-  const _body=(_tr.length?_tr.map(card).join(''):'')
-    +((_or.length&&_tr.length)?'<div class="mgroup">Not in the renewal schedule</div>':'')
-    +(_or.length?_or.map(card).join(''):'');
+  /* ---- three zones ----
+     What is coming leads the page. Behind it, a drawer.
+
+     The flat single-list version this replaces was honest about the calendar and
+     wrong about the job: it opened on eighty rows of what is behind, and the
+     twenty-one that can actually be worked today sat somewhere down the middle
+     of one very long scroll. Matt: "i want those upcoming ones to go back to
+     being prominent and taking up the top of the page like it used to be".
+
+     So: a banner saying how many are past due (closed), the live panel, then the
+     ledger by month. Opening the banner inserts the past rows between it and the
+     panel and compensates the scroll by the height that appeared, so nothing
+     below moves — the list comes to exist above you, to scroll up into.
+
+     rank is 0 for everything dated and 9 for everything off the axis, so the
+     sort is month order and then the deadline order `props` already carries. */
+  const _banded=_tr.map(p=>({p:p,b:p._band||bandOf(p)}));
+  _banded.sort((a,b)=>(a.b.rank-b.b.rank)
+    ||String(a.b.key).localeCompare(String(b.b.key))
+    ||(_tr.indexOf(a.p)-_tr.indexOf(b.p)));
+  /* Month headings, emitted over whichever subset a zone holds. Each zone runs
+     its own key, so a month split across two of them is named in both: the
+     ledger's "August 2026" stands over the August rows the live panel did not
+     take, under a zone heading that already said which thirty days it took. */
+  const _zone=list=>{let k=null;return list.map(x=>{
+    const h=(x.b.key!==k)?('<div class="mgroup">'+esc(x.b.label)+'</div>'):'';
+    k=x.b.key;return h+card(x.p,x.b.behind?'past':(x.p.days<=MENU_WINDOW?'now':'later'));}).join('');};
+  const _cols='<div class="mcols'+(_pmCol?' pm':'')+'"><span>Property</span>'
+    +(_pmCol?'<span>Manager</span>':'')+'<span>Program</span>'
+    +'<span>Due to HUD</span><span>Rents effective</span><span class="r">Units</span>'
+    +'<span></span></div>';
+  const _rowsCls='mgrid rows'+(_pmCol?' pm':'');
+  const _pastRows=_banded.filter(x=>x.b.key!=='none'&&x.b.behind);
+  const _liveRows=_banded.filter(x=>x.b.key!=='none'&&!x.b.behind&&x.p.days<=MENU_WINDOW);
+  const _restRows=_banded.filter(x=>x.b.key!=='none'&&!x.b.behind&&x.p.days>MENU_WINDOW);
+  const _offRows=_banded.filter(x=>x.b.key==='none');
+  const _pl=n=>fmtNum(n)+(n===1?' property':' properties');
+
+  /* ---- zone 1: the drawer ----
+     A drawer only where it has something to hide. Filtered TO what is past, the
+     rows ARE the list, and a banner over them would be a control that closes the
+     view you just chose. */
+  /* The arrow points DOWN when the drawer is open. It pointed up in the first
+     draft, meaning "those rows are above you" — which is a compass reading, and
+     on a disclosure control the arrow is read as the ACTION or the state, not as
+     a direction to look in. Open means it dropped down. */
+  /* Not while searching. Search is a find-within that forces the All view, so a
+     past-due property matching the query was being routed into a CLOSED drawer:
+     you typed a name you knew existed and the page showed you nothing. A drawer
+     is for a list you are browsing, never for one you are searching. */
+  const _drawer=(!q&&view!=='past'&&_pastRows.length>0);
+  const _pastGrid=_pastRows.length?('<div class="mpastwrap" id="mPastWrap"'
+      +((_drawer&&!_pastOpen)?' hidden':'')+'><div class="'+_rowsCls+'">'
+      +_cols+_zone(_pastRows)+'</div></div>'):'';
+  const _banner=_drawer?('<button class="mpast'+(_pastOpen?' open':'')
+      +'" id="mPast" aria-expanded="'+(_pastOpen?'true':'false')+'">'
+      +'<span class="mp-n">'+(_pastOpen?'\u2193 ':'')+'<b>'+fmtNum(_pastRows.length)
+      +'</b> already due</span>'
+      +'<span class="mp-a">'+(_pastOpen?'Hide':'Show')+'</span>'
+      +'</button>'):'';
+
+  /* ---- zone 2: what is coming ----
+     "Due to HUD by Jul 31" over a row due Aug 1 is a heading asserting something
+     its members do not share. The band is a window, so the heading names it. */
+  /* The panel is about what is coming, so it is drawn in the views that are about
+     that — everything, and the window itself. Filtered to what is already due or
+     off the schedule, a heading reading "nothing is due in the next 60 days" would
+     be answering a question nobody asked, and it put a SECOND empty panel on a
+     page that already had one. The control lives in that heading, so it comes and
+     goes with it; the strip is how you get back to a view that has it. */
+  const _liveZone=(view==='all'||view==='now');
+  const _liveHtml=!_liveZone?'':('<div class="zhead"><h3>Due within '+_bandNow()
+      +' days</h3><span>'+(_liveRows.length?(_pl(_liveRows.length)
+        +' &middot; earliest deadline first'):'Nothing in this window')+'</span>'
+    +'<span class="zsp"></span>'+windowPickHtml()+'</div>'
+    +(_liveRows.length?('<div class="'+_rowsCls+' live">'+_cols+_zone(_liveRows)+'</div>')
+      :(view==='now'?'':'<div class="mempty win0">Nothing is due in the next '+_bandNow()
+        +' days. Try a wider window, or read on below.</div>')));
+
+  /* ---- zone 3: the rest of the schedule, by month ---- */
+  /* Where the panel is not drawn, its rows fall to the ledger \u2014 otherwise
+     choosing "already due" and then "later" would silently drop the ones inside
+     the window, and the strip's figure would no longer equal the rows it draws. */
+  const _ledgerRows=_liveZone?_restRows:_liveRows.concat(_restRows);
+  const _restN=_ledgerRows.length+_offRows.length+_or.length;
+  const _restHtml=_restN?('<div class="zhead"><h3>'+(_liveRows.length?'Further out':'The schedule')
+      +'</h3><span>'+_pl(_restN)+(_ledgerRows.length?' &middot; earliest deadline first':'')+'</span></div>'
+    +'<div class="'+_rowsCls+'">'+_cols+_zone(_ledgerRows)
+    /* Off the axis, so below every month rather than inside the last one — a
+       property with no deadline cannot sit on a deadline timeline. */
+    +(_offRows.length?('<div class="mgroup">'+esc(_offRows[0].b.label)+'</div>'
+      +_offRows.map(x=>card(x.p,'none')).join('')):'')
+    /* Named whenever it has members, because the heading carries the only control
+       that removes them. Sweeping is offered HERE and nowhere else: the group
+       above is IN the schedule and merely has nothing ahead of it, so a sweep
+       that took both would delete live properties. */
+    +(_or.length?('<div class="mgroup"><span>Not in the renewal schedule</span>'
+        +(DEV_PURGE?('<button class="txtbtn del" id="orphPurge">Remove '
+          +(_or.length===1?'this record':'these '+fmtNum(_or.length)+' records')+'</button>'):'')
+        +'</div>'+_or.map(p=>card(p,'none')).join('')):'')
+    +'</div>'):'';
+  /* The drawer lives in its own bar, flush under the masthead, so it is not the
+     first item of a list it is not part of. But ONLY while it is a drawer:
+     filtered TO what is past, those rows are the whole list, and leaving them in
+     the top bar put every row of the chosen view above the page's own heading
+     and left the list below it empty. */
+  if(el('menuPastBar'))el('menuPastBar').innerHTML=_drawer?(_banner+_pastGrid):'';
+  const _body=(_drawer?'':_pastGrid)+_liveHtml+_restHtml;
+  el('menuGrid').className='mzones';
   el('menuGrid').innerHTML=_body+(q&&!props.length?empty:'')
     +((hasRail&&!q&&!props.length)?viewEmpty:'')
-    +((!q&&(!hasRail||view==='all'))?newTile:'');
+    ;
   document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>{const v=b.getAttribute('data-open');
     if(v.indexOf('hap:')===0)openHapProperty(v.slice(4));else openLauncher(v);});
   /* No e.stopPropagation(): the two buttons are siblings, and adding one would
      be a lie about the structure. */
   document.querySelectorAll('[data-pact]').forEach(b=>b.onclick=()=>primaryActionClick(b.getAttribute('data-pact')));
+  if(el('orphPurge'))el('orphPurge').onclick=()=>purgeOrphans(_or);
+  /* ---- opening the drawer ----
+     Compensating the scroll is the whole trick. Inserting eighty rows above the
+     live panel would otherwise shove it off the bottom of the screen; measuring
+     what appeared and scrolling by exactly that keeps every pixel below the
+     banner where it was, and leaves the past list above the viewport for the
+     reader to scroll up into.
+
+     Scrolling up while already at the top opens it too — the gesture a PM reaches
+     for without being told. Guarded on the wheel pointing up AND the page being
+     at the top, so it cannot fire mid-list. */
+  document.querySelectorAll('#menuGrid [data-win]').forEach(b=>{
+    b.onclick=()=>setMenuWindow(b.getAttribute('data-win'));});
+  const _pb=el('mPast');
+  if(_pb)_pb.onclick=()=>_togglePast();
+  if(!_menuWheel&&typeof window!=='undefined'&&window.addEventListener){
+    _menuWheel=true;
+    window.addEventListener('wheel',_menuWheelEvent,{passive:false});
+    /* Escape puts the list back the way it was found: the backlog away, the page at
+       the top. Not while a dialog is up — Escape belongs to whatever is in front. */
+    window.addEventListener('keydown',e=>{
+      if(e.key!=='Escape')return;
+      const mv=el('viewMenu');
+      if(!mv||mv.style.display==='none')return;
+      const sc=el('scrim');
+      if(sc&&sc.classList&&sc.classList.contains('open'))return;
+      if(_pastOpen)_togglePast();
+      _wasTop=true;_push=0;_armAt=0;
+      if(typeof window.scrollTo==='function')window.scrollTo(0,0);
+    });
+    window.addEventListener('scroll',_menuScrollBack,{passive:true});
+  }
+
   /* Wired here rather than in boot(): the rail is rebuilt on every render, so a
      one-time wiring would go stale on the first click. Clearing the search is
      deliberate — search forces the All view, and a stale query would silently
@@ -4305,7 +4887,6 @@ function renderMenu(){
   document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{
     menuView=b.getAttribute('data-view');
     if(el('menuSearch'))el('menuSearch').value='';renderMenu();});
-  const tn=el('tileNew');if(tn)tn.onclick=createProperty;
   const mc=el('mClear');if(mc)mc.onclick=()=>{if(el('menuSearch'))el('menuSearch').value='';renderMenu();};
 }
 function existingPropByName(nm){nm=String(nm||'').trim().toLowerCase();if(!nm)return null;try{return (mpdb.listProperties()||[]).find(p=>String(p.name||'').trim().toLowerCase()===nm)||null;}catch(e){return null;}}
@@ -4354,6 +4935,11 @@ function createProperty(){
 /* ---- LAUNCHER: property summary + program picker --------------------- */
 function openLauncher(pid){activePid=pid;activeCid=null;renderLauncher();show('Launcher');}
 function docIcon(){return '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c86a2" stroke-width="1.6" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>';}
+/* On this desk a colour means a deadline, a link or a thing that is done, and
+   an increase is none of those — it is the ordinary case, so it is ink. A
+   DECREASE is worth naming, and gets the stamp. Separate from liftClr (teal /
+   red / slate), which the FORM still speaks and which this pass does not touch. */
+const deskClr=n=>n<0?'var(--stamp)':(n>0?'var(--i1)':'var(--i4)');
 function rcsAffPane(a){
   if(!a.total_units)return '<div class="aff-empty">Add unit types &amp; rents to see the affordability check.</div>';
   if(a.safmr_missing||!a.ceiling)return '<div class="aff-empty">Enter a 150% SAFMR to run the affordability check.</div>';
@@ -4364,8 +4950,8 @@ function rcsAffPane(a){
   const pCur=CEIL>0?clamp(CG/CEIL*100):0,pPro=CEIL>0?clamp(PG/CEIL*100):0;const dMo=a.delta_mo,dYr=a.delta_yr;
   return '<div class="aff"><div class="aff-top"><span class="aff-k">AFFORDABILITY CHECK</span><span class="aff-pass '+(PASS?'ok':'over')+'">'+(PASS?'&#10003; PASS':'&#10007; OVER')+' &middot; '+money(Math.abs(HEAD))+(PASS?' headroom':' over')+(partial?' &middot; '+a.types_priced+' of '+a.types_total+' types priced':'')+'</span></div>'
     +'<div class="aff-body"><div class="aff-left"><div class="aff-gauge">'+gaugeSegs(pCur,pPro)+'<div class="oend"></div></div>'
-      +'<div class="aff-anchors"><span><b style="color:#2f7d57">'+money(CG)+'</b><i>current</i></span><span><b style="color:#47a377">'+money(PG)+'</b><i>proposed</i></span><span><b>'+money(CEIL)+'</b><i>150% ceiling</i></span></div></div>'
-    +'<div class="aff-right"><span><b style="color:'+liftClr(a.pct)+'">'+sPct(a.pct)+'</b><i>'+liftWord(a.pct)+'</i></span><span><b style="color:'+liftClr(a.per_unit)+'">'+sMoney(a.per_unit)+'</b><i>per unit</i></span><span><b style="color:'+liftClr(dMo)+'">'+sMoney(dMo)+'</b><i>per month</i></span><span><b style="color:'+liftClr(dYr)+'">'+sK(dYr)+'</b><i>/yr</i></span></div></div></div>';}
+      +'<div class="aff-anchors"><span><b>'+money(CG)+'</b><i>current</i></span><span><b>'+money(PG)+'</b><i>proposed</i></span><span><b>'+money(CEIL)+'</b><i>150% ceiling</i></span></div></div>'
+    +'<div class="aff-right"><span><b style="color:'+deskClr(a.pct)+'">'+sPct(a.pct)+'</b><i>'+liftWord(a.pct)+'</i></span><span><b style="color:'+deskClr(a.per_unit)+'">'+sMoney(a.per_unit)+'</b><i>per unit</i></span><span><b style="color:'+deskClr(dMo)+'">'+sMoney(dMo)+'</b><i>per month</i></span><span><b style="color:'+deskClr(dYr)+'">'+sK(dYr)+'</b><i>/yr</i></span></div></div></div>';}
 /* ---- CYCLES: property-page cards + create picker ----------------------
    A cycle is a complete frozen snapshot (see CYCLES-OCAF-UAF-DESIGN.md).
    The dominant cycle (latest effective date; rent-setting beats UAF-only)
@@ -4383,10 +4969,10 @@ function cyclePane(c){
   let rows='';
   if(c.programs.indexOf('ocaf')>=0){const C=G.ocafCalcRec(rec);let dMo=0;(C.rows||[]).forEach(r=>{if(r.n&&r.c&&C.R>0)dMo+=r.n*(Math.round(r.c*C.R)-r.c);});
     rows+=C.R>0?('<div class="aff-top"><span class="aff-k">OCAF</span><span class="aff-pass ok">\u00d7'+C.R.toFixed(3)+' effective \u00b7 '+sMoney(dMo)+'/mo \u00b7 '+sK(dMo*12)+'/yr</span></div>')
-              :'<div class="aff-top"><span class="aff-k">OCAF</span><span class="aff-pass over">worksheet incomplete \u2014 open the package</span></div>';}
+              :'<div class="aff-top"><span class="aff-k">OCAF</span><span class="aff-note">Worksheet not filled in</span></div>';}
   if(c.programs.indexOf('uaf')>=0){const U=G.uafCalcRec(rec);let uaMo=0;U.rows.forEach(r=>{uaMo+=(r.n||0)*(r.newSum-r.curSum);});
     rows+=U.rows.length?('<div class="aff-top"><span class="aff-k">UAF</span><span class="aff-pass '+(U.dec.length?'over':'ok')+'">'+U.rows.length+' unit type'+(U.rows.length>1?'s':'')+' \u00b7 '+sMoney(uaMo)+' UA/mo'+(U.dec.length?' \u00b7 '+U.dec.length+' decrease'+(U.dec.length>1?'s':''):'')+'</span></div>')
-              :'<div class="aff-top"><span class="aff-k">UAF</span><span class="aff-pass over">UA components not entered \u2014 open the package</span></div>';}
+              :'<div class="aff-top"><span class="aff-k">UAF</span><span class="aff-note">Allowances not entered</span></div>';}
   return '<div class="aff">'+rows+'</div>';
 }
 /* The tracker's answer to "what is next here", on the property's own page. It
@@ -4406,7 +4992,7 @@ function nextUpHtml(){
   const scheduled=!!(a.effective&&a.year);
   const v=scheduled?esc(a.type+' · effective '+fmtDateLong(a.effective))
     :a.kind==='expiring'?esc('Contract expires '+fmtDateLong(a.effective))
-    :a.kind==='gap'?esc('No renewal scheduled after '+fmtDateLong(a.effective))
+    :a.kind==='gap'?esc('Schedule ends '+fmtDateLong(a.effective)+(a.contractExp?(' \u2014 the contract runs to '+fmtDateLong(a.contractExp)):''))
     :'Not scheduled';
   return '<div class="nextup"><div class="nu-l">'
     +'<div class="nu-k">NEXT RENEWAL</div>'
@@ -4415,19 +5001,47 @@ function nextUpHtml(){
     +(why?'<div class="lh-note">'+esc(why)+'</div>':'')+'</div>'
     +(lab?'<button class="btn p" id="nuGo"'+(a.disabled?' disabled':'')+'>'+esc(lab)+'</button>':'')+'</div>';
 }
-function cyclesHtml(){
+/* The list was a chooser: four equal cards, each one a candidate. That is no
+   longer what it is. The renewal schedule decides which package you work on, and
+   a programme can be started only once per effective date, so nothing here is a
+   choice — the current renewal is the current renewal, and everything before it
+   is what was filed. So: the current renewal keeps its card and its figures, and
+   each earlier package collapses to one line — what it was, when it took effect,
+   and whether it went out. */
+function cyclesHtml(hasAction){
   const cs=mpdb.listCycles(activePid);
-  const btn='<button class="btn p" id="bNewCycle" style="margin-bottom:10px">+ Start new package</button>';
-  if(!cs.length)return btn+'<div class="lh-note">No packages yet \u2014 start one to work on this property\u2019s renewal.</div>';
-  return btn+cs.map(c=>{
-    const gen=c.generated&&c.generated.at;
-    return '<div class="cycard'+(c.dominant?' dom':'')+'" data-cyopen="'+c.id+'">'
-      +'<div class="cy-h">'+progChips(c.programs)+'<b class="cy-t">'+esc(c.label||'(no year)')+(c.effective_date?' \u00b7 effective '+esc(fmtDateLong(c.effective_date)):'')+'</b>'
-      +(c.dominant?'<span class="cy-dom">current \u00b7 sets the property record</span>':'')
-      +'<span class="cy-st'+(gen?' ok':'')+'">'+(gen?'Package generated':'Draft')+'</span></div>'
-      +cyclePane(c)
-      +'<div class="cy-act"><button class="txtbtn del" data-cydel="'+c.id+'">Delete</button></div></div>';
-  }).join('');
+  /* Two independent questions, and conflating them labelled a fourth package
+     "Start a package". How LOUD the control is answers "is there another way in?"
+     — quiet when the schedule offers one above, primary when it does not. What it
+     SAYS answers "is this the first?". */
+  const start='<button class="'+(hasAction?'addrow':'btn p')+'" id="bNewCycle">'
+    +(hasAction?'+ ':'')+(cs.length?'Start another package':'Start a package')+'</button>';
+  if(!cs.length)return '<div class="lh-note" style="margin-top:0;margin-bottom:12px">No packages yet.</div>'+start;
+  /* Current is the dominant package's effective DATE, not the dominant package
+     alone. An RCS and a UA effective the same day are one renewal done in two
+     packages, and filing the UA under "Earlier" would date it a year wrong. */
+  const dom=cs.find(c=>c.dominant)||cs[0];
+  const eff=c=>String((c&&c.effective_date)||'');
+  const cur=eff(dom)?cs.filter(c=>eff(c)===eff(dom)):[dom];
+  const past=cs.filter(c=>cur.indexOf(c)<0);
+  const gen=c=>!!(c.generated&&c.generated.at);
+  const stChip=c=>'<span class="cy-st'+(gen(c)?' ok':'')+'">'+(gen(c)?'Generated':'Draft')+'</span>';
+  const card=c=>'<div class="cycard'+(c.dominant?' dom':'')+'" data-cyopen="'+c.id+'">'
+    +'<div class="cy-h">'+progChips(c.programs)
+    +'<b class="cy-t">'+esc(c.effective_date?('Effective '+fmtDateLong(c.effective_date)):(c.label||'No date'))+'</b>'
+    +(c.dominant?'<span class="cy-dom">Current</span>':'')
+    +stChip(c)+'</div>'
+    +cyclePane(c)
+    +'<div class="cy-act"><button class="txtbtn del" data-cydel="'+c.id+'">Delete</button></div></div>';
+  const row=c=>'<div class="cyrow" data-cyopen="'+c.id+'">'
+    +'<span class="cyr-p">'+esc(c.programs.map(x=>PROG_NAMES[x]||String(x).toUpperCase()).join(' + '))+'</span>'
+    +'<span class="cyr-e">'+esc(c.effective_date?fmtDateLong(c.effective_date):'No date')+'</span>'
+    +stChip(c)
+    +'<button class="txtbtn del" data-cydel="'+c.id+'">Delete</button></div>';
+  return cur.map(card).join('')
+    +(past.length?('<div class="cyhist"><div class="cyh-t">Earlier</div>'
+      +'<div class="cyledger">'+past.map(row).join('')+'</div></div>'):'')
+    +start;
 }
 function wireCycles(){
   /* Wrapped, not passed by reference: newCycleDialog now takes a prefill, and a
@@ -4448,9 +5062,14 @@ function bootstrapFirstCycle(p){
   const eff=(m['rent_schedule.date_rents_effective']&&m['rent_schedule.date_rents_effective'].value)||'';
   const yr=(String(eff).match(/(\d{4})/)||[])[1]||String(new Date().getFullYear());
   const pid=activePid;
-  mpdb.createCycle(pid,{full:true,programs:['rcs'],label:yr,effective_date:eff})
+  /* This runs ONCE per property to turn an existing record into package #1. If a
+     package already holds rcs at that date the migration has nothing to do, and
+     saying "save failed" about a no-op would be alarming and wrong. */
+  Promise.resolve(mpdb.createCycle(pid,{full:true,programs:['rcs'],label:yr,effective_date:eff}))
     .then(()=>{if(activePid===pid)renderLauncher();})
-    .catch(e=>saveFailedModal(e));
+    .catch(e=>{
+      if(e&&e.code==='DUP_PACKAGE_PROGRAM'){if(activePid===pid)renderLauncher();return;}
+      saveFailedModal(e);});
 }
 /* `pre` is the tracker's answer, handed in by the card's Start button:
    {program, effective, type, deadline}. It PRE-FILLS this dialog rather than
@@ -4487,11 +5106,11 @@ function newCycleDialog(pre){
     +'<div class="dlg-sub">'+esc((((mpdb.listProperties()||[]).find(p=>p.id===activePid))||{}).name||'')+(effPh?(' \u00b7 the next one after '+esc(String(effPh).slice(-4))):'')+'</div>'
     +((pre&&pre.effective)?'<div class="lh-note" style="margin:-4px 0 12px">'+esc('The renewal schedule has this as an '+(pre.type||'')+' effective '+fmtDateLong(pre.effective)+'.')+'</div>':'')
     +'<div class="dlg-field"><label>How are the rents being set?</label>'
-    +'<div class="cypgs">'+card('cyRCS','RCS','Market reset','A rent comparability study sets the rents. Every fifth year.')
-                            +card('cyOCAF','OCAF','Factor adjustment','HUD\u2019s published operating-cost factor sets the rents.')+'</div></div>'
-    +'<div class="dlg-field"><label class="cyaddl">And alongside it</label>'
-    +'<label class="cyopt cyadd"><input type="checkbox" id="cyUAF"> <span><b>UAF</b> \u2014 revise the utility allowances in the same package</span></label></div>'
-    +'<div class="dlg-field"><label>Rents effective (mm/dd/yyyy)</label><input id="cyEff" autocomplete="off" value="'+esc((pre&&pre.effective)?fmtDate(pre.effective):effPh)+'" placeholder="'+esc(effPh)+'"></div>'
+    +'<div class="cypgs">'+card('cyRCS','RCS','Market reset','A rent comparability study sets the rents.')
+                            +card('cyOCAF','OCAF','Factor adjustment','HUD\u2019s published factor sets the rents.')+'</div></div>'
+    +'<div class="dlg-field"><label class="cyaddl">Also in this package</label>'
+    +'<label class="cyopt cyadd"><input type="checkbox" id="cyUAF"> <span><b>UAF</b> \u2014 revise the utility allowances</span></label></div>'
+    +'<div class="dlg-field"><label>Rents effective</label><input id="cyEff" autocomplete="off" value="'+esc((pre&&pre.effective)?fmtDate(pre.effective):effPh)+'" placeholder="'+esc(effPh||'mm/dd/yyyy')+'"></div>'
     +'<div class="autherr" id="cyErr"></div>'
     +'<div class="dlg-row"><button class="btn" id="dlgCancel">Cancel</button><span class="dlg-sp"></span><button class="btn p" id="dlgOk">Create</button></div>');
   const rcs=el('cyRCS'),ocaf=el('cyOCAF'),uaf=el('cyUAF'),err=el('cyErr');
@@ -4508,7 +5127,20 @@ function newCycleDialog(pre){
     const eff=fmtDateInput((el('cyEff').value||'').trim())||effPh;   // left blank, the package takes the date shown in gray: a year on from the last one
     const label=(eff.match(/(\d{4})/)||[])[1]||String(new Date().getFullYear());
     closeModal();
-    try{const r=await mpdb.createCycle(activePid,{programs,label,effective_date:eff});renderLauncher();await openCycleForm(r.cid);_cyFresh=r.cid;}catch(e){saveFailedModal(e);}
+    try{const r=await mpdb.createCycle(activePid,{programs,label,effective_date:eff});renderLauncher();await openCycleForm(r.cid);_cyFresh=r.cid;}
+    catch(e){
+      /* A clash is not a failure. The rule is one package per programme per
+         effective date, and the data layer hands back the cid of the one already
+         holding it — so the answer to "start an OCAF effective Oct 1" when that
+         package exists is to OPEN it, the same courtesy a duplicate property name
+         already gets. Reporting "save failed" would be a lie about what happened. */
+      if(e&&e.code==='DUP_PACKAGE_PROGRAM'&&e.cid){
+        closeModal();renderLauncher();await openCycleForm(e.cid);
+        setStatus('That package already exists \u2014 opened it.');
+        return;
+      }
+      saveFailedModal(e);
+    }
   };
 }
 async function openCycleForm(cid){
@@ -4540,7 +5172,9 @@ function renderLauncher(){
   const pct=Math.round(p.completeness*100);const a=mpdb.propertyAnalysis(activePid);const lh=mpdb.getLetterhead(activePid);
   const _domCy=mpdb.listCycles(activePid).find(c=>c.dominant);
   const rcsLine=(_domCy&&_domCy.programs.indexOf('rcs')<0)?(_domCy.programs.map(x=>PROG_NAMES[x]||x).join(' + ')+' package &middot; see the package card below'):((a.total_units&&a.proposed_gpr)?((a.pass?'PASS':'OVER')+' &middot; '+sPct(a.pct)+' &middot; '+money(a.proposed_gpr)+'/mo'):(a.total_units?'rents not entered yet':'set up units &amp; rents'));
-  const soon=(code,name)=>'<div class="progcard soon"><div class="pg-h"><span class="pg-code">'+code+'</span><span class="soonchip">Coming soon</span></div><div class="pg-name">'+name+'</div></div>';
+  const _meta=[(p.fha&&p.fha!=='\u2014')?esc(p.fha):'',p.city_state?esc(p.city_state):'',
+    p.total_units?(fmtNum(p.total_units)+' units'):''].filter(Boolean).join(' &middot; ');
+  const _nu=nextUpHtml();
   const lhIsPdf=String(lh.data||'').indexOf('data:application/pdf')===0;
   const lhSub=lh.data?(lhIsPdf?'PDF letterhead &middot; the tenant notice prints on it full-page':'Property letterhead &middot; reused on every package'):'<span style="color:#b4552d">Not print-ready &mdash; re-upload the letterhead (PDF, PNG or JPG) so it prints on the tenant notice</span>';
   const letter=lh.name
@@ -4548,11 +5182,15 @@ function renderLauncher(){
     :'<div class="letter empty"><div class="lh-doc">'+docIcon()+'</div><div class="lh-info"><b>Add the property letterhead</b><i>Used on the tenant notice &middot; PDF, PNG or JPG, kept with the property</i></div><button class="btn sm" id="lhAdd">Upload</button></div>';
   el('launcherBody').innerHTML=
     '<div class="lhead"><div class="lh-left"><div class="lh-name">'+esc(p.name)+(_showAl?'<span class="lh-alias">&ldquo;'+esc(_al)+'&rdquo;</span>':'')+'</div>'
-      +'<div class="lh-meta">'+esc(p.fha)+(p.city_state?' &middot; '+esc(p.city_state):'')+(p.total_units?' &middot; '+p.total_units+' units':'')+'</div>'
+      /* Built from the parts that exist. The data layer hands back an em dash
+         when a property has no number, which printed as a lone "\u2014" on its own
+         line under the name and read as a rendering fault. */
+      +(_meta?('<div class="lh-meta">'+_meta+'</div>'):'')
       +(p.entity?'<div class="lh-entity">'+esc(p.entity)+'</div>':'')+'</div>'
       +'<div class="lh-right"><div class="lh-tools"><button class="txtbtn" id="pRename">Rename</button><span class="dotsep">&middot;</span><button class="txtbtn del" id="pDelete">Delete</button></div><div class="lh-prof">'+(profileChip(p)||'<span class="pchip ok">Profile complete</span>')+'</div></div></div>'
     +'<div class="lsec"><div class="lsec-t">Property letterhead</div>'+letter+'<div class="lh-note">The uploaded letterhead appears on the tenant notice. All other letterheads are built into the document templates.</div><input type="file" id="lhFile" accept="image/*,.pdf,application/pdf" style="display:none"></div>'
-    +'<div class="lsec"><div class="lsec-t">Packages</div>'+nextUpHtml()+cyclesHtml()+'<div class="progrow" style="margin-top:10px">'+soon('BBRA','Budget-Based Rent Adjustment')+'</div></div>';
+    +'<div class="lsec"><div class="lsec-t">Packages</div>'+_nu+cyclesHtml(!!_nu)
+      +'<div class="cysoon">BBRA \u00b7 Budget-Based Rent Adjustment \u2014 not yet available</div></div>';
   wireCycles();
   bootstrapFirstCycle(p);
   el('pRename').onclick=async()=>{
@@ -4976,7 +5614,7 @@ function showPackageModal(nm,docs,combined,missingRcs,missingLh,capMsgs,blocked,
 
 
   const notes=[].concat(capMsgs||[]);
-  const noteHtml=notes.length?'<div class="gnotes">'+notes.map(m=>'<div class="gnote">⚠ '+esc(m)+'</div>').join('')+'</div>':'';
+  const noteHtml=notes.length?'<div class="gnotes">'+notes.map(m=>'<div class="gnote">'+esc(m)+'</div>').join('')+'</div>':'';
   const folderIcon='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>';
   // stacked sheets: one file holding all of them
   const pdfIcon='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto"><path d="M8 3h7l5 5v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M15 3v5h5"/><path d="M4 7v12a2 2 0 0 0 2 2h10" opacity=".45"/></svg>';
@@ -4984,7 +5622,7 @@ function showPackageModal(nm,docs,combined,missingRcs,missingLh,capMsgs,blocked,
   const xlIcon='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>';
 
   modal('<div class="dlg-t">Package generated</div>'
-    +'<div class="dlg-b">'+esc(nm)+' · '+(nGap?nReady+' of '+ORDER.length+' ready · <b style="color:#b45309">'+nGap+' need'+(nGap===1?'s':'')+' more information</b>':'all '+ORDER.length+' documents ready')+'</div>'
+    +'<div class="dlg-b">'+esc(nm)+' \u00b7 '+(nGap?nReady+' of '+ORDER.length+' ready \u00b7 <b class="gwarn">'+nGap+' not ready</b>':'all '+ORDER.length+' documents ready')+'</div>'
     +'<div class="gdocs">'+rows+'</div>'
     +noteHtml
     /* Everything you can leave with, at the end. The folder is the whole package
@@ -5248,11 +5886,11 @@ function showOcafUafModal(nm,tag,docs,combined,warns,blocked,warnOf,order){
   const ORDER=(order&&order.length)?order:docs.map(d=>d.label);
   const nReady=ORDER.filter(l=>byLabel[l]).length,nGap=ORDER.length-nReady;
   const rows=gdocRows(ORDER,byLabel,blkBy,warnOf,null,null);
-  const noteHtml=(warns||[]).length?'<div class="gnotes">'+warns.map(m=>'<div class="gnote">\u26a0 '+esc(m)+'</div>').join('')+'</div>':'';
+  const noteHtml=(warns||[]).length?'<div class="gnotes">'+warns.map(m=>'<div class="gnote">'+esc(m)+'</div>').join('')+'</div>':'';
   const folderIcon='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>';
   const pdfIcon='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto"><path d="M8 3h7l5 5v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M15 3v5h5"/><path d="M4 7v12a2 2 0 0 0 2 2h10" opacity=".45"/></svg>';
   modal('<div class="dlg-t">Package generated</div>'
-    +'<div class="dlg-b">'+esc(nm)+' \u00b7 '+esc(tag)+' \u00b7 '+(nGap?nReady+' of '+ORDER.length+' ready \u00b7 <b style="color:#b45309">'+nGap+' need'+(nGap===1?'s':'')+' more information</b>':'all '+ORDER.length+' documents ready')+'</div>'
+    +'<div class="dlg-b">'+esc(nm)+' \u00b7 '+esc(tag)+' \u00b7 '+(nGap?nReady+' of '+ORDER.length+' ready \u00b7 <b class="gwarn">'+nGap+' not ready</b>':'all '+ORDER.length+' documents ready')+'</div>'
     +'<div class="gdocs">'+rows+'</div>'
     +noteHtml
     +(nReady?('<button class="gprim" id="dlFolder">'+folderIcon+'<span><span class="gprim-t">Download the '+esc(tag)+' Package folder</span>'
@@ -5322,12 +5960,6 @@ async function boot(){
   const ms=el('menuSearch');if(ms)ms.addEventListener('input',renderMenu);
   const bn=el('bNewProperty');if(bn)bn.onclick=createProperty;
   const who=el('menuWho');if(who)who.onclick=pickWhoDialog;
-  document.querySelectorAll('[data-lens]').forEach(b=>b.onclick=()=>{menuLens=b.getAttribute('data-lens');
-    document.querySelectorAll('[data-lens]').forEach(x=>x.classList.toggle('on',x===b));
-    /* Mine and All are different questions, and the first non-empty view for one
-       is rarely the first for the other — so the rail re-resolves rather than
-       landing you in a view that is empty only because the lens moved. */
-    menuView='';renderMenu();});
   const be=el('bExit');if(be)be.onclick=requestExit;
   wireHome();
   const _revertToSaved=async()=>{form=await store.fillForm();await refreshSnap();fixSavedToggles();deriveUnits();snapForm();renderBody();setStatus('Reverted to the last saved record.');};
@@ -5447,17 +6079,17 @@ function openContacts(){renderContacts();show('Contacts');}
 const DIR_SECTIONS=[
  {kind:'appraiser',title:'Appraisers',one:'appraiser',add:'+ Add appraiser',
   rows:[[['name','Name']],[['firm','Company']],[['addr_street','Street']],[['addr_city','City'],['addr_state','State',STATES,'nrw'],['addr_zip','ZIP',null,'nrw']],[['email','Email']],[['phone','Phone']]],
-  sub:c=>[c.firm,dirAddrLine(c),c.email,c.phone?fmtPhone(c.phone):''].filter(Boolean).join('  \u00b7  ')},
+  sub:c=>[c.firm,dirAddrLine(c),fmtEmail(c.email),c.phone?fmtPhone(c.phone):''].filter(Boolean).join('  \u00b7  ')},
  {kind:'ca',title:'Contract administrators',one:'contract administrator',add:'+ Add contract administrator',
   rows:[[['prefix','Prefix',['Ms.','Mr.','Dr.','Mx.'],'nrw'],['name','Name']],[['title','Position']],[['org','Organization']],[['addr_street','Street']],[['addr_city','City'],['addr_state','State',STATES,'nrw'],['addr_zip','ZIP',null,'nrw']]],
   sub:c=>[c.title,c.org,dirAddrLine(c)].filter(Boolean).join('  \u00b7  ')},
 ];
 function renderContacts(){const list=mpdb.listContacts();
-  const pmRows=list.map(c=>'<div class="crow2"><div class="cc-main"><div class="cc-name">'+esc(c.name||'(unnamed)')+'</div><div class="cc-sub">'+esc(c.email||'\u2014')+'  \u00b7  '+esc(c.phone?fmtPhone(c.phone):'\u2014')+'</div></div><button class="txtbtn" data-ced="'+c.id+'">Edit</button><span class="dotsep">\u00b7</span><button class="txtbtn del" data-cdel="'+c.id+'">Delete</button></div>').join('');
+  const pmRows=list.map(c=>'<div class="crow2"><div class="cc-main"><div class="cc-name">'+esc(c.name||'(unnamed)')+'</div><div class="cc-sub">'+esc(fmtEmail(c.email)||'\u2014')+'  \u00b7  '+esc(c.phone?fmtPhone(c.phone):'\u2014')+'</div></div><button class="txtbtn" data-ced="'+c.id+'">Edit</button><span class="dotsep">\u00b7</span><button class="txtbtn del" data-cdel="'+c.id+'">Delete</button></div>').join('');
   let html='<div class="lhead" style="display:block"><div class="lh-name">Contacts</div><div class="lh-meta">Shared across all properties. Picking a saved contact on a property fills that part of the form.</div></div>';
-  html+='<div class="lsec"><div class="lsec-t">PM contacts</div>'+(pmRows||'<div class="mempty" style="padding:20px">No contacts yet.</div>')+'<div class="addrow" id="cAdd">+ Add PM contact</div></div>';
+  html+='<div class="lsec"><div class="lsec-t">PM contacts</div><div class="clist">'+(pmRows||'<div class="mempty">No contacts yet.</div>')+'</div><div class="addrow" id="cAdd">+ Add PM contact</div></div>';
   DIR_SECTIONS.forEach(S=>{const rows=dirList(S.kind).map(c=>'<div class="crow2"><div class="cc-main"><div class="cc-name">'+esc(((c.prefix?c.prefix+' ':'')+(c.name||'')).trim()||'(unnamed)')+'</div><div class="cc-sub">'+esc(S.sub(c)||'\u2014')+'</div></div><button class="txtbtn" data-dired="'+c.id+'" data-dkind="'+S.kind+'">Edit</button><span class="dotsep">\u00b7</span><button class="txtbtn del" data-dirdel="'+c.id+'" data-dkind="'+S.kind+'">Delete</button></div>').join('');
-    html+='<div class="lsec"><div class="lsec-t">'+S.title+'</div>'+(rows||'<div class="mempty" style="padding:20px">None saved yet.</div>')+'<div class="addrow" data-diradd="'+S.kind+'">'+S.add+'</div></div>';});
+    html+='<div class="lsec"><div class="lsec-t">'+S.title+'</div><div class="clist">'+(rows||'<div class="mempty">None saved yet.</div>')+'</div><div class="addrow" data-diradd="'+S.kind+'">'+S.add+'</div></div>';});
   el('contactsBody').innerHTML=html;
   const a=el('cAdd');if(a)a.onclick=()=>contactDialog(null);
   document.querySelectorAll('[data-ced]').forEach(b=>b.onclick=()=>contactDialog(mpdb.listContacts().find(x=>x.id===b.getAttribute('data-ced'))));
@@ -5466,18 +6098,18 @@ function renderContacts(){const list=mpdb.listContacts();
   document.querySelectorAll('[data-dired]').forEach(b=>b.onclick=()=>dirDialog(b.getAttribute('data-dkind'),dirList(b.getAttribute('data-dkind')).find(x=>x.id===b.getAttribute('data-dired'))));
   document.querySelectorAll('[data-dirdel]').forEach(b=>b.onclick=()=>{const id=b.getAttribute('data-dirdel');const S=DIR_SECTIONS.find(x=>x.kind===b.getAttribute('data-dkind'));const c=dirList(S.kind).find(x=>x.id===id);dialogConfirm('Delete '+S.one,'Remove <b>'+esc(c&&c.name?c.name:'this contact')+'</b> from '+S.title.toLowerCase()+'?','Delete',true,async()=>{try{await mpdb.deleteDir(id);renderContacts();}catch(e){saveFailedModal(e);}});});}
 function dirDialog(kind,c){const S=DIR_SECTIONS.find(x=>x.kind===kind);c=c||{};const FLDS=S.rows.flat();
-  const cell=f=>{const v=f[0]==='phone'&&c[f[0]]?fmtPhone(c[f[0]]):(c[f[0]]||'');
+  const cell=f=>{const v=f[0]==='phone'&&c[f[0]]?fmtPhoneInput(c[f[0]]):(c[f[0]]||'');
     const inner=f[2]?('<select id="dc_'+f[0]+'">'+[''].concat(f[2]).map(o=>'<option value="'+esc(o)+'"'+(String(v)===o?' selected':'')+'>'+(o===''?'\u2014':esc(o))+'</option>').join('')+'</select>')
       :('<input id="dc_'+f[0]+'" value="'+esc(v)+'" autocomplete="off">');
     return '<div class="dlg-field'+(f[3]?' '+f[3]:'')+'"><label>'+esc(f[1])+'</label>'+inner+'</div>';};
   modal('<div class="dlg-t">'+(c.id?'Edit ':'Add ')+esc(S.one)+'</div>'+S.rows.map(row=>row.length>1?('<div class="dlg-2">'+row.map(cell).join('')+'</div>'):cell(row[0])).join('')+'<div class="dlg-row"><button class="btn" id="dlgCancel">Cancel</button><span class="dlg-sp"></span><button class="btn p" id="dlgOk">Save</button></div>');
-  const pp=el('dc_phone');if(pp&&pp.addEventListener)pp.addEventListener('input',()=>{pp.value=fmtPhone(pp.value);});
+  const pp=el('dc_phone');if(pp&&pp.addEventListener)pp.addEventListener('input',()=>{pp.value=fmtPhoneInput(pp.value);});
   FLDS.forEach(f=>{const ff=el('dc_'+f[0]);if(ff&&ff.addEventListener)ff.addEventListener('keydown',ev=>{if(ev.key!=='Enter')return;ev.preventDefault();const d=pp?(pp.value||'').replace(/\D/g,''):'';if(!pp||d.length===0||d.length===10)el('dlgOk').click();});});
   el('dlgCancel').onclick=closeModal;
   el('dlgOk').onclick=async()=>{const patch={};FLDS.forEach(f=>{patch[f[0]]=(el('dc_'+f[0]).value||'').trim();});closeModal();try{if(c.id)await mpdb.updateDir(c.id,patch);else await mpdb.addDir(kind,patch);renderContacts();}catch(e){saveFailedModal(e);}};}
 function contactDialog(c){c=c||{};
-  modal('<div class="dlg-t">'+(c.id?'Edit contact':'Add contact')+'</div><div class="dlg-field"><label>Name</label><input id="ccN" value="'+esc(c.name||'')+'" autocomplete="off"></div><div class="dlg-field"><label>Email</label><input id="ccE" value="'+esc(c.email||'')+'" autocomplete="off"></div><div class="dlg-field"><label>Phone</label><input id="ccP" value="'+esc(c.phone?fmtPhone(c.phone):'')+'" autocomplete="off"></div><div class="dlg-row"><button class="btn" id="dlgCancel">Cancel</button><span class="dlg-sp"></span><button class="btn p" id="dlgOk">Save</button></div>');
-  { const pp=el('ccP'); if(pp){ pp.value=fmtPhone(pp.value||''); if(pp.addEventListener) pp.addEventListener('input',()=>{ pp.value=fmtPhone(pp.value); }); } }
+  modal('<div class="dlg-t">'+(c.id?'Edit contact':'Add contact')+'</div><div class="dlg-field"><label>Name</label><input id="ccN" value="'+esc(c.name||'')+'" autocomplete="off"></div><div class="dlg-field"><label>Email</label><input id="ccE" value="'+esc(c.email||'')+'" autocomplete="off"></div><div class="dlg-field"><label>Phone</label><input id="ccP" value="'+esc(c.phone?fmtPhoneInput(c.phone):'')+'" autocomplete="off"></div><div class="dlg-row"><button class="btn" id="dlgCancel">Cancel</button><span class="dlg-sp"></span><button class="btn p" id="dlgOk">Save</button></div>');
+  { const pp=el('ccP'); if(pp){ pp.value=fmtPhoneInput(pp.value||''); if(pp.addEventListener) pp.addEventListener('input',()=>{ pp.value=fmtPhoneInput(pp.value); }); } }
   ['ccN','ccE','ccP'].forEach(id=>{const ff=el(id);if(ff&&ff.addEventListener)ff.addEventListener('keydown',ev=>{if(ev.key!=='Enter')return;ev.preventDefault();const d=(el('ccP').value||'').replace(/\D/g,'');if(d.length===0||d.length===10)el('dlgOk').click();});});
   el('dlgCancel').onclick=closeModal;
   el('dlgOk').onclick=async()=>{const patch={name:(el('ccN').value||'').trim(),email:(el('ccE').value||'').trim(),phone:(el('ccP').value||'').trim()};closeModal();try{if(c.id)await mpdb.updateContact(c.id,patch);else await mpdb.addContact(patch);renderContacts();}catch(e){saveFailedModal(e);}};}
@@ -5486,7 +6118,7 @@ function contactDialog(c){c=c||{};
    ReferenceError at load and took three suites down with zero checks run. An
    arrow defers the lookup to the call, which only ever happens in the browser
    suite, which has the whole bundle. */
-const __API={LABEL_HINTS,rsParseUnitType,rsNum,ocrMapPages:(p)=>ocrMapPages(p),ocrWhy:()=>ocrWhy(),fmtPhone,fmtDate,sMoney,sPct,sK,analysis,uaResolvedOf,safmrResolvedOf,uaConflict,uaUnresolved,renderMenu,renderLauncher,openMenu,openForm,openLauncher,ringSvg,niceDate,isDirty,overrideCount,isStateKey,attnFlags,pbUtil,clearUncheckedWriteins,srcOf:(k)=>srcOf(k),__openForm:(pid)=>{activePid=pid;return openForm('RCS');},__openCycleForm:(pid,cid)=>{activePid=pid;return openCycleForm(cid);},__renderBody:()=>renderBody(),__docMissing:(id)=>docMissing(id).map(x=>x.label),__docWarns:(id)=>docWarns(id).map(x=>x.label),__edit:(k,v)=>{form=store.editForm(form,k,v);},getVal:(k)=>get(k),modeOf:(kk)=>modeOf(kk),fieldKeys:(k)=>fieldKeys(k),keysCanSave:(ks)=>keysCanSave(ks),keysCanRevert:(ks)=>keysCanRevert(ks),keysNewDirty:(ks)=>keysNewDirty(ks),__revert:(k)=>store.revertForm(form,k),coupledKeys:(k)=>coupledKeys(k),__firstPid:()=>{const ps=mpdb?mpdb.listProperties():[];return ps.length?ps[0].id:null;},__listProps:()=>(mpdb?mpdb.listProperties():[]),__cycles:()=>(mpdb?mpdb.listCycles(activePid):[]),packageScore:()=>packageScore(),packageDocs:()=>packageDocs(),scoreCtx:()=>scoreCtx(),__pkgCard:()=>pkgCard(),__boxes:(i)=>({ua:uaBox(i),safmr:safmrBox(i)}),__saveField:async(k)=>{form=await store.saveField(form,k);},__set:(f,u)=>{form=f;UNITS=u;},__cell:(k)=>form[k],
+const __API={LABEL_HINTS,rsParseUnitType,rsNum,ocrMapPages:(p)=>ocrMapPages(p),ocrWhy:()=>ocrWhy(),fmtPhone,fmtPhoneInput,fmtDate,sMoney,sPct,sK,analysis,uaResolvedOf,safmrResolvedOf,uaConflict,uaUnresolved,renderMenu,renderLauncher,openMenu,openForm,openLauncher,ringSvg,niceDate,isDirty,overrideCount,isStateKey,attnFlags,pbUtil,clearUncheckedWriteins,srcOf:(k)=>srcOf(k),__openForm:(pid)=>{activePid=pid;return openForm('RCS');},__openCycleForm:(pid,cid)=>{activePid=pid;return openCycleForm(cid);},__renderBody:()=>renderBody(),__docMissing:(id)=>docMissing(id).map(x=>x.label),__docWarns:(id)=>docWarns(id).map(x=>x.label),__edit:(k,v)=>{form=store.editForm(form,k,v);},getVal:(k)=>get(k),modeOf:(kk)=>modeOf(kk),fieldKeys:(k)=>fieldKeys(k),keysCanSave:(ks)=>keysCanSave(ks),keysCanRevert:(ks)=>keysCanRevert(ks),keysNewDirty:(ks)=>keysNewDirty(ks),__revert:(k)=>store.revertForm(form,k),coupledKeys:(k)=>coupledKeys(k),__firstPid:()=>{const ps=mpdb?mpdb.listProperties():[];return ps.length?ps[0].id:null;},__listProps:()=>(mpdb?mpdb.listProperties():[]),__cycles:()=>(mpdb?mpdb.listCycles(activePid):[]),packageScore:()=>packageScore(),packageDocs:()=>packageDocs(),scoreCtx:()=>scoreCtx(),__pkgCard:()=>pkgCard(),__boxes:(i)=>({ua:uaBox(i),safmr:safmrBox(i)}),__saveField:async(k)=>{form=await store.saveField(form,k);},__set:(f,u)=>{form=f;UNITS=u;},__cell:(k)=>form[k],
   /* The whole record, and the snapshot isDirty() measures against. The round-trip
      sweep needs a key-by-key diff (FORM-RULES "Before you deliver" 6): isDirty()
      compares VALUES ONLY, so a hidden side-effect key strands the form dirty with
@@ -5560,6 +6192,10 @@ __rcsFill:()=>rcsFillFromParsed(),/* The same door for the rent schedule. Fillin
   /* What the tail is, so a check can compute the expected answer near the foot
      of the page instead of hardcoding this file's arithmetic. */
   railTail:()=>{const T=railTail();return {line:RAIL_LINE,maxY:T.maxY,tailStart:T.start,
-    tailSecs:T.cards.slice(T.k).map(c=>+c.getAttribute('data-sec'))};}};
+    tailSecs:T.cards.slice(T.k).map(c=>+c.getAttribute('data-sec'))};},
+  /* The route that was unreachable: a record already in the registry under
+     the schedule's own name, carrying no tracker code. */
+  __openHap:(code)=>openHapProperty(code),
+  __fmt:{num:fmtNum,phone:fmtPhone,email:fmtEmail,date:fmtDate}};
 if(typeof module!=='undefined')module.exports=__API;
 if(SELFTEST)window.__t=__API;   // browser gets the identical surface, flag-gated
