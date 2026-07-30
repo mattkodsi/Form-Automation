@@ -35,7 +35,9 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=381;   // 2026-07-30: +25 — the two package modals join the dialog audit, and every
+const MIN_CHECKS=390;   // 2026-07-30: +9 — the swipe rebuilt on the clock: which gestures open it,
+                        // where each one lands, and what the bar is allowed to say
+// 2026-07-30: +25 — the two package modals join the dialog audit, and every
                         // dialog is now checked against the three colours the desk replaced
 // 2026-07-29: +12 — three zones: the past-due drawer closed on arrival, and
                         // opening it without moving the panel below (measured in a real layout).
@@ -2202,31 +2204,23 @@ const FULL=process.argv.includes('--full');
          throw the reader up the list, and the detent absorbs whatever is left of
          it — so all three of these end in the same place, at the bottom of the
          backlog, beside today, which is the end it is read from. */
+      /* A reader who keeps pushing after it opens DRIFTS — and is meant to. The
+         boundary is stiff, not locked: the first wheel through it is worth a fifth
+         of itself and the last most of itself, so pushing works and pushing costs
+         something. What is asserted is that the drift is bounded. It replaces a
+         measured 2,383px up a 3,428px list. */
       await shut();
       await burst(30,25); await sleep(700);
       const a2=await read();
       eq('a thirty-notch gesture opens it too',a2.hidden,false);
-      landed('and lands in the same place, not up the list',a2.panelTop,a1.panelTop);
-      await shut();
-      /* Ten, not thirty: each notch costs a CDP round trip on top of the sleep, so
-         thirty at 90ms is 3.4 seconds of wall time — past DETENT_MAX, which is the
-         NEXT check's subject and would make this one flake against it. */
-      await burst(10,90); await sleep(700);
-      const a3=await read();
-      eq('so does the same gesture at a third the speed',a3.hidden,false);
-      landed('speed changes nothing about where you land',a3.panelTop,a1.panelTop);
-      /* And the detent is a catch, not a lock. A gesture that outlasts DETENT_MAX
-         is released rather than trapped: keep wheeling and you keep going, which is
-         the whole point of the backlog being reachable at all. Thirty notches at
-         90ms is 2.7 seconds of unbroken wheeling — well past the cap. */
+      T('and pushing on through moves the reader, rather than hitting a wall',
+        a2.panelTop>a1.panelTop);
+      T('but nowhere near the top of the list',a2.panelTop-a1.panelTop<800);
       await shut();
       await burst(30,90); await sleep(700);
-      const a4=await read();
-      T('but a gesture that outlasts the detent is released, not trapped',
-        a4.panelTop>a1.panelTop);
-      /* Bounded, though. The whole complaint was 2,383px up a 3,428px list. */
-      T('and even then it has gone nowhere near the top of the list',
-        a4.panelTop-a1.panelTop<400);
+      const a3=await read();
+      eq('so does the same gesture at a third the speed',a3.hidden,false);
+      T('and it drifts no further',a3.panelTop-a1.panelTop<800);
 
       /* (b) A hand that never stopped. It reaches the top mid-gesture, so it can
          never be (a) — and it has to open anyway, or the gate is just a wall. Matt,
@@ -2238,7 +2232,7 @@ const FULL=process.argv.includes('--full');
       await sleep(700);
       const b1=await read();
       eq('a hand that keeps swiping opens it, having started mid-list',b1.hidden,false);
-      landed('and lands where every other gesture does',b1.panelTop,a1.panelTop);
+      T('and is caught by the same boundary',b1.panelTop-a1.panelTop<800);
 
       /* A fling is neither, and what makes it neither is its SHAPE: momentum is a
          decaying curve, so every event is smaller than the one before it. Nothing a
@@ -2262,27 +2256,49 @@ const FULL=process.argv.includes('--full');
       eq('scrolling briskly up to the heading and stopping leaves it closed',
         (await read()).hidden,true);
 
-      /* ---- the fill ----
-         It counts the hold, so it rises on the clock rather than in wheel-sized
-         lumps — which is the whole reason the rule it replaced needed a glide.
-         Sampled IN PAGE at 16ms, because a round trip per sample cannot see the
-         shape; and sampled on a run that stops SHORT of the hold, because a run
-         that completes it opens the drawer and leaves no bar to watch. */
+      /* ---- what the bar says, and when ----
+         It used to fill on ANY upward run at the top, including every run that was
+         never going to open anything — so arriving at the top from below ran the
+         whole animation, right and back again, in answer to nothing. Matt: "it has
+         the same animation of sliding all the way right, then all the way back left
+         without actually reacting or timing to anything."
+
+         Two signals, and they are drawn separately now. The blue rule means a pull
+         that is going to unlock the rows. Reaching the top gets a short bounce on
+         the banner and nothing else — there is more up here if you want it.
+         Sampled IN PAGE at 16ms, because a round trip per sample cannot see it. */
+      const sample=async fn=>{
+        await c.eval(`window.__S=[];window.__si=setInterval(()=>{
+          const b=document.getElementById('mPast');
+          window.__S.push([+getComputedStyle(b).getPropertyValue('--pull')||0,
+            b.classList.contains('nudge')?1:0]);},16);return 1`);
+        await fn();
+        return c.eval('clearInterval(window.__si);return window.__S');};
       await shut();
-      await c.eval('window.scrollTo(0,700);return 1'); await sleep(360);
-      await c.eval(`window.__S=[];const b=document.getElementById('mPast');
-        window.__si=setInterval(()=>{window.__S.push(
-          +getComputedStyle(b).getPropertyValue('--pull'));},16);return 1;`);
-      for(let i=0;i<9;i++){await wheel(-120);await sleep(30);}
-      await sleep(1000);
-      const S=await c.eval('clearInterval(window.__si);return window.__S');
-      const uniq=[...new Set(S.map(v=>v.toFixed(3)))].length;
-      T('the fill is animated, not written in wheel-sized lumps',uniq>=8);
-      const pk=S.indexOf(Math.max.apply(null,S));
-      const zi=S.findIndex((v,i)=>i>pk&&v<0.01);
-      T('and it slides back rather than blinking out',zi-pk>=6);
-      T('all the way to nothing',zi>0);
-      eq('and the run that drew it opened nothing',(await read()).hidden,true);
+      /* Long enough to clear NUDGE_GAP. shut() itself scrolls to the top, which
+         fires the bounce, and the bounce does not replay inside a second and a half
+         — so a sample taken too soon after it catches an arrival that is real and a
+         bounce that was correctly suppressed, and fails on a rule it is not
+         testing. This is what made the suite flake once in five. */
+      await c.eval('window.scrollTo(0,2600);return 1'); await sleep(1700);
+      const S1=await sample(async()=>{
+        let dv=-300;
+        for(let i=0;i<44;i++){await wheel(Math.min(-1,Math.round(dv)));dv*=0.92;await sleep(16);}
+        await sleep(600);});
+      T('a fling reaching the top draws no rule at all',
+        Math.max.apply(null,S1.map(r=>r[0]))<0.05);
+      T('it gets the arrival bounce instead',S1.some(r=>r[1]===1));
+      eq('and opens nothing',(await read()).hidden,true);
+      await shut();
+      await c.eval('window.scrollTo(0,700);return 1'); await sleep(400);
+      const S2=await sample(async()=>{
+        for(let i=0;i<26;i++){await wheel(-120);await sleep(38);}
+        await sleep(300);});
+      const F=S2.map(r=>r[0]);
+      T('a pull that is going to open it does draw the rule',Math.max.apply(null,F)>0.5);
+      T('and draws it as an animation, not in wheel-sized lumps',
+        [...new Set(F.map(v=>v.toFixed(3)))].length>=8);
+      eq('and that one opened',(await read()).hidden,false);
 
       /* ---- and the banner is still a button ----
          Everything above is a gesture. This is the way in for a reader who would
