@@ -5,51 +5,44 @@ production deploy).
 
 ---
 
-> # RESUME HERE — 2026-07-30. All 34 properties audited, 24 defects fixed.
+> # RESUME HERE — 2026-07-30. All 34 audited, 25 defects fixed. M47 is DONE.
 >
-> HEAD `86df74e` (+ this record), pushed, tree clean, **0** `ZZ-CORPUS-*` in the account.
-> Eleven suites, 1,766 checks, all green. The corpus loop is **finished** — every property
+> HEAD `4914153` (+ this record), pushed, tree clean, **0** `ZZ-CORPUS-*` in the account.
+> Eleven suites, **1,717 checks**, all green. The corpus loop is **finished** — every property
 > has been driven through the real app, read by eye against its own sources, and compared
 > three ways against what was filed. Matt has answered the open questions; three findings
-> are withdrawn or tabled as a result. See the last section of
+> are withdrawn or tabled as a result. See the last two sections of
 > `docs/superpowers/plans/DIAGNOSTIC-REGISTER.md` for all of it.
 >
 > ---
 >
-> ## DO THIS FIRST — the one authorised code change
+> ## DONE — M47, the checklist reads the study (4914153)
 >
-> **M47: drive the owner's checklist from the study instead of a hard-coded seed.** Matt
-> approved it explicitly. It is the highest-consequence defect left and it is cheap.
+> The one authorised code change is shipped and verified end to end. `checkSeed` +
+> `CHECK_CONDITIONAL` in `app.js` replaced two rules that disagreed (the key manifest tested
+> the LABEL text, `applyChecklistDefaults` hardcoded `(i===2||i===4)`, and only the second is
+> read at runtime). `readChecklist` in `rcs.js` answers item 14 from the study over pages the
+> reader **already holds** — page budget unchanged, no OCR page added.
 >
-> Today `app.js:72` reads
-> `const off=/scope of repair/i.test(it)||/scope of work/i.test(it); SEED['check.'+i]=[off?'':'1',D]`
-> — all seventeen items ticked except two hand-picked exceptions, and the study is never
-> consulted. Two items are wrong across the corpus:
+> Result, through the real signed-in app: **Scope of Work now ticks** (all 34 studies carry
+> the section; Belfry heads it "Scope of Assignment") and the **appraiser's-licence item ticks
+> only when the study names a temporary licence** — measured across all 31 studies the app can
+> open, that is Holly House and Hampshire House and nothing else, which is exactly where the
+> filed checklists tick it truthfully.
 >
-> - **The appraiser-licence item is seeded ON**, so the app certifies that a copy of a
->   *temporary* licence is enclosed on every property that does not use one — six confirmed
->   (Walden, Marine Terrace, Morningside Court, Newberry Arms, Friendship Court, Colonial
->   Village). It is a false statement on a form the owner signs under 18 U.S.C. §1001, and
->   it is the app's worst act found anywhere in this corpus.
-> - **"Scope of Work" is seeded OFF** on every property, though every study carries the
->   section — under Belfry's own heading **"Scope of Assignment"**, listed in the study's
->   table of contents, and referred to as "the Scope of Work section of this report" in the
->   appraiser's own certification. Wrong on Walden, Colonial Village, Friendship Court,
->   Fairview Homes. **A literal "Scope of Work" match will miss it** — match the section, not
->   the phrase.
+> **Two things in the finding as written were wrong, and the register now says so.** TP018-25
+> is Holly House's permit, not Fairview Homes' — Fairview's study answers the question "No" in
+> plain text on page 74, and there is no blank-with-a-permit case in this corpus. And the
+> filed checklists tick "Scope of Work" on **one** property (Colonial Village), not four. The
+> larger correction: the app was not diverging from the team's practice on item 14, it was
+> **reproducing** it — five filed checklists read by eye all tick it, three of them with
+> permanent licences. That is a "team wrong" verdict, so from here the app deliberately
+> differs from those filed packages on that one box.
 >
-> **The hazard to design around, and it is real:** on **Fairview Homes** the appraiser left
-> the printed question *"Did you prepare the RCS under a temporary license? ___"* **blank**
-> while attaching Temporary Visiting Practice Permit TP018-25 **and** typing that temporary
-> number into the field labelled "Permanent License No". So the study's literal answer is
-> silence and its material answer is yes. Walden and Marine Terrace answer a clean **N** with
-> permanent licences (NY 1553109, NY 4600054504). **The safe default for an unanswered
-> conditional item is NOT ticked** — and say so in a comment, because the next person will
-> want to "tidy" it the other way.
->
-> Where the answer lives: study Appendix 9-1-4, item 12. `rcs.js` already reaches that
-> appendix on some properties. Add a test pinned to the three real shapes — a clean `N`, a
-> clean `Y`, and Fairview's blank-with-a-permit.
+> **New in this session's evidence, worth keeping:** the comparator **cannot read a filed
+> checklist's ticks at all** — every `check.N` row comes back `theirs: null`, because the
+> marks are glyphs in an offset font or, on DocuSigned copies, drawn. Any claim about a filed
+> tick has to be an eye-read.
 >
 > ---
 >
@@ -98,7 +91,12 @@ production deploy).
 >   genuine **$0** that must survive any fix.
 > - **"the workbook is missing formulas"** — they are Excel **shared** formulas the reader
 >   could not resolve. Three separate agents nearly filed this; two caught themselves.
-> - **"checklist Scope of Work unticked is a team habit"** — the *signed* filed copies tick it.
+> - ~~**"checklist Scope of Work unticked is a team habit"** — the *signed* filed copies tick it.~~
+>   **This was wrong and is corrected in the register (M47).** Of five filed checklists read by
+>   eye, **one** ticks it — Colonial Village's 2026 DocuSigned copy. Walden, Fairview Homes,
+>   Holly House and Hampshire House all leave it blank on the signed "Exhibit 2" template. The
+>   app ticks it now anyway, because all 34 studies carry the section and HUD lists it as
+>   required RCS material; leaving it blank under-reports material that is in the package.
 > - **The 7.1-point tier-2 refusals** are a **third printing of HUD-92458**, discriminated by
 >   its footer's page count and not its OMB date, whose Part B rows sit on a 14.4pt pitch
 >   against our 10.85pt. Market Square and Mapleview measure identical to five decimals, so

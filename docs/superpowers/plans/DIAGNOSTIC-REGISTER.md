@@ -2136,3 +2136,117 @@ company's actual property list from the CSV HAP tracker.** By design. Two conseq
 the `ZZ-CORPUS-` prefix discipline now matters *more*, because scratch records sit alongside the real
 portfolio; and any future corpus run should expect the account to hold real properties it must not
 touch.
+
+---
+
+# M47 — SHIPPED, and the finding as written was wrong twice (4914153)
+
+The fix stands and it is the right fix. The **evidence for it in this register was not**, and both
+errors were the same kind: an agent generalised from the filed packages it happened to open, and
+nobody re-read the sources. Corrected here, with the sources named.
+
+## What was measured this time, by eye, from the sources
+
+**Five filed owner's checklists, read as images.** Every one of them ticks item 14, *"Copy of RCS
+Appraiser's License (only if relying upon a temporary license)"*:
+
+| property | temporary licence in the study? | filed item 14 | filed "Scope of Work" |
+|---|---|---|---|
+| Holly House | **yes** — "New Jersey Temporary Practice Permit / License No.: TP018-25" | ✓ true | blank |
+| Hampshire House | **yes** — "New Jersey Temporary Visiting" / "Practice Permit" | ✓ true | blank |
+| Walden | no — NY permanent 1553109 | ✓ **false** | blank |
+| Fairview Homes | no — its study answers the question "No" | ✓ **false** | blank |
+| Colonial Village (2026, DocuSign) | no | ✓ **false** | **ticked** |
+
+**Eleven of the 34 studies print HUD's Appendix 9-1-4 item 12** — *"Did you prepare the RCS under a
+temporary license?"* — ten answering **No** and Noble Tower **Yes**. Its page position, measured:
+8 to 18 pages from the end (New Horizons is the outlier at page 7 of 47).
+
+**All 34 studies carry a scope-of-work section.** Belfry heads it **"Scope of Assignment"** — Marine
+Terrace, Colonial Village and Friendship Court each print that heading on page 4, immediately after
+their table of contents — which is why searching for the literal phrase finds nothing on 16 of them.
+
+## The two corrections
+
+1. **The hazard story was the wrong property.** The register said Fairview Homes left the temporary-
+   licence question blank while attaching permit **TP018-25** and typing that number into "Permanent
+   License No". TP018-25 is **Holly House's** permit, printed under its appraiser's signature.
+   Fairview's study answers the question **"No"** in plain text on page 74, and its permanent licence
+   field reads NJ# 42RG00253100, expiring December 31 2020. There is no blank-with-a-permit case in
+   this corpus.
+2. **"The filed checklists tick Scope of Work" was true of one property, not four.** It was claimed
+   for Walden, Colonial Village, Friendship Court and Fairview Homes. Only **Colonial Village** ticks
+   it. Walden and Fairview leave it blank, on the same "Exhibit 2" template Holly House and Hampshire
+   House use.
+
+Neither correction changes the fix. It changes what the fix *is*: the app was not diverging from the
+team's practice on item 14 — it was **reproducing** it, blanket-ticked, and the practice mis-certifies
+on the properties where no temporary licence was used. That is a "team wrong" verdict, and the app is
+not fixed toward it.
+
+## The mechanism, and why it costs nothing
+
+`app.js` had **two** rules for where each checklist item starts and they disagreed. The key manifest
+tested the LABEL text — `/scope of repair/ || /scope of work/` — which caught the one item every study
+carries in the same net as a genuine conditional. `applyChecklistDefaults` hardcoded
+`(i===2||i===4)`. **Only the second is read at runtime**, so they could disagree indefinitely without
+anything noticing. Now `checkSeed` is the single rule and `CHECK_CONDITIONAL` names the two
+conditional items and why each is one.
+
+`rcs.js readChecklist` answers item 14 from the study, over the pages the reader **already holds** —
+so the page budget is unchanged (measured 2 to 4 per study, exactly as before) and no OCR page is
+added. Two signals: the certification's sworn answer where a page carrying it is in hand, and a
+temporary licence named in the signature block.
+
+Three design points that are each a defect avoided:
+
+- **The window is two lines, not one.** Hampshire House breaks the phrase across a line and the other
+  signature column lands between its halves: `New Jersey Temporary Visiting | Illinois Associate
+  Trainee` then `Practice Permit`. A line-at-a-time test finds "temporary" with no "permit" beside it
+  and reports nothing.
+- **The test is a TITLE, not a co-occurrence.** Noble Tower's own study says *"units were temporarily
+  taken offline"* in one place and *"all required licenses, consents"* in another. Two ordinary
+  sentences must never tick a federal certification, so the rule asks for `practicepermit`,
+  `licen[sc]eno` or `licen[sc]ed` — and not bare "permit", because a building permit is a permit.
+- **Silence leaves the box empty.** The blank form prints the question with nothing after it, and its
+  own words say "temporary license" twice; reading them as a signature block would tick the box on
+  every study carrying the blank form. The answer is part of the anchor.
+
+## Verified
+
+**Measured over all 31 studies the app can open: ticks Holly House and Hampshire House, nothing
+else** — precisely the two whose filed checklists tick it truthfully. (North Park, Noble Tower and
+Northgate Terrace CA will not open in pdf-lib at all — a separate, older class of problem. Noble
+Tower's letterhead line is pinned in the suite as text.)
+
+**End to end, through the real signed-in app, both fill orders:**
+
+| property | check.4 | check.14 |
+|---|---|---|
+| Colonial Village | 0 → **1** | 1 → **0** (permanent licence) |
+| Hampshire House | 0 → **1** | **1**, and now only because the study says so |
+
+Hampshire House is the whole loop in one property: the seed no longer ticks item 14, so the tick can
+only have come from the parse — and its generated checklist prints it, read by eye, on exactly the
+line *"Copy of RCS Appraiser's License (only if relying upon a temporary license)"*. The off-by-one
+that `'Check Box'+(i+1)` invites was checked the only way it can be: a checklist generated with item
+14 and nothing else ticked, read as an image.
+
+Colonial Village's full row diff moved exactly three values and nothing else: the two above, plus
+`rentSchedule.property.name` going `ColonialVillage` → `ColonialVillage/WhiteOakTownhomes`, which
+**matches** the filed schedule and is `03a5452` showing up in a snapshot that predated it. 39 → 38
+differences, every one accounted for.
+
+23 new checks in `test_rcs.js`, every line quoted from a real study. `MIN_CHECKS` 361 → 383; the
+suite runs 384. **1,717 checks across eleven suites, all green.** On the old code the block cannot run
+at all — `readChecklist` and `checkSeed` do not exist — and the old code answers `check.4` `""` and
+`check.14` `"1"`, which is what the new checks assert against.
+
+## Still open, and now visible
+
+The comparator **cannot read a filed checklist's boxes**: every `check.N` row in the sweep comes back
+`theirs: null`. The ticks are glyphs in an offset font (`test_extract.js` already handles ASCII−29 for
+the text), and on DocuSigned copies they are drawn marks. So the checklist half of the corpus
+comparison has never verified anything about ticks — the five eye-reads in the table above are the
+only ground truth there is on this document, and any future claim about a filed tick must come the
+same way.
