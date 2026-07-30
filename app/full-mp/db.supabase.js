@@ -108,6 +108,14 @@ function makeSupabaseDb(client) {
       const prj = r.principals || {}; if (prj && typeof prj === 'object') for (const i in prj) { const e = prj[i] || {}; if (e.name != null) place(p, 'principals.' + i + '.name', e.name, sa); if (e.title != null) place(p, 'principals.' + i + '.title', e.title, sa); }
       const cl = r.checklist || {};
       for (const k in cl) place(p, 'check.' + k, cl[k], sa);
+      /* The tracker code, which the loader used to drop on the floor. It is not
+         a form cell, so it is in no PSCALAR map and nothing else read it back —
+         written on createProperty, present in the row, gone from memory the
+         moment the page reloaded. propByRaCode() then answered null for every
+         property, so a scheduled property you had already opened came back as a
+         record the schedule does not carry: a copy at the bottom of the list,
+         and a name clash the next time you opened it. */
+      if (r.ra_property_code != null) p.ra_property_code = String(r.ra_property_code);
       D.props[r.id] = p;
     });
     (ur.data || []).forEach(u => {
@@ -233,6 +241,49 @@ function makeSupabaseDb(client) {
     const e = new Error('A property named \u201c' + String(name).trim() + '\u201d already exists.');
     e.code = 'DUP_PROPERTY_NAME'; e.pid = clash.id; e.dupName = String(name).trim(); throw e;
   };
+  /* ---- one package per programme per effective date ----
+     Matt, on the hierarchy: a year's line holds that year's package, and you pick
+     the latest rather than choosing from a list. That needs a uniqueness rule, and
+     the rule is NOT "one package per year".
+
+     Two reasons it is not. Sample Property (90111) genuinely carries two startable
+     rows in one calendar year — OCAF effective 2026-09-01 and OCAF 2026-12-06 — so
+     a year key would let it hold only one of its two real packages, which is the
+     bug hap.js already goes out of its way to avoid. And the utility allowance can
+     be done either alongside the rent action or on its own, so one effective date
+     may legitimately carry {rcs, uaf} as a single package OR {rcs} and {uaf} as
+     two.
+
+     Both fall out of keying on the PROGRAMME within the date: for one property and
+     one effective date, each programme appears in at most one package. {rcs+uaf}
+     passes. {rcs} then {uaf} passes. {rcs} then {rcs} does not, and neither does
+     {rcs} then {rcs+uaf}.
+
+     A package with no effective date cannot be keyed, so it is not guarded — there
+     is nothing to be unique against. Existing data is not rewritten: this stops new
+     collisions, it does not clean up old ones.
+
+     The error carries the cid of the package already holding the programme, so the
+     caller can open THAT rather than report a failure — the same courtesy
+     assertNameFree extends for a duplicate property name. */
+  const PROGS_OF = c => String((c && c.programs) || '')
+    .split(',').map(x => x.trim().toLowerCase()).filter(Boolean);
+  const assertProgramsFree = (pid, effIn, progs, skipCid) => {
+    const eff = cyISO(effIn); if (!eff) return;
+    const want = (progs || []).map(x => String(x).trim().toLowerCase()).filter(Boolean);
+    if (!want.length) return;
+    for (const cid in D.cycles) {
+      if (cid === skipCid) continue;
+      const c = D.cycles[cid];
+      if (!c || c.property_id !== pid || cyISO(c.effective_date) !== eff) continue;
+      const clash = want.filter(x => PROGS_OF(c).indexOf(x) >= 0);
+      if (!clash.length) continue;
+      const e = new Error('A ' + clash.join(' + ').toUpperCase()
+        + ' package effective ' + eff + ' already exists for this property.');
+      e.code = 'DUP_PACKAGE_PROGRAM'; e.cid = cid; e.programs = clash; e.effective = eff;
+      throw e;
+    }
+  };
   /* The ring is the DOMINANT PACKAGE's score — see score.js. It used to be ten
      durable keys, counted, which is why a property could read 100% with the
      draft rent schedule and the tenant notice unbuildable: those ten were never
@@ -311,22 +362,26 @@ function makeSupabaseDb(client) {
      conflict between two numbers that are no longer the numbers in front of
      them. The owner's checklist goes the same way: it is signed per package.
 
-     Current rents and utility allowances depend on the programs. An RCS year
-     uploads an executed rent schedule that supplies both, so inheriting them
-     puts last year's figures on the form in the colour of saved truth. An
-     OCAF or UAF year has no schedule to upload and the prior contract rent is
-     the starting point — cycleAnalysis already falls back to it.
+     Current rents and utility allowances never carry, on any programme.
+     They were dropped on RCS years only, on the reasoning that an OCAF year
+     has no executed schedule to upload and last year's figures are the best
+     starting point. Both halves were wrong. Nothing in the app ever rolls
+     proposed into current, so an OCAF built from an OCAF inherited a rent one
+     full cycle stale and computed this year's factor against it. And rolling
+     proposed forward would not have fixed it: what took effect is whatever the
+     CA returned after the owner submitted, and the only record of that is the
+     executed schedule. A figure we cannot observe must not arrive wearing the
+     colour of saved truth. The column starts empty and the schedule fills it.
 
      Still pre-filled either way: unit mix, Part B, non-S8 and non-revenue
      rows, debt service, and everything about the property itself. */
-  const cyNoCarry = (k, progs) => /^units\.\d+\.proposed$/.test(k)
+  const cyNoCarry = (k) => /^units\.\d+\.proposed$/.test(k)
+    || /^units\.\d+\.(current|ua_exec|ua_source|ua_custom)$/.test(k)
     || /^units\.\d+\.(br_rcs|ba_rcs|num_rcs|ua_rcs)$/.test(k)
     || /^units\.\d+\.safmr_(hud|rcs|source|custom)$/.test(k)
     || /^units\.\d+\.(ua|safmr|num|type)_reviewed$/.test(k)
     || /^units\.\d+\.uac_[a-z]+$/.test(k)
     || /^check\.\d+$/.test(k)
-    || ((progs || []).indexOf('rcs') >= 0
-        && /^units\.\d+\.(current|ua_exec|ua_source|ua_custom)$/.test(k))
     || /^appr\./.test(k)
     || /^ocaf\.(factor_|ds_t12$|ds_f12$)/.test(k)
     || /^uaf\./.test(k)
@@ -401,6 +456,20 @@ function makeSupabaseDb(client) {
         D.activePid = pid;
         enqueue(pid, () => client.from('property').upsert({ id: pid, name: name || null, ra_property_code: raMasterId ? String(raMasterId) : null }).then(r => { if (r.error) throw r.error; }));
         return { pid };
+      },
+      /* Binding, not creating. A record can predate the schedule — imported by
+         hand, or named before the code existed — and then the schedule's own
+         row has nowhere to land, so opening it tried to make a SECOND property
+         under the same name and hit the one-name rule instead of opening the
+         one already there. Same building, so the code goes on the record. */
+      setRaCode(pid, code) {
+        const p = D.props[pid]; if (!p) return Promise.resolve();
+        const c = String(code == null ? '' : code).trim();
+        if (!c || String(p.ra_property_code || '') === c) return Promise.resolve();
+        p.ra_property_code = c; p.updated_at = now();
+        enqueue(pid, () => client.from('property').upsert({ id: pid, ra_property_code: c })
+          .then(r => { if (r.error) throw r.error; }));
+        return Promise.resolve();
       },
       renameProperty(pid, name) {
         const p = D.props[pid]; if (!p) return Promise.resolve();
@@ -519,12 +588,12 @@ function makeSupabaseDb(client) {
       createCycle(pid, opts) {
         const p = D.props[pid]; if (!p) throw new Error('no property ' + pid);
         const o = opts || {}; const cid = cyUuid(); const cells = {};
+        assertProgramsFree(pid, o.effective_date, o.programs || ['rcs']);
         if (o.full) { const m = merged(pid); for (const k in m) { if (k === 'assets.letterhead_data') continue; cells[k] = { value: m[k].value, saved_at: m[k].saved_at || today() }; } }
         else {
           const domId = dominantCycleId(pid);
           const src = domId ? D.cycles[domId].cells : merged(pid);
-          const _pg = o.programs || ['rcs'];
-          for (const k in src) { if (cyNoCarry(k, _pg)) continue; const v = src[k].value; if (v == null || v === '') continue; cells[k] = { value: String(v), saved_at: today() }; }
+            for (const k in src) { if (cyNoCarry(k)) continue; const v = src[k].value; if (v == null || v === '') continue; cells[k] = { value: String(v), saved_at: today() }; }
           for (const k in p.durable) { if (!isTemplateKey(k)) continue; cells[k] = { value: p.durable[k].value, saved_at: today() }; } // property record stays authoritative for identity
         }
         // The date picked when the package is created is a statement about this
