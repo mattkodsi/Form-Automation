@@ -35,7 +35,7 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=315;   // 2026-07-29: +11 — either upload order, one package (found by the corpus sweep).
+const MIN_CHECKS=327;   // 2026-07-30: +12 — the study survives a reload, and does not cross to another property (M60).
                        // 2026-07-28: +35 — the home page's filter rail, driven by real clicks.
                        // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
                        // pristine (three seeds, two checks each). 2026-07-27: the unit-type cell
@@ -1333,6 +1333,108 @@ const FULL=process.argv.includes('--full');
       T('no row is left without a unit type',
         revRs.types.every(function(t){return t&&t!=='/';})
         &&revRcs.types.every(function(t){return t&&t!=='/';}));
+    }
+
+    /* ── A REAL RELOAD, which is the whole reason this file exists ──────────
+       Everything above proves the two fill orders agree WITHIN ONE PAGE LOAD.
+       A person does not work that way: they read the study on Monday and the
+       executed schedule on Tuesday, and in between the browser is closed.
+
+       _rsFill / _rcsFill were module variables -- the app's only record that a
+       document had been APPLIED rather than merely read -- while rsRecall /
+       rcsRecall faithfully restored the readings beside them. So a reload threw
+       away the record and kept the reading, and the roster re-read in
+       rsFillFromParsed, which is gated on _rcsFill, could no longer fire.
+       Measured on HEAD in this same browser: a study pricing "all studios" at
+       1000 and "all one-bedrooms" at 1500, against a schedule with two studio
+       variants and two 1BR variants, printed 1000 / 1500 / (blank) / (blank) --
+       the second studio variant wearing the one-bedroom's rent. Which is, to
+       the figure, the defect Matt found by clicking for twenty minutes.
+
+       No other suite can see this. smoke_combined and test_interactions live in
+       one node process, where a module variable survives everything they can do
+       to it -- which is exactly why the offline probe for this came out GREEN on
+       the broken code. */
+    console.log('\n── the study survives a reload ───────────────────────');
+    {
+      const study={scalars:{},firm:'belfry',units:[
+        {type:'Studio',br:0,ba:1,count:'',rent:'',ua:'',proposed:'1000',safmr:''},
+        {type:'1BR',   br:1,ba:1,count:'',rent:'',ua:'',proposed:'1500',safmr:''}]};
+      const rs={scalars:{},principals:[],partb:null,ns8:[],nonrev:[],units:[
+        {type:'Studio',count:'10',rent:'800',ua:'50'},
+        {type:'Studio',count:'6', rent:'810',ua:'50'},
+        {type:'1BR',   count:'12',rent:'900',ua:'60'},
+        {type:'1BR',   count:'4', rent:'910',ua:'60'}]};
+      const SNAP=`const U=window.__t.__UNITS();return {rows:U.length,
+        br:U.map(i=>String(window.__t.getVal('units.'+i+'.br')||'')),
+        counts:U.map(i=>String(window.__t.getVal('units.'+i+'.num_units')||'')),
+        proposed:U.map(i=>String(window.__t.getVal('units.'+i+'.proposed')||''))};`;
+      const mkprop=async name=>await c.eval('const db=window.__t.__db();'
+        +'const r=await db.createProperty('+JSON.stringify(name)+');'
+        +'const np=(r&&(r.pid||r.id))||r;'
+        +'await window.__t.__openForm(np);'
+        +"const cy=await window.__t.__newCycle({programs:['rcs'],label:'RELOAD'});"
+        +'const nc=(cy&&(cy.cid||cy.id))||cy;'
+        +'await window.__t.__openCycleForm(np,nc);'
+        +'return {pid:np,cid:nc};');
+
+      await c.reload();await c.eval(HELPERS);
+      const ids=await mkprop('Reload test A');
+      await sleep(300);
+      /* the study is read and applied, then saved -- saving is what makes its
+         values survive the reload at all, and is what a person does before
+         closing the tab */
+      await c.eval('window.__t.__setRcsParsed('+JSON.stringify(study)+');window.__t.__rcsFill();return 1');
+      await sleep(300);
+      await c.eval("const U=window.__t.__UNITS();"
+        +"for(const i of U)for(const f of ['proposed','br','ba','num_units'])await window.__t.__saveField('units.'+i+'.'+f);"
+        +"return 1");
+      await sleep(300);
+      const pre=await c.eval(SNAP);
+      eq('the study alone builds one row per priced type',pre.rows,2);
+      eq('and prices them as the study says',pre.proposed,['1000','1500']);
+
+      /* ── the reload. Every module variable in the bundle is gone. ── */
+      await c.reload();await c.eval(HELPERS);
+      await c.eval('await window.__t.__openCycleForm('+JSON.stringify(ids.pid)+','+JSON.stringify(ids.cid)+');return 1');
+      await sleep(400);
+      const post=await c.eval(SNAP);
+      eq('the saved rents are still there after a real page reload',post.proposed,['1000','1500']);
+      const recs=await c.eval('return window.__t.__fillRecords()');
+      T('and the app still knows the study was applied',!!(recs&&recs.rcs&&recs.rcs.name));
+      eq('against the file it was applied from',recs.rcs&&recs.rcs.name,'study.pdf');
+
+      /* NOW the schedule arrives, on the second sitting. */
+      await c.eval('window.__t.__setRsParsed('+JSON.stringify(rs)+');window.__t.__rsFill();window.__t.__renderBody();return 1');
+      await sleep(500);
+      const after=await c.eval(SNAP);
+      eq('the schedule still owns the roster after a reload',after.rows,4);
+      eq('and its unit counts',after.counts,['10','6','12','4']);
+      /* THE CHECK THIS WHOLE BLOCK EXISTS FOR. */
+      eq('and the study’s rents reach BOTH variants of each type',
+         after.proposed,['1000','1000','1500','1500']);
+      eq('the studio figure never lands on a one-bedroom',
+         after.br.map((b,i)=>b+':'+after.proposed[i]),
+         ['Studio:1000','Studio:1000','1BR:1500','1BR:1500']);
+
+      /* ── and it does not cross to the next property ─────────────────────
+         The same variables leaked the other way: a study APPLIED on one
+         property left its record standing, so the NEXT property whose study had
+         only been UPLOADED applied itself when its schedule was filled -- a
+         document the user never asked for, written into a different property's
+         package. The gate's own comment says that must never happen. */
+      const idsB=await mkprop('Reload test B');
+      await sleep(300);
+      await c.eval('window.__t.__setRcsParsed('+JSON.stringify(study)+');return 1');   // uploaded, NOT applied
+      await c.eval('await window.__t.__openCycleForm('+JSON.stringify(idsB.pid)+','+JSON.stringify(idsB.cid)+');return 1');
+      await sleep(350);
+      const recsB=await c.eval('return window.__t.__fillRecords()');
+      T('a property whose study was only uploaded claims no fill',!(recsB&&recsB.rcs));
+      await c.eval('window.__t.__setRsParsed('+JSON.stringify(rs)+');window.__t.__rsFill();window.__t.__renderBody();return 1');
+      await sleep(450);
+      const afterB=await c.eval(SNAP);
+      eq('its schedule still fills the roster',afterB.counts,['10','6','12','4']);
+      eq('but the study it never applied stays unapplied',afterB.proposed,['','','','']);
     }
 
     /* ── the OCAF / UAF package states its own requirements ─────────────────

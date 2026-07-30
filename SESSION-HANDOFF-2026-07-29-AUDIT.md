@@ -5,7 +5,33 @@ production deploy).
 
 ---
 
-> # RESUME HERE — 2026-07-30. All 34 audited, 26 defects fixed. M54 and M55 are DONE.
+> # RESUME HERE — 2026-07-30, wave 1 of the overnight form audit. M60 is DONE.
+>
+> **The reload defect is fixed and settled in real chromium** (M60, last section of the register).
+> `_rsFill` / `_rcsFill` were module variables, so a page reload threw away the record that a
+> document had been APPLIED while faithfully restoring the reading — which un-did M59 and brought
+> Matt's studio / one-bedroom defect straight back on the second sitting, and leaked a fill record
+> from one property into the next. The record now travels with the document, per cycle. Proved
+> broken on HEAD in a real `Page.navigate` reload: `got ["Studio:1000","Studio:1500","1BR:","1BR:"]`.
+> `test_browser.js` 315 → **327**, `smoke_combined.js` 165 → **173**. Eleven suites, **1,800
+> checks**, all green; delivered; RA anchors built.
+>
+> **The corpus verification blocked at M59 has now run** (`_sweep/wave1.*`, app frozen at
+> `b1b4ab2`, both orders, `--jobs 2`). Morh Housing 10 → **0** and North Park 18 → **0**
+> converged. **Peterson Plaza 24 → 17 and Oaks on North Plaza 16 → 16 did not**, and the shape
+> says why: the schedule's row reads `2BR` with no bathroom while the study prices `2BR/1BA` and
+> `2BR/1.5BA` separately, so schedule-first hits M59's ambiguity guard and declines the row while
+> study-first never faces it. **The two orders now build different rosters** — a different
+> mechanism from M59, worth $27,850/month of contract rent on Peterson's HUD form. Settling it
+> needs those two source documents read by eye. **That is the next wave.**
+>
+> `ZZ-CORPUS-` cleanup ran twice and reports **0**; four test properties created, four deleted.
+> One note for whoever runs the suites next: `test_crypto.js` failed once at `1 of 81` while two
+> suites ran concurrently and passed unchanged on its own — the known load flake, not a defect.
+>
+> ---
+>
+> ## EARLIER — All 34 audited, 26 defects fixed. M54 and M55 are DONE.
 >
 > HEAD `04d0609` (+ this record), pushed, tree clean, **0** `ZZ-CORPUS-*` in the account.
 > Eleven suites, **1,753 checks**, all green. Every property has been driven through the real

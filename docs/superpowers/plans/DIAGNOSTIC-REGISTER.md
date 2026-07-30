@@ -2439,7 +2439,7 @@ the roster right they agree, and no surviving divergence could be constructed �
 is held by an assertion rather than patched with a second renderer, which is how two renderers
 came to disagree before.
 
-## BLOCKED — the corpus verification did not run
+## SUPERSEDED 2026-07-30 (it has now run — see the last section) — the corpus verification did not run
 
 Peterson Plaza, North Park, Oaks on North Plaza and Morh Housing were queued (they are the four
 whose two orders still disagree on record: 24, 18, 16 and 10 rows). All four threw before
@@ -2462,3 +2462,113 @@ Four reasons the audit was blind here, all confirmed:
    assertion that fails.
 4. **The comparator's own false rows buried it.** Sixty noise rows per property is enough to
    hide a four-row defect, and it cost real attention re-deriving which rows were real.
+
+---
+
+# M60 — a fill record was a module variable, so a page reload undid M59
+
+**Status: FIXED. Measured in real headless chromium, on a real `Page.navigate` reload.**
+
+M59 made the two upload orders agree by re-reading the study against the schedule's roster once
+the schedule has laid it down. That re-read is **gated on `_rcsFill`** — the app's only record
+that a document has been *applied* rather than merely *read*. `_rsFill` / `_rcsFill` were plain
+module variables, while `rsRecall` / `rcsRecall` faithfully restored the *readings* beside them.
+So the app kept the reading and threw away the record, and after a reload the gate could not fire.
+
+**What that costs, measured on HEAD in a browser.** A study pricing "all studios" at 1000 and
+"all one-bedrooms" at 1500, against a schedule with two studio variants and two 1BR variants —
+the exact shape Matt found by clicking — printed:
+
+```
+✗ the studio figure never lands on a one-bedroom:
+    got  ["Studio:1000","Studio:1500","1BR:","1BR:"]
+    want ["Studio:1000","Studio:1000","1BR:1500","1BR:1500"]
+```
+
+The second studio variant wearing the one-bedroom's rent, and both one-bedroom variants blank.
+That is M59's defect back in full, on the second sitting, on a form the user believes is fixed.
+
+**And the same variables leaked the other way.** `openCycleForm` clears `_rcsUpload` / `_rsUpload`
+and never touched the fill records, so a study **applied** on one property left its record
+standing. Open the next property — whose study had only been **uploaded** — fill its schedule, and
+the study applied itself:
+
+```
+✗ but the study it never applied stays unapplied:
+    got ["1000","1000","1500","1500"] want ["","","",""]
+```
+
+A document the user never asked for, written into a different property's package. The gate's own
+comment says that must never happen.
+
+## The mechanism, and the fix
+
+The record is a fact about a document, so it now travels **with** that document, per cycle:
+
+- `rsRemember` / `rcsRemember` store `fill` alongside `name` / `at` / `parsed`; `rsRecall` /
+  `rcsRecall` return it. No schema change — both data layers store the doc opaquely.
+- `rcsFillFromParsed` and `rsFillFromParsed` call their `*Remember()` immediately after setting
+  the record, so a fill is written down the moment it happens.
+- `openCycleForm` and `openForm` start with **both records null**, then restore them from the
+  recalled documents. A property's record cannot reach another property.
+- The gate now requires `_rcsFill.name === _rcsUpload.name`. `fillNote()` has always required
+  that before it will say anything about a record; the gate did not, so a fill recorded against
+  one document could re-apply another. One rule, one place.
+- Uploading a document clears its fill record before remembering it: a new file has had nothing
+  applied from it yet.
+
+## And the instrument was wrong, which is why no suite saw it
+
+`__setRcsParsed` / `__setRsParsed` set the upload and stopped. The real handlers set the upload,
+clear the fill record and call `*Remember()`. A door that skipped the last two left every suite
+testing **a state the app never holds** — and specifically left no suite able to test a reload,
+because nothing had been stored for the reload to recall. The doors now do what the handlers do.
+
+This is also why the first offline probe for this came out **green on the broken code**: in one
+node process a module variable survives everything an offline harness can do to it. Only a real
+`Page.navigate` resets it. Recorded because it will be true of the next such defect too.
+
+## Verified
+
+- `test_browser.js` +12 checks, MIN_CHECKS 315 → **327** — a real reload between applying the
+  study and applying the schedule, and the cross-property case. Both fail on HEAD (quoted above).
+- `smoke_combined.js` +8 checks, MIN_CHECKS 165 → **173** — the cross-property half, offline,
+  where it is cheap to keep: whose record it is, which file's, and that it survives re-opening.
+- All eleven suites green; `deliver.sh` clean; RA-port anchors built.
+
+---
+
+# The corpus verification blocked at M59 has now RUN — and half of it converged
+
+`wave1` re-drove the four properties whose two fill orders disagreed, at `b1b4ab2`, both orders,
+`--jobs 2`. **The record above it that says this was blocked is now superseded**, and the four
+`"generated nothing comparable"` verdicts in `_sweep/m59.json` were the dead session, as recorded.
+
+| property | fill-order rows, before M59 | after M59 | |
+|---|---:|---:|---|
+| Morh Housing | 10 | **0** | converged |
+| North Park | 18 | **0** | converged |
+| Peterson Plaza | 24 | **17** | still disagrees |
+| Oaks on North Plaza | 16 | **16** | unchanged |
+
+`ZZ-CORPUS-` cleanup ran twice and reports **0**. Four test properties created, four deleted.
+
+## What is still open, and its shape
+
+Peterson Plaza's two orders differ by **$27,850/month of contract rent** on the HUD form
+(`429,050` rs-first vs `456,900` rcs-first). The pattern is legible in the rows:
+
+```
+unit.2.type   2BR        | 2BR/1BA
+unit.3.type   2BR/1BA    | 2BR/1.5BA
+unit.2.rent   (absent)   | 2650
+```
+
+rs-first ends with a row that has a type and **no rent**; rcs-first carries one more distinct
+type. That is M59's P4 guard doing exactly what it was built to do — the schedule's row says
+`2BR` with no bathroom, the study prices `2BR/1BA` and `2BR/1.5BA` separately, so the row is
+genuinely ambiguous and rs-first declines it. Study-first never faces the ambiguity because the
+study *builds* the two rows itself. So the two orders now disagree because they build **different
+rosters**, not because a rent lands on the wrong row — a different mechanism from M59, and the
+right answer needs the two source documents read by eye. Oaks on North Plaza is `ocr:half` and
+likely the same shape. **Next wave.**

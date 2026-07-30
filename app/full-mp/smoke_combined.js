@@ -20,7 +20,7 @@ global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>
 const os=require('os'),path=require('path'),fs=require('fs');
 
 /* ── the verdict machinery (mirrors test_interactions.js) ───────────────── */
-const MIN_CHECKS=165;   // 2026-07-28: +32 the home page's filter rail, +24 the primary action
+const MIN_CHECKS=173;   // 2026-07-30: +8 — a fill record belongs to one property and one file (M60)
 let n=0,fails=0,verdict=null;
 const BAR='═'.repeat(68);
 function fail(msg,err){
@@ -583,6 +583,61 @@ const T=(label,v)=>eq(label,!!v,true);
   /* ── every spelling of a studio ───────────────────────────────────────────
      '' from rcsBrOf does not mean "unknown", it means THIS LINE MATCHES NO ROW,
      so anything it fails to recognise disappears from the study silently. */
+  /* ── A FILL RECORD BELONGS TO ONE PROPERTY AND ONE FILE ────────────────
+     The roster re-read that makes the two upload orders agree is gated on
+     _rcsFill, the record that the study has been APPLIED. openCycleForm cleared
+     the READINGS and left the RECORDS standing, so the record crossed from one
+     property to the next: measured on HEAD, property B -- whose study had only
+     been uploaded, never applied -- came out with the study's proposed rents on
+     every row the moment its schedule was filled. Applying a document the user
+     has not asked for, on a property they had not applied it to.
+
+     A page reload is the other half of this and only the browser suite can see
+     it; this is the half that is cheap to keep here. */
+  console.log('\n─ a fill record belongs to one property and one file ─');
+  { const STUDY={units:[
+      {type:'Studio',br:0,ba:1,count:'',proposed:1000,ua:50,safmr:'',safmr_base:''},
+      {type:'1BR',   br:1,ba:1,count:'',proposed:1500,ua:75,safmr:'',safmr_base:''}],scalars:{}};
+    const SCHED={scalars:{},principals:[],ns8:[],nonrev:[],units:[
+      {type:'Studio A',br:'Studio',ba:1,count:10,rent:900, ua:41},
+      {type:'Studio B',br:'Studio',ba:1,count:6, rent:950, ua:42},
+      {type:'1BR A',   br:1,       ba:1,count:12,rent:1400,ua:71},
+      {type:'1BR B',   br:1,       ba:1,count:4, rent:1450,ua:72}]};
+    const open=async name=>{const p=(await db.createProperty(name,name)).pid;
+      await app.__openForm(p);await app.__newCycle({label:'TEST'});
+      const cs=app.__cids();const cid=cs[cs.length-1];
+      await app.__openCycleForm(p,cid);return {p,cid};};
+    const proposed=()=>app.__UNITS().map(i=>String(app.getVal('units.'+i+'.proposed')||''));
+    const counts=()=>app.__UNITS().map(i=>String(app.getVal('units.'+i+'.num_units')||''));
+
+    /* A: the study is applied, then the schedule. M59's own case, as a control. */
+    const A=await open('Record owner A');
+    app.__setRcsParsed(STUDY);app.__rcsFill();
+    app.__setRsParsed(SCHED); app.__rsFill();
+    eq('the study reaches both variants of each type',proposed(),['1000','1000','1500','1500']);
+    const recA=app.__fillRecords();
+    eq('and the fill is recorded against the file it came from',recA.rcs&&recA.rcs.name,'study.pdf');
+    T('the record is stored with the package, not just held in memory',
+      !!((db.getCycleRcs(A.cid)||{}).fill));
+
+    /* B: the study is UPLOADED and never applied. */
+    const B=await open('Record owner B');
+    app.__setRcsParsed(STUDY);
+    T('a study only uploaded claims no fill',!app.__fillRecords().rcs);
+    app.__setRsParsed(SCHED);app.__rsFill();
+    eq('its schedule still lays down the roster',counts(),['10','6','12','4']);
+    eq('but the study it never applied stays unapplied',proposed(),['','','','']);
+
+    /* …and re-opening A finds its own record again, not B's absence. */
+    await app.__openCycleForm(A.p,A.cid);
+    eq('re-opening the first package restores its own record',
+       (app.__fillRecords().rcs||{}).name,'study.pdf');
+    /* Replacing the document retires the record: a fill is about the file it
+       names, which is the rule fillNote has always used and the gate now does. */
+    app.__setRcsParsed(STUDY);
+    T('and replacing the study retires it',!app.__fillRecords().rcs);
+  }
+
   console.log('\n─ rcsBrOf ─');
   eq('a studio arrives as the number 0',      app.__rcsBrOf({br:0}),'Studio');
   eq('and as the word',                       app.__rcsBrOf({br:'Studio'}),'Studio');
