@@ -1139,8 +1139,6 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
    something to do, not something wrong — and on the launcher it says so either
    way, because that page is about this one property and the answer is worth
    stating. The gallery shows it only when there is something to show. */
-.pchip{display:inline-block;font-size:11px;font-weight:700;color:#92400e;background:#fef3c7;border:1px solid #fde68a;border-radius:999px;padding:3px 9px;white-space:nowrap;cursor:default}
-.pchip.ok{color:var(--ok);background:var(--ok-fill);border-color:#bbf7d0}
 .lh-prof{margin-top:2px}
 .aff{margin-top:10px;border-top:1px solid var(--page);padding-top:10px}
 .aff-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
@@ -1312,20 +1310,9 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
 :is(#viewContacts,#viewLauncher) .dotsep{color:var(--ln)}
 /* what a record is short of. Amber was a fifth colour saying "attention",
    which on this desk is what the stamp already says. */
-:is(#viewMenu,#viewLauncher) .pchip{background:none;border:1px solid var(--stamp);
-  color:var(--stamp);border-radius:999px;font-size:10.5px;font-weight:600;padding:2px 9px}
 /* The chip is the popover's trigger now, so it looks pressable and the panel
    hangs off it. Anchored right, because the chip sits at the right edge of the
    launcher header and a 340px panel anchored left would run off the screen. */
-:is(#viewMenu,#viewLauncher) .pchip{cursor:pointer}
-:is(#viewMenu,#viewLauncher) .pchip:hover{background:var(--card)}
-#viewLauncher .pchipw .gpop{right:0;width:340px}
-#viewLauncher .pchipw .gpop-in{background:var(--card);border-color:var(--ln);
-  border-radius:var(--r-card);box-shadow:0 12px 30px rgba(16,29,43,.13)}
-#viewLauncher .pchipw .gpop-h{color:var(--i3);letter-spacing:.09em;font-weight:600}
-#viewLauncher .pchipw .gpf-n{color:var(--i1);font-weight:600}
-#viewLauncher .pchipw .gpf-w{color:var(--i3)}
-:is(#viewMenu,#viewLauncher) .pchip.ok{background:none;border-color:var(--filed);color:var(--filed)}
 /* section headings read as the zone headings on the gallery do */
 :is(#viewContacts,#viewLauncher) .lsec{margin-top:34px}
 :is(#viewContacts,#viewLauncher) .lsec-t{font-size:11px;font-weight:600;letter-spacing:.13em;
@@ -1398,14 +1385,11 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
 #viewLauncher .cy-st{background:none;border:1px solid var(--ln);border-radius:999px;
   color:var(--i4);font-size:10.5px;font-weight:600;padding:2px 9px}
 #viewLauncher .cy-st.ok{color:var(--filed);border-color:var(--filed)}
-/* The score is the chip now; "Generated" is a second, quieter fact beside it, and
-   the sentence under the title is what the score is WAITING ON — the number moves
+/* The score is the chip. The sentence under the title is what it is WAITING ON — the number moves
    on fields and that moves on documents, so a reader who wants to act reads the
    sentence and a reader who wants to compare reads the number. */
-#viewLauncher .cy-gen{margin-left:7px;font-size:10px;font-weight:600;letter-spacing:.09em;
-  text-transform:uppercase;color:var(--filed)}
 #viewLauncher .cy-cap{font-size:12.5px;color:var(--i3);margin-top:5px}
-#viewLauncher .cyrow .cy-gen{display:none}
+
 #viewLauncher .cy-line{color:var(--i3)}
 #viewLauncher .cy-act{margin-top:6px}
 /* An unfilled worksheet is empty, not failing: it reads as ink, not as a stamp. */
@@ -8395,12 +8379,18 @@ function hapProperties(){
          "0 units" on every unstarted row — a figure, and wrong. */
       total_units:(rec&&rec.total_units)||(+String(any.units||'').replace(/[^0-9]/g,'')||0),
       unit_types:(rec&&rec.unit_types)||0,
-      completeness:rec?rec.completeness:0, updated_at:(rec&&rec.updated_at)||'',
+      /* THIS renewal's package, not the property's newest one. rec.completeness is
+         scoreOfPid, which scores the dominant cycle — so a row for a renewal
+         nobody has started showed a percentage earned by LAST year's package, and
+         read as being partway through work not yet begun. act.cid is the package
+         this row is about, or nothing, and nothing scores zero. */
+      completeness:(act&&act.cid&&mpdb.cycleScore)?(mpdb.cycleScore(act.cid).pct/100):0,
+      updated_at:(rec&&rec.updated_at)||'',
       /* Carried, not recomputed. Without these two the profile chip and the
          card's hover caption were dead on every scheduled property — the chip
          showed on records with no tracker code and nowhere else, which read as
          "only uncoded records have gaps". */
-      profile:(rec&&rec.profile)||null, caption:(rec&&rec.caption)||'',
+      caption:(rec&&rec.caption)||'',
       /* The pill shows an unrecognised increase type verbatim rather than going
          blank: "displayed verbatim, never silently dropped" applies to the pill
          as much as to the button. */
@@ -9260,7 +9250,6 @@ function cyclesHtml(hasAction,hap){
   const eff=c=>String((c&&c.effective_date)||'');
   const cur=eff(dom)?cs.filter(c=>eff(c)===eff(dom)):[dom];
   const past=cs.filter(c=>cur.indexOf(c)<0);
-  const gen=c=>!!(c.generated&&c.generated.at);
   /* Draft/Generated says only whether a button has been pressed. What a reader
      wants is how far along the package is and what is holding it — which score.js
      has computed all along, for the property ring, and which the cards had no way
@@ -9268,10 +9257,7 @@ function cyclesHtml(hasAction,hap){
      what happened to that intensive code session creating the ultimate scoring
      system for package completion?" */
   const scOf=c=>{try{return mpdb.cycleScore?mpdb.cycleScore(c.id):null;}catch(e){return null;}};
-  const stChip=(c,s)=>(s?('<span class="cy-st'+(s.pct>=100?' ok':'')+'">'+s.pct+'%</span>'):'')
-    /* Generated stays, smaller and second: it is still a fact — this went out — it
-       is just not the answer to "how far along is it". */
-    +(gen(c)?'<span class="cy-gen">Generated</span>':'');
+  const stChip=(c,s)=>(s?('<span class="cy-st'+(s.pct>=100?' ok':'')+'">'+s.pct+'%</span>'):'');
   const capOf=s=>{const t=(s&&window.RCSScore&&window.RCSScore.scoreCaption)?window.RCSScore.scoreCaption(s):'';
     return t?('<div class="cy-cap">'+esc(t)+'</div>'):'';};
   const card=c=>'<div class="cycard'+(c.dominant?' dom':'')+'" data-cyopen="'+c.id+'">'
@@ -9427,9 +9413,11 @@ async function openCycleForm(cid){
 function renderLauncher(){
   const p=mpdb.listProperties().find(x=>x.id===activePid);if(!p){openMenu();return;}
   const _al=(p.alias||'').trim();const _showAl=_al&&_al.toLowerCase()!==String(p.name||'').trim().toLowerCase();
-  const pct=Math.round(p.completeness*100);const a=mpdb.propertyAnalysis(activePid);const lh=mpdb.getLetterhead(activePid);
-  const _domCy=mpdb.listCycles(activePid).find(c=>c.dominant);
-  const rcsLine=(_domCy&&_domCy.programs.indexOf('rcs')<0)?(_domCy.programs.map(x=>PROG_NAMES[x]||x).join(' + ')+' package &middot; see the package card below'):((a.total_units&&a.proposed_gpr)?((a.pass?'PASS':'OVER')+' &middot; '+sPct(a.pct)+' &middot; '+money(a.proposed_gpr)+'/mo'):(a.total_units?'rents not entered yet':'set up units &amp; rents'));
+  /* rcsLine, propertyAnalysis and pct went with the single-profile page they were
+     written for: one property, one summary of its one package. The packages list
+     below says it per package now, and that line had been computed on every render
+     and printed nowhere for some time. */
+  const lh=mpdb.getLetterhead(activePid);
   const _meta=[(p.fha&&p.fha!=='\u2014')?esc(p.fha):'',p.city_state?esc(p.city_state):'',
     p.total_units?(fmtNum(p.total_units)+' units'):''].filter(Boolean).join(' &middot; ');
   const _hap=hapForPid(activePid);

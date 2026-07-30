@@ -4146,12 +4146,18 @@ function hapProperties(){
          "0 units" on every unstarted row — a figure, and wrong. */
       total_units:(rec&&rec.total_units)||(+String(any.units||'').replace(/[^0-9]/g,'')||0),
       unit_types:(rec&&rec.unit_types)||0,
-      completeness:rec?rec.completeness:0, updated_at:(rec&&rec.updated_at)||'',
+      /* THIS renewal's package, not the property's newest one. rec.completeness is
+         scoreOfPid, which scores the dominant cycle — so a row for a renewal
+         nobody has started showed a percentage earned by LAST year's package, and
+         read as being partway through work not yet begun. act.cid is the package
+         this row is about, or nothing, and nothing scores zero. */
+      completeness:(act&&act.cid&&mpdb.cycleScore)?(mpdb.cycleScore(act.cid).pct/100):0,
+      updated_at:(rec&&rec.updated_at)||'',
       /* Carried, not recomputed. Without these two the profile chip and the
          card's hover caption were dead on every scheduled property — the chip
          showed on records with no tracker code and nowhere else, which read as
          "only uncoded records have gaps". */
-      profile:(rec&&rec.profile)||null, caption:(rec&&rec.caption)||'',
+      caption:(rec&&rec.caption)||'',
       /* The pill shows an unrecognised increase type verbatim rather than going
          blank: "displayed verbatim, never silently dropped" applies to the pill
          as much as to the button. */
@@ -5011,7 +5017,6 @@ function cyclesHtml(hasAction,hap){
   const eff=c=>String((c&&c.effective_date)||'');
   const cur=eff(dom)?cs.filter(c=>eff(c)===eff(dom)):[dom];
   const past=cs.filter(c=>cur.indexOf(c)<0);
-  const gen=c=>!!(c.generated&&c.generated.at);
   /* Draft/Generated says only whether a button has been pressed. What a reader
      wants is how far along the package is and what is holding it — which score.js
      has computed all along, for the property ring, and which the cards had no way
@@ -5019,10 +5024,7 @@ function cyclesHtml(hasAction,hap){
      what happened to that intensive code session creating the ultimate scoring
      system for package completion?" */
   const scOf=c=>{try{return mpdb.cycleScore?mpdb.cycleScore(c.id):null;}catch(e){return null;}};
-  const stChip=(c,s)=>(s?('<span class="cy-st'+(s.pct>=100?' ok':'')+'">'+s.pct+'%</span>'):'')
-    /* Generated stays, smaller and second: it is still a fact — this went out — it
-       is just not the answer to "how far along is it". */
-    +(gen(c)?'<span class="cy-gen">Generated</span>':'');
+  const stChip=(c,s)=>(s?('<span class="cy-st'+(s.pct>=100?' ok':'')+'">'+s.pct+'%</span>'):'');
   const capOf=s=>{const t=(s&&window.RCSScore&&window.RCSScore.scoreCaption)?window.RCSScore.scoreCaption(s):'';
     return t?('<div class="cy-cap">'+esc(t)+'</div>'):'';};
   const card=c=>'<div class="cycard'+(c.dominant?' dom':'')+'" data-cyopen="'+c.id+'">'
@@ -5178,9 +5180,11 @@ async function openCycleForm(cid){
 function renderLauncher(){
   const p=mpdb.listProperties().find(x=>x.id===activePid);if(!p){openMenu();return;}
   const _al=(p.alias||'').trim();const _showAl=_al&&_al.toLowerCase()!==String(p.name||'').trim().toLowerCase();
-  const pct=Math.round(p.completeness*100);const a=mpdb.propertyAnalysis(activePid);const lh=mpdb.getLetterhead(activePid);
-  const _domCy=mpdb.listCycles(activePid).find(c=>c.dominant);
-  const rcsLine=(_domCy&&_domCy.programs.indexOf('rcs')<0)?(_domCy.programs.map(x=>PROG_NAMES[x]||x).join(' + ')+' package &middot; see the package card below'):((a.total_units&&a.proposed_gpr)?((a.pass?'PASS':'OVER')+' &middot; '+sPct(a.pct)+' &middot; '+money(a.proposed_gpr)+'/mo'):(a.total_units?'rents not entered yet':'set up units &amp; rents'));
+  /* rcsLine, propertyAnalysis and pct went with the single-profile page they were
+     written for: one property, one summary of its one package. The packages list
+     below says it per package now, and that line had been computed on every render
+     and printed nowhere for some time. */
+  const lh=mpdb.getLetterhead(activePid);
   const _meta=[(p.fha&&p.fha!=='\u2014')?esc(p.fha):'',p.city_state?esc(p.city_state):'',
     p.total_units?(fmtNum(p.total_units)+' units'):''].filter(Boolean).join(' &middot; ');
   const _hap=hapForPid(activePid);
