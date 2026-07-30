@@ -3905,6 +3905,17 @@ function renderMenu(){
   if(!_menuWheel&&typeof window!=='undefined'&&window.addEventListener){
     _menuWheel=true;
     window.addEventListener('wheel',_menuWheelEvent,{passive:false});
+    /* Escape puts the list back the way it was found: the backlog away, the page at
+       the top. Not while a dialog is up — Escape belongs to whatever is in front. */
+    window.addEventListener('keydown',e=>{
+      if(e.key!=='Escape')return;
+      const mv=el('viewMenu');
+      if(!mv||mv.style.display==='none')return;
+      const sc=el('scrim');
+      if(sc&&sc.classList&&sc.classList.contains('open'))return;
+      if(_pastOpen)_togglePast();
+      if(typeof window.scrollTo==='function')window.scrollTo(0,0);
+    });
     window.addEventListener('scroll',_menuScrollBack,{passive:true});
   }
 

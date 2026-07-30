@@ -35,7 +35,7 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=394;   // 2026-07-30: the pull cut to two rules — at rest at the top it
+const MIN_CHECKS=399;   // 2026-07-30: the pull cut to two rules — at rest at the top it
                         // opens, arriving at the top it bobs, and the bob is the same
                         // length however you arrived   // 2026-07-30: +10 — the swipe rebuilt on the clock: which gestures open it,
                         // where each one lands, and what the bar is allowed to say
@@ -2190,10 +2190,16 @@ const FULL=process.argv.includes('--full');
       const bobbed=async fn=>{
         await c.eval(`window.__B=[];window.__bi=setInterval(()=>{
           const n=document.querySelector('#viewMenu .mp-n');
-          window.__B.push(n?getComputedStyle(n).transform:'none');},16);return 1`);
+          const b=document.getElementById('mPast');
+          window.__B.push([n?getComputedStyle(n).transform:'none',
+            Math.round(b.getBoundingClientRect().height)]);},16);return 1`);
         await fn(); await sleep(700);
         const B=await c.eval('clearInterval(window.__bi);return window.__B');
-        return {moved:B.filter(t=>!IDENT.test(t)).length,rests:IDENT.test(B[B.length-1])};};
+        const H=B.map(r=>r[1]);
+        return {moved:B.filter(r=>!IDENT.test(r[0])).length,
+                rests:IDENT.test(B[B.length-1][0]),
+                grew:Math.max.apply(null,H)-Math.min.apply(null,H),
+                back:H[H.length-1]===Math.min.apply(null,H)};};
 
       /* ---- rule 1 ---- */
       await shut(0);
@@ -2215,7 +2221,10 @@ const FULL=process.argv.includes('--full');
         const b=await bobbed(fn);
         const r=await read();
         T('arriving at the top by '+name+' bobs the banner',b.moved>0);
-        T('and the bob settles back where it started',b.rests);
+        /* The BAR opens downward too. Text alone was too quiet to read as an
+           invitation, and a hint nobody notices is a hint that is not there. */
+        T('and the bar itself opens downward, not just the type',b.grew>=10);
+        T('and both settle back where they started',b.rests&&b.back);
         eq('and opens nothing',r.hidden,true);
         eq('and leaves the page at the top',r.y,0);
         arrivals.push(b.moved);
@@ -2254,6 +2263,15 @@ const FULL=process.argv.includes('--full');
       eq('the wheel that opens it is swallowed, so its scroll cannot land',C[0],1);
       eq('and so is one that follows straight after',C[1],1);
       eq('but a scroll a moment later is the reader scrolling, and it scrolls',C[2],0);
+
+      /* ---- Escape puts the list back the way it was found ---- */
+      await shut(0);
+      await notch(); await sleep(500);
+      await c.eval('window.scrollTo(0,1200);return 1'); await sleep(300);
+      await c.key('Escape'); await sleep(400);
+      const esc=await read();
+      eq('Escape puts the backlog away again',esc.hidden,true);
+      eq('and returns the reader to the start of the list',esc.y,0);
 
       /* Pressing Hide scrolls back to the top, which is an arrival — the bob must
          not fire for the page rearranging itself under a button. */

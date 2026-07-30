@@ -859,12 +859,23 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
    under half a second. */
 @keyframes mpBob{
   0%{transform:translateY(0)}
-  40%{transform:translateY(-5px)}
-  72%{transform:translateY(1.5px)}
+  40%{transform:translateY(-4px)}
+  72%{transform:translateY(1px)}
   100%{transform:translateY(0)}}
+/* The BAR opens downward as well. Text alone was too quiet to read as an
+   invitation — the bar giving a little is the thing that says there is something
+   behind it. This one does relayout the list below for four hundred milliseconds,
+   which is why it was a transform on its own before; it is kept short and small
+   for that reason. */
+@keyframes mpOpen{
+  0%{padding-top:13px;padding-bottom:13px}
+  40%{padding-top:22px;padding-bottom:22px}
+  100%{padding-top:13px;padding-bottom:13px}}
+#viewMenu .mpast.nudge{animation:mpOpen .44s cubic-bezier(.33,.9,.4,1)}
 #viewMenu .mpast.nudge .mp-n,#viewMenu .mpast.nudge .mp-a{
   animation:mpBob .44s cubic-bezier(.33,.9,.4,1)}
 @media (prefers-reduced-motion:reduce){
+  #viewMenu .mpast.nudge,
   #viewMenu .mpast.nudge .mp-n,#viewMenu .mpast.nudge .mp-a{animation:none}}
 #viewMenu .mpastwrap{margin:0}
 #viewMenu .mpastwrap .mgrid.rows{border-radius:0;border-left:0;border-right:0;
