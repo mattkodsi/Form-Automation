@@ -23,7 +23,12 @@ d="$(cd "$(dirname "$0")" && pwd)"     # app/full-mp
 # reads the filed Colonial Village package committed under _archive/, and
 # test_compare.js builds its own fixtures. test_safety.js skips its Drive-mount
 # check loudly on a machine that has no mount, so it gates everywhere.
-suites="test_crypto.js test_db.js test_interactions.js smoke_combined.js test_gen.js test_rcs.js test_hap.js test_browser.js corpus/test_safety.js corpus/test_compare.js corpus/test_extract.js"
+# corpus/test_look.js is the render-and-look instrument (look.js / rdiff.js).
+# It builds its own PDFs byte by byte so every coordinate it asserts is one it
+# computed, and it skips LOUDLY where poppler is not installed - a missing
+# pdftoppm must never read as a pass, because the whole point of these two
+# tools is that a check which sees nothing has to say so.
+suites="test_crypto.js test_db.js test_interactions.js smoke_combined.js test_gen.js test_rcs.js test_hap.js test_browser.js corpus/test_safety.js corpus/test_compare.js corpus/test_extract.js corpus/test_look.js"
 failed=""
 
 for s in $suites; do

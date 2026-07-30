@@ -182,8 +182,20 @@ a new suite needs registering (`deliver.sh` calls it).
   four traps: HUD-92458 values live in widget `/V` and not the text layer, `copyPages` drops the
   AcroForm, the filed checklist font is offset ASCII−29, and our own output has no word spacing.
   See `docs/superpowers/plans/MORNING-REPORT.md` for what the first full sweep found.
+- **`app/full-mp/corpus/look.js` + `rdiff.js`** — **the only tooling that looks at a rendering.**
+  Everything above compares *values*, and both sides have had `$` and `,` stripped from them before
+  they meet (`extract.js:96`, `compare.js:68`) — so a dropped dollar sign, a missing zero or a figure
+  one row low compares as a perfect match. These two rasterise instead, via poppler (`pdftoppm`; no
+  npm). `look.js` writes PNGs and prints their absolute paths so a person can open them;
+  `rdiff.js` renders two PDFs at one DPI and reports differing pixels, merged region bounding boxes,
+  where each falls on the page in words, and a side-by-side PNG with the regions outlined. Regions
+  carry `meanDelta`/`maxDelta` and `inkA`/`inkB` precisely because a pixel diff cannot by itself tell
+  a changed value from a re-rendered glyph — the numbers are what let a reader tell them apart.
+  `test_look.js` (159) builds its own PDFs byte by byte so every coordinate it asserts is one it
+  computed, and both tools exit 3 with a banner where poppler is absent rather than exiting 0 having
+  rendered nothing.
 
-**1849 checks across eleven suites** (98 · 169 · 144 · 175 · 91 · 420 · 189 · 341 · 11 · 91 · 120) as of 2026-07-30, counted off a real run. These
+**2008 checks across twelve suites** (98 · 169 · 144 · 175 · 91 · 420 · 189 · 341 · 11 · 91 · 120 · 159) as of 2026-07-30, counted off a real run. These
 numbers go stale the moment a suite grows — `MIN_CHECKS` in each file is the binding floor; this list
 is a map.
 ⚠️ **Don't pipe a suite through `| tail`.** A pipeline's exit status is the LAST command's, so node's
