@@ -23,16 +23,21 @@ echo "starting lanes:"; stop_all >/dev/null 2>&1; sleep 0.4
 for l in "${LANES[@]}"; do
   name="${l%%:*}"; rest="${l#*:}"; dir="${rest%:*}"; port="${rest##*:}"
   if [ ! -f "$dir/index.html" ]; then echo "  ~ $name SKIPPED — no index.html at $dir"; continue; fi
-  ( cd "$dir" && nohup python3 -m http.server "$port" >/tmp/serve-$name.log 2>&1 & )
+  ( cd "$dir" && nohup python3 -m http.server "$port" >/tmp/serve-$name.log 2>&1 </dev/null & disown ) >/dev/null 2>&1
 done
-sleep 1
+# wait for the ports to answer rather than guessing at a sleep
+for l in "${LANES[@]}"; do p="${l##*:}"
+  for i in 1 2 3 4 5 6 7 8 9 10; do
+    curl -s -o /dev/null -m 1 "http://localhost:$p/" && break || sleep 0.3
+  done
+done
 echo
 printf '  %-9s %-34s %s\n' LANE URL BRANCH
 for l in "${LANES[@]}"; do
   name="${l%%:*}"; rest="${l#*:}"; dir="${rest%:*}"; port="${rest##*:}"
   [ -f "$dir/index.html" ] || continue
   br=$(git -C "$dir" rev-parse --abbrev-ref HEAD 2>/dev/null)
-  code=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:$port/index.html")
+  code=$(curl -s -o /dev/null -m 3 -w '%{http_code}' "http://localhost:$port/index.html")
   printf '  %-9s %-34s %s  [HTTP %s]\n' "$name" "http://localhost:$port/index.html" "$br" "$code"
 done
 echo
