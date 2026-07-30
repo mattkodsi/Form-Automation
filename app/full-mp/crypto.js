@@ -265,12 +265,19 @@ function decryptBlock(block,ks){
   }
   return s;
 }
-/* PDF streams carry the IV as the first 16 bytes, then PKCS#7 padding. */
+/* PDF streams carry the IV as the first 16 bytes, then PKCS#7 padding.
+   The revision 6 UE/OE strings carry neither: a zero IV, no padding, and the
+   plaintext IS the 32-byte file key. So ivIncluded===false selects both -- and
+   the padding half is not cosmetic. A file key is 32 uniformly random bytes;
+   one in sixteen ends on a byte in 1..16, which stripping reads as a padding
+   length and cuts off. The short key that comes back does not raise, it just
+   decrypts the document to plausible garbage. */
 function aesDecryptCBC(key,data,ivIncluded){
   key=u8(key);data=u8(data);
   const ks=expandKey(key);
+  const raw=(ivIncluded===false);
   let iv,body;
-  if(ivIncluded===false){iv=new Uint8Array(16);body=data;}
+  if(raw){iv=new Uint8Array(16);body=data;}
   else{iv=data.slice(0,16);body=data.slice(16);}
   const n=body.length-(body.length%16);
   const out=new Uint8Array(n);
@@ -282,7 +289,7 @@ function aesDecryptCBC(key,data,ivIncluded){
     out.set(pt,off);
     prev=ct;
   }
-  if(!n)return out;
+  if(raw||!n)return out;
   const pad=out[n-1];
   return (pad>=1&&pad<=16&&pad<=n)?out.slice(0,n-pad):out;
 }
