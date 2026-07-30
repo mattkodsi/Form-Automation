@@ -1136,7 +1136,14 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
    the masthead ran the full width over content that stopped a third of the
    way across. Left-flush at the masthead's own 40px, not centred: centring
    slid the page sideways every time you opened a property. */
-:is(#viewContacts,#viewLauncher) .lwrap{max-width:1480px;margin:0;padding:36px 40px 80px}
+/* margin:0 AUTO. Written as margin:0 it overrode the base rule's own auto and
+   left the launcher and the contacts page pinned to the left edge of any display
+   wider than 1480px, with the whole right-hand third empty. The menu escaped it
+   only because its rule never touched margin. 1480 is the cap on all three: wide
+   enough for the schedule's six columns, narrow enough that a line of prose is
+   still a readable measure, and centred so the page has two equal gutters instead
+   of one large one. */
+:is(#viewContacts,#viewLauncher) .lwrap{max-width:1480px;margin:0 auto;padding:36px 40px 80px}
 
 /* ---- the page head is a title ON the paper, not a card laid on it ---- */
 :is(#viewContacts,#viewLauncher) .lhead{background:none;border:0;border-radius:0;padding:0;
@@ -1158,6 +1165,17 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
    which on this desk is what the stamp already says. */
 :is(#viewMenu,#viewLauncher) .pchip{background:none;border:1px solid var(--stamp);
   color:var(--stamp);border-radius:999px;font-size:10.5px;font-weight:600;padding:2px 9px}
+/* The chip is the popover's trigger now, so it looks pressable and the panel
+   hangs off it. Anchored right, because the chip sits at the right edge of the
+   launcher header and a 340px panel anchored left would run off the screen. */
+:is(#viewMenu,#viewLauncher) .pchip{cursor:pointer}
+:is(#viewMenu,#viewLauncher) .pchip:hover{background:var(--card)}
+#viewLauncher .pchipw .gpop{right:0;width:340px}
+#viewLauncher .pchipw .gpop-in{background:var(--card);border-color:var(--ln);
+  border-radius:var(--r-card);box-shadow:0 12px 30px rgba(16,29,43,.13)}
+#viewLauncher .pchipw .gpop-h{color:var(--i3);letter-spacing:.09em;font-weight:600}
+#viewLauncher .pchipw .gpf-n{color:var(--i1);font-weight:600}
+#viewLauncher .pchipw .gpf-w{color:var(--i3)}
 :is(#viewMenu,#viewLauncher) .pchip.ok{background:none;border-color:var(--filed);color:var(--filed)}
 /* section headings read as the zone headings on the gallery do */
 :is(#viewContacts,#viewLauncher) .lsec{margin-top:34px}
@@ -5985,13 +6003,25 @@ function profileChip(p){
   const m=(p&&p.profile&&p.profile.missing)||[];
   if(!m.length)return '';
   const names=m.map(x=>x.label);
-  /* "4 missing from the profile" named nothing. The count was the whole chip
-     and the four labels lived in a title attribute, so the one question it
-     provoked — which four? — was the one it would not answer without a hover
-     nobody knows to try. It says them. */
+  /* "4 missing from the profile" named nothing. The count was the whole chip and
+     the four labels lived in a title attribute, so the one question it provoked —
+     which four? — was the one it would not answer without a hover nobody knows to
+     try. It names as many as fit, and the rest are one hover away in a panel of
+     the app's own rather than a native tooltip that makes you wait and then
+     truncates the answer.
+
+     Flat rows, not the generate modal's jump buttons: a property with no package
+     has no form open to jump into, and a control that does nothing is worse than
+     no control at all. */
   const shown=names.length<=3?andJoin(names):(names.slice(0,2).join(', ')+' and '+(names.length-2)+' more');
-  return '<span class="pchip" title="'+esc('Missing: '+andJoin(names))+'">Needs '
-    +esc(shown)+'</span>';}
+  const rows=m.map(x=>{
+    const w=(typeof whyShort==='function'?whyShort(x.key,x.why):'')||(x.sec?(SECTION_TITLES[x.sec]||''):'');
+    return '<span class="gpf gpf-flat"><span class="gpf-n">'+esc(x.label)+'</span>'
+      +(w?'<span class="gpf-w">'+esc(w)+'</span>':'')+'</span>';}).join('');
+  return '<span class="gpw pchipw"><button type="button" class="pchip" aria-haspopup="true">Needs '
+    +esc(shown)+'</button><div class="gpop"><div class="gpop-in">'
+    +'<div class="gpop-h">Needed before this package can be generated</div>'
+    +'<div class="gpop-l">'+rows+'</div></div></div></span>';}
 function ringSvg(pct,size){size=size||36;const r=size/2-3;const c=2*Math.PI*r;const off=c*(1-Math.max(0,Math.min(100,pct))/100);const col=ringColor(pct);
   return '<svg class="ringsvg" width="'+size+'" height="'+size+'" viewBox="0 0 '+size+' '+size+'"><circle cx="'+size/2+'" cy="'+size/2+'" r="'+r+'" fill="none" stroke="#e9edf4" stroke-width="3.4"/><circle cx="'+size/2+'" cy="'+size/2+'" r="'+r+'" fill="none" stroke="'+col+'" stroke-width="3.4" stroke-linecap="round" stroke-dasharray="'+c.toFixed(1)+'" stroke-dashoffset="'+off.toFixed(1)+'" transform="rotate(-90 '+size/2+' '+size/2+')"/><text x="50%" y="53%" dominant-baseline="middle" text-anchor="middle" font-size="'+(size<44?10:12.5)+'" font-weight="700" fill="#33405c">'+pct+'</text></svg>';}
 function niceDate(d){if(!d)return '—';const m=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];const p=String(d).slice(0,10).split('-');if(p.length!==3)return d;return m[(+p[1])-1]+' '+(+p[2])+', '+p[0];}

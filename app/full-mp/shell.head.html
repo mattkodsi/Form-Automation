@@ -1136,7 +1136,14 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
    the masthead ran the full width over content that stopped a third of the
    way across. Left-flush at the masthead's own 40px, not centred: centring
    slid the page sideways every time you opened a property. */
-:is(#viewContacts,#viewLauncher) .lwrap{max-width:1480px;margin:0;padding:36px 40px 80px}
+/* margin:0 AUTO. Written as margin:0 it overrode the base rule's own auto and
+   left the launcher and the contacts page pinned to the left edge of any display
+   wider than 1480px, with the whole right-hand third empty. The menu escaped it
+   only because its rule never touched margin. 1480 is the cap on all three: wide
+   enough for the schedule's six columns, narrow enough that a line of prose is
+   still a readable measure, and centred so the page has two equal gutters instead
+   of one large one. */
+:is(#viewContacts,#viewLauncher) .lwrap{max-width:1480px;margin:0 auto;padding:36px 40px 80px}
 
 /* ---- the page head is a title ON the paper, not a card laid on it ---- */
 :is(#viewContacts,#viewLauncher) .lhead{background:none;border:0;border-radius:0;padding:0;
@@ -1158,6 +1165,17 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
    which on this desk is what the stamp already says. */
 :is(#viewMenu,#viewLauncher) .pchip{background:none;border:1px solid var(--stamp);
   color:var(--stamp);border-radius:999px;font-size:10.5px;font-weight:600;padding:2px 9px}
+/* The chip is the popover's trigger now, so it looks pressable and the panel
+   hangs off it. Anchored right, because the chip sits at the right edge of the
+   launcher header and a 340px panel anchored left would run off the screen. */
+:is(#viewMenu,#viewLauncher) .pchip{cursor:pointer}
+:is(#viewMenu,#viewLauncher) .pchip:hover{background:var(--card)}
+#viewLauncher .pchipw .gpop{right:0;width:340px}
+#viewLauncher .pchipw .gpop-in{background:var(--card);border-color:var(--ln);
+  border-radius:var(--r-card);box-shadow:0 12px 30px rgba(16,29,43,.13)}
+#viewLauncher .pchipw .gpop-h{color:var(--i3);letter-spacing:.09em;font-weight:600}
+#viewLauncher .pchipw .gpf-n{color:var(--i1);font-weight:600}
+#viewLauncher .pchipw .gpf-w{color:var(--i3)}
 :is(#viewMenu,#viewLauncher) .pchip.ok{background:none;border-color:var(--filed);color:var(--filed)}
 /* section headings read as the zone headings on the gallery do */
 :is(#viewContacts,#viewLauncher) .lsec{margin-top:34px}
