@@ -5,15 +5,45 @@ production deploy).
 
 ---
 
-> **STOPPED 2026-07-29 ~23:00 at Matt's request — 21 of 34 audited, 14 defects fixed.**
-> Wave 5 is **driven but not audited**: `_archive/corpus-cache/_sweep/_out/` holds fresh
-> output for Market Square (75568), Barnum House (75569), Shiloh Village (75572),
-> Morningside Court (75573) and 333 Holly (75704), and the pre-fix snapshot is at
-> `_snap-w4/`. Their five audit agents were stopped mid-read, so **re-launch those five
-> first** — no Azure spend is needed, the drive is already done. One of them had already
-> found something: Shiloh Village showed a "key UA divergence" before it was stopped.
-> Scratch properties are cleaned (0 `ZZ-CORPUS-*`). Everything is committed and pushed.
-> Resume by re-running `/loop` with the prompt in the last iteration.
+> **WAVE 6 DONE 2026-07-30 — 26 of 34 audited, 17 defects fixed.** All five wave-5
+> properties are audited (Market Square, Barnum House, Shiloh Village, Morningside Court,
+> 333 Holly) and three defects shipped: `43258e0` tier 2 now checks that a page prints the
+> form where the form prints it; `c23b161` the workbook and the rent schedule share one
+> unit-type label; `da46f05` a column gap drawn as a pen move is a column gap, which took
+> **Shiloh Village and 333 Holly from ZERO unit types to a complete, correct unit mix.**
+> Verified end to end: Shiloh's workbook now carries 1,830/2,235/2,535, allowances
+> 102/124/133 and SAFMR bases 1,590/2,000/2,550 — every figure matching the eye-read
+> source — where before it had none and printed a false "NO" on the 150% test.
+>
+> **I owe a correction on my own commit message.** `43258e0` claims it stops the
+> contaminated property names. It does not. Re-driving Shiloh showed the name is still
+> wrong and now differently wrong — `Shiloh Village Apts. Part A Apartment Rents Show the
+> actual` — because declining tier 2 sends the page to tier 3, which swallows the same
+> heading. The real cause is **M41**: our own template's Project Name box is 23pt tall and
+> reaches 1.95pt below the next printed row. That is the top repair for wave 7 and the
+> register has both candidate fixes.
+>
+> **Two queue items were misdiagnosed and are now resolved as understanding, not code.**
+> The "7.1 points" is a third printing of HUD-92458 whose Part B rows sit on a 14.4pt pitch
+> against our 10.85pt — Market Square and Mapleview measure identical to five decimals, so
+> the residual measures *the blank*, not the document, and tier 3's refusal is **correct**.
+> Loosening that threshold would have been actively harmful. The real fix is a
+> label-relative reader, which is new work rather than a tuning.
+>
+> Eight properties remain unaudited: The Pines (75705), Colonial Village (75708),
+> Friendship Court (75831), Newberry Arms (75832), Northgate Terrace CA (75919),
+> Fairview Homes (75920), Walden (75921), Marine Terrace (75922).
+>
+> Scratch properties are cleaned (**0** `ZZ-CORPUS-*`). Snapshot of the pre-fix output is at
+> `_archive/corpus-cache/_snap-w5/`. Everything is committed and pushed.
+>
+> ⚠️ **Two things for Matt.** (1) The account is now down to **2 properties**; it held 14 on
+> 2026-07-29, then 4, now 2. My cleanup provably cannot do this — it returns before deleting
+> when no name matches the prefix, and it reports exactly what it removes. If this is not you
+> tidying up, it is data loss and it should jump the whole queue. (2) `git` could not
+> auto-detect an identity this session because the machine's hostname changed to `Mac.(none)`;
+> rather than write to your config I passed the same name and address your earlier commits
+> already used. Setting `user.name`/`user.email` in the repo would make that unnecessary.
 
 > **WAVE 4 AUDITS NEED RE-RUNNING.** On 2026-07-29 four of the five wave-4 audit
 > agents — Noble Tower, Oaks on North Plaza, Oceanport, Holly House — died on
@@ -167,11 +197,11 @@ A wave marks a property `audited` only when its agent returned rows.
 | 14 | 75564 | Holly House | **audited** | 4 |
 | 15 | 75566 | Ebony Gardens | **audited** | 1 |
 | 16 | 75567 | Mapleview Towers | **audited** | 4 |
-| 17 | 75568 | Market Square | unaudited | |
-| 18 | 75569 | Barnum House | unaudited | |
-| 19 | 75572 | Shiloh Village | unaudited | |
-| 20 | 75573 | Morningside Court | unaudited | |
-| 21 | 75704 | 333 Holly | unaudited | |
+| 17 | 75568 | Market Square | **audited** | 7 |
+| 18 | 75569 | Barnum House | **audited** | 9 |
+| 19 | 75572 | Shiloh Village | **audited** | 11 |
+| 20 | 75573 | Morningside Court | **audited** | 12 |
+| 21 | 75704 | 333 Holly | **audited** | 8 |
 | 22 | 75705 | The Pines | unaudited | |
 | 23 | 75708 | Colonial Village | unaudited | |
 | 24 | 75830 | Clinton Manor | **audited** | 1 |

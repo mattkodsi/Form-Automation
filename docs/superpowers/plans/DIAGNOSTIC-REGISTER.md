@@ -1288,3 +1288,295 @@ and in the tenant notice. Four spellings of one unit type across the cycle (`1BR
 An agent honesty note worth keeping: it first read the draft's monthly potential as `$312.595`
 at 150 dpi, re-rendered at 500 dpi, found an unambiguous comma, and **withdrew its own
 finding** rather than filing it. 309,500 + 3,095 = 312,595 ✓.
+
+---
+
+# WAVE 6 — 2026-07-30 · Market Square · Barnum House · Shiloh Village · Morningside Court · 333 Holly
+
+Twenty-six of thirty-four audited. Three defects shipped: `43258e0`, `c23b161`, `da46f05`.
+
+## M37 — tier 2 read four schedules out of boxes that sat over the wrong printing · **FIXED `43258e0`**
+
+Tier 2 reads a value out of the blank template's own field rectangle, and `rsDropTplLabels`
+tells a printed label from an entered value by finding that label at the template's own
+coordinates. Both rest on one premise — that this copy prints the form where the blank form
+prints it — and nothing checked it.
+
+Measured across all 34 properties the premise is **binary, not marginal**:
+
+| | labels at template coordinates | of those present |
+|---|---|---|
+| shares the template's geometry (12 properties) | **28 – 128** | 78 – 99% |
+| does not (8 properties) | **0 – 3** | 0 – 10% |
+
+Nothing lies between 10% and 78%. So one pass settles it, and tier 2 now declines rather than
+guessing, which hands the page to tier 3 — the tier that registers a page onto the template
+before reading it and so can take an arbitrary geometry.
+
+What the four misaligned-and-accepted properties were returning:
+
+| property | project name it filed itself under | worst figure |
+|---|---|---|
+| Oaks on North Plaza | `OaksonINorthP,lazafkaNorthPlazaApartmentsPartA-ApartmentRents` | 14 units at **$111,198**/mo; monthly potential **$1,642,642** against a page printing **$91,922** |
+| Shiloh Village | `ShilohVillageApts.      PartA-ApartmentRents` | types `2BR`, `BR3`, `4BR` |
+| 333 Holly | `11fkaCreek333HollyHollyPartA-ApartmentRents` | types `BR3` |
+| The Pines | `ThePinesfkaWoodGlenApartmentsPartA-ApartmentRents` | types `BR3` |
+
+**Considered and rejected with evidence: measuring the offset and correcting for it.** On the
+eight misaligned schedules the displaced labels agree on *no single shift* — 4 of 56, 5 of 62,
+2 of 22, 6 of 27 land within 2pt of the best one. They are not shifted copies of our template;
+they are a different printing of the form. Correcting a shift that is not there would have
+placed values with false confidence.
+
+**Also rejected: a plausibility bound on the values.** The garbage included a rent of
+**11,918**, which sits inside any bound loose enough to accept real Section 8 rents (the corpus
+runs 1,198–2,875). And the figure such rows would be reconciled against read as the *word*
+`"Potential"`. A bound would have caught one of the six bad rows on Oaks and none elsewhere.
+
+## M38 — the reader's only quality gate is disabled exactly when it is needed · **OPEN**
+
+```js
+const ok=outp.units.length>0&&(tot===''||Math.abs(sum-tot)<=Math.max(2,all.length));
+```
+
+`tot===''` means "there is no printed total to check against" and is treated as **passed**. The
+total is the *only* check `rsAssembleFields` makes, and it goes missing precisely on the pages
+that cannot be read. On all four M37 properties the printed total read as `"Potential"` or `""`,
+so the gate degenerated to "at least one row exists" and waved the $1,642,642 through.
+
+Not fixed this wave, and the reason is honest: its blast radius **cannot be measured offline.**
+Nine properties reach tier 2 with no readable total in a diagnostic that stubs the OCR
+tick-assist, and in the real app that assist supplies values afterwards — so whether requiring a
+total would newly decline a good property can only be answered by a live re-drive. Do that
+before touching this line.
+
+## M39 — the workbook and the rent schedule disagreed about what a unit type is called · **FIXED `c23b161`**
+
+`gen.js` builds Column 1 with `utype(br,ba,dg)`, whose comment already says why the designation
+matters: *"Without it a property whose elderly and family rows carry different rents generated
+two rows that read identically."* The workbook built its own label, `br + '/' + ba`, and dropped
+both the designation and the spacing. Morningside Court's two one-bedroom types, at **$2,275**
+and **$2,285**, print as `1 BR / 1 BA S` and `1 BR / 1 BA Large` on the rent schedule and as
+`1BR/1BA` **twice** in the workbook beside it. `utype` is now module-scope, exported, and called
+by both.
+
+## M40 — two studies read as zero unit types because a gap emitted no characters · **FIXED `da46f05`**
+
+The single highest-value repair found so far, and two agents reached it independently with
+byte-level proof.
+
+Cornerstone's letter tables are laid out identically across the corpus, but Acrobat emits them
+two ways. The Pines and Oaks put a whole row in one `TJ` array, whose large kerning numbers
+`rsRuns` already converts back to spaces. Shiloh Village and 333 Holly put each cell after its
+own `Td` move — which moves the pen and shows nothing:
+
+```
+[(1)-96 ( BR)-71.9 ( /)-103.7 ( 1)-96 ( BA)]TJ
+0 Tc 0 Tw 10.482 -0 0 10.4221 216.5607 309.732 Tm
+(51)Tj  4.071 0 Td  (632)Tj  5.643 0 Td  [($1,)-35.7 (710)]TJ
+```
+
+So the row arrived as `1 BR / 1 BA51632$1,710$2.71Y`, every row pattern needs `\s+` between the
+count and the next column, and both studies read as **zero** unit types. And with zero rows the
+Apply button is never offered (`app.js` gates `rcsApply` on the unit count), which suppressed
+not just the rents but **every scalar those letters carried** — including the correct property
+name. Two whole packages went unwritten over a missing space character.
+
+Verified end to end by re-driving Shiloh Village. Its workbook went from no RCS rents, no
+SAFMR, and a false **"NO"** on the 150% test, to:
+
+| | units | current | RCS rent | UA | SAFMR base |
+|---|---|---|---|---|---|
+| 2 BR | 16 | 1,355 | **1,830** | 102 | **1,590** |
+| 3 BR | 80 | 1,537 | **2,235** | 124 | **2,000** |
+| 4 BR | 72 | 1,709 | **2,535** | 133 | **2,550** |
+
+Every figure matches the auditor's eye-read truth table. 333 Holly reads its four types with
+the same fidelity.
+
+**The threshold is 25 device points and it is not a matter of taste.** Cell gaps are an order of
+magnitude wider than anything inside a cell — medians 44 to 125pt against intra-cell moves
+reaching ~22pt. 1.5pt was tried first and **the suite refused it**: Golden Link draws `$1,580`
+as `$1,` then a pen move then `580`, and that move is as wide as the moves between its own
+cells, so the figure split and the row read as 580 units. No width rule can judge that boundary,
+so a digit-comma-digit join is left alone — testing for the *comma*, not merely for digits on
+both sides, because `30` and `537` are genuinely adjacent cells and welding them to `30537` is
+the exact ambiguity the `TJ` rule exists to prevent. Belfry's studies use no horizontal `Td`
+moves at all, so none of this can reach them.
+
+## CORRECTION I OWE — M37 does **not** fix the contaminated property names
+
+`43258e0`'s commit message overstates its reach. Re-driving Shiloh Village after the fix, the
+name is **still wrong** — and now differently wrong:
+
+```
+before   ShilohVillageApts.      PartA-ApartmentRents      (tier 2)
+after    Shiloh Village Apts. Part A Apartment Rents Show the actual   (tier 3)
+```
+
+Declining tier 2 sent the page to tier 3, which swallows the same heading. So M37 stops tier 2
+**misplacing values** on a page it cannot locate — which is real and is what the $1,642,642 was
+— but the name has a different and simpler cause, which both agents identified and I
+under-weighted:
+
+**M41 — our own template's Project Name box is 23pt tall and reaches below the next printed
+row.** Field `1`'s rect is `y 678.59 … 701.59`; fields `2` and `3` beside it are 19pt with a
+bottom edge at 682.59. `rsMapRects` accepts `r.y >= rc.y-1`, so the window is 677.59…701.59 —
+and on Shiloh the project name sits at baseline 691.20 while `Part A - Apartment Rents` sits at
+**680.64**, 1.95pt inside the box. Both get collected and joined. Confirmed independently on
+333 Holly, where the value's runs are spread over baselines 693.36/693.24/693.12/691.20 (one
+printed line, jittered by a scanner's OCR) with `Part A` 7.7pt below.
+
+Two candidate fixes, neither attempted yet: raise field 1's read window to match its
+neighbours, or cluster the runs inside a box by baseline and keep only the topmost cluster —
+the latter also fixes the ordering, since `rsMapRects` sorts by descending y and so returns a
+jittered line out of reading order. `rsLines` already solved exactly that for the HAP-number
+label; `rsMapRects` never got the same treatment. **Do not edit the template PDF** — gen.js
+writes through the same rect.
+
+## The 7.1 points is SOLVED, and the queue item was misdiagnosed
+
+There are **three printings of HUD-92458 (11/05)** in this corpus, and the discriminator is the
+footer's page count, **not** the OMB expiry date:
+
+| printing | OMB exp | p1 footer | registers? |
+|---|---|---|---|
+| 1 | 11/30/2020 | Page 1 of 3 | yes — Noble Tower reads |
+| 2 | 04/30/2027 | Page 1 of 3 | our bundled template |
+| 3 | 11/30/2020 | **Page 1 of 2** | **no — fails at ~7.1** |
+
+Market Square and Mapleview Towers measure **identical to five decimal places** (scale 1.01059,
+stage-0 median residual 7.58), which proves the residual measures *the blank*, not the document.
+The "of 2" printing compresses Parts A–F onto one page with a different row pitch — Part B's
+checkbox rows sit on a **14.4pt pitch against our 10.85pt**, and the top four shift-vote bins
+span 24 points with near-equal support. **No similarity transform can absorb it, so tier 3's
+refusal is correct behaviour.**
+
+So "tier 2 refuses pages it can read" was wrong as stated. The pages are readable *as text* but
+not placeable on *our template's geometry*. That reframes the work from "loosen a threshold" —
+which would have been actively harmful, since it is the same misalignment that produced the
+$1,642,642 — to **"add a label-relative reader"**: find the label, read the value beside it,
+independent of our coordinates. That is the real fix for Westwood, Riverwood, Mapleview and
+Market Square, and it is a new piece of work, not a tuning.
+
+## M42 — `ocrPlace` throws away a page that registers perfectly · **OPEN, and cheap**
+
+On Market Square and Mapleview, page 2 registers at **residual 0.00, scale 1.00000, over 66
+label pairs** — and is discarded unread, because `ocrPlace` returns as soon as Part A fails
+("Part A is the half we cannot do without"). That page carries Part G (ownership entity,
+principals), Part H (signatory) and Part I (the HAP contract number) — none of which depend on
+Part A. `ocrHalf` already exists for exactly this shape; `ocrParseRs` never reaches it. This is
+a large part of "Part F blank (8)" and "Part I HAP number blank (7)".
+
+## M43 — Part E has no model at all · **OPEN**
+
+Barnum House files three commercial tenants — Creative Inkstinkts $1,045, United Roots $1,576,
+Miss Thelma's Resturant $1,848, **total $4,469/month, $53,628/year** — on both the prior
+executed schedule and the HUD-approved 2026 one. Our generated HUD-92458 prints Part E
+completely empty, down to the "Total Commercial Rent Potential" box. There is no `commercial.*`
+key in `db.js`, no Part E field id in `gen.js`, and **no warning anywhere**. Nothing was
+misparsed; nothing was ever collected. It will hit every mixed-use property in the portfolio.
+
+## M44 — a value run that is entirely punctuation is deleted · **OPEN, one line**
+
+`rsDropTplLabels` skips `/^[_\-–—.]+$/` as "a rule to write on, not writing" — but it applies
+that to *any* run, including one inside a value box. Barnum's schedule prints
+`BARNUM HOTEL - CT26H03706` as four runs, and the run whose whole text is the hyphen is
+deleted, so three generated documents say `BARNUM HOTEL CT26H03706`. A printed rule is
+`_____`; a hyphen in a name is one character. Requiring 3+ such characters separates them.
+
+## M45 — the study tile tells the user to replace a complete study · **OPEN**
+
+`renderSources` derives its message from the unit count alone, so `_rn === 0 && !textless`
+prints *"No appraiser's letter was found in this file. Check that it is the complete study."*
+On 333 Holly and Shiloh the letter **was** found — `parsed.found` is available and unused — and
+the tile shows a green ✓ beside `uploaded · not read`. It sent the user off to re-source a
+complete 77-page study over a missing space character. M40 removes the trigger on these two;
+the false message remains for any other study whose rows fail.
+
+## M46 — the checklist prints a blank date under a false-claims signature · **OPEN**
+
+`checklist.sign_date` has no automatic source **and is not in `DOC_REQS.checklist`**, so the
+checklist scores `✓ ready` while printing "Date:" with nothing after it, on a form the owner
+signs under 18 U.S.C. §1001.
+
+## M47 — the checklist's 17 ticks are a hard-coded default · **OPEN**
+
+`app.js` sets all on except indices 2 and 4; nothing consults the study. So we assert a
+document that does not exist (the appraiser's licence, where Morningside's and Barnum's studies
+both answer **N** to "did you prepare the RCS under a temporary license?") and leave "Scope of
+Work" unticked where the study carries a Scope of Assignment section. Two properties each way.
+
+## M48 — the checklist signature line runs off the page · **OPEN**
+
+`gen.js` draws it at `x:109` with **no width measurement, no wrap, no truncation**. Barnum's
+signatory line reaches **x 611.5 on a 612pt page**, truncated mid-word, and the white rectangle
+behind it covers only the field's own box — so two overlapping strings survive in the text
+layer with different content.
+
+## M49 — every generated workbook ships a named employee and a stale path · **OPEN**
+
+`xlsx.js` embeds a real Related workbook as a base64 zip and never rewrites `docProps`. Every
+workbook that goes to a contract administrator carries `dc:creator = "Beatty, Claire"`,
+`Company = "Related Partners Inc."`, a 2025-10-14 creation date, and
+`absPath = /Users/matthewkodsi/Desktop/github/Form-Automation/Blank RCS Package/`.
+
+## RIG CORRECTIONS — these invalidate comparisons, and matter more than most defects
+
+**1. The study-selection rule trusts the filename over the letter date, and on Market Square
+that picks the OLDER study.** Three revisions exist: Sept 24 (`$2,375`, bound into the filed
+Submission), Oct 29 (`$2,375`, the file *named* `(updated)`, which the manifest chose), and
+**Nov 21 (`$2,325`, plain filename, the latest)**. The **fully executed, HUD-approved** FY2026
+rent schedule in the same folder says **$2,325**, and so does the team's own workbook. Our app
+emitted $2,375 — matching the filed Submission exactly, so a Submission-only comparison
+**scores it correct** while the operative figure is $50/unit lower. Any property with an
+"(updated)" study may have been audited against a superseded conclusion.
+
+**2. The executed rent schedule, not the Submission PDF, is the authority on what was
+approved.** And the letter date *inside* the study, not the filename, decides which study is
+current.
+
+**3. The corpus picked the weaker of two prior schedules on Barnum House.** `2025/Barnum House
+- 2025 Rent Schedule.pdf` is owner-signed only, with Part I blank and a truncated contract
+number glued to the project name. Beside it sits `2025/FY 2025 RS - Barnum House eff.
+04.01.25.pdf` — HUD-countersigned, **Part I = CT26H037068**, Part F filled, correct rates, clean
+name. Preferring the countersigned copy would have handed the app the contract number for free.
+
+**4. `_sweep/75569.json`'s "79 differences" are mostly its own comparator's fault** — it reads
+the filed rent schedule **one field off** (`property.name → "N/A"`, `total.units →
+"YearlyContractRentPotential"`) and zero of the 17 checklist ticks. The filed FY2026 RS is a
+*retyped* 92458, not our template's geometry. Every `severity: high` row in that record is an
+artefact. This is the second time the comparator has invented a high-severity finding.
+
+## team wrong — the app caught real errors in filed deliverables
+
+- **Morningside Court's filed workbook is wrong on both numbers the 150% gate is made of.**
+  Allowances **68/66/120** and SAFMRs **2,040/2,300/2,960**, which match *nothing* in the
+  folder — not the 2025 UAF worksheet that set 34/33/57, not the executed schedule that filed
+  those same figures, not the study's own SAFMR table, not the 2021/2024/2025 schedules. Ours
+  reproduces the study's $395,822 and $456,900 to the dollar.
+- **Barnum's filed, HUD-countersigned schedule misnames the mortgagor entity in Part G** —
+  `BARNUM HOUSING PRESERVATION, L.P.` — and contradicts itself in Part H two inches below.
+  Ours prints the correct `BARNUM HOUSE PRESERVATION, L.P.` Do not fix the app toward this.
+- Shiloh's UA workbook has a stale "Current Utility Allowance" column (86/104/112) matching no
+  schedule in force; it did not feed the Proposed figures, so the filing is unaffected.
+- 333 Holly's study Re: block names **San Antonio** where its body, its SAFMR zip and every
+  filed schedule say The Woodlands — so when the name reader is fixed, the Re: block is the
+  wrong line to trust on this document.
+- 333 Holly's filed workbook carries a `Gill Grids - As Is` block naming two firms with no
+  connection to this Cornerstone study.
+- Belfry's grid header on Market Square reads `CT26N037003` — H→N — in the grid only.
+- Barnum's study promises the CT DOH Utility Allowance Schedule "in the addenda" and **it is not
+  there**; the addenda are a divider, a résumé and the certification.
+
+## The utility allowance: a decision only Matt can make, now with a price
+
+Shiloh Village's governing FY2026 allowances — **$101 / $103 / $111** — exist only in
+`2026 (RCS)/Archive/UA - Shiloh Village 2026 2-12-2026.xlsx`, derived from 12-month bill
+sampling. The study deliberately carries the **prior** figures and says so in its own footnote
+(*"Utility Allowances From Rent Schedule"*). So the app cannot reach the filed numbers from
+either of its two inputs, and carrying 102/124/133 forward is correct given what it was given
+and still produces the wrong draft schedule. It also cannot detect that this cycle is a **UA
+decrease**, which changes the tenant notice's governing rule from 24 CFR 245.310 to **245.410**.
+Same shape on 333 Holly, where FY25 has no UA schedule at all and only Exhibit A states the
+figures.
