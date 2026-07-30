@@ -266,7 +266,15 @@ const addrLine=(street,city,state,zip)=>{
     const C=n=>{ try{ form.getCheckBox(String(n)).check(); }catch(e){} };
     const _de=(g('rent_schedule.date_eff_source')==='custom'?(g('rent_schedule.date_eff_custom')||g('rent_schedule.date_eff_rs')||g('rent_schedule.date_rents_effective')):(g('rent_schedule.date_eff_rs')||g('rent_schedule.date_eff_custom')||g('rent_schedule.date_rents_effective')));
     const _dei=_toISO(_de);
-    T(1,g('property.name')); T(2,g('property.fha')); T(3,dfmt(_dei));
+    /* Both names, the way the executed copy prints them. app.js splits a slashed
+       Part A project name on the way IN - "Sample Property/Sample Property"
+       becomes property.name plus tenant.property_alias - and only the first half
+       was written back, so the one form HUD identifies the project by lost half
+       its identity while the app was holding both values. The alias is consumed
+       by the tenant notice, which is right, and by nothing else, which was not. */
+    { const _pn=g('property.name'),_pa=g('tenant.property_alias');
+      T(1,(_pn&&_pa)?(_pn+'/'+_pa):(_pn||_pa)); }
+    T(2,g('property.fha')); T(3,dfmt(_dei));
     { const rp=String(_dei).slice(0,10).split('-'); if(rp.length===3){ T(4,rp[1]); T(5,rp[2]); T(6,rp[0]); } }
     // Part A layout: Section 8 rev rows, then a full-width "Non- Section 8
     // Rents" banner + the non-Section-8 rows, then a blank spacer row + the
