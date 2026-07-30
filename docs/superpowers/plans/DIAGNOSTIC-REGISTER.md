@@ -2392,3 +2392,73 @@ so it cannot have moved them.
 whole from the real files by the app's own reader, including the strays that would mis-place Col. 4
 and the totals line that would read as a unit row. It fails on the old code with
 `rsTableA is not defined`.
+
+---
+
+# M59 — the study's rents landed on the wrong rows, and the chooser under the cell said so · **FIXED `a2b6be3`**, corpus verification **BLOCKED**
+
+Matt found this by clicking for twenty minutes. The 34-property sweep never saw it, and could
+not have: the corpus comparator has **zero** references to `ua_exec`, `ua_rcs` or the chooser —
+it reads generated documents, and this defect never reaches one.
+
+**The shape.** A study prices ONE line per bedroom count — "all studios", "all one beds" —
+against a schedule with TWO studio variants and TWO one-bed variants. Reproduced through the
+app's own `uaBox` renderer, study applied first:
+
+| row | unit | proposed | chooser offers | resolved |
+|---|---|---|---|---|
+| 0 | Studio A | 1000 | RS $41 · RCS $50 | RCS 50 |
+| 1 | **Studio B** | **1500** | RS $42 · **RCS $75** | **RCS 75** |
+| 2 | 1BR A | *(none)* | RS $71 · RCS *(blank)* | RS 71 |
+| 3 | 1BR B | *(none)* | RS $72 · RCS *(blank)* | RS 72 |
+
+The one-bedroom rent AND its allowance sat on the second studio; the two real one-bed rows were
+offered no study figure at all — while `rcsOf('units.2.ua_rcs')` answered **75** for both. The
+chooser reads two stored cells written once at fill time, so it can and did disagree with what
+the app knows.
+
+**Cause: class E's roster half, exactly as diagnosed in the first sweep and parked.** `rcsMatch`
+looks a row up by bedrooms and baths, so one study line is *meant* to price several rows — but
+only rows that exist. On an empty form every line is homeless, so the study builds the roster,
+one row per line; `rsFillFromParsed` then writes `units.0..N` positionally over them. Fixed by
+the rule `rcsMatch`'s own comment already states: once the schedule has laid the real roster
+down, re-read the study against it. Both orders now give 1000/1000/1500/1500 and 50/50/75/75,
+asserted identical.
+
+**P4 shipped with it** — the silent drop from the other end. A priced study line with no readable
+bedroom count is not a candidate, so the remaining line reads as unanimous and its rent goes to
+every row of that shape. That is Peterson Plaza's $2,550. A row whose unit count an unplaced line
+*states* is now ambiguous, and the study tile says a priced line could not be read. On Peterson's
+shape the 100-unit row goes from a confident wrong $2,025 to empty and named.
+
+`smoke_combined.js` 138 → **165 checks**; they fail on the old code with `["1000","1500","",""]`,
+a chooser offering `["50","75",null,null]` against a matcher answering `["50","50","75","75"]`.
+
+**Deliberately NOT changed:** `uaBox` still reads the stored cells rather than the matcher. With
+the roster right they agree, and no surviving divergence could be constructed — so the invariant
+is held by an assertion rather than patched with a second renderer, which is how two renderers
+came to disagree before.
+
+## BLOCKED — the corpus verification did not run
+
+Peterson Plaza, North Park, Oaks on North Plaza and Morh Housing were queued (they are the four
+whose two orders still disagree on record: 24, 18, 16 and 10 rows). All four threw before
+creating anything — *"the stored session expired 2358s ago and the refresh token was refused
+(400: Invalid Refresh Token: Already Used)"*. `_sweep/m59.json` therefore reads **"the app
+generated nothing comparable"** four times, and **that is the harness failing, not a finding**.
+Nothing was created in the live account, and even the `ZZ-CORPUS-` cleanup check cannot run
+without a session. Both wait on `node app/full-mp/corpus/signin.js`, which only Matt can run.
+
+## And the method lesson, which is bigger than the defect
+
+Four reasons the audit was blind here, all confirmed:
+
+1. **The comparator only reads generated documents.** Anything that does not change a printed
+   figure is invisible, however wrong the form is.
+2. **The rig runs one fixed script** — upload, apply, generate — and never performs a human
+   sequence. `test_browser.js` presses real keys but exercises ~110 *controls*, not sequences.
+3. **Order-dependence was measured and demoted to a counter.** `fillOrder: 24` sat in a JSON
+   field while the harness printed *"both orders produce comparable packages"*. It is now an
+   assertion that fails.
+4. **The comparator's own false rows buried it.** Sixty noise rows per property is enough to
+   hide a four-row defect, and it cost real attention re-deriving which rows were real.
