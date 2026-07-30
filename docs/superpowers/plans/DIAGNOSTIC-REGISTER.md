@@ -1861,3 +1861,47 @@ Northgate Terrace clears by $58,290 and agrees exactly. Colonial Village, Friend
 Northgate Terrace each reproduce their study's 150% figures to the dollar. And Colonial Village's
 $0 allowance is genuine on three documents, with the reason printed on study p.33 — every utility
 is included in the rent.
+
+---
+
+# WAVE 8 — 2026-07-30 · Fairview Homes · Walden · Marine Terrace
+
+The last three properties driven at `b90a2d8` (snapshot `_snap-w7/`); their audits were in
+flight when this was written. Two defects shipped: `2d2ffd6`.
+
+## M52 — a two-column signature block loses the appraiser's name · **FIXED `2d2ffd6`**
+
+`readSignature` requires a two-to-four-token capitalised line after "Sincerely,". Belfry and
+Cornerstone sign some letters in **two columns**, so the line carries both people:
+
+| property | the line as it assembles |
+|---|---|
+| Newberry Arms, Northgate Terrace CA | `Aaron M. Zabel   Rachel A Walsh` |
+| Morningside Court | `Aaron M. Zabel   Matthew A. Polnow` |
+
+Six tokens, rejected; the following lines are eaten by the
+`license|certified|president|associate` skips and the window runs out. `appr.name` is a
+requirement of the **owner cover letter**, so on each of the three this alone withheld a document
+the team filed.
+
+The split is **down the middle**, not at the first position that parses — two columns hold one
+name each, so a balanced split reflects the layout, whereas trying every position would accept
+`Aaron M.` off the front of `Aaron M. | Zabel Matthew A. Polnow`, which parses equally well and is
+not a person. There are checks for that trap and for prose and a job number after "Sincerely,"
+yielding nothing.
+
+## M56 — an email address was read as the appraisal firm · **FIXED `2d2ffd6`**
+
+`readSender` takes the first opening line matching
+`/valuation|appraisal|appraiser|associates|…/`. Northgate Terrace's letter puts the appraiser's
+e-mail on line 2 and its domain contains "valuation", so `appr.firm` was stored as
+**`"(E) azabel@belfryvaluation.com"`** and shipped on the owner cover letter's certifications; the
+title-page fallback then declines to overwrite a firm it believes it has. Proved against the old
+code: given only that line, the old reader returns it as the firm and the new one returns nothing.
+
+## Sweep counts for the last three, before their audits
+
+Walden **97**, Fairview Homes **95**, Marine Terrace **14**. On the evidence of four earlier
+properties, expect most of the two large counts to be the comparator failing to read a
+DocuSign-flattened schedule and a retyped checklist — and expect the small one to mean little was
+produced rather than that little differs.
