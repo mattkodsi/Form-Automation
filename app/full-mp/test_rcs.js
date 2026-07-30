@@ -16,7 +16,7 @@ const els={};
 global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>null,querySelectorAll:()=>[],createElement:()=>mk(),addEventListener(){},body:{classList:{toggle(){},contains(){return false;}}}};
 const fs=require('fs'),path=require('path'),os=require('os');
 
-const MIN_CHECKS=334;
+const MIN_CHECKS=340;
 let n=0,fails=0,verdict=null;
 const BAR='='.repeat(68);
 function fail(msg,err){
@@ -55,7 +55,7 @@ const _b=path.join(os.tmpdir(),'rcs_parse_test.'+process.pid+'.js');
 process.on('exit',()=>{try{fs.rmSync(_b,{force:true});}catch(e){}});
 fs.writeFileSync(_b,'function ocrHalf(b,p,skip){(globalThis.__HALF=globalThis.__HALF||[]).push({p:p,skip:(skip||[]).slice()});return Promise.resolve(null);}\n'
   +['templates.js','core.js','score.js','db.js','app.js','rcs.js'].map(x=>fs.readFileSync(path.join(_d,x),'utf8')).join('\n')
-  +'\nif(typeof module!=="undefined")Object.assign(module.exports,{__rsTextPageAt:rsTextPageAt,__rsTextPages:rsTextPages,__rsReadTextTier:rsReadTextTier,__rsTplAlign:rsTplAlign,__rsTplPremiseHolds:rsTplPremiseHolds,__rsFieldRects:rsFieldRects,__rsMapRects:rsMapRects,__rsBoxText:rsBoxText,__rsDropTplLabels:rsDropTplLabels,__rsTplRuns:rsTplRuns});\n');
+  +'\nif(typeof module!=="undefined")Object.assign(module.exports,{__rsTextPageAt:rsTextPageAt,__rsTextPages:rsTextPages,__rsReadTextTier:rsReadTextTier,__rsTplAlign:rsTplAlign,__rsTplPremiseHolds:rsTplPremiseHolds,__rsFieldRects:rsFieldRects,__rsMapRects:rsMapRects,__rsBoxText:rsBoxText,__rsDropTplLabels:rsDropTplLabels,__rsTplRuns:rsTplRuns,__rsDropFormLines:rsDropFormLines,__rsFormLines:rsFormLines});\n');
 const app=require(_b);
 const R=global.window.RCSParse;
 const D_=_d+'/';
@@ -675,6 +675,40 @@ async function reader(file){
 
      This fixture is the real thing: pages 1-4 of Shiloh Village's study, which
      returns 0 unit types without the fix and 3 with it. */
+  /* ── the form's own printed lines, by text rather than by position ────────
+     rsDropTplLabels drops a label by finding it where the template prints it,
+     which is the right test on a page laid out like the template and finds
+     nothing on a page that is not. Clamping field 1 to its row-mates' floor
+     fixed Shiloh Village and could not reach 333 Holly or The Pines, where the
+     divider prints ABOVE that floor - nor tier 3 at all, which is where the
+     misaligned pages now go: Shiloh came back from OCR as
+     "Shiloh Village Apts. Part A Apartment Rents Show the actual".
+     Text can reach all of them. Whatever coordinates it arrived at, a line that
+     reproduces one of the blank form's own printed lines is the form talking. */
+  console.log('\n─ the form’s own printed lines are not values ─');
+  {
+    await app.__rsTplRuns();          // the set is built from the template's runs
+    const set=app.__rsFormLines(0);
+    T('the form’s page 1 yields a set of printed lines',set.size>10);
+    T('and the Part A divider is one of them',set.has('partaapartmentrents'));
+    const D=app.__rsDropFormLines;
+    eq('a divider inside a box is dropped and the name kept',
+      D(['ThePinesfkaWoodGlenApartments','PartA-ApartmentRents'],0),
+      ['ThePinesfkaWoodGlenApartments']);
+    /* Whole-line match only. A value that merely contains a form phrase, or that
+       is short enough to collide by accident, must survive - "N/A" normalises to
+       two characters and the floor is eight. */
+    eq('a value that only contains a form phrase survives',
+      D(['Part A Apartments LLC'],0),['Part A Apartments LLC']);
+    eq('and a short value is never dropped',D(['N/A','$0','II'],0),['N/A','$0','II']);
+    /* And through the box reader, which is how both tiers reach it. */
+    eq('a trailing form line is dropped from a box',
+      app.__rsBoxText([{s:'Shiloh',x:24,y:691},{s:'Village',x:53,y:691},
+                       {s:'Part',x:24,y:680},{s:'A-',x:41,y:680},
+                       {s:'Apartment',x:53,y:680},{s:'Rents',x:95,y:680}],0),
+      'ShilohVillage');
+  }
+
   console.log('\n─ a column gap drawn as a pen move is still a column gap ─');
   { const sv=await R.readLetter(await reader(path.join(FIX,'cornerstone-shiloh-village.pdf')));
     eq('the firm is read',sv.firm,'cornerstone');
