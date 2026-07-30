@@ -1077,13 +1077,24 @@ function rsVal(k){try{const p=_rsUpload&&_rsUpload.parsed;const v=p&&p.scalars?p
    The reading is stored with its package; the PDF bytes are not, because nothing
    downstream reads _rsUpload.bytes and a schedule is a megabyte the record does
    not need. */
+/* WHAT WAS APPLIED IS PART OF THE READING. _rsFill/_rcsFill are the app's only
+   record that a document has been APPLIED and not merely read, and they were
+   module variables — so a page reload, which is a thing a person does, threw
+   them away while rsRecall/rcsRecall faithfully restored the readings beside
+   them. Two consequences, both measured: the source tile went back to saying no
+   values had been applied, and the roster re-read in rsFillFromParsed — the
+   whole of M59 — is GATED on _rcsFill, so after a reload Matt's studio /
+   one-bedroom defect came straight back (proved in real chromium: the second
+   studio variant took the one-bedroom's rent and both 1BR variants took
+   nothing). The record belongs with the reading, per cycle, which also stops it
+   leaking from one property to the next. */
 function rsRemember(){if(!(activeCid&&mpdb&&mpdb.setCycleRs))return;const u=_rsUpload;
-  const doc=u?{name:u.name,kind:u.kind,via:u.via,at:u.at,parsed:u.parsed}:{};
+  const doc=u?{name:u.name,kind:u.kind,via:u.via,at:u.at,parsed:u.parsed,fill:_rsFill}:{};
   try{Promise.resolve(mpdb.setCycleRs(activeCid,doc)).catch(()=>{});}catch(e){}}
 function rsRecall(){if(!(activeCid&&mpdb&&mpdb.getCycleRs))return null;
   let d=null;try{d=mpdb.getCycleRs(activeCid);}catch(e){return null;}
   if(!d||!d.name)return null;
-  return {name:d.name,bytes:null,kind:d.kind||'scan',via:d.via,parsed:d.parsed||null,at:d.at||'',stored:true};}
+  return {name:d.name,bytes:null,kind:d.kind||'scan',via:d.via,parsed:d.parsed||null,at:d.at||'',fill:d.fill||null,stored:true};}
 /* A permissions-locked PDF needs no password to open -- Preview shows one
    instantly -- but pdf-lib has no decryption at all, and ignoreEncryption does
    not skip encryption, it defers the failure to the page tree. So a study that
@@ -1430,7 +1441,8 @@ function rcsFillFromParsed(){
 
   deriveUnits();renderBody();scheduleHudRefresh();
   const n=rcsFillKeys().length;
-  _rcsFill=fillRecord(_rcsUpload,_wrote);  setStatus('Form filled from the RCS study — '+n+' value'+(n===1?'':'s')+' marked “RCS report”.'
+  _rcsFill=fillRecord(_rcsUpload,_wrote);rcsRemember();
+  setStatus('Form filled from the RCS study — '+n+' value'+(n===1?'':'s')+' marked “RCS report”.'
     +(added.length?' Added '+added.length+' unit row'+(added.length===1?'':'s')+' the study prices and the form did not have ('+added.join(', ')+') — check the count and type against the executed schedule.':'')
     +(ambiguous?' '+ambiguous+' unit row'+(ambiguous===1?'':'s')+' matched more than one line in the study and '+(ambiguous===1?'was':'were')+' left for you — the study prices them separately and the form cannot tell which is which.':'')
     +' Review the highlighted cells, then “Update property profile”.');
@@ -1527,12 +1539,12 @@ function rcsChecks(){
 }
 /* The reading outlives the page that made it, exactly as the schedule's does. */
 function rcsRemember(){if(!(activeCid&&mpdb&&mpdb.setCycleRcs))return;const u=_rcsUpload;
-  const doc=u?{name:u.name,at:u.at,parsed:u.parsed}:{};
+  const doc=u?{name:u.name,at:u.at,parsed:u.parsed,fill:_rcsFill}:{};
   try{Promise.resolve(mpdb.setCycleRcs(activeCid,doc)).catch(()=>{});}catch(e){}}
 function rcsRecall(){if(!(activeCid&&mpdb&&mpdb.getCycleRcs))return null;
   let d=null;try{d=mpdb.getCycleRcs(activeCid);}catch(e){return null;}
   if(!d||!d.name)return null;
-  return {name:d.name,bytes:null,parsed:d.parsed||null,at:d.at||'',stored:true};}
+  return {name:d.name,bytes:null,parsed:d.parsed||null,at:d.at||'',fill:d.fill||null,stored:true};}
 function rsNum(v){let s=String(v==null?'':v).replace(/[^0-9.,\-]/g,'');
   /* A dot is not always a decimal point. These schedules are typed by hand and
      real copies use both conventions: White Oak's prints 1.147 / 36.704 /
@@ -2395,7 +2407,7 @@ function rsFillFromParsed(){const P=_rsUpload&&_rsUpload.parsed;if(!P)return;
          paints as this-cycle and its pair can save it; unmarked it wore the grey
          of an untouched cell and could not be saved at all. */
       if(get('nonrev.'+ix+'.num_units')===''){form=store.editForm(form,'nonrev.'+ix+'.num_units','1');mark('nonrev.'+ix+'.num_units');}});}
-  _rsFill=fillRecord(_rsUpload,_wrote);
+  _rsFill=fillRecord(_rsUpload,_wrote);rsRemember();
   deriveUnits();
   /* THE SCHEDULE OWNS THE ROSTER, SO THE STUDY MUST BE RE-READ AGAINST IT.
      rcsMatch looks a row up by its bedrooms and baths, which means one study
@@ -2421,7 +2433,11 @@ function rsFillFromParsed(){const P=_rsUpload&&_rsUpload.parsed;if(!P)return;
      just wrote; it only moves the study's own values onto the right rows.
      This is the rule the precedence comment above already states: the order
      the two documents happen to be uploaded in cannot change the result. */
-  if(_rcsFill&&_rcsUpload&&_rcsUpload.parsed){
+  /* fillNote() has always required the record to name the SAME file before it
+     will say anything about it; the gate did not, so a fill recorded against one
+     document could re-apply another. Same rule, one place: a fill record is
+     about the file it names. */
+  if(_rcsFill&&_rcsUpload&&_rcsUpload.parsed&&_rcsFill.name===(_rcsUpload.name||'')){
     rcsFillFromParsed();   // renders, and reports its own count
     setStatus('Form filled from the executed rent schedule, and the RCS study re-read against its unit types \u2014 review the highlighted values, then \u201cUpdate property profile\u201d.');
     return;}
@@ -3410,7 +3426,9 @@ function wireBody(){
          sitting unchanged while it happens. */
       _rcsBusy={name:f.name};renderBody();setStatus('Reading the RCS study\u2026');
       let r=null;try{r=await parseRcsPdf(b);}catch(e){r=null;}finally{_rcsBusy=null;}
-      _rcsUpload={name:f.name,bytes:b,parsed:r,at:new Date().toISOString()};rf.value='';
+      /* A new file has had nothing applied from it yet, and the record must say
+         so before it is written down beside the new reading. */
+      _rcsUpload={name:f.name,bytes:b,parsed:r,at:new Date().toISOString()};rf.value='';_rcsFill=null;
       rcsRemember();renderBody();
       const nu=r&&r.units?r.units.length:0;
       setStatus(nu
@@ -3447,7 +3465,7 @@ function wireBody(){
         setStatus('Rent schedule \u2014 '+SHORT[w]+' (page '+i+' of '+n+')\u2026');};
       busy('Reading…','Reading the document’s text.');
       let r;try{r=await parseRsPdf(b,step);}catch(e){r={kind:'scan',parsed:null};}finally{_rsBusy=null;}
-      _rsUpload={name:f.name,bytes:b,kind:r.kind,via:r.via,why:r.why||'',parsed:r.parsed,at:new Date().toISOString()};sf.value='';_rsArm=(r.kind==='fields'&&!!r.parsed);rsRemember();renderBody();
+      _rsUpload={name:f.name,bytes:b,kind:r.kind,via:r.via,why:r.why||'',parsed:r.parsed,at:new Date().toISOString()};sf.value='';_rsArm=(r.kind==='fields'&&!!r.parsed);_rsFill=null;rsRemember();renderBody();
       setStatus(r.kind==='fields'
         ?((r.via==='ocr'?'Rent schedule scanned — check the values against the document. ':'Rent schedule read. ')+'Press Enter to fill the form, or use “Fill form from RS” in '+secRef(1)+'.')
         :((r.why?r.why+' ':'')+'The values in this copy could not be read — enter them by hand below.'));});};
@@ -4226,8 +4244,14 @@ async function openCycleForm(cid){
   activeCid=cid;_cyFresh=null;
   const cy=mpdb.listCycles(activePid).find(c=>c.id===cid);
   activeProgram=cy?cy.programs.map(x=>PROG_NAMES[x]||x).join(' + '):'RCS';
-  _undoStack=[];_undoNR=[];_undoLI=[];_undoPR=[];_undoChain=[];_rcsUpload=null;_rsUpload=null;_rsArm=false;
-  await mpdb.setActive(activePid);_rsUpload=rsRecall();_rcsUpload=rcsRecall();await refreshSnap();form=await store.fillForm();
+  _undoStack=[];_undoNR=[];_undoLI=[];_undoPR=[];_undoChain=[];_rcsUpload=null;_rsUpload=null;_rsArm=false;_rsFill=null;_rcsFill=null;
+  await mpdb.setActive(activePid);_rsUpload=rsRecall();_rcsUpload=rcsRecall();
+  /* …and the fill records come back with them, or stay null. Measured on HEAD:
+     with these left alone, a study APPLIED on one property re-applied itself to
+     the NEXT property whose study had only been uploaded — the one thing the
+     gate's own comment says must never happen. */
+  _rsFill=(_rsUpload&&_rsUpload.fill)||null;_rcsFill=(_rcsUpload&&_rcsUpload.fill)||null;
+  await refreshSnap();form=await store.fillForm();
   fixSavedToggles();applyChecklistDefaults();deriveUnits();snapForm();renderFormHeader();renderBody();
   show('Form');window.scrollTo(0,0);
   if(cy&&cy.dominant&&cy.programs.indexOf('rcs')>=0)ensureHudSafmr({});   // auto-pull: dominant RCS cycles only
@@ -4350,7 +4374,7 @@ function requestSave(afterSave){
    literal 17, because a list that grows and a loop that does not is how the
    last item of a form goes quietly unset. */
 function applyChecklistDefaults(){if(Object.keys(DBSNAP).some(k=>/^check\.\d+$/.test(k)))return;for(let i=0;i<CHECKLIST_FLAT.length;i++)form=store.editForm(form,'check.'+i,checkSeed(i));}
-async function openForm(program){activeProgram=program||'RCS';_undoStack=[];_undoNR=[];_undoLI=[];_undoPR=[];_undoChain=[];_rcsUpload=null;_rsUpload=null;_rsArm=false;await mpdb.setActive(activePid);await refreshSnap();form=await store.fillForm();fixSavedToggles();applyChecklistDefaults();deriveUnits();snapForm();renderFormHeader();renderBody();show('Form');window.scrollTo(0,0);ensureHudSafmr({});}
+async function openForm(program){activeProgram=program||'RCS';_undoStack=[];_undoNR=[];_undoLI=[];_undoPR=[];_undoChain=[];_rcsUpload=null;_rsUpload=null;_rsArm=false;_rsFill=null;_rcsFill=null;await mpdb.setActive(activePid);await refreshSnap();form=await store.fillForm();fixSavedToggles();applyChecklistDefaults();deriveUnits();snapForm();renderFormHeader();renderBody();show('Form');window.scrollTo(0,0);ensureHudSafmr({});}
 function renderFormHeader(){
   if(el('hdrProp'))el('hdrProp').textContent=(get('property.name')||'(unnamed property)');
   if(el('hdrProgram'))el('hdrProgram').textContent=activeProgram+' Package';
@@ -5201,17 +5225,21 @@ const __API={LABEL_HINTS,rsParseUnitType,rsNum,ocrMapPages:(p)=>ocrMapPages(p),o
      are no program pills to drive. Make one. */
   __newCycle:(o)=>mpdb.createCycle(activePid,Object.assign({full:true,programs:['rcs'],label:'TEST'},o||{})),
   __progsOf:(cid)=>{const c=(mpdb?mpdb.listCycles(activePid):[]).find(x=>x.id===cid);return c?c.programs.slice():[];},
-__setRcsParsed:(rec)=>{_rcsUpload={name:'study.pdf',bytes:null,parsed:rec,at:''};},
+/* The handler at #upRcs sets _rcsUpload, clears the fill record and calls
+     rcsRemember(); a door that skipped the last two left every suite testing a
+     state the app never actually holds — and in particular left no suite able to
+     see a reload, because nothing had been stored for the reload to recall. */
+  __setRcsParsed:(rec)=>{_rcsUpload={name:'study.pdf',bytes:null,parsed:rec,at:''};_rcsFill=null;rcsRemember();},
 __rcsFill:()=>rcsFillFromParsed(),/* The same door for the rent schedule. Filling FROM a parse is the state where
      the save affordances have to be right — every cell it touches is unsaved by
      definition — and it was the one state no suite could set up. Passing null
      clears the reading, which is how a test says "no schedule was ever read".
      kind:'fields' matches what parseRsPdf returns for a readable copy. */
-  __setRsParsed:(rec)=>{_rsUpload=rec?{name:'rs.pdf',bytes:null,kind:'fields',parsed:rec,at:''}:null;},
+  __setRsParsed:(rec)=>{_rsUpload=rec?{name:'rs.pdf',bytes:null,kind:'fields',parsed:rec,at:''}:null;_rsFill=null;rsRemember();},
   /* The whole ladder, on real bytes: which tier answered, and with what. The
      only way to ask that question of a document without a Supabase session. */
   __parseRsPdf:(by,onStep)=>parseRsPdf(by,onStep),
-  __rsFill:()=>rsFillFromParsed(),__UNITS:()=>UNITS.slice(),__moneySrcRows:(k)=>moneySrcRows(k),__rcsChecks:()=>rcsChecks(),__rcsTag:(k)=>rcsTag(k),__rsTag:(k)=>rsTag(k),__srcTags:(k)=>srcTags(k),__rcsFillKeys:()=>rcsFillKeys(),__rcsMatch:(i)=>rcsMatch(i),__rcsBrOf:(u)=>rcsBrOf(u),__rcsUnplaced:()=>rcsUnplaced(),__rcsOf:(k)=>rcsOf(k),
+  __rsFill:()=>rsFillFromParsed(),__UNITS:()=>UNITS.slice(),__moneySrcRows:(k)=>moneySrcRows(k),__rcsChecks:()=>rcsChecks(),__rcsTag:(k)=>rcsTag(k),__rsTag:(k)=>rsTag(k),__srcTags:(k)=>srcTags(k),__rcsFillKeys:()=>rcsFillKeys(),__fillRecords:()=>({rs:_rsFill,rcs:_rcsFill}),__rcsMatch:(i)=>rcsMatch(i),__rcsBrOf:(u)=>rcsBrOf(u),__rcsUnplaced:()=>rcsUnplaced(),__rcsOf:(k)=>rcsOf(k),
   /* The undo run. __editCell is the text box's input handler in miniature —
      push the cell, then write it the way that handler does — so a suite can
      build a run of edits without synthesising DOM events. */
