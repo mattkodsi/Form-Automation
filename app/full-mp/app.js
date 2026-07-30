@@ -3644,7 +3644,10 @@ async function primaryActionClick(code){
 function renderMenu(){
   const q=((el('menuSearch')&&el('menuSearch').value)||'').toLowerCase();
   const hp=hapProperties();
-  const lensed=hp.filter(p=>menuLens==='all'||!pmName||p.pm===pmName);
+  /* The same condition the filter below runs on, named once: showing everyone
+     is either the explicit lens or no name chosen yet. */
+  const _pmCol=(menuLens==='all'||!pmName);
+  const lensed=hp.filter(p=>_pmCol||p.pm===pmName);
   const orphans=(mpdb.listProperties()||[]).filter(p=>!hp.some(h=>h.id===p.id));
   const all=hp.length?lensed.concat(orphans.map(p=>Object.assign({},p,{hap:false}))):(mpdb.listProperties()||[]);
   /* The rail is conditional on the tracker having supplied properties. With
@@ -3740,6 +3743,11 @@ function renderMenu(){
     const _pg=p.hap?(String(p.program||'').trim()||(p.action&&p.action.kind==='unsupported'?'no type stated':'')):'';
     const prog=_pg?('<span class="pc-prog'+(_pg==='OCAF'?' ocaf':_pg==='RCS'?'':' unk')+'">'+esc(_pg)+'</span>'):'';
     const body='<button class="pc-body" data-open="'+p.id+'"'+(p.caption?' title="'+esc(p.caption)+'"':'')+'><div class="pc-top"><div class="pc-name">'+esc(p.name)+(showAl?'<span class="pc-alias">&ldquo;'+esc(al)+'&rdquo;</span>':'')+'</div></div>'
+      /* Only in the everyone scope. Reading one manager's list, a column
+         repeating that manager on every row is 229 restatements of what the
+         masthead already says. Reading all of them, it is the fact that tells
+         you whose row it is. */
+      +(_pmCol?('<div class="pc-pm">'+esc(p.hap?(p.pm||'Unassigned'):'')+'</div>'):'')
       +'<div class="pc-meta">'+(p.hap?(esc(p.pm||'Unassigned')+(p.city_state?' &middot; '+esc(p.city_state):'')):(esc(p.fha)+(p.city_state?' &middot; '+esc(p.city_state):'')))+'</div>'
       +(p.hap?dueLine(p):'')
       /* The ledger printed a "Rents effective" header over an empty column. */
@@ -3797,9 +3805,11 @@ function renderMenu(){
   const _zone=list=>{let k=null;return list.map(x=>{
     const h=(x.b.key!==k)?('<div class="mgroup">'+esc(x.b.label)+'</div>'):'';
     k=x.b.key;return h+card(x.p,x.b.behind?'past':(x.p.days<=MENU_WINDOW?'now':'later'));}).join('');};
-  const _cols='<div class="mcols"><span>Property</span><span>Program</span>'
+  const _cols='<div class="mcols'+(_pmCol?' pm':'')+'"><span>Property</span>'
+    +(_pmCol?'<span>Manager</span>':'')+'<span>Program</span>'
     +'<span>Due to HUD</span><span>Rents effective</span><span class="r">Units</span>'
     +'<span></span></div>';
+  const _rowsCls='mgrid rows'+(_pmCol?' pm':'');
   const _pastRows=_banded.filter(x=>x.b.key!=='none'&&x.b.behind);
   const _liveRows=_banded.filter(x=>x.b.key!=='none'&&!x.b.behind&&x.p.days<=MENU_WINDOW);
   const _restRows=_banded.filter(x=>x.b.key!=='none'&&!x.b.behind&&x.p.days>MENU_WINDOW);
@@ -3820,7 +3830,7 @@ function renderMenu(){
      is for a list you are browsing, never for one you are searching. */
   const _drawer=(!q&&view!=='past'&&_pastRows.length>0);
   const _pastGrid=_pastRows.length?('<div class="mpastwrap" id="mPastWrap"'
-      +((_drawer&&!_pastOpen)?' hidden':'')+'><div class="mgrid rows">'
+      +((_drawer&&!_pastOpen)?' hidden':'')+'><div class="'+_rowsCls+'">'
       +_cols+_zone(_pastRows)+'</div></div>'):'';
   const _banner=_drawer?('<button class="mpast'+(_pastOpen?' open':'')
       +'" id="mPast" aria-expanded="'+(_pastOpen?'true':'false')+'">'
@@ -3843,7 +3853,7 @@ function renderMenu(){
       +' days</h3><span>'+(_liveRows.length?(_pl(_liveRows.length)
         +' &middot; earliest deadline first'):'Nothing in this window')+'</span>'
     +'<span class="zsp"></span>'+windowPickHtml()+'</div>'
-    +(_liveRows.length?('<div class="mgrid rows live">'+_cols+_zone(_liveRows)+'</div>')
+    +(_liveRows.length?('<div class="'+_rowsCls+' live">'+_cols+_zone(_liveRows)+'</div>')
       :(view==='now'?'':'<div class="mempty win0">Nothing is due in the next '+_bandNow()
         +' days. Try a wider window, or read on below.</div>')));
 
@@ -3855,7 +3865,7 @@ function renderMenu(){
   const _restN=_ledgerRows.length+_offRows.length+_or.length;
   const _restHtml=_restN?('<div class="zhead"><h3>'+(_liveRows.length?'Further out':'The schedule')
       +'</h3><span>'+_pl(_restN)+(_ledgerRows.length?' &middot; earliest deadline first':'')+'</span></div>'
-    +'<div class="mgrid rows">'+_cols+_zone(_ledgerRows)
+    +'<div class="'+_rowsCls+'">'+_cols+_zone(_ledgerRows)
     /* Off the axis, so below every month rather than inside the last one — a
        property with no deadline cannot sit on a deadline timeline. */
     +(_offRows.length?('<div class="mgroup">'+esc(_offRows[0].b.label)+'</div>'

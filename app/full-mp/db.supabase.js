@@ -362,22 +362,26 @@ function makeSupabaseDb(client) {
      conflict between two numbers that are no longer the numbers in front of
      them. The owner's checklist goes the same way: it is signed per package.
 
-     Current rents and utility allowances depend on the programs. An RCS year
-     uploads an executed rent schedule that supplies both, so inheriting them
-     puts last year's figures on the form in the colour of saved truth. An
-     OCAF or UAF year has no schedule to upload and the prior contract rent is
-     the starting point — cycleAnalysis already falls back to it.
+     Current rents and utility allowances never carry, on any programme.
+     They were dropped on RCS years only, on the reasoning that an OCAF year
+     has no executed schedule to upload and last year's figures are the best
+     starting point. Both halves were wrong. Nothing in the app ever rolls
+     proposed into current, so an OCAF built from an OCAF inherited a rent one
+     full cycle stale and computed this year's factor against it. And rolling
+     proposed forward would not have fixed it: what took effect is whatever the
+     CA returned after the owner submitted, and the only record of that is the
+     executed schedule. A figure we cannot observe must not arrive wearing the
+     colour of saved truth. The column starts empty and the schedule fills it.
 
      Still pre-filled either way: unit mix, Part B, non-S8 and non-revenue
      rows, debt service, and everything about the property itself. */
-  const cyNoCarry = (k, progs) => /^units\.\d+\.proposed$/.test(k)
+  const cyNoCarry = (k) => /^units\.\d+\.proposed$/.test(k)
+    || /^units\.\d+\.(current|ua_exec|ua_source|ua_custom)$/.test(k)
     || /^units\.\d+\.(br_rcs|ba_rcs|num_rcs|ua_rcs)$/.test(k)
     || /^units\.\d+\.safmr_(hud|rcs|source|custom)$/.test(k)
     || /^units\.\d+\.(ua|safmr|num|type)_reviewed$/.test(k)
     || /^units\.\d+\.uac_[a-z]+$/.test(k)
     || /^check\.\d+$/.test(k)
-    || ((progs || []).indexOf('rcs') >= 0
-        && /^units\.\d+\.(current|ua_exec|ua_source|ua_custom)$/.test(k))
     || /^appr\./.test(k)
     || /^ocaf\.(factor_|ds_t12$|ds_f12$)/.test(k)
     || /^uaf\./.test(k)
@@ -589,8 +593,7 @@ function makeSupabaseDb(client) {
         else {
           const domId = dominantCycleId(pid);
           const src = domId ? D.cycles[domId].cells : merged(pid);
-          const _pg = o.programs || ['rcs'];
-          for (const k in src) { if (cyNoCarry(k, _pg)) continue; const v = src[k].value; if (v == null || v === '') continue; cells[k] = { value: String(v), saved_at: today() }; }
+            for (const k in src) { if (cyNoCarry(k)) continue; const v = src[k].value; if (v == null || v === '') continue; cells[k] = { value: String(v), saved_at: today() }; }
           for (const k in p.durable) { if (!isTemplateKey(k)) continue; cells[k] = { value: p.durable[k].value, saved_at: today() }; } // property record stays authoritative for identity
         }
         // The date picked when the package is created is a statement about this

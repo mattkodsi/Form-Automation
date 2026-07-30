@@ -35,7 +35,7 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=373;   // 2026-07-30: +17 — the two package modals join the dialog audit, and every
+const MIN_CHECKS=381;   // 2026-07-30: +25 — the two package modals join the dialog audit, and every
                         // dialog is now checked against the three colours the desk replaced
 // 2026-07-29: +12 — three zones: the past-due drawer closed on arrival, and
                         // opening it without moving the panel below (measured in a real layout).
@@ -2369,6 +2369,42 @@ const FULL=process.argv.includes('--full');
         await c.eval('return window.__t.__menuView()'),'all');
       T('and the masthead says which portfolio is on screen',
         await c.eval('return /All portfolios/.test(document.getElementById("menuWho").textContent)'));
+
+      /* ---- the manager column belongs to the everyone scope ----
+         Reading one manager's list, a column repeating that manager on every row
+         restates what the masthead says 229 times. Reading all of them, it is the
+         fact that says whose row it is. Driven through the real picker rather
+         than by setting the lens, because the two grids and the header row have
+         to agree about the column count — a cell hidden by CSS inside a six
+         column grid is how a row silently gains a seventh. */
+      const cols=()=>c.eval(`const g=document.querySelector('#menuGrid .mgrid.rows');
+        const h=document.querySelector('#menuGrid .mcols');
+        return {pm:g.className.split(' ').indexOf('pm')>=0,
+          head:[...h.querySelectorAll('span')].map(x=>x.textContent),
+          cell:!!document.querySelector('#menuGrid .pc-pm'),
+          agree:getComputedStyle(document.querySelector('#menuGrid .pcard')).gridTemplateColumns
+               ===getComputedStyle(h).gridTemplateColumns,
+          over:document.documentElement.scrollWidth>document.documentElement.clientWidth+1};`);
+      const everyone=await cols();
+      T('showing everyone, the list names the manager on every row',everyone.pm&&everyone.cell);
+      eq('under a header of its own',everyone.head[1],'Manager');
+      T('the rows and the header agree on the columns',everyone.agree);
+      T('and nothing spills sideways',!everyone.over);
+      await c.eval('document.getElementById("menuWho").click();return 1');
+      await sleep(300);
+      const picked=await c.eval(`const r=[...document.querySelectorAll('[data-who]')]
+        .filter(x=>x.getAttribute('data-who')!=='*')[0];
+        const n=r.getAttribute('data-who');r.click();return n;`);
+      await sleep(400);
+      T('a manager was there to choose',!!picked);
+      const one=await cols();
+      T('narrowed to one, the column goes',!one.pm&&!one.cell);
+      eq('and the header goes with it',one.head[1],'Program');
+      T('the rows and the header still agree',one.agree);
+      await c.eval('document.getElementById("menuWho").click();return 1');
+      await sleep(300);
+      await c.eval('document.querySelector(\'[data-who="*"]\').click();return 1');
+      await sleep(300);
     }
 
     console.log('\n── the console stayed quiet ───────────────────────────');

@@ -5,7 +5,7 @@
    shows it, and MIN_CHECKS catches a run that dies partway — a short count is
    a failure, not a pass. Adding checks? Raise MIN_CHECKS. */
 const { makeDb, memoryAdapter, isPerCycleKey, migrate, computeAnalysis, computeSalutation, CROSSWALK } = require('./db.js');
-const MIN_CHECKS = 182;
+const MIN_CHECKS = 186;   // 2026-07-30: +4 current rents and executed UA carry on no programme
 let fails = 0, n = 0, verdict = null;
 const BAR = '═'.repeat(68);
 function fail(msg, err) {
@@ -155,12 +155,13 @@ function jsonAdapter() { let s = null; return { get: async () => (s ? JSON.parse
   console.log('\n─ 8b · WHAT CARRIES INTO A NEW CYCLE ─');
   const { cid: cid2 } = await cdb.createCycle(cpid, { programs: ['rcs'], effective_date: '2027-09-01' });
   const c2 = cdb.getFlatCycle(cid2);
-  /* An RCS year uploads an executed rent schedule that states the current
-     rents and the utility allowances. Inheriting last year's put them on the
-     form wearing the colour of saved truth, which is the one thing they are
-     not. OCAF and UAF years have no schedule to upload, so there they still
-     carry — cycleAnalysis already falls back to the current rent for the
-     proposed. */
+  /* What took effect is whatever the CA returned after the owner submitted, and
+     the only record of that is the executed schedule. So a rent or an allowance
+     we have not read from one must never arrive wearing the colour of saved
+     truth — on ANY programme. These two were dropped on RCS years only until
+     2026-07-30, which meant an OCAF built from an OCAF inherited a rent one full
+     cycle stale (nothing rolls proposed into current) and computed this year's
+     factor against it. */
   ok('an RCS year does NOT inherit last year\'s current rents', c2['units.0.current'], undefined);
   ok('nor its utility allowances', c2['units.0.ua_exec'], undefined);
   ok('nor what LAST year\'s study read', c2['units.0.br_rcs'], undefined);
@@ -562,6 +563,32 @@ function jsonAdapter() { let s = null; return { get: async () => (s ? JSON.parse
     ndb.listProperties().find(p => p.id === bh).name, 'Beacon Hill');
   ok('and a property saving its OWN name is never in its own way',
     await grabA(() => ndb.saveFlat(bh, { 'property.name': { value: 'Beacon Hill' } })), null);
+
+  /* ─ AN OCAF INHERITS NO RENT EITHER ─
+     Last, and on its own property, because every cycle created on the shared
+     fixture shifts the ids that section 8c asserts by name — which is how this
+     block failed seven checks in three sections it never touched.
+
+     The rule these prove: what took effect is whatever the CA returned after the
+     owner submitted, and the only record of that is the executed schedule. An
+     OCAF year has no schedule to upload, which was the reason it kept last
+     year's figures and is the reason it must not — with nothing read, there is
+     nothing behind the number. Nothing rolls proposed into current either, so
+     what an OCAF-from-an-OCAF inherited was a rent one full cycle stale, and the
+     factor was computed against it. */
+  console.log('\n─ 11 · AN OCAF INHERITS NO RENT EITHER ─');
+  const opid = (await cdb.createProperty('Ormsby Place')).pid;
+  const { cid: oc1 } = await cdb.createCycle(opid, { programs: ['ocaf'], effective_date: '2026-09-01' });
+  await cdb.saveFlatCycle(oc1, {
+    'units.0.num_units': { value: '40' }, 'units.0.current': { value: '1150' },
+    'units.0.ua_exec': { value: '62' },   'units.0.ua_source': { value: 'executed' } });
+  ok('the earlier OCAF holds a current rent', cdb.getFlatCycle(oc1)['units.0.current'].value, '1150');
+  const { cid: oc2 } = await cdb.createCycle(opid, { programs: ['ocaf'], effective_date: '2027-09-01' });
+  const o2 = cdb.getFlatCycle(oc2);
+  ok('the next OCAF does not inherit it', o2['units.0.current'], undefined);
+  ok('nor the executed utility allowance', o2['units.0.ua_exec'], undefined);
+  ok('nor how that allowance was sourced', o2['units.0.ua_source'], undefined);
+  ok('while the unit mix still carries', o2['units.0.num_units'].value, '40');
 
   /* API PARITY (CLAUDE.md): db.js is the harness's stand-in, db.supabase.js is
      what actually runs, db.cosmos.js is what the RA port runs. A guard in one
