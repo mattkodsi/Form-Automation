@@ -38,9 +38,11 @@
 */
 const fs=require('fs'),path=require('path'),cp=require('child_process');
 const {driveOne}=require('./drive.js');
+const {assertNotMain}=require('./drive.js');
 const {extractFacts}=require('./extract.js');
 const {compareFacts,compareRuns,renderMarkdown}=require('./compare.js');
 
+assertNotMain('sweep.js');   // before anything else: see drive.js
 const argv=process.argv.slice(2);
 const flag=(n,d)=>{const i=argv.indexOf('--'+n);return i>=0?argv[i+1]:d;};
 const has=n=>argv.includes('--'+n);

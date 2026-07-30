@@ -18,7 +18,8 @@
    ocr.js would move billing somewhere nothing is counting; that is the failure
    these guard now. */
 const fs=require('fs'),path=require('path'),cp=require('child_process');
-const MIN_CHECKS=10;
+const MIN_CHECKS=14;   // 2026-07-30: check 5 became five real ones - the rail moved
+                       // out of this file and into sweep.js/drive.js, so it can be DRIVEN.
 let n=0,fails=0,skips=0;
 const T=(l,v)=>{n++;if(!v){fails++;console.log('  X '+l);}else console.log('  + '+l);};
 /* Loudly, never as a pass -- the house convention from test_browser.js. A
@@ -47,9 +48,32 @@ T('the selftest hatch routes the data layer to the local stub, not Supabase',
 const gi=fs.readFileSync(path.join(ROOT,'.gitignore'),'utf8');
 T('_archive/corpus-cache/ is gitignored',/^_archive\/corpus-cache\/?\s*$/m.test(gi));
 
-/* 5. Never on main: on this repo a push to main is a deploy. */
-const br=cp.execSync('git rev-parse --abbrev-ref HEAD',{cwd:ROOT}).toString().trim();
-T('not working on main (got "'+br+'")',br!=='main');
+/* 5. Never on main: on this repo a push to main is a deploy, and a sweep signs
+   into the LIVE account and writes ZZ-CORPUS-* properties into it.
+
+   This used to read `git rev-parse --abbrev-ref HEAD` and assert the answer was
+   not "main". That assertion never stopped a sweep -- nothing consulted it --
+   it stopped the TEST SUITE, and the moment the corpus tooling landed on main
+   it made run_tests.sh, and so deliver.sh, permanently red on the one branch we
+   ship from. The rule now lives in the sweep's own entry points, where it
+   binds; these checks drive those entry points rather than restating the rule.
+
+   CORPUS_BRANCH is what lets the refusal be exercised from any branch, so this
+   proves the real path instead of a copy of it. */
+const runsOn=(script,env)=>{
+  const r=cp.spawnSync(process.execPath,[path.join(MP,'corpus',script)],
+    {cwd:ROOT,env:Object.assign({},process.env,env),encoding:'utf8'});
+  return {code:r.status,out:String(r.stdout||'')+String(r.stderr||'')};
+};
+{ const onMain=runsOn('sweep.js',{CORPUS_BRANCH:'main',CORPUS_ALLOW_MAIN:''});
+  T('sweep.js refuses to run on main',onMain.code===2&&/REFUSING/.test(onMain.out));
+  T('and says why, naming the live account',/LIVE account/.test(onMain.out));
+  const onBranch=runsOn('sweep.js',{CORPUS_BRANCH:'a-working-branch',CORPUS_ALLOW_MAIN:''});
+  T('and does NOT refuse on a working branch',!/REFUSING/.test(onBranch.out));
+  const drv=runsOn('drive.js',{CORPUS_BRANCH:'main',CORPUS_ALLOW_MAIN:''});
+  T('drive.js refuses on main too - the other way in',drv.code===2&&/REFUSING/.test(drv.out));
+  const over=runsOn('sweep.js',{CORPUS_BRANCH:'main',CORPUS_ALLOW_MAIN:'1'});
+  T('CORPUS_ALLOW_MAIN=1 is a deliberate override, and works',!/REFUSING/.test(over.out)); }
 
 /* 6. The Drive mount is read-only to us. Prove we can see it before a night
    of runs discovers otherwise at 3am. */

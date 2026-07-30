@@ -189,8 +189,9 @@ a new suite needs registering (`deliver.sh` calls it).
   clipped ones are in PAGE coordinates and will place a `position:sticky` bar wherever the scroll left it.
 
 - **`app/full-mp/corpus/`** — the RCS corpus loop: drive the real app over every filed package and
-  compare what it generates to what the PM team filed. `test_safety.js` (7) asserts the rails an
-  unattended run needs — tier-3 OCR unreachable, cache gitignored, not on `main`. `test_compare.js`
+  compare what it generates to what the PM team filed. `test_safety.js` (15) asserts the rails an
+  unattended run needs — tier-3 OCR unreachable, cache gitignored, and the refusal to sweep from
+  `main`, which now lives in `sweep.js`/`drive.js` and is DRIVEN here rather than restated. `test_compare.js`
   (91) holds the normalisation rules, including the ones that must NOT normalise (the property alias,
   accounting parentheses, leading zeros). `test_extract.js` (120) reads filed documents and guards the
   four traps: HUD-92458 values live in widget `/V` and not the text layer, `copyPages` drops the
@@ -209,7 +210,7 @@ a new suite needs registering (`deliver.sh` calls it).
   computed, and both tools exit 3 with a banner where poppler is absent rather than exiting 0 having
   rendered nothing.
 
-**2443 checks across thirteen suites** (98 · 190 · 144 · 222 · 125 · 444 · 189 · 539 · 111 · 11 · 91 · 120 · 159) as of 2026-07-30, counted off a real run. These
+**2447 checks across thirteen suites** (98 · 190 · 144 · 222 · 125 · 444 · 189 · 539 · 111 · 15 · 91 · 120 · 159) as of 2026-07-30, counted off a real run. These
 numbers go stale the moment a suite grows — `MIN_CHECKS` in each file is the binding floor; this list
 is a map.
 ⚠️ **Don't pipe a suite through `| tail`.** A pipeline's exit status is the LAST command's, so node's

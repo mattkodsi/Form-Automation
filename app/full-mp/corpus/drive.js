@@ -93,6 +93,38 @@ const SRC = path.join(__dirname, '..');            // app/full-mp
 const REPO = path.join(SRC, '..', '..');           // repo root
 const SESSION_DEFAULT = path.join(REPO, '_archive', 'corpus-cache', '.session.json');
 const NAME_PREFIX = 'ZZ-CORPUS-';
+
+/* ── the rail that used to live only in a test ───────────────────────────
+   A sweep signs into Matt's LIVE account and writes ZZ-CORPUS-* properties
+   into it, and on this repo a push to main is a deploy. So a sweep must not
+   run from main. That rule existed only as an assertion inside
+   corpus/test_safety.js, which means it never stopped a single sweep — it
+   stopped the TEST SUITE, and once the corpus tooling landed on main it made
+   run_tests.sh (and so deliver.sh) permanently red on the one branch we ship
+   from. A rule enforced somewhere other than the point of action is not
+   enforced; this is that rule moved to the point of action.
+
+   CORPUS_BRANCH overrides the branch lookup so the suite can drive this exact
+   path instead of asserting a copy of it. CORPUS_ALLOW_MAIN=1 is the
+   deliberate override, named for what it costs. */
+function currentBranch(){
+  if(process.env.CORPUS_BRANCH) return process.env.CORPUS_BRANCH;
+  try{ return cp.execSync('git rev-parse --abbrev-ref HEAD',
+    {cwd:__dirname,stdio:['ignore','pipe','ignore']}).toString().trim(); }
+  catch(e){ return ''; }
+}
+function refuseOnMain(branch){ return String(branch).trim()==='main'; }
+function assertNotMain(what){
+  if(process.env.CORPUS_ALLOW_MAIN==='1') return;
+  const br=currentBranch();
+  if(refuseOnMain(br)){
+    console.error('REFUSING: '+what+' must not run on main.');
+    console.error('  A sweep writes '+NAME_PREFIX+'* properties into the LIVE account,');
+    console.error('  and on this repo a push to main is a deploy.');
+    console.error('  Check out a working branch, or set CORPUS_ALLOW_MAIN=1 to override.');
+    process.exit(2);
+  }
+}
 const ORDERS = ['rs-first', 'rcs-first'];
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const J = v => JSON.stringify(v);
@@ -1236,10 +1268,12 @@ module.exports = {
   _resetMemo: () => _memo.clear(),
   pickCycle, pickStudy, findProperty, unzipStored, tierOf, diffSnaps,
   NAME_PREFIX, ORDERS,
+  currentBranch, refuseOnMain, assertNotMain,
 };
 
 /* ── standalone ─────────────────────────────────────────────────────────── */
 if (require.main === module) {
+  assertNotMain('drive.js');
   const argv = process.argv.slice(2);
   const flag = n => argv.indexOf(n) >= 0;
   const opt = n => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : null; };
