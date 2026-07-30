@@ -35,7 +35,7 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=304;   // 2026-07-29: +12 — three zones: the past-due drawer closed on arrival, and
+const MIN_CHECKS=310;   // 2026-07-29: +12 — three zones: the past-due drawer closed on arrival, and
                         // opening it without moving the panel below (measured in a real layout).
                         // 2026-07-29: -3 — the rail's eight rows became the strip's five figures.
                        // 2026-07-28: +35 — the home page's filter rail, driven by real clicks.
@@ -2069,14 +2069,18 @@ const FULL=process.argv.includes('--full');
         +'window.__t.__setMenuView("all");window.scrollTo(0,0);return 1');
       await sleep(280);
       const read=()=>c.eval(`const g=document.getElementById('menuGrid');
-        const w=g.querySelector('#mPastWrap'),b=g.querySelector('#mPast');
+        const w=document.getElementById('mPastWrap'),b=document.getElementById('mPast');
         const p=g.querySelector('.mgrid.rows.live');
         return {banner:b?b.textContent.replace(/\\s+/g,' ').trim():null,
                 expanded:b?b.getAttribute('aria-expanded'):null,
                 hidden:w?!!w.hidden:null,
                 grids:g.querySelectorAll('.mgrid.rows').length,
                 live:g.querySelectorAll('.mgrid.rows.live .pcard').length,
-                shown:[...g.querySelectorAll('.pcard .pc-name')]
+                flush:(()=>{const m=document.querySelector('#viewMenu .mtop');
+                  return (b&&m)?Math.round(b.getBoundingClientRect().top-m.getBoundingClientRect().bottom):null;})(),
+                label:b?b.textContent.replace(/\\s+/g,' ').trim():null,
+                pull:b?getComputedStyle(b).getPropertyValue('--pull').trim():null,
+                shown:[...document.querySelectorAll('#viewMenu .pcard .pc-name')]
                   .filter(n=>n.getBoundingClientRect().height>0).map(n=>n.textContent.trim()),
                 panelTop:p?Math.round(p.getBoundingClientRect().top):null,
                 y:Math.round(window.pageYOffset)};`);
@@ -2091,6 +2095,28 @@ const FULL=process.argv.includes('--full');
         !d0.shown.includes('Drawer Behind')&&!d0.shown.includes('Drawer Behind Two'));
       T('while what is coming is',d0.shown.includes('Drawer Now'));
       eq('what is coming is a panel of its own',d0.live,1);
+      /* Flush under the masthead, and edge to edge: it reads as attached to the
+         navy rather than as the first item of the list it is not part of. */
+      eq('the banner touches the masthead',d0.flush,0);
+      T('and it offers to show them without saying "them"',
+        /Show$/.test(d0.label||'')&&!/Show them/.test(d0.label||''));
+      /* ---- the pull ----
+         One notch used to open it, which fired on flicks nobody meant as a
+         gesture. It now stretches and fills, and opens only on a sustained pull. */
+      const notch=()=>c.send('Input.dispatchMouseEvent',
+        {type:'mouseWheel',x:600,y:400,deltaX:0,deltaY:-100});
+      await notch(); await sleep(140);
+      const p1=await read();
+      eq('one notch upward does not open it',p1.hidden,true);
+      T('but the bar stretches to say it is listening',parseFloat(p1.pull||'0')>0);
+      for(let i=0;i<3;i++){await notch();await sleep(70);}
+      await sleep(200);
+      const p2=await read();
+      eq('a sustained pull opens it',p2.hidden,false);
+      T('and the arrow points down, because that is where the rows went',
+        /\u2193/.test(p2.label||''));
+      await c.eval('document.getElementById("mPast").click();return 1');
+      await sleep(280);
       /* Opening it. The one check the DOM alone cannot make: inserting rows above
          the panel must not move the panel. Measured in the viewport, before and
          after, in a real layout. */

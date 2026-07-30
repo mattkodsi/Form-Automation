@@ -91,12 +91,35 @@ Three zones, in this order:
 3. **Further out** — the rest of the schedule by month, then the properties with
    no deadline, then the records the tracker does not carry.
 
+### Where the banner sits
+
+**Flush under the masthead, edge to edge**, above the page's own heading. It is
+not the first item of a list it is not part of, and opening it pushes *Renewals*,
+the strip and the panel down together — which is the "drop down" it is meant to
+be. Inner padding matches `.mwrap`'s 40px so the count lines up with everything
+below it.
+
+Not while searching, and not when the past band is the chosen view. Search is a
+find-within that forces the All view, so a matching past-due property was being
+routed into a *closed* drawer: you typed a name you knew existed and the page
+showed you nothing. And filtered TO what is past, those rows are the whole list —
+left in the top bar they sat above the page's heading with the list below them
+empty. A drawer is for a list you are browsing, never for one you are searching
+or have already filtered to.
+
 ### Opening the drawer
 
-Two ways in: pressing the banner, or **scrolling up while already at the top of
-the page** — the gesture a PM reaches for without being told. The wheel handler
-is guarded on the delta pointing up *and* `pageYOffset <= 0`, so it cannot fire
-mid-list, and it is wired once for the life of the page rather than per render.
+Two ways in: pressing the banner, or **pulling down at the top of the page**.
+The first draft opened on a single upward notch, which fired on flicks nobody
+meant as a gesture. It now takes a *sustained* pull: upward wheel delta
+accumulates while already at the top, the bar stretches (padding grows) and a
+rule fills across its foot as it climbs, and it opens on crossing 300px. Scrolling
+down or pausing for 420ms gives it all back — an abandoned gesture must not leave
+the bar half-stretched, and must not add to the next one.
+
+The arrow points **down** when open. It pointed up in the first draft, meaning
+"those rows are above you", which is a compass bearing; on a disclosure control an
+arrow is read as the action or the state. Open means it dropped down.
 
 **The panel below must not move.** Inserting eighty rows above it would otherwise
 shove it off the bottom of the screen, so the scroll is compensated by exactly
@@ -134,8 +157,14 @@ its parts still sum to its total:
 | later | days > 30 |
 | not in the schedule | no deadline |
 
-Only `past their date` → `behind` changes, so the label matches the schedule the
-page now is. Filtering to one band shows that band alone, with its month
+Only `past their date` → `past due to HUD` changes, so the label names the column
+it is about.
+
+One claim of the strip is restated by the drawer. "Every figure is countable on
+the page below it" now means *cards drawn plus the number the banner names*: 82
+of the 230 are countable on the banner rather than as rows. The suite asserts that
+sum, so a total which silently exceeded both would be the drawer hiding rows from
+the count. Filtering to one band shows that band alone, with its month
 headings intact. Filtered TO what is past, the rows *are* the list and no drawer
 is drawn — a banner over them would be a control that closes the view just
 chosen.

@@ -22,7 +22,7 @@ const os=require('os'),path=require('path'),fs=require('fs');
 /* ── the verdict machinery (mirrors test_interactions.js) ───────────────── */
 const MONTHNAMES=['January','February','March','April','May','June','July',
                  'August','September','October','November','December'];
-const MIN_CHECKS=153;   // 2026-07-29: +12 the schedule — one axis, month headings, the today-line
+const MIN_CHECKS=169;   // 2026-07-29: +12 the schedule — one axis, month headings, the today-line
                         // 2026-07-28: +32 the home page's filter rail, +24 the primary action
 let n=0,fails=0,verdict=null;
 const BAR='═'.repeat(68);
@@ -143,7 +143,13 @@ const T=(label,v)=>eq(label,!!v,true);
   eq('the page opens on everything', app.__menuView(), 'all');
   T('and the figure holding that view is marked current',
     /data-view="all"[^>]*aria-current/.test(strip1));
-  eq('and the total equals the cards drawn', cardsIn(g1), c1.all);
+  /* The strip's claim, restated for the drawer: the total is still countable on
+     the page, but 82 of it is countable ON THE BANNER rather than as rows. Cards
+     drawn plus the number the banner names must be the figure pressed — a total
+     that silently exceeded both would be the drawer hiding rows from the count. */
+  const _inDrawer=+(((els.menuPastBar.innerHTML||'').match(/>(\d+)<\/b> past due/)||[])[1]||0);
+  eq('the total equals the cards drawn plus the number the banner names',
+    cardsIn(g1)+_inDrawer, c1.all);
   app.__setMenuView('later');
   eq('pressing a figure redraws the grid to match it', cardsIn(els.menuGrid.innerHTML), c1.later);
   app.__setMenuView('past');
@@ -164,8 +170,15 @@ const T=(label,v)=>eq(label,!!v,true);
   /* Captured, not string-surgeried: `[^>]*` cannot cross the `>` in
      `class="zhead">`, so the tidy-up version of this returned the whole match. */
   const zh=[];{const re=/class="zhead"><h3>([^<]*)</g;let m;while((m=re.exec(sch)))zh.push(m[1]);}
-  eq('the page is three zones: the drawer, what is coming, and the rest',
-    (sch.match(/class="mgrid rows/g)||[]).length, 3);
+  const bar=els.menuPastBar.innerHTML;
+  eq('what is coming and the rest are two grids in the list',
+    (sch.match(/class="mgrid rows/g)||[]).length, 2);
+  /* The drawer is not in the list. It sits in its own bar flush under the
+     masthead — it is not the first item of a list it is not part of, and opening
+     it pushes the page's own heading down with everything else. */
+  eq('and the drawer is a third, in its own bar above the heading',
+    (bar.match(/class="mgrid rows/g)||[]).length, 1);
+  T('the list holds none of it', !/id="mPast"/.test(sch)&&!/mpastwrap/.test(sch));
   T('and what is coming is named by the window it holds, not by a date inside it',
     /^Due within \d+ days$/.test(zh[0]||''));
   eq('with the rest of the schedule under it', zh[1], 'Further out');
@@ -173,20 +186,24 @@ const T=(label,v)=>eq(label,!!v,true);
      backlog — and the banner is the only thing standing where 82 rows would. */
   /* id, not class: "mpastwrap" starts with "mpast", so a class test matches the
      drawer's own container and would pass with no banner rendered at all. */
-  T('the past-due rows are behind a banner', /id="mPast"/.test(sch));
-  T('and it is closed on arrival', /id="mPastWrap"[^>]*hidden/.test(sch));
-  T('the banner says how many are back there', new RegExp('>'+c1.past+'</b> past due').test(sch));
-  T('and it is a control, not a caption', /aria-expanded="false"/.test(sch));
-  /* Position, not just presence: the banner must sit ABOVE what is coming, or
-     "scroll up to look back" is a lie about the page. */
-  T('the banner sits above what is coming', sch.indexOf('class="mpast')<sch.indexOf('class="zhead"'));
-  /* Filtered TO what is past, the rows ARE the list — a banner over them would
-     be a control that closes the view just chosen. */
+  T('the past-due rows are behind a banner', /id="mPast"/.test(bar));
+  T('and it is closed on arrival', /id="mPastWrap"[^>]*hidden/.test(bar));
+  T('the banner says how many are back there', new RegExp('>'+c1.past+'</b> past due').test(bar));
+  T('and it is a control, not a caption', /aria-expanded="false"/.test(bar));
+  T('it offers to show them without saying "them"', /Show</.test(bar)&&!/Show them/.test(bar));
+  /* The arrow points DOWN when open, because on a disclosure control an arrow is
+     read as the action, not as a compass bearing on where the rows are. */
+  T('and closed it carries no arrow at all', !/\u2191/.test(bar)&&!/\u2193/.test(bar));
+  /* Filtered TO what is past, the rows ARE the list. Left in the top bar they
+     put every row of the chosen view above the page's own heading and left the
+     list below it empty — and a banner over them would be a control that closes
+     the view just chosen. */
   app.__setMenuView('past');
   const sp=els.menuGrid.innerHTML;
   T('filtered to what is past, the rows are the list and not a drawer',
     !/id="mPast"/.test(sp)&&!/hidden/.test(sp));
-  eq('and every one of them is drawn', cardsIn(sp), c1.past);
+  eq('and every one of them is drawn in the list', cardsIn(sp), c1.past);
+  eq('with the bar emptied, not left holding them', els.menuPastBar.innerHTML, '');
   app.__setMenuView('all');
   /* Months inside a zone run forward. Read off the markup, because ordering is
      the one thing a count cannot catch: headings in the wrong sequence still sum
