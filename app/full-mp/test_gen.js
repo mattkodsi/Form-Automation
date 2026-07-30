@@ -235,7 +235,12 @@ function record(extra){
        was not, and why a blank left a reader wondering if a figure was withheld. */
     eq('column 3 states a zero: this unit earns no contract rent',V(row+2),'0');
     eq('and column 5 a zero: it carries no allowance',V(row+4),'0');
-    eq('and still no extension, because zero times anything is not a claim',V(row+3),'');
+    /* CORRECTED 2026-07-30, same day I wrote it. I asserted the extension stays
+       blank "because zero times anything is not a claim". The live HUD form
+       disagrees: Col. 4 calculates, and a calculated cell reads 0 rather than
+       nothing. My reasoning was about what we can assert; the form's is about
+       which cells are inputs and which are arithmetic. */
+    eq('and the extension calculates to a zero, as the live form does',V(row+3),'0');
     eq('so the potential is the Section 8 rows alone',V('95'),'$'+(10*900+6*1100).toLocaleString('en-US'));
     eq('and the unit count still counts it',V('94a'),'17');
     eq('while Part D still names the use',V(159),"Manager's Unit"); }
@@ -270,6 +275,32 @@ function record(extra){
      comparing: the comparator compares figures and is blind to presentation. This
      block is the part of that blindness that can be closed cheaply — against the
      template, where the raw field string is readable. */
+  /* ── WHAT WE HAND A PM MUST STILL BE A WORKING HUD FORM ──────────────────
+     Matt, 2026-07-30: "the RS pdf you generate must actually be calculable, just
+     like the original pdf provided by HUD. PMs will download that RS and attempt
+     to interact with it as if it's a normal RS form." So the calculation
+     machinery is a requirement, not an accident of pdf-lib preserving objects:
+     41 AFSimple_Calculate actions, the /CO order they fire in, and the 103 format
+     actions. If a refactor ever flattens the form or sets NeedAppearances, this
+     is the check that says so. */
+  console.log('\n─ the form we hand back still calculates ─');
+  { const {PDFName}=global.PDFLib;
+    const shape=async bytes=>{ const d=await PDFDocument.load(bytes);
+      const af=d.catalog.lookup(PDFName.of('AcroForm'));
+      const co=af&&af.lookup?af.lookup(PDFName.of('CO')):null;
+      let calc=0,fmt=0;
+      d.getForm().getFields().forEach(f=>{ try{ const aa=f.acroField.dict.lookup(PDFName.of('AA'));
+        if(aa&&aa.lookup){ if(aa.lookup(PDFName.of('C')))calc++; if(aa.lookup(PDFName.of('F')))fmt++; } }catch(e){} });
+      return {co:co&&co.size?co.size():0,calc,fmt,
+              need:!!(af&&af.lookup&&af.lookup(PDFName.of('NeedAppearances')))}; };
+    const before=await shape(rsBytes);
+    const r=record({'units.0.br':'2BR','units.0.ba':'1BA','units.0.num_units':'32','units.0.proposed':'1061'});
+    const after=await shape(await G.fillRentSchedule(rsBytes,r));
+    eq('HUD ships 41 calculating fields and we hand back 41',after.calc,before.calc);
+    eq('the calculation ORDER survives too',after.co,before.co);
+    eq('and every format action',after.fmt,before.fmt);
+    T('and we never ask the viewer to rebuild appearances',!after.need); }
+
   console.log('\n─ the four potentials carry a dollar sign ─');
   { const r=record({'units.0.br':'2BR','units.0.ba':'1BA','units.0.num_units':'32','units.0.proposed':'1061',
                     'units.1.br':'3BR','units.1.ba':'1BA','units.1.num_units':'33','units.1.proposed':'1302'});

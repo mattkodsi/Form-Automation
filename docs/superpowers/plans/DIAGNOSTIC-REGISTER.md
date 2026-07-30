@@ -2831,3 +2831,67 @@ The fix closes four cells. **It does not close the hole**, which is that the com
 away the entire class. Until `compare.js` can compare presentation, the next defect of this shape
 is equally invisible. That is a bigger job than one wave — filed copies are mostly vector outlines,
 so the raw string is not always available — and it is now the top of the queue.
+
+---
+
+# M65 — a calculated cell reads its zero, and the form must still calculate
+
+Matt supplied two screenshots of the live HUD-92458 (`My Drive/RA/Screenshot of RS Page 1.png`,
+page 2 alongside it) and one rule that makes the whole class legible:
+
+> **The blue cells are input cells, the white cells are calculable. Every white cell reads its zero
+> — `0` or `$0` depending on the cell — when there is no positive value, instead of being blank.**
+
+## Measured against the blank template, which agrees exactly
+
+41 fields carry an `AFSimple_Calculate` action. Per Part A row they are **Col. 4**
+(`PRD` Col.2×Col.3), **Col. 6** (`SUM` Col.3+Col.5) and **Col. 8** (`PRD` Col.7×Col.2), plus
+`94a`, `95`, `96`, `97`, `98`, `174`, `195`, `1156`. The template ships every one of them as `"0"`:
+
+```
+row0 cols 1..8:  "" "" "" "0" "" "0" "" "0"
+totals 94a,95,96,97,98:  "0" "0" "0" "0" "0"
+```
+
+**We cleared all eight columns of all eleven rows, and separately blanked `195` and `1156`.** So
+every calculated cell on our draft was empty where HUD's own form — and every filed copy — shows a
+zero. The earlier reasoning (*"every unused row kept its zeros and the filing went out showing 0
+units at $0 down the page"*) treated the zeros as template litter. They are the form's arithmetic.
+**Withdrawn.** The clear loop now blanks the five input columns and writes `0` to the three
+calculated ones; `195` and `1156` are left alone.
+
+The dollar sign splits the same way, which is why one rule could not cover both: on `174`, `195`
+and `1156` the `$` is **printed on the form beside the box**, so the field reads `0`; on `95`–`98`
+it is **inside the box**, so the field reads `$0`. That is visible in the screenshot and matches
+M64's fix.
+
+## The screenshot also corrected one of my own flags
+
+M64 recorded that the filed 2023 copy prints Part D Col. 2 as a bare `2` where we print `2 BR`.
+The live form prints **`2 BR`**. The bare `2` was that PM's own typing, not the convention.
+**Our format was right and that flag is withdrawn.** Part D Col. 3 reads `1,850` — the proposed
+rent — corroborating M63 a second time.
+
+## And a requirement that was never written down: the form must still work
+
+> *"the RS pdf you generate must actually be calculable, just like the original pdf provided by
+> HUD… PMs will download that RS and attempt to interact with it as if it's a normal RS form."*
+
+Measured, blank template vs our output: **232 fields both sides, 41 `/CO` entries both, 41
+calculate actions both, 103 format actions both, `NeedAppearances` unset both.** The machinery
+survives our fill intact. `test_gen.js` already asserted the 41 calculating fields, which is why —
+that is a case where the suite did its job. Now extended to the calculation ORDER, the format
+actions and `NeedAppearances`, because a flatten or an appearance-rebuild would break a PM's copy
+in a way no value check would notice. `test_gen.js` 87 → **91**.
+
+## A correction of my own, hours old
+
+M64's check *"and still no extension, because zero times anything is not a claim"* asserted the
+extension stays blank. Wrong: my reasoning was about what we may assert, the form's is about which
+cells are inputs and which are arithmetic. Col. 4 calculates, so it reads `0`. Corrected in place
+and labelled.
+
+## Still open on this page
+
+`174` Total Rent Loss Due to Non-Revenue Units and Part C's charge column were not audited against
+the screenshot — page 2 has not been read yet, and Part G (Matt's principals defect) is on it.
