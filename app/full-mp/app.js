@@ -5012,13 +5012,26 @@ function cyclesHtml(hasAction,hap){
   const cur=eff(dom)?cs.filter(c=>eff(c)===eff(dom)):[dom];
   const past=cs.filter(c=>cur.indexOf(c)<0);
   const gen=c=>!!(c.generated&&c.generated.at);
-  const stChip=c=>'<span class="cy-st'+(gen(c)?' ok':'')+'">'+(gen(c)?'Generated':'Draft')+'</span>';
+  /* Draft/Generated says only whether a button has been pressed. What a reader
+     wants is how far along the package is and what is holding it — which score.js
+     has computed all along, for the property ring, and which the cards had no way
+     to ask for one package at a time. Matt: "the generated tag tells you NOTHING.
+     what happened to that intensive code session creating the ultimate scoring
+     system for package completion?" */
+  const scOf=c=>{try{return mpdb.cycleScore?mpdb.cycleScore(c.id):null;}catch(e){return null;}};
+  const stChip=(c,s)=>(s?('<span class="cy-st'+(s.pct>=100?' ok':'')+'">'+s.pct+'%</span>'):'')
+    /* Generated stays, smaller and second: it is still a fact — this went out — it
+       is just not the answer to "how far along is it". */
+    +(gen(c)?'<span class="cy-gen">Generated</span>':'');
+  const capOf=s=>{const t=(s&&window.RCSScore&&window.RCSScore.scoreCaption)?window.RCSScore.scoreCaption(s):'';
+    return t?('<div class="cy-cap">'+esc(t)+'</div>'):'';};
   const card=c=>'<div class="cycard'+(c.dominant?' dom':'')+'" data-cyopen="'+c.id+'">'
     +'<div class="cy-h">'+progChips(c.programs)
     +'<b class="cy-t">'+esc(c.effective_date?('Effective '+fmtDateLong(c.effective_date)):(c.label||'No date'))+'</b>'
     +(c.dominant?'<span class="cy-dom">Current</span>':'')
-    +stChip(c)+'</div>'
+    +stChip(c,scOf(c))+'</div>'
     +((_due&&c.id===_due&&hap)?dueLine(hap):'')
+    +capOf(scOf(c))
     +cyclePane(c)
     /* The action comes INTO the card with the deadline. Merging the strip away
        without it would have left the one box the schedule points at as the only
@@ -5031,7 +5044,7 @@ function cyclesHtml(hasAction,hap){
   const row=c=>'<div class="cyrow" data-cyopen="'+c.id+'">'
     +'<span class="cyr-p">'+esc(c.programs.map(x=>PROG_NAMES[x]||String(x).toUpperCase()).join(' + '))+'</span>'
     +'<span class="cyr-e">'+esc(c.effective_date?fmtDateLong(c.effective_date):'No date')+'</span>'
-    +stChip(c)
+    +stChip(c,scOf(c))
     +'<button class="txtbtn del" data-cydel="'+c.id+'">Delete</button></div>';
   return cur.map(card).join('')
     +(past.length?('<div class="cyhist"><div class="cyh-t">Earlier</div>'

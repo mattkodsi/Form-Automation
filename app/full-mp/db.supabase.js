@@ -294,8 +294,8 @@ function makeSupabaseDb(client) {
   /* Reading the dominant cycle, falling back to the template. A cycle that HOLDS
      a key answers for it even when the value is blank — the package is what was
      frozen, not the template underneath it. */
-  function scoreRead(pid) {
-    const domId = dominantCycleId(pid);
+  function scoreRead(pid, cid) {
+    const domId = cid === undefined ? dominantCycleId(pid) : cid;
     const cells = domId && D.cycles[domId] ? D.cycles[domId].cells : null;
     /* With no package yet, the template IS what would be scored — and the
        template is BOTH buckets. Reading p.durable alone left the appraiser, the
@@ -308,20 +308,26 @@ function makeSupabaseDb(client) {
       return v == null ? '' : String(v);
     };
   }
-  function scoreOfPid(pid) {
+  /* Scored for ONE package, not for the property. The launcher lists every package
+     a property has and each is at a different point; scoring only the dominant
+     cycle left the rest with nothing to say but "Draft", which is not a fact about
+     how far along anything is. Matt: "the generated tag tells you NOTHING." Same
+     arithmetic, same tables, one argument more. */
+  function scoreOfCycle(pid, cid) {
     const p = D.props[pid]; if (!p || !SCORE) return { pct: 0, gate: 'profile', docsReady: 0, docsTotal: 0 };
-    const domId = dominantCycleId(pid); const cy = domId ? D.cycles[domId] : null;
+    const domId = cid; const cy = domId ? D.cycles[domId] : null;
     const u = new Set(); const scan = o => { for (const k in o) { const m = k.match(/^units\.(\d+)\./); if (m) u.add(+m[1]); } };
     scan(bucketsOf(pid)); if (cy) scan(cy.cells);
     const progs = cy ? (Array.isArray(cy.programs) ? cy.programs : String(cy.programs || '').split(',').filter(Boolean)) : [];
     const held = !!(cy && cy.rcs_doc && Object.keys(cy.rcs_doc).length);
-    const read = scoreRead(pid);
+    const read = scoreRead(pid, domId);
     return SCORE.packageScore(read, {
       programs: progs.length ? progs : ['rcs'], units: [...u].sort((a, b) => a - b), checklistLen: 17,
       hasLetterhead: dv(p, 'assets.letterhead_name') !== '', hasStudy: held, hasCaPkg: held,
       rateType: read('ocaf.rate_type'),
     });
   }
+  const scoreOfPid = pid => scoreOfCycle(pid, dominantCycleId(pid));
   const completenessOf = p => scoreOfPid(p.id).pct / 100;
   function unitCountOfPid(pid) {
     const domId = dominantCycleId(pid);
@@ -570,7 +576,10 @@ function makeSupabaseDb(client) {
         D = { props: {}, contacts: [], dir: [], activePid: null, cycles: {}, hap: D.hap, hapError: D.hapError, pmName: D.pmName };
       },
       /* ---- cycle surface ---- */
-      listCycles(pid) {
+      /* One package's score, for the launcher, which lists them all. */
+    cycleScore(cid) { const c = D.cycles[cid];
+      return c ? scoreOfCycle(c.property_id, cid) : { pct: 0, gate: 'profile', docsReady: 0, docsTotal: 0 }; },
+    listCycles(pid) {
         const dom = dominantCycleId(pid);
         return cyclesOf(pid).map(c => ({ id: c.id, programs: (c.programs || '').split(',').filter(Boolean), label: c.label, effective_date: c.effective_date, generated: c.generated || {}, dominant: c.id === dom, created_at: c.created_at, updated_at: c.updated_at }))
           .sort((a, b) => ((b.dominant ? 1 : 0) - (a.dominant ? 1 : 0)) || cyCompare(D.cycles[a.id], D.cycles[b.id]));
