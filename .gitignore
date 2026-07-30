@@ -18,3 +18,7 @@ _archive/the RA integrator/ra-port-2026-07-16/
 # decrypted corpus copies and generated packages — derived from Drive,
 # hold real contract numbers and rents, never committed
 _archive/corpus-cache/
+
+# rendered screenshots from `node app/full-mp/shots.js` — derived from the
+# build on every run, and binaries never belong in this repo
+app/full-mp/_shots/
