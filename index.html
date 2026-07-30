@@ -9296,25 +9296,6 @@ function wireCycles(){
   document.querySelectorAll('[data-cydel]').forEach(x=>x.onclick=(e)=>{e.stopPropagation();const id=x.getAttribute('data-cydel');
     dialogConfirm('Delete package','This permanently removes the package and its saved data. The property record is untouched.','Delete',true,async()=>{try{await mpdb.deleteCycle(id);renderLauncher();}catch(e){saveFailedModal(e);}});});
 }
-function bootstrapFirstCycle(p){
-  // migration: an existing single-record property becomes its own cycle #1
-  window.__cyBoot=window.__cyBoot||{};
-  if(mpdb.listCycles(activePid).length||window.__cyBoot[activePid])return;
-  if(!(p&&p.total_units>0))return;   // real unit data = a record worth migrating; a fresh name-only property is not
-  window.__cyBoot[activePid]=1;
-  const m=mpdb.getFlat(activePid);
-  const eff=(m['rent_schedule.date_rents_effective']&&m['rent_schedule.date_rents_effective'].value)||'';
-  const yr=(String(eff).match(/(\d{4})/)||[])[1]||String(new Date().getFullYear());
-  const pid=activePid;
-  /* This runs ONCE per property to turn an existing record into package #1. If a
-     package already holds rcs at that date the migration has nothing to do, and
-     saying "save failed" about a no-op would be alarming and wrong. */
-  Promise.resolve(mpdb.createCycle(pid,{full:true,programs:['rcs'],label:yr,effective_date:eff}))
-    .then(()=>{if(activePid===pid)renderLauncher();})
-    .catch(e=>{
-      if(e&&e.code==='DUP_PACKAGE_PROGRAM'){if(activePid===pid)renderLauncher();return;}
-      saveFailedModal(e);});
-}
 /* `pre` is the tracker's answer, handed in by the card's Start button:
    {program, effective, type, deadline}. It PRE-FILLS this dialog rather than
    bypassing it.
@@ -9442,7 +9423,6 @@ function renderLauncher(){
     +'<div class="lsec"><div class="lsec-t">Packages</div>'+_nu+cyclesHtml(_entry,_hap)
       +'<div class="cysoon">BBRA \u00b7 Budget-Based Rent Adjustment \u2014 not yet available</div></div>';
   wireCycles();
-  bootstrapFirstCycle(p);
   el('pRename').onclick=async()=>{
     // The tenant-facing name lives with the property, not the package, so it is
     // editable from here rather than only inside a form.
