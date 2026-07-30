@@ -16,7 +16,7 @@ const els={};
 global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>null,querySelectorAll:()=>[],createElement:()=>mk(),addEventListener(){},body:{classList:{toggle(){},contains(){return false;}}}};
 const fs=require('fs'),path=require('path'),os=require('os');
 
-const MIN_CHECKS=383;
+const MIN_CHECKS=420;
 let n=0,fails=0,verdict=null;
 const BAR='='.repeat(68);
 function fail(msg,err){
@@ -55,7 +55,7 @@ const _b=path.join(os.tmpdir(),'rcs_parse_test.'+process.pid+'.js');
 process.on('exit',()=>{try{fs.rmSync(_b,{force:true});}catch(e){}});
 fs.writeFileSync(_b,'function ocrHalf(b,p,skip){(globalThis.__HALF=globalThis.__HALF||[]).push({p:p,skip:(skip||[]).slice()});return Promise.resolve(null);}\n'
   +['templates.js','core.js','score.js','db.js','app.js','rcs.js'].map(x=>fs.readFileSync(path.join(_d,x),'utf8')).join('\n')
-  +'\nif(typeof module!=="undefined")Object.assign(module.exports,{__rsTextPageAt:rsTextPageAt,__rsTextPages:rsTextPages,__rsReadTextTier:rsReadTextTier,__rsTplAlign:rsTplAlign,__rsTplPremiseHolds:rsTplPremiseHolds,__rsFieldRects:rsFieldRects,__rsMapRects:rsMapRects,__rsBoxText:rsBoxText,__rsDropTplLabels:rsDropTplLabels,__rsTplRuns:rsTplRuns,__rsDropFormLines:rsDropFormLines,__rsFormLines:rsFormLines,__defUaSrc:defUaSrc,__defSafmrSrc:defSafmrSrc,__checkSeed:checkSeed,__CHECK_CONDITIONAL:CHECK_CONDITIONAL,__CHECKLIST_FLAT:CHECKLIST_FLAT});\n');
+  +'\nif(typeof module!=="undefined")Object.assign(module.exports,{__rsTextPageAt:rsTextPageAt,__rsTextPages:rsTextPages,__rsReadTextTier:rsReadTextTier,__rsTplAlign:rsTplAlign,__rsTplPremiseHolds:rsTplPremiseHolds,__rsFieldRects:rsFieldRects,__rsMapRects:rsMapRects,__rsTableA:rsTableA,__rsColHeads:rsColHeads,__rsTblCells:rsTblCells,__rsAssembleFields:rsAssembleFields,__rsLines:rsLines,__rsBoxText:rsBoxText,__rsDropTplLabels:rsDropTplLabels,__rsTplRuns:rsTplRuns,__rsDropFormLines:rsDropFormLines,__rsFormLines:rsFormLines,__defUaSrc:defUaSrc,__defSafmrSrc:defSafmrSrc,__checkSeed:checkSeed,__CHECK_CONDITIONAL:CHECK_CONDITIONAL,__CHECKLIST_FLAT:CHECKLIST_FLAT});\n');
 const app=require(_b);
 const R=global.window.RCSParse;
 const D_=_d+'/';
@@ -1111,6 +1111,93 @@ async function reader(file){
     T('db.js is held to the same precedence',typeof D.computeAnalysis==='function');
     const A=D.computeAnalysis(read,[0]);
     T('and its ceiling follows the study',A&&typeof A==='object'); }
+
+  /* ── a printing that is NOT ours: Part A read from the form's own table ────
+     fixture_rs_printings.json is the app's own reader's output for page 1 of two
+     REAL prior schedules, captured whole rather than trimmed:
+
+       Market Square  an alternate printing of HUD-92458 laid out at coordinates
+                      our template does not share. Values are proper characters,
+                      "Col. 1".."Col. 8" are single runs, and Part A carries the
+                      "Non- Section 8 Rents" divider.
+       The Pines      a scanner's OWN text layer over the same form. Every number
+                      arrives in fragments — "1," then "350" — the word "Col."
+                      and its digit are separate runs, and those two fragments
+                      occur AGAIN lower down inside "(Col. 4 Sum x 12)*", where
+                      the caption sits at x 169 and the column it names at 258.
+
+     Both pages are declined by the premise, which is asserted below: everything
+     in this block happens where the reader returned null before, so no copy
+     that reads today can read differently because of it.
+
+     Every figure was eye-read off the source PDF as an image, which is the only
+     ground truth these documents have. */
+  console.log('\n─ Part A off a printing that is not ours ─');
+  { const FX=JSON.parse(fs.readFileSync(path.join(_d,'fixture_rs_printings.json'),'utf8'));
+    const tplr=await app.__rsTplRuns();
+    const V=F=>(n=>String(F[String(n)]||'').trim());
+
+    // the premise declines both, so the table path is additive by construction
+    T('Market Square is declined by the premise',!app.__rsTplPremiseHolds(app.__rsTplAlign(FX.marketSquare.runs,tplr[0])));
+    T('The Pines is declined by the premise',!app.__rsTplPremiseHolds(app.__rsTplAlign(FX.thePines.runs,tplr[0])));
+
+    // ---- Market Square -----------------------------------------------------
+    const ms=FX.marketSquare.runs, msH=app.__rsColHeads(ms);
+    T('Market Square: the form numbers its own columns',!!msH);
+    eq('and all eight are found, left to right',msH&&msH.map(x=>Math.round(x)),[50,120,178,250,325,400,472,545]);
+    const msF=app.__rsTableA(ms);
+    T('Market Square: Part A reads',!!msF);
+    eq('the project name is the name and nothing else',msF['1'],'MARKET SQUARE');
+    eq('the FHA number is what the page prints',msF['2'],'N/A');
+    eq('the effective date is read off the head row',msF['3'],'02/04/2025');
+    eq('the printed monthly potential is captured',msF['95'],'$118,712');
+    eq('the divider occupies its own row',/^Non-\s*Section 8/.test(String(msF['15']||'')),true);
+    eq('and the row below it is the unassisted one',msF['23'],'1 Bedroom');
+    eq('the totals line did NOT become a twelfth unit type',msF['31'],undefined);
+    const msR=app.__rsAssembleFields(V(msF));
+    T('the rows reconcile against the printed total',!!msR);
+    eq('one Section 8 row',msR.units.map(u=>[u.type,u.count,u.rent,u.ua]),[['1 Bedroom',75,1562,0]]);
+    eq('one non-Section 8 row',msR.ns8.map(u=>[u.type,u.count,u.rent]),[['1 Bedroom',1,1562]]);
+    eq('the effective date normalises',msR.scalars['rs_date'],'2025-02-04');
+    eq('and the name reaches the record',msR.scalars['property.name'],'MARKET SQUARE');
+
+    // ---- The Pines ---------------------------------------------------------
+    const tp=FX.thePines.runs, tpH=app.__rsColHeads(tp);
+    T('The Pines: the columns are found though word and digit are separate runs',!!tpH);
+    eq('Col. 4 is the column at x 258, not the caption at x 169',tpH&&Math.round(tpH[3]),258);
+    eq('and all eight sit where the grid does',tpH&&tpH.map(x=>Math.round(x)),[59,130,190,258,327,396,461,530]);
+    const tpF=app.__rsTableA(tp);
+    T('The Pines: Part A reads',!!tpF);
+    eq('the project name loses the swallowed heading',tpF['1'],'The Pines fka Wood Glen Apartments');
+    eq('the effective date is read',tpF['3'],'7/1/2024');
+    eq('a number broken across runs is put back together',tpF['9'],'1,350');
+    eq('the printed monthly potential is captured',tpF['95'],'242,808');
+    const tpR=app.__rsAssembleFields(V(tpF));
+    T('the rows reconcile against the printed total',!!tpR);
+    eq('three rows, exactly as printed',tpR.units.map(u=>[u.type,u.count,u.rent,u.ua]),
+      [['1 BR',40,1350,67],['2 BR',72,1549,82],['3 BR',40,1932,98]]);
+    eq('and nothing is filed as unassisted',tpR.ns8.length,0);
+    eq('152 units, the figure the page prints',tpR.units.reduce((a,u)=>a+u.count,0),152);
+    eq('242,808 a month, the figure the page prints',tpR.units.reduce((a,u)=>a+u.count*u.rent,0),242808);
+
+    /* The gate is the whole safety argument for reading a scanner's characters,
+       so it is tested rather than assumed: the same rows against a total that
+       does not match them are refused, not filed. */
+    { const bad=Object.assign({},tpF);bad['95']='300,000';
+      eq('rows that do not add up to the printed total are refused',app.__rsAssembleFields(V(bad)),null); }
+
+    // ---- and it declines rather than guesses -------------------------------
+    eq('no runs, no table',app.__rsTableA([]),null);
+    eq('without the column numbers there is nothing to place cells against',
+      app.__rsTableA(ms.filter(r=>!/^col/i.test(String(r.s).trim()))),null);
+    eq('without Part A naming itself the page is not Part A',
+      app.__rsTableA(ms.filter(r=>!/^part\s*a/i.test(String(r.s).trim()))),null);
+    eq('without the totals caption there is nothing to reconcile against',
+      app.__rsTableA(ms.filter(r=>!/total\s*units|monthly\s*contract\s*rent/i.test(String(r.s).trim()))),null);
+    { /* eight headings crowded into 40 points are not eight columns */
+      const fake=[];for(let i=1;i<=8;i++)fake.push({s:'Col. '+i,x:100+i*5,y:600,d:0});
+      eq('columns that cannot span the form are not columns',app.__rsColHeads(fake),null); }
+  }
 
   finish();
 })().catch(e=>{fail('the suite threw',e);process.exit(1);});
