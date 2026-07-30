@@ -2656,3 +2656,100 @@ M60's record said the fix was complete. It was not: it fixed the reload and brok
 the register said nothing about the unsaved case because I had not measured it. The gap was named
 in M60's own critique paragraph and closed in the next wave, which is the only reason it was
 closed at all rather than found by Matt clicking.
+
+---
+
+# M62 — provenance is painted twice, and two cells were painted differently (plan phase 3d)
+
+**Status: FIXED.** Every colour defect in this register has been the full render and the keystroke
+repaint answering differently for the same cell. So rather than sample, enumerate: read every
+`[data-box]` and its computed `border-left-color`, fire `paintCell` on all of those keys, read them
+all again, and require that nothing moves.
+
+**Measured on a four-row package: 60 boxes, 2 moved by a whole colour.**
+
+```
+units.0.ua_source     render #b45309 overridden -> repaint #64748b new
+units.0.safmr_source  render #0f766e this package -> repaint #64748b new
+```
+
+`paintCell` handed a `*_source` key to `srcCellState`, which wants a `*_custom` key, got `null`,
+and fell through to judging the cell by that key's own history. The colour of a source-backed cell
+is a question about a **family** — the two offers, the custom value, and which source is chosen —
+which is the same thing the address cells solved with `groupOf`/`paintGroup`. The computation now
+lives in `uaCellColors(i)` / `safmrCellColors(i)`, called by both painters. After the fix: **0 of
+60 move, and 0 of 35 after a reload.**
+
+Rows 1–3 showed no disagreement for a reason worth recording: their `ua_source` key is not in the
+record yet, so `paintCell`'s `if(!s)return` declined them silently. The family branch is placed
+before that guard, so those rows repaint now too.
+
+## The test that almost made this suite a lie
+
+Written as `try{__paintCell(k)}catch(e){}`, the new block **passed on the code the defect was
+measured on**: `__paintCell` did not exist there, every call threw, the catch swallowed it, no cell
+was ever repainted, and so nothing could move. Step 4 of the wave — *run the new test against
+HEAD's source* — is the only reason that was caught. The block now asserts the door is reachable,
+counts the repaints, and reports which key threw. With the door alone grafted onto HEAD:
+
+```
+✗ no box changes colour when it is repainted: got ["units.0.ua_source","units.0.safmr_source"] want []
+```
+
+## One latent finding, pinned rather than allowlisted
+
+`tenant.mgmt_address` is a box painted from a key the record never holds — declared in
+`FIELD_SECTIONS` as `type:'mgmtaddr'`, absent from the store's `FIELDS`. That is the
+`ocaf.factor_source` shape exactly. It is **latent, not live**: every mutation of that cell goes
+through `renderBody`, so its colour is never stale on screen — but `paintCell`'s `if(!s)return`
+means that one cell can never be repainted, which is one keystroke handler away from the real
+defect. The check asserts the stray list is **exactly** `['tenant.mgmt_address']`, so a new stray
+name fails the suite and fixing this one also fails it and forces the note to move.
+
+`test_browser.js` +8, MIN_CHECKS 333 → **341**.
+
+---
+
+# M63 — three things Matt found by testing Colonial Village
+
+Reported 2026-07-30 from his own clicking, after M62 was measured. Two of the four are fixed here;
+one was already fixed on this branch and has simply never reached the app he runs; one is open.
+
+## FIXED — Part A columns 3 and 5 of a non-revenue row state a zero
+
+The register's own non-revenue comment spent three properties arguing about which rent to print in
+Column 3, and concluded it should print nothing until `nonrev.<i>.rent` could be trusted (Oak
+Center got right, Ebony and Morh got wrong). **Matt's instruction settles it, and reframes it: the
+question was never which rent, it is that a non-revenue unit earns no contract rent and carries no
+allowance.** Zero is a fact about the unit, not a guess about the document — which is exactly why
+it is safe where printing the stored figure was not. A blank left a reader to wonder whether a
+figure had been withheld.
+
+Two checks in `test_gen.js` asserted the old blank. **They asserted the old behaviour, so they are
+part of the fix:** updated, renamed, and the reason written beside them.
+
+## FIXED — Part D Column 3 is the rent being filed, not last term's
+
+Colonial Village's leasing office printed **1,147**, the figure read off the executed schedule,
+where the filing states **1,850**. `nonrev.<i>.rent` holds what the PRIOR schedule said; the
+proposed rent for the same unit type lives on its `units.<j>` row, and that is the contract rent
+for the term being filed. `nrProposed(i)` matches bedroom **and** bathroom first, bedroom alone
+second (a leasing office rarely states a bathroom), and falls back to the stored rent when no unit
+row matches at all, because a Part D row with an empty rent column is what the filed copies never
+show. The Part D total follows the same figure. `test_gen.js` +5 → **81 checks**.
+
+## ALREADY FIXED ON THIS BRANCH — the aka name in the RS Project Name
+
+`gen.js` writes field 1 as `(_pn&&_pa)?(_pn+'/'+_pa):(_pn||_pa)`, shipped in `03a5452`. `git show
+main:app/full-mp/gen.js | grep -c "_pn+'/'+_pa"` returns **0**; on this branch it returns **1**. So
+Matt's own guess was right — it is branch-only, and he runs `main`. Nothing to do but merge.
+
+## OPEN — the second Part G principal did not copy
+
+Colonial Village's executed schedule carries `Colonial Village Preservation GP, LLC` /
+`General Partner`, which copied, and `David Pearson, Vice President of the General Partner`, which
+did not. Note the shape of the one that failed: the name field appears to carry the **title inside
+it**, comma-separated, where the first row has them split across two fields. `rsPrin(i,f)` reads
+`_rsUpload.parsed.principals[i][f]`, so the question is whether the reader found a second principal
+at all or found it and dropped a field. **Not yet measured** — it needs Colonial Village's own
+executed schedule parsed and the `principals` array printed. Next wave.

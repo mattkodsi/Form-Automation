@@ -35,7 +35,7 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=333;   // 2026-07-30: +6 — a fill claimed after a reload has to still be on the form, and the other order (M61).
+const MIN_CHECKS=341;   // 2026-07-30: +8 — every box, repainted, keeps the colour the render gave it (M62, plan phase 3d).
                        // 2026-07-28: +35 — the home page's filter rail, driven by real clicks.
                        // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
                        // pristine (three seeds, two checks each). 2026-07-27: the unit-type cell
@@ -1489,6 +1489,115 @@ const FULL=process.argv.includes('--full');
       const afterD=await c.eval(SNAP);
       eq('schedule first, reload, then the study: the roster is the schedule’s',afterD.counts,['10','6','12','4']);
       eq('and the study still prices both variants of each type',afterD.proposed,['1000','1000','1500','1500']);
+    }
+
+    /* ── PHASE 3d — provenance is painted TWICE, and the two must agree ──────
+       Every colour defect in this register has been the full render and the
+       keystroke repaint answering differently for the same cell. Rather than
+       sample, enumerate: read every [data-box] and its computed
+       border-left-color, fire paintCell on every one of those keys, and read them
+       all again. Nothing may move.
+
+       Measured on the code before this: 2 of 60 boxes moved by a whole colour —
+       units.0.ua_source from #b45309 (overridden) to #64748b (new), and
+       units.0.safmr_source from #0f766e (this package) to the same grey. The
+       repaint handed a *_source key to srcCellState, which wants a *_custom key,
+       got null, and fell through to judging the cell by its own history. The
+       colour of a source-backed cell is a question about the family — the two
+       offers, the custom value, and which source is chosen — which is why that
+       computation now lives in one function both painters call. */
+    console.log('\n── every box keeps its colour when repainted ──────────');
+    {
+      const READ='return [...document.querySelectorAll("#viewForm [data-box]")].map(e=>({'
+        +'k:e.getAttribute("data-box"),cls:e.className,'
+        +'edge:getComputedStyle(e).borderLeftColor,bg:getComputedStyle(e).backgroundColor}));';
+      /* A study and a schedule that disagree about the allowance on row 0, so the
+         UA cell is genuinely in conflict and genuinely coloured — a cell that is
+         grey either way proves nothing about two painters agreeing. */
+      const study2={scalars:{'appr.firm':'Belfry Valuation'},firm:'belfry',units:[
+        {type:'Studio',br:0,ba:1,count:'',rent:'',ua:'40',proposed:'1000',safmr:'1200'},
+        {type:'1BR',   br:1,ba:1,count:'',rent:'',ua:'55',proposed:'1500',safmr:'1700'}]};
+      const rs2={scalars:{},partb:null,ns8:[],nonrev:[{type:'Laundry',rent:'250'}],
+        principals:[{name:'P One',title:'Manager'}],units:[
+        {type:'Studio',count:'10',rent:'800',ua:'50'},
+        {type:'Studio',count:'6', rent:'810',ua:'50'},
+        {type:'1BR',   count:'12',rent:'900',ua:'60'},
+        {type:'1BR',   count:'4', rent:'910',ua:'60'}]};
+
+      /* mkprop above is scoped to the reload block; this one is its twin. */
+      const mkp=async name=>await c.eval('const db=window.__t.__db();'
+        +'const r=await db.createProperty('+JSON.stringify(name)+');'
+        +'const np=(r&&(r.pid||r.id))||r;'
+        +'await window.__t.__openForm(np);'
+        +"const cy=await window.__t.__newCycle({programs:['rcs'],label:'COLOUR'});"
+        +'const nc=(cy&&(cy.cid||cy.id))||cy;'
+        +'await window.__t.__openCycleForm(np,nc);'
+        +'return {pid:np,cid:nc};');
+      await c.reload();await c.eval(HELPERS);
+      const idsE=await mkp('Colour test E');
+      await sleep(300);
+      await c.eval('window.__t.__setRsParsed('+JSON.stringify(rs2)+');window.__t.__rsFill();'
+        +'window.__t.__setRcsParsed('+JSON.stringify(study2)+');window.__t.__rcsFill();'
+        +'window.__t.__renderBody();return 1');
+      await sleep(600);
+
+      const shot=async()=>await c.eval(READ);
+      /* THE try/catch THAT ALMOST MADE THIS SUITE A LIE. Written as
+         `try{__paintCell(k)}catch(e){}`, this block PASSED on the code the defect
+         was measured on: __paintCell did not exist there, every call threw, the
+         catch swallowed it, no cell was ever repainted and so nothing could move.
+         A repaint that did not happen is not agreement. Count them, and say which
+         key threw. */
+      T('the repaint is reachable at all',
+        await c.eval('return typeof window.__t.__paintCell==="function"'));
+      const repaintAll=async boxes=>{
+        const r=await c.eval('let n=0;const err=[];'
+          +'for(const k of '+JSON.stringify(boxes.map(b=>b.k))+'){'
+          +'try{window.__t.__paintCell(k);n++;}catch(e){err.push(k+": "+(e&&e.message||e));}}'
+          +'return {n,err};');
+        await sleep(200);
+        return r;};
+      const drift=(a,b)=>{const m=new Map(b.map(x=>[x.k,x]));
+        return a.filter(x=>{const y=m.get(x.k);return y&&(y.edge!==x.edge||y.bg!==x.bg);}).map(x=>x.k);};
+
+      const b1=await shot();
+      T('a four-row package draws the whole box inventory',b1.length>=50);
+      const rp1=await repaintAll(b1);
+      eq('and every box was actually repainted, none of them throwing',rp1.err,[]);
+      eq('all of them',rp1.n,b1.length);
+      eq('no box changes colour when it is repainted',drift(b1,await shot()),[]);
+
+      /* The typo class phase 3d was written for: ocaf.factor_source vs
+         ocaf.factor_src — a box painted from a key nothing else in the app uses.
+         Address groups are named by their group, and a per-row key is simply
+         unwritten until the row has that value, so both are legitimate; anything
+         else absent from the record is a name that came from nowhere. */
+      const held=new Set(await c.eval('return Object.keys(window.__t.__form())'));
+      const stray=b1.map(x=>x.k).filter(k=>!held.has(k)
+        &&!/^(property|ca|appr)\.addr$/.test(k)
+        &&!/^(units|nonrev|ns8|principals)\.\d+\./.test(k));
+      /* EXACTLY ONE, pinned rather than allowlisted, so a NEW stray name still
+         fails and so fixing this one also fails and forces this comment to move.
+         tenant.mgmt_address is declared in FIELD_SECTIONS (type:'mgmtaddr') but is
+         not in the store's FIELDS, so the record never holds it. Latent, not live:
+         every mutation of that cell goes through renderBody, so its colour is
+         never stale on screen — but paintCell's `if(!s)return` means that one cell
+         can never be repainted, which is one keystroke handler away from the
+         ocaf.factor_source defect. Fixing it means giving the box a key the record
+         holds AND a shared colour function, exactly as the UA cell now has,
+         because the generic repaint path would otherwise disagree with the
+         render's `ovSrc?CLR.overridden:groupColors(ADDR)`. */
+      eq('the only box painted from a non-key is the one known to be',stray,['tenant.mgmt_address']);
+
+      /* …and again after a reload, because the record the render reads is rebuilt
+         from storage there and the repaint is not. */
+      await c.reload();await c.eval(HELPERS);
+      await c.eval('await window.__t.__openCycleForm('+JSON.stringify(idsE.pid)+','+JSON.stringify(idsE.cid)+');return 1');
+      await sleep(500);
+      const b2=await shot();
+      const rp2=await repaintAll(b2);
+      eq('every box repaints after a reload too',rp2.n,b2.length);
+      eq('and none changes colour when repainted after a reload',drift(b2,await shot()),[]);
     }
 
     /* ── the OCAF / UAF package states its own requirements ─────────────────

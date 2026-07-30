@@ -346,7 +346,15 @@ const addrLine=(street,city,state,zip)=>{
          is trustworthy this row prints its type and its count and stops. */
       else { const nn=nmv(g('nonrev.'+i+'.num_units'))||1;
         const nrType=utype(g('nonrev.'+i+'.br'),g('nonrev.'+i+'.ba'));
-        T(base, nrType||g('nonrev.'+i+'.use')); T(base+1,nn); ptU+=nn; }
+        /* COLUMNS 3 AND 5 STATE A ZERO. Matt, 2026-07-30, and it settles the
+           dilemma the comment above spent three properties on: the question was
+           never which rent to print here, it was that a non-revenue unit earns no
+           CONTRACT RENT and carries no ALLOWANCE. Zero is not a guess about the
+           document, it is the fact about the unit — which is why it is safe where
+           printing nonrev.<i>.rent was not (Ebony's rents at $0 and we store
+           3,700; Morh's is 5,100 for the new term and we store last year's 4,763).
+           Blank left a reader to wonder whether the figure was withheld. */
+        T(base, nrType||g('nonrev.'+i+'.use')); T(base+1,nn); T(base+2,'0'); T(base+4,'0'); ptU+=nn; }
     });
     // Totals count every unit — non-S8 rents add into the contract rent
     // potential like S8 rows, and non-rev units count even when trimmed
@@ -399,7 +407,28 @@ const addrLine=(street,city,state,zip)=>{
     if(g('owner.entity_type')==='Other (specify)'){ C(204); T(205,g('owner.entity_type_other')); }
     const nrIdx=[...new Set(Object.keys(rec).map(k=>(k.match(/^nonrev\.(\d+)\./)||[])[1]).filter(x=>x!=null))].sort((a,b)=>a-b);
     const dUse=[159,162,165,168,171],dType=[160,163,166,169,172],dRent=[161,164,167,170,173]; let dr=0,trl=0;
-    nrIdx.forEach(i=>{ if(dr>4)return; const use=g('nonrev.'+i+'.use'),br=g('nonrev.'+i+'.br'),ba=g('nonrev.'+i+'.ba'),rent=g('nonrev.'+i+'.rent'); if(!(use||br||ba||rent||nmv(g('nonrev.'+i+'.num_units'))))return; T(dUse[dr],use); T(dType[dr],(String(br).replace(/(\d+)\s*BR/i,'$1 BR')+(ba?'/'+ba:'')).replace(/^\//,'')); T(dRent[dr],(rent!==''&&rent!=null)?money(rent):''); trl+=nmv(rent)*(nmv(g('nonrev.'+i+'.num_units'))||1); dr++; });
+    /* PART D COLUMN 3 IS THE CONTRACT RENT FOR THE TERM BEING FILED, so it is the
+       PROPOSED rent for that unit type — not the rent the unit carried last term.
+       Matt, 2026-07-30: Colonial Village's leasing office printed 1,147, which is
+       the figure read off the EXECUTED schedule, where the filing states 1,850.
+       nonrev.<i>.rent holds what the prior schedule said; the proposed figure for
+       the same bedroom/bath type lives on its units.<j> row, so that is where this
+       reads from. Bedroom AND bathroom first, bedroom alone second — a leasing
+       office rarely states a bathroom count. With no matching type at all it falls
+       back to the stored rent rather than printing nothing, because a Part D row
+       with an empty rent column is what the filed copies never show. */
+    const nrProposed=i=>{ const br=String(g('nonrev.'+i+'.br')||''),ba=String(g('nonrev.'+i+'.ba')||'');
+      if(!br)return null;
+      const js=[...new Set(Object.keys(rec).map(k=>(k.match(/^units\.(\d+)\./)||[])[1]).filter(x=>x!=null))].sort((a,b)=>a-b);
+      const hit=js.find(j=>String(g('units.'+j+'.br')||'')===br&&String(g('units.'+j+'.ba')||'')===ba);
+      const j=hit!=null?hit:js.find(j2=>String(g('units.'+j2+'.br')||'')===br);
+      if(j==null)return null;
+      const v=g('units.'+j+'.proposed');
+      return (v===''||v==null)?null:Math.round(nmv(v)); };
+    nrIdx.forEach(i=>{ if(dr>4)return; const use=g('nonrev.'+i+'.use'),br=g('nonrev.'+i+'.br'),ba=g('nonrev.'+i+'.ba'),rent=g('nonrev.'+i+'.rent'); if(!(use||br||ba||rent||nmv(g('nonrev.'+i+'.num_units'))))return; T(dUse[dr],use); T(dType[dr],(String(br).replace(/(\d+)\s*BR/i,'$1 BR')+(ba?'/'+ba:'')).replace(/^\//,''));
+      const _dp=nrProposed(i); const _dv=_dp!=null?_dp:((rent!==''&&rent!=null)?nmv(rent):null);
+      T(dRent[dr],_dv!=null?money(_dv):'');
+      trl+=(_dv||0)*(nmv(g('nonrev.'+i+'.num_units'))||1); dr++; });
     T(174, dr?money(trl):'');
     // Part G: the principals roster fills the name (left) / title (right) rows in order
     { const gL=[206,208,210,212,214,216,218,220,222,224,226], gR=[207,209,211,213,215,217,219,221,223,225,227];

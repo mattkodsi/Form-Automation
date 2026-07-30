@@ -226,11 +226,16 @@ function record(extra){
     const base2=7+3*8;
     const row=[V(base),V(base2)].find(x=>/BR|Manager/.test(x))===V(base)?base:base2;
     eq('column 1 carries the unit type',V(row),'3 BR / 1 BA');
-    /* The rent stays OFF this row until the stored figure can be trusted --
-       see the comment at the non-revenue branch in gen.js. Printing it made
-       Oak Center right and Ebony and Morh wrong. */
-    eq('and does not print a rent we do not trust',V(row+2),'');
-    eq('nor an extension',V(row+3),'');
+    /* UPDATED 2026-07-30 on Matt's instruction: columns 3 and 5 STATE A ZERO.
+       These two checks previously asserted a blank, which was the old behaviour.
+       The dilemma the gen.js comment spent three properties on was never which
+       rent to print here — it was that a non-revenue unit earns no CONTRACT RENT
+       and carries no ALLOWANCE. Zero is a fact about the unit rather than a guess
+       about the document, which is why it is safe where printing the stored rent
+       was not, and why a blank left a reader wondering if a figure was withheld. */
+    eq('column 3 states a zero: this unit earns no contract rent',V(row+2),'0');
+    eq('and column 5 a zero: it carries no allowance',V(row+4),'0');
+    eq('and still no extension, because zero times anything is not a claim',V(row+3),'');
     eq('so the potential is the Section 8 rows alone',V('95'),(10*900+6*1100).toLocaleString('en-US'));
     eq('and the unit count still counts it',V('94a'),'17');
     eq('while Part D still names the use',V(159),"Manager's Unit"); }
@@ -242,9 +247,45 @@ function record(extra){
     const f=(await PDFDocument.load(by)).getForm();
     const V=id=>{try{return f.getTextField(String(id)).getText()||'';}catch(e){return null;}};
     const row=/BR/.test(V(7+2*8))?7+2*8:7+3*8;
-    eq('a non-revenue row with no rent prints none',V(row+2),'');
+    /* UPDATED 2026-07-30, same instruction. Ebony's non-revenue unit rents at $0,
+       and a printed 0 is now what the form says rather than a blank. */
+    eq('a non-revenue row states a zero rent rather than nothing',V(row+2),'0');
     eq('and adds nothing to the potential',V('95'),(10*900+6*1100).toLocaleString('en-US'));
     eq('and column 1 is still the type, not the use',V(row),'2 BR / 1 BA'); }
+
+  /* ── PART D COLUMN 3 IS THE RENT BEING FILED, NOT LAST TERM'S ────────────
+     Matt, testing Colonial Village 2026-07-30: its leasing office printed 1,147
+     — the figure read off the EXECUTED schedule — where the filing states 1,850.
+     nonrev.<i>.rent holds what the prior schedule said; the proposed rent for the
+     same unit type lives on its units.<j> row, and that is the contract rent for
+     the term being filed. */
+  console.log('\n─ Part D column 3 is the proposed rent for that unit type ─');
+  { const r=record({'nonrev.0.use':'Leasing Office','nonrev.0.br':'1BR','nonrev.0.ba':'1BA',
+      'nonrev.0.num_units':'1','nonrev.0.rent':'1147',
+      'units.0.br':'1BR','units.0.ba':'1BA','units.0.num_units':'10','units.0.proposed':'1850',
+      'units.1.br':'2BR','units.1.ba':'1BA','units.1.num_units':'6','units.1.proposed':'2200'});
+    const by=await G.fillRentSchedule(rsBytes,r);
+    const f=(await PDFDocument.load(by)).getForm();
+    const V=id=>{try{return f.getTextField(String(id)).getText()||'';}catch(e){return null;}};
+    eq('Part D names the use',V(159),'Leasing Office');
+    eq('and prints the PROPOSED rent for its unit type, not the executed one',V(161),'1,850');
+    /* The bathroom is what distinguishes two variants of a bedroom count, so a
+       type that states one must not match a row that states a different one. */
+    const r2=record({'nonrev.0.use':'Model','nonrev.0.br':'2BR','nonrev.0.ba':'1BA',
+      'nonrev.0.num_units':'1','nonrev.0.rent':'999',
+      'units.0.br':'1BR','units.0.ba':'1BA','units.0.num_units':'10','units.0.proposed':'1850',
+      'units.1.br':'2BR','units.1.ba':'1BA','units.1.num_units':'6','units.1.proposed':'2200'});
+    const f2=(await PDFDocument.load(await G.fillRentSchedule(rsBytes,r2))).getForm();
+    const V2=id=>{try{return f2.getTextField(String(id)).getText()||'';}catch(e){return null;}};
+    eq('a two-bedroom non-revenue unit takes the two-bedroom figure',V2(161),'2,200');
+    /* And with no unit type to match, the stored rent is better than an empty
+       column — the filed copies never show one. */
+    const r3=record({'nonrev.0.use':'Storage','nonrev.0.br':'4BR','nonrev.0.ba':'2BA',
+      'nonrev.0.num_units':'1','nonrev.0.rent':'750',
+      'units.0.br':'1BR','units.0.ba':'1BA','units.0.num_units':'10','units.0.proposed':'1850'});
+    const f3=(await PDFDocument.load(await G.fillRentSchedule(rsBytes,r3))).getForm();
+    const V3=id=>{try{return f3.getTextField(String(id)).getText()||'';}catch(e){return null;}};
+    eq('a type no unit row matches falls back to the stored rent',V3(161),'750'); }
 
   console.log('\n─ column 5 is the allowance for the term being filed ─');
   /* Sycamore Green printed 42/50 where its own study, its UA workbook, its

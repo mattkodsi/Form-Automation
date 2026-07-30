@@ -5,7 +5,54 @@ production deploy).
 
 ---
 
-> # RESUME HERE — 2026-07-30, wave 2 of the overnight form audit. M60 and M61 are DONE.
+> # RESUME HERE — 2026-07-30, wave 3. M62 done, and THREE OF MATT'S FOUR FINDINGS.
+>
+> ## MATT REPORTED FOUR THINGS FROM TESTING COLONIAL VILLAGE — status of each
+>
+> 1. **aka name in the RS Project Name** — ALREADY FIXED on this branch (`03a5452`), and absent
+>    from `main`, which is what he runs. `git show main:app/full-mp/gen.js | grep -c "_pn+'/'+_pa"`
+>    is 0; here it is 1. **Nothing to do but merge this branch.**
+> 2. **Part A columns 3 and 5 of a non-revenue row must state a zero** — FIXED (M63). It also
+>    settles the three-property argument the old non-revenue comment was stuck in.
+> 3. **Part D column 3 must be the PROPOSED rent, not the current** — FIXED (M63). Colonial
+>    Village's leasing office printed 1,147 where the filing says 1,850.
+> 4. **The second Part G principal did not copy** — **OPEN, and it is the next thing to do.**
+>    `Colonial Village Preservation GP, LLC` / `General Partner` copied; `David Pearson, Vice
+>    President of the General Partner` did not. The failing row looks like it carries its TITLE
+>    INSIDE THE NAME, comma-separated, where the row that worked has them in two fields. Parse
+>    Colonial Village's own executed schedule (code 75708) and print `parsed.principals` — that
+>    single measurement says whether the reader found one principal or found two and dropped a
+>    field. Do NOT guess between those; they need different fixes.
+>
+> ## TWO AGENTS ARE RUNNING, both on Matt's explicit instruction
+>
+> - **Property-name provenance** (Cherry Garden: `"Oak Park Apartments (t/b/k/a Cherry Garden
+>   Apartments)"`). Read-and-document only; it writes
+>   `docs/superpowers/plans/2026-07-30-property-name-provenance.md` and changes no source. It
+>   carries a real DECISION FOR MATT about whether the HAP tracker, the executed RS, or the PM's
+>   own edit is definitive for Property Name, and what that means for Kinley's database.
+> - **Tab / shift-tab order and dropdown focus visibility**, in its own isolated worktree, on its
+>   own branch, NOT merged. Column-major within a section, then the next section; and a focus
+>   indicator whose measured geometry matches the trigger's.
+>
+> ## M62 — provenance is painted twice and two cells were painted differently (phase 3d)
+>
+> All 60 boxes of a four-row package enumerated: **2 moved by a whole colour** when repainted —
+> `units.0.ua_source` orange→grey, `units.0.safmr_source` teal→grey. `paintCell` asked
+> `srcCellState` for a `*_source` key, got null, and judged the cell by its own history. The colour
+> of a source-backed cell is a family question, so it now lives in one function both painters call.
+> **0 of 60 move now, 0 of 35 after a reload.** One latent finding pinned, not allowlisted:
+> `tenant.mgmt_address` is a box painted from a key the record never holds — the
+> `ocaf.factor_source` shape, latent because that cell always re-renders.
+>
+> **And the new test passed on the broken code first time round**, because a `try/catch` swallowed
+> the missing `__paintCell` door so no repaint ever fired. Step 4 caught it. It now asserts the
+> door is reachable and counts the repaints. `test_browser.js` 333 → **341**, `test_gen.js` 76 →
+> **81**.
+>
+> ---
+>
+> ## WAVE 2 — M60 and M61 are DONE.
 >
 > **M61 fixed a defect M60 introduced, found by M60's own critique.** Making the fill record
 > durable did not ask what happens when the FILL does not survive the reload — a fill applied and
