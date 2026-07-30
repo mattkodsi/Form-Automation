@@ -1854,6 +1854,149 @@ function rsMapRects(pageRuns,rects,tplPg){ // one page's runs -> {fieldId: text}
     const v=rsBoxText(inside,tplPg);
     if(v)out[id]=v;}
   return out;}
+/* ---- a printing that is NOT ours: Part A, read from the form's own table ----
+   Eight of the corpus's prior schedules print HUD-92458 at coordinates that are
+   not our template's, and the premise above rightly declines them. What the
+   register recorded as "measure the offset and correct for it -- refused" is
+   worth restating precisely, because it decides the shape of everything below.
+   Fitting each axis independently over a page's own label correspondences --
+   which is a more generous model than the similarity fit tier 3 uses -- still
+   leaves a median error of 3.2 to 9.0 points on those pages, with maxima of 13
+   to 16: more than one printed row. On Sample Property the implied shift walks
+   from -1.4pt at the top of the page to -45pt at the bottom, because that
+   printing sets Part B's rows on a 14.4pt pitch where ours uses 10.92. These
+   are different PRINTINGS of the form, not displaced copies of ours, so no
+   transform of any order will put our boxes over their cells. Nine pages, four
+   distinct printings, each shared by two or more properties.
+
+   What every printing does share is the form's own text. HUD numbers the
+   columns of Part A on the page -- "Col. 1" through "Col. 8" -- names the Part
+   above them and its totals below, and prints one unit type per line. So Part A
+   can be read with no reference to our geometry at all: columns from the page's
+   own headings, rows from the page's own baselines, and the result handed to the
+   same rsAssembleFields, whose reconciliation against the schedule's own
+   printed monthly total is what decides whether the read is believed. That gate
+   is why this can be attempted at all on a scanner's text layer, where the
+   characters are themselves a guess: Sample Property's read $111,198 where
+   the page prints $91,922, and a row set that does not add up to the printed
+   total is refused rather than filed.
+
+   Reached ONLY where the reader returns null today, so no copy that reads now
+   can read differently. */
+const RS_TBL_TOL=2.2;      // runs within this many points of one baseline are one printed line
+const RS_TBL_SPLIT=40;     // an x gap this wide separates two entries on the head row
+const RS_TBL_MINGAP=25;    // narrower than this, two "columns" are one column and a stray
+const RS_TBL_SPAN=380;     // Col. 1 to Col. 8 measures 471-494pt on every printing seen
+const rsTblFlat=s=>String(s==null?'':s).replace(/\s+/g,'');
+const RS_TBL_NUM=/^\$?\(?-?[\d,]*\d(?:\.\d{1,2})?\)?$/;
+const rsTblIsNum=s=>{const t=rsTblFlat(s);return t!==''&&RS_TBL_NUM.test(t);};
+function rsColHeads(runs){
+  /* The form prints its own column numbers over Part A. On one printing each is
+     a single run ("Col. 4"); on a scanner's text layer the word and its digit
+     are separate runs, and the same two fragments occur again further down
+     inside "(Col. 2 x Col. 3)" and "(Col. 4 Sum x 12)*". So every candidate is
+     collected and the columns are then taken in order, each the leftmost that
+     still sits right of the one before -- the only assignment a table admits,
+     which discards the strays without having to recognise them as strays. On
+     The Pines that alone is the difference between reading Col. 4 at x 258,
+     where its figures are, and at x 169, where the yearly-total caption is. */
+  const cand={};
+  const add=(n,x)=>{if(n>=1&&n<=8)(cand[n]=cand[n]||[]).push(x);};
+  runs.forEach(r=>{const t=String(r.s).trim();
+    const m=t.match(/^col[.,]?\s*([1-8])$/i);
+    if(m){add(+m[1],r.x);return;}
+    if(!/^col[.,]?$/i.test(t))return;
+    let best=null;
+    runs.forEach(o=>{if(o===r||Math.abs(o.y-r.y)>RS_TBL_TOL)return;
+      const d=o.x-r.x;if(d<=0||d>22)return;
+      if(!/^[1-8]$/.test(String(o.s).trim()))return;
+      if(!best||o.x<best.x)best=o;});
+    if(best)add(+String(best.s).trim(),r.x);});
+  const heads=[];let prev=-1e9;
+  for(let n=1;n<=8;n++){
+    const xs=(cand[n]||[]).filter(x=>x>prev+(n>1?RS_TBL_MINGAP:0)).sort((a,b)=>a-b);
+    if(!xs.length)return null;
+    heads.push(xs[0]);prev=xs[0];}
+  return (heads[7]-heads[0])>=RS_TBL_SPAN?heads:null;}
+function rsTblCells(lineRuns,heads){ // one printed line -> one string per column
+  const cells=[];for(let i=0;i<8;i++)cells.push([]);
+  lineRuns.forEach(r=>{let c=0;
+    for(let i=1;i<8;i++)if(r.x>=(heads[i-1]+heads[i])/2)c=i;
+    cells[c].push(r);});
+  /* Joined with a space and then measured, because a scanner's layer breaks one
+     number across runs -- "1," then "350" -- while a unit type genuinely reads
+     "1 BR". A numeric cell has its spaces taken back out (rsNum reads
+     "1,350"); a text cell keeps them. */
+  return cells.map(rs=>rs.sort((a,b)=>a.x-b.x).map(r=>String(r.s)).join(' ').replace(/\s+/g,' ').trim());}
+function rsTableA(runs){ // a page's positioned runs -> {fieldId: text} for Part A, or null
+  if(!runs||runs.length<20)return null;
+  const L=rsLines(runs,RS_TBL_TOL);
+  const at=re=>L.find(l=>re.test(l.t));
+  const pa=at(/^\s*part\s*a\b/i);if(!pa)return null;
+  const pb=at(/^\s*part\s*b\b/i), yBot=pb?pb.y:0;
+  const heads=rsColHeads(runs.filter(r=>r.y<pa.y&&r.y>yBot));
+  if(!heads)return null;
+  /* Where Part A's rows stop: the form's own totals caption. Taking the higher
+     of the two it prints matters -- "Total Units 76 $118,712" sits BELOW
+     "Monthly Contract Rent Potential" and carries three numeric cells, so a row
+     test alone would file the schedule's total as a twelfth unit type. */
+  let yTot=0;
+  L.forEach(l=>{if(l.y<=yBot)return;
+    if(/monthly\s*contract\s*rent\s*potential/i.test(l.t)||/total\s*units/i.test(l.t))
+      if(l.y>yTot)yTot=l.y;});
+  if(!yTot)return null;
+  const F={};
+  /* A row of the table, told from the header block above it by content: three or
+     more of columns 2-8 holding nothing but a figure. Every caption line fails
+     that test, including the fragmented ones, and no unit row does. */
+  let slot=0;
+  L.forEach(l=>{
+    if(l.y>=pa.y||l.y<=yTot||slot>=11)return;
+    const c=rsTblCells(l.r,heads);
+    if(/non[\s\-\u2010-\u2015]*section\s*8/i.test(l.t)){
+      // the divider itself occupies a row, because rsRows reads it to know that
+      // everything below it is unassisted
+      F[String(7+slot*8)]=l.t.replace(/\s+/g,' ').trim();slot++;return;}
+    let nums=0;for(let i=1;i<8;i++)if(rsTblIsNum(c[i]))nums++;
+    if(nums<3)return;
+    if(!(rsNum(rsTblFlat(c[2]))>0))return;   // an all-zero row is a blank row on the form
+    const b=7+slot*8;
+    for(let i=0;i<8;i++){const v=i===0?c[i]:rsTblFlat(c[i]);
+      if(v)F[String(b+i)]=v;}
+    slot++;});
+  if(!slot)return null;
+  // the printed monthly potential: the first figure the totals band carries in
+  // Col. 4. rsAssembleFields reconciles the rows against it, and refuses them if
+  // they do not agree.
+  for(let i=0;i<L.length;i++){const l=L[i];
+    if(l.y>yTot||l.y<=yBot)continue;
+    const c=rsTblCells(l.r,heads);
+    if(rsTblIsNum(c[3])){F['95']=rsTblFlat(c[3]);break;}}
+  const h=rsTableHead(L);if(h)Object.keys(h).forEach(k=>{F[k]=h[k];});
+  return F;}
+function rsTableHead(L){ // the head row: project name, FHA number, effective date
+  /* Read off the page's own label line rather than out of a box, which is also
+     what finally settles the swallowed project names: there is no box to
+     over-reach, so "Part A - Apartment Rents" cannot join the name. */
+  const i=L.findIndex(l=>/project\s*name/i.test(l.t));
+  if(i<0)return null;
+  const lab=L[i],val=L[i+1];
+  if(!val||lab.y-val.y>26)return null;
+  const fha=lab.r.filter(r=>/fha/i.test(String(r.s))).map(r=>r.x).sort((a,b)=>a-b)[0];
+  const cut=(fha==null?300:fha)-8;
+  const rs=val.r.slice().sort((a,b)=>a.x-b.x);
+  const name=rs.filter(r=>r.x<cut).map(r=>String(r.s)).join(' ').replace(/\s+/g,' ').trim();
+  const rest=[];                            // the two entries right of the name, split on a wide gap
+  rs.filter(r=>r.x>=cut).forEach(r=>{const g=rest[rest.length-1];
+    if(g&&r.x-g.x<=RS_TBL_SPLIT){g.t+=String(r.s);g.x=r.x;}
+    else rest.push({x:r.x,t:String(r.s)});});
+  const out={};
+  if(name)out['1']=name;
+  const di=rest.findIndex(g=>/^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(rsTblFlat(g.t)));
+  if(di>=0)out['3']=rsTblFlat(rest[di].t);
+  const fi=rest.findIndex((g,k)=>k!==di&&rsTblFlat(g.t));
+  if(fi>=0)out['2']=rest[fi].t.replace(/\s+/g,' ').trim();
+  return Object.keys(out).length?out:null;}
 function rsPartD(V){ // Part D non-revenue-producing space: gen.js's dUse/dType/dRent ids
   const dUse=[159,162,165,168,171],dType=[160,163,166,169,172],dRent=[161,164,167,170,173];
   const out=[];
@@ -2058,16 +2201,35 @@ async function rsReadTextTier(pages,bytes,onStep){ // flattened copy -> same par
      This comes BEFORE the checkbox assist below on purpose: a page we have
      already decided we cannot place must not be sent out to be scanned for ticks
      we could not have located anyway. */
-  if(!rsTplPremiseHolds(rsTplAlign(pages[pg0],tplr&&tplr[0])))return null;
   const clean=(rs,tp)=>rsDropTplLabels(rs,tplr&&tplr[tp]);
-  const F=Object.assign(rsMapRects(clean(pages[pg0],0),rects,0),pg1>=0?rsMapRects(clean(pages[pg1],1),rects,1):{});
+  const okA=rsTplPremiseHolds(rsTplAlign(pages[pg0],tplr&&tplr[0]));
+  /* The premise is asked of EACH half, because each half is read through our
+     own rectangles. Sample Property and Mapleview are the case that requires it
+     from the other side: their page 1 is a printing we cannot place, while
+     their page 2 is ours exactly (43 of 43 labels), so the halves have to be
+     judged apart or the certification page is lost with the rent roll. On
+     every copy in the corpus whose front half passes, the back half passes
+     too, so this costs nothing that reads today. */
+  const okB=pg1>=0&&rsTplPremiseHolds(rsTplAlign(pages[pg1],tplr&&tplr[1]));
+  let F=null,viaTable=false;
+  if(okA)F=rsMapRects(clean(pages[pg0],0),rects,0);
+  else{
+    /* Not our printing. Read Part A out of the form's own table instead of
+       declining the document outright -- and if that cannot be done either,
+       decline exactly as before. */
+    F=rsTableA(pages[pg0]);if(!F)return null;viaTable=true;}
+  if(okB)Object.assign(F,rsMapRects(clean(pages[pg1],1),rects,1));
   let s8=rsS8FromPages(pages);
   // Ticks are often drawings rather than glyphs — this copy's Part B boxes hold no
   // text whatsoever — so a page that reads perfectly well can still be blind to
   // every checkbox on it. When not one is found, ask Azure for that page's
   // selection marks and take ONLY the boxes from it; the values stay with the
   // text layer, which reads them better than OCR does.
-  if(bytes&&typeof ocrHalf==='function'&&typeof OCR_CHECKBOX!=='undefined'
+  /* Never on a page the table reader had to read: registration is what ocrHalf
+     does first, and it fails on these printings by the same measurement that
+     sent us to the table. Asking anyway spends Azure calls to place values by a
+     fit we have already shown does not hold. */
+  if(!viaTable&&bytes&&typeof ocrHalf==='function'&&typeof OCR_CHECKBOX!=='undefined'
      &&!OCR_CHECKBOX.some(id=>rects[String(id)]&&rects[String(id)].pg===0&&F[String(id)])){
     let ticks=null;try{ticks=await ocrHalf(bytes,0,[],(i,n)=>onStep&&onStep(i,n,'ticks'));}catch(e){}
     if(ticks){
