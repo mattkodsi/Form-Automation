@@ -101,12 +101,9 @@ function unitIndices(form) {
     never diverge. */
 function safmrResolvedFrom(val, i) {
   const sh = num(val('units.' + i + '.safmr_hud')), sr = num(val('units.' + i + '.safmr_rcs'));
-  // Same precedence as app.js defSafmrSrc: the study's printed table first, the
-  // HUD pull second. The team used the study on every property audited, and the
-  // pull returns different figures on different runs.
-  const src = val('units.' + i + '.safmr_source') || (sr > 0 ? 'rcs' : (sh > 0 ? 'hud' : 'custom'));
+  const src = val('units.' + i + '.safmr_source') || (sh > 0 ? 'hud' : (sr > 0 ? 'rcs' : 'custom'));
   if (src === 'custom') return num(val('units.' + i + '.safmr_custom'));
-  return src === 'rcs' ? (sr || sh) : (sh || sr);
+  return src === 'rcs' ? (sr || sh) : (sh || sr); // HUD trumps by default
 }
 function computeAnalysis(form) {
   const val = k => (form[k] ? form[k].value : '');
@@ -120,8 +117,7 @@ function computeAnalysis(form) {
   units.forEach(i => {
     const n = num(val('units.' + i + '.num_units')), cur = num(val('units.' + i + '.current')), pro = num(val('units.' + i + '.proposed'));
     const ue = num(val('units.' + i + '.ua_exec')), ur = num(val('units.' + i + '.ua_rcs'));
-    // Same precedence as app.js defUaSrc: the study first, the prior schedule second.
-    const usrc = val('units.' + i + '.ua_source') || (ur > 0 ? 'rcs' : (ue > 0 ? 'exec' : 'custom'));
+    const usrc = val('units.' + i + '.ua_source') || (ue > 0 ? 'exec' : (ur > 0 ? 'rcs' : 'custom'));
     const ua = usrc === 'rcs' ? num(val('units.' + i + '.ua_rcs')) : (usrc === 'custom' ? num(val('units.' + i + '.ua_custom')) : num(val('units.' + i + '.ua_exec')));
     const safmr = safmrResolvedFrom(val, i);
     cg += (cur + ua) * n; pg += (pro + ua) * n; tot += n;
@@ -312,8 +308,8 @@ async function makeDb(adapter, opts) {
   /* Reading the dominant cycle, falling back to the template. A cycle that HOLDS
      a key answers for it even when the value is blank — the package is what was
      frozen, not the template underneath it. */
-  function scoreRead(pid) {
-    const domId = dominantCycleId(pid);
+  function scoreRead(pid, cid) {
+    const domId = cid === undefined ? dominantCycleId(pid) : cid;
     const cells = domId && D.cycles[domId] ? D.cycles[domId].cells : null;
     /* With no package yet, the template IS what would be scored — and the
        template is BOTH buckets. Reading p.durable alone left the appraiser, the
@@ -326,20 +322,26 @@ async function makeDb(adapter, opts) {
       return v == null ? '' : String(v);
     };
   }
-  function scoreOfPid(pid) {
+  /* Scored for ONE package, not for the property. The launcher lists every package
+     a property has and each is at a different point; scoring only the dominant
+     cycle left the rest with nothing to say but "Draft", which is not a fact about
+     how far along anything is. Matt: "the generated tag tells you NOTHING." Same
+     arithmetic, same tables, one argument more. */
+  function scoreOfCycle(pid, cid) {
     const p = D.props[pid]; if (!p || !SCORE) return { pct: 0, gate: 'profile', docsReady: 0, docsTotal: 0 };
-    const domId = dominantCycleId(pid); const cy = domId ? D.cycles[domId] : null;
+    const domId = cid; const cy = domId ? D.cycles[domId] : null;
     const u = new Set(); const scan = o => { for (const k in o) { const m = k.match(/^units\.(\d+)\./); if (m) u.add(+m[1]); } };
     scan(bucketsOf(pid)); if (cy) scan(cy.cells);
     const progs = cy ? (Array.isArray(cy.programs) ? cy.programs : String(cy.programs || '').split(',').filter(Boolean)) : [];
     const held = !!(cy && cy.rcs_doc && Object.keys(cy.rcs_doc).length);
-    const read = scoreRead(pid);
+    const read = scoreRead(pid, domId);
     return SCORE.packageScore(read, {
       programs: progs.length ? progs : ['rcs'], units: [...u].sort((a, b) => a - b), checklistLen: 17,
       hasLetterhead: dv(p, 'assets.letterhead_name') !== '', hasStudy: held, hasCaPkg: held,
       rateType: read('ocaf.rate_type'),
     });
   }
+  const scoreOfPid = pid => scoreOfCycle(pid, dominantCycleId(pid));
   const completenessOf = p => scoreOfPid(p.id).pct / 100;
   function unitCountOf(p) {
     const idx = new Set(); Object.keys(p.durable).forEach(k => { const m = k.match(/^units\.(\d+)\.num_units$/); if (m && p.durable[k].value !== '') idx.add(m[1]); });
@@ -562,6 +564,9 @@ async function makeDb(adapter, opts) {
     updateDir(id, patch) { const c = (D.dir || []).find(x => x.id === id); if (c) Object.assign(c, patch || {}); return persist(); },
     deleteDir(id) { D.dir = (D.dir || []).filter(x => x.id !== id); return persist(); },
     /* ---- cycle surface (mirrors db.supabase.js) ---- */
+    /* One package's score, for the launcher, which lists them all. */
+    cycleScore(cid) { const c = D.cycles[cid];
+      return c ? scoreOfCycle(c.property_id, cid) : { pct: 0, gate: 'profile', docsReady: 0, docsTotal: 0 }; },
     listCycles(pid) {
       const dom = dominantCycleId(pid);
       return cyclesOf(pid).map(c => ({ id: c.id, programs: (c.programs || '').split(',').filter(Boolean), label: c.label, effective_date: c.effective_date, generated: c.generated || {}, dominant: c.id === dom, created_at: c.created_at, updated_at: c.updated_at }))
