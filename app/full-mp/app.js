@@ -3111,7 +3111,7 @@ const DETENT_FROM=0.18;  /* what a wheel is worth the instant the boundary appea
 const DETENT_TO=0.55;     /* and by the time the reader has pushed all the way through it */
 const DETENT_GRACE=260;  /* how long before a quiet gap is allowed to release it */
 const DETENT_MAX=700;    /* and the longest it lasts, whatever happens */
-const FILL_AFTER=170;    /* a run draws nothing until it has shown it is not a fling */
+const FILL_AFTER=240;    /* a run draws nothing until it is most of the way through */
 const NUDGE_GAP=1500;    /* the arrival bounce does not replay more often than this */
 const _now=()=>(typeof performance!=='undefined'&&performance.now)?performance.now():0;
 /* _atTopFrom: when the current unbroken upward run first reached the top; zero
@@ -3141,9 +3141,11 @@ function _pullWrite(){
 function _pullTick(){
   _pullRaf=null;
   const df=_fillTo-_fill, ds=_stretchTo-_stretch;
-  /* Out fast enough to track the hand, back gently enough to read as sliding home
-     rather than blinking out. */
-  _fill+=(df>0?df*0.55:df*0.24);
+  /* The rule tracks the hand closely and does not linger: it is a statement about
+     what is happening NOW, and an eased return is what read as an animation playing
+     after the scrolling had stopped. The banner's give still settles softly, because
+     that one is a surface relaxing rather than a claim about anything. */
+  _fill+=(df>0?df*0.8:df);
   _stretch+=(ds>0?ds*0.5:ds*0.22);
   if(Math.abs(df)<0.004&&Math.abs(ds)<0.004){_fill=_fillTo;_stretch=_stretchTo;_pullWrite();return;}
   _pullWrite();
@@ -3157,7 +3159,9 @@ function _pullGlide(){
 /* The run is over: the bar slides home and the next event starts from nothing. */
 function _pullEnd(){
   _atTopFrom=0;_pullHeld=0;_pullMag=0;_pullFalls=0;_pullRises=0;_pullOk=false;
-  _fillTo=0;_stretchTo=0;_pullGlide();
+  /* The rule goes at once. Nothing is unlocking any more, so there is nothing for
+     it to be saying while it slides home. */
+  _fillTo=0;_fill=0;_stretchTo=0;_pullWrite();_pullGlide();
 }
 /* "There is more up here." Played on arriving at the top with the drawer shut, in
    CSS and on min-height, which composes with the padding the pull drives instead of
@@ -3203,12 +3207,16 @@ function _menuPull(dy){
      decays, will be refused, and so is shown nothing — which is the whole of the
      first complaint: an animation that ran in response to nothing.
 
-     And nothing at all for the first FILL_AFTER of any run, because a fling has
-     not yet PROVEN itself decaying that early: four straight falls take a few
+     And nothing at all for the first FILL_AFTER of any run. Partly because a fling
+     has not PROVEN itself decaying that early — four straight falls take a few
      events, and without this the bar rose to 0.4 before the shape gave the fling
-     away and it slid back. Measured. What is drawn is the part of the hold AFTER
-     that, normalised, so the rule still starts at nothing and reaches the end
-     exactly as the drawer opens. */
+     away and it slid back. Mostly because a rule that creeps up on every long
+     scroll is not saying anything: Matt, on Windows, "a delayed blue line/expand
+     hint... always after i've actually stopped scrolling." At 300 of a 450ms hold
+     it only appears in the last third, where it means one thing — this is
+     unlocking now. Reaching the top is told by the bounce instead. What is drawn
+     is the part of the hold AFTER that, normalised, so the rule still starts at
+     nothing and arrives at the end exactly as the drawer opens. */
   _pullOk=!(_pullRises===0&&_pullFalls>=PULL_FALLS)&&mag>=PULL_FLOOR;
   const t=(_pullOk&&_pullHeld>FILL_AFTER)
     ?Math.max(0,Math.min(1,(_pullHeld-FILL_AFTER)/(PULL_HOLD-FILL_AFTER))):0;
@@ -3331,6 +3339,11 @@ function _menuAnchor(){
   const a=g.querySelector('.mgrid.rows.live')||g.querySelector('.zhead')||g;
   return (a&&a.getBoundingClientRect)?a.getBoundingClientRect().top:null;}
 function _togglePast(){
+  /* Opening or closing lands the reader at a boundary, and closing scrolls back to
+     the top — an arrival, which would set the bounce going the instant they pressed
+     Hide. Stamping the rate limiter here swallows it: the bounce is for reaching the
+     top by SCROLLING there, not for the page rearranging itself under a button. */
+  _nudgeAt=_now();
   const anchor=_menuAnchor;
   const before=anchor();
   _pastOpen=!_pastOpen;

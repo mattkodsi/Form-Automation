@@ -855,8 +855,15 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
    animation ran, right and back again, in answer to nothing.
    On min-height, which raises the box without touching the padding the pull
    drives, so the two can never fight. The overshoot in the easing is the bounce. */
-@keyframes mpNudge{0%{min-height:0}44%{min-height:15px}100%{min-height:0}}
-#viewMenu .mpast.nudge{animation:mpNudge .5s cubic-bezier(.34,1.32,.5,1)}
+/* On PADDING, which is the box, not min-height, which was a no-op: the banner is
+   45px tall and a 15px minimum raises nothing. The class went on, the animation
+   ran, and not one pixel moved — on either platform. The test asserted the class,
+   which is the whole reason it shipped. It asserts the HEIGHT now. */
+@keyframes mpNudge{
+  0%{padding-top:13px;padding-bottom:13px}
+  42%{padding-top:20px;padding-bottom:20px}
+  100%{padding-top:13px;padding-bottom:13px}}
+#viewMenu .mpast.nudge{animation:mpNudge .42s cubic-bezier(.33,1.3,.5,1)}
 @media (prefers-reduced-motion:reduce){#viewMenu .mpast.nudge{animation:none}}
 #viewMenu .mpast .mp-fill{position:absolute;left:0;bottom:0;height:2px;
   width:calc(var(--pull) * 100%);background:var(--ledger)}
