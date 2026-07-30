@@ -10388,11 +10388,29 @@ const addrLine=(street,city,state,zip)=>{
        We only ever write the rows we have, so every unused row kept its zeros and
        the filing went out showing 0 units at $0 down the page. Clear the grid
        first: only what we actually put there should appear. */
-    for(let r=0;r<11;r++) for(let k=0;k<8;k++){ try{ form.getTextField(String(7+r*8+k)).setText(''); }catch(e){} }
+    /* A CALCULATED CELL READS ITS ZERO; ONLY THE INPUT CELLS GO BLANK.
+       This loop used to clear all eight columns of all eleven rows, on the
+       reasoning that "every unused row kept its zeros and the filing went out
+       showing 0 units at $0 down the page". The live HUD form says otherwise, and
+       Matt's screenshot of it shows the rule: the blue cells are inputs and go
+       blank, the white ones calculate and read 0 even when empty. Measured on the
+       blank template, which agrees exactly — row 0 ships as
+           "" "" "" "0" "" "0" "" "0"
+       zeros in Cols. 4, 6 and 8, which are the three per-row fields carrying an
+       AFSimple_Calculate action (Col.2xCol.3, Col.3+Col.5, Col.7xCol.2). Clearing
+       them left a PM's downloaded form showing empty boxes where HUD's own shows
+       0, and made our draft the odd one out against every filed copy.
+       Cols. 4 and 6 are overwritten below on every row we actually print. */
+    const RS_CALC_COL=[3,5,7];   // 0-based offsets of Col. 4, Col. 6, Col. 8
+    for(let r=0;r<11;r++) for(let k=0;k<8;k++){ try{ form.getTextField(String(7+r*8+k)).setText(RS_CALC_COL.indexOf(k)>=0?'0':''); }catch(e){} }
     /* Same for the totals the app has no figures for. Market rent potential is a
        real HUD number and we do not collect the market rents it sums, so it must
        print blank rather than the template's $0 — a stated zero is a claim. */
-    ['195','1156'].forEach(id=>{ try{ form.getTextField(id).setText(''); }catch(e){} });
+    /* 195 (Total Commercial Rent Potential) and 1156 (Part F) both calculate and
+       both ship as "0" on the blank template, so they are left alone for the same
+       reason. The dollar sign in front of each of those two is PRINTED ON THE
+       FORM, beside the box rather than inside it — which is why they read "0"
+       where the four potentials below read "$0". */
     /* THE FOUR POTENTIALS CARRY A DOLLAR SIGN; THE PER-ROW COLUMNS DO NOT. Read off
        Sample Property's own executed 2023 schedule: Col. 3 prints 1,061, Col. 4
        33,952, Col. 5 129 and Col. 6 1,190 — all bare — while the four boxes
