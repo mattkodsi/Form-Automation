@@ -35,7 +35,12 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=354;   // 2026-07-30: the union of two branches, counted off a real run —
+const MIN_CHECKS=435;   // 2026-07-30: +81 for the section rail — the indicator's choice of
+                       // section swept across the whole document, the jump landing clear of a
+                       // #ccbar that is now one constant line, the pin and its release, Tab /
+                       // Enter / Space / focus ring, prefers-reduced-motion, and 860px. 49 of
+                       // them fail against 8fc25a1, measured, before any were believed.
+                       // 2026-07-30: the union of two branches, counted off a real run —
                        // 341 (M61 reload + M62 repaint) plus tab-order’s 13 (Tab walks the
                        // columns in reading order, and a dropdown you land on says so).
                        // 2026-07-28: +35 — the home page's filter rail, driven by real clicks.
@@ -108,6 +113,74 @@ const HELPERS=`window.__b={
   footerUnsaved(){const u=document.getElementById('unsavedTag');
     return !!(u&&getComputedStyle(u).display!=='none');}
 };return 1;`;
+
+/* ── the rail's page-side instrument ────────────────────────────────────── */
+/* Everything the rail checks measure is read off the LIVE ELEMENTS here, never
+   off window.__t. The doors are then held to agreeing with this — a door that
+   answers differently from the DOM the reader is looking at is itself the bug,
+   and a door that simply does not exist has to fail a check rather than throw
+   a run away. Nothing below is wrapped in a try/catch for that reason. */
+const RAILKIT=`window.__r={
+  rows(){return [...document.querySelectorAll('#rail .railitem')].map(e=>{
+    const s=getComputedStyle(e);
+    return {tag:e.tagName,sec:e.getAttribute('data-rsec'),
+      label:((e.querySelector('.rname')||e).textContent||'').trim(),
+      on:e.classList.contains('on'),aria:e.getAttribute('aria-current'),
+      tabIndex:e.tabIndex,cursor:s.cursor};});},
+  cards(){return [...document.querySelectorAll('#sections .card')].map(e=>{
+    const r=e.getBoundingClientRect(),t=e.querySelector('.ctitle');
+    return {sec:e.getAttribute('data-sec'),title:t?t.textContent.trim():'',
+      top:Math.round(r.top+window.scrollY),h:Math.round(r.height)};});},
+  /* MULTI and null are returned rather than a best guess: "two rows are lit"
+     and "none is" are distinct failures and must read as distinct failures. */
+  active(){const on=[...document.querySelectorAll('#rail .railitem.on')];
+    return on.length===1?String(on[0].getAttribute('data-rsec')):(on.length?'MULTI:'+on.length:null);},
+  ariaActive(){const a=[...document.querySelectorAll('#rail .railitem[aria-current]')]
+      .filter(e=>e.getAttribute('aria-current')!=='false');
+    return a.length===1?String(a[0].getAttribute('data-rsec')):(a.length?'MULTI:'+a.length:null);},
+  bar(){const b=document.getElementById('railbar');if(!b)return null;
+    const s=getComputedStyle(b),r=b.getBoundingClientRect();
+    return {top:Math.round(r.top+window.scrollY),h:Math.round(r.height),
+      opacity:s.opacity,dur:s.transitionDuration};},
+  /* offsetParent alone does not settle whether a chip is shown — a chip inside
+     an overflow:hidden bar still has one. The text is collected from what
+     survives BOTH tests so "nothing important vanished" is a real question. */
+  ccbar(){const b=document.getElementById('ccbar'),r=b.getBoundingClientRect(),s=getComputedStyle(b);
+    const chips=[...b.querySelectorAll('.bchip')].filter(e=>{
+      const cr=e.getBoundingClientRect();
+      return e.offsetParent!==null&&getComputedStyle(e).display!=='none'&&cr.width>0&&cr.right<=r.right+1;});
+    return {h:+r.height.toFixed(2),top:+r.top.toFixed(2),bottom:+r.bottom.toFixed(2),
+      shown:+s.opacity>0.5&&r.bottom>0,
+      chips:chips.map(e=>e.textContent.replace(/\\s+/g,' ').trim()),
+      chipLines:[...new Set(chips.map(e=>Math.round(e.getBoundingClientRect().top)))].length,
+      text:(b.textContent||'').replace(/\\s+/g,' ').trim()};},
+  headTop(sec){const c=document.querySelector('#sections .card[data-sec="'+sec+'"]');if(!c)return null;
+    const h=c.querySelector('.chead')||c;return +h.getBoundingClientRect().top.toFixed(2);},
+  page(){return {scrollH:document.documentElement.scrollHeight,innerH:window.innerHeight,
+    maxY:Math.max(0,document.documentElement.scrollHeight-window.innerHeight)};},
+  /* A smooth scroll finishes when it stops moving, not after a sleep somebody
+     guessed. Ten quiet frames, then a beat for the observer to answer. */
+  async settle(){let last=-1,same=0;
+    for(let i=0;i<240;i++){await new Promise(r=>requestAnimationFrame(r));
+      const y=Math.round(window.scrollY);
+      if(y===last){if(++same>10)break;}else{same=0;last=y;}}
+    await new Promise(r=>setTimeout(r,160));return window.scrollY;},
+  async clickRow(sec){
+    const e=document.querySelector('#rail .railitem[data-rsec="'+sec+'"]');
+    if(!e)return {err:'no rail row carries data-rsec="'+sec+'"'};
+    e.click();
+    await this.settle();
+    await new Promise(r=>setTimeout(r,280));
+    const cc=this.ccbar();
+    return {headTop:this.headTop(sec),ccBottom:cc.bottom,ccH:cc.h,ccShown:cc.shown,
+      innerH:window.innerHeight,y:Math.round(window.scrollY),active:this.active()};}
+};return 1;`;
+/* A width is a fact about the window, so it is set on the window rather than by
+   restyling the page: the media queries the rail depends on only fire for the
+   real thing. */
+const setViewport=async(c,w,h)=>{
+  await c.send('Emulation.setDeviceMetricsOverride',{width:w,height:h,deviceScaleFactor:1,mobile:false});
+  await sleep(340);};
 
 /* ── the run ────────────────────────────────────────────────────────────── */
 const FULL=process.argv.includes('--full');
@@ -2504,6 +2577,505 @@ const FULL=process.argv.includes('--full');
        must never do is leave an edit behind. */
     eq('and a walk through the whole form with Tab leaves it clean',
       [cleanBefore,await c.eval('return window.__t.isDirty()')],[false,false]);
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       THE SECTION RAIL — navigation, not decoration.
+
+       The rail used to be ten inert DIVs. It is now a jump-to control with a
+       travelling indicator, and every check below exists because this feature
+       is got wrong in one of six specific ways:
+
+         · the indicator picks its section from "the last heading scrolled
+           past", which can never light a tail shorter than the window, and
+           flickers to the neighbour halfway down a section taller than one;
+         · the jump offset is computed against a bar whose height changes with
+           the viewport, so the heading lands underneath it;
+         · the jump starts at scrollY 0, where the bar is HIDDEN and slides in
+           during the scroll — an offset measured before it appears is short by
+           the bar's whole height;
+         · the row is a DIV with a click handler: no Tab, no Enter, no Space;
+         · the active row is marked by colour alone;
+         · the travel animates under prefers-reduced-motion.
+
+       GROUND TRUTH IS THE DOM (window.__r). The selftest doors are checked for
+       AGREEMENT with it rather than trusted as the measurement. */
+    console.log('\n── the section rail ───────────────────────────────────');
+    await setViewport(c,1280,900);
+    await openForm();
+    await c.eval(RAILKIT);
+
+    /* ── the shape of a row ─────────────────────────────────────────────── */
+    const rows=await c.eval('return window.__r.rows()');
+    const cards=await c.eval('return window.__r.cards()');
+    T(`the rail renders its rows (${rows.length})`,rows.length>=9);
+    eq('every row is a real button, so the browser gives it Enter and Space for free',
+       rows.filter(r=>r.tag!=='BUTTON').map(r=>r.label),[]);
+    eq('every row names the section it points at',rows.filter(r=>!r.sec).map(r=>r.label),[]);
+    eq('every row is reachable by Tab',rows.filter(r=>r.tabIndex!==0).map(r=>r.label),[]);
+    eq('and reads as clickable under the pointer',
+       rows.filter(r=>r.cursor!=='pointer').map(r=>r.label),[]);
+    eq('every section card names itself the same way',cards.filter(x=>!x.sec).map(x=>x.title),[]);
+    /* `!s||` matters: without it a rail of ten unnamed rows pairs perfectly
+       with ten unnamed cards, and the check reads green having compared
+       nothing at all to nothing at all. */
+    eq('and every row has a card to jump to',
+       rows.map(r=>r.sec).filter(s=>!s||!cards.some(x=>x.sec===s)),[]);
+    eq('with no card the rail cannot reach',
+       cards.map(x=>x.sec).filter(s=>!s||!rows.some(r=>r.sec===s)),[]);
+
+    /* THE RENUMBERING TRAP. _secPos renumbers the rail for display: the row
+       reading "3. Principals" is section TWELVE. A spy or a jump that pairs
+       row INDEX to card INDEX rather than section NUMBER is off by that
+       renumbering for most of the form — and looks perfectly right for the
+       first two rows, which is exactly how it ships. */
+    eq('a row and its card agree on the TITLE, not merely on their position',
+       rows.filter(r=>{const card=cards.find(x=>x.sec===r.sec);
+         return !card||r.label.replace(/^\s*\d+\.\s*/,'')!==card.title;}).map(r=>r.label),[]);
+    T('and the rail really is renumbered, so that check has something to catch',
+      rows.some((r,i)=>String(r.sec)!==String(i+1)));
+
+    /* ── the doors, and whether they tell the truth ─────────────────────── */
+    eq('the selftest doors exist',
+       await c.eval(`return {rows:typeof window.__t.railRows,active:typeof window.__t.activeSection,
+         bar:typeof window.__t.railBar,goto:typeof window.__t.railGoto}`),
+       {rows:'function',active:'function',bar:'function',goto:'function'});
+    eq('railRows() agrees with the DOM, row for row',
+       await c.eval(`return (typeof window.__t.railRows==='function'?window.__t.railRows():[]).map(r=>String(r.sec))`),
+       rows.map(r=>String(r.sec)));
+
+    /* ── #ccbar is one line, at every width ─────────────────────────────── */
+    /* Not cosmetic: a jump offset cannot be right against a bar of
+       unpredictable height, so this is the precondition for the jump checks
+       below. Measured at 8fc25a1 — 32px at 1440, 64px at 1050, 154px at 860. */
+    console.log('\n── #ccbar: one constant line ──────────────────────────');
+    const bars={};
+    for(const w of [1440,1050,860]){
+      await setViewport(c,w,900);
+      bars[w]=await c.eval(`window.scrollTo(0,1200);await window.__r.settle();return window.__r.ccbar()`);
+      console.log(`    ${w}px → ${bars[w].h}px tall, ${bars[w].chips.length} chip(s) on ${bars[w].chipLines} line(s)`);
+    }
+    eq('the command bar is exactly as tall at 1050 as at 1440',bars[1050].h,bars[1440].h);
+    eq('and exactly as tall at 860',bars[860].h,bars[1440].h);
+    T(`and it is one line, not a stack (${bars[1440].h}px)`,bars[1440].h>0&&bars[1440].h<=44);
+    eq('its chips sit on a single row at every width',
+       [bars[1440].chipLines,bars[1050].chipLines,bars[860].chipLines],[1,1,1]);
+    /* …and nothing that MATTERS went away when it stopped wrapping. A bar that
+       is constant because it silently dropped the verdict is worse than one
+       that wraps. */
+    eq('the money line survives the squeeze at every width',
+       [1440,1050,860].filter(w=>!/current/.test(bars[w].text)||!/ceiling/.test(bars[w].text)),[]);
+    eq('so does the pass/over verdict',
+       [1440,1050,860].filter(w=>!/PASS|OVER|needed/.test(bars[w].text)),[]);
+    /* Chips may be dropped as the bar narrows — but only the ones saying
+       everything is fine. A warning or a note is the whole reason to look at
+       the bar. Identified by its own glyph rather than by a class name, so
+       this reads the same against old code and new. */
+    const attn=bars[1440].chips.filter(t=>/^[⚠ⓘ]/.test(t));
+    T(`the wide bar carries an attention chip to lose (${JSON.stringify(attn)})`,attn.length>0);
+    eq('and no attention chip is dropped at 1050',
+       attn.filter(t=>bars[1050].chips.indexOf(t)<0),[]);
+    eq('nor at 860',attn.filter(t=>bars[860].chips.indexOf(t)<0),[]);
+
+    /* ── the indicator picks the right section ──────────────────────────── */
+    console.log('\n── the indicator follows the scroll ───────────────────');
+    await setViewport(c,1280,900);
+    const geo=await c.eval('return window.__r.page()');
+    console.log(`    page ${geo.scrollH}px in a ${geo.innerH}px window; max scrollY ${geo.maxY}`);
+
+    const atTop=await c.eval(`window.scrollTo(0,0);await window.__r.settle();
+      return {a:window.__r.active(),aria:window.__r.ariaActive()}`);
+    eq('at the top of the form the first section is the active one',atTop.a,String(rows[0].sec));
+    T(`and the state is not colour-only — aria-current marks the same row (${atTop.aria})`,
+      atTop.a!==null&&atTop.aria===atTop.a);
+
+    /* Each section in turn, brought under the reading line. Cards nearer the
+       document foot than one window height cannot be brought there AT ALL —
+       that is the tail case, which gets its own check below rather than being
+       quietly dropped from this one. */
+    const reachable=cards.filter(x=>x.top-10<=geo.maxY);
+    const missed=[];
+    for(const card of reachable){
+      const got=await c.eval(`window.scrollTo(0,${card.top-10});await window.__r.settle();
+        return {a:window.__r.active(),aria:window.__r.ariaActive()}`);
+      if(got.a!==String(card.sec))missed.push(`${card.title} (sec ${card.sec}) lit ${got.a} instead`);
+      else if(got.aria!==got.a)missed.push(`${card.title}: aria-current on ${got.aria}, class on ${got.a}`);
+    }
+    eq(`scrolling to each of ${reachable.length} reachable sections lights that section`,missed,[]);
+    /* THE SWEEP. The rail must be able to LAND on every row it draws: a row no
+       scroll position can light is a row that lies about where you are.
+       This walks the document in ~120 steps and reads the indicator at each,
+       rather than deciding from geometry which cards "can" reach the reading
+       line. The formula version of this check was written first and was wrong
+       within a day — it encoded one particular scroll-spy rule (a flat reading
+       line) as if it were the definition of reachable, so a correct
+       implementation with a different rule for the last cards failed it. What
+       is actually being asked is "walk the form; does every row light?", and
+       that question survives whatever the rule becomes next. It is also
+       strictly stronger: it catches a row that lights out of order, and one
+       that flickers back to a section already passed. */
+    const sweep=await c.eval(`
+      const maxY=Math.max(0,document.documentElement.scrollHeight-innerHeight);
+      const step=Math.max(1,Math.round(maxY/120));
+      /* …and whether the section it names is actually ON SCREEN. A rail that
+         lights a section the reader cannot see is lying about where they are,
+         and no check that only asks "which row is lit" can tell. */
+      const read=y=>{const on=document.querySelector('#rail .railitem.on');
+        const sec=on?String(on.getAttribute('data-rsec')):null;
+        const card=sec?document.querySelector('#sections .card[data-sec="'+sec+'"]'):null;
+        const r=card?card.getBoundingClientRect():null;
+        return {y:y,a:sec,onScreen:!!(r&&r.bottom>0&&r.top<innerHeight)};};
+      const seen=[];
+      for(let y=0;y<=maxY;y+=step){
+        window.scrollTo(0,y);
+        await new Promise(r=>requestAnimationFrame(r));
+        await new Promise(r=>setTimeout(r,25));
+        seen.push(read(y));}
+      window.scrollTo(0,maxY);await new Promise(r=>setTimeout(r,200));
+      seen.push(read(maxY));
+      return seen;`);
+    const order=[];sweep.forEach(p=>{if(!order.length||order[order.length-1]!==p.a)order.push(p.a);});
+    console.log(`    swept ${sweep.length} scroll positions; the indicator went ${JSON.stringify(order)}`);
+    eq(`a row is lit at every one of ${sweep.length} scroll positions — the rail is never blank`,
+       sweep.filter(p=>p.a===null||/^MULTI/.test(p.a)).map(p=>p.y),[]);
+    eq('and walking the whole form lights EVERY row the rail draws',
+       rows.map(r=>String(r.sec)).filter(x=>!order.includes(x))
+           .map(x=>(cards.find(cd=>cd.sec===x)||{}).title||x),[]);
+    /* No row may be lit, left, and lit again: that is the flicker this rule
+       exists to prevent, and it is invisible to any check that only samples
+       one scroll position per section. */
+    eq('lighting them in the order they are read, and never going back',
+       order.filter((x,i)=>order.indexOf(x)!==i),[]);
+    eq('and the section it names is on screen at every one of those positions',
+       sweep.filter(p=>!p.onScreen).map(p=>`y=${p.y} lit ${p.a}, which is off screen`).slice(0,6),[]);
+    T(`and the order it lit them is the order the rail lists them`,
+      JSON.stringify(order)===JSON.stringify(rows.map(r=>String(r.sec))));
+
+    /* THE TALL SECTION. One card here is taller than the window. A spy that
+       answers "the nearest heading" flickers to the neighbour halfway down it;
+       it must stay lit from its first pixel to its last. */
+    /* Whether any section happens to out-measure a 900px window depends on how
+       much data the suite above it entered, so the window is SHRUNK to
+       guarantee the case instead of hoping for it — a check that quietly does
+       not apply is the thing this file exists to stop. */
+    const tallest=cards.slice().sort((a,b)=>b.h-a.h)[0];
+    const tallH=Math.max(380,Math.min(900,tallest.h-120));
+    await setViewport(c,1280,tallH);
+    const tGeo=await c.eval('return window.__r.page()');
+    const tCards=await c.eval('return window.__r.cards()');
+    const tall=tCards.filter(x=>x.h>tGeo.innerH).sort((a,b)=>b.h-a.h)[0];
+    T(`a section taller than the window to test against`
+      +(tall?` (${tall.title}, ${tall.h}px in ${tGeo.innerH}px)`:` — none, tallest is ${tallest.h}px`),!!tall);
+    const walkT=[];
+    if(tall)for(const frac of [0.05,0.25,0.5,0.75,0.95]){
+      const y=Math.max(0,Math.min(tGeo.maxY,Math.round(tall.top-60+tall.h*frac)));
+      walkT.push(await c.eval(`window.scrollTo(0,${y});await window.__r.settle();return window.__r.active()`));
+    }
+    eq(`and it stays lit the whole way down — ${JSON.stringify(walkT)}`,
+       walkT.length===5&&tall?walkT.filter(a=>a!==String(tall.sec)):['the tall-section walk never ran'],[]);
+    await setViewport(c,1280,900);
+
+    /* THE TAIL. The last card is shorter than the window, so no reading line
+       can ever reach it: at maximum scroll the line is still inside an earlier
+       section. A rule with no bottom-of-document exception lights the wrong
+       row at the one place a reader is certain to look. */
+    const last=cards[cards.length-1];
+    T(`the last section is shorter than the window, so the tail case is real (${last.h}px in ${geo.innerH}px)`,
+      last.h<geo.innerH);
+    const atBottom=await c.eval(`window.scrollTo(0,document.documentElement.scrollHeight);
+      await window.__r.settle();return {a:window.__r.active(),aria:window.__r.ariaActive()}`);
+    eq('scrolled to the very bottom, the LAST section is the active one',atBottom.a,String(last.sec));
+    eq('and aria-current says so too',atBottom.aria,String(last.sec));
+    eq('exactly one row is ever active — never two, never none',
+       [atTop.a,atBottom.a].filter(a=>a===null||/^MULTI/.test(String(a))),[]);
+
+    /* ── the travelling bar ─────────────────────────────────────────────── */
+    const bTop=await c.eval(`window.scrollTo(0,0);await window.__r.settle();
+      await new Promise(r=>setTimeout(r,420));return window.__r.bar()`);
+    const bBot=await c.eval(`window.scrollTo(0,document.documentElement.scrollHeight);
+      await window.__r.settle();await new Promise(r=>setTimeout(r,420));return window.__r.bar()`);
+    T('there is a single travelling bar',!!(bTop&&bBot));
+    T('it is visible when a section is active',!!(bTop&&+bTop.opacity>0.5&&bTop.h>2));
+    T('it MOVES between the first section and the last',!!(bTop&&bBot&&Math.abs(bBot.top-bTop.top)>20));
+    T('and it comes to rest ON the active row, not beside it',
+      await c.eval(`const r=document.querySelector('#rail .railitem.on'),b=document.getElementById('railbar');
+        if(!r||!b)return false;const a=r.getBoundingClientRect(),x=b.getBoundingClientRect();
+        return Math.abs(a.top-x.top)<=8 && Math.abs(a.height-x.height)<=8;`));
+
+    /* …and that it TRAVELS. "A bar visibly moves up and down the sections" is
+       the request; a bar that teleports satisfies every geometric check above
+       and none of the intent. Sampled against the RAIL, not the viewport: the
+       rail is sticky and its own `top` transitions when body.scrolled flips, so
+       a viewport-relative sample shows movement even when the bar has snapped. */
+    const travel=await c.eval(`window.scrollTo(0,0);await window.__r.settle();
+      const bar=document.getElementById('railbar'),rail=document.getElementById('rail');
+      if(!bar||!rail)return null;
+      const rel=()=>+(bar.getBoundingClientRect().top-rail.getBoundingClientRect().top).toFixed(1);
+      const rr=[...document.querySelectorAll('#rail .railitem')];
+      const start=rel();rr[rr.length-1].click();
+      const s=[];for(let i=0;i<10;i++){await new Promise(r=>requestAnimationFrame(r));
+        await new Promise(r=>setTimeout(r,30));s.push(rel());}
+      await new Promise(r=>setTimeout(r,900));const end=rel();
+      return {start:start,end:end,
+        mids:[...new Set(s)].filter(v=>Math.abs(v-start)>1&&Math.abs(v-end)>1).length};`);
+    T('the bar actually goes somewhere',!!(travel&&Math.abs(travel.end-travel.start)>20));
+    T(`and it TRAVELS there rather than teleporting`
+      +(travel?` (${travel.mids} intermediate positions between ${travel.start} and ${travel.end})`:''),
+      !!(travel&&travel.mids>=2));
+
+    /* ── a jump lands the heading VISIBLE ───────────────────────────────── */
+    console.log('\n── jump-to: the heading must clear the bar ────────────');
+    const buried=[],disagree=[];
+    for(const r of rows){
+      const got=await c.eval(`window.scrollTo(0,${geo.maxY});await window.__r.settle();
+        return await window.__r.clickRow(${JSON.stringify(String(r.sec))})`);
+      if(got.err){buried.push(`${r.label}: ${got.err}`);disagree.push(`${r.label}: ${got.err}`);continue;}
+      if(got.headTop<got.ccBottom-0.5)
+        buried.push(`${r.label}: heading top ${got.headTop} is under a bar ending at ${got.ccBottom}`);
+      else if(got.headTop>got.innerH-40)
+        buried.push(`${r.label}: heading top ${got.headTop} is off the bottom of a ${got.innerH}px window`);
+      if(got.active!==String(r.sec))disagree.push(`${r.label} → lit ${got.active}`);
+    }
+    eq(`clicking each of ${rows.length} rows lands its heading clear of the command bar`,buried,[]);
+    /* Clicking a row and watching a DIFFERENT row light up is the most visible
+       way this feature fails, and it comes for free at the foot of the
+       document where the jump cannot complete. */
+    eq('and the row you clicked is the row that lights up',disagree,[]);
+
+    /* THE scrollY-0 TRAP, on its own. From the top the command bar is HIDDEN
+       and slides in DURING the scroll; an offset computed before it appears is
+       short by the bar's whole height. This is the first jump any reader
+       makes. */
+    const far=rows[rows.length-1];
+    const cold=await c.eval(`window.scrollTo(0,0);await window.__r.settle();
+      const before=window.__r.ccbar();
+      const after=await window.__r.clickRow(${JSON.stringify(String(far.sec))});
+      return {barWasHidden:!before.shown,after:after};`);
+    T('the bar really is out of the way at scrollY 0, so the trap is live',cold.barWasHidden);
+    T(`a jump from the very top still clears the bar that slid in during it`
+      +` (heading ${cold.after.headTop} vs bar bottom ${cold.after.ccBottom})`,
+      !cold.after.err&&cold.after.headTop>=cold.after.ccBottom-0.5);
+    const refY=cold.after.y;
+
+    /* A real mouse press, not element.click(): a handler bound to mousedown, or
+       a row a sticky rail has moved out from under the pointer, passes the
+       synthetic call and fails the finger. */
+    const spot=await c.eval(`window.scrollTo(0,0);await window.__r.settle();
+      const e=document.querySelector('#rail .railitem[data-rsec=${JSON.stringify(String(far.sec))}]');
+      if(!e)return null;const r=e.getBoundingClientRect();
+      if(r.width<4||r.height<4||r.top<0)return null;
+      return {x:Math.round(r.left+r.width/2),y:Math.round(r.top+r.height/2)};`);
+    T('the row is where a pointer can reach it',!!spot);
+    if(spot){
+      for(const type of ['mousePressed','mouseReleased'])
+        await c.send('Input.dispatchMouseEvent',{type,x:spot.x,y:spot.y,button:'left',clickCount:1});
+      const landed=await c.eval(`await window.__r.settle();await new Promise(r=>setTimeout(r,280));
+        return {y:Math.round(scrollY),head:window.__r.headTop(${JSON.stringify(String(far.sec))}),
+                cc:window.__r.ccbar().bottom,active:window.__r.active()};`);
+      T(`a real mouse click on the row jumps too (scrollY ${landed.y})`,landed.y>0);
+      T('and lands the heading clear of the bar',landed.head!=null&&landed.head>=landed.cc-0.5);
+    }
+
+    /* ── the pin, and whether it ever lets go ───────────────────────────── */
+    /* A jump PINS the row it jumped to, because the two sections nearest the
+       document foot share one maximum scroll position and the geometry alone
+       cannot tell a click on one from a click on the other. A pin is the right
+       answer and a dangerous one: a pin that never releases means the indicator
+       stops following the reader the moment they use it once, which is worse
+       than the flicker it was added to cure. Both halves are checked. */
+    console.log('\n── the jump pins its answer, and then lets go ─────────');
+    const pinDoor=await c.eval(`return typeof window.__t.railPin`);
+    eq('there is a door onto the pin',pinDoor,'function');
+    const tailTwo=rows.slice(-2);
+    const pinned=[];
+    for(const r of tailTwo){
+      const got=await c.eval(`window.scrollTo(0,0);await window.__r.settle();
+        const a=await window.__r.clickRow(${JSON.stringify(String(r.sec))});
+        return {active:a.active,pin:(typeof window.__t.railPin==='function'?String(window.__t.railPin()):'(no door)')};`);
+      if(got.active!==String(r.sec))pinned.push(`clicking ${r.label} lit ${got.active}`);
+    }
+    /* These are the two rows that land at the same maximum scroll, so without a
+       pin the second of them is unreachable by clicking as well as by
+       scrolling. */
+    eq(`the last two rows each light THEMSELVES when clicked, not the same one twice`,pinned,[]);
+    const released=await c.eval(`window.scrollTo(0,0);await window.__r.settle();
+      await window.__r.clickRow(${JSON.stringify(String(rows[rows.length-1].sec))});
+      const held=window.__r.active();
+      window.scrollTo(0,0);await window.__r.settle();
+      return {held:held,after:window.__r.active(),
+        pin:(typeof window.__t.railPin==='function'?window.__t.railPin():'(no door)')};`);
+    eq('the pin holds the row the reader asked for',released.held,String(rows[rows.length-1].sec));
+    eq('and the reader’s next scroll takes it back — the rail does not freeze after one click',
+       released.after,String(rows[0].sec));
+    eq('with the pin itself cleared, not merely overruled',released.pin,null);
+
+    /* ── keyboard ───────────────────────────────────────────────────────── */
+    /* Real Tab presses, because :focus-visible is the whole point of the ring
+       check and a programmatic focus() does not raise it. */
+    console.log('\n── keyboard: Tab, Enter, Space, and a ring you can see ─');
+    await c.eval(`window.scrollTo(0,0);await window.__r.settle();
+      document.getElementById('bFill').focus();return 1`);
+    /* Tab into the rail rather than assuming it is the next stop: `.chkmore`
+       in the command centre carries tabindex="0" and has since before this
+       branch, so a walk that counted stops from #bFill would report the rail
+       one place out and blame the rail for it. The check is that the rows form
+       a CONTIGUOUS RUN in reading order once reached — which is the thing that
+       actually matters — not that nothing precedes them. */
+    const at=async()=>c.eval(`const a=document.activeElement;
+      return a&&a.classList&&a.classList.contains('railitem')?String(a.getAttribute('data-rsec')):
+        ('['+(a?a.tagName+(a.id?'#'+a.id:''):'none')+']');`);
+    let hops=0,cur=await at();
+    while(/^\[/.test(cur)&&hops<12){await c.key('Tab',{wait:45});cur=await at();hops++;}
+    T(`Tab reaches the rail from the toolbar (${hops} stop(s) on the way)`,!/^\[/.test(cur));
+    const walkRail=[cur];
+    for(let i=1;i<rows.length;i++){await c.key('Tab',{wait:45});walkRail.push(await at());}
+    eq('and then walks every row, in the order they are read, with nothing in between',
+       walkRail,rows.map(r=>String(r.sec)));
+
+    /* A ring the eye can see: the focused row measured against an UNFOCUSED row
+       of the same kind. Comparing to a sibling rather than to the same element
+       blurred is deliberate — blur/refocus does not restore :focus-visible, so
+       that comparison would quietly measure the wrong state and pass. */
+    const rlRing=await c.eval(`const a=document.activeElement;
+      const other=[...document.querySelectorAll('#rail .railitem')].find(e=>e!==a);
+      const S=e=>{const s=getComputedStyle(e);
+        return {outline:s.outlineStyle+' '+s.outlineWidth+' '+s.outlineColor,shadow:s.boxShadow};};
+      return {focused:S(a),plain:S(other),isRow:!!(a&&a.classList&&a.classList.contains('railitem'))};`);
+    /* Every clause below is gated on isRow. Without that gate the comparison is
+       between whatever Tab actually landed on and a rail row — two different
+       kinds of element, which of course compute different styles, and the
+       check reads green while the rail is not in the tab order at all. */
+    T('the focused element is a rail row',rlRing.isRow);
+    T(`a Tab onto a row paints what the unfocused row does not have (${rlRing.focused.outline})`,
+      rlRing.isRow&&(rlRing.focused.outline!==rlRing.plain.outline||rlRing.focused.shadow!==rlRing.plain.shadow));
+    T('and it is a ring with real width, not a hairline',
+      rlRing.isRow&&!/^none/.test(rlRing.focused.outline)
+      &&parseFloat(rlRing.focused.outline.split(' ')[1])>=1.5);
+
+    /* Enter and Space BOTH: a DIV with a click handler answers neither, and a
+       handler that calls preventDefault for Enter only is a real shape. */
+    const keyY={};
+    for(const key of ['Enter',' ']){
+      const name=key===' '?'Space':'Enter';
+      /* No try/catch anywhere in this file, so a missing row has to be answered
+         with a failing check rather than an exception that ends the run before
+         the reduced-motion and narrow-viewport checks below it. */
+      const armed=await c.eval(`window.scrollTo(0,0);await window.__r.settle();
+        const e=document.querySelector('#rail .railitem[data-rsec=${JSON.stringify(String(far.sec))}]');
+        if(!e)return false;e.focus();return document.activeElement===e;`);
+      T(`there is a row for ${name} to press, and it takes focus`,armed);
+      if(armed)await c.key(key,{wait:140});
+      const got=await c.eval(`await window.__r.settle();await new Promise(r=>setTimeout(r,300));
+        return {y:Math.round(scrollY),head:window.__r.headTop(${JSON.stringify(String(far.sec))}),
+                cc:window.__r.ccbar().bottom};`);
+      keyY[name]=got.y;
+      T(`${name} on a focused row jumps (scrollY ${got.y})`,got.y>0);
+      T(`and ${name} lands the heading clear of the bar`,got.head!=null&&got.head>=got.cc-0.5);
+    }
+    /* Space must scroll to the SECTION and nowhere else. A button that forgot
+       preventDefault gives you the jump AND a screenful of page-down. */
+    T(`Space landed where the click landed, not a screenful past it (${keyY.Space} vs ${refY})`,
+      Math.abs(keyY.Space-refY)<=40);
+
+    /* ── the rail does not make the form dirty ──────────────────────────── */
+    eq('navigating the rail changes no data',await c.eval('return window.__t.isDirty()'),false);
+
+    /* ── below 1050px, where the rail stops being sticky ────────────────── */
+    console.log('\n── 860px: the rail goes static, and must still work ───');
+    await setViewport(c,860,900);
+    await c.eval(`window.scrollTo(0,0);await window.__r.settle();return 1`);
+    eq('the rail is static at 860, as the stylesheet says',
+       await c.eval(`return getComputedStyle(document.querySelector('#viewForm .rail')).position`),'static');
+    const nBad=[];
+    for(const r of rows.slice(0,3).concat(rows.slice(-2))){
+      const got=await c.eval(`window.scrollTo(0,0);await window.__r.settle();
+        return await window.__r.clickRow(${JSON.stringify(String(r.sec))})`);
+      if(got.err){nBad.push(`${r.label}: ${got.err}`);continue;}
+      if(got.headTop<got.ccBottom-0.5)nBad.push(`${r.label}: heading ${got.headTop} under a bar ending ${got.ccBottom}`);
+      else if(got.headTop>got.innerH-40)nBad.push(`${r.label}: heading ${got.headTop} off a ${got.innerH}px window`);
+    }
+    eq('jump-to still lands the heading clear of the bar at 860',nBad,[]);
+    const nCards=await c.eval('return window.__r.cards()');
+    const nLast=nCards.length?nCards[nCards.length-1].sec:'(no cards at 860)';
+    eq('and the indicator still tracks the scroll at 860',
+       await c.eval(`window.scrollTo(0,document.documentElement.scrollHeight);
+         await window.__r.settle();return window.__r.active()`),
+       nLast?String(nLast):'(the last card at 860 names no section)');
+
+    /* ── prefers-reduced-motion ─────────────────────────────────────────── */
+    /* The travel must not run — and the active state must still be plainly
+       there. "No animation" is trivially satisfied by an indicator that is not
+       drawn at all, so the visibility half is the half that matters. */
+    console.log('\n── prefers-reduced-motion: still legible, not animated ─');
+    await setViewport(c,1280,900);
+    await c.send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
+    await c.reload();
+    await openForm();
+    await c.eval(RAILKIT);
+    const rm=await c.eval(`window.scrollTo(0,0);await window.__r.settle();
+      const b=document.getElementById('railbar');
+      const on=document.querySelector('#rail .railitem.on');
+      const off=[...document.querySelectorAll('#rail .railitem')].find(e=>e!==on);
+      const S=e=>{const s=getComputedStyle(e);
+        return {bg:s.backgroundColor,color:s.color,weight:s.fontWeight};};
+      return {media:matchMedia('(prefers-reduced-motion: reduce)').matches,
+        barProp:b?getComputedStyle(b).transitionProperty:null,
+        barDur:b?getComputedStyle(b).transitionDuration:null,
+        bar:window.__r.bar(),active:window.__r.active(),
+        onS:on?S(on):null,offS:off?S(off):null};`);
+    T('the browser really is reporting reduced motion',rm.media);
+    /* The question is whether it MOVES, not whether every transition was
+       switched off: a colour or opacity fade is not motion, and demanding
+       transition-duration:0 would fail a correct implementation. So the check
+       is on the properties that displace or resize the bar — and then on the
+       bar's actual path, which is the claim itself rather than a proxy for it. */
+    T(`no property that moves or resizes the bar is transitioned (${rm.barProp})`,
+      rm.barProp!=null&&!/transform|height|width|top|left|translate|inset|margin/.test(rm.barProp));
+    const rmTravel=await c.eval(`window.scrollTo(0,0);await window.__r.settle();
+      const bar=document.getElementById('railbar'),rail=document.getElementById('rail');
+      if(!bar||!rail)return null;
+      const rel=()=>+(bar.getBoundingClientRect().top-rail.getBoundingClientRect().top).toFixed(1);
+      const rr=[...document.querySelectorAll('#rail .railitem')];
+      const start=rel();rr[rr.length-1].click();
+      const s=[];for(let i=0;i<10;i++){await new Promise(r=>requestAnimationFrame(r));
+        await new Promise(r=>setTimeout(r,30));s.push(rel());}
+      await new Promise(r=>setTimeout(r,900));const end=rel();
+      return {start:start,end:end,
+        mids:[...new Set(s)].filter(v=>Math.abs(v-start)>1&&Math.abs(v-end)>1).length};`);
+    T('and the bar still gets where it is going',
+      !!(rmTravel&&Math.abs(rmTravel.end-rmTravel.start)>20));
+    T(`it simply arrives, without travelling`
+      +(rmTravel?` (${rmTravel.mids} intermediate positions, against ${travel?travel.mids:'?'} without the preference)`:''),
+      !!(rmTravel&&rmTravel.mids===0));
+    T('a section is still marked active',rm.active!=null&&!/^MULTI/.test(String(rm.active)));
+    T('the indicator is still drawn',!!(rm.bar&&+rm.bar.opacity>0.5&&rm.bar.h>2));
+    T('and the active row still reads differently from its neighbours',
+      !!(rm.onS&&rm.offS&&(rm.onS.bg!==rm.offS.bg||rm.onS.color!==rm.offS.color||rm.onS.weight!==rm.offS.weight)));
+    const rmJump=await c.eval(`window.scrollTo(0,0);await window.__r.settle();
+      return await window.__r.clickRow(${JSON.stringify(String(far.sec))})`);
+    T('and a jump still arrives under reduced motion',
+      !rmJump.err&&rmJump.headTop>=rmJump.ccBottom-0.5&&rmJump.headTop<=rmJump.innerH-40);
+    await c.send('Emulation.setEmulatedMedia',{features:[]});
+    await c.reload();
+    await openForm();
+
+    /* ── the other views still work ─────────────────────────────────────── */
+    /* The rail lives in #viewForm; nothing it added may leak into the gallery
+       or the launcher, and neither may stop rendering. */
+    const views=await c.eval(`window.__t.openMenu();await new Promise(r=>setTimeout(r,450));
+      const m={shown:getComputedStyle(document.getElementById('viewMenu')).display!=='none',
+        cards:document.querySelectorAll('#menuGrid > *').length,
+        stray:document.querySelectorAll('#viewMenu #railbar, #viewMenu .railitem').length};
+      window.__t.openLauncher(${JSON.stringify(pid)});await new Promise(r=>setTimeout(r,600));
+      const l={shown:getComputedStyle(document.getElementById('viewLauncher')).display!=='none',
+        body:(document.getElementById('viewLauncher').textContent||'').length,
+        stray:document.querySelectorAll('#viewLauncher #railbar, #viewLauncher .railitem').length};
+      return {m:m,l:l};`);
+    T(`the property gallery still renders (${views.m.cards} card(s))`,views.m.shown&&views.m.cards>0);
+    eq('and the rail did not leak into it',views.m.stray,0);
+    T(`the launcher still renders (${views.l.body} chars)`,views.l.shown&&views.l.body>200);
+    eq('and the rail did not leak into that either',views.l.stray,0);
+    await c.send('Emulation.clearDeviceMetricsOverride');
+    await openForm();
 
     console.log('\n── the console stayed quiet ───────────────────────────');
     eq('no console errors and no uncaught exceptions',c.logs.slice(0,3),[]);
