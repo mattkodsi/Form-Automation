@@ -35,7 +35,7 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=327;   // 2026-07-29: +12 — three zones: the past-due drawer closed on arrival, and
+const MIN_CHECKS=346;   // 2026-07-29: +12 — three zones: the past-due drawer closed on arrival, and
                         // opening it without moving the panel below (measured in a real layout).
                         // 2026-07-29: -3 — the rail's eight rows became the strip's five figures.
                        // 2026-07-28: +35 — the home page's filter rail, driven by real clicks.
@@ -2057,6 +2057,50 @@ const FULL=process.argv.includes('--full');
         +'on:(document.querySelector("#menuCount .fig.on")||{}).getAttribute("data-view")};');
       eq('clearing the box returns you where you were',[s2.view,s2.on],['later','later']);
 
+      /* ---- how far ahead ----
+         Three settings, and everything on the page that names the window has to
+         move together: the heading, the strip figure, and the rows in the panel.
+         The four bands must also still be disjoint and still sum at EVERY setting
+         — the window moves the line between "coming" and "later", so a figure that
+         did not move with it would double-count or drop rows. */
+      /* Back to the view that HAS the control: it lives in the heading of the panel
+         it resizes, so it is drawn only where that panel is. The checks above leave
+         the page filtered to a band that has no panel. */
+      await c.eval('window.__t.__setMenuView("all");return 1'); await sleep(280);
+      T('the window control is drawn where the panel it resizes is',
+        await c.eval('return !!document.querySelector("#menuGrid .winsel")'));
+      T('and not where that panel is not',
+        await c.eval(`window.__t.__setMenuView("past");return new Promise(r=>setTimeout(()=>
+          r(!document.querySelector('#menuGrid .winsel')),240));`));
+      await c.eval('window.__t.__setMenuView("all");return 1'); await sleep(280);
+      for(const N of [30,60,90]){
+        await c.eval('document.querySelector(\'#menuGrid [data-win="'+N+'"]\').click();return 1');
+        await sleep(300);
+        const w=await c.eval(`const s=document.getElementById('menuCount'),o={};
+          [...s.querySelectorAll('[data-view]')].forEach(b=>
+            o[b.getAttribute('data-view')]=+b.querySelector('b').textContent.replace(/,/g,''));
+          return {on:(s&&document.querySelector('#menuGrid .winb.on')||{}).textContent,
+            head:(document.querySelector('#menuGrid .zhead h3')||{}).textContent.trim(),
+            fig:(document.querySelector('#menuCount [data-view="now"]')||{}).textContent.trim(),
+            rows:document.querySelectorAll('#menuGrid .mgrid.rows.live .pcard').length,
+            now:o.now, sums:(o.now+o.later+o.past+o.undated)===o.all};`);
+        eq(N+' days: the control shows which window is on',w.on,String(N));
+        eq('and the heading names it',w.head,'Due within '+N+' days');
+        T('and the strip figure names it too',w.fig.indexOf('within '+N+' days')>=0);
+        eq('and the panel holds exactly that many rows',w.rows,w.now);
+        T('and the bands still sum to the total at this window',w.sums);
+      }
+      /* Choosing a window while filtered to a band the window redefines would leave
+         the reader looking at a figure they never pressed. */
+      await c.eval('document.querySelector(\'#menuCount [data-view="now"]\').click();return 1');
+      await sleep(240);
+      await c.eval('document.querySelector(\'#menuGrid [data-win="30"]\').click();return 1');
+      await sleep(300);
+      eq('changing the window releases a band the window redefines',
+        await c.eval('return window.__t.__menuView()'),'all');
+      await c.eval('document.querySelector(\'#menuGrid [data-win="90"]\').click();return 1');
+      await sleep(280);
+
       /* ---- the past-due drawer ----
          A SECOND seed, because the fixture above deliberately leaves the past
          band empty so an empty band can be pressed, and there is no drawer
@@ -2172,29 +2216,36 @@ const FULL=process.argv.includes('--full');
       eq('pressing it again closes it',d2.hidden,true);
       eq('and what is coming still has not moved',d2.panelTop,d0.panelTop);
       /* ---- momentum is not intent ----
-         A fast flick up from halfway down the list keeps delivering wheel events
-         for a few hundred ms AFTER it has hit the top, and those were counted as a
-         pull: scrolling briskly back towards the Portfolio heading opened the
-         drawer by itself and threw the reader to the top of eighty rows they had
-         not asked for. Continuity is tracked now, and a gesture that began below
-         the top stays a scroll for its whole life however long its tail runs on.
+         Two shapes, and the app has to tell them apart.
 
-         Fired with NO sleep between events, which is what makes it one gesture. */
-      await c.eval('window.scrollTo(0,1200);return 1'); await sleep(280);
-      for(let i=0;i<24;i++){await notch();}
-      await sleep(700);
+         A FLING decays: big deltas, then a tail that keeps arriving after the page
+         has already landed. Those were counted as a pull, so scrolling briskly
+         back towards the Portfolio heading opened the drawer by itself.
+
+         A CONTINUOUS SWIPE does not decay — a hand still on the trackpad delivers
+         steady deltas for as long as it keeps moving. The first fix asked where the
+         gesture BEGAN, which disqualified this shape forever: Matt got "swiping up
+         and up and up and nothing expands". What separates them is the dwell right
+         after arriving at the top, where a tail lives and a moving hand does not. */
+      const wheel=dy=>c.send('Input.dispatchMouseEvent',
+        {type:'mouseWheel',x:600,y:400,deltaX:0,deltaY:dy});
+      await c.eval('window.scrollTo(0,700);return 1'); await sleep(340);
+      for(const d of [-260,-240,-220,-200,-170,-140,-110,-80,-55,-38,-24,-15,-9,-5,-3,-2,-1]){
+        await wheel(d); await sleep(14);
+      }
+      await sleep(900);
       const fl=await read();
-      eq('a fast flick up from mid-list does not open the drawer',fl.hidden,true);
+      eq('a fling up does not open the drawer, however long its tail runs on',fl.hidden,true);
       eq('it only returns the page to the top',fl.y,0);
-      /* And the same pull, once the flick has been let go of, does open it \u2014 so
-         what is being tested is the gesture boundary and not merely a raised
-         threshold. */
+      /* The shape the first fix broke: steady deltas, never pausing, begun well
+         down the list. This MUST open — otherwise the gate is just a wall. */
+      await c.eval('window.scrollTo(0,700);return 1'); await sleep(340);
+      for(let i=0;i<26;i++){await wheel(-120);await sleep(38);}
       await sleep(520);
-      for(let i=0;i<4;i++){await notch();await sleep(80);}
-      await sleep(560);
-      eq('but a deliberate pull once settled there does',(await read()).hidden,false);
+      eq('but a hand that keeps swiping does, even having started mid-list',
+        (await read()).hidden,false);
       await c.eval('document.getElementById("mPast").click();return 1');
-      await sleep(320);
+      await sleep(340);
 
       /* ---- the bar stays reachable, and puts itself away ----
          Pinned while open, so Hide can be pressed from anywhere in the drawer

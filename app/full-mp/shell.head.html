@@ -771,6 +771,26 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
 #viewMenu .zhead h3{font-size:11px;font-weight:600;letter-spacing:.13em;
   text-transform:uppercase;color:var(--i3);margin:0}
 #viewMenu .zhead span{font-size:12.5px;color:var(--i3)}
+/* ---- how far ahead ----
+   Three buttons in the heading of the panel they resize, pushed to its right edge
+   by a spacer so the heading and its count stay together on the left. Segmented
+   rather than a dropdown: three options, all worth showing, and the current one is
+   then a fact on the page instead of something you open a menu to read. */
+#viewMenu .zhead{justify-content:flex-start}
+#viewMenu .zhead .zsp{flex:1}
+#viewMenu .winsel{display:inline-flex;align-items:center;gap:0;flex:0 0 auto;
+  border:1px solid var(--ln);border-radius:var(--r-ctl);background:var(--card);
+  overflow:hidden;align-self:center}
+#viewMenu .winb{font:inherit;font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;
+  color:var(--i3);background:none;border:0;border-right:1px solid var(--ln-soft);
+  padding:5px 11px;cursor:pointer;min-width:38px}
+#viewMenu .winb:hover{background:var(--sunk);color:var(--i1)}
+#viewMenu .winb.on{background:#101d2b;color:#fff}
+#viewMenu .winb.on:hover{background:#101d2b;color:#fff}
+#viewMenu .winu{font-size:11px;color:var(--i4);padding:0 10px 0 9px;letter-spacing:.03em}
+/* An empty window is a state the control can produce, so it says so where the rows
+   would have been rather than leaving the heading standing over nothing. */
+#viewMenu .mempty.win0{margin-bottom:40px}
 #viewMenu .mgrid.rows{margin-bottom:0}
 #viewMenu .mgrid.rows.live{margin-bottom:48px}
 /* the live row: the name leads and says what the package is, the columns are

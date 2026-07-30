@@ -3051,8 +3051,22 @@ const PULL_MAX=340;
 /* Wheel events closer together than this are one continuous gesture. Long enough
    to span trackpad momentum, short enough that a deliberate second pull reads as
    a second gesture. */
-const GESTURE_GAP=180;
-let _pull=0,_pullTo=0,_pullAt=0,_pullTimer=null,_pullRaf=null,_gestPull=false;
+/* How long the page must have been AT the top before an upward wheel counts as a
+   pull. A fling's momentum tail arrives in the first couple of hundred
+   milliseconds after it lands and decays to nothing; a hand still moving does
+   not. This is the only thing separating the two, and it replaced a rule that
+   asked where the GESTURE began — which sounded right and failed in practice:
+   a trackpad swipe can deliver events under 180ms apart for as long as you keep
+   moving, so a swipe that began mid-page stayed disqualified however long you
+   kept swiping. Matt: "sometimes it triggers and sometimes im just swiping up and
+   up and up and nothing expands." */
+const TOP_DWELL=220;
+let _pull=0,_pullTo=0,_pullAt=0,_pullTimer=null,_pullRaf=null;
+/* When the page last ARRIVED at the top, measured off the scroll event rather
+   than the wheel, because that is the thing that actually happened. Zero means
+   "not recently", which is the state on load — so the first pull of a session is
+   not made to serve a dwell it never earned. */
+let _topAt=0,_leftTop=false;
 function _pullPaint(){
   const b=el('mPast');
   if(!b||!b.style||!b.style.setProperty)return;
@@ -3079,25 +3093,22 @@ function _menuPull(dy){
   if(_pastOpen||!v||v.style.display==='none'||!el('mPast')){if(_pullTo)_pullRelease();return;}
   const now=(typeof performance!=='undefined'&&performance.now)?performance.now():0;
   const atTop=(typeof window==='undefined')||(window.pageYOffset||0)<=0;
-  /* ---- where the gesture STARTED, not where the page is now ----
+  /* ---- momentum is not intent, and the dwell is how you tell ----
      A fast flick up from halfway down the list keeps delivering wheel events for
-     a few hundred milliseconds AFTER it has hit the top, and those were counted
-     as a pull: scrolling briskly back to the Portfolio heading opened the drawer
-     by itself and threw the reader to the top of eighty rows they had not asked
-     for. Momentum is not intent.
-
-     So continuity is tracked. Events less than GESTURE_GAP apart are one gesture,
-     and a gesture is only a PULL if it began with the page already at rest at the
-     top. One that began further down stays a scroll for its whole life, however
-     long its tail runs on. Lift off, pause, and pull again — that is a new
-     gesture, and it counts. */
-  const cont=now&&_pullAt&&(now-_pullAt)<GESTURE_GAP;
-  if(!cont){_gestPull=atTop;if(_pullTo)_pullTo=0;}
+     a few hundred ms AFTER it has landed, and those were counted as a pull:
+     scrolling briskly back towards the Portfolio heading opened the drawer by
+     itself. What is swallowed is the window right after ARRIVING at the top —
+     where a fling's tail lives and a moving hand does not. */
   _pullAt=now;
-  /* Only pulling up, only at the top, and only within a gesture that began
-     there. */
-  if(dy>=0||!atTop||!_gestPull){
+  if(dy>=0||!atTop){
     if(_pullTo)_pullRelease();
+    return;
+  }
+  if(_topAt&&now&&(now-_topAt)<TOP_DWELL){
+    /* Swallowed, and not accumulated — but the bar is only zeroed, not released,
+       so a hand carrying straight on through the dwell picks up from nothing
+       without a flicker. */
+    if(_pullTo)_pullTo=0;
     return;
   }
   /* The THRESHOLD reads the target, not the animated value: gating on the glide
@@ -3118,6 +3129,17 @@ function _menuPull(dy){
    point removing it and compensating the scroll leaves every visible pixel where
    it was, so the restore cannot be seen happening. */
 function _menuScrollBack(){
+  /* Arrival at the top, which is what the dwell is measured from. Recorded only on
+     the transition INTO it: sitting there does not keep re-arming the dwell, so a
+     deliberate pull on a page that has not moved responds at once. */
+  if(typeof window!=='undefined'){
+    const y=window.pageYOffset||0;
+    if(y>0)_leftTop=true;
+    else if(_leftTop){
+      _leftTop=false;
+      _topAt=(typeof performance!=='undefined'&&performance.now)?performance.now():0;
+    }
+  }
   if(!_pastOpen)return;
   const w=el('mPastWrap');
   if(!w||!w.getBoundingClientRect)return;
@@ -3296,8 +3318,38 @@ function actionBtnHtml(p,short){
    hap.js's own BAND_DAYS is deliberately NOT changed: it is held to the real
    corpus by test_hap.js, and this is a decision about what the page emphasises,
    not about what a band means to the tracker. */
-const MENU_WINDOW=90;
+const MENU_WINDOWS=[30,60,90];
+let MENU_WINDOW=90;
+/* Remembered, because a window you have to re-pick on every reload is not a
+   setting. localStorage rather than the record: it is how this reader likes to
+   look at the list, not a fact about the portfolio, and it must not travel to
+   anyone else opening the same properties. */
+try{const _w=+((typeof localStorage!=='undefined'&&localStorage.getItem('rcs.menuWindow'))||0);
+  if(MENU_WINDOWS.indexOf(_w)>=0)MENU_WINDOW=_w;}catch(e){}
 function _bandNow(){return MENU_WINDOW;}
+function setMenuWindow(n){
+  n=+n;
+  if(MENU_WINDOWS.indexOf(n)<0||n===MENU_WINDOW)return;
+  MENU_WINDOW=n;
+  try{if(typeof localStorage!=='undefined')localStorage.setItem('rcs.menuWindow',String(n));}catch(e){}
+  /* The chosen band is released. "within 30 days" and "within 90 days" are not the
+     same set, so a band chosen under one window and kept under the other leaves the
+     reader looking at a figure they never pressed. */
+  if(menuView==='now'||menuView==='later')menuView='all';
+  renderMenu();
+}
+/* Three buttons, in the heading of the panel they resize. A control belongs beside
+   the thing it changes: put in the strip it would have been a fourth kind of
+   element in a row of filters, and put in the toolbar it would have been a setting
+   with no visible subject. Here the heading states the window and the control
+   changes it, one inch apart. */
+function windowPickHtml(){
+  return '<span class="winsel" role="group" aria-label="How far ahead to show">'
+    +MENU_WINDOWS.map(n=>'<button type="button" class="winb'+(n===MENU_WINDOW?' on':'')
+      +'" data-win="'+n+'"'+(n===MENU_WINDOW?' aria-current="true"':'')
+      +'>'+n+'</button>').join('')
+    +'<span class="winu">days</span></span>';
+}
 /* Read left to right this is now the order of the work: everything, then what is
    coming, then what is beyond it, then what is behind, then what is off the
    schedule entirely. Matt set it. What is BEHIND comes fourth rather than second
@@ -3310,12 +3362,24 @@ function _bandNow(){return MENU_WINDOW;}
    implies it is putting an accusation in HUD's mouth. "already due" says the only
    thing that is actually true — the date has arrived. */
 const MENU_VIEWS=[
- {k:'all',    t:'properties',          c:''},
- {k:'now',    t:'within '+MENU_WINDOW+' days', c:'now'},
- {k:'later',  t:'later',               c:'soon'},
- {k:'past',   t:'already due',         c:''},
- {k:'undated',t:'not in the schedule', c:''},
+ {k:'all',    c:''},
+ {k:'now',    c:'now'},
+ {k:'later',  c:'soon'},
+ {k:'past',   c:''},
+ {k:'undated',c:''},
 ];
+/* COMPUTED, never stored on the entry above. As a literal in that array the label
+   was baked at load, so choosing 60 days left the strip reading "52 within 90
+   days" beside a heading reading DUE WITHIN 60 DAYS — the count moved and the
+   words did not, which is the worst of the two failures because the figure looks
+   authoritative. Matt caught it on screen; the suite caught it the same minute. */
+function viewLabel(k,n){
+  if(k==='all')return n===1?'property':'properties';
+  if(k==='now')return 'within '+MENU_WINDOW+' days';
+  if(k==='later')return 'later';
+  if(k==='past')return 'already due';
+  return 'not in the schedule';
+}
 /* The words live here, not in a click handler (FORM-RULES 17): the lede under
    the heading and the copy shown when a view is empty are two halves of one
    explanation and must be edited together. Every empty state names the next
@@ -3394,7 +3458,7 @@ function figuresHtml(counts,view){
     return '<button class="fig'+(v.c?' '+v.c:'')+(v.k===view?' on':'')+(counts[v.k]?'':' zero')
       +'" data-view="'+v.k+'"'+(v.k===view?' aria-current="true"':'')
       +' title="'+esc(C.lede)+'"><b>'+fmtNum(counts[v.k])+'</b> '
-      +esc(v.k==='all'&&counts.all===1?'property':v.t)+'</button>';}).join('');
+      +esc(viewLabel(v.k,counts[v.k]))+'</button>';}).join('');
 }
 
 /* The deadline, said the way a person would say it. */
@@ -3754,15 +3818,30 @@ function renderMenu(){
   /* ---- zone 2: what is coming ----
      "Due to HUD by Jul 31" over a row due Aug 1 is a heading asserting something
      its members do not share. The band is a window, so the heading names it. */
-  const _liveHtml=_liveRows.length?('<div class="zhead"><h3>Due within '+_bandNow()
-      +' days</h3><span>'+_pl(_liveRows.length)+' &middot; earliest deadline first</span></div>'
-    +'<div class="mgrid rows live">'+_zone(_liveRows)+'</div>'):'';
+  /* The panel is about what is coming, so it is drawn in the views that are about
+     that — everything, and the window itself. Filtered to what is already due or
+     off the schedule, a heading reading "nothing is due in the next 60 days" would
+     be answering a question nobody asked, and it put a SECOND empty panel on a
+     page that already had one. The control lives in that heading, so it comes and
+     goes with it; the strip is how you get back to a view that has it. */
+  const _liveZone=(view==='all'||view==='now');
+  const _liveHtml=!_liveZone?'':('<div class="zhead"><h3>Due within '+_bandNow()
+      +' days</h3><span>'+(_liveRows.length?(_pl(_liveRows.length)
+        +' &middot; earliest deadline first'):'Nothing in this window')+'</span>'
+    +'<span class="zsp"></span>'+windowPickHtml()+'</div>'
+    +(_liveRows.length?('<div class="mgrid rows live">'+_zone(_liveRows)+'</div>')
+      :(view==='now'?'':'<div class="mempty win0">Nothing is due in the next '+_bandNow()
+        +' days. Try a wider window, or read on below.</div>')));
 
   /* ---- zone 3: the rest of the schedule, by month ---- */
-  const _restN=_restRows.length+_offRows.length+_or.length;
+  /* Where the panel is not drawn, its rows fall to the ledger \u2014 otherwise
+     choosing "already due" and then "later" would silently drop the ones inside
+     the window, and the strip's figure would no longer equal the rows it draws. */
+  const _ledgerRows=_liveZone?_restRows:_liveRows.concat(_restRows);
+  const _restN=_ledgerRows.length+_offRows.length+_or.length;
   const _restHtml=_restN?('<div class="zhead"><h3>'+(_liveRows.length?'Further out':'The schedule')
-      +'</h3><span>'+_pl(_restN)+(_restRows.length?' &middot; earliest deadline first':'')+'</span></div>'
-    +'<div class="mgrid rows">'+_cols+_zone(_restRows)
+      +'</h3><span>'+_pl(_restN)+(_ledgerRows.length?' &middot; earliest deadline first':'')+'</span></div>'
+    +'<div class="mgrid rows">'+_cols+_zone(_ledgerRows)
     /* Off the axis, so below every month rather than inside the last one — a
        property with no deadline cannot sit on a deadline timeline. */
     +(_offRows.length?('<div class="mgroup">'+esc(_offRows[0].b.label)+'</div>'
@@ -3803,6 +3882,8 @@ function renderMenu(){
      Scrolling up while already at the top opens it too — the gesture a PM reaches
      for without being told. Guarded on the wheel pointing up AND the page being
      at the top, so it cannot fire mid-list. */
+  document.querySelectorAll('#menuGrid [data-win]').forEach(b=>{
+    b.onclick=()=>setMenuWindow(b.getAttribute('data-win'));});
   const _pb=el('mPast');
   if(_pb)_pb.onclick=()=>_togglePast();
   if(!_menuWheel&&typeof window!=='undefined'&&window.addEventListener){
