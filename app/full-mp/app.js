@@ -3021,34 +3021,77 @@ let _pastOpen=false;
 let _menuWheel=false;
 /* ---- the pull ----
    Opening on the first upward notch fired on flicks nobody meant as a gesture,
-   so the drawer now takes a SUSTAINED pull: upward wheel delta accumulates while
-   the page is already at the top, the bar stretches and fills as it climbs, and
-   it opens on crossing PULL_MAX. Scrolling down, or pausing, gives it all back —
-   an abandoned gesture must not leave the bar half-stretched, and must not add to
-   the next one. */
-const PULL_MAX=300;
-let _pull=0,_pullAt=0,_pullTimer=null;
-function _setPull(v){
-  _pull=Math.max(0,Math.min(PULL_MAX,v));
+   so the drawer takes a SUSTAINED pull: upward wheel delta accumulates while the
+   page is already at the top, and it opens on crossing PULL_MAX.
+
+   Two values, because they answer two different questions. The FILL is linear —
+   it is a progress rule and progress must not flatter. The STRETCH is eased so
+   the bar yields less the further it is pulled, which is what resistance is: the
+   first inch is free and the last one is work.
+
+   Both are driven by a rAF glide toward a target rather than written straight
+   from the wheel handler. Wheel events arrive in coarse discrete lumps, so
+   painting them directly made the rule jump from a third to two thirds in one
+   frame — staccato. The glide also gives release for free: the target drops to
+   zero and the rule slides back to the left over about a quarter second instead
+   of blinking out. */
+const PULL_MAX=340;
+let _pull=0,_pullTo=0,_pullAt=0,_pullTimer=null,_pullRaf=null;
+function _pullPaint(){
   const b=el('mPast');
-  if(b&&b.style&&b.style.setProperty)b.style.setProperty('--pull',String(_pull/PULL_MAX));
+  if(!b||!b.style||!b.style.setProperty)return;
+  const t=Math.max(0,Math.min(1,_pull/PULL_MAX));
+  b.style.setProperty('--pull',String(t));
+  /* Concave: steep at first, then grudging. */
+  b.style.setProperty('--stretch',String(1-Math.pow(1-t,2)));
 }
+function _pullTick(){
+  _pullRaf=null;
+  const d=_pullTo-_pull;
+  if(Math.abs(d)<0.5){_pull=_pullTo;_pullPaint();return;}
+  _pull+=d*0.2;
+  _pullPaint();
+  _pullGlide();
+}
+function _pullGlide(){
+  if(_pullRaf||typeof requestAnimationFrame!=='function'){if(_pullRaf)return;_pull=_pullTo;_pullPaint();return;}
+  _pullRaf=requestAnimationFrame(_pullTick);
+}
+function _pullRelease(){_pullTo=0;_pullGlide();}
 function _menuPull(dy){
   const v=el('viewMenu');
-  if(_pastOpen||!v||v.style.display==='none'||!el('mPast')){if(_pull)_setPull(0);return;}
+  if(_pastOpen||!v||v.style.display==='none'||!el('mPast')){if(_pullTo)_pullRelease();return;}
   /* Only at the very top, and only pulling up. Anywhere else this is an ordinary
-     scroll and the accumulator has to be empty when the reader gets back here. */
+     scroll, and the accumulator has to be empty when the reader gets back here. */
   if(dy>=0||(typeof window!=='undefined'&&(window.pageYOffset||0)>0)){
-    if(_pull)_setPull(0);
+    if(_pullTo)_pullRelease();
     return;
   }
   const now=(typeof performance!=='undefined'&&performance.now)?performance.now():0;
-  if(now&&_pullAt&&(now-_pullAt)>420)_setPull(0);   /* a pause ends the gesture */
+  if(now&&_pullAt&&(now-_pullAt)>420)_pullTo=0;   /* a pause ends the gesture */
   _pullAt=now;
-  _setPull(_pull-dy);
+  /* The THRESHOLD reads the target, not the animated value: gating on the glide
+     would make the drawer open a beat after the pull that earned it. */
+  _pullTo=Math.min(PULL_MAX,_pullTo-dy);
+  _pullGlide();
   if(_pullTimer&&typeof clearTimeout==='function')clearTimeout(_pullTimer);
-  if(typeof setTimeout==='function')_pullTimer=setTimeout(()=>_setPull(0),450);
-  if(_pull>=PULL_MAX){_setPull(0);_togglePast();}
+  if(typeof setTimeout==='function')_pullTimer=setTimeout(_pullRelease,420);
+  if(_pullTo>=PULL_MAX){
+    _pull=0;_pullTo=0;_pullPaint();
+    _togglePast();
+  }
+}
+/* ---- and it puts itself away ----
+   Scrolling back down past the drawer closes it, so the page returns to the
+   configuration it opened in rather than carrying eighty rows around for the rest
+   of the session. Only once the drawer is ENTIRELY above the viewport: at that
+   point removing it and compensating the scroll leaves every visible pixel where
+   it was, so the restore cannot be seen happening. */
+function _menuScrollBack(){
+  if(!_pastOpen)return;
+  const w=el('mPastWrap');
+  if(!w||!w.getBoundingClientRect)return;
+  if(w.getBoundingClientRect().bottom<=0)_togglePast();
 }
 /* Open or close the past-due drawer, holding everything below it still.
    Anchored on the live panel and not on the drawer's own height: offsetHeight
@@ -3710,6 +3753,7 @@ function renderMenu(){
   if(!_menuWheel&&typeof window!=='undefined'&&window.addEventListener){
     _menuWheel=true;
     window.addEventListener('wheel',e=>_menuPull(e.deltaY),{passive:true});
+    window.addEventListener('scroll',_menuScrollBack,{passive:true});
   }
 
   /* Wired here rather than in boot(): the rail is rebuilt on every render, so a

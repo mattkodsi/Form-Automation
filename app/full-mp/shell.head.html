@@ -815,19 +815,27 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
    bar grows and fills as it climbs. Opening on the first upward notch fired on a
    flick nobody meant as a gesture, so it now takes a sustained pull. */
 #viewMenu #menuPastBar{background:var(--paper)}
-#viewMenu .mpast{--pull:0;width:100%;display:flex;align-items:center;
+#viewMenu .mpast{--pull:0;--stretch:0;width:100%;display:flex;align-items:center;
   justify-content:space-between;gap:16px;position:relative;overflow:hidden;
   background:var(--card);border:0;border-bottom:1px solid var(--ln);
   border-radius:0;cursor:pointer;font:inherit;text-align:left;
-  padding:calc(13px + (var(--pull) * 18px)) 40px}
+  padding:calc(13px + (var(--stretch) * 20px)) 40px}
+/* Pinned while OPEN, so Hide is reachable from anywhere in the drawer instead of
+   only from the very top of it. Static when closed, where it already sits at the
+   top of the page and has nothing to stick to. Its containing block is the bar,
+   so it travels the length of the drawer and then leaves with it. */
+#viewMenu .mpast.open{position:sticky;top:0;z-index:6;
+  box-shadow:0 1px 0 var(--ln),0 6px 14px rgba(16,29,43,.07)}
 #viewMenu .mpast:hover{background:var(--sunk)}
 #viewMenu .mpast .mp-n{font-size:13.5px;font-weight:600;color:var(--i1)}
 #viewMenu .mpast .mp-a{font-size:12px;font-weight:600;color:var(--ledger);white-space:nowrap}
 /* How far the pull has got. A rule across the foot of the bar, not a spinner:
    it is the same hairline the bar already ends in, filling from the left. */
+/* No CSS transition: the width is driven frame by frame from a rAF glide, and a
+   transition on top of that fights it — the rule lagged its own animation and
+   read as staccato. */
 #viewMenu .mpast .mp-fill{position:absolute;left:0;bottom:0;height:2px;
-  width:calc(var(--pull) * 100%);background:var(--ledger);
-  transition:width .08s linear}
+  width:calc(var(--pull) * 100%);background:var(--ledger)}
 #viewMenu .mpastwrap{margin:0}
 #viewMenu .mpastwrap .mgrid.rows{border-radius:0;border-left:0;border-right:0;
   border-top:0;background:var(--card)}
