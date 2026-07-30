@@ -92,6 +92,22 @@ async function shotViewport(c,name,title,what){
      block. Passing no clip is the only way to get the window itself. */
   return png(c,name,title,what,null);
 }
+/* The rail is `position:sticky`, so it belongs to the window-true family: a
+   clipped shot is resolved in PAGE coordinates and would draw the rail wherever
+   scroll 0 would have put it, not where the reader is looking at it. These are
+   therefore uncropped windows — but at deviceScaleFactor 2, because the thing
+   under review is a 2px focus ring and a 38px indicator, and at 1x a reviewer
+   is squinting at exactly the pixels the shot exists to show. */
+async function shotWindow2x(c,w,h,name,title,what){
+  await c.send('Emulation.setDeviceMetricsOverride',
+    {width:w,height:h,deviceScaleFactor:2,mobile:false});
+  await sleep(260);
+  const f=await png(c,name,title,what,null);
+  await c.send('Emulation.setDeviceMetricsOverride',
+    {width:w,height:h,deviceScaleFactor:1,mobile:false});
+  await sleep(200);
+  return f;
+}
 async function viewport(c,w,h){
   await c.send('Emulation.setDeviceMetricsOverride',
     {width:w,height:h,deviceScaleFactor:1,mobile:false});
@@ -407,7 +423,113 @@ async function sweep(c){
   await stick('scrolled to the bottom');
   await shotViewport(c,'38-window-bottom-1440','The window scrolled to the bottom',
     'Where the sticky footer meets the last row of the form. Look for: a control hidden behind the footer.');
+  /* ── the rail as NAVIGATION ─────────────────────────────────────────────
+     The rail is the one part of the form whose whole job is to be looked at.
+     Three positions of the indicator, a row holding focus and the same row
+     without it, and the window immediately after a jump — because "the heading
+     cleared the bar" is a number in test_browser.js and a picture here, and
+     only the picture answers "does it look right". */
+  console.log('\n── the rail: the indicator, focus, and a jump ───────────');
+  const railGeo=await c.eval(`
+    const cards=[...document.querySelectorAll('#sections .card')];
+    const tall=cards.slice().sort((a,b)=>b.getBoundingClientRect().height-a.getBoundingClientRect().height)[0];
+    return {tallTop:tall?Math.round(tall.getBoundingClientRect().top+scrollY):null,
+      tallTitle:tall?((tall.querySelector('.ctitle')||{}).textContent||'').trim():null,
+      rows:[...document.querySelectorAll('#rail .railitem')].map(e=>e.getAttribute('data-rsec'))};`);
+
+  /* A picture cannot be asserted on, but the state it was taken in can. These
+     three readings are what let test_shots.js tell "the indicator moved" from
+     "three photographs of the same thing". */
+  measured.railStates={};
+  const railState=async(label)=>{
+    const o=await c.eval(`
+      const on=document.querySelector('#rail .railitem.on');
+      const bar=document.getElementById('railbar');
+      const cards=[...document.querySelectorAll('#sections .card')];
+      /* whichever card is actually filling the middle of the window */
+      const mid=innerHeight/2;
+      const seen=cards.filter(e=>{const r=e.getBoundingClientRect();return r.top<mid&&r.bottom>mid;})
+        .map(e=>((e.querySelector('.ctitle')||{}).textContent||'').trim());
+      return {scrollY:Math.round(scrollY),
+        lit:on?String(on.getAttribute('data-rsec')):null,
+        litLabel:on?(on.textContent||'').replace(/\s+/g,' ').trim():null,
+        ariaCurrent:on?on.getAttribute('aria-current'):null,
+        barTop:bar?Math.round(bar.getBoundingClientRect().top-document.getElementById('rail').getBoundingClientRect().top):null,
+        barHeight:bar?Math.round(bar.getBoundingClientRect().height):null,
+        fillingTheWindow:seen.join(' / ')||'—'};`);
+    measured.railStates[label]=o;
+    console.log('  '+label+': '+JSON.stringify(o));
+    return o;};
+
+  await c.eval('window.scrollTo(0,0);return 1');await sleep(700);
+  await railState('indicator @ top of the form');
+  await shotWindow2x(c,1440,960,'50-rail-indicator-top','The rail with the form at the top',
+    'The indicator at rest on the first section. Look for: does the marked row read as "you are here" rather than as a hover, and does a row read as pressable at all?');
+
+  await c.eval(`window.scrollTo(0,${railGeo.tallTop?railGeo.tallTop+120:1200});return 1`);await sleep(700);
+  await railState('indicator @ the tallest section');
+  await shotWindow2x(c,1440,960,'51-rail-indicator-middle','The rail partway down the form',
+    'The indicator on the tallest section. Look for: the bar aligned to its row, and whether the rest of the rail still reads as a list you could jump around.');
+
+  await c.eval('window.scrollTo(0,document.documentElement.scrollHeight);return 1');await sleep(800);
+  await railState('indicator @ the bottom');
+  await shotWindow2x(c,1440,960,'52-rail-indicator-bottom','The rail with the form scrolled to the bottom',
+    'The indicator at the foot. Look for: WHICH row is lit against which section actually fills the window — this is where a scroll-spy lies.');
+
+  /* Focus, by real Tab presses. :focus-visible is the state under review and a
+     programmatic focus() does not raise it, so these two shots are the only
+     honest way to ask whether the ring is there. Same scroll, same everything —
+     the ONLY difference between 53 and 53b is which element holds focus, which
+     is what makes comparing the two files meaningful. */
+  await c.eval(`window.scrollTo(0,0);document.getElementById('bFill').focus();return 1`);
+  await sleep(300);
+  let rlTabs=0;
+  while(rlTabs<12&&!(await c.eval(`const a=document.activeElement;
+      return !!(a&&a.classList&&a.classList.contains('railitem'))`))){
+    await c.key('Tab',{wait:60});rlTabs++;}
+  for(let i=0;i<3;i++)await c.key('Tab',{wait:60});   /* land mid-rail, not on row 1 */
+  measured.railFocus=await c.eval(`const a=document.activeElement;
+    const other=[...document.querySelectorAll('#rail .railitem')].find(e=>e!==a);
+    const S=e=>{const s=getComputedStyle(e);return {outline:s.outlineStyle+' '+s.outlineWidth+' '+s.outlineColor,
+      offset:s.outlineOffset,shadow:s.boxShadow,bg:s.backgroundColor};};
+    return {reachedByTab:!!(a&&a.classList&&a.classList.contains('railitem')),
+      row:a?(a.textContent||'').trim():null,
+      /* gated on it BEING a rail row: an <input> reached by Tab matches
+         :focus-visible perfectly well, so an ungated reading reports a rail
+         focus ring on source whose rail is ten inert DIVs. */
+      focusVisible:!!(a&&a.classList&&a.classList.contains('railitem')&&a.matches&&a.matches(':focus-visible')),
+      focused:a?S(a):null,unfocused:other?S(other):null};`);
+  console.log('  rail focus: '+JSON.stringify(measured.railFocus));
+  await shotWindow2x(c,1440,960,'53-rail-row-focused','A rail row holding keyboard focus',
+    'Reached by real Tab presses, so :focus-visible applies. Look for: a ring you can actually SEE, and whether it is distinguishable from the active-section marking beside it.');
+  await c.eval('if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();return 1');
+  await sleep(300);
+  await shotWindow2x(c,1440,960,'53b-rail-row-unfocused','The same window with nothing focused',
+    'The control for the shot above: identical scroll, identical state, focus removed. If this file and 53 are the same bytes, the focus ring does not exist.');
+
+  /* A jump, photographed where it lands. The bar is HIDDEN at scrollY 0 and
+     slides in during the scroll, so this is the frame where a wrong offset
+     shows up as a title tucked under the bar. */
+  measured.ccbarHeights=measured.ccbarHeights||{};
+  measured.ccbarHeights['1440']=await c.eval(`window.scrollTo(0,1200);
+    await new Promise(r=>setTimeout(r,500));
+    const b=document.getElementById('ccbar');const r=b.getBoundingClientRect();
+    const chips=[...b.querySelectorAll('.bchip')].filter(e=>e.offsetParent!==null);
+    return {h:+r.height.toFixed(2),chips:chips.length,
+      lines:[...new Set(chips.map(e=>Math.round(e.getBoundingClientRect().top)))].length,
+      text:(b.textContent||'').replace(/\s+/g,' ').trim().slice(0,120)};`);
+  console.log('  ccbar @1440: '+JSON.stringify(measured.ccbarHeights['1440']));
+
+  await c.eval(`window.scrollTo(0,0);return 1`);await sleep(600);
+  await c.eval(`const rr=[...document.querySelectorAll('#rail .railitem')];
+    const t=rr[Math.min(rr.length-1,Math.max(0,Math.floor(rr.length/2)))];if(t)t.click();return 1;`);
+  await sleep(1400);
+  await stick('immediately after a jump from the top');
+  await shotWindow2x(c,1440,960,'54-window-after-jump-1440','The window immediately after a jump from scrollY 0',
+    'The command bar was hidden when this jump started and slid in during it. Look for: is the section title clear of the bar, or tucked under it?');
+
   /* dirty, so the unsaved tag has every reason to be on screen */
+  await c.eval(`window.scrollTo(0,0);return 1`);await sleep(300);
   await c.eval(`window.__t.__editCell('poc.name','Somebody Else');window.__t.__renderBody();return 1`);
   await sleep(400);
   const dirtyState=await stick('dirty');
@@ -466,6 +588,22 @@ async function sweep(c){
 
   await c.eval('window.__t.openMenu();return 1');await sleep(450);
   await overflow('menu @860');
+  await c.eval(`await window.__t.__openForm(${JSON.stringify(pid)});return 1`);await sleep(700);
+  await c.eval('window.scrollTo(0,0);return 1');await sleep(500);
+  await shotWindow2x(c,860,900,'55-rail-860','The rail at 860, where it stops being sticky',
+    'Below 1050px the rail is a table of contents at the top of the page rather than a sticky column. Look for: does it still read as navigation in that position, and does the indicator still mark a row?');
+  await c.eval('window.scrollTo(0,1200);return 1');await sleep(600);
+  measured.ccbarHeights=measured.ccbarHeights||{};
+  measured.ccbarHeights['860']=await c.eval(`const b=document.getElementById('ccbar');
+    const r=b.getBoundingClientRect();
+    const chips=[...b.querySelectorAll('.bchip')].filter(e=>e.offsetParent!==null);
+    return {h:+r.height.toFixed(2),chips:chips.length,
+      lines:[...new Set(chips.map(e=>Math.round(e.getBoundingClientRect().top)))].length,
+      text:(b.textContent||'').replace(/\s+/g,' ').trim().slice(0,120)};`);
+  console.log('  ccbar @860: '+JSON.stringify(measured.ccbarHeights['860']));
+  await shotWindow2x(c,860,900,'56-ccbar-860','The command bar at 860, scrolled',
+    'The bar used to wrap to five lines here. Look for: one line, and whether the chips are still readable once their labels collapse to icons.');
+  await c.eval('window.__t.openMenu();return 1');await sleep(450);
   await shotViewport(c,'48-window-menu-860','The gallery window at 860',
     'Look for: the filter strip running off the right edge with nothing to say so.');
   await shotPage(c,'44-view-menu-860','The property gallery at 860px',
@@ -519,6 +657,46 @@ function writeIndex(m){
     L.push('```');
     Object.entries(m.rail).forEach(([k,v])=>L.push(k.padEnd(14)+': '+v));
     L.push('```');
+    L.push('');
+  }
+  if(m.railStates){
+    L.push('## The indicator, at the three positions photographed');L.push('');
+    L.push('| position | scrollY | row lit | aria-current | bar top / height (within #rail) | section filling the window |');
+    L.push('|----------|--------:|---------|--------------|--------------------------------:|----------------------------|');
+    for(const [k,o] of Object.entries(m.railStates))
+      L.push(`| ${k} | ${o.scrollY} | ${o.litLabel||'**none**'} | ${o.ariaCurrent||'—'} | ${o.barTop==null?'no bar':o.barTop+' / '+o.barHeight} | ${o.fillingTheWindow} |`);
+    L.push('');
+  }
+  if(m.ccbarHeights){
+    L.push('## The command bar, measured at both widths');L.push('');
+    L.push('| width | height | chips | chip lines |');
+    L.push('|-------|-------:|------:|-----------:|');
+    for(const [k,o] of Object.entries(m.ccbarHeights))
+      L.push(`| ${k}px | ${o.h}px | ${o.chips} | ${o.lines} |`);
+    L.push('');
+    L.push('It must be ONE height at every width: a jump offset is computed against it.');
+    L.push('');
+  }
+  if(m.railFocus){
+    L.push('## The rail row that holds focus, as computed');L.push('');
+    L.push('```');
+    L.push('rail row reached by real Tab   : '+m.railFocus.reachedByTab);
+    L.push('rail row                       : '+m.railFocus.row);
+    L.push('rail row matches :focus-visible: '+m.railFocus.focusVisible);
+    if(m.railFocus.focused){
+      L.push('focused   outline   : '+m.railFocus.focused.outline+'  offset '+m.railFocus.focused.offset);
+      L.push('focused   background: '+m.railFocus.focused.bg);
+    }
+    if(m.railFocus.unfocused){
+      L.push('unfocused outline   : '+m.railFocus.unfocused.outline);
+      L.push('unfocused background: '+m.railFocus.unfocused.bg);
+    }
+    L.push('```');
+    L.push('');
+    L.push('Shots `53-rail-row-focused` and `53b-rail-row-unfocused` are the same window');
+    L.push('at the same scroll with only focus changed. Identical bytes would mean the');
+    L.push('ring is not drawn — a prior audit on this project found exactly that on a');
+    L.push('dropdown trigger, so the images are compared and not merely the styles.');
     L.push('');
   }
   if(m.conflictColour){
