@@ -5,14 +5,49 @@ production deploy).
 
 ---
 
-> # RESUME HERE — 2026-07-30. All 34 audited, 25 defects fixed. M47 is DONE.
+> # RESUME HERE — 2026-07-30. All 34 audited, 26 defects fixed. M54 and M55 are DONE.
 >
-> HEAD `4914153` (+ this record), pushed, tree clean, **0** `ZZ-CORPUS-*` in the account.
-> Eleven suites, **1,717 checks**, all green. The corpus loop is **finished** — every property
-> has been driven through the real app, read by eye against its own sources, and compared
-> three ways against what was filed. Matt has answered the open questions; three findings
-> are withdrawn or tabled as a result. See the last two sections of
-> `docs/superpowers/plans/DIAGNOSTIC-REGISTER.md` for all of it.
+> HEAD `04d0609` (+ this record), pushed, tree clean, **0** `ZZ-CORPUS-*` in the account.
+> Eleven suites, **1,753 checks**, all green. Every property has been driven through the real
+> app, read by eye against its own sources, and compared three ways against what was filed.
+>
+> ---
+>
+> ## DONE — the big one. Seven schedules print HUD-92458 somewhere else (04d0609)
+>
+> **M54 as recorded proposed the wrong fix, and the measurement is the useful part.** Fitting
+> each axis independently over a page's own label correspondences — a more generous model than
+> tier 3's similarity fit — leaves a **median 3.2 to 9.0 points** of error on the declined
+> pages, with maxima of **13 to 16**: more than a printed row. On Market Square the implied
+> shift walks from −1.4pt at the top of the page to −45pt at the bottom, because that printing
+> sets Part B's rows on a **14.4pt pitch where ours uses 10.92**. They are different
+> *printings* of the form, so no transform of any order places them — and "anchor the rects to
+> found text" fails too, because inside Part A there is no text to anchor to. There are
+> **four** alternate printings in the corpus, each shared by exactly two properties.
+>
+> **What ships instead:** `rsTableA` reads Part A out of the form's own table — columns from
+> the page's own printed "Col. 1".."Col. 8", rows from its own baselines, no reference to our
+> geometry at all — and hands the result to the same `rsAssembleFields`, whose reconciliation
+> against the schedule's printed monthly total decides whether the read is believed. Reached
+> **only where the reader returned null before.**
+>
+> **Six properties gained their whole rent roll, every figure eye-read off the source page:**
+> Market Square 118,712/mo · Mapleview Towers 247,248 · Riverwood 106,563 · Shiloh Village
+> 267,688 · 333 Holly 221,267 · The Pines 242,808. Every unit count, rent and allowance
+> matches the printed page exactly. **Tier 2 read 3 of 34 prior schedules before and reads 9
+> now.** Riverwood went from *three OCR calls and zero files* to a package; Market Square and
+> Mapleview from 3 files and 2 billed calls to **5 files and none**.
+>
+> **M55 closed with it.** The Pines' two fill orders disagreed on 12 rows because tier 3 placed
+> them through a fit that held to only 3.4pt on a 12pt pitch. Read as a table they agree
+> exactly and the phantom fourth row is gone. **M37's contaminated names are finished too** —
+> `The Pines fka Wood Glen Apartments`, `Shiloh Village Apts.`, no swallowed divider.
+>
+> **Still open on those pages:** Parts B–E are unread on a printing that is not ours (the
+> reader covers Part A, the head row and the printed total); Westwood Village and Oaks on
+> North Plaza correctly gain nothing and stay OCR cases. See the last section of
+> `docs/superpowers/plans/DIAGNOSTIC-REGISTER.md` for all of it, including the four-printing
+> table and the proof that the control's two moved rows are M47's, not this fix's.
 >
 > ---
 >
@@ -46,7 +81,10 @@ production deploy).
 >
 > ---
 >
-> ## THE ONE LARGE JOB — M54, and it wants its own session
+> ## ~~THE ONE LARGE JOB — M54~~ — SHIPPED 2026-07-30 as `04d0609`. Kept below because
+> the three measurements it names are still the sharpest statement of what these pages are,
+> and because the fix it proposed ("anchor each page's rects to found text") was measured and
+> refused — see the register's M54 section.
 >
 > Our blank HUD-92458's vertical metrics do not match the filed renditions, in three places
 > The Pines measured exactly:

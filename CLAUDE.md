@@ -157,7 +157,9 @@ a new suite needs registering (`deliver.sh` calls it).
   no chromium is installed.
 - **`app/full-mp/test_rcs.js`** — the RCS study reader against the real corpus: nine studies from four
   firms, trimmed to the pages that carry the numbers; 230 checks. The largest suite, and the one that
-  guards every figure the appraiser supplies.
+  guards every figure the appraiser supplies. Since 2026-07-30 it also holds the HUD-92458 table
+  reader (`rsTableA`) against `fixture_rs_printings.json` — two REAL prior schedules printed at
+  coordinates our template does not share, one of them a scanner’s own text layer.
 - **`app/full-mp/test_gen.js`** — record → PDF bytes: what each generated document actually prints,
   and what it refuses to print rather than print wrong; 33 checks.
 
@@ -181,7 +183,7 @@ a new suite needs registering (`deliver.sh` calls it).
   AcroForm, the filed checklist font is offset ASCII−29, and our own output has no word spacing.
   See `docs/superpowers/plans/MORNING-REPORT.md` for what the first full sweep found.
 
-**1717 checks across eleven suites** (81 · 169 · 144 · 138 · 75 · 384 · 189 · 315 · 11 · 91 · 120) as of 2026-07-30. These
+**1753 checks across eleven suites** (81 · 169 · 144 · 138 · 75 · 420 · 189 · 315 · 11 · 91 · 120) as of 2026-07-30. These
 numbers go stale the moment a suite grows — `MIN_CHECKS` in each file is the binding floor; this list
 is a map.
 ⚠️ **Don't pipe a suite through `| tail`.** A pipeline's exit status is the LAST command's, so node's

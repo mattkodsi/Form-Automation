@@ -2250,3 +2250,141 @@ the text), and on DocuSigned copies they are drawn marks. So the checklist half 
 comparison has never verified anything about ticks — the five eye-reads in the table above are the
 only ground truth there is on this document, and any future claim about a filed tick must come the
 same way.
+
+---
+
+# M54 — SHIPPED, and the fix the register proposed was the wrong one (04d0609)
+
+M54 was recorded as *"a fix that anchors each page's rects to found text before placing anything
+closes all three."* Measured, that is not available, and the measurement is the useful part of this
+entry.
+
+## What the pages actually are
+
+For every prior schedule in the corpus, the page's own label correspondences against our template
+were fitted **per axis independently** — a strictly more generous model than the similarity fit
+tier 3 uses, since it allows a different scale in x and y:
+
+| property (page 1) | y scale | y shift | median err | max err | verdict |
+|---|---|---|---|---|---|
+| the 13 copies the premise accepts | 1.00000–1.00039 | ≤0.05 | **0.00–0.09** | ≤0.32 | our printing |
+| Newberry Arms (2019 copy) | 1.03959 | −20.09 | **0.24** | 0.93 | our printing, scaled 4% |
+| 333 Holly | 1.00341 | −8.60 | **3.18** | 13.66 | not our printing |
+| The Pines | 1.00281 | −8.51 | **3.36** | 13.72 | not our printing |
+| Shiloh Village | 0.98332 | +8.36 | **3.55** | 13.98 | not our printing |
+| Oaks on North Plaza | 0.98480 | +8.23 | **4.04** | 13.42 | not our printing |
+| Mapleview Towers · Market Square | 1.02057 | −30.31 | **5.32** | 12.65 | not our printing |
+| Westwood Village · Riverwood | 1.00824 | −33.17 | **9.00** | 16.09 | not our printing |
+
+A median of 3 to 9 points with maxima of 13 to 16 is **more than a printed row**, so no affine
+transform places these pages. The reason is visible in the correspondences themselves: on Market
+Square the implied shift walks from −1.4pt at the top of the page to −45pt at the bottom, and inside
+Part B its rows sit on a **14.4pt pitch where ours uses 10.92**. These are different *printings* of
+HUD-92458, not displaced copies of ours.
+
+Note the pairs. There are **four** alternate printings in the corpus, each shared by exactly two
+properties — identical to five decimal places — so every one of them meets the two-property rule on
+its own.
+
+That also disposes of "anchor the rects to found text": inside Part A there is **no text to anchor
+to** (the cells are the figures we are trying to read) and its rows are on a pitch of their own.
+Field 228's 4.9pt is the same story from the other end — our rect sits correctly *below* our own
+printed "Name and Title" at y 194.52, and The Pines prints its signatory *above* that label, because
+that printing puts the box on the other side of its caption.
+
+## What was done instead — read Part A out of the form's own table
+
+Every printing shares the form's own **text**: HUD numbers the columns of Part A on the page,
+"Col. 1" through "Col. 8", names the Part above them and its totals below, and prints one unit type
+per line. `rsTableA` (app.js) takes the columns from the page's own headings and the rows from its
+own baselines, with no reference to our geometry at all, and hands the result to the same
+`rsAssembleFields`. It is reached **only where the reader returned null before**, so nothing that
+reads today can read differently.
+
+Three details are the whole design:
+
+- **The column numbers are taken in order, each the leftmost still right of the one before.** On a
+  scanner's text layer the word "Col." and its digit are separate runs, and the same two fragments
+  occur again lower down inside `(Col. 4 Sum x 12)*`. On The Pines that rule alone is the difference
+  between reading Col. 4 at x 258, where its figures are, and at x 169, where the caption is.
+- **The totals caption bounds the rows.** "Total Units 76 $118,712 $0" carries three numeric cells
+  and would otherwise be filed as a twelfth unit type.
+- **The gate decides, not the reader.** Three of these pages are a scanner's own OCR — every number
+  arrives in fragments, "1," then "350" — so `rsAssembleFields`' reconciliation against the
+  schedule's printed monthly total is what makes reading them defensible. Oaks on North Plaza, whose
+  scanner read $111,198 where the page prints $91,922, still declines.
+
+Also: the **premise is now asked of each half.** Market Square's and Mapleview's page 1 is a printing
+we cannot place while their page 2 is ours exactly — 43 of 43 labels — so judging the halves together
+threw away the certification page along with the rent roll. On every copy in the corpus whose front
+half passes, the back half passes too, so this costs nothing that reads today.
+
+## Six properties gained their whole rent roll, every figure eye-read
+
+Source pages read as images, which is the only ground truth these documents have:
+
+| property | rows read | monthly potential | printed on the page |
+|---|---|---|---|
+| Market Square | 1 Bedroom 75 @ 1,562 + 1 unassisted @ 1,562 | 118,712 | **$118,712** ✓ |
+| Mapleview Towers | 1 Bedroom 100 @ 2,448 + 1 unassisted @ 2,448 | 247,248 | **$247,248** ✓ |
+| Riverwood | 4/23/32/24 units, 83 total | 106,563 | **$106,563** ✓ |
+| Shiloh Village | 2/3/4 BR — 16/80/72 units, 168 total | 267,688 | **$267,688** ✓ |
+| 333 Holly | 51/41/35/12 units, 139 total | 221,267 | **$221,267** ✓ |
+| The Pines | 1/2/3 BR — 40/72/40 units, 152 total | 242,808 | **$242,808** ✓ |
+
+Every unit count, rent per unit and utility allowance matches the printed page exactly. **Tier 2 read
+3 of 34 prior schedules before this and reads 9 now.**
+
+Through the real signed-in app (`m54.json`, sha 04d0609), against the previous sweep of each:
+
+| property | before | after |
+|---|---|---|
+| Riverwood | `unreadable:text`, **3 OCR calls, 0 files** | `text:half`, 1 call, **3 files**, 26 compared |
+| Market Square | `unreadable:text`, 2 calls, 3 files, 8 compared | `text`, **0 calls**, **5 files**, 72 compared |
+| Mapleview Towers | `unreadable:text`, 2 calls, 3 files, 7 compared | `text`, **0 calls**, **5 files**, 67 compared |
+| Shiloh Village | 20 compared, **8 differences** | 20 compared, **2 differences** |
+| 333 Holly | 26 compared, **11 differences**, 2 calls | 26 compared, **6 differences**, 1 call |
+| The Pines | `ocr:half`, 2 calls, **fillOrder 12** | `text:half`, 1 call, **fillOrder 0** |
+
+**M55 is closed by this.** The Pines' two fill orders disagreed on 12 rows because tier 3 was placing
+its rows through a fit that held to 3.4pt on a 12pt pitch; read as a table they agree exactly, and the
+phantom fourth row is gone.
+
+**M37's contaminated project names are finished too.** Read off the page's own head row there is no
+box to over-reach, so `ThePinesfkaWoodGlenApartmentsPartA-ApartmentRents` is now
+`The Pines fka Wood Glen Apartments` and Shiloh Village's is `Shiloh Village Apts.` One artifact
+remains and is not ours to fix: 333 Holly reads `Holly Creek 11`, because the scanner's own text
+layer renders the roman numeral II as 11 at a third the font size of its neighbours.
+
+## The control moved, and not because of this
+
+Hampshire House was driven as a control: its tier-2 read is byte-identical before and after, and its
+premise holds so it never enters the table path. Its difference count still moved 77 → 75, and the row
+diff against `wave-4` names exactly four changed values — `check.4` 0→1, the checklist heading's
+spacing, and two SAFMR figures 1590→1500 and 1916→1810. All four are `4914153` (M47) and
+`592101a`/`c7d6451` (the SAFMR precedence), every one of which landed after wave-4. This commit
+touches `app.js`, `test_rcs.js`, one fixture and the bundle — no checklist code and no SAFMR code —
+so it cannot have moved them.
+
+## What is still open on the seven
+
+- **Westwood Village and Oaks on North Plaza gain nothing**, correctly. Westwood's Part A figures are
+  vector outlines (its text layer holds one money run, the total); Oaks' scanner layer prints "Col,"
+  with no digit at all, so the columns cannot be found, and its figures are the misreads the register
+  already records. Both remain OCR cases.
+- **Parts B, C, D and E are still unread on a printing that is not ours.** The table reader covers
+  Part A, the head row and the printed total. Parts F–I arrive when the back half is our printing
+  (Market Square, Mapleview) and otherwise do not; the page-0 tick assist is deliberately skipped on
+  these pages, because registration is exactly what it does first and it fails by the same
+  measurement that sent us to the table.
+- **Market Square's 67 and Mapleview's 63 differences are mostly the rig**, on the pattern this
+  register has recorded four times: `theirs` reads `property.name = "N/A"`, `total.units =
+  "Potential(AddCol.4)*"` and `unit.0.units = "2325"`, which is the extractor a column and a row out
+  on a flattened filed schedule. One row in there looks real and is not this fix's business: our
+  proposed 1BR rent for Market Square is **2,375** against the filed **2,325**, in both the schedule
+  and the workbook.
+
+`test_rcs.js` 383 → **420 checks**, against `fixture_rs_printings.json` — both printings captured
+whole from the real files by the app's own reader, including the strays that would mis-place Col. 4
+and the totals line that would read as a unit row. It fails on the old code with
+`rsTableA is not defined`.
