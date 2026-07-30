@@ -1553,7 +1553,55 @@ async function rsRuns(txt,ctx){ // content stream -> ctx.runs [{s,x,y,d}] in pag
   const P=window.PDFLib;
   let cm=ctx.ctm.slice(),stack=[],tm=null,tlm=null,TL=0,font=null;
   const fonts=await rsFontMaps(ctx.res);
-  const emit=str=>{if(!str)return;const m=rsMul(tm||[1,0,0,1,0,0],cm);ctx.runs.push({s:str,x:+m[4].toFixed(2),y:+m[5].toFixed(2),d:ctx.depth});};
+  /* A gap the page draws by MOVING THE PEN rather than by printing spaces.
+     The TJ rule below restores the gaps a producer expresses as displacements
+     inside one array; this restores the ones expressed as Td moves between
+     separate show operations, which emit no characters at all and so were
+     invisible. Same fault, other spelling:
+
+       [(1)-96 ( BR)-71.9 ( /)-103.7 ( 1)-96 ( BA)]TJ
+       0 Tc 0 Tw 10.482 -0 0 10.4221 216.5607 309.732 Tm
+       (51)Tj  4.071 0 Td  (632)Tj  5.643 0 Td  [($1,)-35.7 (710)]TJ
+
+     welded to "1 BR / 1 BA51632$1,710" and every row pattern needs \s+ between
+     the count and the next column, so 333 Holly and Sample Property read as ZERO
+     unit types and their whole packages went unwritten. Their sibling Cornerstone
+     studies, The Pines and Sample Property, read fine only because Acrobat
+     emitted the same row as one TJ array. One template, two PDFMaker outputs.
+
+     The threshold comes from measuring the corpus, and it is deliberately high.
+     Cell gaps are an order of magnitude wider than anything inside a cell: their
+     medians run 44 to 125pt across the Cornerstone studies, while intra-cell
+     moves reach about 22pt. 25pt sits in that gap. A lower value was tried first
+     and rejected with evidence - at 1.5pt the reader began splitting figures, and
+     the suite caught it on Sample Property.
+
+     So this only ever separates CELLS, never words. A page that positions each
+     word with its own small Td gets no spaces from this rule, which is a real
+     limitation and not an oversight: the rule exists to stop a table row welding
+     into one string, and buying word spacing too would cost the margin that
+     makes the cell case safe. Belfry's studies use no horizontal Td moves at all,
+     so nothing this rule does can reach them.
+
+     Note the fix is here and NOT in the row patterns. Relaxing \s+ to \s* would
+     read "1 BR / 1 BA51632" as type "1 BR / 1 BA5", count 1, area 632 - filing a
+     confidently wrong unit mix in place of an honest zero. */
+  const RS_TD_GAP=25;   // device points; above kerning, below a word space
+  let gap=false,prevS='';
+  const devXY=t=>{const m=rsMul(t||[1,0,0,1,0,0],cm);return [m[4],m[5]];};
+  const emit=str=>{if(!str)return;
+    if(gap){gap=false;
+      /* One boundary no width rule can judge: the inside of a printed figure.
+         Sample Property draws "$1,580" as "$1," then a pen move then "580", and that
+         move is as wide as the moves between its own table cells - the same page
+         prints the same figure unsplit a few columns later. So no threshold can
+         separate them there. A digit-comma-digit boundary can only be one number
+         though: a thousands separator is never followed by a space. Note this is
+         deliberately NOT "both sides are digits", which would weld the genuinely
+         adjacent cells "30" and "537" into 30537 - the very ambiguity the TJ rule
+         above exists to prevent. */
+      if(!(/\d,$/.test(prevS)&&/^\d/.test(str)))str=' '+str;}
+    const m=rsMul(tm||[1,0,0,1,0,0],cm);ctx.runs.push({s:str,x:+m[4].toFixed(2),y:+m[5].toFixed(2),d:ctx.depth});prevS=str;};
   const deLit=b=>b.replace(/\\([nrtbf()\\]|[0-7]{1,3})/g,(mm,g)=>{if(g==='n')return'\n';if(g==='r')return'\r';if(g==='t')return'\t';if(g==='b')return'\b';if(g==='f')return'\f';if(/^[0-7]+$/.test(g))return String.fromCharCode(parseInt(g,8));return g;});
   const deHex=h=>{h=h.replace(/\s+/g,'').toLowerCase();const fi=font&&fonts[font]?fonts[font]:null;
     const step=(fi?fi.bytes===2:(h.length>=4&&/^00/.test(h)))?4:2;let o='';
@@ -1585,12 +1633,16 @@ async function rsRuns(txt,ctx){ // content stream -> ctx.runs [{s,x,y,d}] in pag
       case 'Q':cm=stack.pop()||ctx.ctm.slice();break;
       case 'cm':if(nums.length>=6)cm=rsMul(nums.slice(-6),cm);break;
       case 'Tf':font=lastName;break;
-      case 'BT':tm=[1,0,0,1,0,0];tlm=tm.slice();break;
+      case 'BT':tm=[1,0,0,1,0,0];tlm=tm.slice();gap=false;break;
       case 'ET':tm=null;break;
-      case 'Tm':if(nums.length>=6){tlm=nums.slice(-6);tm=tlm.slice();}break;
-      case 'Td':if(nums.length>=2){tlm=rsMul([1,0,0,1,nums[nums.length-2],nums[nums.length-1]],tlm||[1,0,0,1,0,0]);tm=tlm.slice();}break;
+      case 'Tm':if(nums.length>=6){tlm=nums.slice(-6);tm=tlm.slice();gap=false;}break;
+      case 'Td':if(nums.length>=2){const _p0=devXY(tlm);tlm=rsMul([1,0,0,1,nums[nums.length-2],nums[nums.length-1]],tlm||[1,0,0,1,0,0]);tm=tlm.slice();
+        const _p1=devXY(tlm);
+        // along ONE baseline only: a move that also drops a line is a new line,
+        // which lines() already separates by y, and must not read as a space
+        if(Math.abs(_p1[1]-_p0[1])<=0.5&&_p1[0]-_p0[0]>=RS_TD_GAP)gap=true;}break;
       case 'TD':if(nums.length>=2){TL=-nums[nums.length-1];tlm=rsMul([1,0,0,1,nums[nums.length-2],nums[nums.length-1]],tlm||[1,0,0,1,0,0]);tm=tlm.slice();}break;
-      case 'T*':tlm=rsMul([1,0,0,1,0,-TL],tlm||[1,0,0,1,0,0]);tm=tlm.slice();break;
+      case 'T*':tlm=rsMul([1,0,0,1,0,-TL],tlm||[1,0,0,1,0,0]);tm=tlm.slice();gap=false;break;
       case 'TL':if(nums.length)TL=nums[nums.length-1];break;
       case 'Tj':emit(lastStr);lastStr=null;break;
       case "'":tlm=rsMul([1,0,0,1,0,-TL],tlm||[1,0,0,1,0,0]);tm=tlm.slice();emit(lastStr);lastStr=null;break;
