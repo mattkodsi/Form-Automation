@@ -2,113 +2,77 @@
 
     /Users/matthewkodsi/Desktop/github/Form-Automation-AUDIT   branch: rcs-audit
 
-`cd` there at the start of every shell command.
+`cd` there at the start of every shell command. The corpus (read-only Drive mount):
 
----
+    ~/Library/CloudStorage/GoogleDrive-mfkodsi@gmail.com/My Drive/RCS Package Samples
 
-# STOP. Do not run anything yet.
+## Do not run the audit yet
 
-Write your methodology first. Matt approves it before you audit a single package.
-Then you prove it on ONE package before you touch the rest. Two gates, both his.
+Two gates, both Matt's: he approves your written method, then your pipeline passes a
+blind trial on one package he designates. Nothing scales until both pass.
 
-An overnight run that finds nothing is the failure mode this lane exists to avoid.
-It has already happened. It happened because nobody checked the method first.
+## The task
 
----
+30+ real properties. Each property folder holds one or more package years; a year
+holds the appraiser's RCS survey, the prior year's executed rent schedule, and the
+package the PM actually submitted to HUD. **Inventory the corpus yourself, from disk,
+every property and every year, before you scope anything.**
 
-## What this audit is
+For each (property, year) you audit, produce three versions of the package and compare
+all three:
 
-For each property AND each year it has a package, build three things:
+- **SHOULD** — what the package must contain, derived by you from the two source
+  documents alone, before consulting any answer.
+- **OURS** — what Matt's form generates when fed those same two documents: the
+  document set and the Excel workbook.
+- **FILED** — what the PM submitted.
 
-| | what it is |
-|---|---|
-| **SHOULD** | What the package must contain — derived by YOU, from the appraiser's RCS survey and the prior year's executed rent schedule. Reasoned out from the sources, before looking at any answer. |
-| **OURS** | What Matt's form generates when fed those same two documents — the documents and the Excel workbook. |
-| **FILED** | What the PM actually sent HUD that year. |
+FILED is evidence, not truth — PMs make mistakes too. SHOULD is the referee: every
+finding names which leg is wrong and how you know. Differences of style, ordering,
+file naming, or optional extra documents are not findings.
 
-Compare all three.
+Read every page of every document the way a reviewing human would — numbers, wording,
+placement, formatting, what is absent, what is invented. Rendering pages and looking
+at them is part of the pipeline for **every** document, not a step reserved for
+suspicious ones.
 
-**SHOULD is the referee, and that is the whole point.** Where OURS differs from FILED,
-that alone tells you nothing — it could be a bug in the form or a typo by the PM. Only
-SHOULD settles which. A comparison that treats FILED as truth cannot tell a defect from
-a human error, and every previous attempt here did exactly that.
+Audit the middle as well as the ends: what the form parsed from each source, what
+landed in which cell, provenance colours, saving — driven in a real browser, observed,
+not inferred from reading the code.
 
-Ignore differences of style, ordering, file naming, and extra optional documents a PM
-chose to include. Those are not findings.
+## Prove your instruments first
 
-## Read like a person, not like a parser
+Trust no tool you have not tested — **including everything already in this repo**.
+Before any extractor, renderer, or comparator joins your pipeline, show it detects a
+difference you deliberately planted and stays silent on an identical pair. A green
+unit suite is not that proof. Whatever fails the check is discarded, whoever wrote it.
 
-Every document, every page, in all three sets: **look at it and read it.** Textual,
-visual, functional. Numbers, wording, placement, formatting, alignment, what is missing,
-what is invented, what is in the wrong box.
+## Gate 1 — the method, one page
 
-Rendering is a PASS, not a follow-up. You cannot decide to look at a page because a
-finding told you to — the findings you are hunting are the ones only looking produces.
+Plain terms Matt can judge in two minutes:
 
-## Why the previous attempts failed — do not repeat these
+1. How you build SHOULD.
+2. How a page becomes something you can judge — mechanically.
+3. How you proved each instrument you rely on.
+4. Scale: package count, wall-clock, cost.
+5. What a finding looks like, and how it names the leg that is wrong.
 
-Verified in the code, not remembered:
+## Gate 2 — the blind trial
 
-1. **It never rendered a single page.** `sweep.js` contains no call to any renderer.
-   `look.js` and `rdiff.js` exist and nothing invokes them.
-2. **It stripped `$` and `,` off both sides before comparing** (`extract.js:96`,
-   `compare.js:68`), so a missing dollar sign on a federal filing compared as a perfect
-   match across all 34 properties.
-3. **It treated FILED as truth.** No SHOULD leg existed.
-4. **It audited a fraction.** The manifest holds 48 packages; the property folders on
-   disk hold 8–26 each. Re-manifest before you scope anything.
-5. Its verdict line reads *"every compared value agrees"* — which a reader takes as
-   "this property is fine."
+Matt designates one trial package when he approves the method. It contains defects you
+have not been told about. Run the full pipeline and report everything you find. Every
+finding must carry the pipeline evidence that produced it — the rendered region, the
+extracted values, the comparison — and findings without evidence do not count. You are
+graded on what you find, what you miss, and what you falsely report. Then wait.
 
-## The calibration gate — prove the method before you scale
+## Rails
 
-These are real defects in this form, every one found by a human eye and missed entirely
-by the automated sweep. Run your pipeline and see whether it rediscovers them **without
-being told where to look**:
-
-- The four rent-potential totals printed with no `$`, where every filed copy has one.
-- Part D Column 3 printed the prior year's rent instead of the proposed rent
-  (Colonial Village: 1,147 where the filing says 1,850).
-- Field 174 printed blank where HUD's own form and every filed copy print `0`.
-- Rent values stored as `"1,850"`, which Acrobat reads as 1.85 — the form miscalculated
-  by a factor of a thousand on a live filing.
-- Part H read "Vice President **of the** General Partner"; no source has that article.
-- The signature date defaulted to today, under a signature line nobody had signed.
-- The Part A project name lost everything after the `/`.
-
-**If your method cannot find these, it will not find the ones nobody has found yet.**
-Report how many you caught, and for each one you missed, why. That number is the gate.
-
-## Your methodology, in plain terms
-
-One page. No jargon. Matt must be able to judge it in two minutes. Answer exactly this:
-
-1. **How do you build SHOULD?** What do you read, and how do you decide what's correct?
-2. **How do you actually look at a document?** Mechanically — what turns a page into
-   something you can judge?
-3. **How do you know you catch things?** Your score on the calibration list above.
-4. **How big and how long?** Package count, wall-clock, and what it costs.
-5. **What do I get at the end?** The shape of the output, and how a finding says which
-   of the three legs was wrong.
-
-Then run **one** package end to end, show Matt the findings, and wait.
-
-## The rails
-
-- **Every run writes `ZZ-CORPUS-*` properties into Matt's LIVE account.** Delete them:
-
-      node app/full-mp/corpus/drive.js --cleanup --prefix ZZ-CORPUS- --dry-run
-      node app/full-mp/corpus/drive.js --cleanup --prefix ZZ-CORPUS-
-
-- A sweep refuses to run on `main`. You are on `rcs-audit`, so it will run.
-- **Stay out of `app.js` 2720–2867** (OCAF/UAF) and out of `shell.head.html` styling —
-  two other lanes own those. Findings that need a UI change: write them down, hand over.
+- Runs write `ZZ-CORPUS-*` properties into Matt's LIVE account. Delete them after
+  every run: `node app/full-mp/corpus/drive.js --cleanup --prefix ZZ-CORPUS-`
+  (`--dry-run` first to look).
+- Sweeps refuse to run on `main`; you are on `rcs-audit`.
+- Stay out of `app.js` lines 2720–2867 and out of `shell.head.html` styling — other
+  lanes own them. A finding that needs a UI change is written down and handed over.
 - Merge `origin/main` into this branch daily.
-- The OCR cache is symlinked to the main folder. Don't delete it; rebuilding costs money.
-- `bash app/full-mp/run_tests.sh` green before anything is pushed. Repairs reach `main`
-  by PR.
-
-## Read first
-
-- `SESSION-HANDOFF-2026-07-29-AUDIT.md` — the method, the repair loop, what's open.
-- `docs/superpowers/plans/MORNING-REPORT.md` — what the first sweep found.
+- `_archive/corpus-cache` is symlinked and expensive to rebuild. Do not delete it.
+- `bash app/full-mp/run_tests.sh` green before any push. Repairs reach `main` by PR.
