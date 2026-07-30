@@ -2753,3 +2753,81 @@ it**, comma-separated, where the first row has them split across two fields. `rs
 `_rsUpload.parsed.principals[i][f]`, so the question is whether the reader found a second principal
 at all or found it and dropped a field. **Not yet measured** — it needs Colonial Village's own
 executed schedule parsed and the `principals` array printed. Next wave.
+
+---
+
+# M64 — the generated rent schedule printed no dollar sign, and the sweep could not see it
+
+**Status: FIXED for the four potentials. And the honest part of this entry is why it was missed.**
+
+Matt found it by eye in about a minute. The 34-property sweep, which exists to compare a generated
+schedule against a filed one, reported agreement on every property.
+
+## Why it was invisible — by construction, not by oversight
+
+Two places strip currency formatting from **both sides** before anything is compared:
+
+- `corpus/extract.js:96` — `s=s.replace(/[$,]/g,'')` on anything matching a number
+- `corpus/compare.js:68` — `String(v).trim().replace(/^\$\s*/,'')`
+
+So the comparator compares **figures** and is blind to **presentation**. Every generated schedule
+could print `76,918` where the filed copy prints `$76,918` and all 34 would read as matching.
+`grep -rin "dollar sign"` over this register and `AUDIT-BACKLOG.md` returns nothing: this was never
+found and parked, it was never seen. The audit's summaries said "34 properties compared three
+ways" and never said "values only, formatting normalised away", which is the worse half — the
+limitation was real and undisclosed.
+
+**It is not a branch-vs-main difference.** `gen.js`'s rent-schedule `money` is
+`v=>Math.round(nmv(v)).toLocaleString('en-US')` at line 258 here and line 234 on `main`. Merging
+would not have fixed it.
+
+## Ground truth, eye-read from Colonial Village's executed 2023 schedule
+
+`75708 - Colonial Village - Section 8/2023/800016946_92458 Rent Schedule_10-1-2023 EXECUTED.pdf`,
+page 1. **The per-row columns are bare and only the four potentials carry the sign:**
+
+| cell | filed | ours (before) |
+|---|---|---|
+| Col. 3 Rent Per Unit | `1,061` | `1,061` ✓ |
+| Col. 4 Monthly Contract Rent Potential | `33,952` | ✓ |
+| Col. 5 Utility Allowances | `129` | ✓ |
+| Col. 6 Gross Rent | `1,190` | ✓ |
+| **Monthly Contract Rent Potential** | **`$76,918`** | `76,918` ✗ |
+| **Yearly Contract Rent Potential** | **`$923,016`** | `923,016` ✗ |
+| **Monthly Market Rent Potential** | **`$0`** | *(blank)* ✗ |
+| **Yearly Market Rent Potential** | **`$0`** | *(blank)* ✗ |
+
+This is why the fix is `dmoney` on four fields and not a blanket `$` on `money`: a blanket change
+would have traded Matt's defect for four wrong columns.
+
+**The market-rent reasoning here was wrong and is withdrawn.** `gen.js` argued that market rent
+potential must print blank because "we do not collect the market rents it sums — a stated zero is a
+claim". The filed copies print `$0`. Matt's instruction and the executed copy agree.
+
+## Two more differences the same page shows, NOT changed
+
+Recorded rather than reversed, because each was a deliberate decision with written evidence and
+neither is what Matt reported:
+
+1. **The filed copy keeps the template's `0` in Cols. 4, 6 and 8 on every unused row.** We clear
+   the whole 11-row grid, on the reasoning that a filing "went out showing 0 units at $0 down the
+   page". The filed copy shows that is in fact the convention. Needs a count across more properties
+   before reversing.
+2. **Part F "Maximum Allowable Monthly Rent Potential" prints `$ 76,918`** — the same figure as the
+   monthly contract rent potential. We blank field `1156`.
+
+Also visible, and it **corroborates two of Matt's instructions independently**: the filed
+`2BR Non Rev` row prints `0` in Col. 3 and Col. 5 (M63), and Part D prints `Leasing Office | 2 |
+1,061`, where `1,061` is that same filing's Col. 3 rent for the 2-Bedroom type — the rent being
+filed, not the prior term's (M63 again). One further difference: Part D Col. 2 prints `2`, the bare
+bedroom number, where we print `2 BR/1BA`.
+
+`test_gen.js` +7 → **87 checks**. Two checks asserted the dollar-less total; they asserted the old
+behaviour, so updating them is part of the fix.
+
+## What still has to happen
+
+The fix closes four cells. **It does not close the hole**, which is that the comparator normalises
+away the entire class. Until `compare.js` can compare presentation, the next defect of this shape
+is equally invisible. That is a bigger job than one wave — filed copies are mostly vector outlines,
+so the raw string is not always available — and it is now the top of the queue.

@@ -5,7 +5,50 @@ production deploy).
 
 ---
 
-> # RESUME HERE — 2026-07-30, wave 3. M62 done, and THREE OF MATT'S FOUR FINDINGS.
+> # RESUME HERE — 2026-07-30, wave 4. M64, and the audit's own blind spot named.
+>
+> ## THE THING TO FIX NEXT, ahead of the phase plan
+>
+> **The comparator cannot see presentation, and that is why Matt found the missing dollar signs
+> and 34 properties of sweeping did not.** `corpus/extract.js:96` (`s.replace(/[$,]/g,'')`) and
+> `corpus/compare.js:68` (`replace(/^\$\s*/,'')`) strip currency formatting from BOTH sides before
+> comparing. M64 fixes four cells; it does not fix the class. Hard part: most filed schedules are
+> vector outlines, so the raw string is not always available — the honest version may only cover
+> the 9 text-readable copies plus the template-side assertions.
+>
+> ## M64 — no dollar sign on the four potentials (FIXED), and it was NOT a branch/main gap
+>
+> `gen.js`'s rent-schedule `money` is dollar-less at line 258 here AND line 234 on `main`. Eye-read
+> off Colonial Village's executed 2023 schedule: the per-row columns are BARE (`1,061`, `33,952`,
+> `129`, `1,190`) and only the four potentials carry the sign (`$76,918`, `$923,016`, `$0`, `$0`).
+> So the fix is `dmoney` on four fields, never a blanket `$` on `money`. The old argument that
+> market rent potential must print blank is WITHDRAWN — the filed copies print `$0`.
+>
+> **Three differences from that same page are recorded and NOT changed** (each reverses a decision
+> with written evidence, and one property is not a count): the filed copy keeps the template's `0`
+> in Cols. 4/6/8 on unused rows where we clear them; Part F prints `$ 76,918` where we blank field
+> `1156`; Part D Col. 2 prints a bare `2` where we print `2 BR/1BA`. **Count these across the
+> other text-readable copies before touching them.**
+>
+> ## STILL OPEN from Matt's list — the second Part G principal
+>
+> Colonial Village: `Colonial Village Preservation GP, LLC` / `General Partner` copied; `David
+> Pearson, Vice President of the General Partner` did not. The failing row looks like it carries
+> its TITLE INSIDE THE NAME. MEASURE FIRST: parse 75708's executed schedule and print
+> `parsed.principals` — one principal found, or two with a field dropped? Different fixes.
+>
+> ## THE NAME-PROVENANCE AGENT FINISHED — and found worse than the alias problem
+>
+> `docs/superpowers/plans/2026-07-30-property-name-provenance.md`. **7 of 24 readable schedules
+> print a CONTRACT NUMBER where the name goes**, and on 2 the shipped splitter writes it into
+> `tenant.property_alias`, **which prints on the tenant notice's letterhead**. Also
+> `app.js:5172` writes a non-existent key `property.alias`. Its rule scores 21 correct / 8 correctly
+> refused / 0 wrong over 29 cases; the shipped slash-only rule scores 11 correct / 18 wrong. The
+> decisions in that file are Matt's and are NOT to be taken.
+>
+> ---
+>
+> ## WAVE 3 — M62 done, and THREE OF MATT'S FOUR FINDINGS.
 >
 > ## MATT REPORTED FOUR THINGS FROM TESTING COLONIAL VILLAGE — status of each
 >

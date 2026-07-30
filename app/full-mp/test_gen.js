@@ -236,7 +236,7 @@ function record(extra){
     eq('column 3 states a zero: this unit earns no contract rent',V(row+2),'0');
     eq('and column 5 a zero: it carries no allowance',V(row+4),'0');
     eq('and still no extension, because zero times anything is not a claim',V(row+3),'');
-    eq('so the potential is the Section 8 rows alone',V('95'),(10*900+6*1100).toLocaleString('en-US'));
+    eq('so the potential is the Section 8 rows alone',V('95'),'$'+(10*900+6*1100).toLocaleString('en-US'));
     eq('and the unit count still counts it',V('94a'),'17');
     eq('while Part D still names the use',V(159),"Manager's Unit"); }
   /* A non-revenue unit with no rent of its own must not invent one — Ebony's
@@ -250,7 +250,7 @@ function record(extra){
     /* UPDATED 2026-07-30, same instruction. Ebony's non-revenue unit rents at $0,
        and a printed 0 is now what the form says rather than a blank. */
     eq('a non-revenue row states a zero rent rather than nothing',V(row+2),'0');
-    eq('and adds nothing to the potential',V('95'),(10*900+6*1100).toLocaleString('en-US'));
+    eq('and adds nothing to the potential',V('95'),'$'+(10*900+6*1100).toLocaleString('en-US'));
     eq('and column 1 is still the type, not the use',V(row),'2 BR / 1 BA'); }
 
   /* ── PART D COLUMN 3 IS THE RENT BEING FILED, NOT LAST TERM'S ────────────
@@ -259,6 +259,37 @@ function record(extra){
      nonrev.<i>.rent holds what the prior schedule said; the proposed rent for the
      same unit type lives on its units.<j> row, and that is the contract rent for
      the term being filed. */
+  /* ── THE FOUR POTENTIALS CARRY A DOLLAR SIGN, THE COLUMNS DO NOT ──────────
+     Every figure below is read off Colonial Village's own executed 2023 schedule
+     (800016946_92458 Rent Schedule_10-1-2023 EXECUTED.pdf, page 1). Col. 3 prints
+     1,061 and Col. 4 33,952 and Col. 5 129 and Col. 6 1,190 — all bare — while the
+     four boxes beneath print $76,918, $923,016, $0 and $0.
+
+     Ours printed all six bare. The 34-property sweep reported agreement anyway,
+     because extract.js:96 and compare.js:68 strip `$` from BOTH sides before
+     comparing: the comparator compares figures and is blind to presentation. This
+     block is the part of that blindness that can be closed cheaply — against the
+     template, where the raw field string is readable. */
+  console.log('\n─ the four potentials carry a dollar sign ─');
+  { const r=record({'units.0.br':'2BR','units.0.ba':'1BA','units.0.num_units':'32','units.0.proposed':'1061',
+                    'units.1.br':'3BR','units.1.ba':'1BA','units.1.num_units':'33','units.1.proposed':'1302'});
+    const f=(await PDFDocument.load(await G.fillRentSchedule(rsBytes,r))).getForm();
+    const V=id=>{try{return f.getTextField(String(id)).getText()||'';}catch(e){return null;}};
+    const mo=32*1061+33*1302;
+    eq('monthly contract rent potential carries it',V('95'),'$'+mo.toLocaleString('en-US'));
+    eq('and the yearly one',V('96'),'$'+(mo*12).toLocaleString('en-US'));
+    /* Not blank. The old reasoning — that a stated zero is a claim we cannot
+       support — is wrong about this box: the filed copies print $0. */
+    eq('monthly market rent potential states $0 rather than nothing',V('97'),'$0');
+    eq('and the yearly one likewise',V('98'),'$0');
+    /* …and the per-row columns stay bare, which is the half a blanket fix breaks. */
+    const b=7+0*8;
+    eq('Col. 3 stays bare',V(b+2),'1,061');
+    eq('Col. 4 stays bare',V(b+3),(32*1061).toLocaleString('en-US'));
+    /* Col. 6 is Col.3 + Col.5, so its figure depends on the fixture's allowance —
+       what matters here is that it carries no sign. */
+    eq('Col. 6 stays bare',/^\$/.test(V(b+5)||''),false); }
+
   console.log('\n─ Part D column 3 is the proposed rent for that unit type ─');
   { const r=record({'nonrev.0.use':'Leasing Office','nonrev.0.br':'1BR','nonrev.0.ba':'1BA',
       'nonrev.0.num_units':'1','nonrev.0.rent':'1147',
