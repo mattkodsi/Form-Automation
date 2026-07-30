@@ -16,7 +16,7 @@ const els={};
 global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>null,querySelectorAll:()=>[],createElement:()=>mk(),addEventListener(){},body:{classList:{toggle(){},contains(){return false;}}}};
 const fs=require('fs'),path=require('path'),os=require('os');
 
-const MIN_CHECKS=350;
+const MIN_CHECKS=361;
 let n=0,fails=0,verdict=null;
 const BAR='='.repeat(68);
 function fail(msg,err){
@@ -55,7 +55,7 @@ const _b=path.join(os.tmpdir(),'rcs_parse_test.'+process.pid+'.js');
 process.on('exit',()=>{try{fs.rmSync(_b,{force:true});}catch(e){}});
 fs.writeFileSync(_b,'function ocrHalf(b,p,skip){(globalThis.__HALF=globalThis.__HALF||[]).push({p:p,skip:(skip||[]).slice()});return Promise.resolve(null);}\n'
   +['templates.js','core.js','score.js','db.js','app.js','rcs.js'].map(x=>fs.readFileSync(path.join(_d,x),'utf8')).join('\n')
-  +'\nif(typeof module!=="undefined")Object.assign(module.exports,{__rsTextPageAt:rsTextPageAt,__rsTextPages:rsTextPages,__rsReadTextTier:rsReadTextTier,__rsTplAlign:rsTplAlign,__rsTplPremiseHolds:rsTplPremiseHolds,__rsFieldRects:rsFieldRects,__rsMapRects:rsMapRects,__rsBoxText:rsBoxText,__rsDropTplLabels:rsDropTplLabels,__rsTplRuns:rsTplRuns,__rsDropFormLines:rsDropFormLines,__rsFormLines:rsFormLines});\n');
+  +'\nif(typeof module!=="undefined")Object.assign(module.exports,{__rsTextPageAt:rsTextPageAt,__rsTextPages:rsTextPages,__rsReadTextTier:rsReadTextTier,__rsTplAlign:rsTplAlign,__rsTplPremiseHolds:rsTplPremiseHolds,__rsFieldRects:rsFieldRects,__rsMapRects:rsMapRects,__rsBoxText:rsBoxText,__rsDropTplLabels:rsDropTplLabels,__rsTplRuns:rsTplRuns,__rsDropFormLines:rsDropFormLines,__rsFormLines:rsFormLines,__defUaSrc:defUaSrc,__defSafmrSrc:defSafmrSrc});\n');
 const app=require(_b);
 const R=global.window.RCSParse;
 const D_=_d+'/';
@@ -693,6 +693,52 @@ async function reader(file){
      It is a requirement of the OWNER COVER LETTER, so on Newberry Arms,
      Morningside Court and Northgate Terrace CA this alone withheld a document.
      These are the exact lines those three letters print. */
+  /* ── score.js's mirrors answer the same as app.js's ───────────────────────
+     score.js keeps its own copy of every source-precedence resolver, because the
+     menu and the launcher score a record with no form loaded. Its comment claimed
+     test_browser.js pinned them against app.js; it never did, and under cover of
+     that claim BOTH precedences drifted - d714cd8 moved the allowance default to
+     the study, 592101a moved the SAFMR default to the study's printed table, and
+     neither touched score.js. So for two commits the menu scored a record by the
+     opposite rule from the one the form applied. Nothing delivered was wrong,
+     because one resolver was dead code and the other is only read as > 0, which
+     is precisely why nobody noticed. These are the checks that were missing. */
+  console.log('\n─ score.js answers the same as app.js ─');
+  {
+    const S=global.window.RCSScore;
+    T('score.js exposes its mirrors',typeof S._defUaSrc==='function'&&typeof S._defSafmrSrc==='function');
+    /* Drive both through the same record. app.js's read the live form, so the
+       comparison is made value by value on the cases that distinguish them. */
+    const cases=[
+      {name:'both allowances present — the study wins',rec:{'units.0.ua_rcs':'116','units.0.ua_exec':'107'},want:'rcs'},
+      {name:'only the prior schedule has one',        rec:{'units.0.ua_exec':'107'},                        want:'exec'},
+      {name:'only the study has one',                 rec:{'units.0.ua_rcs':'116'},                         want:'rcs'},
+      {name:'neither, so it is the PM\u2019s own figure',rec:{},                                             want:'custom'},
+      /* A stated ZERO is a figure, not an absence - the lesson 83a1e14 was written
+         for, and the reason uaHas tests for empty rather than for truth. */
+      {name:'a stated $0 allowance still counts',      rec:{'units.0.ua_exec':'0'},                          want:'exec'}];
+    cases.forEach(c=>{
+      const read=k=>(k in c.rec)?c.rec[k]:'';
+      /* score.js's resolver is driven directly. app.js's namesake reads the live
+         FORM through its own get(), so it cannot be handed a synthetic record from
+         here - which is why the expectations below are written out in full rather
+         than compared against it. If app.js's precedence changes, these have to be
+         edited too, and that is the point: the drift that went unnoticed for two
+         commits now has to be acknowledged in writing to happen again. */
+      eq('UA: '+c.name,S._defUaSrc(read,0),c.want); });
+    const sc=[
+      {name:'both present — the study\u2019s printed table wins',rec:{'units.0.safmr_rcs':'1420','units.0.safmr_hud':'1492'},want:'rcs'},
+      {name:'only the HUD pull',                                rec:{'units.0.safmr_hud':'1492'},                            want:'hud'},
+      {name:'only the study',                                   rec:{'units.0.safmr_rcs':'1420'},                            want:'rcs'},
+      {name:'neither',                                          rec:{},                                                      want:'custom'},
+      /* A SAFMR of zero is not a SAFMR - unlike the allowance, these resolvers
+         test > 0, and that asymmetry is deliberate. */
+      {name:'a zero SAFMR is not a figure',                     rec:{'units.0.safmr_hud':'0'},                               want:'custom'}];
+    sc.forEach(c=>{
+      const read=k=>(k in c.rec)?c.rec[k]:'';
+      eq('SAFMR: '+c.name,S._defSafmrSrc(read,0),c.want); });
+  }
+
   console.log('\n─ two appraisers on one line ─');
   { const sigOf=lines=>{const S={};R._readSignature(lines,S);return S['appr.name']||'';};
     eq('Newberry Arms / Northgate Terrace',

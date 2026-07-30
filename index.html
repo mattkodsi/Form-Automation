@@ -1761,19 +1761,32 @@ const hasReal=(read,k)=>{const v=String(read(k)==null?'':read(k)).trim();return 
    Each one mirrors its namesake in app.js. They are here rather than passed in
    because the menu and the launcher score a record with no form loaded, and a
    score that could only be computed with the form open would be a second
-   computation again. test_browser.js pins these against app.js's own on a live
-   form — if one is edited and the other is not, that check fails. */
+   computation again.
+
+   THEY ARE PINNED BY test_rcs.js, and they were not always. This comment used to
+   claim test_browser.js pinned them; it never did - the resolvers appear nowhere
+   in that suite - and under cover of that claim BOTH source precedences drifted.
+   d714cd8 moved the allowance default to the study in app.js, db.js and gen.js;
+   592101a moved the SAFMR default to the study's printed table. Neither touched
+   this file, so for two commits the menu and the launcher scored a record by the
+   opposite rule from the one the form applied. Nothing delivered was wrong -
+   uaResolvedOf here was dead code and safmrResolvedOf is only read as > 0 - which
+   is exactly why it went unnoticed, and exactly why it is worth closing now
+   rather than after the first caller makes it visible.
+
+   If you change a precedence in app.js, change it here, and the parity checks in
+   test_rcs.js will tell you if you forget. */
 const dateEffResolved=read=>{const src=read('rent_schedule.date_eff_source')||(read('rent_schedule.date_eff_rs')?'rs':'custom');
   return src==='custom'?(read('rent_schedule.date_eff_custom')||read('rent_schedule.date_rents_effective')):read('rent_schedule.date_eff_rs');};
 const ocafFactorResolved=read=>{const src=read('ocaf.factor_src')||(read('ocaf.factor_pub')?'fr':'custom');
   return src==='custom'?numf(read('ocaf.factor_custom')):numf(read('ocaf.factor_pub'));};
 const uaHas=(read,k)=>{const v=read(k);return v!==''&&v!=null;};
-const defUaSrc=(read,i)=>uaHas(read,'units.'+i+'.ua_exec')?'exec':(uaHas(read,'units.'+i+'.ua_rcs')?'rcs':'custom');
+const defUaSrc=(read,i)=>uaHas(read,'units.'+i+'.ua_rcs')?'rcs':(uaHas(read,'units.'+i+'.ua_exec')?'exec':'custom');
 const uaResolvedOf=(read,i)=>{const src=read('units.'+i+'.ua_source')||defUaSrc(read,i);
   if(src==='rcs')return numf(read('units.'+i+'.ua_rcs'));
   if(src==='custom')return numf(read('units.'+i+'.ua_custom'));
   return numf(read('units.'+i+'.ua_exec'));};
-const defSafmrSrc=(read,i)=>{const h=numf(read('units.'+i+'.safmr_hud')),r=numf(read('units.'+i+'.safmr_rcs'));return h>0?'hud':(r>0?'rcs':'custom');};
+const defSafmrSrc=(read,i)=>{const h=numf(read('units.'+i+'.safmr_hud')),r=numf(read('units.'+i+'.safmr_rcs'));return r>0?'rcs':(h>0?'hud':'custom');};
 const safmrResolvedOf=(read,i)=>{const src=read('units.'+i+'.safmr_source')||defSafmrSrc(read,i);
   const sh=numf(read('units.'+i+'.safmr_hud')),sr=numf(read('units.'+i+'.safmr_rcs')),sc=numf(read('units.'+i+'.safmr_custom'));
   return src==='custom'?sc:(src==='rcs'?(sr||sh):(sh||sr));};
@@ -2059,7 +2072,7 @@ function scoreCaption(s){
   if(s.gate==='clean')return 'Every document has its source · '+s.caveats.length+' item'+(s.caveats.length===1?'':'s')+' left';
   return 'Ready to generate';}
 
-const API={
+const API={_defUaSrc:defUaSrc,_defSafmrSrc:defSafmrSrc,
   packageScore:packageScore, packageDocs:packageDocs, scoreCaption:scoreCaption,
   docReqs:docReqs, docCaveatReqs:docCaveatReqs, docMissing:docMissing, docWarns:docWarns,
   gateScore:gateScore, hasReal:hasReal, uafFigures:uafFigures, DOC_REQS:DOC_REQS, NA_RE:NA_RE};
