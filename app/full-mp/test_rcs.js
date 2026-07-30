@@ -16,7 +16,7 @@ const els={};
 global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>null,querySelectorAll:()=>[],createElement:()=>mk(),addEventListener(){},body:{classList:{toggle(){},contains(){return false;}}}};
 const fs=require('fs'),path=require('path'),os=require('os');
 
-const MIN_CHECKS=340;
+const MIN_CHECKS=350;
 let n=0,fails=0,verdict=null;
 const BAR='='.repeat(68);
 function fail(msg,err){
@@ -685,6 +685,53 @@ async function reader(file){
      "Shiloh Village Apts. Part A Apartment Rents Show the actual".
      Text can reach all of them. Whatever coordinates it arrived at, a line that
      reproduces one of the blank form's own printed lines is the form talking. */
+  /* ── two appraisers, two columns, one printed line ────────────────────────
+     Belfry and Cornerstone sign some letters in two columns, so the appraiser's
+     name arrives beside a colleague's on one line - six tokens where a name is
+     two to four. The pattern rejected it, the following lines were eaten by the
+     license/certified/president/associate skips, and appr.name came back empty.
+     It is a requirement of the OWNER COVER LETTER, so on Newberry Arms,
+     Morningside Court and Northgate Terrace CA this alone withheld a document.
+     These are the exact lines those three letters print. */
+  console.log('\n─ two appraisers on one line ─');
+  { const sigOf=lines=>{const S={};R._readSignature(lines,S);return S['appr.name']||'';};
+    eq('Newberry Arms / Northgate Terrace',
+      sigOf(['Respectfully submitted,','Aaron M. Zabel Rachel A Walsh',
+             'President Associate','License No.: 8815']),'Aaron M. Zabel');
+    eq('Morningside Court',
+      sigOf(['Sincerely,','Aaron M. Zabel Matthew A. Polnow',
+             'President Associate']),'Aaron M. Zabel');
+    /* A single signature is unchanged - the whole line is the name. */
+    eq('one appraiser is still read whole',
+      sigOf(['Sincerely,','Kyle L. Bjerke','Certified General Appraiser']),'Kyle L. Bjerke');
+    /* Split down the MIDDLE. Trying every position instead would take "Aaron M."
+       off the front of this line, which parses and is not a person. */
+    eq('and never half of the first name',
+      sigOf(['Sincerely,','Aaron M. Zabel Matthew A. Polnow'])
+        .indexOf('Zabel')>=0,true);
+    /* Prose after "Sincerely," must not become a name just because it splits. */
+    eq('a sentence is not two names',
+      sigOf(['Sincerely,','Please call with any questions you may have']),'');
+    eq('and neither is a job number',
+      sigOf(['Sincerely,','Job No. 25-095R']),''); }
+
+  /* ── an address is not a firm name ────────────────────────────────────────
+     Northgate Terrace's letter puts the appraiser's e-mail on line 2, and the
+     firm pattern matched it because the domain contains "valuation". appr.firm
+     was stored as "(E) azabel@belfryvaluation.com" and went out on the owner
+     cover letter's certifications. */
+  console.log('\n─ an e-mail address is not the firm ─');
+  { const firmOf=lines=>{const S={};R._readSender(lines,S,8);return S['appr.firm']||'';};
+    eq('the e-mail is skipped and the real firm found',
+      firmOf(['BELFRY VALUATION, LLC','(E) azabel@belfryvaluation.com']),'BELFRY VALUATION, LLC');
+    eq('and an e-mail alone yields no firm',
+      firmOf(['(E) azabel@belfryvaluation.com','708.500.2380']),'');
+    /* The ordinary case is untouched. */
+    eq('a plain firm line still reads',
+      firmOf(['Cornerstone Valuation Services','P.O. Box 387']),'Cornerstone Valuation Services');
+    eq('and a trailing comma still comes off',
+      firmOf(['Belfry Valuation, LLC,']),'Belfry Valuation, LLC'); }
+
   console.log('\n─ the form’s own printed lines are not values ─');
   {
     await app.__rsTplRuns();          // the set is built from the template's runs
