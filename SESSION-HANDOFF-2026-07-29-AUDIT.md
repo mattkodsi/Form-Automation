@@ -216,7 +216,7 @@ A wave marks a property `audited` only when its agent returned rows.
 | 28 | 75917 | Peterson Plaza | **audited** | 0 |
 | 29 | 75919 | Northgate Terrace CA | **audited** | 11 |
 | 30 | 75920 | Fairview Homes | unaudited | |
-| 31 | 75921 | Walden | unaudited | |
+| 31 | 75921 | Walden | **audited** | 7 |
 | 32 | 75922 | Marine Terrace | unaudited | |
 | 33 | 75926 | Oak Center | **audited** | 1 |
 | 34 | 75927 | Morh Housing | **audited** | 1 |

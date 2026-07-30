@@ -1905,3 +1905,66 @@ Walden **97**, Fairview Homes **95**, Marine Terrace **14**. On the evidence of 
 properties, expect most of the two large counts to be the comparator failing to read a
 DocuSign-flattened schedule and a retyped checklist — and expect the small one to mean little was
 produced rather than that little differs.
+
+## Walden (75921) — audited. 97 differences, **7 real**, and the 7 include a false certification
+
+The prior schedule **was** read, fully and correctly, via tier 3 (2 OCR calls on a DocuSign-flattened
+2024 copy); all 24 Part A figures verified by eye. So nothing here is downstream of an unread
+upload — the opposite of the four properties where a large count was one failure.
+
+**90 of the 97 are the rig:** 18 checklist rows where ours is **tick-for-tick identical** to the
+filed copy but the filed text layer reads `$SSHQGL[ 2ZQHr'V&CKHFNOL` (the ASCII−29 font); 26
+workbook rows where the filed sheet starts at row 10 in columns H/I/K/L/O/P/Q/S/T/U against ours at
+row 9 in I/J/L/M/P/Q/R/T/U/V, **every figure matching** (135,062 / 196,075 / 1,620,744 / 2,352,900 /
+201,310 / 209,790 / Below 150% YES / Δ $61,013 = 45.17%); 35 rows from the extractor reading the
+**"Section 8" group label** as `unit.0.type` and shifting every filed row down one; and 11 more
+where HUD-92458 values live in widget `/V` on a flattened copy. **The comparator also missed two
+real defects** — it never compared Part F or the Part I HAP number.
+
+- **M47 is worse than recorded, and it is the item to act on.** Walden's study answers
+  *"Did you prepare the RCS under a temporary license? **N**"* (p.71, Appendix 9-1-4) and signs a
+  **permanent** New York Certified General licence 1553109 (p.4) — and both **our** checklist and the
+  **filed** one tick "Copy of RCS Appraiser's License (only if relying upon a temporary license)".
+  The app ticks all thirteen RCS-materials items unconditionally, so this is not a Walden accident:
+  **it is wrong on every property whose appraiser holds a permanent licence, which is most of them,
+  and it is a false statement on a form carrying an 18 U.S.C. §1001 warning.** Its sibling fails the
+  opposite way for the same reason — the app tests for the literal heading "Scope of Work" and
+  Belfry names that section "Scope of Assignment" (study p.6, and the study's own table of contents
+  lists it). Both want the checklist driven from what the study answers rather than from a default.
+- **Part F is blank and the figure is already in hand** — 196,075, the Part A Column 4 sum, which the
+  app computes for the total. **This conflicts with Market Square's finding** that page 3 of the form
+  prints *"Part F. Do not complete this Part."*, and Walden's team fills it anyway. Record as a
+  genuine ambiguity: the form says don't, the PM team does. **Do not fix either way without Matt.**
+- Part A's group labels — `Section 8` and `Non-Revenue` — are never emitted, so nothing distinguishes
+  assisted from non-revenue rows. That absence is also what produced the comparator's 35-row shift.
+- The app renames all four unit types from the study's grid (`1 BR / 1 BA A`) instead of carrying the
+  prior schedule's Column 1 forward (`1 BEDROOM-A`), which both filed cycles use unchanged — so a CA
+  comparing 2024 to 2025 sees four renamed types. And **`Senior` is silently dropped** from the (B)
+  type in both the schedule and the workbook.
+- Zeros print as blanks across Columns 6/7/8, the whole non-revenue line, Total Rent Loss and both
+  Market Rent Potentials, where the filed copy prints an explicit `0`.
+- **`_drive.json` does not name the fields a document is short of** — "3 of 6 ready · 3 need more
+  information" is unactionable without another run. An instrumentation gap worth closing early,
+  because every wave has spent effort reconstructing those lists from `DOC_REQS` arithmetic.
+
+**"The Cedars" is correct, not a misread.** Part A of both the 2024 and 2025 schedules prints exactly
+`The Cedars`; `Walden (The Cedars)` appears in the letters and checklist head, and the slash-joined
+`Walden/The Cedars` exists only on **study p.70**, in Appendix 9-1-4. So `03a5452`'s slash-split
+cannot fire here — the schedule reader never sees a slash. The **ghost "Senior" row is gone**: four
+revenue rows all carrying rent, and nothing holding an allowance without one.
+
+**The 1-BEDROOM-A allowance FALLS 51 → 45 across 27 units** — and the governing rule is quoted
+verbatim in this property's own `2024/Archive/Cedars UAF.pdf`: 24 CFR §245.405(a) and §245.410
+require notice of a proposed **decrease**, and §245.430 bars collecting the new tenant rent until it
+expires. Neither the filed package nor the filed tenant notice mentions it. **Team wrong as well as
+app-silent** — the third property where M57 bites.
+
+Also: one unit type **individually exceeds** its own 150% SAFMR (`1BR/1BA (B) Senior`, $2,150 against
+$2,130, stated on study p.3). The aggregate test governs and passes, so the package is fine, but
+neither our workbook nor the team's surfaces the type that fails. And the filed impact workbook
+carries `#REF!` in its own what-if block.
+
+**Confirmed fixed by this run:** the w7 copy of Walden's workbook carried SAFMR figures — 1492,
+1492, 1907.333…, 2433.333… — that appear in **no source document** (1,492 is the 2024 *gross rent* of
+the 1BR-B row). This run reads 1,420 / 1,420 / 1,820 / 2,320, exactly study p.4. And w7's two 1BR
+types were both labelled `1BR/1BA`; they are now `1 BR / 1 BA A` and `1 BR / 1 BA B`.
