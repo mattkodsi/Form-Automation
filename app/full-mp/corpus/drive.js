@@ -168,10 +168,25 @@ async function loadSession(sessionFile) {
   const f = sessionFile || SESSION_DEFAULT;
   const how = '\n  Sign in first — it asks for the password in YOUR terminal and never stores it:\n'
             + '      node app/full-mp/corpus/signin.js\n';
-  if (!fs.existsSync(f)) throw new NoSession('no signed-in session at ' + f + how);
+  /* A CLOUD RUNNER HAS NO SESSION FILE. It gets a fresh clone and nothing else:
+     the cache the file lives in is gitignored, and signin.js cannot run because
+     there is no terminal to type a password into. So a refresh token may arrive
+     through the environment instead. It is exchanged for an access token by the
+     very same refresh call below — the token is written to disk only if the
+     directory already exists, because on the runner it does not and a missing
+     cache must not be the thing that fails the run. */
   let s = null;
-  try { s = JSON.parse(fs.readFileSync(f, 'utf8')); }
-  catch (e) { throw new NoSession('the session file at ' + f + ' is not readable JSON.' + how); }
+  const envTok = (process.env.RCS_SUPABASE_REFRESH_TOKEN || '').trim();
+  if (!fs.existsSync(f)) {
+    if (!envTok) throw new NoSession('no signed-in session at ' + f
+      + '\n  and RCS_SUPABASE_REFRESH_TOKEN is not set in the environment.' + how);
+    /* expires_at 0 forces the refresh path, which is what turns the token into a
+       usable session. */
+    s = { access_token: 'env', refresh_token: envTok, expires_at: 0, email: '' };
+  } else {
+    try { s = JSON.parse(fs.readFileSync(f, 'utf8')); }
+    catch (e) { throw new NoSession('the session file at ' + f + ' is not readable JSON.' + how); }
+  }
   if (!s || !s.access_token || !s.refresh_token)
     throw new NoSession('the session file at ' + f + ' carries no access/refresh token.' + how);
 
@@ -193,7 +208,9 @@ async function loadSession(sessionFile) {
     expires_at: Math.floor(Date.now() / 1000) + (j.expires_in || 3600),
     email: (j.user && j.user.email) || s.email || '',
   };
-  fs.writeFileSync(f, JSON.stringify(ns, null, 1), { mode: 0o600 });
+  try { fs.mkdirSync(path.dirname(f), { recursive: true });
+        fs.writeFileSync(f, JSON.stringify(ns, null, 1), { mode: 0o600 }); }
+  catch (e) { /* a runner with a read-only or absent cache still has its session in memory */ }
   return { sess: ns, refreshed: true, file: f, secondsLeft: (j.expires_in || 3600) };
 }
 
