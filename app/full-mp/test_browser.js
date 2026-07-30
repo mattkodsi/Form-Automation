@@ -35,7 +35,9 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=391;   // 2026-07-30: +10 — the swipe rebuilt on the clock: which gestures open it,
+const MIN_CHECKS=394;   // 2026-07-30: the pull cut to two rules — at rest at the top it
+                        // opens, arriving at the top it bobs, and the bob is the same
+                        // length however you arrived   // 2026-07-30: +10 — the swipe rebuilt on the clock: which gestures open it,
                         // where each one lands, and what the bar is allowed to say
 // 2026-07-30: +25 — the two package modals join the dialog audit, and every
                         // dialog is now checked against the three colours the desk replaced
@@ -2157,156 +2159,109 @@ const FULL=process.argv.includes('--full');
       eq('the banner touches the masthead',d0.flush,0);
       T('and it offers to show them without saying "them"',
         /Show$/.test(d0.label||'')&&!/Show them/.test(d0.label||''));
-      /* ---- the pull, rebuilt on the clock, 2026-07-30 ----
-         Distance was the wrong quantity. Measured against the real portfolio, a
-         thirty-notch wheel-up delivers 3,600px: the drawer opened on notch three
-         and the remaining twenty-seven carried the reader 2,383px up into a
-         3,428px list. Matt: "scrolling too quickly launches you all the way to the
-         top almost all the time, which is basically every time when using a mouse
-         scroll wheel." Distance also made a fast wheel and a slow wheel two
-         different controls.
+      /* ---- the pull: two rules, and nothing else ----
+         What was here read the SHAPE of a gesture — how fast it arrived, whether
+         its deltas decayed, how long the wheel had been moving — and decided from
+         that whether to open, how hard to resist and what to draw. All of it
+         behaved differently on a trackpad and a mouse. Matt: "sometimes displays a
+         bob and line, sometimes does not, sometimes delayed/late, and sometimes is
+         glitchy as shit."
 
-         So there are two things to prove, and the second is the one he asked for:
-         which gestures open it, and — for every one of them — WHERE THE READER
-         LANDS. Every assertion about landing is written against ONE value, the
-         viewport position of the panel of what is coming, because that is the
-         thing that must not move. */
-      const notch=()=>c.send('Input.dispatchMouseEvent',
-        {type:'mouseWheel',x:600,y:400,deltaX:0,deltaY:-100});
+             1. AT the top, at rest, and you scroll up  ->  it opens.
+             2. You scroll UP TO the top                ->  it bobs, once, at once.
+
+         The whole point of what follows is that rule 2 does the SAME THING however
+         you arrive. So each shape is driven and compared, rather than one shape
+         being driven and the rest assumed. */
       const wheel=dy=>c.send('Input.dispatchMouseEvent',
         {type:'mouseWheel',x:600,y:400,deltaX:0,deltaY:dy});
-      const burst=async(n,gap)=>{for(let i=0;i<n;i++){await notch();await sleep(gap);}};
-      /* Closed, at the top, and settled there long enough that the next wheel reads
-         as a new gesture rather than as the tail of this one. */
-      const shut=async()=>{
+      const notch=()=>wheel(-100);
+      /* Closed, parked, and still for longer than REST_GAP. */
+      const shut=async y=>{
         if(!(await read()).hidden)
           await c.eval('document.getElementById("mPast").click();return 1');
-        await c.eval('window.scrollTo(0,0);return 1');await sleep(430);};
+        await c.eval('window.scrollTo(0,'+y+');return 1');await sleep(1700);};
+      /* The bob is a transform on the banner's own text — composited, so it cannot
+         judder. It replaced an animation on PADDING that relaid out 229 rows every
+         time anyone reached the top, and before that one on min-height that moved
+         nothing at all because the banner is taller than the minimum it set. That
+         one shipped because the test asserted the CLASS. This reads the transform. */
+      const IDENT=/^(none|matrix\(1, 0, 0, 1, 0, 0\))$/;
+      const bobbed=async fn=>{
+        await c.eval(`window.__B=[];window.__bi=setInterval(()=>{
+          const n=document.querySelector('#viewMenu .mp-n');
+          window.__B.push(n?getComputedStyle(n).transform:'none');},16);return 1`);
+        await fn(); await sleep(700);
+        const B=await c.eval('clearInterval(window.__bi);return window.__B');
+        return {moved:B.filter(t=>!IDENT.test(t)).length,rests:IDENT.test(B[B.length-1])};};
 
-      /* (a) You stopped, you looked, you scrolled up again. */
-      await shut();
-      await notch(); await sleep(430);
-      /* Sampled at 16ms through the open, the panel lands on the pixel it started
-         on and then one event leaks 4-17px: Chrome hands a little scroll to the
-         compositor before preventDefault reaches it, and no amount of listener
-         arrangement gets that back. So the bar here is a ROW, not a pixel — the
-         claim being made is that the reader has not travelled up the list, and a
-         row is the unit that would show. It replaces a measured 2,383px. */
-      const ROW=60;
-      const landed=(what,got,want)=>T(what,Math.abs(got-want)<ROW);
+      /* ---- rule 1 ---- */
+      await shut(0);
+      await notch(); await sleep(500);
       const a1=await read();
-      eq('a deliberate scroll on a settled top opens it',a1.hidden,false);
-      landed('and what is coming has not moved',a1.panelTop,d0.panelTop);
+      eq('at rest at the top, one scroll up opens it',a1.hidden,false);
+      eq('and what is coming has not moved a pixel',a1.panelTop,d0.panelTop);
       T('the arrow points down, because that is where the rows went',
         /↓/.test(a1.label||''));
 
-      /* The landing IS the feature. A long fast gesture is the one that used to
-         throw the reader up the list, and the detent absorbs whatever is left of
-         it — so all three of these end in the same place, at the bottom of the
-         backlog, beside today, which is the end it is read from. */
-      /* A reader who keeps pushing after it opens DRIFTS — and is meant to. The
-         boundary is stiff, not locked: the first wheel through it is worth a fifth
-         of itself and the last most of itself, so pushing works and pushing costs
-         something. What is asserted is that the drift is bounded. It replaces a
-         measured 2,383px up a 3,428px list. */
-      await shut();
-      await burst(30,25); await sleep(700);
-      const a2=await read();
-      eq('a thirty-notch gesture opens it too',a2.hidden,false);
-      T('and pushing on through moves the reader, rather than hitting a wall',
-        a2.panelTop>a1.panelTop);
-      T('but nowhere near the top of the list',a2.panelTop-a1.panelTop<800);
-      await shut();
-      await burst(30,90); await sleep(700);
-      const a3=await read();
-      eq('so does the same gesture at a third the speed',a3.hidden,false);
-      T('and it drifts no further',a3.panelTop-a1.panelTop<800);
+      /* ---- rule 2, three ways in ---- */
+      const arrivals=[];
+      for(const [name,fn] of [
+        ['a decaying fling',async()=>{let d=-320;
+          for(let i=0;i<40;i++){await wheel(Math.min(-1,Math.round(d)));d*=0.9;await sleep(16);}}],
+        ['a steady wheel',async()=>{for(let i=0;i<22;i++){await wheel(-120);await sleep(30);}}],
+        ['a fast wheel',async()=>{for(let i=0;i<30;i++){await wheel(-120);await sleep(12);}}]]){
+        await shut(2400);
+        const b=await bobbed(fn);
+        const r=await read();
+        T('arriving at the top by '+name+' bobs the banner',b.moved>0);
+        T('and the bob settles back where it started',b.rests);
+        eq('and opens nothing',r.hidden,true);
+        eq('and leaves the page at the top',r.y,0);
+        arrivals.push(b.moved);
+      }
+      /* The claim the whole rewrite rests on. Three gestures with nothing in common
+         but where they end up, and the hint is the same length every time. */
+      T('and every arrival bobs for the same length, whatever brought it there',
+        Math.max.apply(null,arrivals)-Math.min.apply(null,arrivals)<=3);
 
-      /* (b) A hand that never stopped. It reaches the top mid-gesture, so it can
-         never be (a) — and it has to open anyway, or the gate is just a wall. Matt,
-         of the rule before this one: "sometimes it triggers and sometimes im just
-         swiping up and up and up and nothing expands." */
-      await shut();
-      await c.eval('window.scrollTo(0,700);return 1'); await sleep(360);
-      for(let i=0;i<26;i++){await wheel(-120);await sleep(38);}
-      await sleep(700);
-      const b1=await read();
-      eq('a hand that keeps swiping opens it, having started mid-list',b1.hidden,false);
-      T('and is caught by the same boundary',b1.panelTop-a1.panelTop<800);
+      /* Nothing else on this bar animates now. The progress rule is gone: it drew
+         on gestures that opened nothing, at times with no relation to what the
+         reader had just done. */
+      T('and no progress rule is drawn anywhere any more',
+        await c.eval('return !document.querySelector("#viewMenu .mp-fill")'));
 
-      /* A fling is neither, and what makes it neither is its SHAPE: momentum is a
-         decaying curve, so every event is smaller than the one before it. Nothing a
-         hand does looks like that — a mouse wheel repeats one magnitude exactly and
-         a trackpad under a finger wanders. This tail is long enough to sit at the
-         top well past the hold, so the only thing refusing it is the shape. */
-      await shut();
-      await c.eval('window.scrollTo(0,700);return 1'); await sleep(360);
-      { let dv=-300;
-        for(let i=0;i<44;i++){await wheel(Math.min(-1,Math.round(dv)));dv*=0.92;await sleep(16);} }
-      await sleep(900);
-      const fl=await read();
-      eq('a fling up does not open it, however long its tail runs on',fl.hidden,true);
-      eq('it only returns the page to the top',fl.y,0);
+      /* ---- the burst that opens it cannot also ride it up ---- */
+      await shut(0);
+      for(let i=0;i<12;i++){await wheel(-120);await sleep(15);}
+      await sleep(600);
+      const bu=await read();
+      eq('a fast burst from rest opens it too',bu.hidden,false);
+      T('and the third of a second after it opens keeps the burst from riding up',
+        bu.panelTop-d0.panelTop<1000);
+      /* And that third of a second is over by the time anyone reacts to it. Read
+         off defaultPrevented rather than off the scroll position, because this
+         fixture's backlog is two rows tall: a burst pins it to zero and there is
+         nowhere left for a later scroll to go, which fails a rule that works. */
+      await c.eval(`window.__C=[];window.addEventListener('wheel',
+        e=>window.__C.push(e.defaultPrevented?1:0),{passive:true});return 1`);
+      await shut(0);
+      await c.eval('window.__C=[];return 1');
+      await notch();                       /* opens it, and is swallowed */
+      await sleep(60);  await notch();     /* inside the hold */
+      await sleep(600); await notch();     /* long after it */
+      const C=await c.eval('return window.__C');
+      eq('the wheel that opens it is swallowed, so its scroll cannot land',C[0],1);
+      eq('and so is one that follows straight after',C[1],1);
+      eq('but a scroll a moment later is the reader scrolling, and it scrolls',C[2],0);
 
-      /* And arriving at the top and stopping there is not a request for anything. */
-      await shut();
-      await c.eval('window.scrollTo(0,900);return 1'); await sleep(360);
-      for(let i=0;i<10;i++){await wheel(-120);await sleep(30);}
-      await sleep(900);
-      eq('scrolling briskly up to the heading and stopping leaves it closed',
-        (await read()).hidden,true);
-
-      /* ---- what the bar says, and when ----
-         It used to fill on ANY upward run at the top, including every run that was
-         never going to open anything — so arriving at the top from below ran the
-         whole animation, right and back again, in answer to nothing. Matt: "it has
-         the same animation of sliding all the way right, then all the way back left
-         without actually reacting or timing to anything."
-
-         Two signals, and they are drawn separately now. The blue rule means a pull
-         that is going to unlock the rows. Reaching the top gets a short bounce on
-         the banner and nothing else — there is more up here if you want it.
-         Sampled IN PAGE at 16ms, because a round trip per sample cannot see it. */
-      /* The BANNER'S HEIGHT, not the presence of a class. The first version of the
-         bounce animated min-height on a box already 45px tall, so the class went on,
-         the animation ran, and not one pixel moved — on either platform. Asserting
-         the class is exactly why that shipped. */
-      const sample=async fn=>{
-        await c.eval(`window.__S=[];window.__si=setInterval(()=>{
-          const b=document.getElementById('mPast');
-          window.__S.push([+getComputedStyle(b).getPropertyValue('--pull')||0,
-            Math.round(b.getBoundingClientRect().height)]);},16);return 1`);
-        await fn();
-        return c.eval('clearInterval(window.__si);return window.__S');};
-      await shut();
-      /* Long enough to clear NUDGE_GAP. shut() itself scrolls to the top, which
-         fires the bounce, and the bounce does not replay inside a second and a half
-         — so a sample taken too soon after it catches an arrival that is real and a
-         bounce that was correctly suppressed, and fails on a rule it is not
-         testing. This is what made the suite flake once in five. */
-      await c.eval('window.scrollTo(0,2600);return 1'); await sleep(1700);
-      const S1=await sample(async()=>{
-        let dv=-300;
-        for(let i=0;i<44;i++){await wheel(Math.min(-1,Math.round(dv)));dv*=0.92;await sleep(16);}
-        await sleep(600);});
-      T('a fling reaching the top draws no rule at all',
-        Math.max.apply(null,S1.map(r=>r[0]))<0.05);
-      const H1=S1.map(r=>r[1]);
-      T('it gets the arrival bounce instead, and the banner really moves',
-        Math.max.apply(null,H1)-Math.min.apply(null,H1)>=8);
-      T('and settles back to the height it started at',
-        H1[H1.length-1]===Math.min.apply(null,H1));
-      eq('and opens nothing',(await read()).hidden,true);
-      await shut();
-      await c.eval('window.scrollTo(0,700);return 1'); await sleep(400);
-      const S2=await sample(async()=>{
-        for(let i=0;i<26;i++){await wheel(-120);await sleep(38);}
-        await sleep(300);});
-      const F=S2.map(r=>r[0]);
-      T('a pull that is going to open it does draw the rule',Math.max.apply(null,F)>0.5);
-      T('and draws it as an animation, not in wheel-sized lumps',
-        [...new Set(F.map(v=>v.toFixed(3)))].length>=8);
-      eq('and that one opened',(await read()).hidden,false);
+      /* Pressing Hide scrolls back to the top, which is an arrival — the bob must
+         not fire for the page rearranging itself under a button. */
+      await shut(0);
+      await c.eval('document.getElementById("mPast").click();return 1'); await sleep(400);
+      const hb=await bobbed(async()=>{
+        await c.eval('document.getElementById("mPast").click();return 1');});
+      eq('pressing Hide does not wink at you',hb.moved,0);
 
       /* ---- and the banner is still a button ----
          Everything above is a gesture. This is the way in for a reader who would
