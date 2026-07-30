@@ -354,7 +354,20 @@ const addrLine=(street,city,state,zip)=>{
     const nrIdx=[...new Set(Object.keys(rec).map(k=>(k.match(/^nonrev\.(\d+)\./)||[])[1]).filter(x=>x!=null))].sort((a,b)=>a-b);
     const dUse=[159,162,165,168,171],dType=[160,163,166,169,172],dRent=[161,164,167,170,173]; let dr=0,trl=0;
     nrIdx.forEach(i=>{ if(dr>4)return; const use=g('nonrev.'+i+'.use'),br=g('nonrev.'+i+'.br'),ba=g('nonrev.'+i+'.ba'),rent=g('nonrev.'+i+'.rent'); if(!(use||br||ba||rent||nmv(g('nonrev.'+i+'.num_units'))))return; T(dUse[dr],use); T(dType[dr],(String(br).replace(/(\d+)\s*BR/i,'$1 BR')+(ba?'/'+ba:'')).replace(/^\//,'')); T(dRent[dr],(rent!==''&&rent!=null)?money(rent):''); trl+=nmv(rent)*(nmv(g('nonrev.'+i+'.num_units'))||1); dr++; });
-    T(174, dr?money(trl):'');
+    /* THE ZERO IS THE FACT, NOT A CLAIM, so field 174 states it. This wrote ''
+       when there were no Part D rows, and the form prints its own "$" outside the
+       box — so a property with no non-revenue units filed a schedule reading "$"
+       against an empty cell. 174 is a CALCULATED field (AFSimple_Calculate SUM
+       over 161/164/167/170/173) and HUD ships it holding "0", the same shape as
+       195 and 1156. The filed copies settle it, and they were measured, not
+       reasoned about: Willow Woods has no Part D rows and its submitted schedule
+       renders "$        0" — in the DocuSigned copy AND in the CA's executed one,
+       which is a different printing with the box higher up the page. Colonial
+       Village has one row and renders "$    1,147". Not one filed copy leaves it
+       empty. Having no rows is an OBSERVATION — the rent loss is zero — which is
+       why a stated zero is honest here and is not on 97/98, whose market rents we
+       never collect and therefore cannot total. */
+    T(174, money(trl));
     // Part G: the principals roster fills the name (left) / title (right) rows in order
     { const gL=[206,208,210,212,214,216,218,220,222,224,226], gR=[207,209,211,213,215,217,219,221,223,225,227];
       const pIdx=[...new Set(Object.keys(rec).map(k=>(k.match(/^principals\.(\d+)\./)||[])[1]).filter(x=>x!=null))].sort((a,b)=>a-b);

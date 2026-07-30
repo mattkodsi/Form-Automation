@@ -10,7 +10,7 @@ new Function('window',fs.readFileSync(D+'templates.js','utf8'))(global.window);
 const TPL=global.window.RCSTemplates;
 const G=require(D+'gen.js');
 
-const MIN_CHECKS=32;                 // the count this file is known to run to the end
+const MIN_CHECKS=34;                 // the count this file is known to run to the end
 let n=0,fails=0,verdict=null;
 const BAR='═'.repeat(68);
 function fail(msg,err){
@@ -147,6 +147,22 @@ function record(extra){
        and the blank spacer — so find it by what it says, not by counting. */
     let nrRow=-1;for(let r=0;r<11;r++)if(V(7+r*8)==='Model unit')nrRow=r;
     eq('and Part A carries the count with it',nrRow<0?'(row not found)':V(7+nrRow*8+1),'2'); }
+
+  /* And with NO Part D rows it must still STATE that zero. It wrote '', and the
+     "$" is PRINTED on the form outside the box, so every property without a
+     non-revenue unit filed a schedule reading "$" against an empty cell. Nothing
+     that reads values could see it — both sides compare as empty — so this was
+     found by rendering the page. Measured, not reasoned: Willow Woods has no
+     Part D rows and its submitted schedule renders "$        0", in the
+     DocuSigned copy and in the CA's executed one alike; Colonial Village has one
+     row and renders "$    1,147". No filed copy leaves the box empty. 174 is a
+     calculated cell — SUM of 161/164/167/170/173 — and HUD ships it holding the
+     zero, exactly as 195 and 1156 do. */
+  { eq('HUD ships field 174 holding its zero', bForm.getTextField('174').getText(), '0');
+    const by=await G.fillRentSchedule(rsBytes,record());
+    const f=(await PDFDocument.load(by)).getForm();
+    eq('and a schedule with no non-revenue units states that zero, not a blank',
+       f.getTextField('174').getText()||'', '0'); }
 
   /* .replace(/, $/,'') strips a trailing comma, so an empty TITLE was handled and
      an empty NAME was not: Part G read ", Vice President of the General Partner". */

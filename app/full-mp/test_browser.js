@@ -35,7 +35,7 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=390;   // 2026-07-30: +9 — the swipe rebuilt on the clock: which gestures open it,
+const MIN_CHECKS=391;   // 2026-07-30: +10 — the swipe rebuilt on the clock: which gestures open it,
                         // where each one lands, and what the bar is allowed to say
 // 2026-07-30: +25 — the two package modals join the dialog audit, and every
                         // dialog is now checked against the three colours the desk replaced
@@ -2267,11 +2267,15 @@ const FULL=process.argv.includes('--full');
          that is going to unlock the rows. Reaching the top gets a short bounce on
          the banner and nothing else — there is more up here if you want it.
          Sampled IN PAGE at 16ms, because a round trip per sample cannot see it. */
+      /* The BANNER'S HEIGHT, not the presence of a class. The first version of the
+         bounce animated min-height on a box already 45px tall, so the class went on,
+         the animation ran, and not one pixel moved — on either platform. Asserting
+         the class is exactly why that shipped. */
       const sample=async fn=>{
         await c.eval(`window.__S=[];window.__si=setInterval(()=>{
           const b=document.getElementById('mPast');
           window.__S.push([+getComputedStyle(b).getPropertyValue('--pull')||0,
-            b.classList.contains('nudge')?1:0]);},16);return 1`);
+            Math.round(b.getBoundingClientRect().height)]);},16);return 1`);
         await fn();
         return c.eval('clearInterval(window.__si);return window.__S');};
       await shut();
@@ -2287,7 +2291,11 @@ const FULL=process.argv.includes('--full');
         await sleep(600);});
       T('a fling reaching the top draws no rule at all',
         Math.max.apply(null,S1.map(r=>r[0]))<0.05);
-      T('it gets the arrival bounce instead',S1.some(r=>r[1]===1));
+      const H1=S1.map(r=>r[1]);
+      T('it gets the arrival bounce instead, and the banner really moves',
+        Math.max.apply(null,H1)-Math.min.apply(null,H1)>=8);
+      T('and settles back to the height it started at',
+        H1[H1.length-1]===Math.min.apply(null,H1));
       eq('and opens nothing',(await read()).hidden,true);
       await shut();
       await c.eval('window.scrollTo(0,700);return 1'); await sleep(400);
