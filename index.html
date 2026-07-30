@@ -871,18 +871,28 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
   0%{padding-top:13px;padding-bottom:13px}
   40%{padding-top:22px;padding-bottom:22px}
   100%{padding-top:13px;padding-bottom:13px}}
+/* The keyframe writes padding-top/bottom only, so the horizontal padding above is
+   left alone by it. */
 #viewMenu .mpast.nudge{animation:mpOpen .44s cubic-bezier(.33,.9,.4,1)}
 #viewMenu .mpast.nudge .mp-n,#viewMenu .mpast.nudge .mp-a{
   animation:mpBob .44s cubic-bezier(.33,.9,.4,1)}
 @media (prefers-reduced-motion:reduce){
   #viewMenu .mpast.nudge,
   #viewMenu .mpast.nudge .mp-n,#viewMenu .mpast.nudge .mp-a{animation:none}}
+/* ---- the drawer is the same document as the list below it ----
+   It ran edge to edge while the ledger underneath sat in a centred 1480 column, so
+   scrolling up crossed a seam: the same rows, the same columns, two different
+   measures. The bar goes with them. It still meets the masthead with nothing
+   between — that was about touching the navy vertically, which a narrower bar does
+   just as well — and it keeps its own card edges so it reads as the head of the
+   thing it opens rather than as a strip of chrome. */
+#viewMenu #menuPastBar{max-width:1480px;margin:0 auto;padding:0 40px}
+#viewMenu .mpast{border:1px solid var(--ln);border-bottom-width:1px;
+  border-radius:var(--r-card) var(--r-card) 0 0;padding:13px 18px}
+#viewMenu .mpast.open{border-radius:var(--r-card) var(--r-card) 0 0}
 #viewMenu .mpastwrap{margin:0}
-#viewMenu .mpastwrap .mgrid.rows{border-radius:0;border-left:0;border-right:0;
+#viewMenu .mpastwrap .mgrid.rows{border-radius:0 0 var(--r-card) var(--r-card);
   border-top:0;background:var(--card)}
-#viewMenu .mpastwrap .mgrid.rows .pcard{padding-left:40px;padding-right:40px}
-#viewMenu .mpastwrap .mgrid.rows .mcols,
-#viewMenu .mpastwrap .mgrid.rows .mgroup{padding-left:40px;padding-right:40px}
 /* the ledger row: quiet, and its action is a text affordance not a slab */
 /* 116px, not 104. Every row's action is the short label ("Start 2026"), and the
    rows nearest today draw it as a bordered button — which the ledger's 104px,
