@@ -35,7 +35,7 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=327;   // 2026-07-30: +12 — the study survives a reload, and does not cross to another property (M60).
+const MIN_CHECKS=333;   // 2026-07-30: +6 — a fill claimed after a reload has to still be on the form, and the other order (M61).
                        // 2026-07-28: +35 — the home page's filter rail, driven by real clicks.
                        // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
                        // pristine (three seeds, two checks each). 2026-07-27: the unit-type cell
@@ -1435,6 +1435,60 @@ const FULL=process.argv.includes('--full');
       const afterB=await c.eval(SNAP);
       eq('its schedule still fills the roster',afterB.counts,['10','6','12','4']);
       eq('but the study it never applied stays unapplied',afterB.proposed,['','','','']);
+
+      /* ── …and a fill the reload did NOT carry must stop claiming it ───────
+         Making the record durable introduced its own wrong. A fill that was
+         applied and never saved does not survive a reload -- the values go back
+         to what is on file -- but the record did, so the study tile read
+         "Filled 10 values - 3 still to save." over a form holding one empty row
+         and none of the study's figures. The 3 counted nothing: fillNote counts
+         keys not yet on file, and after a reload those are residual keys with no
+         connection to any fill. A record is a claim about the FORM, so it is now
+         checked against the form before it is believed. */
+      const idsC=await mkprop('Reload test C');
+      await sleep(300);
+      await c.eval('window.__t.__setRcsParsed('+JSON.stringify(study)+');window.__t.__rcsFill();window.__t.__renderBody();return 1');
+      await sleep(350);
+      await c.reload();await c.eval(HELPERS);
+      await c.eval('await window.__t.__openCycleForm('+JSON.stringify(idsC.pid)+','+JSON.stringify(idsC.cid)+');return 1');
+      await sleep(450);
+      const TILES='return [...document.querySelectorAll("#viewForm .srcrow")].map(r=>((r.querySelector(".sfsub")||{}).textContent||"").trim());';
+      const recsC=await c.eval('return window.__t.__fillRecords()');
+      T('a fill the reload did not carry is retired',!(recsC&&recsC.rcs));
+      const tilesC=await c.eval(TILES);
+      T('and the study tile stops claiming values the form does not show',
+        !/Filled/.test(tilesC[1]||''));
+
+      /* The saved schedule is the control: rsTag must answer for at least one of
+         the keys the schedule fills, or this same rule would retire a record
+         that is perfectly true. */
+      const idsD=await mkprop('Reload test D');
+      await sleep(300);
+      await c.eval('window.__t.__setRsParsed('+JSON.stringify(rs)+');window.__t.__rsFill();return 1');
+      await sleep(400);
+      await c.eval("const U=window.__t.__UNITS();"
+        +"for(const i of U)for(const f of ['current','num_units','br','ba','ua_exec'])await window.__t.__saveField('units.'+i+'.'+f);"
+        +"return 1");
+      await sleep(300);
+      await c.reload();await c.eval(HELPERS);
+      await c.eval('await window.__t.__openCycleForm('+JSON.stringify(idsD.pid)+','+JSON.stringify(idsD.cid)+');return 1');
+      await sleep(450);
+      const recsD=await c.eval('return window.__t.__fillRecords()');
+      eq('a saved schedule keeps its record across a reload',recsD.rs&&recsD.rs.name,'rs.pdf');
+      T('and its tile says so',/Filled \d+ values, all saved/.test((await c.eval(TILES))[0]||''));
+
+      /* ── the other order, across the same reload ─────────────────────────
+         Wave 1 only drove study-then-reload-then-schedule. This is the sequence
+         the other half of the corpus performs: the executed schedule is read and
+         saved first, the browser is closed, and the study arrives later. It does
+         not use the gate at all -- the roster already exists, so rcsMatch places
+         the study's two lines onto four rows directly -- which is exactly why it
+         is worth pinning: the two sequences must land in the same place. */
+      await c.eval('window.__t.__setRcsParsed('+JSON.stringify(study)+');window.__t.__rcsFill();window.__t.__renderBody();return 1');
+      await sleep(450);
+      const afterD=await c.eval(SNAP);
+      eq('schedule first, reload, then the study: the roster is the schedule’s',afterD.counts,['10','6','12','4']);
+      eq('and the study still prices both variants of each type',afterD.proposed,['1000','1000','1500','1500']);
     }
 
     /* ── the OCAF / UAF package states its own requirements ─────────────────

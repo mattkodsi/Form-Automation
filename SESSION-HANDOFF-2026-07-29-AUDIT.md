@@ -5,7 +5,28 @@ production deploy).
 
 ---
 
-> # RESUME HERE — 2026-07-30, wave 1 of the overnight form audit. M60 is DONE.
+> # RESUME HERE — 2026-07-30, wave 2 of the overnight form audit. M60 and M61 are DONE.
+>
+> **M61 fixed a defect M60 introduced, found by M60's own critique.** Making the fill record
+> durable did not ask what happens when the FILL does not survive the reload — a fill applied and
+> never saved does not, so the study tile printed *"Filled 10 values — 3 still to save."* over a
+> form holding one empty row and none of the study's figures, and the `3` counted nothing. A record
+> is a claim about the form, so a recalled record is now checked against it: at least one key it
+> names must still carry the document's value, or it is retired. Three cases measured in real
+> chromium — unsaved study retires, saved study survives, saved schedule survives (the control that
+> stops the rule over-reaching). M60 is intact: the saved case still lands 1000/1000/1500/1500.
+> **A wave-1 test that asserted the old behaviour was updated and says so in the file.** Also added
+> the sequence M60's critique promised: schedule → save → reload → study, which lands in the same
+> place. `test_browser.js` 327 → **333**, `smoke_combined.js` 173 → **175**, eleven suites,
+> **1,808 checks**, green, delivered, RA anchors built.
+>
+> **NEXT: Peterson Plaza and Oaks on North Plaza**, the two whose fill orders still disagree — see
+> the wave-1 section below for the shape and the register's `M60` corpus section for the numbers.
+> It needs those two source PDFs read by eye, which is the first thing this wave could not do.
+>
+> ---
+>
+> ## WAVE 1 — M60 is DONE.
 >
 > **The reload defect is fixed and settled in real chromium** (M60, last section of the register).
 > `_rsFill` / `_rcsFill` were module variables, so a page reload threw away the record that a

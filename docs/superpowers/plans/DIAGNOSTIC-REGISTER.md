@@ -2572,3 +2572,87 @@ study *builds* the two rows itself. So the two orders now disagree because they 
 rosters**, not because a rent lands on the wrong row — a different mechanism from M59, and the
 right answer needs the two source documents read by eye. Oaks on North Plaza is `ocr:half` and
 likely the same shape. **Next wave.**
+
+---
+
+# M61 — the durable fill record outlived the fill, and the tile said so
+
+**Status: FIXED. This one was mine, introduced by M60 seven hours earlier, and found because
+M60's own critique said to go and look.**
+
+M60 made the fill record durable so a reload could not un-do M59. It did not ask what happens when
+the **fill itself** does not survive the reload. A fill applied and never saved is exactly that: the
+values go back to what is on file, and nothing of the study remains on the form. The record
+survived anyway, so the study tile printed, in a real browser after a real reload:
+
+```
+tile : "Filled 10 values — 3 still to save."
+form : {"rows":1,"proposed":[""]}
+```
+
+One empty row, none of the study's figures, and a sentence claiming ten values were filled. The
+`3` counted nothing at all — `fillNote` counts keys whose cell is not yet on file, and after a
+reload those are residual keys with no connection to any fill. Before M60 this read correctly
+("The values are ready to apply."), because the record was thrown away with everything else.
+
+## The mechanism
+
+A fill record is a **claim about the form**, so it is now checked against the form before it is
+believed. `fillSurvived(rec, tag)` requires at least one of the keys the record names to still
+carry the value the document gives, and `openCycleForm` retires a record that fails — after
+`fillForm()` and `deriveUnits()`, because every unit key is read through `UNITS`.
+
+`rsTag` / `rcsTag` **are** that question, already written and already asserted by two suites, so
+nothing is invented and no second copy of the truth is stored. Rule 15 again: an indicator
+computes, it never asserts.
+
+**One key, not all of them,** because a fill is one act — the user may correct any number of the
+values afterwards and the study was still applied. If they have corrected *every* one, the record
+describes nothing, and retiring it is also the safer answer: the roster re-read would otherwise
+write the study back over all of those corrections.
+
+## Measured, three cases, real chromium, real reload
+
+| sequence | record after reload | tile after reload | correct |
+|---|---|---|---|
+| study applied, **never saved** | retired | *"The values are ready to apply."* | ✅ |
+| study applied **and saved** | `study.pdf` | *"Filled 10 values, all saved."* | ✅ |
+| schedule applied **and saved** | `rs.pdf` | *"Filled 16 values, all saved."* | ✅ |
+
+The third row is the control that stops this rule over-reaching: if `rsTag` answered for none of
+the keys the schedule fills, the same code would retire a record that is perfectly true. It
+answers, and the saved schedule keeps its record.
+
+And in the saved case the schedule fill still lands `1000 / 1000 / 1500 / 1500` on four rows —
+M60 is intact, not traded away for this.
+
+## A test that asserted the old behaviour, updated and said so
+
+`smoke_combined.js`'s wave-1 check *"re-opening the first package restores its own record"* passed
+on an **unsaved** fill. That was the old behaviour and it was the defect. The check now saves the
+fill first and reads *"restores its own SAVED record"*, with a companion beside it asserting the
+unsaved case retires. Both are named in the file so the change is not silent.
+
+## And the sequence sweep M60's critique promised
+
+Wave 1 drove one sequence: study → save → reload → schedule. Added: **schedule → save → reload →
+study**, which the other half of the corpus performs and which does not touch the gate at all —
+the roster already exists, so `rcsMatch` places the study's two lines onto four rows directly.
+Both sequences land in the same place: roster `10 / 6 / 12 / 4`, rents `1000 / 1000 / 1500 / 1500`.
+
+## Verified
+
+- `test_browser.js` +6, MIN_CHECKS 327 → **333**. Two fail on `550a38f`:
+  `✗ a fill the reload did not carry is retired: got false want true` and
+  `✗ and the study tile stops claiming values the form does not show: got false want true`.
+  The other four passed on the old code, which is what a control is for.
+- `smoke_combined.js` +2, MIN_CHECKS 173 → **175**:
+  `✗ but an unsaved fill is retired when the package is re-opened: got false want true`.
+- Eleven suites, **1,808 checks**, green. Delivered. RA anchors built.
+
+## The correction, plainly
+
+M60's record said the fix was complete. It was not: it fixed the reload and broke the tile, and
+the register said nothing about the unsaved case because I had not measured it. The gap was named
+in M60's own critique paragraph and closed in the next wave, which is the only reason it was
+closed at all rather than found by Matt clicking.

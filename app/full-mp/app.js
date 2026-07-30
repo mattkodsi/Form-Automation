@@ -2447,6 +2447,29 @@ function rsFillFromParsed(){const P=_rsUpload&&_rsUpload.parsed;if(!P)return;
    document — or opening another property — leaves nothing behind claiming a
    fill that did not happen here. */
 function fillRecord(up,keys){return up?{name:up.name||'',n:keys.length,keys:keys.slice()}:null;}
+/* …AND IT IS ONLY TRUE WHILE THE FORM STILL SHOWS THE FILL. Making the record
+   durable (M60) fixed the reload but introduced its own wrong: a fill applied
+   and never saved does not survive the reload, yet the record did, so the study
+   tile read "Filled 10 values — 3 still to save." over a form holding one empty
+   row and none of the study's figures. The 3 was not even a count of anything —
+   fillNote counts keys whose cell is not on file, and after a reload those are
+   residual keys with no connection to the fill.
+
+   So a recalled record is checked against the form before it is believed: at
+   least one of the keys it names must still carry the value the document gives.
+   rsTag / rcsTag are exactly that question, already written and already asserted
+   by two suites. Nothing is invented and nothing is stored twice — this is rule
+   15 again, an indicator computes rather than asserts.
+
+   One key is the threshold rather than all of them because a fill is one act:
+   the user may have corrected any number of the values afterwards and the study
+   was still applied. If they have corrected EVERY one, the record has nothing
+   left to describe, and retiring it is also the safer answer — the roster
+   re-read would otherwise write the study back over all of those corrections. */
+function fillSurvived(rec,tag){
+  if(!rec||!rec.keys||!rec.keys.length)return false;
+  for(let j=0;j<rec.keys.length;j++)if(tag(rec.keys[j]))return true;
+  return false;}
 function fillNote(rec,up){
   if(!rec||!up||rec.name!==(up.name||''))return null;
   const left=rec.keys.filter(k=>form[k]&&form[k].source!=='database').length;
@@ -4252,7 +4275,12 @@ async function openCycleForm(cid){
      gate's own comment says must never happen. */
   _rsFill=(_rsUpload&&_rsUpload.fill)||null;_rcsFill=(_rcsUpload&&_rcsUpload.fill)||null;
   await refreshSnap();form=await store.fillForm();
-  fixSavedToggles();applyChecklistDefaults();deriveUnits();snapForm();renderFormHeader();renderBody();
+  fixSavedToggles();applyChecklistDefaults();deriveUnits();
+  /* …and now that there is a form to check them against, a record that describes
+     nothing on it is retired. deriveUnits() first: every unit key a record names
+     is read through UNITS. */
+  if(!fillSurvived(_rsFill,rsTag))_rsFill=null;
+  if(!fillSurvived(_rcsFill,rcsTag))_rcsFill=null;snapForm();renderFormHeader();renderBody();
   show('Form');window.scrollTo(0,0);
   if(cy&&cy.dominant&&cy.programs.indexOf('rcs')>=0)ensureHudSafmr({});   // auto-pull: dominant RCS cycles only
   if(cy&&cy.programs.indexOf('ocaf')>=0)pullOcafFactor({auto:true});      // year-verified; empty fields only

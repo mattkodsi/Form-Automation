@@ -20,7 +20,7 @@ global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>
 const os=require('os'),path=require('path'),fs=require('fs');
 
 /* ── the verdict machinery (mirrors test_interactions.js) ───────────────── */
-const MIN_CHECKS=173;   // 2026-07-30: +8 — a fill record belongs to one property and one file (M60)
+const MIN_CHECKS=175;   // 2026-07-30: +10 — a fill record belongs to one property, one file, and a form that still shows it (M60, M61)
 let n=0,fails=0,verdict=null;
 const BAR='═'.repeat(68);
 function fail(msg,err){
@@ -619,6 +619,10 @@ const T=(label,v)=>eq(label,!!v,true);
     eq('and the fill is recorded against the file it came from',recA.rcs&&recA.rcs.name,'study.pdf');
     T('the record is stored with the package, not just held in memory',
       !!((db.getCycleRcs(A.cid)||{}).fill));
+    /* Saved, because a record only outlives the page if what it describes does —
+       see the retirement rule below. This save is part of the setup, not a check. */
+    for(const i of app.__UNITS())
+      for(const f of ['proposed','br','ba','num_units'])await app.__saveField('units.'+i+'.'+f);
 
     /* B: the study is UPLOADED and never applied. */
     const B=await open('Record owner B');
@@ -628,14 +632,31 @@ const T=(label,v)=>eq(label,!!v,true);
     eq('its schedule still lays down the roster',counts(),['10','6','12','4']);
     eq('but the study it never applied stays unapplied',proposed(),['','','','']);
 
-    /* …and re-opening A finds its own record again, not B's absence. */
+    /* …and re-opening A finds its own record again, not B's absence.
+       UPDATED 2026-07-30: this check used to pass on an UNSAVED fill, which was
+       the old behaviour and was wrong — a record that outlives the values it
+       describes made the study tile read "Filled 10 values — 3 still to save."
+       over a form showing none of them. A is saved above, so the record is still
+       true and must come back. */
     await app.__openCycleForm(A.p,A.cid);
-    eq('re-opening the first package restores its own record',
+    eq('re-opening the first package restores its own SAVED record',
        (app.__fillRecords().rcs||{}).name,'study.pdf');
     /* Replacing the document retires the record: a fill is about the file it
        names, which is the rule fillNote has always used and the gate now does. */
     app.__setRcsParsed(STUDY);
     T('and replacing the study retires it',!app.__fillRecords().rcs);
+
+    /* ── and the record retires itself when the form no longer shows the fill ──
+       The other half of the same rule, and the reason the check above now says
+       SAVED. Applied and never saved, the values go back to what is on file the
+       moment the package is re-opened; the record must go with them. */
+    const D=await open('Record owner D');
+    app.__setRcsParsed(STUDY);app.__rcsFill();
+    eq('a fresh fill is claimed while it is on the form',
+       (app.__fillRecords().rcs||{}).name,'study.pdf');
+    await app.__openCycleForm(D.p,D.cid);
+    T('but an unsaved fill is retired when the package is re-opened',
+      !app.__fillRecords().rcs);
   }
 
   console.log('\n─ rcsBrOf ─');
