@@ -16,7 +16,7 @@ const els={};
 global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>null,querySelectorAll:()=>[],createElement:()=>mk(),addEventListener(){},body:{classList:{toggle(){},contains(){return false;}}}};
 const fs=require('fs'),path=require('path'),os=require('os');
 
-const MIN_CHECKS=420;
+const MIN_CHECKS=444;   /* 2026-07-30: +24 - the floor every tier answers to (an empty read is not a read) */
 let n=0,fails=0,verdict=null;
 const BAR='='.repeat(68);
 function fail(msg,err){
@@ -54,8 +54,14 @@ const _b=path.join(os.tmpdir(),'rcs_parse_test.'+process.pid+'.js');
    try/catch so cleanup can never be what fails an otherwise-green run. */
 process.on('exit',()=>{try{fs.rmSync(_b,{force:true});}catch(e){}});
 fs.writeFileSync(_b,'function ocrHalf(b,p,skip){(globalThis.__HALF=globalThis.__HALF||[]).push({p:p,skip:(skip||[]).slice()});return Promise.resolve(null);}\n'
+  /* parseRsPdf falls through to tier 3 and then reports why it failed, so the
+     suite has to supply both halves of that seam. ocrParseRs answers whatever
+     the test set and never a network call; ocrWhy answers the reason a real
+     Azure run would have left behind, so the composed message can be asserted. */
+  +'function ocrParseRs(){return Promise.resolve(globalThis.__OCR||null);}\n'
+  +'function ocrWhy(){return globalThis.__OCRWHY||"";}\n'
   +['templates.js','core.js','score.js','db.js','app.js','rcs.js'].map(x=>fs.readFileSync(path.join(_d,x),'utf8')).join('\n')
-  +'\nif(typeof module!=="undefined")Object.assign(module.exports,{__rsTextPageAt:rsTextPageAt,__rsTextPages:rsTextPages,__rsReadTextTier:rsReadTextTier,__rsTplAlign:rsTplAlign,__rsTplPremiseHolds:rsTplPremiseHolds,__rsFieldRects:rsFieldRects,__rsMapRects:rsMapRects,__rsTableA:rsTableA,__rsColHeads:rsColHeads,__rsTblCells:rsTblCells,__rsAssembleFields:rsAssembleFields,__rsLines:rsLines,__rsBoxText:rsBoxText,__rsDropTplLabels:rsDropTplLabels,__rsTplRuns:rsTplRuns,__rsDropFormLines:rsDropFormLines,__rsFormLines:rsFormLines,__defUaSrc:defUaSrc,__defSafmrSrc:defSafmrSrc,__checkSeed:checkSeed,__CHECK_CONDITIONAL:CHECK_CONDITIONAL,__CHECKLIST_FLAT:CHECKLIST_FLAT});\n');
+  +'\nif(typeof module!=="undefined")Object.assign(module.exports,{__rsTextPageAt:rsTextPageAt,__rsTextPages:rsTextPages,__rsReadTextTier:rsReadTextTier,__rsTplAlign:rsTplAlign,__rsTplPremiseHolds:rsTplPremiseHolds,__rsFieldRects:rsFieldRects,__rsMapRects:rsMapRects,__rsTableA:rsTableA,__rsColHeads:rsColHeads,__rsTblCells:rsTblCells,__rsAssembleFields:rsAssembleFields,__rsLines:rsLines,__rsBoxText:rsBoxText,__rsDropTplLabels:rsDropTplLabels,__rsTplRuns:rsTplRuns,__rsDropFormLines:rsDropFormLines,__rsFormLines:rsFormLines,__parseRsPdf:parseRsPdf,__defUaSrc:defUaSrc,__defSafmrSrc:defSafmrSrc,__checkSeed:checkSeed,__CHECK_CONDITIONAL:CHECK_CONDITIONAL,__CHECKLIST_FLAT:CHECKLIST_FLAT});\n');
 const app=require(_b);
 const R=global.window.RCSParse;
 const D_=_d+'/';
@@ -1198,6 +1204,125 @@ async function reader(file){
       const fake=[];for(let i=1;i<=8;i++)fake.push({s:'Col. '+i,x:100+i*5,y:600,d:0});
       eq('columns that cannot span the form are not columns',app.__rsColHeads(fake),null); }
   }
+
+  /* ================= AN EMPTY READ IS NOT A READ ==========================
+     parseRsPdf has three tiers and had two floors. rsAssembleFields - which
+     tiers 2 and 3 must pass - refuses a record with no rent rows in it. Tier 1,
+     which reads the AcroForm directly, had no floor at all: it returned whatever
+     the fields held and the form called it read - a green tile saying "read",
+     "Fill form from RS" armed, and Enter bound to it.
+
+     Two real documents walk through that hole. The first is our OWN blank
+     HUD-92458, the template in templates.js: 232 fields and not a value in one of
+     them, and exactly what a property manager sends when they mean to attach the
+     schedule and attach the form instead. The second is filed. Mapleview Towers'
+     "HUD Rent Schedule - Mapleview Towers eff. 04.01.26.pdf" carries all 232
+     fields with 39 of them filled, and every one of those 39 is the string "0" -
+     the schedule's own printed monthly total included. Measured over all 103 rent
+     schedules in the corpus it is the only filed copy that does this, and one is
+     enough: what it puts into a federal filing is nothing at all, with a tick
+     beside it. The fixtures below are built from our own template, so the shape
+     is asserted without a byte of portfolio data leaving the Drive. */
+  { const P=global.window.PDFLib;
+    const b64=global.window.RCSTemplates&&global.window.RCSTemplates.rentSchedule;
+    T('the blank HUD-92458 template is there to build the fixtures from',!!b64);
+    const blank=new Uint8Array(Buffer.from(b64,'base64'));
+    { const d=await P.PDFDocument.load(blank,{ignoreEncryption:true,parseSpeed:Infinity});
+      T('the blank template trips tier 1 - it carries far more than ten fields',
+        d.getForm().getFields().length>10); }
+
+    globalThis.__OCR=null;globalThis.__OCRWHY='';
+
+    /* THE BLANK FORM. */
+    { const r=await app.__parseRsPdf(blank);
+      /* The defect in one line: kind 'fields' WITH a parsed record is precisely
+         what the upload handler arms "Fill form from RS" on. */
+      eq('a blank form is not a read schedule',!!(r.kind==='fields'&&r.parsed),false);
+      eq('and nothing is handed to the form',r.parsed,null);
+      T('and it says so in words a property manager can act on',
+        /fields/.test(r.why||'')&&/rent/.test(r.why||'')); }
+
+    /* MAPLEVIEW'S SHAPE: the fields are all there and every figure in them is
+       "0", the schedule's own printed total among them. */
+    { const d=await P.PDFDocument.load(blank,{ignoreEncryption:true,parseSpeed:Infinity});
+      const f=d.getForm();
+      for(let row=0;row<11;row++){const b=7+row*8;
+        [b+1,b+2,b+3,b+4,b+5].forEach(id=>{try{f.getTextField(String(id)).setText('0');}catch(e){}});}
+      try{f.getTextField('95').setText('0');}catch(e){}
+      const zeroed=new Uint8Array(await d.save({updateFieldAppearances:false}));
+      const r=await app.__parseRsPdf(zeroed);
+      eq('a schedule whose every rent reads zero is not a read schedule',!!(r.kind==='fields'&&r.parsed),false);
+      eq('and nothing is handed to the form',r.parsed,null);
+      T('and the reason names the empty fields',/hold no apartment rents/.test(r.why||'')); }
+
+    /* WHAT MUST NOT CHANGE. A fielded copy that does hold a rent roll still
+       reads through tier 1, and reads through it whole. */
+    { const d=await P.PDFDocument.load(blank,{ignoreEncryption:true,parseSpeed:Infinity});
+      const f=d.getForm();
+      const set=(id,v)=>{try{f.getTextField(String(id)).setText(v);}catch(e){}};
+      set(1,'Gates Manor Apartments');
+      set(7,'2BR/1BA'); set(8,'10'); set(9,'900');
+      set(15,'1BR/1BA'); set(16,'5');  set(17,'700');
+      set(95,'12,500');
+      const real=new Uint8Array(await d.save({updateFieldAppearances:false}));
+      const r=await app.__parseRsPdf(real);
+      eq('a fielded schedule that holds a rent roll still reads through tier 1',r.kind,'fields');
+      eq('and it still comes back with both of its unit rows',r.parsed?r.parsed.units.length:null,2);
+      eq('and with the rents the fields carry',
+        r.parsed?r.parsed.units.map(u=>u.count*u.rent).reduce((a,b)=>a+b,0):null,12500);
+      eq('and with the name the fields carry',r.parsed?r.parsed.scalars['property.name']:null,'Gates Manor Apartments');
+      T('and with no refusal attached to it',!r.why); }
+
+    /* THE FLOOR ITSELF, through the door tiers 2 and 3 come in by. It is the same
+       predicate tier 1 now answers to, so this is the other half of the same
+       statement: a record with no Section 8 rent row in it is not a schedule. */
+    eq('a record with no rent rows at all is refused',app.__rsAssembleFields(()=>''),null);
+
+    /* BOTH REASONS, IN ORDER. A copy can be useless in two ways at once and the
+       reader is entitled to hear both. */
+    { globalThis.__OCRWHY='The scan came back, but only 3 of the blank form printed labels were recognised on the page.';
+      const r=await app.__parseRsPdf(blank);
+      T('the field reason comes first',/^This copy still carries/.test(r.why||''));
+      T('and the scan reason is kept beside it',/only 3 of the blank form/.test(r.why||''));
+      globalThis.__OCRWHY=''; }
+
+    /* A REAL CLASS-C COPY. Colonial Village's filed EXECUTED schedule carries no
+       form fields and a text layer holding none of its figures - the shape 18 of
+       the corpus's 34 current executed schedules have. It must refuse, and the
+       reason the scanning tier gave must reach the caller rather than being
+       dropped on the way. */
+    { const cv=path.join(_d,'..','..','_archive','colonial-village-example',
+                         'Colonial Village - Executed Rent Schedule.pdf');
+      T('the executed Colonial Village schedule is in the repository',fs.existsSync(cv));
+      globalThis.__OCRWHY='This copy is a scanned image, so it can only be read by the scanning service.';
+      const r=await app.__parseRsPdf(new Uint8Array(fs.readFileSync(cv)));
+      eq('a flattened executed schedule yields no record at all',r.parsed,null);
+      eq('and it is not reported as a read',r.kind==='fields',false);
+      T('and the reason the scan gave reaches the caller',/scanning service/.test(r.why||''));
+      globalThis.__OCRWHY=''; }
+  }
+
+  /* ---- ocr.js: the refusal that carried no reason -------------------------
+     ocrParseRs returned null with OCR_WHY still empty whenever there was no
+     session - the one exit that fires offline - so the form showed a copy it
+     could not read with nothing beside it, and the reader could not tell "Azure
+     declined this page" from "nobody was ever asked". Loaded on its own here:
+     both branches return before any request is built, so this reaches no
+     network and costs nothing. */
+  { const _o=path.join(os.tmpdir(),'rcs_ocr_only.'+process.pid+'.js');
+    try{
+      fs.writeFileSync(_o,'let supaClient=null;\n'
+        +fs.readFileSync(path.join(_d,'ocr.js'),'utf8')
+        +'\nmodule.exports={ocrParseRs:ocrParseRs,ocrWhy:ocrWhy};\n');
+      const O=require(_o);
+      const saved=global.window.PDFLib;
+      eq('with no session the scan is declined',await O.ocrParseRs(new Uint8Array([1,2,3])),null);
+      T('and it says why, instead of leaving the form to guess',/scanning service/.test(O.ocrWhy()));
+      global.window.PDFLib=null;
+      eq('with no PDF engine the scan is declined too',await O.ocrParseRs(new Uint8Array([1,2,3])),null);
+      T('and that refusal has its own reason',/PDF engine/.test(O.ocrWhy()));
+      global.window.PDFLib=saved;
+    } finally { try{fs.rmSync(_o,{force:true});}catch(e){} } }
 
   finish();
 })().catch(e=>{fail('the suite threw',e);process.exit(1);});
