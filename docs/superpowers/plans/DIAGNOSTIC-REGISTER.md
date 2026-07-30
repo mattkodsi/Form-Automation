@@ -2990,3 +2990,139 @@ read is worse than one that refuses. It puts silence where a number belongs on a
 `extract.js` already carries this guarantee for the corpus tool — *"a flattened executed schedule
 yields no values at all"* and *"says why, rather than reading as an empty schedule."* Whether the
 **app's own** reader carries it has never been measured. It is being measured now.
+
+# M67 — the rent schedule stored pictures of numbers, so the form did its arithmetic on decimals
+
+Matt generated a schedule, opened it in Acrobat and changed one unit count from 33 to 3 — the
+ordinary thing a property manager does to a draft. He photographed what the form computed.
+
+| cell | should be | our form computed |
+|---|---|---|
+| Col. 4 = 3 x 1,850 | 5,550 | **6** |
+| Col. 6 = 1,850 + 160 | 2,010 | **162** |
+| Monthly Contract Rent Potential | $5,550 | **$85** |
+
+Those are `3 x 1.85` and `160 + 1.85`. **Acrobat was reading our `"1,850"` as one point eight five.**
+His control is the same input typed into HUD's untouched template, which computes 5,550 correctly,
+because typing leaves the value raw.
+
+## The mechanism
+
+An AcroForm field has a **value** (`/V`) and a **drawn appearance**. HUD's `AFSimple_Calculate`
+actions read `/V` through `AFMakeNumber`; the `AFNumber_Format` actions render the separators and the
+`$` for display. Under the US convention this template specifies (sepStyle 0) `AFMakeNumber` takes a
+comma as a **decimal point**. `gen.js` wrote the *formatted* string into `/V`, so every figure
+downstream of any edit was wrong by a factor of a thousand.
+
+This makes M64 wrong rather than incomplete: it wrote `"$76,918"` into `/V`, which is less parseable
+again. **M64's intent — that the four potentials must show a `$` — is correct and survives here.** It
+was only ever a claim about the appearance, and it had no way to say so, because nothing in the suite
+could read an appearance.
+
+## What the real filings do, which is what settled the design
+
+Two filed schedules, 232 fields each, different preparers — `Colonial Village - Draft RS 2025 -
+Unsigned.pdf` and `HUD 92458 - Rent Schedule - Willow Woods (unsigned).pdf`:
+
+| field | `/V` stores | `/AP` draws |
+|---|---|---|
+| 9 (Col. 3) | `1147` | `1,147` |
+| 10 (Col. 4) | `36704` | `36,704` |
+| 11 (Col. 5) | `161` | `161` |
+| 95 (monthly potential) | `83135` | `$83,135` |
+| 97 (market potential) | `0` | `$0` |
+
+`NeedAppearances` is **absent in both**. So Acrobat itself keeps the value raw and bakes a formatted
+appearance — the second of the two candidate fixes, chosen on evidence rather than on taste. Setting
+`NeedAppearances` would have handed the formatting to whichever viewer opened the file, and Preview
+and Chrome would each have drawn something different from Acrobat.
+
+Field 11 is the instructive one. It carries **no format action**, so HUD's own form draws it bare —
+and we now draw it bare too, which is a visible change from the comma we used to print. It is also
+read by `SUM("11","9")`, which is why it still has to be raw.
+
+## Which fields are numeric is read off the template, not listed by hand
+
+The union of: fields carrying an `AFNumber_Format` action (101), fields that calculate (41), and —
+the term a format-based rule misses — fields **named as operands by someone else's calculation** (84).
+**112 fields.** That last term is exactly the Col. 5 allowance column (`11, 19, 27 … 91`), which no
+format action covers. Fields like the FHA number, which is text with leading zeros, fall outside it
+and are left alone.
+
+Presentation stays the template's decision: the currency symbol and whether it leads are parsed from
+each field's own format action, so the four potentials print `$` and the other 97 do not.
+
+## A second defect, found while measuring the first
+
+`gen.js` blanked `x12`. That is HUD's own hidden constant (`/F=6`) — the multiplier in
+`AFSimple_Calculate("PRD", ["95","x12"])` that turns each monthly potential into its annual one, and
+it ships holding `"12"`. Blanking it is invisible until something recalculates, at which point
+`AFMakeNumber("")` is 0 and **both annual potentials collapse to $0** in front of the reader. Both
+filed schedules carry `"12"`. The line dates to the original upload with no reason recorded; it is
+gone.
+
+## The order the fix has to happen in
+
+`T()` writes display text and lets pdf-lib bake an appearance from it. The 9pt sweep near the end of
+`fillRentSchedule` then re-bakes ninety of those appearances. So the raw values go in **last**, poked
+onto the field dict directly — through `setText` they would mark the field dirty and `save()` would
+redraw it from the raw value, losing every separator. This is not theoretical: an earlier draft of the
+fix did exactly that.
+
+## Why the suite did not catch it, and what it asserts now
+
+`test_gen.js` asserted that **41 calculating fields exist**. That is structure, and the structure was
+perfect the whole time — it passed while the form miscalculated by a factor of a thousand. Worse,
+**fifteen checks demanded a comma from `getText()`, which is `/V`**: the defect was written into the
+suite as a requirement.
+
+Those fifteen are corrected. The comma and the `$` are still required — of the drawn appearance, read
+through a new `apText()` helper that decodes the widget's appearance stream. Added on top: every one
+of the 112 numeric fields must store a value that round-trips as a number, and Matt's reproduction
+runs as arithmetic over the stored values. `test_gen.js` **91 → 123 checks**; `MIN_CHECKS` 75 → 123.
+
+Proven against `4564090`'s `gen.js`, extracted to a temp dir and run with the new suite — **19 of 118
+failed**, including his three numbers:
+
+```
+X Col. 4 = 3 x 1,850 comes out at 5,550: got 5.550000000000001 want 5550
+X Col. 6 = 1,850 + 160 comes out at 2,010: got 161.85 want 2010
+X the annual one follows through HUD's own multiplier: got 0 want 66600
+X and not one of them stores a comma or a dollar sign: got "9=\"1,850\", 10=\"61,050\",
+  12=\"2,010\", 95=\"$61,050\", 97=\"$0\", 96=\"$732,600\", 98=\"$0\"" want ""
+```
+
+## A third defect, handed over mid-change: field 174 blanked a zero
+
+Raised by the agent on `vis-look`, which rendered the blank template: field 174, "Total Rent Loss Due
+to Non-Revenue Units", calculates `SUM(161,164,167,170,173)` and ships as `"0"`, but
+`T(174, dr?money(trl):'')` wrote an empty string whenever a property had no non-revenue units. It is
+the calculated cell M65 missed — the same rule it applied to 195 and 1156 twenty lines above.
+
+**Checked against the filed copies before changing it**, because a filed schedule that printed this
+blank would outrank HUD's blank form. None does:
+
+| filed copy | Part D | field 174 |
+|---|---|---|
+| Willow Woods 2025 (unsigned) | empty | `0` |
+| Beacon Hill eff. 08.01.25 (unsigned) | empty | `0` |
+| `05. [Property Name] - Draft Rent Schedule.pdf` | empty | `0` |
+| Colonial Village 2025 (unsigned) | one row | `1147` |
+
+Unanimous, no counterexample: the blank was ours alone. Now `T(174, money(trl))`, which under the
+raw-value rule stores `0` and draws `0`. The `$` a reader sees beside it is printed on the form —
+174's format action names no currency — which is the same arrangement 195 and 1156 use.
+
+The other 27 field-complete-looking schedules checked turned out to carry **zero form fields**
+(executed copies are vector outlines), so this rests on four documents, not thirty.
+
+## The standing lesson
+
+**A check that reads a value and asserts a presentation is testing neither.** The fifteen wrong checks
+were readable, specific, and passed for months, and every one of them made the defect look like a
+requirement. When a field has two faces, a suite that can only see one will confidently describe the
+wrong one — and the sweep that compared 34 properties could not help, because `extract.js:96` and
+`compare.js:68` strip `$` from both sides before comparing, so presentation was invisible there too.
+
+Note also what "solved" meant in `7179b5f`, whose message is the diagnosis above and which changed
+**one markdown file and no code**. The analysis was right and complete; nothing shipped from it.
