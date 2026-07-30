@@ -6375,20 +6375,37 @@ let _menuWheel=false;
      1. AT the top, at rest, and you scroll up  ->  it opens.
      2. You scroll UP TO the top                ->  it bobs, once, at once.
 
-   "At rest" is the only timing left: REST_GAP of no wheel at all. That is what
-   makes a fling's tail not count, and it asks nothing about speed or shape — a
-   tail is a stream of events, and a stream has no quarter-second hole in it. Same
-   rule, same result, on every machine.
+   Rule 1 is a DISTANCE, not a stillness. It was a quarter-second gap with no wheel
+   in it, and on a trackpad that gap does not exist: momentum keeps firing for over
+   a second after the fingers lift, so a second swipe arrives inside the tail of the
+   first. Matt: "the scroll up on a trackpad like mac doesnt work at all... scrolling
+   up only does something when i navigate my mouse directly on top of the banner and
+   then scroll up." Over the banner there is nothing under the cursor to scroll, so
+   no momentum is generated, so the gap appears — the rule was working by accident of
+   where the pointer happened to be.
+
+   So: keep pushing up against the top and it opens, at PUSH_OPEN pixels of push. A
+   distance cannot be starved by a stream of events. The flick that brought you here
+   is excluded by zeroing the count for ARRIVE_HOLD after you land, which is long
+   enough that what is still arriving afterwards is a hand and not the last fling.
 
    Nothing is drawn while scrolling. No progress rule, no resistance, no damping,
    no cooldown. Opening cancels the one wheel event that opened it, so the reader
    lands where they were with the backlog stacked above; anything they scroll after
    that is scrolling, and it moves the page, because that is what scrolling does. */
-const REST_GAP=250;      /* no wheel for this long is "at rest" — the only timing left */
-const HOLD_AFTER=350;    /* and upward wheels do nothing for this long after it opens */
+const PUSH_OPEN=240;     /* pixels of upward push against the top before it opens */
+const ARM_QUIET=120;     /* the flick that landed you here is over once the wheel pauses this long */
+const ARM_MAX=2500;      /* and in any case it is over by then — a momentum tail dies
+                            well inside 1.5s, and a hand that never once pauses for
+                            120ms across two and a half seconds is asking to be let in */
+const HOLD_AFTER=350;    /* upward wheels do nothing for this long after it opens */
 const NUDGE_GAP=1500;    /* and the bob does not replay more often than this */
 const _now=()=>(typeof performance!=='undefined'&&performance.now)?performance.now():0;
-let _pullLast=0,_openedAt=0;
+/* _wasTop starts TRUE because the page starts at the top: a reader who scrolls up
+   on arrival has flown in from nowhere and there is no flick to wait out. It is set
+   false by any wheel that sees the page below the top, which is what makes the next
+   wheel at zero a LANDING. Programmatic scrolls to the top set it back themselves. */
+let _push=0,_openedAt=0,_armAt=0,_wheelAt=0,_wasTop=true;
 /* When the page last ARRIVED at the top, off the scroll event rather than the
    wheel, because that is the thing that actually happened. Zero means "not
    recently", which is the state on load. */
@@ -6413,15 +6430,34 @@ function _menuNudge(){
 /* Rule 1. Returns true when this event opened the drawer, so the wheel handler can
    cancel it — otherwise the scroll it carries lands on a page 3,400px taller. */
 function _menuPull(dy){
-  const now=_now();
-  const gap=_pullLast?(now-_pullLast):1e9;
-  _pullLast=now;
   const v=el('viewMenu');
-  if(_pastOpen||!v||v.style.display==='none'||!el('mPast'))return false;
-  if(dy>=0)return false;
-  if(typeof window!=='undefined'&&(window.pageYOffset||0)>0)return false;
-  if(gap<REST_GAP)return false;                       /* still one gesture */
-  if(_topAt&&now-_topAt<REST_GAP)return false;        /* only just landed here */
+  if(_pastOpen||!v||v.style.display==='none'||!el('mPast')){_push=0;return false;}
+  /* Anything but an upward wheel at the top ends the push. */
+  if(dy>=0){_push=0;return false;}
+  if(typeof window!=='undefined'&&(window.pageYOffset||0)>0){_push=0;_wasTop=false;return false;}
+  /* The landing is observed HERE, in the wheel handler, and not left to the scroll
+     handler that follows it. A gapless stream delivers several more wheels before
+     the scroll event fires, and those saw a page already at the top with no window
+     armed yet — 240px of "push" arrived and the drawer opened on arrival, which is
+     exactly what the window exists to prevent. Whoever sees the transition first
+     has to be the one that arms it. */
+  if(!_wasTop){_wasTop=true;_armAt=_now();_push=0;_wheelAt=_armAt;return false;}
+  /* The flick that landed you here is not a push, and it is over when it STOPS —
+     not after some fixed number of milliseconds. A fixed window was tried at 450ms
+     and a long tail simply outlived it, delivering another 1,200px of "push" and
+     opening the drawer on arrival. A pause is what ends a flick, and lifting your
+     fingers to swipe again always makes one. ARM_MAX is only a backstop, for a hand
+     that never pauses at all. */
+  const now=_now();
+  const gap=_wheelAt?(now-_wheelAt):1e9;
+  _wheelAt=now;
+  if(_armAt){
+    if(gap>=ARM_QUIET||now-_armAt>=ARM_MAX)_armAt=0;
+    else{_push=0;return false;}
+  }
+  _push+=Math.abs(dy);
+  if(_push<PUSH_OPEN)return false;
+  _push=0;
   _openPast();
   return true;
 }
@@ -6467,6 +6503,9 @@ function _menuScrollBack(){
     else if(_leftTop){
       _leftTop=false;
       _topAt=_now();
+      /* Landing arms the window: what arrives next is the flick finishing, until it
+         pauses. */
+      _armAt=_topAt;_push=0;
       _menuNudge();
     }
   }
@@ -6491,10 +6530,26 @@ function _togglePast(){
      bob is for reaching the top by SCROLLING, not for the page rearranging itself
      under a button. */
   _nudgeAt=_now();
+  /* A toggle moves the page itself. Nothing flew in, so nothing has to be waited
+     out — the reader's next scroll is theirs. */
+  _wasTop=true;_push=0;_armAt=0;
   const anchor=_menuAnchor;
   const before=anchor();
   _pastOpen=!_pastOpen;
-  renderMenu();
+  /* The rows are ALREADY in the page — renderMenu writes them on every render and
+     hides them — so opening the drawer is a hidden attribute and one word on a
+     button. Rebuilding all 229 rows to change those two things is where the lag
+     came from: Matt, "its still a tiny bit laggy". renderMenu stays as the fallback
+     for a toggle on a render that has not drawn the drawer. */
+  const w=el('mPastWrap'),b=el('mPast');
+  if(w&&b&&b.classList&&w.hasAttribute){
+    if(_pastOpen)w.removeAttribute('hidden');else w.setAttribute('hidden','');
+    b.classList.toggle('open',_pastOpen);
+    b.setAttribute('aria-expanded',_pastOpen?'true':'false');
+    const n=b.querySelector('.mp-n'),a=b.querySelector('.mp-a');
+    if(n)n.innerHTML=(_pastOpen?'\u2193 ':'')+n.innerHTML.replace(/^\u2193\s*/,'');
+    if(a)a.textContent=_pastOpen?'Hide':'Show';
+  }else renderMenu();
   if(before==null||typeof window==='undefined'||typeof window.scrollTo!=='function')return;
   const after=anchor();
   if(after==null)return;
@@ -7244,6 +7299,7 @@ function renderMenu(){
       const sc=el('scrim');
       if(sc&&sc.classList&&sc.classList.contains('open'))return;
       if(_pastOpen)_togglePast();
+      _wasTop=true;_push=0;_armAt=0;
       if(typeof window.scrollTo==='function')window.scrollTo(0,0);
     });
     window.addEventListener('scroll',_menuScrollBack,{passive:true});

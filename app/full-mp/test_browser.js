@@ -2201,12 +2201,22 @@ const FULL=process.argv.includes('--full');
                 grew:Math.max.apply(null,H)-Math.min.apply(null,H),
                 back:H[H.length-1]===Math.min.apply(null,H)};};
 
-      /* ---- rule 1 ---- */
+      /* ---- rule 1: a PUSH, not a pause ----
+         It used to want a quarter second of silence first, and on a trackpad that
+         silence does not exist — momentum fires for over a second after the fingers
+         lift, so a second swipe lands inside the tail of the first. It worked for
+         Matt only with the pointer parked over the banner, where nothing under the
+         cursor scrolls and so no momentum is made. A distance cannot be starved by
+         a stream of events. */
       await shut(0);
-      await notch(); await sleep(500);
+      await notch(); await notch(); await notch(); await sleep(500);
       const a1=await read();
-      eq('at rest at the top, one scroll up opens it',a1.hidden,false);
-      eq('and what is coming has not moved a pixel',a1.panelTop,d0.panelTop);
+      eq('pushing up against the top opens it',a1.hidden,false);
+      /* Within a few pixels, not exactly: the push that opens it is several wheel
+         events, and the compensation is measured during one of them. Measured at 8
+         to 19px where the click path is exact. The claim is that the reader has not
+         travelled — a third of a row is not travel. */
+      T('and what is coming has not moved',Math.abs(a1.panelTop-d0.panelTop)<25);
       T('the arrow points down, because that is where the rows went',
         /↓/.test(a1.label||''));
 
@@ -2256,17 +2266,18 @@ const FULL=process.argv.includes('--full');
         e=>window.__C.push(e.defaultPrevented?1:0),{passive:true});return 1`);
       await shut(0);
       await c.eval('window.__C=[];return 1');
+      await notch(); await notch();        /* the push */
       await notch();                       /* opens it, and is swallowed */
       await sleep(60);  await notch();     /* inside the hold */
       await sleep(600); await notch();     /* long after it */
       const C=await c.eval('return window.__C');
-      eq('the wheel that opens it is swallowed, so its scroll cannot land',C[0],1);
-      eq('and so is one that follows straight after',C[1],1);
-      eq('but a scroll a moment later is the reader scrolling, and it scrolls',C[2],0);
+      eq('the wheel that opens it is swallowed, so its scroll cannot land',C[2],1);
+      eq('and so is one that follows straight after',C[3],1);
+      eq('but a scroll a moment later is the reader scrolling, and it scrolls',C[4],0);
 
       /* ---- Escape puts the list back the way it was found ---- */
       await shut(0);
-      await notch(); await sleep(500);
+      await notch(); await notch(); await notch(); await sleep(500);
       await c.eval('window.scrollTo(0,1200);return 1'); await sleep(300);
       await c.key('Escape'); await sleep(400);
       const esc=await read();
