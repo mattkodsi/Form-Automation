@@ -1780,7 +1780,15 @@ function rsBoxText(inside,tplPg){
     const L=lines[lines.length-1];
     if(L&&Math.abs(L.y-r.y)<=RS_LINE)L.runs.push(r);
     else lines.push({y:r.y,runs:[r]});});
-  const txt=lines.map(L=>L.runs.sort((a,b)=>a.x-b.x).map(r=>r.s).join('').trim()).filter(Boolean);
+  const txt=lines.map(L=>L.runs.sort((a,b)=>a.x-b.x).map(r=>r.s).join('')
+    /* One space, however many the page drew. Friendship Court's name arrived as
+       "Friendship  Court" once the Td-gap rule started restoring a space beside
+       one the run already carried, and that reached the stored name, the workbook
+       title and every output filename. rcs.js's own lines() has collapsed
+       whitespace this way from the start; this is the same treatment, not a new
+       idea, and the six spaces inside "Shiloh Village Apts.      " were only ever
+       trailing, so nothing legible is lost. */
+    .replace(/\s+/g,' ').trim()).filter(Boolean);
   return rsDropFormLines(txt,tplPg).join(' ').trim();}
 function rsMapRects(pageRuns,rects,tplPg){ // one page's runs -> {fieldId: text}
   const out={};if(!pageRuns)return out;

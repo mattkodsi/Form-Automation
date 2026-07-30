@@ -1419,7 +1419,12 @@ const FULL=process.argv.includes('--full');
         const row=r=>[V(7+r*8),V(7+r*8+1),V(7+r*8+4)];
         return {name:V(1),rows:[row(0),row(1),row(2)],total:V('94a'),
           formCounts:window.__t.__UNITS().map(i=>window.__t.getVal('units.'+i+'.num_units')).filter(v=>v!=='')};`);
-      eq('the project name the schedule printed comes back out',out.name,'Colonial Village');
+      /* Both names. This asserted "Colonial Village" alone until the Colonial
+         Village audit read the sources: its prior EXECUTED schedule and the team's
+         own filed draft both print "Colonial Village/White Oak Townhomes" in Part
+         A, and app.js splits that on the way in. Writing back only the first half
+         left the one form HUD identifies the project by holding half an identity. */
+      eq('the project name the schedule printed comes back out',out.name,'Colonial Village/White Oak Townhomes');
       /* No bath count: Part A of this schedule gives '2 Bedroom' and nothing more,
          so the row that comes out says exactly what the row that went in said. */
       eq('the first unit type, its count and its allowance',out.rows[0],['2 BR','32','161']);

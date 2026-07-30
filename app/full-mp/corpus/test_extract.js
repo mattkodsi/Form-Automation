@@ -229,7 +229,11 @@ const REC={
   eq('ours schedule: the comma comes off the rent', ors['unit.0.rent'],'1850');
   eq('ours schedule: unit type carries the bath count', ors['unit.0.type'],'2BR/1BA');
   eq('ours schedule: the FHA number IS typed',      ors['property.fha'],'OH10-M000-236');
-  eq('ours schedule: project name has no alias',    ors['property.name'],'ColonialVillage');
+  /* Renamed and re-expected. This read "project name has no alias" and asserted
+     the bare name - a description of what we then printed, not a reason for it.
+     The prior EXECUTED schedule and the team's own filed draft both print both
+     names in Part A. */
+  eq('ours schedule: project name carries its alias', ors['property.name'],'ColonialVillage/WhiteOakTownhomes');
   eq('ours schedule: total units',                  ors['total.units'],'65');
 
   const otn=ours.tenantNotice.values;

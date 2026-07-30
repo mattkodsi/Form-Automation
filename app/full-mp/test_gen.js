@@ -13,7 +13,7 @@ const G=require(D+'gen.js');
    DecompressionStream, Blob and atob, all of which node has had since 18. */
 new Function('window',fs.readFileSync(D+'xlsx.js','utf8'))(global.window);
 
-const MIN_CHECKS=72;                 // the count this file is known to run to the end
+const MIN_CHECKS=75;                 // the count this file is known to run to the end
 let n=0,fails=0,verdict=null;
 const BAR='═'.repeat(68);
 function fail(msg,err){
@@ -288,6 +288,30 @@ function record(extra){
      unit types at two different rents wearing one label. Two callers formatting
      one field two ways is how a package comes to contradict itself, so the
      function is exported and there is now one. */
+  /* ── a property with two names keeps both on the form ─────────────────────
+     Colonial Village's executed schedule prints its Part A project name as
+     "Colonial Village/White Oak Townhomes". app.js splits that on the way in
+     into property.name plus tenant.property_alias, which is why the tenant
+     notice correctly headers "White Oak Townhomes" while every letter uses the
+     legal name. Writing back, only the first half reached HUD-92458 - so the one
+     form HUD identifies the project by lost half its identity while the record
+     held both halves, and the team's own filed draft prints both. */
+  console.log('\n─ a property with two names keeps both on the form ─');
+  { const two=await G.fillRentSchedule(rsBytes,record(
+      {'property.name':'Colonial Village','tenant.property_alias':'White Oak Townhomes'}));
+    const f2=(await PDFDocument.load(Buffer.from(two))).getForm();
+    eq('the schedule carries both names',
+      f2.getTextField('1').getText(),'Colonial Village/White Oak Townhomes');
+    /* And a property with one name gains nothing - no stray slash on the form. */
+    const one=await G.fillRentSchedule(rsBytes,record({'property.name':'Colonial Village'}));
+    const f1=(await PDFDocument.load(Buffer.from(one))).getForm();
+    eq('and one name stays one',f1.getTextField('1').getText(),'Colonial Village');
+    /* An alias with no name still prints something rather than a bare slash. */
+    const al=await G.fillRentSchedule(rsBytes,record(
+      {'property.name':'','tenant.property_alias':'White Oak Townhomes'}));
+    const fa=(await PDFDocument.load(Buffer.from(al))).getForm();
+    eq('and an alias alone is not a slash',fa.getTextField('1').getText(),'White Oak Townhomes'); }
+
   console.log('\n─ the unit-type label, shared by both documents ─');
   { const ut=window.RCSGen.utype;
     T('the label function is exported',typeof ut==='function');
