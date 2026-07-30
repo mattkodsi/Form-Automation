@@ -35,7 +35,7 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=310;   // 2026-07-29: +12 — three zones: the past-due drawer closed on arrival, and
+const MIN_CHECKS=318;   // 2026-07-29: +12 — three zones: the past-due drawer closed on arrival, and
                         // opening it without moving the panel below (measured in a real layout).
                         // 2026-07-29: -3 — the rail's eight rows became the strip's five figures.
                        // 2026-07-28: +35 — the home page's filter rail, driven by real clicks.
@@ -2120,6 +2120,25 @@ const FULL=process.argv.includes('--full');
       /* Opening it. The one check the DOM alone cannot make: inserting rows above
          the panel must not move the panel. Measured in the viewport, before and
          after, in a real layout. */
+      /* ---- the glide ----
+         Sampled IN PAGE at 16ms, because the value is animated frame by frame and
+         a round trip per sample cannot see the shape. Written straight from the
+         wheel handler it jumped a third of the bar per event — staccato — so what
+         is asserted is INTERPOLATION: many distinct values across the gesture, and
+         a release that slides back over time rather than blinking out. */
+      await c.eval(`window.__S=[];const b=document.getElementById('mPast');
+        window.__si=setInterval(()=>{window.__S.push(
+          +getComputedStyle(b).getPropertyValue('--pull'));},16);return 1;`);
+      await notch(); await sleep(90); await notch();
+      await sleep(1150);
+      const S=await c.eval('clearInterval(window.__si);return window.__S');
+      const uniq=[...new Set(S.map(v=>v.toFixed(3)))].length;
+      T('the fill is interpolated, not written straight from the wheel',uniq>=8);
+      const pk=S.indexOf(Math.max.apply(null,S));
+      const zi=S.findIndex((v,i)=>i>pk&&v<0.01);
+      T('and letting go slides it back rather than blinking it out',zi-pk>=6);
+      T('all the way back to nothing',zi>0);
+      await c.eval('window.scrollTo(0,0);return 1'); await sleep(140);
       await c.eval('document.getElementById("mPast").click();return 1');
       await sleep(320);
       const d1=await read();
@@ -2136,6 +2155,32 @@ const FULL=process.argv.includes('--full');
       const d2=await read();
       eq('pressing it again closes it',d2.hidden,true);
       eq('and what is coming still has not moved',d2.panelTop,d0.panelTop);
+      /* ---- the bar stays reachable, and puts itself away ----
+         Pinned while open, so Hide can be pressed from anywhere in the drawer
+         rather than only from the top of it. And scrolling back down past the
+         drawer closes it, returning the page to the configuration it opened in —
+         only once the drawer is entirely above the viewport, where removing it and
+         compensating the scroll leaves every visible pixel where it was. */
+      await c.eval('window.scrollTo(0,0);return 1'); await sleep(140);
+      await c.eval('document.getElementById("mPast").click();return 1');
+      await sleep(320);
+      const pin=await c.eval(`window.scrollTo(0,240);return new Promise(r=>setTimeout(()=>{
+        const b=document.getElementById('mPast');
+        r({pos:getComputedStyle(b).position,top:Math.round(b.getBoundingClientRect().top),
+           hidden:!!document.getElementById('mPastWrap').hidden});},420));`);
+      eq('the bar is pinned while the drawer is open',pin.pos,'sticky');
+      /* Within a pixel or two of the top, not exactly 0: the scroll that got here
+         can still be settling when this is read, and the failure this guards
+         against is the bar riding away with the rows (-180, -1440), not a
+         subpixel. */
+      T('and sits at the top of the screen, not scrolled off it',Math.abs(pin.top)<=2);
+      eq('with the drawer still open at that point',pin.hidden,false);
+      await c.eval('window.scrollTo(0,document.body.scrollHeight);return 1');
+      await sleep(420);
+      const back=await read();
+      eq('scrolling down past the drawer puts it away again',back.hidden,true);
+      T('and the bar goes back to sitting in the flow',
+        await c.eval('return getComputedStyle(document.getElementById("mPast")).position!=="sticky"'));
       /* Back to the first fixture, so the checks after this read the portfolio
          they were written against. */
       await c.eval('await window.__t.__seedHap('+JSON.stringify(rows)+');'
