@@ -35,6 +35,10 @@
                         (off by default: a record from another build answers a
                         question about that build, not this one)
        --label NAME     names the output files (default sweep-1)
+       --cycles all|latest  drive every package year on disk (default) or only
+                        the newest one
+       --fuzz N         episodes of the randomized interaction storm per package
+                        (default 8; 0 turns it off)
 */
 const fs=require('fs'),path=require('path'),cp=require('child_process');
 const {driveOne}=require('./drive.js');
@@ -48,7 +52,7 @@ const flag=(n,d)=>{const i=argv.indexOf('--'+n);return i>=0?argv[i+1]:d;};
 const has=n=>argv.includes('--'+n);
 /* Flags that take a value swallow the next argument; --force does not. Getting
    this wrong silently turns a flag's value into the corpus root. */
-const VALUED=new Set(['out','only','limit','jobs','label']);
+const VALUED=new Set(['out','only','limit','jobs','label','fuzz','cycles']);
 const positional=[];
 for(let i=0;i<argv.length;i++){
   const a=argv[i];
@@ -68,9 +72,30 @@ const ONLY=(flag('only','')||'').split(',').map(s=>s.trim()).filter(Boolean);
 const FORCE=has('force');
 /* Opts back into reusing records from another build. Named for what it costs. */
 const STALE_OK=has('stale-ok');
+/* Episodes of the randomized interaction storm per driven cycle. Zero turns it
+   off; the default runs it on every cycle of every sweep, which is the point —
+   different permutations find different defects, so every run is a new sample. */
+const FUZZ_EPISODES=(()=>{const v=flag('fuzz',null);return v==null?8:Math.max(0,+v||0);})();
+/* Which cycles to drive. 'all' is the corpus as it exists on disk; 'latest'
+   restores the old behaviour of driving only the newest package year. */
+const CYCLES=(flag('cycles','all')||'all').toLowerCase();
 fs.mkdirSync(OUT,{recursive:true});
 
 const SHA=(()=>{try{return cp.execSync('git rev-parse --short HEAD',{cwd:path.join(__dirname,'..','..','..')}).toString().trim();}catch(e){return 'unknown';}})();
+
+const slug=x=>String(x).replace(/[^\w.-]/g,'_');
+/* THE SEED IS DERIVED, NOT RANDOM, AND IT MOVES. Two properties in one sweep must
+   walk different paths (or the sweep samples one permutation 56 times), the same
+   property must walk a different path in the NEXT sweep (that is the whole point
+   of a storm — a fresh sample of the interleavings each run), and any walk that
+   finds something must replay exactly. A hash of property + cycle + run label
+   gives all three: stable within a run, different across runs, and printable. */
+function seedFor(p,cycle){
+  const s=[LABEL,p.code,p.name,cycle&&cycle.cycleLabel].join('|');
+  let h=2166136261>>>0;
+  for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)>>>0;}
+  return h>>>0;
+}
 
 const man=JSON.parse(fs.readFileSync(MANIFEST,'utf8'));
 const resolveIn=(folder,rel)=>{
@@ -158,19 +183,34 @@ async function factsOfFiled(folder,cycle){
   return {facts:out,notes};
 }
 
-async function runProperty(p){
-  const cycle=(p.cycles||[]).find(c=>c.wave===1);
+/* ONE RUN IS ONE (PROPERTY, YEAR), NOT ONE PROPERTY. The corpus holds 34
+   current-cycle packages and 22 complete prior cycles, and a prior cycle is a
+   whole extra package the app must produce correctly — same property, different
+   documents, different answers. Sweeping only the newest cycle audited 34 of 56
+   packages and called it the corpus. Each cycle is now its own unit of work,
+   its own output directory and its own record. */
+async function runCycle(p,cycle){
   const rec={property:p.name,code:p.code,folder:p.folder,year:cycle&&cycle.year,
-             sha:SHA,orders:{},rows:[],fillOrder:[],drift:[],notes:[],verdict:null};
-  if(!cycle||!cycle.chosenStudy){rec.verdict='no wave-1 cycle';return rec;}
+             cycleLabel:cycle&&cycle.cycleLabel,
+             sha:SHA,orders:{},rows:[],fillOrder:[],drift:[],notes:[],verdict:null,fuzz:null};
+  if(!cycle||!cycle.chosenStudy){rec.verdict='no study for this cycle';return rec;}
   rec.inputs={study:cycle.chosenStudy,priorRs:cycle.priorRs,priorRsRule:cycle.priorRsRule};
+  /* A cycle whose study the reader cannot read is DRIVEN ANYWAY. What the app
+     does with a document it cannot parse is exactly the thing under audit, and
+     skipping it would hide the reader's blindness behind an absent row. */
+  if((cycle.studies||[])[0]&&cycle.studies[0].unread)
+    rec.notes.push('the manifest could not read this cycle\'s study; driving it anyway, because what the app does with an unreadable study is the observation');
 
   const perOrder={};
   for(const order of ['rs-first','rcs-first']){
     let r;
     try{
       r=await driveOne({propertyFolder:p.folder,studyPath:cycle.chosenStudy,
-        priorRsPath:cycle.priorRs,order,outRoot:path.join(OUT,'_out'),
+        priorRsPath:cycle.priorRs,order,
+        /* per CYCLE, so a property's 2026 run cannot overwrite its 2021 run */
+        outRoot:path.join(OUT,'_out',slug(cycle.cycleLabel||String(cycle.year||'cycle'))),
+        cycleLabel:cycle.cycleLabel||null,
+        fuzz:FUZZ_EPISODES>0?{seed:seedFor(p,cycle),episodes:FUZZ_EPISODES,maxEdits:5}:null,
         corpusRoot:CORPUS,cacheRoot:CACHE,propertyCode:p.code,propertyName:p.name});
     }catch(e){
       rec.orders[order]={error:String(e.message).slice(0,160),files:0};
@@ -198,6 +238,9 @@ async function runProperty(p){
       docsExtracted:Object.keys(facts)
     };
     notes.forEach(n=>rec.notes.push(order+': '+n));
+    /* driveBoth storms once per RUN, not once per order, so the first order to
+       come back carries it and the second reports the same object. */
+    if(r.fuzz&&!rec.fuzz)rec.fuzz=r.fuzz;
   }
 
   /* The highest-value comparison in the project, and it needs no ground truth:
@@ -294,7 +337,7 @@ function report(records){
      harness must never do. If the records disagree the run was not frozen, and
      that has to be said out loud rather than averaged away. */
   const shas=[...new Set(records.map(r=>r.sha).filter(Boolean))];
-  push('# ',LABEL,' — ',records.length,' properties, app frozen at ',shas.join(' + ')||'unknown');
+  push('# ',LABEL,' — ',records.length,' packages, app frozen at ',shas.join(' + ')||'unknown');
   push('');
   if(shas.length>1){
     push('> **These results are NOT comparable.** They were produced at ',shas.length,
@@ -308,7 +351,8 @@ function report(records){
   const blank=records.filter(r=>!r.counts);
   push('| | count |');
   push('|---|---:|');
-  push('| properties swept | ',records.length,' |');
+  push('| packages swept | ',records.length,' |');
+  push('| — properties they belong to | ',new Set(records.map(r=>r.code||r.property)).size,' |');
   push('| produced something comparable | ',ran.length,' |');
   push('| produced nothing comparable | ',blank.length,' |');
   push('| values compared | ',ran.reduce((s,r)=>s+r.counts.compared,0),' |');
@@ -332,6 +376,32 @@ function report(records){
   const billed=records.filter(r=>Object.values(r.orders||{}).some(o=>(o.ocrCalls||0)>0));
   push('| Azure OCR requests sent | ',calls,' |');
   push('| — properties that needed at least one | ',billed.length,' of ',records.length,' |');
+  push('');
+
+  /* The storm's findings come first: they need no ground truth AND no filed
+     package, so they are the one section that is never blocked on the corpus. */
+  const stormRows=records.flatMap(r=>((r.fuzz&&r.fuzz.violations)||[])
+    .map(v=>Object.assign({property:r.property,cycleLabel:r.cycleLabel,seed:(r.fuzz||{}).seed},v)));
+  push('## Interaction storm — what random use broke');
+  push('');
+  const stormed=records.filter(r=>r.fuzz&&r.fuzz.counts);
+  if(!stormed.length)push('The storm did not run on any package in this sweep.');
+  else if(!stormRows.length){
+    push('The storm ran on ',stormed.length,' package(s) — ',
+      stormed.reduce((s,r)=>s+((r.fuzz.actions||[]).length),0),
+      ' random actions in total — and found nothing.');
+    push('');
+    push('This is a statement about these permutations, not about the app: a different');
+    push('sweep draws different seeds and walks different interleavings.');
+  }else{
+    push('Randomized clicking, typing, Enter, Escape, save, revert and reopen, run against');
+    push('a form that holds a REAL parsed record. Each row replays exactly from its seed.');
+    push('');
+    push('| property | package | what broke | seed |');
+    push('|---|---|---|---|');
+    stormRows.forEach(x=>push('| ',x.property,' | ',x.cycleLabel||'',' | ',x.kind,': ',
+      String(x.msg).replace(/\|/g,'\\|').slice(0,120),' | `',x.seed,'` |'));
+  }
   push('');
 
   /* Fill-order first: same inputs, two packages. No ground truth needed. */
@@ -425,15 +495,27 @@ const J=v=>{
   let props=man.properties.slice();
   if(ONLY.length)props=props.filter(p=>ONLY.some(o=>p.name===o||p.code===o||p.name.toLowerCase().includes(o.toLowerCase())));
   if(LIMIT)props=props.slice(0,LIMIT);
-  console.log('sweep: '+props.length+' properties, '+JOBS+' concurrent, app frozen at '+SHA);
+  /* Flatten to units of work: one per (property, cycle). */
+  const units=[];
+  for(const p of props){
+    let cs=(p.cycles||[]).filter(c=>c.chosenStudy);
+    if(CYCLES==='latest')cs=cs.filter(c=>c.wave===1).slice(0,1);
+    if(!cs.length)units.push({p,cycle:null});
+    else cs.forEach(c=>units.push({p,cycle:c}));
+  }
+  console.log('sweep: '+units.length+' package(s) across '+props.length+' properties, '
+    +JOBS+' concurrent, app frozen at '+SHA);
+  console.log('storm: '+(FUZZ_EPISODES?FUZZ_EPISODES+' episodes per package':'OFF'));
   console.log('out: '+OUT+'\n');
 
   const records=[];let done=0;
-  const queue=props.slice();
+  const queue=units.slice();
+  const queueTotal=units.length;
   async function worker(id){
     while(queue.length){
-      const p=queue.shift();if(!p)break;
-      const file=path.join(OUT,(p.code||p.name).replace(/[^\w.-]/g,'_')+'.json');
+      const unit=queue.shift();if(!unit)break;
+      const p=unit.p,cycle=unit.cycle;
+      const file=path.join(OUT,slug((p.code||p.name)+'__'+((cycle&&cycle.cycleLabel)||'no-cycle'))+'.json');
       /* A RECORD BUILT BY A DIFFERENT APP IS NOT A RESULT, IT IS A MEMORY.
          Resume exists so a crash on property 30 costs one property, not 29 —
          but it keyed only on "is there a file", and a file written by an older
@@ -452,23 +534,25 @@ const J=v=>{
           const prior=JSON.parse(fs.readFileSync(file,'utf8'));
           if(STALE_OK||prior.sha===SHA){
             records.push(prior);
-            console.log('  ['+(++done)+'/'+props.length+'] '+p.name+'  (cached'
+            console.log('  ['+(++done)+'/'+queueTotal+'] '+p.name+' '+((cycle&&cycle.cycleLabel)||'')+'  (cached'
               +(prior.sha===SHA?'':', from '+prior.sha)+')');continue;}
-          console.log('  ['+(done+1)+'/'+props.length+'] '+p.name+'  — cached record is from '
+          console.log('  ['+(done+1)+'/'+queueTotal+'] '+p.name+' '+((cycle&&cycle.cycleLabel)||'')+'  — cached record is from '
             +(prior.sha||'an unknown commit')+', re-driving at '+SHA);
         }
         catch(e){/* fall through and re-run */}
       }
       let rec;
-      try{rec=await runProperty(p);}
-      catch(e){rec={property:p.name,code:p.code,sha:SHA,verdict:'sweep threw',
+      try{rec=await runCycle(p,cycle);}
+      catch(e){rec={property:p.name,code:p.code,cycleLabel:cycle&&cycle.cycleLabel,sha:SHA,verdict:'sweep threw',
                     notes:['threw: '+String(e&&e.message||e).slice(0,200)],rows:[],fillOrder:[],orders:{}};}
       fs.writeFileSync(file,JSON.stringify(rec,null,1));
       records.push(rec);
-      console.log('  ['+(++done)+'/'+props.length+'] '+p.name.padEnd(26)+' '+(rec.verdict||''));
+      const nv=((rec.fuzz&&rec.fuzz.violations)||[]).length;
+      console.log('  ['+(++done)+'/'+queueTotal+'] '+(p.name+' '+((cycle&&cycle.cycleLabel)||'')).padEnd(34)+' '
+        +(rec.verdict||'')+(nv?'   [storm: '+nv+' violation(s)]':''));
     }
   }
-  await Promise.all(Array.from({length:Math.min(JOBS,props.length)},(_,i)=>worker(i)));
+  await Promise.all(Array.from({length:Math.min(JOBS,units.length)},(_,i)=>worker(i)));
 
   records.sort((a,b)=>String(a.property).localeCompare(String(b.property)));
   fs.writeFileSync(path.join(OUT,LABEL+'.json'),JSON.stringify({sha:SHA,label:LABEL,records},null,1));

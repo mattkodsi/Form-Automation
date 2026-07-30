@@ -18,7 +18,7 @@
               "firm": "renzi",
               "s8": "NC19E000007",
               "name": "Northcross Townhomes",
-              "units": 6,
+              "units": 3,
               "pagesRead": 3,
               "pageCount": 62
             },
@@ -29,7 +29,7 @@
               "firm": "renzi",
               "s8": "NC19E000007",
               "name": "Northcross Townhomes",
-              "units": 6,
+              "units": 3,
               "pagesRead": 3,
               "pageCount": 62
             },
@@ -40,7 +40,7 @@
               "firm": "renzi",
               "s8": "NC19E000007",
               "name": "Northcross Townhomes",
-              "units": 6,
+              "units": 3,
               "pagesRead": 3,
               "pageCount": 62
             }
@@ -249,6 +249,73 @@
             "prior RS filename carries no signed/executed marker"
           ],
           "wave": 1
+        },
+        {
+          "cycleLabel": "2020",
+          "year": 2020,
+          "studies": [
+            {
+              "file": "2020/3a - Westwood Village Roanoke VA HUD RCS 2020, Federal Appraisal.pdf",
+              "bytes": 6268633,
+              "rank": -9.998415370454,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            }
+          ],
+          "docs": {
+            "rentSchedule": [
+              {
+                "file": "2020/2020_Westwood Village rent schedule fully executed.pdf",
+                "bytes": 1208608
+              },
+              {
+                "file": "2020/8 - Draft Rent Schedule.pdf",
+                "bytes": 312452
+              }
+            ],
+            "checklist": [
+              {
+                "file": "2020/3c - Owners-Checklist-for-RCS-Submission - Westwood Village.pdf",
+                "bytes": 991319
+              },
+              {
+                "file": "2020/Old/3c - Owners-Checklist-for-RCS-Submission - Westwood Village.pdf",
+                "bytes": 966144
+              }
+            ],
+            "coverLetter": [
+              {
+                "file": "2020/Westwood Village Cover Letter.docx",
+                "bytes": 1469095
+              },
+              {
+                "file": "2020/Westwood Village Cover Letter.pdf",
+                "bytes": 185189
+              }
+            ]
+          },
+          "executedRs": [],
+          "priorRs": "2019/Westwood - Rent Schedule - Eff 10-1-19.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 0,
+          "priorRsTried": [
+            "year-1 folder(1)",
+            "year-1 in the name(1)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2020/3a - Westwood Village Roanoke VA HUD RCS 2020, Federal Appraisal.pdf",
+          "hasCombined": false,
+          "problems": [
+            "study on disk but the reader returns nothing from it -- the app will face the same wall, which is an audit observation, not a skip",
+            "no filed submittalLetter, tenantNotice"
+          ],
+          "notes": [
+            "prior RS filename carries no signed/executed marker"
+          ],
+          "wave": 2
         }
       ]
     },
@@ -280,7 +347,7 @@
               "firm": "gill",
               "s8": null,
               "name": "Riverwood Apartments",
-              "units": 0,
+              "units": 3,
               "pagesRead": 4,
               "pageCount": 103
             },
@@ -294,6 +361,16 @@
               "units": 0,
               "pagesRead": 4,
               "pageCount": 96
+            },
+            {
+              "file": "2025 - RCS/Gill Group/Related Affordable (M McKee) Riverwood Apts Colonial Beach, VA RCS 10-23-24.pdf",
+              "bytes": 302831,
+              "rank": -5.99827028679,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
             }
           ],
           "docs": {
@@ -394,7 +471,7 @@
               "firm": "gill",
               "s8": null,
               "name": "Riverwood Apartments",
-              "units": 0,
+              "units": 3,
               "pagesRead": 4,
               "pageCount": 103
             },
@@ -405,7 +482,7 @@
               "firm": "gill",
               "s8": null,
               "name": "Riverwood Apartments",
-              "units": 0,
+              "units": 3,
               "pagesRead": 4,
               "pageCount": 92
             },
@@ -416,9 +493,19 @@
               "firm": "gill",
               "s8": null,
               "name": "Riverwood Apartments",
-              "units": 0,
+              "units": 3,
               "pagesRead": 4,
               "pageCount": 93
+            },
+            {
+              "file": "2020/Related Affordable (B Samson) Riverwood Apts Colonial Beach, VA RCS 10-7-19.pdf",
+              "bytes": 216077,
+              "rank": -9.998429447245,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
             }
           ],
           "docs": {
@@ -579,6 +666,84 @@
             "prior RS filename carries no signed/executed marker"
           ],
           "wave": 1
+        },
+        {
+          "cycleLabel": "2019",
+          "year": 2019,
+          "studies": [
+            {
+              "file": "2019/RCS/NewYorkWarwickRentComparabilityStudy updated 3.12.19.pdf",
+              "bytes": 5225407,
+              "rank": -7.998447582467,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            },
+            {
+              "file": "2019/RCS/NewYorkWarwickRentComparabilityStudy2.pdf",
+              "bytes": 4808286,
+              "rank": -9.998448799839,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            }
+          ],
+          "docs": {
+            "rentSchedule": [
+              {
+                "file": "2019/Burt Farms I Rent Schedule Effective 6-26-19.pdf",
+                "bytes": 235623
+              },
+              {
+                "file": "2019/RCS/Burt Farms - Draft Rent Schedule.pdf",
+                "bytes": 694022
+              }
+            ],
+            "tenantNotice": [
+              {
+                "file": "2019/Burt Farms I Tenant 30 Day Notice of Proposed Rent Increase Request 2019.pdf",
+                "bytes": 588909
+              }
+            ],
+            "combinedPackage": [
+              {
+                "file": "2019/RCS/Burt Farms - 2019 RCS Submission Package Exhibit pages.pdf",
+                "bytes": 23137
+              },
+              {
+                "file": "2019/RCS/Burt Farms - 2019 RCS Submission Package_2.26.2019.pdf",
+                "bytes": 5017483
+              }
+            ],
+            "coverLetter": [
+              {
+                "file": "2019/RCS/RCS Owner Cover Letter - Burt Farms 2.26.2019.docx",
+                "bytes": 18262
+              }
+            ]
+          },
+          "executedRs": [],
+          "priorRs": "2018/Burt Farms I 6-26-18 Rent Schedule.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 0,
+          "priorRsTried": [
+            "year-1 folder(1)",
+            "year-1 in the name(1)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2019/RCS/NewYorkWarwickRentComparabilityStudy updated 3.12.19.pdf",
+          "hasCombined": true,
+          "problems": [
+            "study on disk but the reader returns nothing from it -- the app will face the same wall, which is an audit observation, not a skip"
+          ],
+          "notes": [
+            "prior RS filename carries no signed/executed marker"
+          ],
+          "wave": 2
         }
       ]
     },
@@ -719,6 +884,152 @@
           ],
           "notes": [],
           "wave": 1
+        },
+        {
+          "cycleLabel": "2020",
+          "year": 2020,
+          "studies": [
+            {
+              "file": "2020/RCS/Sycamore Green 2019 RCS - MVS UPDATED v1.pdf",
+              "bytes": 5318297,
+              "rank": -7.998423899281001,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            },
+            {
+              "file": "2020/RCS/Sycamore Green 2019 RCS - MVS UPDATED.pdf",
+              "bytes": 4542915,
+              "rank": -7.9984239045239995,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            },
+            {
+              "file": "2020/RCS/Sycamore Green 2019 RCS - MVS v1.pdf",
+              "bytes": 12165379,
+              "rank": -7.998425205893,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            },
+            {
+              "file": "2020/RCS/Sycamore Green 2019 RCS - MVS.pdf",
+              "bytes": 4563664,
+              "rank": -9.998425306028,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            }
+          ],
+          "docs": {
+            "combinedPackage": [
+              {
+                "file": "2020/Sycamore Green - 2020 5 Yr RCS Submission.pdf",
+                "bytes": 5453014
+              }
+            ],
+            "rentSchedule": [
+              {
+                "file": "2020/Sycamore Green - 2020 Proposed Rent Schedule.pdf",
+                "bytes": 659093
+              },
+              {
+                "file": "2020/Sycamore Green - RS from Owner.pdf",
+                "bytes": 232001
+              },
+              {
+                "file": "2020/Sycamore Green - Signed RS from Owner.pdf",
+                "bytes": 111640
+              },
+              {
+                "file": "2020/Sycamore Green 2020 Executed Rent Schedule.pdf",
+                "bytes": 209285
+              }
+            ],
+            "coverLetter": [
+              {
+                "file": "2020/Sycamore Green 5th Year Adjustment Request Cover Letter.doc",
+                "bytes": 40448
+              },
+              {
+                "file": "2020/UA/Sycamore Green 5th Year Adjustment Request Cover Letter.doc",
+                "bytes": 39936
+              }
+            ],
+            "analysisXlsx": [
+              {
+                "file": "2020/backup/Sycamore Green Rent Analysis.xlsx",
+                "bytes": 13155
+              }
+            ],
+            "checklist": [
+              {
+                "file": "2020/rcs-owners-checklist - Sycamore Green.pdf",
+                "bytes": 320691
+              }
+            ]
+          },
+          "executedRs": [],
+          "priorRs": "2019/Sycamore Green - 2019 Rent Schedule_Fully Executed.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 6,
+          "priorRsTried": [
+            "year-1 folder(1)",
+            "year-1 in the name(1)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2020/RCS/Sycamore Green 2019 RCS - MVS UPDATED v1.pdf",
+          "hasCombined": true,
+          "problems": [
+            "study on disk but the reader returns nothing from it -- the app will face the same wall, which is an audit observation, not a skip",
+            "top two studies are within one rank; the choice is a coin toss"
+          ],
+          "notes": [],
+          "wave": 2
+        },
+        {
+          "cycleLabel": "2014",
+          "year": 2014,
+          "studies": [
+            {
+              "file": "2014/453 Sycamore Green RCS 11-19-14 (MVS) - FINAL.pdf",
+              "bytes": 1562942,
+              "rank": -3.998429542165,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            }
+          ],
+          "docs": {},
+          "executedRs": [],
+          "priorRs": null,
+          "priorRsRule": null,
+          "priorRsRank": null,
+          "priorRsTried": [
+            "year-1 folder(0)",
+            "year-1 in the name(0)",
+            "newest before year 0(0)"
+          ],
+          "chosenStudy": "2014/453 Sycamore Green RCS 11-19-14 (MVS) - FINAL.pdf",
+          "hasCombined": false,
+          "problems": [
+            "study on disk but the reader returns nothing from it -- the app will face the same wall, which is an audit observation, not a skip",
+            "no prior rent schedule found; tried year-1 folder(0), year-1 in the name(0), newest before year 0(0)",
+            "no filed coverLetter, submittalLetter, checklist, tenantNotice"
+          ],
+          "notes": [],
+          "wave": 2
         }
       ]
     },
@@ -739,9 +1050,40 @@
               "firm": null,
               "s8": null,
               "name": null,
-              "units": 4,
+              "units": 5,
               "pagesRead": 4,
               "pageCount": 46
+            },
+            {
+              "file": "2024 - RCS/archive/JLL/VA-24-254935 - New Horizons - RCS - 1-26-24.pdf",
+              "bytes": 2389440,
+              "rank": -0.998293612718,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 1,
+              "pagesRead": 4,
+              "pageCount": 40
+            },
+            {
+              "file": "2024 - RCS/archive/Submission/(REVISED) VA-24-257061 - New Horizons - RCS - 4-12-24.pdf",
+              "bytes": 5899223,
+              "rank": -8.998287054732,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            },
+            {
+              "file": "2024 - RCS/archive/Submission/Exhibit 3 - JLL New Horizons - RCS - 3-26-24.pdf",
+              "bytes": 4496550,
+              "rank": -10.998288489337,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
             }
           ],
           "docs": {
@@ -817,9 +1159,153 @@
           ],
           "chosenStudy": "2024 - RCS/archive/JLL/VA-24-254935 - New Horizons - RCS - 3-12-24.pdf",
           "hasCombined": true,
-          "problems": [],
+          "problems": [
+            "top two studies are within one rank; the choice is a coin toss"
+          ],
           "notes": [],
           "wave": 1
+        },
+        {
+          "cycleLabel": "2019",
+          "year": 2019,
+          "studies": [
+            {
+              "file": "2019/Exhibit 1 - New Horizons RCS February 2019 (MVS) .pdf",
+              "bytes": 4307506,
+              "rank": -9.998448707506,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            },
+            {
+              "file": "2019/New Horizons RCS February 2019 (MVS) .pdf",
+              "bytes": 4307506,
+              "rank": -9.998448707506,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            },
+            {
+              "file": "2019/Exhibit 1 - New Horizons RCS February 2019 (MVS).pdf",
+              "bytes": 4306051,
+              "rank": -9.998449902703,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            },
+            {
+              "file": "2019/New Horizons RCS February 2019 (MVS).pdf",
+              "bytes": 4306051,
+              "rank": -9.998449902703,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            }
+          ],
+          "docs": {
+            "rentSchedule": [
+              {
+                "file": "2019/Exhibit 2 - Proposed Rent Schedule.pdf",
+                "bytes": 576659
+              },
+              {
+                "file": "2019/Fully Executed Rent Schedule - New Horizons.pdf",
+                "bytes": 228998
+              }
+            ],
+            "combinedPackage": [
+              {
+                "file": "2019/New Horizons 5th Year Adjustment Request RCS submission 2-2019.pdf",
+                "bytes": 197798
+              }
+            ],
+            "tenantNotice": [
+              {
+                "file": "2019/Tenant Notice - Owner Cert for Tenant Comment Procedures - 8.9.19.pdf",
+                "bytes": 265168
+              }
+            ],
+            "analysisXlsx": [
+              {
+                "file": "2019/UA Analysis/New Horizons HUD Worksheet - UA Analysis Electric.xlsx",
+                "bytes": 63205
+              }
+            ]
+          },
+          "executedRs": [],
+          "priorRs": "2018/New Horizons 2018 Rent Schedule.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 0,
+          "priorRsTried": [
+            "year-1 folder(1)",
+            "year-1 in the name(1)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2019/Exhibit 1 - New Horizons RCS February 2019 (MVS) .pdf",
+          "hasCombined": true,
+          "problems": [
+            "study on disk but the reader returns nothing from it -- the app will face the same wall, which is an audit observation, not a skip",
+            "top two studies are within one rank; the choice is a coin toss"
+          ],
+          "notes": [
+            "prior RS filename carries no signed/executed marker"
+          ],
+          "wave": 2
+        },
+        {
+          "cycleLabel": "2014",
+          "year": 2014,
+          "studies": [
+            {
+              "file": "2014/474 New Horizons RCS March 2014 (MVS).pdf",
+              "bytes": 1594880,
+              "rank": -9.998604060814,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            }
+          ],
+          "docs": {
+            "rentSchedule": [
+              {
+                "file": "2014/New Horizons 2014 Rent Schedules.doc",
+                "bytes": 820736
+              },
+              {
+                "file": "2014/New Horizons-Rent Schedule 07-01-14.pdf",
+                "bytes": 335502
+              }
+            ]
+          },
+          "executedRs": [],
+          "priorRs": "2013/92458-47413signed.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 0,
+          "priorRsTried": [
+            "year-1 folder(2)",
+            "year-1 in the name(3)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2014/474 New Horizons RCS March 2014 (MVS).pdf",
+          "hasCombined": false,
+          "problems": [
+            "study on disk but the reader returns nothing from it -- the app will face the same wall, which is an audit observation, not a skip",
+            "no filed coverLetter, submittalLetter, checklist, tenantNotice"
+          ],
+          "notes": [
+            "prior RS filename carries no signed/executed marker"
+          ],
+          "wave": 2
         }
       ]
     },
@@ -840,7 +1326,7 @@
               "firm": "renzi",
               "s8": "NY36A005001",
               "name": null,
-              "units": 7,
+              "units": 4,
               "pagesRead": 3,
               "pageCount": 70
             },
@@ -851,7 +1337,7 @@
               "firm": "renzi",
               "s8": "NY36A005001",
               "name": null,
-              "units": 7,
+              "units": 4,
               "pagesRead": 3,
               "pageCount": 70
             }
@@ -1149,6 +1635,52 @@
             "prior RS filename carries no signed/executed marker"
           ],
           "wave": 2
+        },
+        {
+          "cycleLabel": "(no cycle folder)",
+          "year": null,
+          "studies": [
+            {
+              "file": "_Archive/North Park RCS - 14-20 West 102nd Street - 1.5.2015.pdf",
+              "bytes": 1774163,
+              "rank": -9.998579349598,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            },
+            {
+              "file": "_Archive/North Park 2014 RCS.pdf",
+              "bytes": 1204669,
+              "rank": -9.998604046412,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            }
+          ],
+          "docs": {},
+          "executedRs": [],
+          "priorRs": null,
+          "priorRsRule": null,
+          "priorRsRank": null,
+          "priorRsTried": [
+            "year-1 folder(0)",
+            "year-1 in the name(0)",
+            "newest before year 0(0)"
+          ],
+          "chosenStudy": "_Archive/North Park RCS - 14-20 West 102nd Street - 1.5.2015.pdf",
+          "hasCombined": false,
+          "problems": [
+            "study on disk but the reader returns nothing from it -- the app will face the same wall, which is an audit observation, not a skip",
+            "no prior rent schedule found; tried year-1 folder(0), year-1 in the name(0), newest before year 0(0)",
+            "no filed coverLetter, submittalLetter, checklist, tenantNotice",
+            "top two studies are within one rank; the choice is a coin toss"
+          ],
+          "notes": [],
+          "wave": 2
         }
       ]
     },
@@ -1227,6 +1759,26 @@
               "units": 2,
               "pagesRead": 2,
               "pageCount": 51
+            },
+            {
+              "file": "2026 - RCS/Submission/Lakeside Apartments RCS report-5-8-2026.pdf",
+              "bytes": 239568,
+              "rank": -5.9982217485,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            },
+            {
+              "file": "2026 - RCS/Submission/Review of RCS Lakeside Apts_.pdf",
+              "bytes": 836946,
+              "rank": -5.99822328612,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
             }
           ],
           "docs": {
@@ -1311,6 +1863,112 @@
             "prior RS filename carries no signed/executed marker"
           ],
           "wave": 1
+        },
+        {
+          "cycleLabel": "2021",
+          "year": 2021,
+          "studies": [
+            {
+              "file": "2021/RCS/Lakeside Rent Study Report 9-17-2021, John E. Doyle, MAI - Final RCS.pdf",
+              "bytes": 5649436,
+              "rank": -3.9983680812999998,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            },
+            {
+              "file": "2021/HAP Contract Renewal Submission/5. Lakeside, Woodbury, NJ, Rent Study, AS-IS, Grids Only, Executive Summary, 4-20-2021, John E. Doyle, MAI.pdf",
+              "bytes": 1774998,
+              "rank": -9.99838104616,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            },
+            {
+              "file": "2021/RCS/Lakeside, Woodbury, NJ, Rent Study, AS-IS, Grids Only, Executive Summary, 4-20-2021, John E. Doyle, MAI.pdf",
+              "bytes": 1774998,
+              "rank": -9.99838104616,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            }
+          ],
+          "docs": {
+            "coverLetter": [
+              {
+                "file": "2021/Cover Letter - Woodbury Oakwood.docx",
+                "bytes": 35336
+              },
+              {
+                "file": "2021/HAP Contract Renewal Submission/0. HAP Renewal Cover Letter - Woodbury Oakwood.pdf",
+                "bytes": 2572871
+              },
+              {
+                "file": "2021/HAP Renewal Cover Letter - Woodbury Oakwood.doc",
+                "bytes": 114688
+              }
+            ],
+            "rentSchedule": [
+              {
+                "file": "2021/HAP Contract Renewal Submission/4. Lakeside HUD-92458 Section 8 Rent Schedule 2021 DRAFT SIGNED NEW.pdf",
+                "bytes": 281651
+              },
+              {
+                "file": "2021/Lakeside HUD-92458 Section 8 Rent Schedule 2021 DRAFT.pdf",
+                "bytes": 473465
+              },
+              {
+                "file": "2021/OCAF/Rent Schedule_Lakeside_proposed signed.pdf",
+                "bytes": 200717
+              },
+              {
+                "file": "2021/OCAF/Rent Schedule_Lakeside_proposed.pdf",
+                "bytes": 166946
+              },
+              {
+                "file": "2021/OCAF/_archive/Rent Schedule_Lakeside_proposed.pdf",
+                "bytes": 224471
+              },
+              {
+                "file": "2021/RCS/support/LAKESIDE RENT SCHEDULE 2020.pdf",
+                "bytes": 98467
+              }
+            ],
+            "combinedPackage": [
+              {
+                "file": "2021/HAP Contract Renewal Submission/Woodbury Oakwood (Lakeside Apartments) HAP Contract Renewal Final Submission 2021.pdf",
+                "bytes": 2539120
+              }
+            ],
+            "analysisXlsx": [
+              {
+                "file": "2021/Lakeside Apartment Rent Analysis.xlsx",
+                "bytes": 11248
+              }
+            ]
+          },
+          "executedRs": [],
+          "priorRs": "2020/2019/Lakeside Apts. 2019 Fully Executed Rent Schedule.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 6,
+          "priorRsTried": [
+            "year-1 folder(6)",
+            "year-1 in the name(7)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2021/RCS/Lakeside Rent Study Report 9-17-2021, John E. Doyle, MAI - Final RCS.pdf",
+          "hasCombined": true,
+          "problems": [
+            "study on disk but the reader returns nothing from it -- the app will face the same wall, which is an audit observation, not a skip"
+          ],
+          "notes": [],
+          "wave": 2
         }
       ]
     },
@@ -1345,6 +2003,16 @@
               "units": 2,
               "pagesRead": 3,
               "pageCount": 51
+            },
+            {
+              "file": "2024 - RCS/Archive/Related Affordable (Z Silber) Hampshire House East Orange, NJ HUD Form 92273-S8 Rent Grids 2-9-24.pdf",
+              "bytes": 402993,
+              "rank": -10.998292485112,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
             }
           ],
           "docs": {
@@ -1407,6 +2075,81 @@
           ],
           "notes": [],
           "wave": 1
+        },
+        {
+          "cycleLabel": "2019",
+          "year": 2019,
+          "studies": [
+            {
+              "file": "2019/Hampshire House Rent Study, 5-9-2019, John E. Doyle, MAI.pdf",
+              "bytes": 5761566,
+              "rank": -9.998442505259,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            },
+            {
+              "file": "2019/Submission/Exhibit 1 - Hampshire House Rent Study, 5-9-2019, John E. Doyle, MAI.pdf",
+              "bytes": 5761566,
+              "rank": -9.998442505259,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            }
+          ],
+          "docs": {
+            "rentSchedule": [
+              {
+                "file": "2019/Hampshire House 2019 Executed Rent Schedule.pdf",
+                "bytes": 830536
+              },
+              {
+                "file": "2019/Submission/Archive/Hampshire House Proposed Rent Schedule .pdf",
+                "bytes": 412800
+              },
+              {
+                "file": "2019/Submission/Exhibit 2 - Hampshire House Proposed Rent Schedule.pdf",
+                "bytes": 491142
+              },
+              {
+                "file": "2019/Support/92458 Hampshire House 2019 Proposed Rent Schedule.pdf",
+                "bytes": 469171
+              }
+            ],
+            "checklist": [
+              {
+                "file": "2019/Submission/Hampshire House Signed Cover Letter and Owner Checklist.pdf",
+                "bytes": 131564
+              }
+            ],
+            "combinedPackage": [
+              {
+                "file": "2019/Support/Hampshire House Submission.pdf",
+                "bytes": 652469
+              }
+            ]
+          },
+          "executedRs": [],
+          "priorRs": "2018/Submission/Hampshire Rent Schedule - Signed.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 5,
+          "priorRsTried": [
+            "year-1 folder(3)",
+            "year-1 in the name(3)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2019/Hampshire House Rent Study, 5-9-2019, John E. Doyle, MAI.pdf",
+          "hasCombined": true,
+          "problems": [
+            "study on disk but the reader returns nothing from it -- the app will face the same wall, which is an audit observation, not a skip",
+            "top two studies are within one rank; the choice is a coin toss"
+          ],
+          "notes": [],
+          "wave": 2
         }
       ]
     },
@@ -1555,6 +2298,111 @@
           "problems": [],
           "notes": [],
           "wave": 1
+        },
+        {
+          "cycleLabel": "2021",
+          "year": 2021,
+          "studies": [
+            {
+              "file": "2021/RCS/Archive/Lansing Manor - 5600 W Mall Drive, Lansing, MI 48917 (Final).pdf",
+              "bytes": 4498103,
+              "rank": -8.998400335024,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            },
+            {
+              "file": "2021/RCS/Lansing Manor - 5600 W Mall Drive, Lansing, MI 48917 (Final2).pdf",
+              "bytes": 4499279,
+              "rank": -9.99839973496,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            }
+          ],
+          "docs": {
+            "rentSchedule": [
+              {
+                "file": "2021/800010652 - Approved Rent Schedule - 12-17-2020 -Lansing Manor (Village Green III).pdf",
+                "bytes": 1931646
+              },
+              {
+                "file": "2021/Lansing Manor - NEW RS - 2021 (signed).pdf",
+                "bytes": 67599
+              },
+              {
+                "file": "2021/Lansing Manor - NEW RS - 2021 v2 (signed).pdf",
+                "bytes": 115420
+              },
+              {
+                "file": "2021/Lansing Manor - NEW RS - 2021 v2.pdf",
+                "bytes": 367321
+              },
+              {
+                "file": "2021/Lansing Manor - NEW RS - 2021.pdf",
+                "bytes": 177065
+              },
+              {
+                "file": "2021/RCS/Lansing Manor - Notice to Residents rent increase rent schedule 2021.docx",
+                "bytes": 41997
+              },
+              {
+                "file": "2021/RCS/Lansing Manor - Notice to Residents rent increase rent schedule 2021.pdf",
+                "bytes": 112980
+              }
+            ],
+            "combinedPackage": [
+              {
+                "file": "2021/RCS/2020 RCS Submission - Lansing Manor.pdf",
+                "bytes": 4728382
+              },
+              {
+                "file": "2021/RCS/Lansing Manor -  5th Year Adjustment Request RCS submission.pdf",
+                "bytes": 40166
+              }
+            ],
+            "checklist": [
+              {
+                "file": "2021/RCS/Owner's RCS Checklist (Signed).pdf",
+                "bytes": 47571
+              },
+              {
+                "file": "2021/RCS/Owner's RCS Checklist.pdf",
+                "bytes": 208148
+              }
+            ],
+            "coverLetter": [
+              {
+                "file": "2021/RCS/RCS Owner Cover Letter.doc",
+                "bytes": 31232
+              },
+              {
+                "file": "2021/RCS/RCS Owner Cover Letter.pdf",
+                "bytes": 71717
+              }
+            ]
+          },
+          "executedRs": [],
+          "priorRs": "2020/800010652 - Approved Rent Schedule - 10-23-19 - Lansing Manor (Village Green III).pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 6,
+          "priorRsTried": [
+            "year-1 folder(1)",
+            "year-1 in the name(2)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2021/RCS/Archive/Lansing Manor - 5600 W Mall Drive, Lansing, MI 48917 (Final).pdf",
+          "hasCombined": true,
+          "problems": [
+            "study on disk but the reader returns nothing from it -- the app will face the same wall, which is an audit observation, not a skip",
+            "top two studies are within one rank; the choice is a coin toss"
+          ],
+          "notes": [],
+          "wave": 2
         }
       ]
     },
@@ -1593,15 +2441,14 @@
               "unlocked": true
             },
             {
-              "file": "2024 - RCS/RCS/Grids/Novo - Noble Tower Preliminary Grids.pdf",
-              "bytes": 2750468,
-              "rank": 4.001710902999,
+              "file": "2024 - RCS/Archive/Owners-RCS-Cover-letter.pdf",
+              "bytes": 1203266,
+              "rank": -10.998276330832,
+              "unread": true,
               "firm": null,
               "s8": null,
               "name": null,
-              "units": 1,
-              "pagesRead": 6,
-              "pageCount": 30
+              "units": 0
             }
           ],
           "docs": {
@@ -1658,6 +2505,48 @@
           ],
           "notes": [],
           "wave": 1
+        },
+        {
+          "cycleLabel": "2018",
+          "year": 2018,
+          "studies": [
+            {
+              "file": "2018/Noble Tower Apartments RCS - 01.11.16.PDF",
+              "bytes": 2696194,
+              "rank": -9.998289047744,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            }
+          ],
+          "docs": {
+            "rentSchedule": [
+              {
+                "file": "2018/Post Rehab Rent Schedule 10.1.18 - Fully Executed.pdf",
+                "bytes": 183030
+              }
+            ]
+          },
+          "executedRs": [],
+          "priorRs": null,
+          "priorRsRule": null,
+          "priorRsRank": null,
+          "priorRsTried": [
+            "year-1 folder(0)",
+            "year-1 in the name(0)",
+            "newest before year 0(0)"
+          ],
+          "chosenStudy": "2018/Noble Tower Apartments RCS - 01.11.16.PDF",
+          "hasCombined": false,
+          "problems": [
+            "study on disk but the reader returns nothing from it -- the app will face the same wall, which is an audit observation, not a skip",
+            "no prior rent schedule found; tried year-1 folder(0), year-1 in the name(0), newest before year 0(0)",
+            "no filed coverLetter, submittalLetter, checklist, tenantNotice"
+          ],
+          "notes": [],
+          "wave": 2
         }
       ]
     },
@@ -1714,6 +2603,16 @@
               "units": 4,
               "pagesRead": 8,
               "pageCount": 13
+            },
+            {
+              "file": "2025 (RCS)/Rent Grid Proposals/Related Affordable Oaks on North Plaza Austin, TX HUD Form 92273-S8 Rent Grids 6-4-24.pdf",
+              "bytes": 312362,
+              "rank": -9.998282476255,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
             }
           ],
           "docs": {
@@ -1807,6 +2706,16 @@
               "units": 0,
               "pagesRead": 2,
               "pageCount": 59
+            },
+            {
+              "file": "2024 - RCS/Archive/VA-24-254925 - Oceanport Gardens - RCS - 1-26-24.pdf",
+              "bytes": 2306060,
+              "rank": -10.998293635177,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
             }
           ],
           "docs": {
@@ -2054,6 +2963,16 @@
               "units": 4,
               "pagesRead": 3,
               "pageCount": 63
+            },
+            {
+              "file": "2025 - RCS/Ebony Revised RCS - Appendix 2.pdf",
+              "bytes": 905374,
+              "rank": -3.998234529304,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
             }
           ],
           "docs": {
@@ -2158,6 +3077,82 @@
           ],
           "notes": [],
           "wave": 1
+        },
+        {
+          "cycleLabel": "2018",
+          "year": 2018,
+          "studies": [
+            {
+              "file": "2018/1 - NewYorkMountVernonHUDRentComparabilityStudy.pdf",
+              "bytes": 9484286,
+              "rank": -5.998470669443,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            }
+          ],
+          "docs": {
+            "coverLetter": [
+              {
+                "file": "2018/2 - RCS Owner Cover Letter - Ebony Gardens 6.28.18.doc",
+                "bytes": 29696
+              },
+              {
+                "file": "2018/2 - RCS Owner Cover Letter - Ebony Gardens 6.28.pdf",
+                "bytes": 79609
+              }
+            ],
+            "rentSchedule": [
+              {
+                "file": "2018/4 - Draft Rent Schedule.pdf",
+                "bytes": 1443879
+              },
+              {
+                "file": "2018/Ebony 2018 Rent Schedule.pdf",
+                "bytes": 309080
+              },
+              {
+                "file": "2018/Ebony Rent Schedule - Owner Signed.pdf",
+                "bytes": 152541
+              },
+              {
+                "file": "2018/Ebony Unsigned Rent Schedule.pdf",
+                "bytes": 302918
+              }
+            ],
+            "tenantNotice": [
+              {
+                "file": "2018/Ebony Gardens 30-Day Utility Decrease Tenant Notice.pdf",
+                "bytes": 41332
+              }
+            ],
+            "combinedPackage": [
+              {
+                "file": "2018/Ebony Gardens 5th Year Adjustment Request RCS submission 11-1-2018 (Tobin).pdf",
+                "bytes": 9860719
+              }
+            ]
+          },
+          "executedRs": [],
+          "priorRs": "2017/Ebony Gardens 2017 Rent Schedule.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 0,
+          "priorRsTried": [
+            "year-1 folder(1)",
+            "year-1 in the name(1)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2018/1 - NewYorkMountVernonHUDRentComparabilityStudy.pdf",
+          "hasCombined": true,
+          "problems": [
+            "study on disk but the reader returns nothing from it -- the app will face the same wall, which is an audit observation, not a skip"
+          ],
+          "notes": [
+            "prior RS filename carries no signed/executed marker"
+          ],
+          "wave": 2
         }
       ]
     },
@@ -2280,6 +3275,16 @@
               "units": 1,
               "pagesRead": 2,
               "pageCount": 45
+            },
+            {
+              "file": "2026 - RCS/Gill Group - RCS Approval - Mapleview Towers.pdf",
+              "bytes": 625572,
+              "rank": -5.99822146176,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
             }
           ],
           "docs": {
@@ -2346,6 +3351,98 @@
           "problems": [],
           "notes": [],
           "wave": 1
+        },
+        {
+          "cycleLabel": "2020",
+          "year": 2020,
+          "studies": [
+            {
+              "file": "2020/ConnecticutStamfordMapleviewTowersRentComparabilityStudypdf_v4.pdf",
+              "bytes": 6104275,
+              "rank": -9.998420797499,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            },
+            {
+              "file": "2020/ConnecticutStamfordMapleviewTowersRentComparabilityStudypdf_v3.pdf",
+              "bytes": 6066242,
+              "rank": -9.998422784253,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            },
+            {
+              "file": "2020/ConnecticutStamfordMapleviewTowersRentComparabilityStudypdf_v2.pdf",
+              "bytes": 6087087,
+              "rank": -9.99842372525,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            },
+            {
+              "file": "2020/ConnecticutStamfordMapleviewTowersRentComparabilityStudypdf_v1.pdf",
+              "bytes": 36868244,
+              "rank": -9.998423991458,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            }
+          ],
+          "docs": {
+            "rentSchedule": [
+              {
+                "file": "2020/92458-Mapleview 2020_owner signed 1.30.2020.pdf",
+                "bytes": 69586
+              },
+              {
+                "file": "2020/Mapleview 2020 Executed Rent Schedule eff. 4.1.2020.pdf",
+                "bytes": 130191
+              },
+              {
+                "file": "2020/Renewal Submission Documents/Mapleview Draft Rent Schedule.pdf",
+                "bytes": 501633
+              }
+            ],
+            "coverLetter": [
+              {
+                "file": "2020/Renewal Submission Documents/Cover Letter - Mapleview Towers 2020 Renewal.docx",
+                "bytes": 58781
+              }
+            ],
+            "tenantNotice": [
+              {
+                "file": "2020/Signed Tenant Notice CT.pdf",
+                "bytes": 510649
+              }
+            ]
+          },
+          "executedRs": [],
+          "priorRs": "2019/Mapleview - 2019 Fully Executed Rent Schedule.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 6,
+          "priorRsTried": [
+            "year-1 folder(1)",
+            "year-1 in the name(1)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2020/ConnecticutStamfordMapleviewTowersRentComparabilityStudypdf_v4.pdf",
+          "hasCombined": false,
+          "problems": [
+            "study on disk but the reader returns nothing from it -- the app will face the same wall, which is an audit observation, not a skip",
+            "no filed submittalLetter, checklist",
+            "top two studies are within one rank; the choice is a coin toss"
+          ],
+          "notes": [],
+          "wave": 2
         }
       ]
     },
@@ -2371,6 +3468,16 @@
               "pageCount": 52
             },
             {
+              "file": "2026 - RCS/Market Square RCS Final Review 12-03-2025.pdf",
+              "bytes": 449473,
+              "rank": 0.0017647999800001202,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            },
+            {
               "file": "2026 - RCS/Archive/25-123 - Market Square, 65 Constance Leigh Drive, Newington, CT.pdf",
               "bytes": 3893388,
               "rank": -0.99823625368,
@@ -2391,6 +3498,26 @@
               "units": 1,
               "pagesRead": 2,
               "pageCount": 45
+            },
+            {
+              "file": "2026 - RCS/Market Square RCS SECOND Review 11-11-2025.pdf",
+              "bytes": 954469,
+              "rank": -5.99823703218,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            },
+            {
+              "file": "2026 - RCS/Market Square RCS First Review 10-20-2025.pdf",
+              "bytes": 2249837,
+              "rank": -5.99823900684,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
             }
           ],
           "docs": {
@@ -2472,9 +3599,46 @@
           ],
           "chosenStudy": "2026 - RCS/Archive/25-123 - Market Square, 65 Constance Leigh Drive, Newington, CT (updated).pdf",
           "hasCombined": true,
-          "problems": [],
+          "problems": [
+            "top two studies are within one rank; the choice is a coin toss"
+          ],
           "notes": [],
           "wave": 1
+        },
+        {
+          "cycleLabel": "Oct. 2019 RCS",
+          "year": 2019,
+          "studies": [
+            {
+              "file": "Oct. 2019 RCS/ConnecticutNewingtonRentComparabilityStudyUpdate.pdf",
+              "bytes": 7900433,
+              "rank": -9.998427457513,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            }
+          ],
+          "docs": {},
+          "executedRs": [],
+          "priorRs": "2018 - HAP Renewal/Submission Documents/HUD-92458 Market Square Draft Rent Schedule.xls",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": -6,
+          "priorRsTried": [
+            "year-1 folder(1)",
+            "year-1 in the name(1)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "Oct. 2019 RCS/ConnecticutNewingtonRentComparabilityStudyUpdate.pdf",
+          "hasCombined": false,
+          "problems": [
+            "study on disk but the reader returns nothing from it -- the app will face the same wall, which is an audit observation, not a skip",
+            "prior RS is a draft or an unsigned copy",
+            "no filed coverLetter, submittalLetter, checklist, tenantNotice"
+          ],
+          "notes": [],
+          "wave": 2
         }
       ]
     },
@@ -2587,7 +3751,7 @@
               "firm": "cornerstone",
               "s8": "TX160011033",
               "name": "Shiloh Village Apartments",
-              "units": 0,
+              "units": 3,
               "pagesRead": 4,
               "pageCount": 77
             },
@@ -2598,7 +3762,7 @@
               "firm": "cornerstone",
               "s8": "TX160011033",
               "name": "Shiloh Village Apartments",
-              "units": 0,
+              "units": 3,
               "pagesRead": 4,
               "pageCount": 77
             },
@@ -2609,7 +3773,7 @@
               "firm": "cornerstone",
               "s8": "TX160011033",
               "name": "Shiloh Village Apartments",
-              "units": 0,
+              "units": 3,
               "pagesRead": 8,
               "pageCount": 10
             }
@@ -2672,6 +3836,119 @@
             "prior RS filename carries no signed/executed marker"
           ],
           "wave": 1
+        },
+        {
+          "cycleLabel": "2019",
+          "year": 2019,
+          "studies": [
+            {
+              "file": "2019/RCS Submission/Shiloh Village RCS v4.pdf",
+              "bytes": 6430572,
+              "rank": -7.998445867046,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            },
+            {
+              "file": "2019/RCS Submission/_Old/Shiloh Village RCS v3.pdf",
+              "bytes": 6395514,
+              "rank": -12.998448614202001,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            }
+          ],
+          "docs": {
+            "coverLetter": [
+              {
+                "file": "2019/RCS Submission/RCS Owner Cover Letter - Shiloh Village v2.doc",
+                "bytes": 30720
+              },
+              {
+                "file": "2019/RCS Submission/RCS Owner Cover Letter - Shiloh Village v2.pdf",
+                "bytes": 63225
+              },
+              {
+                "file": "2019/RCS Submission/_Old/RCS Owner Cover Letter - Shiloh Village.doc",
+                "bytes": 30720
+              }
+            ],
+            "rentSchedule": [
+              {
+                "file": "2019/RCS Submission/Rent_Schedule_Eff_7-1-18 - UA only.pdf",
+                "bytes": 114092
+              },
+              {
+                "file": "2019/Rent_Schedule_Eff_7-1-19.pdf",
+                "bytes": 2185060
+              }
+            ]
+          },
+          "executedRs": [],
+          "priorRs": "2018/Rent_Schedule_Eff_7-1-18.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 0,
+          "priorRsTried": [
+            "year-1 folder(1)",
+            "year-1 in the name(2)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2019/RCS Submission/Shiloh Village RCS v4.pdf",
+          "hasCombined": false,
+          "problems": [
+            "study on disk but the reader returns nothing from it -- the app will face the same wall, which is an audit observation, not a skip",
+            "no filed submittalLetter, checklist, tenantNotice"
+          ],
+          "notes": [
+            "prior RS filename carries no signed/executed marker"
+          ],
+          "wave": 2
+        },
+        {
+          "cycleLabel": "2014",
+          "year": 2014,
+          "studies": [
+            {
+              "file": "2014/436 Shiloh Village RCS report 2-20-14.pdf",
+              "bytes": 2816781,
+              "rank": -9.998604060777,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            }
+          ],
+          "docs": {
+            "rentSchedule": [
+              {
+                "file": "2014/Shiloh Rent Schedule 07-01-14.pdf",
+                "bytes": 93632
+              }
+            ]
+          },
+          "executedRs": [],
+          "priorRs": null,
+          "priorRsRule": null,
+          "priorRsRank": null,
+          "priorRsTried": [
+            "year-1 folder(0)",
+            "year-1 in the name(0)",
+            "newest before year 0(0)"
+          ],
+          "chosenStudy": "2014/436 Shiloh Village RCS report 2-20-14.pdf",
+          "hasCombined": false,
+          "problems": [
+            "study on disk but the reader returns nothing from it -- the app will face the same wall, which is an audit observation, not a skip",
+            "no prior rent schedule found; tried year-1 folder(0), year-1 in the name(0), newest before year 0(0)",
+            "no filed coverLetter, submittalLetter, checklist, tenantNotice"
+          ],
+          "notes": [],
+          "wave": 2
         }
       ]
     },
@@ -2792,7 +4069,7 @@
               "firm": "cornerstone",
               "s8": "TX24L000142",
               "name": "333 Holly",
-              "units": 0,
+              "units": 4,
               "pagesRead": 4,
               "pageCount": 77
             }
@@ -2898,6 +4175,48 @@
             "prior RS filename carries no signed/executed marker"
           ],
           "wave": 1
+        },
+        {
+          "cycleLabel": "2020",
+          "year": 2020,
+          "studies": [
+            {
+              "file": "2020/2019.09.04 - The Pines - Market Study Final.pdf",
+              "bytes": 22700524,
+              "rank": -3.998422604909,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            }
+          ],
+          "docs": {
+            "rentSchedule": [
+              {
+                "file": "2020/Rent_Schedule_Eff_7-1-20 - Signed 2020 July 1.pdf",
+                "bytes": 467546
+              }
+            ]
+          },
+          "executedRs": [],
+          "priorRs": null,
+          "priorRsRule": null,
+          "priorRsRank": null,
+          "priorRsTried": [
+            "year-1 folder(0)",
+            "year-1 in the name(0)",
+            "newest before year 0(0)"
+          ],
+          "chosenStudy": "2020/2019.09.04 - The Pines - Market Study Final.pdf",
+          "hasCombined": false,
+          "problems": [
+            "study on disk but the reader returns nothing from it -- the app will face the same wall, which is an audit observation, not a skip",
+            "no prior rent schedule found; tried year-1 folder(0), year-1 in the name(0), newest before year 0(0)",
+            "no filed coverLetter, submittalLetter, checklist, tenantNotice"
+          ],
+          "notes": [],
+          "wave": 2
         }
       ]
     },
@@ -3892,6 +5211,89 @@
           "problems": [],
           "notes": [],
           "wave": 1
+        },
+        {
+          "cycleLabel": "2020",
+          "year": 2020,
+          "studies": [
+            {
+              "file": "2020/Old/Peterson Plaza - Chicago, IL - RCS (2020).pdf",
+              "bytes": 5338679,
+              "rank": -4.998413192312,
+              "firm": null,
+              "s8": null,
+              "name": "Chicago, Cook County, IL, 60660",
+              "units": 5,
+              "pagesRead": 4,
+              "pageCount": 106
+            },
+            {
+              "file": "2020/Peteron Plaza - RCS - Chicago, IL.pdf",
+              "bytes": 5266803,
+              "rank": -9.998410424386,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            },
+            {
+              "file": "2020/Old/Peterson Plaza - Chicago, IL - RCS - Old.pdf",
+              "bytes": 5830863,
+              "rank": -14.998411818472,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            }
+          ],
+          "docs": {
+            "rentSchedule": [
+              {
+                "file": "2020/2020-Rent Schedule-Peterson executed.pdf",
+                "bytes": 171927
+              },
+              {
+                "file": "2020/Peterson Plaza Draft Rent Schedule 2020 - Owner Signed.pdf",
+                "bytes": 277396
+              },
+              {
+                "file": "2020/Peterson Plaza Draft Rent Schedule 2020.pdf",
+                "bytes": 421463
+              },
+              {
+                "file": "2020/Rent Schedule 2020 Peterson Plaza.docx",
+                "bytes": 189011
+              }
+            ],
+            "coverLetter": [
+              {
+                "file": "2020/RCS Owner Cover Letter - Peterson Plaza.doc",
+                "bytes": 30208
+              },
+              {
+                "file": "2020/RCS Owner Cover Letter - Peterson Plaza.pdf",
+                "bytes": 44492
+              }
+            ]
+          },
+          "executedRs": [],
+          "priorRs": "2019/Peterson_HUD-92458 - Owner Signed.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 5,
+          "priorRsTried": [
+            "year-1 folder(3)",
+            "year-1 in the name(3)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2020/Old/Peterson Plaza - Chicago, IL - RCS (2020).pdf",
+          "hasCombined": false,
+          "problems": [
+            "no filed submittalLetter, checklist, tenantNotice"
+          ],
+          "notes": [],
+          "wave": 2
         }
       ]
     },
@@ -3958,6 +5360,122 @@
           ],
           "notes": [],
           "wave": 1
+        },
+        {
+          "cycleLabel": "2020 (RCS)",
+          "year": 2020,
+          "studies": [
+            {
+              "file": "2020 (RCS)/Northgate Terrace - 2020 RCS.pdf",
+              "bytes": 5921942,
+              "rank": 0.001720751219,
+              "firm": null,
+              "s8": null,
+              "name": "Oakland, Alameda County, CA, 94612",
+              "units": 4,
+              "pagesRead": 4,
+              "pageCount": 104
+            },
+            {
+              "file": "2020 (RCS)/Archive/Northgate Terrace - Oakland, CA - RCS (2020) v3.pdf",
+              "bytes": 6157443,
+              "rank": -2.998419579857,
+              "firm": null,
+              "s8": null,
+              "name": "Oakland, Alameda County, CA, 94612",
+              "units": 4,
+              "pagesRead": 4,
+              "pageCount": 98
+            },
+            {
+              "file": "2020 (RCS)/Archive/Northgate Terrace - Oakland, CA  - RCS (2020) v2.pdf",
+              "bytes": 6133493,
+              "rank": -2.998419661002,
+              "firm": null,
+              "s8": null,
+              "name": "Oakland, Alameda County, CA, 94612",
+              "units": 4,
+              "pagesRead": 4,
+              "pageCount": 98
+            },
+            {
+              "file": "2020 (RCS)/Archive/Northgate Terrace - Oakland, CA - RCS (2020) v1.pdf",
+              "bytes": 6115946,
+              "rank": -2.998419691226,
+              "firm": null,
+              "s8": null,
+              "name": "Oakland, Alameda County, CA, 94612",
+              "units": 2,
+              "pagesRead": 4,
+              "pageCount": 98
+            },
+            {
+              "file": "2020 (RCS)/Northgate Terrace - Oakland, CA - RCS (2020) v4.pdf",
+              "bytes": 6126630,
+              "rank": -7.99841905934,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            }
+          ],
+          "docs": {
+            "rentSchedule": [
+              {
+                "file": "2020 (RCS)/Archive/Northgate FY2020 RS - Owner Signed - to be signed.pdf",
+                "bytes": 202708
+              },
+              {
+                "file": "2020 (RCS)/Archive/Northgate FY2020 RS - Owner Signed.pdf",
+                "bytes": 255257
+              },
+              {
+                "file": "2020 (RCS)/Archive/Northgate FY2020 RS - Owner Signed_updated.pdf",
+                "bytes": 289551
+              },
+              {
+                "file": "2020 (RCS)/Northgate Terrace - Draft Rent Schedule.pdf",
+                "bytes": 800200
+              },
+              {
+                "file": "2020 (RCS)/Northgate Terrace - Draft Rent Schedule_signed 1.31.2020.pdf",
+                "bytes": 89067
+              },
+              {
+                "file": "2020 (RCS)/Northgate Terrace FY2020 Fully Ex RS.pdf",
+                "bytes": 1111266
+              }
+            ],
+            "combinedPackage": [
+              {
+                "file": "2020 (RCS)/Northgate Terrace - 2020 RCS Submission Package_1.31.2020.pdf",
+                "bytes": 6287811
+              }
+            ],
+            "coverLetter": [
+              {
+                "file": "2020 (RCS)/RCS Owner Cover Letter - Northgate Terrace 1.30.2020.docx",
+                "bytes": 18719
+              }
+            ]
+          },
+          "executedRs": [],
+          "priorRs": "2019/Northgate FY2019 Fully Ex RS.PDF",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 0,
+          "priorRsTried": [
+            "year-1 folder(3)",
+            "year-1 in the name(3)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2020 (RCS)/Northgate Terrace - 2020 RCS.pdf",
+          "hasCombined": true,
+          "problems": [],
+          "notes": [
+            "prior RS filename carries no signed/executed marker"
+          ],
+          "wave": 2
         },
         {
           "cycleLabel": "2016",
@@ -4140,6 +5658,46 @@
               "pageCount": 86
             },
             {
+              "file": "2020/Fairview Homes FINAL RCS (Starmark).pdf",
+              "bytes": 5926025,
+              "rank": -3.9984149969929996,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            },
+            {
+              "file": "2020/Fairview Homes FINAL RCS (Starmark) old.pdf",
+              "bytes": 5448262,
+              "rank": -3.9984183099950004,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            },
+            {
+              "file": "2020/Fairview Homes RCS v4 (Starmark).pdf",
+              "bytes": 5002587,
+              "rank": -7.998413627434,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            },
+            {
+              "file": "2020/Fairview Homes RCS v3 (Starmark).pdf",
+              "bytes": 5046868,
+              "rank": -7.998413731284,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            },
+            {
               "file": "2020/Fairview Homes DRAFT RCS (Gill).pdf",
               "bytes": 4541036,
               "rank": -7.998420791152,
@@ -4149,6 +5707,16 @@
               "units": 0,
               "pagesRead": 4,
               "pageCount": 86
+            },
+            {
+              "file": "2020/Starmark RCS Corrections 04072020.pdf",
+              "bytes": 250310,
+              "rank": -9.998413731383,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
             }
           ],
           "docs": {
@@ -4260,7 +5828,7 @@
               "firm": "belfry",
               "s8": null,
               "name": "Walden",
-              "units": 5,
+              "units": 4,
               "pagesRead": 3,
               "pageCount": 71
             }
@@ -4339,6 +5907,62 @@
             "prior RS filename carries no signed/executed marker"
           ],
           "wave": 1
+        },
+        {
+          "cycleLabel": "2020",
+          "year": 2020,
+          "studies": [
+            {
+              "file": "2020/The Cedars- 400 Cliff St, Walden, New York 12586 (Final3).pdf",
+              "bytes": 6215503,
+              "rank": -9.998416483736,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            }
+          ],
+          "docs": {
+            "coverLetter": [
+              {
+                "file": "2020/RCS Owner Cover Letter - Walden 3.11.2020.docx",
+                "bytes": 18619
+              }
+            ],
+            "rentSchedule": [
+              {
+                "file": "2020/The Cedars - Draft Rent Schedule.pdf",
+                "bytes": 851985
+              },
+              {
+                "file": "2020/Walden 2020 Fully Executed RS eff. 7.16.2020.pdf",
+                "bytes": 415047
+              }
+            ],
+            "combinedPackage": [
+              {
+                "file": "2020/Walden aka The Cedars - 2020 RCS Submission Package.pdf",
+                "bytes": 6205672
+              }
+            ]
+          },
+          "executedRs": [],
+          "priorRs": "2019/Cedars 2019 Executed Rent Schedule.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 6,
+          "priorRsTried": [
+            "year-1 folder(1)",
+            "year-1 in the name(1)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2020/The Cedars- 400 Cliff St, Walden, New York 12586 (Final3).pdf",
+          "hasCombined": true,
+          "problems": [
+            "study on disk but the reader returns nothing from it -- the app will face the same wall, which is an audit observation, not a skip"
+          ],
+          "notes": [],
+          "wave": 2
         }
       ]
     },
@@ -4362,6 +5986,16 @@
               "units": 3,
               "pagesRead": 2,
               "pageCount": 61
+            },
+            {
+              "file": "2026 - RCS/Rent Grids/Doyle - Rent Grid/Marine Terrace RENT STUDY, Phase 1, Grids Only, 2-12-2026, John E. Doyle, MAI.pdf",
+              "bytes": 2686899,
+              "rank": -5.99822906292,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
             }
           ],
           "docs": {
@@ -4487,6 +6121,16 @@
               "units": 3,
               "pagesRead": 4,
               "pageCount": 85
+            },
+            {
+              "file": "2021/RCS/Marine Terrace Rent Study, 3-31-2021, John E. Doyle, MAI.pdf",
+              "bytes": 7930387,
+              "rank": -9.99838277644,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
             }
           ],
           "docs": {
@@ -4552,6 +6196,17 @@
               "units": 5,
               "pagesRead": 3,
               "pageCount": 83
+            },
+            {
+              "file": "2026 - RCS/Grids/Oak Center (Novoco) Preliminary Grids _10.2025.pdf",
+              "bytes": 2820458,
+              "rank": 4.0017616934,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 5,
+              "pagesRead": 5,
+              "pageCount": 34
             },
             {
               "file": "2026 - RCS/Archive/25-183 - Oak Center, 1601 Market Street, Oakland, CA (v1).pdf",
@@ -4722,6 +6377,26 @@
               "units": 5,
               "pagesRead": 4,
               "pageCount": 126
+            },
+            {
+              "file": "2021/HUD RCS Revised_ Oak Center.pdf",
+              "bytes": 9020605,
+              "rank": -7.9983847643,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            },
+            {
+              "file": "2021/Archive/Oakland, CA - Oak Center - RCS (12.1.2020).pdf",
+              "bytes": 12794326,
+              "rank": -14.998393068056,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
             }
           ],
           "docs": {
@@ -4806,6 +6481,17 @@
               "units": 2,
               "pagesRead": 2,
               "pageCount": 54
+            },
+            {
+              "file": "2026 - RCS/Grids/MORH (Novoco) Preliminary Grids_10.2025.pdf",
+              "bytes": 2621338,
+              "rank": 4.00176169338,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 4,
+              "pagesRead": 5,
+              "pageCount": 31
             },
             {
               "file": "2026 - RCS/Archive/25-184 - Morh I, 741 Filbert Street, Oakland, CA.pdf",

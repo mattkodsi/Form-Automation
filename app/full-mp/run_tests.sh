@@ -33,7 +33,12 @@ d="$(cd "$(dirname "$0")" && pwd)"     # app/full-mp
 # the one question the DOM cannot answer is what the rendering looks like.
 # It fails loudly where no chromium is installed rather than skipping: a
 # screenshot suite that renders nothing has verified nothing.
-suites="test_crypto.js test_db.js test_interactions.js smoke_combined.js test_gen.js test_rcs.js test_hap.js test_browser.js test_shots.js corpus/test_safety.js corpus/test_compare.js corpus/test_extract.js corpus/test_look.js"
+# test_fuzz.js proves the randomized interaction storm (fuzz.js) by planting
+# defects in copies of these very sources, building them, and requiring the
+# storm to name each break — then requiring silence on the clean build with the
+# identical seed. A fuzzer that has never caught a planted defect is a
+# random-number generator with a log file.
+suites="test_crypto.js test_db.js test_interactions.js smoke_combined.js test_gen.js test_rcs.js test_hap.js test_browser.js test_shots.js test_fuzz.js corpus/test_safety.js corpus/test_compare.js corpus/test_extract.js corpus/test_look.js"
 failed=""
 
 for s in $suites; do

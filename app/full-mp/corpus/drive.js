@@ -830,6 +830,14 @@ async function driveBoth(opts) {
     sessionFile = null,
     uploadTimeoutMs = 300000,   // tier 3 is polled server-side; 30-120s is normal and 240s happens
     log = () => {},
+    /* The interaction storm. Off unless a caller asks for it, and the seed is
+       explicit so a run that finds something can be replayed exactly. Callers
+       that want a different permutation every run pass a fresh seed; callers
+       that want a reproducible one pass a fixed seed. */
+    fuzz: fuzzOpts = null,
+    /* Which package year this run is. Carried so the output tree and the record
+       can say so; a property with a 2026 and a 2021 cycle writes two runs. */
+    cycleLabel = null,
   } = opts;
 
   const warnings = [], errors = [];
@@ -1091,8 +1099,46 @@ async function driveBoth(opts) {
       }
     }
 
+    /* ── the interaction storm ────────────────────────────────────────────
+       Both orders have produced their packages; the session is still open and
+       the form still holds a real record built from real documents. That is the
+       only moment in the whole harness when a randomized interaction pass is
+       worth anything: a storm over an EMPTY form exercises empty cells, and the
+       defects this project keeps shipping — phantom dirty, a save that drops a
+       coupled key, provenance painted twice, a source row that does not survive
+       a reopen — all need a form with values and provenance in it.
+
+       Seeded per property and per run, and the seed is recorded, so a storm that
+       finds something can be replayed exactly. A different permutation every run
+       is the point: the walk that finds nothing today may find something
+       tomorrow, and each run is a fresh sample of the interleavings.
+
+       It runs AFTER generation and never before, because it deliberately dirties
+       and saves the form: a storm ahead of the documents would be editing the
+       package under test. Failures here are recorded, never thrown — the storm
+       is an observer of this run, not a gate on it. */
+    let fuzz = null;
+    if (fuzzOpts && fuzzOpts.episodes > 0) {
+      try {
+        const { storm, colourBaseline } = require('../fuzz.js');
+        const base = await colourBaseline(c);
+        log('storm (' + fuzzOpts.episodes + ' episodes, seed ' + fuzzOpts.seed + ') …');
+        const r = await storm(c, {
+          seed: fuzzOpts.seed, episodes: fuzzOpts.episodes, maxEdits: fuzzOpts.maxEdits || 5,
+          quiet: true, doors: false, baseColours: base, log: m => log('  ' + m),
+        });
+        fuzz = { seed: r.seed, counts: r.counts, violations: r.violations, actions: r.actions };
+        log('storm: ' + r.actions.length + ' actions, ' + r.violations.length + ' violation(s)');
+        r.violations.forEach(v => warnings.push('storm [' + v.kind + '] ' + v.msg + '  (seed ' + r.seed + ')'));
+      } catch (e) {
+        fuzz = { seed: fuzzOpts.seed, error: String((e && e.message) || e).slice(0, 200) };
+        warnings.push('the interaction storm could not run: ' + fuzz.error);
+      }
+    }
+
     const nameUsedInDocs = String((orders['rs-first'] && orders['rs-first'].propertyNameInForm) || runName);
     return {
+      fuzz,
       propertyId: ids.pid, cycleId: ids.cid,
       propertyNameUsed: runName,
       propertyNameInDocuments: nameUsedInDocs,
@@ -1115,6 +1161,7 @@ async function driveBoth(opts) {
 
   const out = Object.assign({
     property: propertyName || null, code, folder: propertyFolder,
+    cycleLabel: cycleLabel || null,
     studyPath: studyPath || null, priorRsPath: priorRsPath || null,
     at: new Date().toISOString(),
   }, meta);
@@ -1171,7 +1218,13 @@ const _memo = new Map();
 async function driveOne(opts) {
   const order = opts.order;
   if (ORDERS.indexOf(order) < 0) throw new Error('order must be "rs-first" or "rcs-first", got ' + J(order));
-  const sig = [opts.propertyFolder, opts.studyPath, opts.priorRsPath, opts.outRoot, opts.corpusRoot, opts.cacheRoot].join(' | ');
+  /* The signature is what makes two orders share one run. It must therefore name
+     everything that makes two runs DIFFERENT — including the cycle, now that a
+     property can be driven for more than one package year, and the storm's seed,
+     because a caller asking for a different permutation is asking for a
+     different run and must not be served yesterday's. */
+  const sig = [opts.propertyFolder, opts.studyPath, opts.priorRsPath, opts.outRoot, opts.corpusRoot, opts.cacheRoot,
+               opts.cycleLabel || '', (opts.fuzz && opts.fuzz.seed) || ''].join(' | ');
   /* The seam exists so the memo can be tested without launching a browser:
      the property this guard protects is "how many times was the expensive
      thing called", which is exactly what a stub can count and a real run
@@ -1191,7 +1244,7 @@ async function driveOne(opts) {
   };
   return Object.assign({
     property: b.property, code: b.code, folder: b.folder,
-    propertyId: b.propertyId, cycleId: b.cycleId,
+    propertyId: b.propertyId, cycleId: b.cycleId, cycleLabel: b.cycleLabel, fuzz: b.fuzz,
     propertyNameUsed: b.propertyNameUsed, propertyNameInDocuments: b.propertyNameInDocuments,
     nameIsPrefix: b.nameIsPrefix, uploads: b.uploads, reopen: b.reopen,
     studyPath: b.studyPath, priorRsPath: b.priorRsPath, at: b.at,

@@ -88,6 +88,24 @@ function cycleOfPath(rel){
 
 /* ---- is this PDF a study? ------------------------------------------------ */
 const SKIP=/invoice|engagement|certificat|w-?9\b|insurance|tax|deed|mortgage|hap contract|amend rents/i;
+/* A STUDY THE READER CANNOT READ IS STILL A STUDY ON THE DISK. The reader
+   recognises a handful of firms; this corpus was written by more (Doyle,
+   Sjoberg and the 2019-format MVS among them). A cycle must not vanish
+   because its appraiser is one the reader has not met -- that silence cost
+   eleven prior-cycle packages in the first manifest, with no readError to
+   show for it. So a PDF that LOOKS like a study by name but reads as
+   nothing is kept as an UNREAD candidate: ranked below every read study,
+   flagged as a problem, and counted -- the cycle stays in the audit and the
+   reader's blindness becomes the finding rather than a hole. */
+const STUDYNAME=/rcs|rent stud|market stud|comparab|apprais|\(final\d*\)|,\s*[a-z .]+\s\d{5}(\D|$)/i;
+/* The last two alternates are the address-naming firms: Starmark and its kin
+   title a study "Property - Street, City, ST 12345 (Final).pdf" with no study
+   word anywhere. Lansing Manor 2021 and Walden 2020 vanished behind that. */
+const STUDYNOT=/cover letter|checklist|submission|proposal|notice|memo|worksheet|analysis|comments|sig(nature)? page/i;
+function nameLooksStudy(f){
+  return /\.pdf$/i.test(f.name)&&!SKIP.test(f.name)&&f.bytes>=200*1024
+       &&STUDYNAME.test(f.name)&&!STUDYNOT.test(f.name);
+}
 async function readsAsStudy(f){
   if(!/\.pdf$/i.test(f.name))return null;
   if(SKIP.test(f.name))return null;
@@ -216,6 +234,12 @@ function studyRank(rel,mtime){
         if(cy)add(cy.key,cy.year,'study',rec);
         else add('(no cycle folder)',null,'study',rec);
       }
+      else if(nameLooksStudy(f)){
+        const rec={file:f.rel,bytes:f.bytes,rank:studyRank(f.rel,f.mtime)-10,
+                   unread:true,firm:null,s8:null,name:null,units:0};
+        if(cy)add(cy.key,cy.year,'study',rec);
+        else add('(no cycle folder)',null,'study',rec);
+      }
     }
     const list=Object.values(cycles).filter(c=>c.studies.length)
       .sort((a,b)=>(b.year||0)-(a.year||0));
@@ -248,10 +272,13 @@ function studyRank(rel,mtime){
       c.studies.sort((a,b)=>b.rank-a.rank);
       c.chosenStudy=c.studies.length?c.studies[0].file:null;
 
+
       const missing=['coverLetter','submittalLetter','checklist','tenantNotice']
         .filter(k=>!c.docs[k]||!c.docs[k].length);
       c.hasCombined=!!(c.docs.combinedPackage&&c.docs.combinedPackage.length);
       c.problems=[];c.notes=[];
+      if(c.studies.length&&c.studies[0].unread)
+        c.problems.push('study on disk but the reader returns nothing from it -- the app will face the same wall, which is an audit observation, not a skip');
       if(!c.priorRs)c.problems.push('no prior rent schedule found; tried '+tries.join(', '));
       else if(rule!=='year-1 folder')c.problems.push('prior RS found by fallback: '+rule);
       else if(hit.rank<0)c.problems.push('prior RS is a draft or an unsigned copy');
@@ -278,6 +305,8 @@ function studyRank(rel,mtime){
   console.log('with an RCS cycle     : '+(properties.length-none.length));
   console.log('wave-1 cycle chosen   : '+w1.length+'   of those with no open questions: '+clean.length);
   console.log('readLetter errors     : '+readErrors.length);
+  const unreadN=properties.reduce((n,p)=>n+p.cycles.filter(c=>c.studies.length&&c.studies[0].unread).length,0);
+  console.log('cycles standing on an UNREAD study: '+unreadN);
 
   const w1c=properties.map(p=>(p.cycles||[]).find(c=>c.wave===1)).filter(Boolean);
   const byRule={};
