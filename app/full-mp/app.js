@@ -1684,7 +1684,63 @@ async function rsFieldRects(){ // field id -> {pg,x,y,w,h} from our own template
   const bin=atob(b64);const tb=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)tb[i]=bin.charCodeAt(i);
   const doc=await window.PDFLib.PDFDocument.load(tb,{parseSpeed:Infinity});const pf=doc.getForm();const pgs=doc.getPages();
   const map={};pf.getFields().forEach(f=>{try{const w=f.acroField.getWidgets()[0];const r=w.getRectangle();let pg=-1;pgs.forEach((p,i)=>{if(p.ref===w.P())pg=i;});map[f.getName()]={pg:pg,x:r.x,y:r.y,w:r.width,h:r.height};}catch(e){}});
+  /* Boxes on ONE printed row hold ONE printed row.
+     Field 1, the Project Name, is 23pt tall where fields 2 and 3 beside it on
+     the same row - the FHA number and the effective date - are 19pt. Its floor
+     therefore sits 4pt lower than theirs, which on this form is most of a row:
+     the "Part A - Apartment Rents" divider prints its baseline 1.95pt INSIDE
+     field 1's window. So the divider was collected as part of the project name
+     and four schedules filed themselves under names like
+       ShilohVillageApts.      PartA-ApartmentRents
+       11fkaCreek333HollyHollyPartA-ApartmentRents
+       ThePinesfkaWoodGlenApartmentsPartA-ApartmentRents
+       OaksonINorthP,lazafkaNorthPlazaApartmentsPartA-ApartmentRents
+     - the name reaching every generated document and all three filenames.
+
+     Declining the misaligned pages did NOT fix this, which is worth recording:
+     it only moved the same swallow to tier 3, because both tiers look up the
+     very rects this function hands out. Clamping here fixes both at once, and
+     nothing else reads them - gen.js writes through the AcroForm by field name.
+
+     No threshold and no magic number: a box is clamped to the shallowest floor
+     on its own printed row, which is a statement about the form rather than
+     about this one field. Twelve of the 95 rows on page 1 disagree about their
+     floor at all, and eleven disagree by about a point - ordinary template
+     sloppiness, far too little to reach another row, since the rows themselves
+     are 10 to 12pt apart. Field 1's row is the only one that disagrees by
+     enough to matter, which is exactly why it was the only one misreading. */
+  { const row={};
+    Object.keys(map).forEach(id=>{const r=map[id];
+      const k=r.pg+':'+(Math.round((r.y+r.h)*2)/2);(row[k]=row[k]||[]).push(id);});
+    Object.keys(row).forEach(k=>{const ids=row[k];
+      let floor=-Infinity;ids.forEach(id=>{if(map[id].y>floor)floor=map[id].y;});
+      ids.forEach(id=>{const r=map[id];if(r.y>=floor)return;
+        r.h=(r.y+r.h)-floor;r.y=floor;});});}
   _rsRectCache=map;return map;}
+/* What one box says, in READING order.
+   Sorting the runs by descending baseline and joining them was right for a page
+   whose lines are exactly level, and wrong for a page carrying a scanner's own
+   text layer, where one printed line arrives as several baselines a fraction of
+   a point apart. 333 Holly's project name prints as "333 Holly fka Holly Creek
+   II" on one line, and its OCR layer gives that line four baselines - 693.36,
+   693.24, 693.12, 691.20 - so ordering by height returned
+     11 | fka Creek | 333 | Holly Holly
+   which is where "11fkaCreek333HollyHolly" came from. The "11" is the scanner's
+   reading of the roman numeral II, at a third the font size of its neighbours.
+   rsLines already solved exactly this for the HAP-number label - "sorting each
+   line by x removes the dependency instead of widening it" - and rsMapRects
+   never got the same treatment.
+   So: group the runs into lines, order each line left to right, and take the
+   lines top to bottom. The tolerance is well under the form's 10-12pt row pitch,
+   so two genuinely separate printed lines stay separate. */
+function rsBoxText(inside){
+  const lines=[];
+  inside.slice().sort((a,b)=>b.y-a.y).forEach(r=>{
+    const L=lines[lines.length-1];
+    if(L&&Math.abs(L.y-r.y)<=RS_LINE)L.runs.push(r);
+    else lines.push({y:r.y,runs:[r]});});
+  return lines.map(L=>L.runs.sort((a,b)=>a.x-b.x).map(r=>r.s).join('').trim())
+    .filter(Boolean).join(' ').trim();}
 function rsMapRects(pageRuns,rects,tplPg){ // one page's runs -> {fieldId: text}
   const out={};if(!pageRuns)return out;
   // A flattened copy draws its values inside form XObjects (depth > 0) while the
@@ -1694,7 +1750,7 @@ function rsMapRects(pageRuns,rects,tplPg){ // one page's runs -> {fieldId: text}
   const deep=pageRuns.filter(r=>r.d>0);const runs=deep.length?deep:pageRuns;
   for(const id in rects){const rc=rects[id];if(rc.pg!==tplPg)continue;
     const inside=runs.filter(r=>r.x>=rc.x-2&&r.x<=rc.x+rc.w+2&&r.y>=rc.y-1&&r.y<=rc.y+rc.h);
-    const v=inside.sort((a,b)=>(b.y-a.y)||(a.x-b.x)).map(r=>r.s).join('').trim();
+    const v=rsBoxText(inside);
     if(v)out[id]=v;}
   return out;}
 function rsPartD(V){ // Part D non-revenue-producing space: gen.js's dUse/dType/dRent ids
