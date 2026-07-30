@@ -174,7 +174,15 @@ function ocrMap(words,rects,tplPg,f){ // registered words -> {fieldId: text}
     const ws=hit[id].slice().sort((a,b)=>b.y-a.y), lines=[];
     ws.forEach(w=>{const L=lines[lines.length-1];
       if(L&&Math.abs(L.y-w.y)<=OCR_LINE)L.w.push(w);else lines.push({y:w.y,w:[w]});});
-    const v=lines.map(L=>L.w.sort((a,b)=>a.x-b.x).map(o=>o.s).join(' ')).join(' ').trim();
+    /* And the form's own printed lines come out here too, by text. A scan is
+       registered onto the template before it is read, so ocrDropLabels can drop a
+       label it recognises AT its own position - but a label OCR read slightly
+       differently, or one printed at a pitch our blank does not share, survives
+       that test and lands in a box. Sample Property came back from OCR as
+       "Sample Property Apts. Part A Apartment Rents Show the actual". Same helper
+       as the text tier, so one page cannot be scrubbed two ways. */
+    const txt=lines.map(L=>L.w.sort((a,b)=>a.x-b.x).map(o=>o.s).join(' '));
+    const v=(typeof rsDropFormLines==='function'?rsDropFormLines(txt,tplPg):txt).join(' ').trim();
     if(v)out[id]=v;});
   return out;}
 
