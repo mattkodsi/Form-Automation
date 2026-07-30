@@ -1,13 +1,19 @@
 # The form-level audit — plan
 
-Written 2026-07-30 against the working tree at `c1a4a3e` **plus uncommitted changes to
-`app/full-mp/app.js` and `app/full-mp/smoke_combined.js`** (another session is editing
-them: `rcsBrOf` gained a "Studio" string branch, `rcsUnplaced` is new, `rcsMatch` gained
-an unplaced-line ambiguity return, `MIN_CHECKS` in the smoke is 165 against CLAUDE.md's
-138). Every number below is measured against that tree. If those edits land or are
-reverted, re-measure before quoting.
+Written 2026-07-30, measured against **`a2b6be3`** — "The study's rents landed on the wrong
+rows, and the chooser under the cell said so", which landed while this plan was being
+written and fixes the roster half of the defect this plan was commissioned over. Every
+number below was re-measured after that commit. `MIN_CHECKS` in `smoke_combined.js` is now
+165, not CLAUDE.md's 138.
 
 Observation only. Nothing under `app/full-mp/` was modified to produce this.
+
+**One finding takes precedence over the rest of this document.** `a2b6be3`'s message says,
+of the chooser: *"I could not construct a surviving case where they do not [agree] — so the
+divergence is held by an assertion instead of patched by a second renderer."* **A surviving
+case exists, and it is measured below.** The assertion holds inside one page load and fails
+the moment the user leaves the form and comes back, which is the sequence the user was
+performing when he found the defect in the first place. See "The reproduction".
 
 ---
 
@@ -98,21 +104,22 @@ exposing `_rcsFill` (the module-local fill record), required in node under
 with **four** rows (Studio A ×10 @1,200, Studio B ×6 @1,250, 1BR A ×20 @1,500, 1BR B ×8
 @1,550).
 
-**Result 1 — inside a single page load, both orders are already correct.**
+**Result 1 — inside a single page load, both orders are correct, as `a2b6be3` claims.**
 
 | order | row 0 Studio A | row 1 Studio B | row 2 1BR A | row 3 1BR B |
 |---|---|---|---|---|
 | `rcs-first` | 1400 / UA 80 | 1400 / 80 | 1750 / 95 | 1750 / 95 |
 | `rs-first` | 1400 / 80 | 1400 / 80 | 1750 / 95 | 1750 / 95 |
 
-That is `04d0609` working: `rsFillFromParsed` re-reads an already-applied study once the
-schedule has laid down the real roster (app.js:2373), and register class E is genuinely
-closed for this shape.
+That is `a2b6be3` working: `rsFillFromParsed` re-reads an already-applied study once the
+schedule has laid down the real roster (app.js:2424), and register class E is closed for
+this shape.
 
 **Result 2 — the re-read is gated on a page-local variable, and the gate opens the defect
 back up across a session boundary.** The guard is
-`if(_rcsFill && _rcsUpload && _rcsUpload.parsed)`. `_rcsFill` is a plain module variable
-(app.js:2400), assigned in exactly one place (app.js:1393, inside `rcsFillFromParsed`), and
+`if(_rcsFill && _rcsUpload && _rcsUpload.parsed)` (app.js:2424). `_rcsFill` is a plain
+module variable (app.js:2451), assigned in exactly one place (app.js:1433, inside
+`rcsFillFromParsed`), and
 **`openCycleForm` does not restore it** — it clears `_undoStack`, `_undoChain`, `_rsUpload`
 and `_rcsUpload`, then rehydrates the two uploads via `rsRecall()`/`rcsRecall()`, and never
 touches `_rcsFill`. So on the sequence *apply the study → save → leave the form (or reload)
@@ -134,17 +141,25 @@ the study's `ba` only reaches the form through the path that did not run.
 (app.js:634) reads `ua_exec` / `ua_rcs` / `ua_custom` off the form and nothing else. It
 never asks `rcsOf('units.'+i+'.ua_rcs')`. So the chooser reports whatever the last fill
 happened to write into that cell, and the two facts in the table's last two columns can
-disagree indefinitely. `safmrBox(i)` (app.js:683) is built the same way. That is rule 2 of
+disagree indefinitely. `safmrBox(i)` is built the same way. That is rule 2 of
 `FORM-RULES.md` — *"a source row carries a value, not just a tag"* — failing in the other
 direction: the row carries a value, and it is the wrong row's.
+
+`a2b6be3` left `uaBox` alone on the stated grounds that with the roster right the two agree,
+and held the agreement with an assertion rather than a second renderer — which is sound
+reasoning and the right instinct given how two renderers disagreeing has bitten before. **But
+the assertion is only as strong as the roster fix, and the roster fix is gated on a page-local
+variable.** The table above is the surviving case. Whatever is decided about `uaBox`, the
+`_rcsFill` gate is the thing to repair first: fix it and the assertion becomes true, leave it
+and no assertion about the chooser can be relied on.
 
 **Hypothesis, from code reading, not measured:** `_rcsFill` is also never *cleared* by
 `openCycleForm`, so within one page load it stays truthy after moving to another package or
 property. Two consequences follow if so — clicking Apply on a schedule would trigger a
 study re-read on a package where the study was never applied (which the code's own comment
-at app.js:2368 says must not happen), and `fillNote(_rcsFill, up)` at app.js:2414 would let
-one package's tile claim *"Filled N values"* about another's. This is the same bug shape
-rule 19 already names for `_rsUpload`. Worth one check each.
+just above app.js:2424 says must not happen), and `fillNote(_rcsFill, up)` at app.js:2465
+would let one package's tile claim *"Filled N values"* about another's. This is the same bug
+shape rule 19 already names for `_rsUpload`. Worth one check each.
 
 ---
 
@@ -568,7 +583,7 @@ authority, exactly as CLAUDE.md says.
 | `test_crypto.js` | 81 | — | |
 | `test_db.js` | 169 | — | |
 | `test_interactions.js` | 144 | **3a, 3b, 3c (node half), 4, 6** — the bulk of this plan | node only |
-| `smoke_combined.js` | 165 | **2, 3d (render half)** | node only |
+| `smoke_combined.js` | 165 | **2, 3d (render half)** — and it already owns the `a2b6be3` chooser-vs-matcher assertion, so 3b's reopen case belongs beside it | node only |
 | `test_gen.js` | 75 | — | |
 | `test_rcs.js` | 420 | shape #11's parse side, if `rcsUnplaced` stays | node only |
 | `test_hap.js` | 189 | — | |
@@ -610,11 +625,14 @@ the only one that spends money or needs Matt.
 
 ### Decisions that are Matt's
 
-1. **Is `uaBox`/`safmrBox` reading a stored cell a bug or a design?** A chooser that reads
-   the live matcher would change value under the PM's hands when a new document is read;
-   one that reads the cell can be stale, as measured. There is a third answer — read the
-   cell, but assert at render time that it agrees with the matcher and warn where it does
-   not — and it is probably the right one for a HUD filing. This is his call, not a repair.
+1. **Is `uaBox`/`safmrBox` reading a stored cell a bug or a design?** `a2b6be3` decided
+   "design, held by an assertion", on the grounds that no surviving divergence could be
+   constructed. One can (above), so the decision is live again. A chooser that reads the live
+   matcher would change value under the PM's hands when a new document is read; one that
+   reads the cell can be stale. There is a third answer — read the cell, but assert at render
+   time that it agrees with the matcher and *say so in the cell* where it does not — and it is
+   probably the right one for a HUD filing. Repairing the `_rcsFill` gate may make the
+   question moot; it should be repaired either way.
 2. **May the drives start recording the form record?** It writes ~30–60 KB more per
    property into `_archive/corpus-cache/` (gitignored, and it holds real contract numbers
    already). No new spend. Recommended, but it is his cache.
@@ -627,7 +645,11 @@ the only one that spends money or needs Matt.
 
 ### One thing to check before starting
 
-`app/full-mp/app.js` and `app/full-mp/smoke_combined.js` are **modified and uncommitted** in
-this worktree by a concurrent session, and the changes are in exactly the code this plan
-measures (`rcsBrOf`, `rcsUnplaced`, `rcsMatch`'s ambiguity return). Reconcile with that
-session before editing either file, and re-measure the inventory numbers if the edits move.
+`a2b6be3` landed mid-writing, from a concurrent session in this same worktree, touching
+`app.js`, `smoke_combined.js` and `index.html`. Everything above was re-measured against it,
+but check `git log` before quoting a number — this branch is moving, and two of the plan's
+phases (2 and 6) are partly built by that commit already.
+
+**The single highest-value next action** is not a phase. It is repairing the `_rcsFill` gate,
+because it is one variable, it re-opens a defect the user found by hand, and it is the
+precondition for the assertion `a2b6be3` chose to rely on. Then phase 0, then the rest.
