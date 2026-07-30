@@ -2950,3 +2950,43 @@ Deliveries aborted at random for weeks, and each abort taught the retry habit ra
 habit. **A test that fails intermittently is a claim about the code until someone reads the code.**
 The suite was the only thing in the project that ever said a PDF was decrypting wrong, and the
 instruction I wrote told everyone to run it again.
+
+---
+
+# DECISION (Matt, 2026-07-30): the app asks for the EXECUTED schedule, always. Never the draft.
+
+Recorded because a prior session's queue proposed the opposite, and because the reasoning is not
+recoverable from the documents.
+
+> *"we will ALWAYS ask for the executed rent schedule and never the draft, even though it's more
+> easily readable. the executed schedule may differ from the draft, and there is no way to know
+> whether that is true by looking at the draft, since PMs do not go back and revise the draft to
+> reflect the final RS. also, executed RS should always be saved, while occasionally a PM might
+> dumbly delete a draft once they received the executed schedule countersigned by the CA."*
+
+Two independent reasons, and either alone settles it: the draft may be **stale in a way that leaves
+no trace**, and the draft may not **exist**.
+
+## What this overturns
+
+The measurement that executed copies are frequently flattened — vector outlines with no AcroForm
+fields and often no text layer — while a field-complete unsigned draft sits in the same folder, is
+still true. **What was wrong was the conclusion drawn from it.** The queue item "census: how many
+have a field-complete draft, as the prerequisite to preferring the draft" is **withdrawn**. The
+readability of a document is not a reason to read a different document.
+
+## What it costs, and who pays it
+
+OCR stops being a fallback and becomes **the primary reader** for the majority of executed
+schedules. That is a running per-document cost on every renewal, forever, and it is the correct
+cost. The census that replaces the withdrawn one asks a different question: **of the executed
+schedules, how many are class A (usable fields), class B (no fields, text-readable), and class C
+(neither — OCR only)** — because that is what the running cost is proportional to.
+
+## The hazard this creates, which matters more than the cost
+
+A reader that meets a flattened document and returns **nothing** while the app reports a successful
+read is worse than one that refuses. It puts silence where a number belongs on a federal filing.
+`extract.js` already carries this guarantee for the corpus tool — *"a flattened executed schedule
+yields no values at all"* and *"says why, rather than reading as an empty schedule."* Whether the
+**app's own** reader carries it has never been measured. It is being measured now.
