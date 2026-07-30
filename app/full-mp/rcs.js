@@ -286,6 +286,76 @@ function readSignature(txt,S){
   }
 }
 
+/* ------------- the owner's checklist, and the one conditional item -------------
+   Appendix 9-2-2 has seventeen items. Sixteen describe material every RCS
+   submission contains; ONE carries its condition in HUD's own printed wording:
+
+     "Copy of RCS Appraiser's License (only if relying upon a temporary license)"
+
+   The app ticked it on every property, which certifies - under the 18 U.S.C.
+   §1001 warning the owner signs above - that a copy of a temporary licence is
+   enclosed when no temporary licence was used. The study is the document that
+   answers it, in two places:
+
+   1. THE SIGNATURE BLOCK, on a page the reader already holds. Three real
+      studies name one:
+        Holly House      "New Jersey Temporary Practice Permit / License No.: TP018-25"
+        Hampshire House  "New Jersey Temporary Visiting" / "Practice Permit"
+        Noble Tower      "CA Temporary Certified General Appraiser License No. 3012633-001"
+      Hampshire's is the reason this reads a TWO-LINE window and not a line:
+      "Temporary Visiting" ends one line and "Practice Permit" begins the next,
+      so a line-at-a-time test finds "temporary" with no "permit" beside it and
+      reports nothing. Measured over all 31 studies the app can open, the window
+      fires on exactly Holly House and Hampshire House and nowhere else - and
+      those are precisely the two whose FILED checklists tick the item.
+
+   2. THE CERTIFICATION, Appendix 9-1-4 item 12: "Did you prepare the RCS under a
+      temporary license? No". Eleven of the 34 studies print it; ten answer No and
+      Noble Tower answers Yes. It sits 8 to 18 pages from the end, so the reader
+      does not go looking for it - but when a page holding it is already in hand
+      it is the appraiser's sworn answer and it is read.
+
+   SILENCE LEAVES THE BOX EMPTY, and that is the whole point. A conditional item
+   nobody answered is not a yes. Do not "tidy" this into a default of ticked
+   because most packages are fine; the two properties above are the ones that
+   make ticking true, and the other 32 are the ones that make it a false
+   statement. Positive evidence only, and only from the study. */
+function readChecklist(txt,S,warn){
+  let q=null,permit=null;
+  for(let i=0;i<txt.length;i++){
+    const k=norm(txt[i]);
+    /* The sworn answer. The blank template prints the question with nothing after
+       it, so the answer is part of the anchor - no capture, no tick. */
+    const m=k.match(/didyoupreparethercsunderatemporarylicense(yes|no)/);
+    if(m){if(q==null)q=m[1];continue;}
+    if(permit!=null)continue;
+    const w=k+norm(txt[i+1]||'');
+    /* The question's OWN words say "temporary license" twice. Reading them as a
+       signature block would tick the box on every study that prints the blank
+       form - the exact fault this function exists to end. */
+    if(/didyouprepare|ifsoattachacopy/.test(w))continue;
+    /* "temporary" beside a TITLE, not beside any word starting "licen". A bare
+       co-occurrence is too loose: Noble Tower's study says "units were
+       temporarily taken offline" in one place and "all required licenses,
+       consents" in another, and two ordinary sentences must never tick a
+       certification. What the three real signature blocks print is a title -
+       "Practice Permit", "License No.", "Temporarily licensed as" - so those are
+       what this asks for. Bare "permit" is not enough either: a building permit
+       is a permit. */
+    if(/tempor/.test(w)&&/practicepermit|licen[sc]eno|licen[sc]ed/.test(w))permit=String(txt[i]).trim();
+  }
+  if(q==null&&permit==null)return;                       // silent: leave it alone
+  const on=(q==='yes'||permit!=null);
+  if(on||S['check.14']!=='1')S['check.14']=on?'1':'';
+  if(!warn)return;
+  if(permit!=null)
+    warn.push('The study was prepared under a temporary licence, so item 14 of the owner’s checklist is ticked and a copy of that licence belongs in the package.');
+  else if(q==='yes')
+    warn.push('The study certifies it was prepared under a temporary licence, so item 14 of the owner’s checklist is ticked and a copy of that licence belongs in the package.');
+  if(q==='no'&&permit!=null)
+    warn.push('The study answers “no” to preparing the RCS under a temporary licence, but its signature block names one. Item 14 is ticked on the stronger of the two.');
+}
+
 
 /* ---------------------------- the tables ---------------------------- */
 
@@ -506,6 +576,15 @@ async function readLetter(rd){
   readSender(perPage[0].txt,S);
   readSubject(perPage[0].txt,S,warn);
   perPage.forEach(function(x){readSignature(x.txt,S);});
+  /* The checklist reads every page the reader HELD, not only the letter's - the
+     probe pages were fetched and paid for either way. The '' between pages is a
+     page boundary: without it the two-line window could weld the last line of
+     one page to the first of the next and read a temporary licence out of two
+     unrelated sentences. */
+  { const held=[];
+    Object.keys(found.runs).map(Number).sort(function(a,b){return a-b;}).forEach(function(i){
+      lines(found.runs[i]).forEach(function(l){held.push(l.text);});held.push('');});
+    readChecklist(held,S,warn); }
   perPage.forEach(function(x){readTables(x.txt,x.pi,units,totals,seen);});
 
   /* Cornerstone keeps its address, telephone and e-mail on the title page
@@ -566,7 +645,7 @@ async function readLetter(rd){
 
 window.RCSParse={norm:norm,lines:lines,money:money,dec:dec,pageKey:pageKey,
   findLetter:findLetter,readLetter:readLetter,parseType:parseType,
-  _splitCityStateZip:splitCityStateZip,_isoDate:isoDate,_s8From:s8From,_detectFirm:detectFirm,_readSender:readSender,_readSignature:readSignature,
+  _splitCityStateZip:splitCityStateZip,_isoDate:isoDate,_s8From:s8From,_detectFirm:detectFirm,_readSender:readSender,_readSignature:readSignature,_readChecklist:readChecklist,
   _caps:{scan:LETTER_SCAN_CAP,tail:LETTER_TAIL},_probeOrder:probeOrder,
   /* The concluded-rent row pattern and the roster's key, exposed so the suite can
      pin them against the exact lines three real studies print. Trimming a fixture

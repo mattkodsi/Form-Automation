@@ -69,7 +69,36 @@ Object.entries(PARTB).forEach(([g,items])=>items.forEach((it,i)=>{SEED['partb.'+
 Object.entries(PB_FUEL).forEach(([i,f])=>SEED['partb.fuel.'+i]=[f,D]);
 ['e1','e2','e3','e4','e5','u1','s1','s2','s3','s4','s5','s6'].forEach(id=>{SEED['partb.writein.'+id]=['',D];SEED['partb.writein.'+id+'.on']=['',D];});
 SEED['partb.writein.u1.fuel']=['',D];
-CHECKLIST_FLAT.forEach((it,i)=>{const off=/scope of repair/i.test(it)||/scope of work/i.test(it);SEED['check.'+i]=[off?'':'1',D];});
+/* Where the owner's checklist starts, and why each item starts there.
+   Appendix 9-2-2 has seventeen items. TWO are conditional - they describe
+   material that exists only in some packages - and the other fifteen describe
+   material every RCS submission contains.
+
+   This used to be a regex over the LABEL text: /scope of repair/ OR /scope of
+   work/. One net, two very different items, and both came out wrong:
+
+   * "Scope of Work" (4) was left OFF on every property, though all 34 studies in
+     the corpus carry the section - Belfry heads it "Scope of Assignment", which
+     is why looking for the literal phrase finds nothing. HUD lists it as
+     required RCS material, and the team's own 2026 checklist for Colonial
+     Village ticks it. The older filed exhibits leave it blank; they under-report
+     material that is in the package, and the app does not copy that.
+   * "Copy of RCS Appraiser's License (only if relying upon a temporary license)"
+     (14) was ticked ON on every property. HUD prints the condition inside the
+     item; the STUDY answers it (readChecklist in rcs.js), and an unanswered
+     conditional stays OFF. Five filed checklists read by eye tick this item on
+     all five - true on Holly House and Hampshire House, whose appraiser held a
+     New Jersey temporary practice permit, and false on Walden, Fairview Homes
+     and Colonial Village, whose appraisers held permanent licences. The app
+     ticks the two and leaves the rest for the study to answer.
+
+   One helper, used by BOTH the key manifest and the new-property default -
+   which disagreed with it: the manifest tested the label, the default hardcoded
+   (i===2||i===4), and only the default is read at runtime. */
+const CHECK_CONDITIONAL={2:'repairs are required',
+                         14:'the appraiser relied on a temporary licence'};
+const checkSeed=i=>CHECK_CONDITIONAL[i]?'':'1';
+CHECKLIST_FLAT.forEach((it,i)=>{SEED['check.'+i]=[checkSeed(i),D];});
 const ALL_KEYS=Object.keys(SEED).map(k=>({key:k}));
 
 let mpdb=null, activePid=null, activeCid=null, _cyFresh=null;
@@ -1348,6 +1377,17 @@ function rcsFillFromParsed(){
     if(cur!==''&&cur!=null)return;
     const v=rcsNonrevVal(i);if(v)setk('nonrev.'+i+'.rent',v);});
 
+  /* Item 14 of the owner's checklist, from the study. Only ever a TICK: the
+     study can prove a temporary licence was relied on, and silence proves
+     nothing, so a box the PM ticked by hand is never cleared from here.
+
+     Not in rcsFillKeys, deliberately. That list drives rcsTag, which paints a
+     source badge beside a VALUE; a checkbox has no room for one and says where
+     it came from by its colour, which put() sets. Adding it there would make
+     the suite's "every key the fill writes is covered by rcsTag" check fail on
+     an unticked box - a cell whose value is empty can carry no tag. */
+  if(P.scalars&&P.scalars['check.14']==='1')put('check.14','1');
+
   deriveUnits();renderBody();scheduleHudRefresh();
   const n=rcsFillKeys().length;
   _rcsFill=fillRecord(_rcsUpload,_wrote);  setStatus('Form filled from the RCS study — '+n+' value'+(n===1?'':'s')+' marked “RCS report”.'
@@ -1379,6 +1419,18 @@ function rcsChecks(){
       agree?('agrees · '+src.map(function(x){return x[0];}).join(', '))
            :src.map(function(x){return esc(x[1])+' per '+x[0];}).join(' · ')));
   }
+
+  /* The one checklist item HUD makes conditional in its own wording: "Copy of
+     RCS Appraiser's License (only if relying upon a temporary license)". Both
+     sides exist here - the study's answer and the box as it stands - so the
+     comparison is real. It renders only when the study answered; a study that
+     never mentions a licence has not said no. */
+  { const tv=P.scalars?P.scalars['check.14']:undefined, on=get('check.14')==='1';
+    if(tv==='1')out.push(chk(on?'ok':'warn','Appraiser\u2019s licence \u00b7 temporary',
+      on?'the study names a temporary licence \u00b7 item 14 ticked'
+        :'the study names a temporary licence \u2014 item 14 is not ticked, and the copy is required'));
+    else if(tv===''&&on)out.push(chk('warn','Appraiser\u2019s licence \u00b7 temporary',
+      'the study answers \u201cno\u201d \u00b7 item 14 is ticked, which certifies a copy that is not required')); }
 
   /* Utility allowance: the study against the executed schedule. */
   let same=0;const diff=[];
@@ -4050,9 +4102,12 @@ function requestSave(afterSave){
   if(total){const parts=[];if(mu.length)parts.push(mu.length+' revenue');if(mn.length)parts.push(mn.length+' non-revenue');if(ml.length)parts.push(ml.length+' non-Section 8');
     dialogConfirm('Delete '+total+' unit type'+(total>1?'s':'')+' with no unit count?','Saving will remove '+parts.join(', ')+' row'+(total>1?'s that have':' that has')+' entered data but no unit count. This cannot be undone after saving.','Save anyway',true,()=>saveNow(afterSave,firstZero));}
   else saveNow(afterSave,firstZero);}
-// New-property checklist default: all §8 boxes on except Scope of repair(2) & Scope of work(4),
-// applied as source 'new' (gray/unsaved) only when the property has never saved a checklist.
-function applyChecklistDefaults(){if(Object.keys(DBSNAP).some(k=>/^check\.\d+$/.test(k)))return;for(let i=0;i<17;i++)form=store.editForm(form,'check.'+i,(i===2||i===4)?'':'1');}
+/* The new-property default, applied as source 'new' (grey/unsaved) and only
+   when the property has never saved a checklist. checkSeed is the one rule -
+   see CHECK_CONDITIONAL. The count comes off CHECKLIST_FLAT rather than a
+   literal 17, because a list that grows and a loop that does not is how the
+   last item of a form goes quietly unset. */
+function applyChecklistDefaults(){if(Object.keys(DBSNAP).some(k=>/^check\.\d+$/.test(k)))return;for(let i=0;i<CHECKLIST_FLAT.length;i++)form=store.editForm(form,'check.'+i,checkSeed(i));}
 async function openForm(program){activeProgram=program||'RCS';_undoStack=[];_undoNR=[];_undoLI=[];_undoPR=[];_undoChain=[];_rcsUpload=null;_rsUpload=null;_rsArm=false;await mpdb.setActive(activePid);await refreshSnap();form=await store.fillForm();fixSavedToggles();applyChecklistDefaults();deriveUnits();snapForm();renderFormHeader();renderBody();show('Form');window.scrollTo(0,0);ensureHudSafmr({});}
 function renderFormHeader(){
   if(el('hdrProp'))el('hdrProp').textContent=(get('property.name')||'(unnamed property)');

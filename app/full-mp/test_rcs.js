@@ -16,7 +16,7 @@ const els={};
 global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>null,querySelectorAll:()=>[],createElement:()=>mk(),addEventListener(){},body:{classList:{toggle(){},contains(){return false;}}}};
 const fs=require('fs'),path=require('path'),os=require('os');
 
-const MIN_CHECKS=361;
+const MIN_CHECKS=383;
 let n=0,fails=0,verdict=null;
 const BAR='='.repeat(68);
 function fail(msg,err){
@@ -55,7 +55,7 @@ const _b=path.join(os.tmpdir(),'rcs_parse_test.'+process.pid+'.js');
 process.on('exit',()=>{try{fs.rmSync(_b,{force:true});}catch(e){}});
 fs.writeFileSync(_b,'function ocrHalf(b,p,skip){(globalThis.__HALF=globalThis.__HALF||[]).push({p:p,skip:(skip||[]).slice()});return Promise.resolve(null);}\n'
   +['templates.js','core.js','score.js','db.js','app.js','rcs.js'].map(x=>fs.readFileSync(path.join(_d,x),'utf8')).join('\n')
-  +'\nif(typeof module!=="undefined")Object.assign(module.exports,{__rsTextPageAt:rsTextPageAt,__rsTextPages:rsTextPages,__rsReadTextTier:rsReadTextTier,__rsTplAlign:rsTplAlign,__rsTplPremiseHolds:rsTplPremiseHolds,__rsFieldRects:rsFieldRects,__rsMapRects:rsMapRects,__rsBoxText:rsBoxText,__rsDropTplLabels:rsDropTplLabels,__rsTplRuns:rsTplRuns,__rsDropFormLines:rsDropFormLines,__rsFormLines:rsFormLines,__defUaSrc:defUaSrc,__defSafmrSrc:defSafmrSrc});\n');
+  +'\nif(typeof module!=="undefined")Object.assign(module.exports,{__rsTextPageAt:rsTextPageAt,__rsTextPages:rsTextPages,__rsReadTextTier:rsReadTextTier,__rsTplAlign:rsTplAlign,__rsTplPremiseHolds:rsTplPremiseHolds,__rsFieldRects:rsFieldRects,__rsMapRects:rsMapRects,__rsBoxText:rsBoxText,__rsDropTplLabels:rsDropTplLabels,__rsTplRuns:rsTplRuns,__rsDropFormLines:rsDropFormLines,__rsFormLines:rsFormLines,__defUaSrc:defUaSrc,__defSafmrSrc:defSafmrSrc,__checkSeed:checkSeed,__CHECK_CONDITIONAL:CHECK_CONDITIONAL,__CHECKLIST_FLAT:CHECKLIST_FLAT});\n');
 const app=require(_b);
 const R=global.window.RCSParse;
 const D_=_d+'/';
@@ -703,6 +703,102 @@ async function reader(file){
      opposite rule from the one the form applied. Nothing delivered was wrong,
      because one resolver was dead code and the other is only read as > 0, which
      is precisely why nobody noticed. These are the checks that were missing. */
+  /* ── the owner's checklist, item 14 ───────────────────────────────────────
+     Appendix 9-2-2 item 14 is "Copy of RCS Appraiser's License (only if relying
+     upon a temporary license)" - the one item HUD makes conditional in its own
+     printed wording. The app ticked it on every property, which certifies, under
+     the §1001 warning printed above the owner's signature, that a copy of a
+     temporary licence is enclosed when none was used.
+
+     Every line below is a line a real study prints. Three name a temporary
+     licence and 31 do not; measured over the whole corpus this reads exactly
+     Holly House and Hampshire House (Noble Tower's PDF will not open in pdf-lib
+     at all, so its letterhead is pinned here as text), and those two are
+     precisely the ones whose FILED checklists tick the item. */
+  console.log('\n─ the owner’s checklist, item 14 ─');
+  { const chkOf=lines=>{const S={},w=[];R._readChecklist(lines,S,w);return {v:S['check.14'],w:w};};
+
+    /* Holly House: the permit is named on the line above its number. */
+    eq('Holly House — a New Jersey temporary practice permit',
+      chkOf(['Aaron M. Zabel Rachel A Walsh','President Associate',
+             'New Jersey Temporary Practice Permit Illinois Associate Trainee',
+             'License No.: TP018-25 Appraiser No.:557.006570']).v,'1');
+    /* Hampshire House is why the window is TWO lines: the same phrase breaks
+       across a line, and the other column's text lands between its halves. */
+    eq('Hampshire House — the phrase broken across two lines',
+      chkOf(['New Jersey Temporary Visiting Illinois Associate Trainee',
+             'Practice Permit']).v,'1');
+    /* Noble Tower states it inline, and its appendix answers Yes. */
+    eq('Noble Tower — stated inline in the letterhead',
+      chkOf(['Andrew J. Van Hazinga, MAI',
+             'CA Temporary Certified General Appraiser License No. 3012633-001']).v,'1');
+    T('and the reader says a copy is required',
+      /copy of that licence belongs in the package/.test(chkOf(['CA Temporary Certified General Appraiser License No. 3012633-001']).w.join(' ')));
+
+    /* A permanent licence is not an answer of yes, and it is not an answer of
+       no either — the reader leaves the box exactly as it found it. */
+    eq('Walden — a permanent New York licence says nothing',
+      chkOf(['Aaron M. Zabel Rachel A Walsh','President Associate',
+             'License No.: 1553109 Appraiser No.:557.006570']).v,undefined);
+    eq('Marine Terrace — likewise',
+      chkOf(['License No.: 4600054504']).v,undefined);
+
+    /* The certification, Appendix 9-1-4 item 12. Ten studies answer No and one
+       answers Yes; the answer is part of the anchor. */
+    eq('Fairview Homes — the certification answers No',
+      chkOf(['Permanent License No: NJ# 42RG00253100 Issuing State: NJ Expires: December 31, 2020',
+             'Did you prepare the RCS under a temporary license? No If so, attach a copy of the temporary license.']).v,'');
+    eq('Noble Tower — the certification answers Yes',
+      chkOf(['Did you prepare the RCS under a temporary license? Yes If so, attach a copy of the temporary license.']).v,'1');
+    /* THE SAFE DEFAULT. The blank form prints the question with nothing after it,
+       and its own words say "temporary license" twice. Reading those words as a
+       signature block would tick the box on every study that carries the blank
+       form — the fault this function exists to end. Silence is not a yes. */
+    eq('an unanswered question leaves the box alone',
+      chkOf(['Did you prepare the RCS under a temporary license? If so, attach a copy of the temporary license.']).v,undefined);
+    eq('and the question’s own words are never read as a permit',
+      chkOf(['If so, attach a copy of the temporary license.']).v,undefined);
+
+    /* Two ordinary sentences from Noble Tower's own study, which co-occurrence
+       alone would have read as a temporary licence. */
+    eq('prose about units taken offline is not a licence',
+      chkOf(['of units were temporarily taken offline for renovations.',
+             'It is assumed that all required licenses, consents, or other legislative']).v,undefined);
+    eq('and a building permit is not a practice permit',
+      chkOf(['The temporary certificate of occupancy expired.','Building permits were pulled in 2019.']).v,undefined);
+    /* Noble Tower says it a second way, in prose, and that one is true. */
+    eq('“Temporarily licensed as” is read',
+      chkOf(['Temporarily licensed as a Certified General Real Estate Appraiser in California and in']).v,'1');
+  }
+
+  /* ── where each checklist item starts, and why ─────────────────────────────
+     TWO of the seventeen items are conditional. The old rule was a regex over
+     the LABEL text - /scope of repair/ OR /scope of work/ - which caught the one
+     item every study carries in the same net as a genuine conditional, and left
+     the actual conditional ticked. Both wrong, in opposite directions, because
+     nothing consulted the study. */
+  console.log('\n─ the checklist seed ─');
+  { const F=app.__CHECKLIST_FLAT, seed=app.__checkSeed;
+    eq('seventeen items',F.length,17);
+    eq('“Scope of repair” is conditional on repairs',F[2],'Scope of repair');
+    eq('and starts unticked',seed(2),'');
+    eq('“Scope of work” is item 4',F[4],'Scope of work');
+    /* All 34 studies in the corpus carry the section - Belfry heads it "Scope of
+       Assignment", which is why the literal phrase finds nothing - and HUD lists
+       it as required RCS material. It is not conditional. */
+    eq('and it starts TICKED, because every study carries the section',seed(4),'1');
+    eq('“Appraiser’s license copy (if temp)” is item 14',F[14],'Appraiser’s license copy (if temp)');
+    eq('and starts unticked, for the study to answer',seed(14),'');
+    eq('exactly two items are conditional',Object.keys(app.__CHECK_CONDITIONAL).sort(),['14','2']);
+    /* Fifteen items describe material every submission contains. */
+    eq('every other item starts ticked',
+      F.map((_,i)=>seed(i)).filter(v=>v==='1').length,15);
+    /* One rule, not two. The manifest tested the label and the new-property
+       default hardcoded (i===2||i===4); only the default is read at runtime, so
+       the two could disagree indefinitely without anything noticing. */
+    T('the seed rule is a function both callers share',typeof seed==='function');
+  }
+
   console.log('\n─ score.js answers the same as app.js ─');
   {
     const S=global.window.RCSScore;
