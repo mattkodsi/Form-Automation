@@ -16,7 +16,7 @@ const els={};
 global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>null,querySelectorAll:()=>[],createElement:()=>mk(),addEventListener(){},body:{classList:{toggle(){},contains(){return false;}}}};
 const fs=require('fs'),path=require('path'),os=require('os');
 
-const MIN_CHECKS=307;
+const MIN_CHECKS=324;
 let n=0,fails=0,verdict=null;
 const BAR='='.repeat(68);
 function fail(msg,err){
@@ -595,6 +595,56 @@ async function reader(file){
       T('and the page it needs is not skipped',globalThis.__HALF[0].skip.indexOf(1)<0);
     }
   }
+
+  /* ── a column gap the page draws by moving the pen ────────────────────────
+     Cornerstone's letter tables are laid out identically across the corpus, but
+     Acrobat emits them two ways. The Pines and Oaks on North Plaza put a whole
+     row in one TJ array, whose large kerning numbers the -200 rule above already
+     turns back into spaces. Shiloh Village and 333 Holly put each cell after its
+     own Td move, which shows no characters at all - so the row arrived as
+     "2 BR16940$1,830$1.95Y", every row pattern needs \s+ between the count and
+     the next column, and both studies read as ZERO unit types. Two whole
+     packages went unwritten over a missing space.
+
+     This fixture is the real thing: pages 1-4 of Shiloh Village's study, which
+     returns 0 unit types without the fix and 3 with it. */
+  console.log('\n─ a column gap drawn as a pen move is still a column gap ─');
+  { const sv=await R.readLetter(await reader(path.join(FIX,'cornerstone-shiloh-village.pdf')));
+    eq('the firm is read',sv.firm,'cornerstone');
+    eq('three unit types are read where there were none',sv.units.length,3);
+    eq('the first type keeps its spacing',sv.units[0].type,'2 BR');
+    eq('and its count is the count',sv.units[0].count,16);
+    eq('and its concluded rent is not welded to it',sv.units[0].proposed,1830);
+    eq('the second type reads',sv.units[1].type,'3 BR');
+    eq('with its count',sv.units[1].count,80);
+    eq('and its rent',sv.units[1].proposed,2235);
+    eq('the third type reads',sv.units[2].type,'4 BR');
+    eq('with its count',sv.units[2].count,72);
+    eq('and its rent',sv.units[2].proposed,2535);
+    /* The second and third tables on the same page must line up with the first,
+       or the allowance and the ceiling land on the wrong row. */
+    eq('the allowance follows the row it belongs to',sv.units[0].ua,102);
+    eq('and the printed SAFMR base too',sv.units[0].safmr_base,1590); }
+
+  /* And the boundary the width rule cannot judge. Golden Link draws "$1,580" as
+     "$1," then a pen move then "580", and that move is as wide as the moves
+     between its own cells - so a threshold alone split the figure into "$1, 580"
+     and the row read as 580 units. A thousands separator is never followed by a
+     space; adjacent numeric CELLS are, which is why the guard tests for a comma
+     and not merely for digits on both sides. */
+  console.log('\n─ and a thousands separator is not a column gap ─');
+  { const P=global.window.PDFLib;
+    const doc=await P.PDFDocument.load(new Uint8Array(fs.readFileSync(path.join(FIX,'cornerstone-golden-link.pdf'))),
+      {ignoreEncryption:true,throwOnInvalidObject:false});
+    const runs=await app.__rsTextPageAt(doc,1);
+    const rows={};
+    runs.forEach(r=>{const k=Math.round(r.y*2)/2;(rows[k]=rows[k]||[]).push(r);});
+    const line=Object.keys(rows).map(k=>rows[k].sort((x,y)=>x.x-y.x).map(r=>r.s).join(''))
+      .filter(s=>/^1 BR \/ 1 BA/.test(s))[0]||'';
+    T('the row is found',!!line);
+    T('the figure survives whole',line.indexOf('$1,580')>=0);
+    eq('and is not split at its comma',line.indexOf('$1, 580'),-1);
+    T('while the type and the count are still separated',/1 BA\s+30\b/.test(line)); }
 
   /* ── the page must print the form where the form prints it ────────────────
      Tier 2 reads values out of the blank template's field rectangles, so it is
