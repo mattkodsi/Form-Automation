@@ -1150,8 +1150,35 @@ function pocMatchRcs(){
    matching a row and building one must never disagree about what a line is.
    A shape the form has no word for returns '', and a line the form cannot
    express is a line it will not invent a row for. */
-function rcsBrOf(u){const b=u&&u.br;if(b==null||b==='')return '';const t=(Number(b)===0)?'Studio':(String(b)+'BR');return BR_OPTS.indexOf(t)>=0?t:'';}
+/* A studio arrives as the NUMBER 0 from rcs.js, and this used to assume that.
+   Given the string "Studio" it computed "StudioBR", found no such option and
+   returned '' -- and '' here does not mean "unknown", it means THIS LINE MATCHES
+   NO ROW, which is the silent drop that P4 below exists to catch. Defensive
+   rather than a fixed defect: no path in the app is known to put the string
+   there today. Cheap to hold anyway, because the cost of being wrong is a rent
+   that vanishes without a word. */
+function rcsBrOf(u){const b=u&&u.br;if(b==null||b==='')return '';
+  const raw=String(b).trim();
+  if(/^(studio|efficiency)$/i.test(raw))return 'Studio';
+  const t=(Number(b)===0)?'Studio':(String(b)+'BR');return BR_OPTS.indexOf(t)>=0?t:'';}
 function rcsBaOf(u){const b=u&&u.ba;if(b==null||b==='')return '';const t=String(b)+'BA';return BA_OPTS.indexOf(t)>=0?t:'';}
+/* THE LINES THE READER COULD NOT PLACE.
+   A study line with a figure on it but no usable bedroom count is invisible to
+   the matching below -- it is not a candidate, so the remaining line for that
+   bedroom count reads as the ONLY one, the count tiebreak never runs, and its
+   rent is written into every row of that shape. Sample Property's schedule came
+   out $2,550 short exactly that way: "IBR/1BA" (capital I) and "2BR /1BA"
+   (internal space) both failed to parse, so both 1BR rows took the other 1BR
+   line's $2,025 and both 2BR rows took $2,650. A parse miss became a wrong
+   number on a HUD form with nothing said.
+   The parser now understands 97 of the 98 priced lines in the corpus, so this is
+   the net under it rather than the fix -- the remaining one is a scanner's
+   misread, and there will always be a next one. */
+function rcsUnplaced(){
+  const p=_rcsUpload&&_rcsUpload.parsed;if(!p||!p.units)return [];
+  return p.units.filter(function(u){
+    if(rcsBrOf(u))return false;                       // placed, or placeable
+    return (u.proposed!==''&&u.proposed!=null)||(u.ua!==''&&u.ua!=null);});}
 function rcsMatch(i){
   const p=_rcsUpload&&_rcsUpload.parsed;if(!p||!p.units)return {u:null,many:false,all:[]};
   const br=String(get('units.'+i+'.br')||''),ba=String(get('units.'+i+'.ba')||'');
@@ -1176,6 +1203,19 @@ function rcsMatch(i){
       if(byIx.length===1)return {u:p.units[byIx[0]],many:false,by:'count',idx:byIx[0],all:ix};
     }
     return {u:null,many:true,types:hit.map(function(u){return u.type;}),all:ix};
+  }
+  /* One candidate looks unanimous -- unless a line the reader could not place
+     states THIS ROW'S unit count, in which case the study prices two types for
+     this shape and we cannot tell which is which. The unit count is the only
+     thing both documents state independently, which is why it is the test here
+     as well as in the tiebreak above. Ambiguous, so the form asks. */
+  if(hit.length===1){
+    const n=numf(get('units.'+i+'.num_units'));
+    if(n>0){
+      const un=rcsUnplaced().filter(function(u){return u.count!==''&&u.count!=null&&Number(u.count)===n;});
+      if(un.length)return {u:null,many:true,unplaced:true,
+        types:hit.map(function(u){return u.type;}).concat(un.map(function(u){return String(u.type||'').trim()||'an unreadable line';})),
+        all:ix};}
   }
   return {u:hit[0]||null,many:false,idx:ix.length?ix[0]:-1,all:ix};
 }
@@ -1406,6 +1446,17 @@ function rcsChecks(){
   const P=_rcsUpload&&_rcsUpload.parsed;if(!P)return '';
   const out=[];const M=v=>'$'+Number(v).toLocaleString('en-US');
   const lab=i=>esc(get('units.'+i+'.br')||('row '+(i+1)));
+
+  /* A priced line the reader could not place is the study telling us about a
+     unit type we did not manage to read. Silence there is the worst outcome,
+     because the rows it belongs to will look confidently filled from another
+     line -- see rcsUnplaced. */
+  { const un=(typeof rcsUnplaced==='function')?rcsUnplaced():[];
+    if(un.length)out.push(chk('warn','The study prices a unit type we could not read',
+      un.length+' priced line'+(un.length===1?'':'s')+' in the study '
+      +(un.length===1?'gives':'give')+' no readable bedroom count \u2014 '
+      +un.map(function(u){return '\u201c'+esc(String(u.type||'').trim()||'(blank)')+'\u201d';}).join(', ')
+      +'. Check every proposed rent against the study by hand: a line we cannot place cannot be matched to a row.')); }
 
   /* The Section 8 number, across every document that carries one. Belfry
      prints it under an "FHA Project No." label and Riverside Gardens's own grid
@@ -2345,7 +2396,36 @@ function rsFillFromParsed(){const P=_rsUpload&&_rsUpload.parsed;if(!P)return;
          of an untouched cell and could not be saved at all. */
       if(get('nonrev.'+ix+'.num_units')===''){form=store.editForm(form,'nonrev.'+ix+'.num_units','1');mark('nonrev.'+ix+'.num_units');}});}
   _rsFill=fillRecord(_rsUpload,_wrote);
-  deriveUnits();renderBody();scheduleHudRefresh();scheduleFactorRefresh();
+  deriveUnits();
+  /* THE SCHEDULE OWNS THE ROSTER, SO THE STUDY MUST BE RE-READ AGAINST IT.
+     rcsMatch looks a row up by its bedrooms and baths, which means one study
+     line can price SEVERAL rows -- a study that quotes one figure for "all
+     1BR" fills both 1BR variants on the schedule. But it can only do that for
+     rows that already exist: on an empty form every study line is homeless, so
+     the study BUILDS the roster, one row per line. Apply the schedule after
+     that and the loop above writes units.0..N positionally straight over those
+     rows, and the study's proposed rents stay where they were put.
+
+     Measured, real, and the shape Matt found independently: a study with two
+     lines (all studios, all one-bedrooms) against a schedule with four rows
+     (two studio variants, two 1BR variants) leaves the one-bedroom figure
+     sitting on the SECOND STUDIO. Across the corpus this order-dependence
+     moved Sample Property's total contract rent by $143,950 between the two
+     orders, on the document that goes to HUD.
+
+     So once the schedule has laid down the real roster, the study is read
+     again against it. Only when the study was ALREADY applied -- re-running it
+     here otherwise would apply a document the user has not asked for, and the
+     two Apply buttons are deliberately separate. setk still declines every
+     cell the schedule offers, so this cannot walk back anything the schedule
+     just wrote; it only moves the study's own values onto the right rows.
+     This is the rule the precedence comment above already states: the order
+     the two documents happen to be uploaded in cannot change the result. */
+  if(_rcsFill&&_rcsUpload&&_rcsUpload.parsed){
+    rcsFillFromParsed();   // renders, and reports its own count
+    setStatus('Form filled from the executed rent schedule, and the RCS study re-read against its unit types \u2014 review the highlighted values, then \u201cUpdate property profile\u201d.');
+    return;}
+  renderBody();scheduleHudRefresh();scheduleFactorRefresh();
   setStatus('Form filled from the executed rent schedule \u2014 review the highlighted values, then \u201cUpdate property profile\u201d.');}
 /* A fill is remembered against the FILE it came from, so replacing the
    document — or opening another property — leaves nothing behind claiming a
@@ -5131,7 +5211,7 @@ __rcsFill:()=>rcsFillFromParsed(),/* The same door for the rent schedule. Fillin
   /* The whole ladder, on real bytes: which tier answered, and with what. The
      only way to ask that question of a document without a Supabase session. */
   __parseRsPdf:(by,onStep)=>parseRsPdf(by,onStep),
-  __rsFill:()=>rsFillFromParsed(),__UNITS:()=>UNITS.slice(),__moneySrcRows:(k)=>moneySrcRows(k),__rcsChecks:()=>rcsChecks(),__rcsTag:(k)=>rcsTag(k),__rsTag:(k)=>rsTag(k),__srcTags:(k)=>srcTags(k),__rcsFillKeys:()=>rcsFillKeys(),__rcsMatch:(i)=>rcsMatch(i),__rcsOf:(k)=>rcsOf(k),
+  __rsFill:()=>rsFillFromParsed(),__UNITS:()=>UNITS.slice(),__moneySrcRows:(k)=>moneySrcRows(k),__rcsChecks:()=>rcsChecks(),__rcsTag:(k)=>rcsTag(k),__rsTag:(k)=>rsTag(k),__srcTags:(k)=>srcTags(k),__rcsFillKeys:()=>rcsFillKeys(),__rcsMatch:(i)=>rcsMatch(i),__rcsBrOf:(u)=>rcsBrOf(u),__rcsUnplaced:()=>rcsUnplaced(),__rcsOf:(k)=>rcsOf(k),
   /* The undo run. __editCell is the text box's input handler in miniature —
      push the cell, then write it the way that handler does — so a suite can
      build a run of edits without synthesising DOM events. */
