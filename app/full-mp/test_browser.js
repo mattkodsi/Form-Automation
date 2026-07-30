@@ -35,7 +35,7 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=346;   // 2026-07-29: +12 — three zones: the past-due drawer closed on arrival, and
+const MIN_CHECKS=356;   // 2026-07-29: +12 — three zones: the past-due drawer closed on arrival, and
                         // opening it without moving the panel below (measured in a real layout).
                         // 2026-07-29: -3 — the rail's eight rows became the strip's five figures.
                        // 2026-07-28: +35 — the home page's filter rail, driven by real clicks.
@@ -2300,6 +2300,37 @@ const FULL=process.argv.includes('--full');
       }
       await c.send('Emulation.clearDeviceMetricsOverride');
       await sleep(240);
+
+      /* ---- the dialogs are on the system too ----
+         One dialog was in the new look and eight were in the old, and the eight are
+         reached from pages that are entirely new. Promoting .dialog.desk to .dialog
+         fixed the shell; what this asserts is that each dialog's CONTENTS came with
+         it, because a shared shell is exactly the thing that makes you stop looking
+         at what is inside it. Radii from the three the system has, one typeface, one
+         primary action, and it fits on the screen. */
+      const dlgAudit=()=>c.eval(`const d=document.getElementById('dialog');
+        const b=d.getBoundingClientRect(),R=new Set(),F=new Set();
+        d.querySelectorAll('*').forEach(e=>{const s=getComputedStyle(e);
+          if(s.borderTopLeftRadius!=='0px')R.add(s.borderTopLeftRadius);
+          F.add(s.fontFamily.split(',')[0].replace(/"/g,''));});
+        return {open:document.getElementById('scrim').classList.contains('open'),
+          radii:[...R],fonts:[...F],
+          prim:d.querySelectorAll('.btn.p,.btn.danger').length,
+          fits:b.top>=-1&&b.bottom<=window.innerHeight+1};`);
+      const ALLOWED=['4px','8px','999px','50%'];
+      for(const [open,name] of [
+        ['document.getElementById("bNewProperty").click()','New property'],
+        ['document.getElementById("menuWho").click()','the portfolio picker']]){
+        await c.eval(open+';return 1'); await sleep(380);
+        const a=await dlgAudit();
+        eq(name+' opens',a.open,true);
+        eq('and uses only the radii the system has',a.radii.filter(r=>ALLOWED.indexOf(r)<0),[]);
+        eq('and one typeface',a.fonts,['IBM Plex Sans']);
+        T('and offers at most one primary action',a.prim<=1);
+        T('and fits on the screen',a.fits);
+        await c.eval('document.getElementById("scrim").classList.remove("open");return 1');
+        await sleep(160);
+      }
 
       /* Whose portfolio you are reading is one control now, and changing it
          releases the band — the bands are not the same shape for one manager

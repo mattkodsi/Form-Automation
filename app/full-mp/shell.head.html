@@ -793,32 +793,20 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
 #viewMenu .mempty.win0{margin-bottom:40px}
 #viewMenu .mgrid.rows{margin-bottom:0}
 #viewMenu .mgrid.rows.live{margin-bottom:48px}
-/* the live row: the name leads and says what the package is, the columns are
-   programme, countdown, size, action — as in the mockup */
-#viewMenu .mgrid.rows.live .pcard{grid-template-columns:minmax(0,1fr) 90px 130px 110px 150px;
-  padding:0 22px}
-#viewMenu .mgrid.rows.live .pc-body{grid-column:1/5;column-gap:24px;
-  grid-template-columns:minmax(0,1fr) 90px 130px 110px;padding:16px 0}
-/* .pc-units and .pc-prog live inside .pc-foot, so they cannot be placed in the
-   row's grid while the footer is a box. display:contents dissolves the box and
-   lets each fact take its own column. */
+/* the live row: the SAME table as the ledger, said louder.
+   It used to have its own narrower grid and no column headers, which meant the
+   prominent panel carried LESS than the quiet one under it — four facts against
+   five — and the fifth, the date the rents change, had to be hidden outright
+   because there was no column for it and it overprinted the unit count. A panel
+   that leads the page cannot hold less than the table it leads. So: identical
+   columns, its own header row, and the emphasis carried entirely by type and by
+   the solid action button. */
 #viewMenu .mgrid.rows .pc-foot{display:contents}
-#viewMenu .mgrid.rows.live .pc-name{font-size:17px;font-weight:600;letter-spacing:-.015em}
-#viewMenu .mgrid.rows.live .pc-meta{font-size:12.5px}
-#viewMenu .mgrid.rows.live .pc-due{grid-column:3;grid-row:1/3;font-size:13px;
-  font-weight:600;color:var(--stamp);white-space:nowrap}
-#viewMenu .mgrid.rows.live .pc-prog{grid-column:2;grid-row:1/3;justify-self:start}
-#viewMenu .mgrid.rows.live .pc-prog{background:none;color:var(--i3);font-size:10.5px;
-  letter-spacing:.09em;padding:0}
-#viewMenu .mgrid.rows.live .pc-units{grid-column:4;grid-row:1/3;justify-self:end;
-  font-size:13px;color:var(--i2);white-space:nowrap}
-#viewMenu .mgrid.rows.live .pc-act{grid-column:5}
-/* Hidden HERE and only here. The live panel carries no column headers, so a
-   second bare date beside the countdown read as part of it — "Jul 31 · 1 day
-   left   Oct 31" with nothing saying which was which, and on a narrow name it
-   overprinted the unit count outright ("Jan 1, 2027" over "51 units"). The panel
-   is about the deadline; the ledger below prints both dates under labels. */
-#viewMenu .mgrid.rows.live .pc-eff{display:none}
+#viewMenu .mgrid.rows.live .pcard{padding:0 18px}
+#viewMenu .mgrid.rows.live .pc-body{padding:19px 0}
+#viewMenu .mgrid.rows.live .pc-name{font-size:16px;font-weight:600;letter-spacing:-.015em}
+#viewMenu .mgrid.rows.live .pc-due{font-size:13px;font-weight:600;white-space:nowrap}
+#viewMenu .mgrid.rows.live .pc-eff,#viewMenu .mgrid.rows.live .pc-units{font-size:13px}
 #viewMenu .mgrid.rows.live .pc-act .btn{min-height:40px;padding:0 18px;font-size:13px;
   font-weight:600;border-radius:var(--r-ctl);background:#101d2b;border-color:#101d2b;
   letter-spacing:0;text-transform:none}
@@ -1296,26 +1284,112 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
 #viewLauncher .soonchip{background:none;border:1px solid var(--ln);border-radius:999px;
   color:var(--i4);font-size:9.5px;font-weight:600;letter-spacing:.1em;padding:2px 9px}
 
-/* ---- THE PORTFOLIO PICKER ----
-   Scoped to .dialog.desk, not .dialog: the generic dialog is shared with the
-   form, which is not part of this overhaul. pickWhoDialog asks modal() for the
-   class; every other dialog keeps the look it has. */
-.dialog.desk{font-family:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+/* ================= DIALOGS =================
+   Promoted from .dialog.desk to .dialog. The picker was scoped so it would not
+   drag the form's dialogs along with it, but that left ONE dialog in the new
+   system and eight in the old — and the eight are reached from pages that are
+   entirely new, so the seam showed on every one of them. Two dialog styles in one
+   app is worse than one, and the form's overhaul would want this look regardless.
+   `.desk` survives as a no-op alias so modal(html,'desk') keeps working.
+
+   Every part below existed already and was styled for the old chrome. What is new
+   here is only the token pass: three radii, the desk palette, IBM Plex, tabular
+   figures, and one primary button per dialog. */
+.scrim{background:rgba(16,24,34,.44);padding:24px}
+.dialog{font-family:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,sans-serif;
   font-variant-numeric:tabular-nums;background:var(--card);color:var(--i2);
   border:1px solid var(--ln);border-radius:var(--r-card);
-  box-shadow:0 20px 56px rgba(16,24,34,.24);padding:22px 24px;width:420px}
-.dialog.desk .dlg-t{font-size:17px;font-weight:600;color:var(--i1);letter-spacing:-.01em}
-.dialog.desk .lh-note{font-size:12.5px;color:var(--i3);line-height:1.6;margin-top:7px}
-.dialog.desk .wholist{max-height:264px;overflow:auto;border:1px solid var(--ln);
-  border-radius:var(--r-ctl);background:var(--sunk);padding:4px}
-.dialog.desk .uaopt{padding:9px 11px;border-radius:var(--r-ctl);font-size:13px;color:var(--i2)}
-.dialog.desk .uaopt:hover{background:var(--card);color:var(--i1)}
-.dialog.desk .uaopt.cur{font-weight:600;color:var(--i1);background:var(--card)}
-.dialog.desk .uaopt .uasub{display:inline;margin-left:8px;font-size:11px;
-  font-weight:400;color:var(--i4)}
-.dialog.desk .btn{border-radius:var(--r-ctl);border-color:var(--ln);background:var(--card);
-  color:var(--i2);font-weight:600}
-.dialog.desk .btn:hover{background:var(--sunk)}
+  box-shadow:0 20px 56px rgba(16,24,34,.24);padding:22px 24px;width:440px}
+.dialog.pkg{width:680px}
+.dialog .dlg-t{font-size:17px;font-weight:600;color:var(--i1);letter-spacing:-.01em}
+/* The subtitle under a title, and the body of a confirm. Same voice, so the same
+   type: it was 11.5px grey in one place and 13px in the other. */
+.dialog .dlg-sub,.dialog .dlg-b,.dialog .lh-note{font-size:12.5px;color:var(--i3);
+  line-height:1.6;margin-top:7px}
+.dialog .dlg-field{margin-top:16px}
+/* `>` and nothing looser. A dialog's field CAPTION is a direct child of
+   .dlg-field; the <label> elements nested inside it are radio cards and checkbox
+   rows, whose own rules set font-size, weight and colour but NOT text-transform or
+   letter-spacing — so a descendant selector here left those two leaking through and
+   shouted "MARKET RESET", "A RENT COMPARABILITY STUDY SETS THE RENTS" and "UAF —
+   REVISE THE UTILITY ALLOWANCES" in caps. The two properties nobody overrides are
+   exactly the two that must not be inherited. */
+.dialog .dlg-field>label{font-size:11px;font-weight:600;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--i4);margin-bottom:7px}
+/* A label that WRAPS A CONTROL is a row, not a caption — the UAF checkbox is a
+   direct child of its field and so was caught by the rule above. This is the
+   general shape of that mistake rather than a patch for one class: a caption
+   labels something else, a row contains it. */
+.dialog .dlg-field>label:has(input),
+.dialog .dlg-field label label{text-transform:none;letter-spacing:normal}
+.dialog .dlg-field input,.dialog .dlg-field select{font-size:13.5px;
+  padding:10px 12px;border:1px solid var(--ln);border-radius:var(--r-ctl);
+  background:var(--card);color:var(--i1)}
+.dialog .dlg-field input:focus,.dialog .dlg-field select:focus{
+  border-color:var(--i2);box-shadow:0 0 0 3px rgba(31,84,128,.13)}
+.dialog .dlg-hint{font-size:11.5px;color:var(--i4);margin-top:6px;line-height:1.45}
+.dialog .dlg-row{margin-top:22px;gap:10px}
+/* One primary per dialog, in the masthead's navy — the same weight the page gives
+   "Start 2026", because these are the same kind of commitment. */
+.dialog .btn{border-radius:var(--r-ctl);border:1px solid var(--ln);background:var(--card);
+  color:var(--i2);font-weight:600;font-size:12.5px;padding:8px 14px}
+.dialog .btn:hover:not(:disabled){background:var(--sunk);color:var(--i1)}
+.dialog .btn.p{background:#101d2b;border-color:#101d2b;color:#fff}
+.dialog .btn.p:hover:not(:disabled){background:var(--ledger);border-color:var(--ledger);color:#fff}
+.dialog .btn.danger,.dialog .btn.d{background:var(--stamp);border-color:var(--stamp);color:#fff}
+.dialog .btn.danger:hover:not(:disabled),.dialog .btn.d:hover:not(:disabled){
+  background:#7f2313;border-color:#7f2313;color:#fff}
+.dialog .btn:disabled{background:var(--sunk);border-color:var(--ln-soft);color:var(--i4);cursor:default}
+/* Lists inside a dialog: the picker's own, the RA-property list on New property,
+   and the record list the dev sweep shows. One sunk well, one control radius. */
+.dialog .wholist,.dialog #srcList,.dialog .olist{max-height:264px;overflow:auto;
+  border:1px solid var(--ln);border-radius:var(--r-ctl);background:var(--sunk);padding:4px}
+.dialog .uaopt{padding:9px 11px;border-radius:var(--r-ctl);font-size:13px;color:var(--i2)}
+.dialog .uaopt:hover{background:var(--card);color:var(--i1)}
+.dialog .uaopt.cur,.dialog .uaopt.sel{font-weight:600;color:var(--i1);background:var(--card)}
+.dialog .uaopt .uasub{display:inline;margin-left:8px;font-size:11px;font-weight:400;color:var(--i4)}
+.dialog .orow{border-radius:var(--r-ctl);padding:8px 11px;font-size:12.5px;color:var(--i2)}
+.dialog .orow+.orow{border-top:1px solid var(--ln-soft)}
+.dialog .orow span{color:var(--i4)}
+/* The programme cards on Start new package. Their own rules predate the desk
+   palette and set neither weight nor colour on the description, so it inherited
+   the caption's 600 and read as emphasis on a sentence that is explaining, not
+   asserting. */
+.dialog .cyc-tag{border-radius:var(--r-ctl);background:var(--sunk);color:var(--i3);
+  font-weight:600;letter-spacing:.06em}
+.dialog .cypg:has(input:checked) .cyc-tag{background:#101d2b;color:#fff}
+.dialog .cyc-n{color:var(--i1);font-weight:600;font-size:13.5px}
+.dialog .cyc-s{color:var(--i3);font-weight:400;font-size:11.5px;line-height:1.45}
+.dialog .cypg{border-radius:var(--r-ctl);border-color:var(--ln)}
+.dialog .cypg:has(input:checked){border-color:var(--i2);background:var(--sunk)}
+.dialog .cyopt,.dialog .cyaddl{border-radius:var(--r-ctl);border-color:var(--ln)}
+.dialog .cyaddl{font-size:12.5px;font-weight:400;color:var(--i2)}
+.dialog .cyaddl b{font-weight:600;color:var(--i1)}
+/* ---- the package modals ----
+   showPackageModal and showOcafUafModal. Styled from their markup and the CSS they
+   already carried rather than from a screenshot: reaching them needs a letterhead
+   the probe could not make the form accept, so this pass is a token conversion of
+   the parts they use and NOT a visual sign-off. Their radii were 9 and 11px, which
+   is two more than the system has.
+   Radii: the three allowed. Palette: the desk. The primary keeps the masthead's
+   navy so "Generate" reads with the same weight as "Start 2026" on the list. */
+.dialog .gdocs{gap:6px;margin-top:18px}
+.dialog .gdoc{border-radius:var(--r-ctl);min-height:44px;padding:10px 14px;
+  font-size:13px;color:var(--i2)}
+.dialog .gnote{font-size:12.5px;line-height:1.55;color:var(--stamp)}
+.dialog .gprim{border-radius:var(--r-ctl);background:#101d2b;color:#fff;
+  padding:14px 16px;margin-top:18px}
+.dialog .gprim:hover{background:var(--ledger)}
+.dialog .gprim-t{font-size:14px;font-weight:600}
+.dialog .gprim-s{font-size:12px;color:rgba(255,255,255,.70);margin-top:3px}
+.dialog .gpair{gap:10px}
+.dialog .gsub{font-size:12.5px;color:var(--i3)}
+.dialog .gshort{font-size:12px;color:var(--i3);border-bottom:1px dotted var(--ln)}
+.dialog .gshort:hover,.dialog .gshort:focus-visible{color:var(--i1);border-bottom-color:var(--i4)}
+.dialog .gpop-in{background:var(--card);border-color:var(--ln);border-radius:var(--r-card)}
+.dialog .gpf{border-radius:var(--r-ctl)}
+.dialog .gpf-n{color:var(--i1);font-weight:600}
+.dialog .gpf-w{color:var(--i3)}
 </style></head>
 <body>
  <!-- ===================== SIGN IN ===================== -->
