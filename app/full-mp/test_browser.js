@@ -35,7 +35,9 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=341;   // 2026-07-30: +8 — every box, repainted, keeps the colour the render gave it (M62, plan phase 3d).
+const MIN_CHECKS=354;   // 2026-07-30: the union of two branches, counted off a real run —
+                       // 341 (M61 reload + M62 repaint) plus tab-order’s 13 (Tab walks the
+                       // columns in reading order, and a dropdown you land on says so).
                        // 2026-07-28: +35 — the home page's filter rail, driven by real clicks.
                        // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
                        // pristine (three seeds, two checks each). 2026-07-27: the unit-type cell
@@ -2347,6 +2349,161 @@ const FULL=process.argv.includes('--full');
       eq('switching the lens re-resolves the view',
         await c.eval('return window.__t.__menuView()'),'needs');
     }
+
+    /* ── Tab walks the form the way the form is read ────────────────────────
+       The two-column sections used to be emitted row by row, so Tab crossed the
+       page after every field: name, entity, alias, entity type, address, S8 #.
+       Fifty-two of the form's stops landed somewhere other than where the eye
+       had just been. They are emitted column by column now, and these checks are
+       the guard on that — walked with real Tab presses, because DOM order is
+       only a claim about focus order until a key proves it.
+
+       And a stop you cannot see is a stop you cannot use: 43 of the 83 dropdown
+       triggers suppressed the browser's own focus ring and drew nothing in its
+       place, so half the tab order was invisible. The ring is measured here, not
+       eyeballed — on which element it lands, what box it occupies, and whether
+       it reads against every colour provenance paints underneath it. */
+    await openForm();
+    const TABKIT=`window.__k={
+      trail:[],rec:null,
+      id(e){
+        if(!e||e===document.body)return 'BODY';
+        const g=n=>e.getAttribute?e.getAttribute(n):null;
+        if(e.classList&&e.classList.contains('uatrigger')){
+          const cell=e.closest('[data-box]');
+          return '\\u25be '+(g('data-trigfor')||(cell&&cell.getAttribute('data-box'))||'?');}
+        const k=g('data-k')||g('data-cb')||g('data-wibox')||g('data-fuel')||g('data-fuel3');
+        if(k)return k;
+        return (e.id?'#'+e.id:e.tagName+'.'+String(e.className||'').split(' ')[0]);},
+      /* the boundary between the two grid tracks, read off the grid itself —
+         a guessed midpoint is not where 'calc(50% - 23px) 1fr' actually splits */
+      bound(cols){const cs=getComputedStyle(cols);const t=cs.gridTemplateColumns.split(' ').map(parseFloat);
+        return cols.getBoundingClientRect().left+t[0]+(parseFloat(cs.columnGap)||0)/2;},
+      snap(e){
+        const card=e.closest?e.closest('.card'):null,cols=e.closest?e.closest('.cols'):null;
+        const r=e.getBoundingClientRect();
+        return {id:this.id(e),
+          card:card?((card.querySelector('.ctitle')||{}).textContent||''):'',
+          col:cols?(r.left<this.bound(cols)?0:1):-1,
+          trig:!!(e.classList&&e.classList.contains('uatrigger')),
+          shadow:getComputedStyle(e).boxShadow,
+          y:Math.round(r.top+window.scrollY)};},
+      start(sel){
+        if(!this.rec){this.rec=ev=>{try{this.trail.push(this.snap(ev.target));}catch(_e){}};
+          document.addEventListener('focusin',this.rec);}
+        if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
+        this.trail=[];const e=document.querySelector('#viewForm '+sel);if(!e)return 0;
+        e.focus();return this.trail.length;},
+      read(){return this.trail;},
+      /* Which element GAINED a box-shadow when this stop took focus, and how its
+         box compares with the trigger's, with the .uadrop's, and with the cell's.
+         A shadow that is always there — the drop-shadow under .uamenu — is not a
+         focus indicator, so the only honest test is the difference. */
+      ring(){
+        const a=document.activeElement;if(!a)return null;
+        const R=e=>{const b=e.getBoundingClientRect();
+          return {x:+b.left.toFixed(2),y:+b.top.toFixed(2),w:+b.width.toFixed(2),h:+b.height.toFixed(2)};};
+        const cell=a.closest('[data-box]'),drop=a.closest('.uadrop');
+        const cands=[a,drop,cell].filter(Boolean),names=['trigger','uadrop','cell'];
+        const on=cands.map(e=>getComputedStyle(e).boxShadow);
+        const skin=cell?[getComputedStyle(cell).backgroundColor,getComputedStyle(cell).borderLeftColor]:null;
+        a.blur();
+        const off=cands.map(e=>getComputedStyle(e).boxShadow);
+        const skinOff=cell?[getComputedStyle(cell).backgroundColor,getComputedStyle(cell).borderLeftColor]:null;
+        a.focus({preventScroll:true});
+        let owner=null;
+        for(let i=0;i<cands.length;i++)if(on[i]!==off[i]){owner={which:names[i],shadow:on[i],rect:R(cands[i])};break;}
+        return {owner,trigger:R(a),drop:drop?R(drop):null,cell:cell?R(cell):null,
+          skinHeld:JSON.stringify(skin)===JSON.stringify(skinOff)};},
+      top(box){const e=document.querySelector('[data-box="'+box+'"]');
+        return e?Math.round(e.getBoundingClientRect().top+window.scrollY):null;},
+      /* WCAG relative luminance, so "can you see it on that background" is a
+         number rather than an opinion */
+      contrast(a,b){const L=c=>{const p=c.match(/[\\d.]+/g).slice(0,3).map(v=>{v=+v/255;
+          return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4);});
+          return 0.2126*p[0]+0.7152*p[1]+0.0722*p[2];};
+        const x=L(a),y=L(b);return +(((Math.max(x,y)+0.05)/(Math.min(x,y)+0.05)).toFixed(2));}
+    };return 1;`;
+    await c.eval(TABKIT);
+
+    const cleanBefore=await c.eval('return window.__t.isDirty()');
+    await c.eval('return window.__k.start(\'input[data-k="property.name"]\')');
+    for(let i=0;i<236;i++)await c.key('Tab',{wait:5});
+    let walk=await c.eval('return window.__k.read()');
+    const _wrap=walk.findIndex((t,i)=>i>0&&t.id===walk[0].id);
+    if(_wrap>0)walk=walk.slice(0,_wrap);
+    console.log(`\n── Tab order: ${walk.length} stops walked with real Tab presses ──`);
+
+    /* A stop's y is not its row — a 36px trigger beside a 34px input starts a
+       pixel higher — so cluster before comparing. */
+    const rowOf=items=>{const ys=[...new Set(items.map(t=>t.y))].sort((a,b)=>a-b),band=[];
+      ys.forEach(y=>{if(band.length&&y-band[band.length-1][band[band.length-1].length-1]<=20)band[band.length-1].push(y);else band.push([y]);});
+      const ix={};band.forEach((b,i)=>b.forEach(y=>{ix[y]=i;}));return ix;};
+    const bySec={};walk.forEach(t=>{if(t.col>=0)(bySec[t.card]=bySec[t.card]||[]).push(t);});
+    const crossedBack=[],wentUp=[];
+    Object.keys(bySec).forEach(sec=>{const items=bySec[sec],ix=rowOf(items);
+      let right=false,lastCol=items[0].col,lastRow=-1;
+      items.forEach(t=>{
+        if(t.col===1)right=true;
+        else if(right)crossedBack.push(sec+' → '+t.id);
+        if(t.col!==lastCol){lastCol=t.col;lastRow=-1;}
+        if(ix[t.y]<lastRow)wentUp.push(sec+' → '+t.id);
+        lastRow=Math.max(lastRow,ix[t.y]);});});
+    eq('Tab finishes a section’s left column before it crosses to the right',crossedBack,[]);
+    eq('and inside a column it only ever moves down the page',wentUp,[]);
+
+    const PROPERTY=['property.name','▾ property.name','tenant.property_alias',
+      'property.addr_street','property.addr_city','▾ property.addr_state','property.addr_zip',
+      '▾ property.addr','owner.entity_name','▾ owner.entity_name','▾ owner.entity_type',
+      'property.s8','▾ property.s8','property.fha','▾ property.fha'];
+    eq('the Property section, stop by stop, in the order Tab visits it',
+      walk.filter(t=>t.card==='Property').map(t=>t.id),PROPERTY);
+
+    await c.eval('return window.__k.start(\'[data-box="property.fha"] .uatrigger\')');
+    for(let i=0;i<PROPERTY.length-1;i++)await c.key('Tab',{wait:5,modifiers:8});
+    const back=(await c.eval('return window.__k.read()')).map(t=>t.id);
+    eq('and Shift-Tab retraces it exactly backwards',back,PROPERTY.slice().reverse());
+
+    /* Emitting by column must not unstack the grid: the two columns still share
+       their rows, so a cell that grows still carries its neighbour down. */
+    const tops=await c.eval('return [window.__k.top("property.name"),window.__k.top("owner.entity_name"),'
+      +'window.__k.top("property.addr"),window.__k.top("property.s8")]');
+    eq('the two columns still share their rows',[tops[0]===tops[1],tops[2]===tops[3]],[true,true]);
+
+    /* ── the ring on a focused dropdown ─────────────────────────────────── */
+    await c.eval('return window.__k.start(\'input[data-k="property.name"]\')');
+    await c.key('Tab',{wait:60});
+    const ring=await c.eval('return window.__k.ring()');
+    const near=(a,b)=>Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y),Math.abs(a.w-b.w),Math.abs(a.h-b.h));
+    T('a Tab onto a source chooser paints a ring that was not there before',!!(ring&&ring.owner));
+    eq('and paints it on the trigger, not on the wrapper or the whole cell',
+      ring.owner&&ring.owner.which,'trigger');
+    T('so the ring’s box IS the trigger’s box, to the pixel',
+      ring.owner&&near(ring.owner.rect,ring.trigger)<=1&&near(ring.trigger,ring.drop)<=1);
+    T('and it stays inside the cell provenance colours',
+      ring.owner&&ring.owner.rect.x>=ring.cell.x&&ring.owner.rect.y>=ring.cell.y
+      &&ring.owner.rect.x+ring.owner.rect.w<=ring.cell.x+ring.cell.w
+      &&ring.owner.rect.y+ring.owner.rect.h<=ring.cell.y+ring.cell.h);
+    T('and leaves those colours exactly as it found them',!!(ring&&ring.skinHeld));
+    const dark=walk.filter(t=>t.trig&&!/inset/.test(t.shadow)).map(t=>t.id);
+    console.log(`  (${walk.filter(t=>t.trig).length} of the ${walk.length} stops are dropdowns)`);
+    eq('every dropdown the walk stopped on carries that same ring',dark,[]);
+    /* Reads back the ring's own colour rather than the constant in the
+       stylesheet, and returns nothing at all when there is no ring — a throw
+       here would end the run before the checks below it, and a suite that dies
+       tells you less than a suite that says which line is red. */
+    const con=await c.eval('const r=window.__k.ring();const s=r&&r.owner&&r.owner.shadow;'
+      +'const m=s&&s.match(/rgba?\\([^)]*\\)/);if(!m)return [];const col=m[0];'
+      +'return ["#e8f0fe","#e9f5f2","#fbf1e6","#f6f7f9","#ffffff"].map(h=>{const n=parseInt(h.slice(1),16);'
+      +'return window.__k.contrast(col,"rgb("+[(n>>16)&255,(n>>8)&255,n&255].join(",")+")");});');
+    T('and reads against all five provenance backgrounds'
+      +(con.length?' ('+con.join(', ')+':1)':' \u2014 but there is no ring to measure'),
+      con.length===5&&Math.min.apply(null,con)>=3);
+
+    /* Tab clears _pending by design (see the document keydown handler); what it
+       must never do is leave an edit behind. */
+    eq('and a walk through the whole form with Tab leaves it clean',
+      [cleanBefore,await c.eval('return window.__t.isDirty()')],[false,false]);
 
     console.log('\n── the console stayed quiet ───────────────────────────');
     eq('no console errors and no uncaught exceptions',c.logs.slice(0,3),[]);

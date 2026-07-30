@@ -588,10 +588,21 @@ function mgmtCell(){const src=get('tenant.mgmt_source')||'property';const propHa
   // mirroring the property address: report that address's record, since that is what prints
   const ovSrc=srcOf('tenant.mgmt_source')==='overridden';const c=ovSrc?CLR.overridden:groupColors(ADDR);
   return '<div class="field"><div class="flabel">Management address</div><div class="fbox mgmtcell" data-box="tenant.mgmt_address" style="background:'+c[1]+';border-left-color:'+c[0]+'"><div class="uadrop"><div class="uatrigger" tabindex="0"><span class="ualab">'+inner+'</span><span class="cvx">▾</span></div>'+menu+'</div>'+(ovSrc?ovIcons('tenant.mgmt_source'):'')+'</div></div>';}
+/* The cells are emitted COLUMN by column, because Tab follows the DOM and the
+   form is read down one column and then down the next — not zigzagged across
+   the page a field at a time, which is what interleaving the two columns into
+   grid rows produced: fifty-two of the form's stops landed somewhere other than
+   where the eye had just been. Placing by column costs nothing visually,
+   because `.cols` is `grid-auto-flow:column` over an explicit
+   `grid-template-rows`: the two columns still share their row heights, so an
+   override note appearing under a left-hand box still carries its right-hand
+   neighbour down with it. Both columns are padded to `n` — auto-flow counts
+   items, not intentions, and a short first column would otherwise swallow the
+   first cell of the second one. */
 function renderFieldSection(sec){const cols=[[],[]];sec.fields.forEach(f=>cols[f.col].push(fieldCell(f)));
-  const n=Math.max(cols[0].length,cols[1].length),rows=[];
-  for(let i=0;i<n;i++){rows.push(cols[0][i]||'<div></div>');rows.push(cols[1][i]||'<div></div>');}
-  return card(sec.n,sectionPill(sec.n),`<div class="cols">${rows.join('')}</div>`);}
+  const n=Math.max(cols[0].length,cols[1].length);
+  const cells=cols.map(c=>{const a=c.slice();while(a.length<n)a.push('<div></div>');return a.join('');}).join('');
+  return card(sec.n,sectionPill(sec.n),`<div class="cols" style="grid-template-rows:repeat(${n},auto)">${cells}</div>`);}
 function principalHasData(i){return ['name','title'].some(s=>{const v=get('principals.'+i+'.'+s);return v!==''&&v!=null;});}
 function renderPrincipals(){
   const rows=PRINCIPALS.map(i=>{const nk='principals.'+i+'.name',tk='principals.'+i+'.title';const nc=cellColors(nk),tc=cellColors(tk);
