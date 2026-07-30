@@ -3079,7 +3079,11 @@ function _pullTick(){
   _pullRaf=null;
   const d=_pullTo-_pull;
   if(Math.abs(d)<0.5){_pull=_pullTo;_pullPaint();return;}
-  _pull+=d*0.2;
+  /* Faster on the way back than on the way out. Climbing is feedback and wants to
+     feel weighty; retreating is just tidying up after a gesture that is over, and
+     at the climbing rate it lingered about three quarters of a second after the
+     hand had stopped. */
+  _pull+=d*(d<0?0.42:0.2);
   _pullPaint();
   _pullGlide();
 }
@@ -3116,7 +3120,9 @@ function _menuPull(dy){
   _pullTo=Math.min(PULL_MAX,_pullTo-dy);
   _pullGlide();
   if(_pullTimer&&typeof clearTimeout==='function')clearTimeout(_pullTimer);
-  if(typeof setTimeout==='function')_pullTimer=setTimeout(_pullRelease,420);
+  /* Short. This is "the hand has stopped", not "the gesture might resume": long
+     enough to bridge the gap between two notches of the same swipe, no longer. */
+  if(typeof setTimeout==='function')_pullTimer=setTimeout(_pullRelease,170);
   if(_pullTo>=PULL_MAX){
     _pull=0;_pullTo=0;_pullPaint();
     _togglePast();
@@ -3829,7 +3835,7 @@ function renderMenu(){
       +' days</h3><span>'+(_liveRows.length?(_pl(_liveRows.length)
         +' &middot; earliest deadline first'):'Nothing in this window')+'</span>'
     +'<span class="zsp"></span>'+windowPickHtml()+'</div>'
-    +(_liveRows.length?('<div class="mgrid rows live">'+_zone(_liveRows)+'</div>')
+    +(_liveRows.length?('<div class="mgrid rows live">'+_cols+_zone(_liveRows)+'</div>')
       :(view==='now'?'':'<div class="mempty win0">Nothing is due in the next '+_bandNow()
         +' days. Try a wider window, or read on below.</div>')));
 
