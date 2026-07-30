@@ -294,7 +294,12 @@ button.gdoc{justify-content:space-between}
 .gpf-w{display:block;font-size:11px;color:#8791a5;margin-top:1px;line-height:1.35}
 .gpf-s .gpf-n{color:#a3855e;font-weight:600}
 
-.cbody{padding:16px} .cols{display:grid;grid-template-columns:calc(50% - 23px) 1fr;gap:13px 12px}
+.cbody{padding:16px} /* grid-auto-flow:column is what lets renderFieldSection emit its cells column by
+   column — the order Tab has to walk — while the rows go on sharing their
+   heights across both columns, so the two sides stay level when one cell grows.
+   The row count comes in as an inline grid-template-rows, because it is a
+   property of the section, not of the stylesheet. */
+.cols{display:grid;grid-template-columns:calc(50% - 23px) 1fr;grid-auto-flow:column;gap:13px 12px}
 .field{margin-bottom:6px} .fpair{display:flex;gap:10px} .fpair>.field{flex:1 1 0;min-width:0} .etpair>.field:first-child{flex:0 1 38%} .sigpair>.field{flex:1 1 0} .sigpair .ofthe{flex:0 0 auto;align-self:flex-start;padding:28px 1px 0;font-size:12px;font-weight:600;color:#5b6577} .prinrow{display:flex;gap:12px;align-items:flex-start;margin-bottom:6px} .prinrow .field{flex:1 1 0;min-width:0;margin-bottom:0} .prinrow .urx{flex:0 0 22px;padding-top:8px} .prinhead{display:flex;gap:12px;font-size:11px;color:#5b6577;font-weight:600;margin:8px 0 4px} .prinhead span{flex:1 1 0} .prinhead span:last-child{flex:0 0 22px} .flabel{font-size:11px;color:#5b6577;margin-bottom:4px;font-weight:600}
 .fbox{display:flex;align-items:center;border:1px solid #e6ebf3;border-left:4px solid #64748b;border-radius:8px;background:#f6f7f9;overflow:visible;min-height:38px}
 .fbox input{flex:1;border:none;background:transparent;font:inherit;font-size:14px;padding:9px 11px;outline:none;color:#1f2937;min-width:0}
@@ -310,7 +315,24 @@ button.gdoc{justify-content:space-between}
 .rbox{display:flex;align-items:center;border:1px solid #e6ebf3;border-left:4px solid #64748b;border-radius:8px;background:#f6f7f9;overflow:visible;min-height:38px} .rbox input{width:100%;border:none;background:transparent;font:inherit;font-size:14px;padding:9px 10px;outline:none;min-width:4.5ch}
 .rbox.money .cur{padding-left:9px;color:#6b7280} .rbox.money input{padding-left:3px}
 .rbox.brba{overflow:visible} .rbox.brba select{border:none;background:transparent;font:inherit;font-size:13.5px;padding:9px 4px;outline:none;flex:1;min-width:0} .slash{color:#9aa4b8;padding:0 2px}
-.rbox.uacell{overflow:visible;gap:4px;padding-right:0} .fbox.mgmtcell{overflow:visible} .uadrop{position:relative;flex:1;min-width:0} .uatrigger{display:flex;align-items:center;justify-content:space-between;height:36px;padding:0 10px;font-size:13px;cursor:pointer;white-space:nowrap} .cvx{color:#9aa4b8;margin-left:6px}
+.rbox.uacell{overflow:visible;gap:4px;padding-right:0} .fbox.mgmtcell{overflow:visible} .uadrop{position:relative;flex:1;min-width:0} .uatrigger{display:flex;align-items:center;justify-content:space-between;height:36px;padding:0 10px;font-size:13px;cursor:pointer;white-space:nowrap}
+/* Landing on a dropdown has to SHOW, or a third of the tab order is invisible: a
+   source chooser is a cell you can stop on, and stopping on it looked exactly
+   like stopping on nothing — 43 of the form's 83 trigger stops suppressed the
+   browser’s own ring (.pocpick and .ulabdrop both set outline:none) and the
+   other 34 were left to a UA outline that differs by browser. One rule now
+   answers for all of them.
+   The ring is an INSET shadow on .uatrigger itself — the element whose own box
+   IS the hit area — because a ring hung on the .uadrop wrapper or on the whole
+   cell reports a different shape and size from the thing that is about to open,
+   which is exactly how earlier attempts came out visibly the wrong shape. Inset
+   also keeps it clear of provenance: the cell’s background and its left edge
+   still say what the record holds, and a ring drawn inside the trigger paints
+   over neither. 6px is the radius tintStyle already gives a tinted trigger, so a
+   focused cell and a filled one agree — and where a trigger butts against its
+   neighbour the !important squared edges of .brba win, which is rule 11 holding.
+   #1e3a5f is the navy the rest of the app focuses with (.pc-body, .searchbox). */
+.uatrigger:focus-visible{outline:none;box-shadow:inset 0 0 0 2px #1e3a5f;border-radius:6px} .cvx{color:#9aa4b8;margin-left:6px}
 .uamenu{display:none;position:absolute;left:0;top:100%;margin-top:3px;z-index:30;background:#fff;border:1px solid #d3dae6;border-radius:8px;box-shadow:0 8px 22px rgba(20,40,80,.14);min-width:150px;max-height:240px;overflow:auto} .uadrop.open .uamenu{display:block} .uaopt{padding:9px 12px;font-size:13px;cursor:pointer;color:#33405c} .uaopt:hover{background:#eef0fc} .uaopt.srcdim{opacity:.45;cursor:default} .uaopt.srcdim:hover{background:transparent} .uaopt.sel{background:#ecf0f6} .uaopt.sel:hover{background:#e3e8f5}
 /* A hairline under the last pulled-from-a-source row, and only when the cell's own
    options follow it: the two kinds of answer are not interchangeable, and a menu
@@ -447,7 +469,6 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;borde
 .ulabline .ovic{margin:0 2px 0 0;flex:0 0 auto}
 .ulabdrop{flex:0 0 22px;position:relative}
 .ulabdrop .uatrigger{padding:0;justify-content:center;height:20px;min-height:0;border:none;background:transparent;border-radius:4px;outline:none}
-.ulabdrop .uatrigger:focus-visible{box-shadow:0 0 0 2px rgba(30,58,95,.35)}
 .ulabdrop .uamenu{right:0;left:auto;min-width:190px}
 .ulab-in::placeholder{color:#9aa3b5;font-style:italic}
 .ulabwarn{font-size:10.5px;color:#b45309;flex:0 0 auto;white-space:nowrap;cursor:help}
@@ -3902,10 +3923,21 @@ function mgmtCell(){const src=get('tenant.mgmt_source')||'property';const propHa
   // mirroring the property address: report that address's record, since that is what prints
   const ovSrc=srcOf('tenant.mgmt_source')==='overridden';const c=ovSrc?CLR.overridden:groupColors(ADDR);
   return '<div class="field"><div class="flabel">Management address</div><div class="fbox mgmtcell" data-box="tenant.mgmt_address" style="background:'+c[1]+';border-left-color:'+c[0]+'"><div class="uadrop"><div class="uatrigger" tabindex="0"><span class="ualab">'+inner+'</span><span class="cvx">▾</span></div>'+menu+'</div>'+(ovSrc?ovIcons('tenant.mgmt_source'):'')+'</div></div>';}
+/* The cells are emitted COLUMN by column, because Tab follows the DOM and the
+   form is read down one column and then down the next — not zigzagged across
+   the page a field at a time, which is what interleaving the two columns into
+   grid rows produced: fifty-two of the form's stops landed somewhere other than
+   where the eye had just been. Placing by column costs nothing visually,
+   because `.cols` is `grid-auto-flow:column` over an explicit
+   `grid-template-rows`: the two columns still share their row heights, so an
+   override note appearing under a left-hand box still carries its right-hand
+   neighbour down with it. Both columns are padded to `n` — auto-flow counts
+   items, not intentions, and a short first column would otherwise swallow the
+   first cell of the second one. */
 function renderFieldSection(sec){const cols=[[],[]];sec.fields.forEach(f=>cols[f.col].push(fieldCell(f)));
-  const n=Math.max(cols[0].length,cols[1].length),rows=[];
-  for(let i=0;i<n;i++){rows.push(cols[0][i]||'<div></div>');rows.push(cols[1][i]||'<div></div>');}
-  return card(sec.n,sectionPill(sec.n),`<div class="cols">${rows.join('')}</div>`);}
+  const n=Math.max(cols[0].length,cols[1].length);
+  const cells=cols.map(c=>{const a=c.slice();while(a.length<n)a.push('<div></div>');return a.join('');}).join('');
+  return card(sec.n,sectionPill(sec.n),`<div class="cols" style="grid-template-rows:repeat(${n},auto)">${cells}</div>`);}
 function principalHasData(i){return ['name','title'].some(s=>{const v=get('principals.'+i+'.'+s);return v!==''&&v!=null;});}
 function renderPrincipals(){
   const rows=PRINCIPALS.map(i=>{const nk='principals.'+i+'.name',tk='principals.'+i+'.title';const nc=cellColors(nk),tc=cellColors(tk);
