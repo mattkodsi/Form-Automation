@@ -16,7 +16,7 @@ const els={};
 global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>null,querySelectorAll:()=>[],createElement:()=>mk(),addEventListener(){},body:{classList:{toggle(){},contains(){return false;}}}};
 const fs=require('fs'),path=require('path'),os=require('os');
 
-const MIN_CHECKS=324;
+const MIN_CHECKS=334;
 let n=0,fails=0,verdict=null;
 const BAR='='.repeat(68);
 function fail(msg,err){
@@ -55,7 +55,7 @@ const _b=path.join(os.tmpdir(),'rcs_parse_test.'+process.pid+'.js');
 process.on('exit',()=>{try{fs.rmSync(_b,{force:true});}catch(e){}});
 fs.writeFileSync(_b,'function ocrHalf(b,p,skip){(globalThis.__HALF=globalThis.__HALF||[]).push({p:p,skip:(skip||[]).slice()});return Promise.resolve(null);}\n'
   +['templates.js','core.js','score.js','db.js','app.js','rcs.js'].map(x=>fs.readFileSync(path.join(_d,x),'utf8')).join('\n')
-  +'\nif(typeof module!=="undefined")Object.assign(module.exports,{__rsTextPageAt:rsTextPageAt,__rsTextPages:rsTextPages,__rsReadTextTier:rsReadTextTier,__rsTplAlign:rsTplAlign,__rsTplPremiseHolds:rsTplPremiseHolds});\n');
+  +'\nif(typeof module!=="undefined")Object.assign(module.exports,{__rsTextPageAt:rsTextPageAt,__rsTextPages:rsTextPages,__rsReadTextTier:rsReadTextTier,__rsTplAlign:rsTplAlign,__rsTplPremiseHolds:rsTplPremiseHolds,__rsFieldRects:rsFieldRects,__rsMapRects:rsMapRects,__rsBoxText:rsBoxText,__rsDropTplLabels:rsDropTplLabels,__rsTplRuns:rsTplRuns});\n');
 const app=require(_b);
 const R=global.window.RCSParse;
 const D_=_d+'/';
@@ -595,6 +595,73 @@ async function reader(file){
       T('and the page it needs is not skipped',globalThis.__HALF[0].skip.indexOf(1)<0);
     }
   }
+
+  /* ── a box holds its own printed row, and reads left to right ─────────────
+     Two faults, one symptom, and the symptom reached every generated document
+     and all three filenames on four properties.
+
+     First the geometry. Field 1, the Project Name, is 23pt tall in our own blank
+     where fields 2 and 3 beside it on the SAME printed row - the FHA number and
+     the effective date - are 19pt. So its floor sits 4pt lower than theirs,
+     which on this form is most of a row, and the "Part A - Apartment Rents"
+     divider prints its baseline inside field 1's window. It was collected as
+     part of the name.
+
+     Then the order. rsMapRects sorted the runs it collected by descending
+     baseline, which is right for a page whose lines are level and wrong for a
+     scanner's text layer, where one printed line arrives as several baselines a
+     fraction of a point apart. 333 Holly's "333 Holly fka Holly Creek II" has
+     four baselines within 2.2pt, so height order returned it as
+     "11 | fka Creek | 333 | Holly Holly".
+
+     Neither fault was fixed by declining the misaligned pages: that only moved
+     the same swallow to tier 3, because both tiers look up the very rects
+     rsFieldRects hands out. */
+  console.log('\n─ a box holds its own printed row ─');
+  { const rects=await app.__rsFieldRects();
+    const f1=rects['1'],f2=rects['2'],f3=rects['3'];
+    T('the three header boxes are all on page 1',f1.pg===0&&f2.pg===0&&f3.pg===0);
+    eq('the project-name box now shares its row’s floor',+f1.y.toFixed(2),+f2.y.toFixed(2));
+    eq('and so is the same height as its neighbours',+f1.h.toFixed(2),+f2.h.toFixed(2));
+    /* The rule is a statement about the form, not about field 1: no box may
+       reach below the shallowest floor on its own printed row. */
+    const rows={};
+    Object.keys(rects).forEach(id=>{const r=rects[id];if(r.pg!==0)return;
+      const k=Math.round((r.y+r.h)*2)/2;(rows[k]=rows[k]||[]).push(+r.y.toFixed(2));});
+    const deep=Object.keys(rows).filter(k=>new Set(rows[k]).size>1);
+    eq('and no row on page 1 disagrees about its floor any more',deep.length,0); }
+
+  console.log('\n─ and reads left to right, line by line ─');
+  { const B=app.__rsBoxText;
+    eq('one level line reads in x order',
+      B([{s:'Village',x:53,y:691},{s:'Shiloh',x:24,y:691},{s:'Apts.',x:85,y:691}]),
+      'ShilohVillageApts.');
+    /* The real shape: 333 Holly's name, whose OCR layer gives one printed line
+       four baselines 2.16pt apart, with the roman numeral II read as "11" at a
+       third the font size of its neighbours. */
+    eq('a line jittered by a scanner still reads in order',
+      B([{s:'11',x:136.80,y:693.36},{s:'fka',x:60,y:693.24},{s:'Creek',x:100,y:693.24},
+         {s:'333',x:24.48,y:693.12},{s:'Holly',x:40,y:691.20},{s:'Holly',x:78,y:691.20}]),
+      '333HollyfkaHollyCreek11');
+    /* Two genuinely separate printed lines are 10-12pt apart on this form and
+       must stay separate rather than welding into one token. */
+    eq('two printed lines stay two',
+      B([{s:'Second',x:24,y:680},{s:'First',x:24,y:691}]),'First Second');
+    eq('and an empty box is still empty',B([]),''); }
+
+  /* On the real page. fixture_rs_misaligned.json is Oaks on North Plaza's Part A
+     page; before this fix its Project Name box returned the divider glued to the
+     name, and its first principal came back with the words out of order. */
+  { const fx2=JSON.parse(fs.readFileSync(path.join(_d,'fixture_rs_misaligned.json'),'utf8'));
+    const rects=await app.__rsFieldRects();
+    const tplr=await app.__rsTplRuns();
+    const F=app.__rsMapRects(app.__rsDropTplLabels(fx2.runs,tplr[0]),rects,0);
+    eq('the real page no longer hands the divider to the project name',
+      String(F['1']||''),'OaksonINorthP,lazafkaNorthPlazaApartments');
+    eq('so the divider is gone',/PartA-|ApartmentRents/.test(String(F['1']||'')),false);
+    /* Part G is the form's second half, so this one-page fixture cannot reach
+       field 206 - the principal whose words came back as "onPlazaNorthGP, LLC".
+       That one is covered by the corpus-wide before/after in the register. */ }
 
   /* ── a column gap the page draws by moving the pen ────────────────────────
      Cornerstone's letter tables are laid out identically across the corpus, but
