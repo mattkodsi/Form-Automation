@@ -300,7 +300,23 @@ const addrLine=(street,city,state,zip)=>{
     /* Same for the totals the app has no figures for. Market rent potential is a
        real HUD number and we do not collect the market rents it sums, so it must
        print blank rather than the template's $0 — a stated zero is a claim. */
-    ['97','98','195','1156'].forEach(id=>{ try{ form.getTextField(id).setText(''); }catch(e){} });
+    ['195','1156'].forEach(id=>{ try{ form.getTextField(id).setText(''); }catch(e){} });
+    /* THE FOUR POTENTIALS CARRY A DOLLAR SIGN; THE PER-ROW COLUMNS DO NOT. Read off
+       Sample Property's own executed 2023 schedule: Col. 3 prints 1,061, Col. 4
+       33,952, Col. 5 129 and Col. 6 1,190 — all bare — while the four boxes
+       underneath print $76,918, $923,016, $0 and $0. Ours printed all six bare, so
+       the four totals were missing a character the form prints on every filed copy.
+       Matt found it by eye in a minute; the 34-property sweep could not see it at
+       all, because extract.js:96 and compare.js:68 strip `$` from BOTH sides before
+       comparing. The comparator was built to compare figures and was blind to
+       presentation, and nothing said so.
+
+       Market rent potential prints $0 rather than blank. The earlier reasoning here
+       — that we do not collect the market rents it sums, so a stated zero is a
+       claim we cannot support — is wrong about this form: the filed copies print
+       $0, and Section 236 market rents are what the box is for. Matt's call, and
+       the executed copy agrees with him. */
+    const dmoney=v=>'$'+money(v);
     let bannerRow=null;let ptU=0,ptC=0;   // totals of the rows actually printed
     plan.forEach((row,r)=>{ const base=7+r*8;
       if(row[0]==='banner'){ bannerRow=r; return; }
@@ -365,7 +381,8 @@ const addrLine=(street,city,state,zip)=>{
        literally "(Add Col. 4)". */
     const tu=ptU, tc=ptC;
     const anyP=s8A.some(i=>{const v=g('units.'+i+'.proposed');return v!==''&&v!=null;})||liA.some(i=>{const v=g('ns8.'+i+'.avg_rent');return v!==''&&v!=null;});
-    T('94a',tu||''); T('95',anyP?money(tc):''); T('96',anyP?money(tc*12):'');
+    T('94a',tu||''); T('95',anyP?dmoney(tc):''); T('96',anyP?dmoney(tc*12):'');
+    T('97','$0'); T('98','$0');
     // Full-width banner: remove that row's fields (so no viewer redraws a "0"
     // over it), white out the row band, and print the centered bold label.
     if(bannerRow!=null){ try{
