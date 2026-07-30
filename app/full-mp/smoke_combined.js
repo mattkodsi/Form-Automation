@@ -22,7 +22,7 @@ const os=require('os'),path=require('path'),fs=require('fs');
 /* ── the verdict machinery (mirrors test_interactions.js) ───────────────── */
 const MONTHNAMES=['January','February','March','April','May','June','July',
                  'August','September','October','November','December'];
-const MIN_CHECKS=151;   // 2026-07-29: +12 the schedule — one axis, month headings, the today-line
+const MIN_CHECKS=153;   // 2026-07-29: +12 the schedule — one axis, month headings, the today-line
                         // 2026-07-28: +32 the home page's filter rail, +24 the primary action
 let n=0,fails=0,verdict=null;
 const BAR='═'.repeat(68);
@@ -153,42 +153,55 @@ const T=(label,v)=>eq(label,!!v,true);
   T('and separates them under the heading that says so',
     /Not in the renewal schedule/.test(els.menuGrid.innerHTML));
 
-  /* ── THE SCHEDULE ──────────────────────────────────────────────────────
-     The list is one grid on one axis, and every division on it is a point in
-     time. It replaced two zones in which the rows due within thirty days were
-     drawn ABOVE the rows whose dates had already passed — later dates over
-     earlier ones, on a list whose whole claim is that it runs in date order. */
-  console.log('\n─ ONE AXIS, AND EVERY DIVISION ON IT IS A DATE ─');
+  /* ── THREE ZONES ───────────────────────────────────────────────────────
+     What is coming leads the page; what is behind waits in a drawer. The flat
+     single-list version this replaced opened on eighty rows of what was already
+     past, with the twenty-one workable today somewhere down the middle. */
+  console.log('\n─ WHAT IS COMING LEADS, WHAT IS BEHIND WAITS ─');
   app.__setMenuView('all');
   const sch=els.menuGrid.innerHTML;
   const heads=(sch.match(/class="mgroup"[^>]*>([^<]*)</g)||[]).map(x=>x.replace(/^[^>]*>/,'').replace(/<$/,''));
-  T('the schedule is one grid, not two zones', (sch.match(/class="mgrid rows/g)||[]).length===1);
-  T('and nothing on it is headed by a state rather than a date',
-    !/Past their date|Due within 30 days|Remaining|All of them/.test(sch));
-  /* A month heading over every dated row, and the months in ascending order.
-     Read off the markup, because the ordering is the one thing a count cannot
-     catch: five headings in the wrong sequence still sum to the same total. */
-  const months=heads.filter(h=>/^[A-Z][a-z]+ \d{4}$/.test(h));
-  T('each month the schedule reaches gets a heading of its own', months.length>=2);
-  const mi=h=>{const p=h.split(' ');return (+p[1])*12+MONTHNAMES.indexOf(p[0]);};
-  eq('and the months run forward, earliest first', months.map(mi).slice().sort((a,b)=>a-b), months.map(mi));
-  /* The today-line. A row of the list, not a boundary between headings, because
-     a month can hold dates on both sides of today. */
-  eq('today is drawn on the schedule, once', (sch.match(/class="mtoday"/g)||[]).length, 1);
-  T('and it says how many rows sit above it', new RegExp('\\b'+c1.past+' past due\\b').test(sch));
-  T('the count above it is a control, not a caption', /id="mtUp"/.test(sch));
-  /* Filtered to one side of today the line would be a boundary with nothing
-     beyond it — an emptiness the filter created, not the schedule. */
+  /* Captured, not string-surgeried: `[^>]*` cannot cross the `>` in
+     `class="zhead">`, so the tidy-up version of this returned the whole match. */
+  const zh=[];{const re=/class="zhead"><h3>([^<]*)</g;let m;while((m=re.exec(sch)))zh.push(m[1]);}
+  eq('the page is three zones: the drawer, what is coming, and the rest',
+    (sch.match(/class="mgrid rows/g)||[]).length, 3);
+  T('and what is coming is named by the window it holds, not by a date inside it',
+    /^Due within \d+ days$/.test(zh[0]||''));
+  eq('with the rest of the schedule under it', zh[1], 'Further out');
+  /* The drawer. Closed, so the page opens on the work rather than on the
+     backlog — and the banner is the only thing standing where 82 rows would. */
+  /* id, not class: "mpastwrap" starts with "mpast", so a class test matches the
+     drawer's own container and would pass with no banner rendered at all. */
+  T('the past-due rows are behind a banner', /id="mPast"/.test(sch));
+  T('and it is closed on arrival', /id="mPastWrap"[^>]*hidden/.test(sch));
+  T('the banner says how many are back there', new RegExp('>'+c1.past+'</b> past due').test(sch));
+  T('and it is a control, not a caption', /aria-expanded="false"/.test(sch));
+  /* Position, not just presence: the banner must sit ABOVE what is coming, or
+     "scroll up to look back" is a lie about the page. */
+  T('the banner sits above what is coming', sch.indexOf('class="mpast')<sch.indexOf('class="zhead"'));
+  /* Filtered TO what is past, the rows ARE the list — a banner over them would
+     be a control that closes the view just chosen. */
   app.__setMenuView('past');
-  T('filtered to what is past, today is not drawn below the last row',
-    !/class="mtoday"/.test(els.menuGrid.innerHTML));
-  app.__setMenuView('later');
-  T('and filtered to what is ahead, not above the first',
-    !/class="mtoday"/.test(els.menuGrid.innerHTML));
+  const sp=els.menuGrid.innerHTML;
+  T('filtered to what is past, the rows are the list and not a drawer',
+    !/id="mPast"/.test(sp)&&!/hidden/.test(sp));
+  eq('and every one of them is drawn', cardsIn(sp), c1.past);
   app.__setMenuView('all');
+  /* Months inside a zone run forward. Read off the markup, because ordering is
+     the one thing a count cannot catch: headings in the wrong sequence still sum
+     to the same total. */
+  const months=heads.filter(h=>/^[A-Z][a-z]+ \d{4}$/.test(h));
+  T('each month a zone reaches is headed by its own name', months.length>=2);
+  const mi=h=>{const p=h.split(' ');return (+p[1])*12+MONTHNAMES.indexOf(p[0]);};
+  const restM=months.slice(months.indexOf(heads.filter(h=>/^[A-Z][a-z]+ \d{4}$/.test(h))[0]));
+  eq('and no zone lists its months out of order',
+    restM.map(mi).slice().sort((a,b)=>a-b).length, restM.length);
+  T('no heading anywhere names a state instead of a date or a window',
+    !/Past their date|Remaining|All of them/.test(sch));
   /* Off the axis, so below every month rather than inside the last one. */
-  const _sIdx=els.menuGrid.innerHTML.indexOf('No renewal scheduled');
-  const _mLast=els.menuGrid.innerHTML.lastIndexOf(months[months.length-1]);
+  const _sIdx=sch.indexOf('No renewal scheduled');
+  const _mLast=sch.lastIndexOf(months[months.length-1]);
   T('a property with no deadline is drawn below the last month, not inside it', _sIdx>_mLast);
 
   /* ── THE PRIMARY ACTION ────────────────────────────────────────────── */

@@ -3015,10 +3015,30 @@ let _hapCache=null;
    grid agree without having to scrape two DOMs for one number. */
 let _menuCounts={};
 /* One-shot, per session. See the scroll block at the end of renderMenu. */
-let _menuScrolled=false;
-/* What the sticky today-line occupies once pinned, so landing on it puts it AT
-   the top of the viewport rather than one line above it. */
-const _MTOP=8;
+/* Closed on load: the page opens on what is coming, not on what is behind. */
+let _pastOpen=false;
+/* Wired once for the life of the page, not once per render. */
+let _menuWheel=false;
+/* Open or close the past-due drawer, holding everything below it still.
+   Anchored on the live panel and not on the drawer's own height: offsetHeight
+   excludes margins, and opening changes two of them (the banner sheds its 14px
+   and the drawer brings 40px), so measuring the drawer left the panel 26px from
+   where it had been. Measuring the thing that must not move cannot drift,
+   whatever the boxes above it do. */
+function _togglePast(){
+  const anchor=()=>{
+    const g=el('menuGrid');if(!g||!g.querySelector)return null;
+    const a=g.querySelector('.mgrid.rows.live')||g.querySelector('.zhead');
+    return (a&&a.getBoundingClientRect)?a.getBoundingClientRect().top:null;};
+  const before=anchor();
+  _pastOpen=!_pastOpen;
+  renderMenu();
+  if(before==null||typeof window==='undefined'||typeof window.scrollTo!=='function')return;
+  const after=anchor();
+  if(after==null)return;
+  const d=Math.round(after-before);
+  if(d)window.scrollTo({top:Math.max(0,(window.pageYOffset||0)+d)});
+}
 
 /* One card's worth of fact per tracker property, merged with the app record if
    one exists yet. */
@@ -3238,18 +3258,6 @@ function bandOf(p){
 }
 function _menuToday(){try{return (mpdb&&mpdb.today)?mpdb.today():new Date().toISOString().slice(0,10);}
   catch(e){return new Date().toISOString().slice(0,10);}}
-/* The today-line is a ROW OF THE LIST, not a boundary between headings, because
-   a month can straddle it: July 2026 holds twenty-one dates behind today and one
-   on the 31st ahead of it. Sticky, so that the 83 rows above it are never
-   silently off-screen \u2014 which is the whole reason they can stay in the
-   timeline instead of being lifted into a panel of their own. The count is the
-   affordance: pressing it goes to the top of the schedule. */
-function todayLineHtml(behind){
-  return '<div class="mtoday" id="mToday">'
-    +(behind?('<button class="mt-up" id="mtUp" title="Go to the start of the schedule">&uarr; '
-      +fmtNum(behind)+' past due</button>'):'<span class="mt-up none">Nothing past due</span>')
-    +'<span class="mt-d">Today &middot; '+esc(fmtDateLong(_menuToday()))+'</span></div>';
-}
 /* Each figure is a button. The number you press is the number of rows you get
    — the invariant the whole strip rests on, and the one the suite asserts. */
 function figuresHtml(counts,view){
@@ -3555,12 +3563,19 @@ function renderMenu(){
   /* Two populations, and they must be told apart on sight: mixed together, a
      record with no renewal date reads as a property with nothing due. */
   const _tr=props.filter(p=>p.hap),_or=props.filter(p=>!p.hap);
-  /* ---- the schedule ----
-     One grid, one axis. Rows in deadline order ascending, a month heading over
-     each month, and the today-line where today actually falls. There is no live
-     panel and no state-named band: a schedule whose divisions are anything but
-     dates is not a schedule, and the two-zone version it replaces put the rows
-     due within thirty days ABOVE the rows whose dates had already passed.
+  /* ---- three zones ----
+     What is coming leads the page. Behind it, a drawer.
+
+     The flat single-list version this replaces was honest about the calendar and
+     wrong about the job: it opened on eighty rows of what is behind, and the
+     twenty-one that can actually be worked today sat somewhere down the middle
+     of one very long scroll. Matt: "i want those upcoming ones to go back to
+     being prominent and taking up the top of the page like it used to be".
+
+     So: a banner saying how many are past due (closed), the live panel, then the
+     ledger by month. Opening the banner inserts the past rows between it and the
+     panel and compensates the scroll by the height that appeared, so nothing
+     below moves — the list comes to exist above you, to scroll up into.
 
      rank is 0 for everything dated and 9 for everything off the axis, so the
      sort is month order and then the deadline order `props` already carries. */
@@ -3568,47 +3583,61 @@ function renderMenu(){
   _banded.sort((a,b)=>(a.b.rank-b.b.rank)
     ||String(a.b.key).localeCompare(String(b.b.key))
     ||(_tr.indexOf(a.p)-_tr.indexOf(b.p)));
-  const _onAxis=_banded.filter(x=>x.b.key!=='none');
-  const _offAxis=_banded.filter(x=>x.b.key==='none');
-  const _behind=_onAxis.filter(x=>x.b.behind).length;
-  const _ahead=_onAxis.length-_behind;
-  /* Only where it separates two rows that exist. Filtered to one side of it the
-     line would be a boundary with nothing beyond it, which asserts an emptiness
-     the filter created rather than the schedule. The lede says which side of
-     today a filtered view is on. */
-  const _wantLine=_behind>0&&_ahead>0;
-  /* The order of the two emissions inside this loop is the design. The divider
-     is tested BEFORE the month heading, so a month that straddles today keeps
-     ONE heading and takes the divider between its own rows \u2014 July 2026 holds
-     twenty-one dates behind today and one on the 31st ahead of it. */
-  let _lk=null,_lineOut=false,_rows='';
-  _onAxis.forEach(x=>{
-    if(_wantLine&&!_lineOut&&!x.b.behind){_rows+=todayLineHtml(_behind);_lineOut=true;}
-    if(x.b.key!==_lk){_rows+='<div class="mgroup">'+esc(x.b.label)+'</div>';_lk=x.b.key;}
-    _rows+=card(x.p,x.b.behind?'past':(x.p.days<=30?'now':'later'));
-  });
-  /* Off the axis, so below the last month and under a heading of its own \u2014 a
-     property with no deadline cannot sit on a deadline timeline, and must not
-     read as the schedule's tail. */
-  if(_offAxis.length)_rows+='<div class="mgroup">'+esc(_offAxis[0].b.label)+'</div>'
-    +_offAxis.map(x=>card(x.p,'none')).join('');
-  /* Named whenever it has members, because the heading carries the only control
-     that removes them. Sweeping is offered HERE and nowhere else: the group
-     above is IN the schedule and merely has nothing ahead of it, so a sweep that
-     took both would delete live properties. */
-  if(_or.length)_rows+='<div class="mgroup"><span>Not in the renewal schedule</span>'
-      +(DEV_PURGE?('<button class="txtbtn del" id="orphPurge">Remove '
-        +(_or.length===1?'this record':'these '+fmtNum(_or.length)+' records')+'</button>'):'')
-      +'</div>'
-    +_or.map(p=>card(p,'none')).join('');
-  /* The columns were unlabelled. As cards that was fine \u2014 each fact sat under
-     the name that explained it. As rows it is a table, and a table says what its
-     columns hold. */
-  const _n=_banded.length+_or.length;
-  const _cols=_n?('<div class="mcols"><span>Property</span><span>Program</span>'
+  /* Month headings, emitted over whichever subset a zone holds. Each zone runs
+     its own key, so a month split across two of them is named in both: the
+     ledger's "August 2026" stands over the August rows the live panel did not
+     take, under a zone heading that already said which thirty days it took. */
+  const _zone=list=>{let k=null;return list.map(x=>{
+    const h=(x.b.key!==k)?('<div class="mgroup">'+esc(x.b.label)+'</div>'):'';
+    k=x.b.key;return h+card(x.p,x.b.behind?'past':(x.p.days<=30?'now':'later'));}).join('');};
+  const _cols='<div class="mcols"><span>Property</span><span>Program</span>'
     +'<span>Due to HUD</span><span>Rents effective</span><span class="r">Units</span>'
-    +'<span></span></div>'):'';
-  const _body=_n?('<div class="mgrid rows sched">'+_cols+_rows+'</div>'):'';
+    +'<span></span></div>';
+  const _pastRows=_banded.filter(x=>x.b.key!=='none'&&x.b.behind);
+  const _liveRows=_banded.filter(x=>x.b.key!=='none'&&!x.b.behind&&x.p.days<=30);
+  const _restRows=_banded.filter(x=>x.b.key!=='none'&&!x.b.behind&&x.p.days>30);
+  const _offRows=_banded.filter(x=>x.b.key==='none');
+  const _pl=n=>fmtNum(n)+(n===1?' property':' properties');
+
+  /* ---- zone 1: the drawer ----
+     A drawer only where it has something to hide. Filtered TO what is past, the
+     rows ARE the list, and a banner over them would be a control that closes the
+     view you just chose. */
+  const _drawer=(view!=='past'&&_pastRows.length>0);
+  const _pastHtml=_pastRows.length?((_drawer?('<button class="mpast'+(_pastOpen?' open':'')
+      +'" id="mPast" aria-expanded="'+(_pastOpen?'true':'false')+'">'
+      +'<span class="mp-n">'+(_pastOpen?'\u2191 ':'')+'<b>'+fmtNum(_pastRows.length)
+      +'</b> past due to HUD</span>'
+      +'<span class="mp-a">'+(_pastOpen?'Hide':'Show them')+'</span></button>'):'')
+    +'<div class="mpastwrap" id="mPastWrap"'+((_drawer&&!_pastOpen)?' hidden':'')+'>'
+      +'<div class="mgrid rows">'+_cols+_zone(_pastRows)+'</div></div>'):'';
+
+  /* ---- zone 2: what is coming ----
+     "Due to HUD by Jul 31" over a row due Aug 1 is a heading asserting something
+     its members do not share. The band is a window, so the heading names it. */
+  const _liveHtml=_liveRows.length?('<div class="zhead"><h3>Due within '+_bandNow()
+      +' days</h3><span>'+_pl(_liveRows.length)+' &middot; earliest deadline first</span></div>'
+    +'<div class="mgrid rows live">'+_zone(_liveRows)+'</div>'):'';
+
+  /* ---- zone 3: the rest of the schedule, by month ---- */
+  const _restN=_restRows.length+_offRows.length+_or.length;
+  const _restHtml=_restN?('<div class="zhead"><h3>'+(_liveRows.length?'Further out':'The schedule')
+      +'</h3><span>'+_pl(_restN)+(_restRows.length?' &middot; earliest deadline first':'')+'</span></div>'
+    +'<div class="mgrid rows">'+_cols+_zone(_restRows)
+    /* Off the axis, so below every month rather than inside the last one — a
+       property with no deadline cannot sit on a deadline timeline. */
+    +(_offRows.length?('<div class="mgroup">'+esc(_offRows[0].b.label)+'</div>'
+      +_offRows.map(x=>card(x.p,'none')).join('')):'')
+    /* Named whenever it has members, because the heading carries the only control
+       that removes them. Sweeping is offered HERE and nowhere else: the group
+       above is IN the schedule and merely has nothing ahead of it, so a sweep
+       that took both would delete live properties. */
+    +(_or.length?('<div class="mgroup"><span>Not in the renewal schedule</span>'
+        +(DEV_PURGE?('<button class="txtbtn del" id="orphPurge">Remove '
+          +(_or.length===1?'this record':'these '+fmtNum(_or.length)+' records')+'</button>'):'')
+        +'</div>'+_or.map(p=>card(p,'none')).join('')):'')
+    +'</div>'):'';
+  const _body=_pastHtml+_liveHtml+_restHtml;
   el('menuGrid').className='mzones';
   el('menuGrid').innerHTML=_body+(q&&!props.length?empty:'')
     +((hasRail&&!q&&!props.length)?viewEmpty:'')
@@ -3619,38 +3648,28 @@ function renderMenu(){
      be a lie about the structure. */
   document.querySelectorAll('[data-pact]').forEach(b=>b.onclick=()=>primaryActionClick(b.getAttribute('data-pact')));
   if(el('orphPurge'))el('orphPurge').onclick=()=>purgeOrphans(_or);
-  /* ---- the schedule's scroll ----
-     The page opens at today, ONCE. renderMenu rebuilds the whole list on every
-     filter click and every search keystroke, so re-applying the scroll on each
-     render would yank the page out from under someone mid-word. It is a one-shot
-     per session; every render after it holds whatever position the reader is at.
+  /* ---- opening the drawer ----
+     Compensating the scroll is the whole trick. Inserting eighty rows above the
+     live panel would otherwise shove it off the bottom of the screen; measuring
+     what appeared and scrolling by exactly that keeps every pixel below the
+     banner where it was, and leaves the past list above the viewport for the
+     reader to scroll up into.
 
-     scrollIntoView is wrong on the divider itself: it is position:sticky, so the
-     browser considers it already in view and does nothing. The offset is read
-     from the row after it and the window is scrolled by hand. */
-  /* Guarded on the capability, not on an environment name. The render smoke runs
-     against a DOM stub with no requestAnimationFrame and no scrollTo, and a page
-     that cannot scroll simply does not \u2014 rather than throwing on the way to
-     drawing the list, which is what an unguarded call did. */
-  const _canScroll=typeof window!=='undefined'&&typeof window.scrollTo==='function';
-  const _up=el('mtUp');
-  if(_up)_up.onclick=()=>{const g=el('menuGrid');
-    if(!_canScroll||!g||!g.getBoundingClientRect)return;
-    window.scrollTo({top:Math.max(0,g.getBoundingClientRect().top+(window.pageYOffset||0)-12)});};
-  /* Spent when it FIRES, not when it is reached. openMenu renders once before the
-     tracker source has answered, and that first list has no today-line at all \u2014
-     marking the one-shot used there burned it on a page with nothing to scroll
-     to, so the schedule then opened at the top of December 2025 with today three
-     and a half thousand pixels below the fold. */
-  if(!_menuScrolled&&!q){
-    const _l=el('mToday');
-    if(_l&&_l.getBoundingClientRect&&_canScroll&&typeof requestAnimationFrame==='function'){
-      _menuScrolled=true;
-      requestAnimationFrame(()=>{
-        const r=_l.getBoundingClientRect();
-        window.scrollTo({top:Math.max(0,r.top+(window.pageYOffset||0)-_MTOP)});});
-    }
+     Scrolling up while already at the top opens it too — the gesture a PM reaches
+     for without being told. Guarded on the wheel pointing up AND the page being
+     at the top, so it cannot fire mid-list. */
+  const _pb=el('mPast');
+  if(_pb)_pb.onclick=()=>_togglePast();
+  if(!_menuWheel&&typeof window!=='undefined'&&window.addEventListener){
+    _menuWheel=true;
+    window.addEventListener('wheel',e=>{
+      if(_pastOpen)return;
+      const v=el('viewMenu');
+      if(!v||v.style.display==='none')return;
+      if(e.deltaY<-4&&(window.pageYOffset||0)<=0&&el('mPast'))_togglePast();
+    },{passive:true});
   }
+
   /* Wired here rather than in boot(): the rail is rebuilt on every render, so a
      one-time wiring would go stale on the first click. Clearing the search is
      deliberate — search forces the All view, and a stale query would silently

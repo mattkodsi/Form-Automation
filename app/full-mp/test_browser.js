@@ -35,8 +35,8 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=301;   // 2026-07-29: +9 — the schedule: one grid, month headings, the sticky
-                        // today-line, and the landing scroll that must not move as you type.
+const MIN_CHECKS=304;   // 2026-07-29: +12 — three zones: the past-due drawer closed on arrival, and
+                        // opening it without moving the panel below (measured in a real layout).
                         // 2026-07-29: -3 — the rail's eight rows became the strip's five figures.
                        // 2026-07-28: +35 — the home page's filter rail, driven by real clicks.
                        // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
@@ -2017,10 +2017,12 @@ const FULL=process.argv.includes('--full');
       const _sh=await c.eval(`const g=document.getElementById('menuGrid');
         return {grids:g.querySelectorAll('.mgrid.rows').length,
                 heads:[...g.querySelectorAll('.mgroup')].map(x=>x.textContent.trim()),
-                states:/Past their date|Due within 30 days|Remaining|All of them/.test(g.innerHTML)};`);
-      eq('the schedule is one grid, not two zones',_sh.grids,1);
-      T('and no heading on it names a state instead of a date',!_sh.states);
-      T('every month the schedule reaches is headed by its own name',
+                zh:[...g.querySelectorAll('.zhead h3')].map(x=>x.textContent.trim()),
+                states:/Past their date|Remaining|All of them/.test(g.innerHTML)};`);
+      T('what is coming is named by the window it holds, not by a date inside it',
+        /^Due within \d+ days$/.test(_sh.zh[0]||''));
+      T('and no heading anywhere names a state instead of a date or a window',!_sh.states);
+      T('every month a zone reaches is headed by its own name',
         _sh.heads.filter(h=>/^[A-Z][a-z]+ \d{4}$/.test(h)).length>=1);
 
       const zv=await c.eval('return ([...document.querySelectorAll("#menuCount [data-view]")]'
@@ -2055,71 +2057,59 @@ const FULL=process.argv.includes('--full');
         +'on:(document.querySelector("#menuCount .fig.on")||{}).getAttribute("data-view")};');
       eq('clearing the box returns you where you were',[s2.view,s2.on],['later','later']);
 
-      /* ---- the today-line ----
+      /* ---- the past-due drawer ----
          A SECOND seed, because the fixture above deliberately leaves the past
-         band empty so an empty band can be pressed, and the line only exists
-         where rows sit on both sides of it. Offsets of -1 and 0 days put two
-         deadlines either side of today; 0 counts as ahead, so the row due today
-         is below the line. Both land in the same calendar month unless today is
-         the 1st, which is why the straddle check is guarded on the date rather
-         than assumed. */
-      const rows2=[trow('B010','Line Behind','OCAF',-1),
-                   trow('B011','Line Today','OCAF',0),
-                   trow('B012','Line Far','OCAF',200)];
+         band empty so an empty band can be pressed, and there is no drawer
+         without something to put in it. */
+      const rows2=[trow('B010','Drawer Behind','OCAF',-40),
+                   trow('B011','Drawer Behind Two','OCAF',-9),
+                   trow('B012','Drawer Now','OCAF',9),
+                   trow('B013','Drawer Far','OCAF',200)];
       await c.eval('await window.__t.__seedHap('+JSON.stringify(rows2)+');'
-        +'window.__t.__setMenuView("all");return 1');
-      await sleep(250);
-      const tl=await c.eval(`const g=document.getElementById('menuGrid');
-        const line=g.querySelector('.mtoday');
-        const kids=[...g.children[0].children].map(n=>
-          n.classList.contains('mtoday')?'|TODAY|'
-          :n.classList.contains('mgroup')?('#'+n.textContent.trim())
-          :n.classList.contains('pcard')?(n.querySelector('.pc-name')||{textContent:''}).textContent.trim()
-          :'');
-        return {n:g.querySelectorAll('.mtoday').length,
-                sticky:line?getComputedStyle(line).position:'',
-                top:line?Math.round(line.getBoundingClientRect().top):null,
-                up:!!g.querySelector('#mtUp'),
-                says:line?line.textContent.replace(/\\s+/g,' ').trim():'',
-                seq:kids.filter(Boolean)};`);
-      eq('today is drawn on the schedule, once',tl.n,1);
-      /* The one that cannot be read off markup. .mgrid.rows carried
-         overflow:hidden, which makes it a scroll container — a sticky child then
-         sticks to a scrollport exactly as tall as its own content, so the line
-         never moved and nothing in the DOM said why. */
-      eq('and it is pinned, not merely drawn',tl.sticky,'sticky');
-      T('it names the day it marks',/Today/.test(tl.says));
-      T('and how many rows sit above it',/1 past due/.test(tl.says));
-      T('the count above it is a control, not a caption',tl.up);
-      /* The divider is emitted BEFORE the month heading, so a month holding
-         dates on both sides of today keeps ONE heading and takes the line
-         between its own rows. On the real portfolio that is July 2026:
-         twenty-one deadlines behind today and one on the 31st ahead of it. */
-      const _d1=new Date(T0).getUTCDate();
-      if(_d1>1){
-        const i=tl.seq.indexOf('|TODAY|'), a=tl.seq.indexOf('Line Behind'), b=tl.seq.indexOf('Line Today');
-        T('a month holding dates either side of today keeps one heading',
-          tl.seq.filter(x=>x[0]==='#').length===tl.seq.filter((x,j)=>x[0]==='#'&&tl.seq.indexOf(x)===j).length);
-        T('and the line falls between its own rows, not above them',a>=0&&b>=0&&a<i&&i<b);
-      }else{
-        T('today is the 1st, so no month can straddle it — the line sits between two headings',
-          tl.seq.indexOf('|TODAY|')>0);
-      }
-      /* Landing scroll: at today on first paint, and NEVER again. renderMenu
-         rebuilds the whole list on every filter click and every search keystroke,
-         so re-applying it would yank the page out from under someone mid-word.
-
-         Asserted by scrolling AWAY and forcing a re-render, not by typing and
-         comparing offsets: filtering to three rows makes the document shorter
-         than the scroll position, so the browser clamps to 0 on its own and the
-         comparison fails on document height rather than on anything the app
-         did. This way round the invariant is the only thing under test. */
-      await c.eval('window.scrollTo(0,0);return 1');
-      await sleep(80);
-      await c.eval('document.querySelector(\'#menuCount [data-view="all"]\').click();return 1');
-      await sleep(260);
-      eq('and a later render does not scroll the page back to it',
-        await c.eval('return Math.round(window.pageYOffset)'),0);
+        +'window.__t.__setMenuView("all");window.scrollTo(0,0);return 1');
+      await sleep(280);
+      const read=()=>c.eval(`const g=document.getElementById('menuGrid');
+        const w=g.querySelector('#mPastWrap'),b=g.querySelector('#mPast');
+        const p=g.querySelector('.mgrid.rows.live');
+        return {banner:b?b.textContent.replace(/\\s+/g,' ').trim():null,
+                expanded:b?b.getAttribute('aria-expanded'):null,
+                hidden:w?!!w.hidden:null,
+                grids:g.querySelectorAll('.mgrid.rows').length,
+                live:g.querySelectorAll('.mgrid.rows.live .pcard').length,
+                shown:[...g.querySelectorAll('.pcard .pc-name')]
+                  .filter(n=>n.getBoundingClientRect().height>0).map(n=>n.textContent.trim()),
+                panelTop:p?Math.round(p.getBoundingClientRect().top):null,
+                y:Math.round(window.pageYOffset)};`);
+      const d0=await read();
+      /* Closed on arrival, and CLOSED means not rendered to the reader — the
+         whole complaint about the flat version was that the backlog was on the
+         page whether you wanted it or not. */
+      eq('the drawer is closed when the page opens',d0.hidden,true);
+      eq('and it says so to a screen reader too',d0.expanded,'false');
+      T('the banner says how many are behind',/2 past due/.test(d0.banner||''));
+      T('and none of those rows is on the page',
+        !d0.shown.includes('Drawer Behind')&&!d0.shown.includes('Drawer Behind Two'));
+      T('while what is coming is',d0.shown.includes('Drawer Now'));
+      eq('what is coming is a panel of its own',d0.live,1);
+      /* Opening it. The one check the DOM alone cannot make: inserting rows above
+         the panel must not move the panel. Measured in the viewport, before and
+         after, in a real layout. */
+      await c.eval('document.getElementById("mPast").click();return 1');
+      await sleep(320);
+      const d1=await read();
+      eq('pressing it opens the drawer',d1.hidden,false);
+      T('the rows behind you are now on the page',d1.shown.includes('Drawer Behind'));
+      T('and the banner offers to close it again',/Hide/.test(d1.banner||''));
+      eq('opening it does not move what is coming',d1.panelTop,d0.panelTop);
+      T('the page scrolled by exactly what appeared above it',d1.y>d0.y);
+      /* Earliest first inside the drawer, same as everywhere else. */
+      T('and the drawer runs earliest-due first',
+        d1.shown.indexOf('Drawer Behind')<d1.shown.indexOf('Drawer Behind Two'));
+      await c.eval('document.getElementById("mPast").click();return 1');
+      await sleep(300);
+      const d2=await read();
+      eq('pressing it again closes it',d2.hidden,true);
+      eq('and what is coming still has not moved',d2.panelTop,d0.panelTop);
       /* Back to the first fixture, so the checks after this read the portfolio
          they were written against. */
       await c.eval('await window.__t.__seedHap('+JSON.stringify(rows)+');'
