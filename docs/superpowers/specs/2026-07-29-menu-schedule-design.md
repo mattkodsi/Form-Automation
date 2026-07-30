@@ -43,7 +43,7 @@ Three facts the design has to answer to:
 - **It is flat.** The front eight months carry 12–31 each. This is a steady
   ~20/month workload for a year, not a spike with a tail. So the page cannot be
   built around "the urgent few" — the whole year is the subject.
-- **83 properties are behind the line** — 36% of the portfolio, the oldest 240
+- **82 properties are behind the line** — 36% of the portfolio, the oldest 240
   days back. Too many to treat as an exception, too many to leave unannounced.
 - **The horizon is ragged.** Apr 2027 has 3, then a gap, then 1, then 2. The CSV
   dribbles out rather than ending, so the bottom of the page is thin by nature
@@ -56,7 +56,7 @@ the user makes, because a schedule with a configurable order is not a schedule.
 
 ```
  ┌──────────────────────────────────────────────────────────────┐
- │  ↑  83 behind            TODAY · Jul 29, 2026                │  pinned
+ │  ↑  82 past due          TODAY · July 29, 2026               │  pinned
  ├──────────────────────────────────────────────────────────────┤
  │  Aug 2026                                                    │
  │  Bellhaven Court      OCAF   due Aug 3 · 5 days      92 units│
@@ -84,7 +84,7 @@ it must be able to sit mid-group. It is **sticky**: pinned to the top of the
 viewport while you are below it, unpinned and travelling as an ordinary divider
 once you scroll above it.
 
-It carries `↑ 83 behind` while pinned. That count is the affordance: clicking it
+It carries `↑ 82 past due` while pinned. That count is the affordance: clicking it
 jumps to the top of the schedule. This is the whole answer to option A's one
 flaw — that the past is off-screen upward on load — and it is why no panel is
 needed.
@@ -139,9 +139,13 @@ The two-zone assembly in `renderMenu` (~3535) collapses to one grid. `_liveHd`,
 them` heading logic all go, replaced by month headings plus the today divider.
 The column header row stays, once, at the top.
 
-`dueLine` gains the days-ago form for behind rows — it has one today ("Was due
-Jul 25") but with no interval, which under a countdown-driven page is the one
-number the row is for.
+`dueLine` is left alone. The draft of this spec had it gain a days-ago interval
+on the rows above the line; that was struck on 2026-07-29 for contradicting a
+decision already in the code — "anything overdue has already been completed", so
+overdue states its date and stops there. Shouting "119 days late" across eighty
+rows buries the handful genuinely inside thirty days, and the tracker records
+the deadline, not the filing, so the interval would be an interval of nothing.
+Above the line a row reads "Was due Jul 1"; below it, "Aug 1 · 2 days left".
 
 Nothing in `hap.js` changes. The deadline derivation, `actionFor`, the gap and
 expiring cases and the 120-day fallback are all untouched.
@@ -165,6 +169,14 @@ expiring cases and the 120-day fallback are all untouched.
   counts stay disjoint and still sum to the total; a property with no deadline
   renders below the last month, not inside it.
 - `MIN_CHECKS` raised in both.
+
+Two defects the checks caught while building, both invisible in markup:
+`.mgrid.rows` carried `overflow:hidden`, which makes it a scroll container, so
+the sticky line stuck to a scrollport exactly as tall as its own content and
+never moved; and the landing scroll's one-shot was spent on the first render,
+which happens before the tracker source answers and therefore has no line to
+scroll to — so the schedule opened at December 2025 with today 3,675px below the
+fold. The flag is now spent when the scroll fires, not when it is reached.
 
 ## Explicitly out of scope
 

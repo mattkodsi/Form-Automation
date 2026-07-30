@@ -625,8 +625,12 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
    the eye can run down a column.
    Nothing here changes what a card contains or what clicking it does.
    ------------------------------------------------------------------ */
+/* clip, NOT hidden. overflow:hidden makes this element a scroll container, and
+   a position:sticky child then sticks to a scrollport exactly as tall as its own
+   content — so the today-line simply never stuck, with nothing in the DOM to
+   show why. overflow:clip still rounds the corners and does not create one. */
 .mgrid.rows{grid-template-columns:minmax(0,1fr);gap:0;
-  background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:clip}
 .mgrid.rows .pcard{border:0;border-radius:0;border-top:1px solid var(--page);
   display:grid;grid-template-columns:minmax(0,1fr) 176px 168px 210px;
   align-items:center;column-gap:20px;padding:0 18px;
@@ -743,8 +747,6 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
 #viewMenu .mgrid.rows .mgroup{display:flex;align-items:baseline;justify-content:space-between;
   gap:16px;background:var(--sunk);border-top:1px solid var(--ln);
   color:var(--i3);font-weight:600;letter-spacing:.12em;font-size:10.5px;padding:8px 18px}
-#viewMenu .mgrid.rows .mgroup.live{background:var(--card);color:var(--stamp);
-  padding:14px 18px 8px}
 #viewMenu .mgrid.rows .pcard{border-top-color:var(--ln-soft)}
 #viewMenu .pc-name{color:var(--i1)}
 #viewMenu .pc-meta{color:var(--i3)}
@@ -757,65 +759,74 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
 #viewMenu .mgrid.rows .pcard:hover{background:var(--sunk);transform:none;border-color:var(--ln-soft)}
 #viewMenu .mgrid.rows .pcard[data-band="now"]{box-shadow:inset 3px 0 0 var(--stamp)}
 #viewMenu .mgrid.rows .pcard[data-band="now"] .pc-due{color:var(--stamp);font-weight:600}
-#viewMenu .mgrid.rows .pcard[data-band^="m"]{box-shadow:inset 3px 0 0 var(--ledger)}
-/* ---- the two zones ---- */
+/* Past due carries the SAME quiet rule as everything further out, not an alarm.
+   Matt, on the earlier draft: "anything overdue has already been completed" —
+   the tracker records the deadline, not the filing. What separates the two sides
+   of today is the today-line, which is positional and needs no colour. */
+#viewMenu .mgrid.rows .pcard[data-band="past"],
+#viewMenu .mgrid.rows .pcard[data-band="later"]{box-shadow:inset 3px 0 0 var(--ledger)}
+/* ---- the schedule: one grid, one axis ---- */
 #viewMenu .mzones{display:block}
-#viewMenu .zhead{display:flex;align-items:baseline;gap:12px;margin:0 0 14px}
-#viewMenu .zhead h3{font-size:11px;font-weight:600;letter-spacing:.13em;
-  text-transform:uppercase;color:var(--i3);margin:0}
-#viewMenu .zhead span{font-size:12.5px;color:var(--i3)}
 #viewMenu .mgrid.rows{margin-bottom:0}
-#viewMenu .mgrid.rows.live{margin-bottom:48px}
-/* the live row: the name leads and says what the package is, the columns are
-   programme, countdown, size, action — as in the mockup */
-#viewMenu .mgrid.rows.live .pcard{grid-template-columns:minmax(0,1fr) 90px 130px 110px 212px;
-  padding:0 22px}
-#viewMenu .mgrid.rows.live .pc-body{grid-column:1/5;column-gap:24px;
-  grid-template-columns:minmax(0,1fr) 90px 130px 110px;padding:16px 0}
 /* .pc-units and .pc-prog live inside .pc-foot, so they cannot be placed in the
    row's grid while the footer is a box. display:contents dissolves the box and
    lets each fact take its own column. */
 #viewMenu .mgrid.rows .pc-foot{display:contents}
-#viewMenu .mgrid.rows.live .pc-name{font-size:17px;font-weight:600;letter-spacing:-.015em}
-#viewMenu .mgrid.rows.live .pc-meta{font-size:12.5px}
-#viewMenu .mgrid.rows.live .pc-due{grid-column:3;grid-row:1/3;font-size:13px;
-  font-weight:600;color:var(--stamp);white-space:nowrap}
-#viewMenu .mgrid.rows.live .pc-prog{grid-column:2;grid-row:1/3;justify-self:start}
-#viewMenu .mgrid.rows.live .pc-prog{background:none;color:var(--i3);font-size:10.5px;
-  letter-spacing:.09em;padding:0}
-#viewMenu .mgrid.rows.live .pc-units{grid-column:4;grid-row:1/3;justify-self:end;
-  font-size:13px;color:var(--i2);white-space:nowrap}
-#viewMenu .mgrid.rows.live .pc-act{grid-column:5}
-#viewMenu .mgrid.rows.live .pc-act .btn{min-height:40px;padding:0 18px;font-size:13px;
-  font-weight:600;border-radius:var(--r-ctl);background:#101d2b;border-color:#101d2b;
-  letter-spacing:0;text-transform:none}
-#viewMenu .mgrid.rows.live .pc-act .btn:hover:not(:disabled){background:var(--ledger);border-color:var(--ledger)}
-#viewMenu .mgrid.rows.live .pc-act .btn:disabled{background:transparent;border-color:var(--ln);color:var(--i4)}
+/* ---- the today-line ----
+   A row of the list, spanning it, pinned to the top of the viewport while you
+   are below it. The masthead is static and scrolls away, so top:0 is the top of
+   the screen. Its 2px rule in the darkest ink outranks a month heading's
+   hairline, because it is the one divider on the page that is not a month. */
+#viewMenu .mgrid.rows .mtoday{grid-column:1/-1;position:sticky;top:0;z-index:4;
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  background:var(--card);border-top:2px solid var(--i1);
+  border-bottom:1px solid var(--ln);padding:9px 18px}
+#viewMenu .mtoday .mt-d{font-size:10.5px;font-weight:600;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--i1)}
+#viewMenu .mtoday .mt-up{font:inherit;font-size:12px;font-weight:600;color:var(--i3);
+  background:none;border:1px solid transparent;border-radius:var(--r-ctl);
+  padding:3px 9px;margin-left:-9px;cursor:pointer;letter-spacing:0}
+#viewMenu .mtoday .mt-up:hover{color:var(--ledger);border-color:var(--ln);background:var(--sunk)}
+#viewMenu .mtoday .mt-up.none{color:var(--i4);font-weight:500;cursor:default;padding-left:0;margin-left:0}
 /* the ledger row: quiet, and its action is a text affordance not a slab */
-#viewMenu .mgrid.rows:not(.live) .pcard{
-  grid-template-columns:minmax(0,1fr) 110px 150px 150px 90px 104px;padding:0 18px}
-#viewMenu .mgrid.rows:not(.live) .pc-body{grid-column:1/6;
+/* 116px, not 104. Every row's action is the short label ("Start 2026"), and the
+   rows nearest today draw it as a bordered button — which the ledger's 104px,
+   sized for a bare text affordance, left no room for. */
+#viewMenu .mgrid.rows .pcard{
+  grid-template-columns:minmax(0,1fr) 110px 150px 150px 90px 116px;padding:0 18px}
+#viewMenu .mgrid.rows .pc-body{grid-column:1/6;
   grid-template-columns:minmax(0,1fr) 110px 150px 150px 90px}
-#viewMenu .mgrid.rows:not(.live) .pc-prog{grid-column:2;grid-row:1;justify-self:start}
+#viewMenu .mgrid.rows .pc-prog{grid-column:2;grid-row:1;justify-self:start}
 #viewMenu .pc-prog{background:none;border-radius:0;padding:0;color:var(--i3);
   font-size:10.5px;font-weight:600;letter-spacing:.09em}
 #viewMenu .pc-prog.unk{background:none;color:var(--stamp)}
-#viewMenu .mgrid.rows:not(.live) .pc-meta{display:none}
+#viewMenu .mgrid.rows .pc-meta{display:none}
 
-#viewMenu .mgrid.rows:not(.live) .pc-due{grid-column:3;grid-row:1}
-#viewMenu .mgrid.rows:not(.live) .pc-eff{grid-column:4;grid-row:1;font-size:13px;color:var(--i3)}
-#viewMenu .mgrid.rows.live .pc-eff{display:none}
+#viewMenu .mgrid.rows .pc-due{grid-column:3;grid-row:1}
+#viewMenu .mgrid.rows .pc-eff{grid-column:4;grid-row:1;font-size:13px;color:var(--i3)}
 .pc-eff{font-size:12px;color:var(--muted)}
-#viewMenu .mgrid.rows:not(.live) .pc-units{grid-column:5;grid-row:1;justify-self:end;
+#viewMenu .mgrid.rows .pc-units{grid-column:5;grid-row:1;justify-self:end;
   white-space:nowrap}
-#viewMenu .mgrid.rows:not(.live) .pc-act{grid-column:6}
-#viewMenu .mgrid.rows:not(.live) .pc-act .btn{text-align:center;padding:5px 10px;width:100%;
+#viewMenu .mgrid.rows .pc-act{grid-column:6}
+#viewMenu .mgrid.rows .pc-act .btn{text-align:center;padding:5px 10px;width:100%;
   background:none;border:1px solid transparent;border-radius:var(--r-ctl);color:var(--i3);
   font-weight:600;font-size:12px;padding:0;width:auto}
-#viewMenu .mgrid.rows:not(.live) .pcard:hover .pc-act .btn{color:var(--ledger);
+#viewMenu .mgrid.rows .pcard:hover .pc-act .btn{color:var(--ledger);
   border-color:var(--ln);background:var(--card)}
-#viewMenu .mgrid.rows:not(.live) .pc-act .btn:hover{border-color:var(--ledger);color:var(--ledger)}
-#viewMenu .mcols{grid-template-columns:minmax(0,1fr) 110px 150px 150px 90px 104px}
+#viewMenu .mgrid.rows .pc-act .btn:hover{border-color:var(--ledger);color:var(--ledger)}
+/* "make that an actual button" — Matt, of the ledger's hover-only affordance.
+   The live panel that used to carry a solid slab is gone, so the emphasis moves
+   onto the rows themselves: everything from today back to the start of the
+   schedule reads as pressable AT REST and fills in on hover. Rows further out
+   keep the quiet text affordance, because 145 solid buttons rank nothing. */
+#viewMenu .mgrid.rows .pcard[data-band="now"] .pc-act .btn,
+#viewMenu .mgrid.rows .pcard[data-band="past"] .pc-act .btn{
+  border-color:var(--ln);background:var(--card);color:var(--i1);padding:6px 12px}
+#viewMenu .mgrid.rows .pcard[data-band="now"] .pc-act .btn:hover:not(:disabled),
+#viewMenu .mgrid.rows .pcard[data-band="past"] .pc-act .btn:hover:not(:disabled){
+  background:#101d2b;border-color:#101d2b;color:#fff}
+#viewMenu .mgrid.rows .pc-act .btn:disabled{background:none;border-color:transparent;color:var(--i4)}
+#viewMenu .mcols{grid-template-columns:minmax(0,1fr) 110px 150px 150px 90px 116px}
 #viewMenu .mcols .r{text-align:right}
 /* the sweep, offered where the population is named */
 #viewMenu .mgroup .txtbtn.del{font-size:11px;font-weight:600;letter-spacing:0;text-transform:none;padding:0}
@@ -844,7 +855,6 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
   font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;
   color:var(--muted)}
 .mgrid.rows .mgroup:first-child{border-top:0}
-.mgrid.rows .mgroup.live{color:var(--navy);background:var(--surface)}
 .mgrid.rows .pcard[data-band="now"]{background:var(--surface)}
 .mgrid.rows .pcard[data-band="now"] .pc-name{font-size:15px}
 .mgrid.rows .pcard[data-band="now"] .pc-due{color:var(--prov-over);font-weight:800}

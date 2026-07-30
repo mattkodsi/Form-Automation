@@ -35,7 +35,9 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=292;   // 2026-07-29: -3 — the rail's eight rows became the strip's five figures.
+const MIN_CHECKS=301;   // 2026-07-29: +9 — the schedule: one grid, month headings, the sticky
+                        // today-line, and the landing scroll that must not move as you type.
+                        // 2026-07-29: -3 — the rail's eight rows became the strip's five figures.
                        // 2026-07-28: +35 — the home page's filter rail, driven by real clicks.
                        // 2026-07-28: +6 — the tier-3 fixture is now read nudged as well as
                        // pristine (three seeds, two checks each). 2026-07-27: the unit-type cell
@@ -2004,13 +2006,22 @@ const FULL=process.argv.includes('--full');
         .forEach(x=>b[x.getAttribute('data-view')]=+x.querySelector('b').textContent);
         return {parts:b.past+b.now+b.later+b.undated,total:b.all};`);
       eq('the four bands sum to the total, on screen',sum.parts,sum.total);
-      /* A heading asserts a fact, so only its members may sit under it. "Due to
-         HUD by Jul 31" stood over a row due Aug 1 — the band is a window, so
-         the heading names the window. */
+      /* A heading asserts a fact, so only its members may sit under it — and on
+         this page every heading is a MONTH, because a month tiles the schedule
+         where a state does not. The two-zone version this replaced headed 83
+         rows "Past their date" and drew them BELOW the rows due within thirty
+         days: later dates above earlier ones, on a list whose whole claim is
+         that it runs in date order. */
       await c.eval('document.querySelector(\'#menuCount [data-view="all"]\').click();return 1');
       await sleep(200);
-      T('the live panel heading names the window it holds, not one date inside it',
-        await c.eval('return /Due within 30 days/.test((document.querySelector("#menuGrid .zhead h3")||{}).textContent||"")'));
+      const _sh=await c.eval(`const g=document.getElementById('menuGrid');
+        return {grids:g.querySelectorAll('.mgrid.rows').length,
+                heads:[...g.querySelectorAll('.mgroup')].map(x=>x.textContent.trim()),
+                states:/Past their date|Due within 30 days|Remaining|All of them/.test(g.innerHTML)};`);
+      eq('the schedule is one grid, not two zones',_sh.grids,1);
+      T('and no heading on it names a state instead of a date',!_sh.states);
+      T('every month the schedule reaches is headed by its own name',
+        _sh.heads.filter(h=>/^[A-Z][a-z]+ \d{4}$/.test(h)).length>=1);
 
       const zv=await c.eval('return ([...document.querySelectorAll("#menuCount [data-view]")]'
         +'.find(b=>+b.querySelector("b").textContent===0)||{getAttribute:()=>""}).getAttribute("data-view")');
@@ -2043,6 +2054,77 @@ const FULL=process.argv.includes('--full');
       const s2=await c.eval('return {view:window.__t.__menuView(),'
         +'on:(document.querySelector("#menuCount .fig.on")||{}).getAttribute("data-view")};');
       eq('clearing the box returns you where you were',[s2.view,s2.on],['later','later']);
+
+      /* ---- the today-line ----
+         A SECOND seed, because the fixture above deliberately leaves the past
+         band empty so an empty band can be pressed, and the line only exists
+         where rows sit on both sides of it. Offsets of -1 and 0 days put two
+         deadlines either side of today; 0 counts as ahead, so the row due today
+         is below the line. Both land in the same calendar month unless today is
+         the 1st, which is why the straddle check is guarded on the date rather
+         than assumed. */
+      const rows2=[trow('B010','Line Behind','OCAF',-1),
+                   trow('B011','Line Today','OCAF',0),
+                   trow('B012','Line Far','OCAF',200)];
+      await c.eval('await window.__t.__seedHap('+JSON.stringify(rows2)+');'
+        +'window.__t.__setMenuView("all");return 1');
+      await sleep(250);
+      const tl=await c.eval(`const g=document.getElementById('menuGrid');
+        const line=g.querySelector('.mtoday');
+        const kids=[...g.children[0].children].map(n=>
+          n.classList.contains('mtoday')?'|TODAY|'
+          :n.classList.contains('mgroup')?('#'+n.textContent.trim())
+          :n.classList.contains('pcard')?(n.querySelector('.pc-name')||{textContent:''}).textContent.trim()
+          :'');
+        return {n:g.querySelectorAll('.mtoday').length,
+                sticky:line?getComputedStyle(line).position:'',
+                top:line?Math.round(line.getBoundingClientRect().top):null,
+                up:!!g.querySelector('#mtUp'),
+                says:line?line.textContent.replace(/\\s+/g,' ').trim():'',
+                seq:kids.filter(Boolean)};`);
+      eq('today is drawn on the schedule, once',tl.n,1);
+      /* The one that cannot be read off markup. .mgrid.rows carried
+         overflow:hidden, which makes it a scroll container — a sticky child then
+         sticks to a scrollport exactly as tall as its own content, so the line
+         never moved and nothing in the DOM said why. */
+      eq('and it is pinned, not merely drawn',tl.sticky,'sticky');
+      T('it names the day it marks',/Today/.test(tl.says));
+      T('and how many rows sit above it',/1 past due/.test(tl.says));
+      T('the count above it is a control, not a caption',tl.up);
+      /* The divider is emitted BEFORE the month heading, so a month holding
+         dates on both sides of today keeps ONE heading and takes the line
+         between its own rows. On the real portfolio that is July 2026:
+         twenty-one deadlines behind today and one on the 31st ahead of it. */
+      const _d1=new Date(T0).getUTCDate();
+      if(_d1>1){
+        const i=tl.seq.indexOf('|TODAY|'), a=tl.seq.indexOf('Line Behind'), b=tl.seq.indexOf('Line Today');
+        T('a month holding dates either side of today keeps one heading',
+          tl.seq.filter(x=>x[0]==='#').length===tl.seq.filter((x,j)=>x[0]==='#'&&tl.seq.indexOf(x)===j).length);
+        T('and the line falls between its own rows, not above them',a>=0&&b>=0&&a<i&&i<b);
+      }else{
+        T('today is the 1st, so no month can straddle it — the line sits between two headings',
+          tl.seq.indexOf('|TODAY|')>0);
+      }
+      /* Landing scroll: at today on first paint, and NEVER again. renderMenu
+         rebuilds the whole list on every filter click and every search keystroke,
+         so re-applying it would yank the page out from under someone mid-word.
+
+         Asserted by scrolling AWAY and forcing a re-render, not by typing and
+         comparing offsets: filtering to three rows makes the document shorter
+         than the scroll position, so the browser clamps to 0 on its own and the
+         comparison fails on document height rather than on anything the app
+         did. This way round the invariant is the only thing under test. */
+      await c.eval('window.scrollTo(0,0);return 1');
+      await sleep(80);
+      await c.eval('document.querySelector(\'#menuCount [data-view="all"]\').click();return 1');
+      await sleep(260);
+      eq('and a later render does not scroll the page back to it',
+        await c.eval('return Math.round(window.pageYOffset)'),0);
+      /* Back to the first fixture, so the checks after this read the portfolio
+         they were written against. */
+      await c.eval('await window.__t.__seedHap('+JSON.stringify(rows)+');'
+        +'window.__t.__setMenuView("all");return 1');
+      await sleep(220);
 
       /* Whose portfolio you are reading is one control now, and changing it
          releases the band — the bands are not the same shape for one manager

@@ -20,7 +20,10 @@ global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>
 const os=require('os'),path=require('path'),fs=require('fs');
 
 /* ── the verdict machinery (mirrors test_interactions.js) ───────────────── */
-const MIN_CHECKS=138;   // 2026-07-28: +32 the home page's filter rail, +24 the primary action
+const MONTHNAMES=['January','February','March','April','May','June','July',
+                 'August','September','October','November','December'];
+const MIN_CHECKS=151;   // 2026-07-29: +12 the schedule — one axis, month headings, the today-line
+                        // 2026-07-28: +32 the home page's filter rail, +24 the primary action
 let n=0,fails=0,verdict=null;
 const BAR='═'.repeat(68);
 function fail(msg,err){
@@ -121,11 +124,11 @@ const T=(label,v)=>eq(label,!!v,true);
   const c1=app.__menuCounts();
   T('the figures strip renders once the tracker supplies properties', /class="fig/.test(strip1));
   T('nothing undefined leaked into the strip', !/undefined/.test(strip1));
-  T('the strip names every band', /past their date/.test(strip1)&&/due within 30 days/.test(strip1)
+  T('the strip names every band', /past due to HUD/.test(strip1)&&/due within 30 days/.test(strip1)
     &&/later/.test(strip1)&&/not in the schedule/.test(strip1)&&/properties/.test(strip1));
   T('and every figure is a control, not a caption', (strip1.match(/data-view=/g)||[]).length===5);
   T('the lede explains the view on screen', lede1.length>20);
-  eq('a deadline already passed lands in past their date', c1.past, 1);
+  eq('a deadline already passed lands in past due to HUD', c1.past, 1);
   eq('inside 30 days lands in due within 30 days',          c1.now, 1);
   eq('further out lands in later',                          c1.later, 2);
   /* Gates Manor carries no tracker code and Rail Awaiting has no future
@@ -144,19 +147,64 @@ const T=(label,v)=>eq(label,!!v,true);
   app.__setMenuView('later');
   eq('pressing a figure redraws the grid to match it', cardsIn(els.menuGrid.innerHTML), c1.later);
   app.__setMenuView('past');
-  eq('and past their date draws only what is past', cardsIn(els.menuGrid.innerHTML), c1.past);
+  eq('and past due to HUD draws only what is past', cardsIn(els.menuGrid.innerHTML), c1.past);
   app.__setMenuView('undated');
   eq('not in the schedule draws both populations',    cardsIn(els.menuGrid.innerHTML), c1.undated);
   T('and separates them under the heading that says so',
     /Not in the renewal schedule/.test(els.menuGrid.innerHTML));
+
+  /* ── THE SCHEDULE ──────────────────────────────────────────────────────
+     The list is one grid on one axis, and every division on it is a point in
+     time. It replaced two zones in which the rows due within thirty days were
+     drawn ABOVE the rows whose dates had already passed — later dates over
+     earlier ones, on a list whose whole claim is that it runs in date order. */
+  console.log('\n─ ONE AXIS, AND EVERY DIVISION ON IT IS A DATE ─');
+  app.__setMenuView('all');
+  const sch=els.menuGrid.innerHTML;
+  const heads=(sch.match(/class="mgroup"[^>]*>([^<]*)</g)||[]).map(x=>x.replace(/^[^>]*>/,'').replace(/<$/,''));
+  T('the schedule is one grid, not two zones', (sch.match(/class="mgrid rows/g)||[]).length===1);
+  T('and nothing on it is headed by a state rather than a date',
+    !/Past their date|Due within 30 days|Remaining|All of them/.test(sch));
+  /* A month heading over every dated row, and the months in ascending order.
+     Read off the markup, because the ordering is the one thing a count cannot
+     catch: five headings in the wrong sequence still sum to the same total. */
+  const months=heads.filter(h=>/^[A-Z][a-z]+ \d{4}$/.test(h));
+  T('each month the schedule reaches gets a heading of its own', months.length>=2);
+  const mi=h=>{const p=h.split(' ');return (+p[1])*12+MONTHNAMES.indexOf(p[0]);};
+  eq('and the months run forward, earliest first', months.map(mi).slice().sort((a,b)=>a-b), months.map(mi));
+  /* The today-line. A row of the list, not a boundary between headings, because
+     a month can hold dates on both sides of today. */
+  eq('today is drawn on the schedule, once', (sch.match(/class="mtoday"/g)||[]).length, 1);
+  T('and it says how many rows sit above it', new RegExp('\\b'+c1.past+' past due\\b').test(sch));
+  T('the count above it is a control, not a caption', /id="mtUp"/.test(sch));
+  /* Filtered to one side of today the line would be a boundary with nothing
+     beyond it — an emptiness the filter created, not the schedule. */
+  app.__setMenuView('past');
+  T('filtered to what is past, today is not drawn below the last row',
+    !/class="mtoday"/.test(els.menuGrid.innerHTML));
+  app.__setMenuView('later');
+  T('and filtered to what is ahead, not above the first',
+    !/class="mtoday"/.test(els.menuGrid.innerHTML));
+  app.__setMenuView('all');
+  /* Off the axis, so below every month rather than inside the last one. */
+  const _sIdx=els.menuGrid.innerHTML.indexOf('No renewal scheduled');
+  const _mLast=els.menuGrid.innerHTML.lastIndexOf(months[months.length-1]);
+  T('a property with no deadline is drawn below the last month, not inside it', _sIdx>_mLast);
 
   /* ── THE PRIMARY ACTION ────────────────────────────────────────────── */
   console.log('\n─ ONE ACTION PER CARD, DERIVED NOT DECORATED ─');
   app.__setMenuView('all');
   const gall=els.menuGrid.innerHTML;
   T('a tracker card carries an action',     /data-pact=/.test(gall));
-  T('and the label names the year and the program it will start',
-    new RegExp('Start '+new Date(T0+132*DAY).getUTCFullYear()+' OCAF').test(gall));
+  /* The year on the button, the programme in the column headed Program. It used
+     to be "Start 2026 OCAF" on a row already reading OCAF one cell to the left \u2014
+     the same fact twice, and only because rows inside thirty days once sat in a
+     panel with twice the width to spend. Both halves are still asserted; what is
+     no longer asserted is that they sit in the same place. */
+  T('the action names the year it will start',
+    new RegExp('Start '+new Date(T0+132*DAY).getUTCFullYear()+'<').test(gall));
+  T('and the programme is named once, in the column headed Program',
+    /class="pc-prog[^"]*">OCAF</.test(gall)&&!/Start \d{4} OCAF/.test(gall));
   /* The nested-button trap. <button> inside <button> is invalid HTML: the parser
      closes the outer element and re-parents the inner one as a sibling, so the
      card silently loses its bottom half in a real browser while an innerHTML
