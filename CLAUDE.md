@@ -225,6 +225,15 @@ Supabase migration (the other half: `deliver.sh` never ran it). All six suites n
 as the last line so a pipe at least *shows* the failure, and each asserts a minimum check count
 (`MIN_CHECKS`) so dying partway can't read as a pass. **Adding checks? Raise `MIN_CHECKS`.**
 
+## Seeing the RA-locked cells
+
+The property name and the effective date stop being editable when
+`window.RASource` — Kinley's database seam — answers for them. Nothing injects it
+on this build, so the feature is invisible here. **Open `index.html?ra=1`** to
+stand the seam up against the property's own stored values: nothing changes value,
+the two cells simply lock. See `docs/superpowers/specs/2026-07-30-tracker-is-definitive-design.md`
+and FORM-RULES 20.
+
 ## Resume point
 
 `SESSION-HANDOFF-2026-07-13.md` holds the working state: what's done and QA-accepted, the hard-won

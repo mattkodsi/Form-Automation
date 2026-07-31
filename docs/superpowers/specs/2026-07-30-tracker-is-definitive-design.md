@@ -149,6 +149,20 @@ writes it to the record, and the gallery follows — `Gates Manor Apartments` �
 tail, which would leave that name behind for whatever runs after; the 19 checks
 around it cover the lock itself.
 
+### Seeing it on this build
+
+`window.RASource` is injected by Kinley's port and by nothing else, so on the
+Supabase build every locked cell renders exactly as it always did and the whole
+feature is invisible. Open the app with **`?ra=1`** to stand the seam up locally:
+
+```
+index.html?ra=1
+```
+
+It invents nothing — it answers with the values the property already holds, so
+the only thing that changes is that the two cells stop being editable. A demo
+that made up a name would be showing something the app will never do.
+
 Still open, deliberately:
 
 - **Storing the tracker row on the package.** Not needed once RASource answers
