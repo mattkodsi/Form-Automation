@@ -33,6 +33,20 @@ Only the live-account sweep needs the Mac.
 properties and two agents in `app.js` collide. If the Mac sees something that needs a
 code change it writes it down and hands it over — it does not apply it.
 
+## The ground under this changed on 2026-07-31 — read `rcs-audit-run.md`
+
+Three things moved after this file was first written, and each invalidates an assumption
+in it:
+
+- **The account is a real 249-property portfolio now**, rebuilt from the HAP tracker with
+  Matt's blessing. `--cleanup` deletes PROPERTIES and would therefore destroy it. Nothing
+  sweeps until the driver creates and deletes **cycles** instead.
+- **The renewal schedule owns a package's date.** There is no date field to type into on
+  `main`. A historical package exists only if the tracker carries that year — 43 of the
+  corpus's 66 property-years do, after the 2026-07-31 export was loaded.
+- **Every record in `sweep-out/` predates that**, so its prior-year rows were driven as
+  current-cycle packages. Provisional until re-driven.
+
 ## What counts as a real bug, in priority order
 
 **1. Storm violations — real today, no ground truth needed.** 34 across the sweep, 30 of

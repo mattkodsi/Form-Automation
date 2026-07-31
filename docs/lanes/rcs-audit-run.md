@@ -1,195 +1,96 @@
-# The run order — read this, then go
+# The run order — CURRENT. Supersedes everything above it in git history.
 
-Matt's instruction, 2026-07-31: **no separate trial gate. Start the audit tonight.**
-Colonial Village goes first so there is one checkable result early, and the sweep
-continues without waiting for anyone to approve it.
+Rewritten 2026-07-31 after three things changed underneath this lane: the corpus is
+driven from a real portfolio rather than scratch records, `main` made the renewal
+schedule definitive for a package's date, and the roles swapped.
 
-Cherry Garden was the earlier designation and is **postponed** — it is one of the eight
-properties the manifest cannot see (see the warning at the top of
-`rcs-audit-inventory.md`). Do not spend the night making it visible.
+## Roles
 
-## Order of work
+**The cloud is the quarterback and owns the code.** It reads sources, writes verdicts,
+traces mechanisms, and is the ONLY machine that edits source, builds, tests and
+delivers. It cannot drive the app — chromium has no network egress in that container,
+proved by twelve measurements — and that is its only limitation. Loopback works there,
+so it runs every suite including the browser ones.
 
-1. **`git pull`.** `.claude/settings.json` now allows the read-only rclone verbs, which
-   is what blocked the corpus fetch.
+**The Mac is the driving rig.** It drives the real signed-in app against the corpus,
+pushes the records, cleans up the account, and after any repair re-drives and reports
+whether the packages that should have moved moved and nothing else did. **It does not
+edit source.** What it observes it writes down and hands over.
 
-2. **Fetch the corpus** to `$HOME/corpus` — outside the repo, it is ~4 GB and must never
-   be committed:
+## The state of the account — READ THIS BEFORE DRIVING ANYTHING
 
-       rclone copy gd: $HOME/corpus --fast-list --transfers 16 --progress
+The account is no longer a scratch pad. On 2026-07-31, with Matt's explicit blessing, it
+was emptied and rebuilt from the HAP tracker:
 
-3. **Fix chromium, in THREE places.** Your `findChrome()` patch is accepted — honour
-   `PLAYWRIGHT_BROWSERS_PATH` / `CHROME_PATH`, and pass `--no-sandbox` only at uid 0.
-   But there are three spawn sites, not one, and the third landed today so you have not
-   seen it:
+- **249 real portfolio properties**, imported with their `ra_property_code`.
+- **4,273 tracker rows** in `hap_schedule`, carrying rent-increase years **2014–2046**
+  where the previous export effectively began at the next renewal.
+- What was deleted is snapshotted at
+  `docs/superpowers/plans/account-snapshot-before-reset.json` — 15 properties, 4 cycles.
 
-   | file | what it needs |
-   |---|---|
-   | `app/full-mp/cdplib.js` | `findChrome()` **and** the spawn args |
-   | `app/full-mp/corpus/drive.js` | its own `findChrome()` **and** spawn args |
-   | `app/full-mp/fuzz.js` | spawn args only — it imports `findChrome` from cdplib |
+**Therefore the old cleanup rule is now DANGEROUS.** `--cleanup` deletes PROPERTIES. The
+properties in that account are now real portfolio records that must survive. A cleanup
+that deletes properties would destroy the portfolio, not tidy up after a run.
 
-   `fuzz.js`'s `withBundle()` exists to serve a deliberately broken bundle to the storm's
-   proof suite. Miss it and `test_fuzz.js` fails as root while everything else passes.
+**The new rule: a run creates CYCLES, not properties, and cleanup deletes only the
+cycles it created.** Until the driver is changed to work that way, DO NOT run a sweep
+against the portfolio.
 
-   **A suite that reports 0 checks must fail, not pass.** You found `test_browser.js`
-   doing exactly that. `MIN_CHECKS` was supposed to make that impossible; a skip that
-   returns before reaching its own floor defeats it. Fix that too — it is the same shape
-   as a planted defect that silently fails to apply, and it is worth more than the
-   container it was found in.
+## Why the date now comes from the tracker
 
-4. **Rebuild the manifest** against the real corpus and commit it:
+`main` (`afda7f4`, and the spec at
+`docs/superpowers/specs/2026-07-30-tracker-is-definitive-design.md`) made the renewal
+schedule definitive. In `newCycleDialog`, when the tracker carries a row for the
+property, `_fixed` is true and the effective date and program render as LOCKED LINES —
+there is no `cyEff` input to type into. The package takes the schedule's date.
 
-       node app/full-mp/corpus/build-manifest.js $HOME/corpus app/full-mp/corpus/corpus.json
+Two consequences, and they are the reason the tracker was reloaded:
 
-5. **`bash app/full-mp/run_tests.sh`** must be green before driving anything. Fourteen
-   suites. If the viewport failures reappear, record them and carry on — CSS belongs to
-   another lane; nothing else may be red.
+1. **A historical package can be created only if the tracker carries that year.** With
+   the new export, **43 of the corpus's 66 property-years** are drivable. The other 23
+   are pre-2020 years where the export thins to a handful of rows, plus Sycamore Green,
+   which the tracker does not list at all. Those 23 can still be READ for SHOULD; they
+   cannot be regenerated, and the driver must skip them and say so rather than invent a
+   date.
+2. **Every package driven before 2026-07-31 took a default date.** `drive.js` never set
+   `cyEff`, so all 89 in `sweep-out/` were created as current-cycle packages whatever
+   their year. Anything year-derived in a prior-year record — the SAFMR pull most
+   obviously — is comparing today's HUD data against a filing from years ago. Treat
+   those prior-year rows as PROVISIONAL until re-driven.
 
-6. **Colonial Village first**, both fill orders, storm on:
+## The driver change — the cloud's next job, and nothing drives until it lands
 
-       node app/full-mp/corpus/sweep.js $HOME/corpus _archive/corpus-cache \
-         app/full-mp/corpus/corpus.json --only 75708 --jobs 1 --label cv
+| # | what | why |
+|--:|---|---|
+| 1 | Find the existing property by `ra_property_code`; never create one | the portfolio is real now |
+| 2 | Create the package for the TARGET year by selecting its tracker row | 16 property-years carry more than one row, so the row must be chosen, not assumed |
+| 3 | Skip, loudly, any property-year the tracker does not carry | a package with an invented date is not the package that was filed |
+| 4 | Record and delete **cycles**, never properties | see the account warning above |
+| 5 | Two passes: drive the prior cycle, SAVE, then drive the current one | this is the one that matters — see below |
 
-   Read what it produced BY EYE — render the pages, look at them — against Colonial
-   Village's own sources. Commit the result. If the package is obviously wrong in a way
-   that would repeat across every property, stop and say so; otherwise continue.
+**Why two passes is the point.** A blank property makes every cell read `new` — grey. The
+provenance system's whole purpose is the difference between **on file** (blue),
+**overridden** (orange) and **new**, and a blank record can produce neither of the first
+two. Every audit run to date has therefore never once exercised the states Matt's team
+actually works in. Driving last year's package, saving it, and then driving this year's
+against a record that already holds it is not a simulation of the workflow — it IS the
+5th-year renewal.
 
-7. **The rest of the corpus**, ~3 jobs:
+## What the Mac does once the change lands
 
-       node app/full-mp/corpus/sweep.js $HOME/corpus _archive/corpus-cache \
-         app/full-mp/corpus/corpus.json --jobs 3 --label night-1
+1. Drive the 43 drivable property-years, both fill orders, storm on.
+2. Cleanup by cycle; confirm the property count is still **249** and unchanged.
+3. Commit `docs/superpowers/plans/sweep-out/` and push after every wave, not at the end.
+4. Re-drive after every repair and report what moved.
 
-## Rails — all of these have bitten
+## Rails that have each cost a run
 
-- **Runs write `ZZ-CORPUS-*` properties into Matt's LIVE account.** Delete them after
-  every batch and verify zero remain:
-  `node app/full-mp/corpus/drive.js --cleanup --prefix ZZ-CORPUS-`
-  Never delete anything without that prefix. A property total is NOT a safety check.
-- **Commit and push after every few packages.** The session can idle out with no warning
-  and the docs do not say when; uncommitted work is lost work. `sweep.js` writes one file
-  per package and resumes, so a death costs one package if you have been pushing.
-- **Never pipe a suite through `| tail`** — the exit status becomes tail's.
-- **Do not use `find` on the corpus.** It returns nothing on a Drive mount, silently.
-- **Never edit `index.html` by hand**; edit `app/full-mp/*` and run `deliver.sh`.
-- **Stay out of `app.js` lines 2720–2867 and `shell.head.html` styling** — another lane
-  owns them. A finding that needs a UI change gets written down, not fixed.
-
-## What to report
-
-Per the method: `property · year · document · field · SHOULD · OURS · FILED · verdict ·
-mechanism · evidence`, verdict naming which leg is wrong. FILED is evidence, not truth.
-Findings without evidence do not count. Append to
-`docs/superpowers/plans/AUDIT-LEDGER.md` and push.
-
-**Also report what the storm found.** It runs on every package with its own seed and
-needs no ground truth, so its violations are findable tonight even where a comparison is
-not. Every violation carries the seed that replays it.
-
-Do not wait for approval between packages. Matt is asleep.
-
----
-
-## Fan out. Do not read the corpus in your own context.
-
-Added after the run started, because the file above did not say it and it decides
-whether the night finishes.
-
-**The mechanical leg is already parallel** — `sweep.js --jobs 3` drives three browsers
-at once. That is not what this section is about.
-
-**The reading leg is the one that will kill you.** The method says every page of every
-document is rendered and read BY EYE. That is images, dozens per package, across ~68
-packages. Done in one context it exhausts the window somewhere around package three,
-and everything after that is a summary of a summary — which is exactly the failure this
-lane was created to stop.
-
-So: **one subagent per package.** It reads the pages, and it returns rows — never the
-pages, never long quotations of what it saw. Your context holds the ledger, the
-mechanism traces and the repairs; theirs holds the documents.
-
-Run **4–6 at a time**. Beyond that the drives contend and the account fills with
-scratch records faster than cleanup runs.
-
-### The brief each one gets
-
-> Audit ONE package end to end: `<property>`, cycle `<label>`. Observation only — do not
-> edit code, do not fix anything, do not run `deliver.sh`, do not push.
->
-> 1. Read the SOURCES first and write down what the package must contain, BEFORE opening
->    any output: the RCS study's concluded-rent table and the prior executed rent
->    schedule. Read them as IMAGES (the Read tool's `pages:` parameter). Do NOT use a
->    text parser — the parser is the thing under test and has produced confident
->    nonsense before.
-> 2. Read what the app generated, in both fill orders, under the sweep's `_out` tree.
->    Same rule: look at the pages.
-> 3. Read what the PM team filed, in the property's cycle folder.
-> 4. Return ledger rows ONLY:
->    `property · year · document · field · SHOULD · OURS · FILED · verdict · where you
->    read each value (file + page)`. Verdict is one of `app wrong`, `team wrong`,
->    `both wrong`, `cosmetic`.
-> 5. EXACT values. If you cannot read something, say so — never infer a number, and
->    never fill a gap with what the other two legs say.
-> 6. Do not propose fixes. The mechanism trace and the repair belong to the coordinator.
-
-### What you do with what comes back
-
-Append rows to `docs/superpowers/plans/AUDIT-LEDGER.md` and **push after every wave**,
-not at the end. A row whose mechanism is not traced stays `undiagnosed`, and no repair
-is written against an undiagnosed row.
-
-Fix by MECHANISM, never by property, and never from a single property: either two
-properties show it or a code reading shows it is general. Repairs are serialized — one
-at a time, by you, never by a subagent — because one mechanism usually spans many
-properties and two agents editing `app.js` collide.
-
----
-
-## Chromium has no egress: it is almost certainly the proxy
-
-Added 2026-07-31 after the container reported `ERR_CONNECTION_RESET` reaching
-`example.com` from chromium while the environment's network access is set to **Full**.
-
-Node can reach the network in that container; chromium cannot. That asymmetry is the
-tell. All outbound traffic there goes through an Anthropic-managed security proxy, and
-node honours `HTTPS_PROXY` / `HTTP_PROXY` from the environment while **chromium does
-not** — on Linux it must be told on the command line. A connection reset rather than a
-DNS failure is what an unproxied client hitting a proxied network looks like.
-
-**The change, at all three spawn sites** (`cdplib.js`, `corpus/drive.js`, `fuzz.js`):
-
-    const PROXY = process.env.HTTPS_PROXY || process.env.https_proxy
-               || process.env.HTTP_PROXY  || process.env.http_proxy || '';
-    // …then, in the args array:
-    ...(PROXY ? ['--proxy-server=' + PROXY,
-                 '--proxy-bypass-list=127.0.0.1,localhost'] : []),
-
-The bypass list is not optional. The bundle is served from a loopback port in the same
-container, and routing that through the proxy breaks the very thing every browser suite
-depends on.
-
-If it then fails on TLS instead, the proxy is intercepting with its own CA that
-chromium's store does not carry. Check for `NODE_EXTRA_CA_CERTS`; if it points at a
-bundle, pass that CA to chromium, and only if that is impossible fall back to
-`--ignore-certificate-errors` — which is acceptable in a throwaway container talking to
-one known host, and nowhere else.
-
-**Prove it before believing it:** load the Supabase URL in the driven browser and read
-the status back. `example.com` is a fine smoke test but it is not the host that matters.
-
-Until this clears, the OURS leg does not exist. The reading agents can still build
-SHOULD from the sources and record what was FILED — that work is real and keeps — but
-**a SHOULD-vs-FILED comparison is not the audit** and must never be filed in the ledger
-as though it were. Mark those rows so the missing leg is visible.
-
-## A record with nothing in it is not a result
-
-The stop condition Matt gave — "every package has a result committed" — is reachable by
-writing 88 records that say the app generated nothing. That would read as a completed
-audit that verified nothing, which is the exact failure this lane exists to prevent, and
-the same shape as a test suite reporting zero checks and passing.
-
-**A cycle counts as done only if the app actually produced documents and they were
-compared.** `verdict: 'the app generated nothing comparable'` is a blocked package, not
-a finished one. Anything that counts packages — the loop, the report, the ledger —
-counts those two categories separately and says so out loud.
+- **The property count is 249 and must stay 249.** If it changes, something deleted or
+  created a portfolio record and the run stops.
+- A scratch record can rename itself out of any name-based check — the app overwrites
+  `property.name` from a readable schedule. `drive.js` records ids; trust ids, never names.
+- Never pipe a suite through `| tail` — the exit status becomes tail's.
+- `find` returns only the root on the Drive mount, silently. Use `ls -R`.
+- A record saying "the app generated nothing comparable" is **blocked**, not done.
+- Stay out of `app.js` 2720–2867 and `shell.head.html` styling — another lane owns them.
+- Merge `origin/main` daily. It moved 19 commits under this lane before anyone noticed.
