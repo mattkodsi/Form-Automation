@@ -338,3 +338,95 @@ feasibility screen, not a concluded rent — and it was not filed.
 root render unsigned, while the copies bound into the filed submission are all
 DocuSigned. Judging a package by its loose files would report false "unsigned" defects —
 the bound submission is the operative artifact.
+
+---
+
+## Mechanisms — patterns across properties, not per-property defects
+
+Per the run order: *"Fix by MECHANISM, never by property, and never from a single
+property: either two properties show it or a code reading shows it is general."* Wave 1
+is five packages. Each entry below states how many of the five carry it, so a reader can
+see which have cleared that bar and which have not.
+
+### M1 · "FHA Project No." always carries the HAP contract number — 5 of 5
+
+Every study transmittal prints the Section 8 HAP contract number in a field labelled
+*FHA Project No.*, and the rent-comparability grid headers repeat it under
+*Subject's FHA #*. The actual FHA project number is `N/A` for these properties, and the
+executed schedules say so.
+
+| property | printed as "FHA Project No." | correct FHA no. |
+|---|---|---|
+| Colonial Village | `OH10M000236` | (blank on both filed and prior executed) |
+| Westwood Village | `VA36H026152` — **and a digit wrong** (…027152) | `N/A` |
+| Circle Park | `IL00054027` — **and a digit wrong** (IL060054027) | blank |
+| Lansing Manor | `MI330005001` | `N/A` |
+| Oceanport Gardens | `NJ3900-14058` in the grids' FHA box | `N/A` on the HAP contract, `031-35157` on Exhibit A |
+
+Two of the five also mistype the number, and in Circle Park's case **HUD's own issues
+memo repeated the malformed number**, so the error propagated into the review record.
+This is an appraiser-template mechanism (Belfry on four, Renzi on one — so it is not
+even firm-specific). It is not something the app can cause, but it is something the app
+could *detect*, since the app holds both numbers.
+
+### M2 · The filed Col.5 utility allowance disagrees with its governing source — 3 of 5
+
+| property | filed | governing source says | source of the wrong figure |
+|---|--:|--:|---|
+| Colonial Village | 160 | 161 (RCS p.3, FY2025 **executed**, workbook) | the FY2025 **draft**, which the executed corrected |
+| Westwood Village | 161 / 150 | 155 / 151 (baseline worksheet `F18`/`F19`) | undetermined — appears nowhere in the folder |
+| Lansing Manor | study priced on 85 | 116 in force, 99 approved | undetermined — appears nowhere in the cycle |
+
+**This is the mechanism most relevant to the app.** Colonial Village's case is exactly
+the failure the app is meant to prevent: a value carried from a superseded draft instead
+of the executed schedule. `db.js` routes rents and allowances through the per-cycle
+bucket and the app reads the *prior executed* schedule as its source — so when the OURS
+leg runs, the first question to ask each package is **which schedule the app picked up
+as "prior"**. The manifest's `priorRsRule` already records that choice per cycle, and
+2 of 88 cycles resolved by `newest before year 0` rather than `year-1 folder`.
+
+### M3 · Judging loose files manufactures defects — 3 of 5, and it is a METHOD finding
+
+Colonial Village, Oceanport and Lansing Manor all have package components sitting loose
+in the folder that render **unsigned**, while the copies bound into the combined
+submission are DocuSigned. Lansing Manor has all three loose components unsigned and all
+three bound copies signed.
+
+An auditor reading the loose files reports three signature defects that do not exist.
+**This applies directly to the OURS leg**: the app generates loose documents, so any
+comparison of OURS against a *bound* FILED package will show a signature difference on
+every property, and that difference is not a finding. Any comparator that scores
+signatures must compare like with like, or exclude them.
+
+### M4 · "Scope of Work" left unchecked though the study contains one — 3 of 5
+
+Colonial Village, Westwood Village and Oceanport Gardens all leave the owner's-checklist
+"Scope of Work" box unticked while the RCS opens with a *Scope of Assignment* section.
+Circle Park and Lansing Manor tick it correctly. The app owns this checkbox
+(`CHECKLIST_FLAT`, 17 items), so it is directly testable once OURS exists.
+
+### M5 · Arithmetic errors on the study's own summary pages — 2 of 5
+
+Circle Park prints a line item of `365,800` where its own columns give `365,880`, a
+total of `639,690` where its own five lines sum to `639,960`, and a 150% test reading
+`$864,296>$959,940` when the figures require `<`. Oceanport's 1BR-Small grid concludes
+`2,500 / $4.53` while every summary in the same report says `2,525 / $4.57`.
+
+In both cases **the downstream totals were computed off the correct figures**, so the
+printed line items are the only wrong values. That matters: a comparator checking only
+totals passes these.
+
+### Not yet mechanisms — single property, recorded so the second instance is recognised
+
+- **Cross-property contamination in a filed workbook** — Colonial Village only (sheet 1
+  holds Crossroads of East Ravenswood's rent grids). Lansing Manor looked like a second
+  instance and is not: "Senior World" and "Village Green III" are aliases of Lansing
+  Manor itself. **An alias is not contamination**, and the corpus is full of aliases
+  (Colonial Village/White Oak Townhomes, Oceanport Gardens/Oceanport Senior Citizens).
+  Adjacent: Circle Park's **2025** certification names *Marshall Field Preservation L.P.*
+- **A rent gap the folder cannot derive** — Oceanport only, $72,180/year, described by
+  the CA as "100% of Owner's RCS". If a second property shows this, it stops being a
+  one-off and becomes a question about how CA determinations relate to filed studies.
+- **The unit-type label on the filed HUD-92458** — Colonial Village only (`1 BR` for 33
+  three-bedroom units). Directly app-relevant: the app writes Col.1 from its own unit
+  mix, so this is a row the OURS leg will either reproduce or get right.
