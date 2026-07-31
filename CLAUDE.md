@@ -145,7 +145,8 @@ a new suite needs registering (`deliver.sh` calls it).
 
 - **`app/full-mp/test_db.js`** — data layer incl. the cycle + directory surface (which cycle is
   dominant, what carries into a new one, what writes back to the template), and the one-name rule
-  the whole registry rests on; 168 checks.
+  the whole registry rests on, and that Related Affordable outranks the schedule for the
+  effective date; 200 checks.
 - **`app/full-mp/test_interactions.js`** — save/revert/group + esc/enter decision logic against the real
   store, incl. the unit designation chip; 144 checks (self-contained; builds its own bundle).
 - **`app/full-mp/smoke_combined.js`** — headless render smoke of the assembled app: menu → launcher →
@@ -154,7 +155,7 @@ a new suite needs registering (`deliver.sh` calls it).
 - **`app/full-mp/test_browser.js`** — **the only suite that presses keys.** Builds its own bundle,
   drives it in a real headless chromium through `?selftest=1`, and dispatches real trusted key
   events over CDP (zero dependencies — node's own WebSocket). It covers the hole the other suites
-  cannot see: they prove `save()` saves, this proves a keystroke *reaches* it. 241 checks — Enter and
+  cannot see: they prove `save()` saves, this proves a keystroke *reaches* it. 558 checks — Enter and
   Escape on every kind of cell, the source dropdowns, the conflict buttons, the session boundary,
   and tier 3 end to end on `fixture_rs_scan.json` — read pristine, and read nudged half a point.
   `--full` drives all ~110 controls instead of one per kind. Skips **loudly** (never as a pass) when
@@ -165,7 +166,8 @@ a new suite needs registering (`deliver.sh` calls it).
   reader (`rsTableA`) against `fixture_rs_printings.json` — two REAL prior schedules printed at
   coordinates our template does not share, one of them a scanner’s own text layer.
 - **`app/full-mp/test_gen.js`** — record → PDF bytes: what each generated document actually prints,
-  and what it refuses to print rather than print wrong; 33 checks.
+  and what it refuses to print rather than print wrong, incl. which of three possible effective
+  dates reaches the federal form; 131 checks.
 
 - **`app/full-mp/test_hap.js`** — the HAP tracker seam (`hap.js`) against the real 2853-row export in
   `_archive/hap-fixtures/`: tolerant column matching, six date formats, and every hazard the live data
@@ -214,7 +216,7 @@ a new suite needs registering (`deliver.sh` calls it).
   computed, and both tools exit 3 with a banner where poppler is absent rather than exiting 0 having
   rendered nothing.
 
-**2447 checks across thirteen suites** (98 · 190 · 144 · 222 · 125 · 444 · 189 · 539 · 111 · 15 · 91 · 120 · 159) as of 2026-07-30, counted off a real run. These
+**2482 checks across thirteen suites** (98 · 200 · 144 · 222 · 131 · 444 · 189 · 558 · 111 · 15 · 91 · 120 · 159) as of 2026-07-30, counted off a real run. These
 numbers go stale the moment a suite grows — `MIN_CHECKS` in each file is the binding floor; this list
 is a map.
 ⚠️ **Don't pipe a suite through `| tail`.** A pipeline's exit status is the LAST command's, so node's

@@ -272,6 +272,36 @@ not exist inside a single load. **Add the reload to the sweep:** after filling
 from a document, reopen the package and confirm every source row still offers
 what it offered a moment ago.
 
+## 20. A locked cell displays a value AND stores it, on every path that opens a form
+
+A cell whose answer comes from Kinley's database (`isLocked`, `RA_LOCKED` in app.js)
+renders as text instead of an input. That value is not decoration: it names the package
+in the header, it drives the record checks, and it prints on six documents. So
+`applyRaLocked()` writes it INTO the form — **before `snapForm()`**, so a value nobody
+can change never opens the form dirty asking to be saved.
+
+**Why:** the write-through was added to `openCycleForm` and not to `openForm`. Through
+that second door the locked value was painted over a record that had never received it:
+the cell read "Colonial Village" while the header read "(unnamed property)" and Record
+Checks said the property name was missing. Displaying and storing are one operation, and
+it belongs to *opening a form*, not to one of the two functions that do it.
+
+Two more things that fall out of the same idea:
+
+- **Locked is not a fifth provenance colour.** The four all answer *is this saved?*; this
+  one answers *who decides this*. It takes none of them — flat surface, neutral rule where
+  the provenance bar would be. Not greyed out either: grey reads as broken rather than
+  governed, and the value still has to be legible on a document nobody can retype.
+- **Rule 7 does not apply to it, because nothing in it is focusable.** A locked cell holds
+  no input, no trigger, no tabindex. That is the invariant to assert — a control you can
+  reach but cannot use is the state rule 7 exists to prevent. And when a cell locks, the
+  dropdown it replaces must be *gone*, not disabled: a menu offering two answers beside a
+  value that answers to neither is a control that lies.
+
+The refusal itself is rule 17's, not this one's: removing an input stops a person, and does
+nothing about the rent-schedule parser, which sets these very keys from a document often a
+year older than the record. Every fill asks `raLockedKey(k)` first.
+
 ## Before you deliver
 
 `deliver.sh` runs most of this. Run it, then do the rest by hand.
