@@ -3801,3 +3801,32 @@ which would make this a per-cycle-staleness bug rather than a parse bug.
 **One for the team's file, not ours:** the 2024 UAF's "Previous Year" 4BR electric reads
 $88.00 where the 2023 UAF concluded $89.00. Carrying $89 yields UA 159, not 158. The CA
 approved 158, so 158 governs; the $1 is theirs.
+
+---
+
+## Six verdicts closed on the H9 classes — no defect on either leg
+
+These six have an OURS leg, a SHOULD, and no money row that survives H9. Recorded as
+verdicts rather than left parked, because "not adjudicated" and "adjudicated to nothing"
+are different states and the ledger should not confuse them.
+
+| package | what the differences were | verdict |
+|---|---|---|
+| **Circle Park** 2026 | unit-type labels only (`1BR/1BAElderly` vs `1B-Elderly`, etc.) — 5 rows, no money | **cosmetic** |
+| **Clinton Manor** 2026 | unit-type labels only (`1BR/1BA` vs `1-Bedroom`) — 4 rows | **cosmetic** |
+| **Burt Farms I** 2024 | one label + the checklist heading's curly apostrophe | **cosmetic** |
+| **Woodbury Oakwood** 2026 | checklist `property.name`: OURS `LakesideApartments`, THEIRS **empty** — the filed checklist's name field did not extract | **harness (H9d)** |
+| **Oceanport** 2024 | `property.name` THEIRS `2FHDQSRUW6HQLRU&LWL]HQV` — **decodes to `OceanportSeniorCitizens`, matching OURS** but for a trailing contract number. `unit.*.type` THEIRS reads `OceanportUrbanRenewalPreservation`, `30HudsonYards,72`, `NewYork,NY10001`, `Attn:Mr.ZacSilber` | **harness (H9a + H9d)** |
+| **Hampshire House** 2024 | `unit.0.type` THEIRS `30HudsonYards72`, `unit.0.units` THEIRS `ndFloor` | **harness (H9a)** |
+
+**Oceanport and Hampshire House are the same harness bug, and it is worth naming precisely:
+the extractor read the COVER LETTER as the rent schedule's unit table.** `30 Hudson Yards`,
+`72nd Floor`, `Attn: Mr. Zac Silber`, `Dear Mr. Silber` are the owner's address block landing
+in `unit.N.type`. No verdict about the app or the team can be drawn from those rows — the
+comparison never reached a rent schedule.
+
+**Woodbury's empty `property.name` is the ASCII−29 decode failing to an empty string rather
+than to mojibake**, which is the more dangerous shape: mojibake announces itself, an empty
+string reads as "the filed document has no value here."
+
+That closes every package that has both a sweep record and a SHOULD.
