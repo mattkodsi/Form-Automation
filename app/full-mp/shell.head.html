@@ -1573,6 +1573,535 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
 .dialog .gdoc-need{color:var(--i3)}
 /* Download is an action, so it is a link: the tick beside it is what says done. */
 .dialog .gdoc-a{color:var(--ledger);font-weight:600}
+
+/* ==================================================================
+   THE FORM — the desk, extended.
+   Built from docs/design/2026-07-28-form-redesign.html and held to
+   docs/design/2026-07-28-style-guide.html.
+
+   The four other views moved into a housing-authority file room —
+   paper, ink, rule, stamp — and the form was deliberately left behind
+   until its own redesign was signed off. Walking through a door and
+   finding a different product on the other side is what this block
+   ends.
+
+   SCOPED TO #viewForm, and placed last in the sheet. Scoped, because
+   nothing here may reach the four views that are already signed off;
+   last, because that is what lets it win the cascade over the legacy
+   rules above without a single !important. The legacy token names are
+   kept and RE-POINTED rather than renamed: two lanes share these
+   files, and a rename touches every line in the sheet while a
+   re-point touches one block.
+
+   THE ONE MARKER, AT A THIRD SCALE. On the home screen a 3px left
+   rule means urgency; on the launcher it means which package. On a
+   CELL it means provenance — and that is what replaces the full-cell
+   fill. A field is INSET (--sunk, a step darker than the card holding
+   it) because it is a box you write in; the rule down its left edge
+   says whether the record holds what is in it. Two states keep a wash
+   as well as a rule — parsed and overridden — because those are the
+   two that want your hands. Hue is spent only where it asks for
+   something.
+
+   The fills themselves are CLR in app.js. These tokens and that
+   constant must agree; changing one means changing the other.
+   ================================================================== */
+#viewForm{
+  /* ---- the desk. Every value below is from the style guide. ---- */
+  --paper:#d8dde4; --card:#fff; --sunk:#eef1f5;
+  --rule:#c2cbd6; --rule-soft:#e4e9ef;
+  --stamp:#9c2b18; --stamp-wash:#f7ece8;
+  --ledger:#1f5480; --filed:#2f6a45; --filed-wash:#e7efea;
+  --chrome:#101d2b;
+  --ease:cubic-bezier(.23,1,.32,1);
+
+  /* ---- the legacy names, re-pointed. Near-duplicates collapse here:
+     six greys became four ink levels, six lines became two rules. ---- */
+  --surface:#fff;          /* a document on the desk */
+  --surface-tint:#f7f9fb;  /* a document that is only offered, not held */
+  --page:#eef1f5;  --band:#eef1f5;  --band-2:#e7ebf1;  --band-3:#e4e9ef;
+  --navy:#101d2b;          /* the masthead, and the ink a primary button is */
+  --navy-pale:rgba(255,255,255,.55);
+  --ink:#101822;           /* the value you came to read */
+  --ink-2:#41505f;         /* supporting prose and labels */
+  --ink-3:#556270;         /* metadata, column heads, units */
+  --ink-gray:#556270;
+  --muted:#556270;
+  --muted-2:#636c77;  --muted-3:#636c77;  --muted-4:#636c77;  --muted-6:#636c77;
+  --muted-5:rgba(255,255,255,.55);
+  --line:#c2cbd6;          /* a ruled edge: cards, cells, column heads */
+  --line-2:#ccd4df;        /* a divider INSIDE a cell — softer, still visible */
+  --line-3:#c2cbd6;  --line-4:#c2cbd6;  --line-5:#c2cbd6;
+  --line-6:#b9c2cd;        /* a mark that is deliberately not ink */
+  --ok:#2f6a45;  --ok-fill:#e7efea;  --ok-tint:#eff4f1;  --ok-line:#a9c4b4;
+  --danger:#9c2b18;
+  --indigo:#1f5480;        /* there is no indigo on this desk; links are ledger */
+  --kraft-line:#ddbb92;
+
+  /* ---- provenance. The hues are a contract with tests behind them and
+     do not move. What moved is the FILL: on file and new now sit on the
+     same inset surface as every other cell, and only the two states that
+     want your hands carry a wash. ---- */
+  --prov-db-fill:#eef1f5;
+  --prov-new-fill:#eef1f5;
+  --prov-cycle-fill:#e9f5f2;
+  --prov-over-fill:#fbf1e6;
+
+  --r-ctl:4px; --r-card:8px;
+
+  background:var(--paper);
+  font-family:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  font-size:13.5px;line-height:1.5;color:var(--ink-2);
+  font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;
+}
+#viewForm button{transition:background .14s var(--ease),border-color .14s var(--ease),
+  color .14s var(--ease),transform .1s var(--ease)}
+#viewForm button:active{transform:scale(.975)}
+/* Focus is indicated ONCE per stop. A blanket :focus-visible put a ring on the
+   <input> as well as on the cell holding it, so landing in a text field drew two
+   rings two pixels apart — and the inner one covered the provenance rule, which
+   is the one thing on that cell you are not allowed to take away. Buttons and
+   tab stops get a ring of their own; a cell's input hands the job to the cell
+   (see .fbox:focus-within), and a dropdown trigger to its own inset ring. */
+#viewForm button:focus-visible,#viewForm [tabindex]:focus-visible{
+  outline:2px solid var(--ledger);outline-offset:2px;border-radius:var(--r-ctl)}
+/* Transitions go; transforms do NOT. The rail's indicator is POSITIONED by
+   transform — a blanket transform:none leaves it parked at the top of the rail
+   for anyone who asks for reduced motion, which is exactly the reader who most
+   needs position to be the indicator. Only the press-scale is dropped. */
+@media (prefers-reduced-motion:reduce){#viewForm *{transition:none!important}
+  #viewForm button:active{transform:none}}
+
+/* ---- the masthead. One masthead across five views now: same height,
+   same chrome, the two names on one baseline. ---- */
+#viewForm .hdr{background:var(--chrome);height:60px;padding:0 28px;gap:20px}
+#viewForm .hdr>div:first-child{display:flex;align-items:baseline;gap:11px;flex:0 0 auto}
+#viewForm .hdr h1{font-size:15px;font-weight:600;letter-spacing:-.005em}
+#viewForm .hdr .sub{font-size:10px;font-weight:600;letter-spacing:.17em;
+  color:rgba(255,255,255,.55);margin-top:0}
+#viewForm .hdrmid{gap:14px;margin-right:16px;min-width:0}
+#viewForm .hprop{font-size:13.5px;font-weight:600}
+#viewForm .hprogram{font-size:10px;font-weight:600;letter-spacing:.13em;
+  color:rgba(255,255,255,.55);border:none;border-radius:0;padding:0}
+/* The programme picker is a segmented control on a wash, the way the day/night
+   pair is in the guide — four pills floating on navy read as four buttons of
+   equal weight, which is not what they are. */
+#viewForm .progs{gap:4px;background:rgba(255,255,255,.10);padding:4px;border-radius:999px;
+  flex:0 0 auto}
+#viewForm .prog{font-size:11.5px;font-weight:600;padding:0 14px;min-height:30px;
+  border-radius:999px;display:flex;align-items:center;letter-spacing:0}
+#viewForm .prog.on{background:#fff;color:var(--chrome)}
+#viewForm .prog.off{background:none;color:#fff;opacity:.6}
+#viewForm .progs .prog.off[data-progpill]:hover{background:rgba(255,255,255,.14);
+  color:#fff;opacity:1}
+#viewForm .progs .prog.dis{opacity:.35}
+
+/* ---- the command bar. Still ONE line and still 32px at every width:
+   the rail's jump offset is a scroll-margin sized to it. Only its
+   surface changed — a document does not float, so the shadow goes and
+   a ruled edge holds it down. ---- */
+#viewForm #ccbar{background:var(--card);border-bottom:1px solid var(--rule);
+  box-shadow:none;padding:7px 28px}
+#viewForm #ccbar .mn{font-size:11.5px;color:var(--ink-3)}
+#viewForm #ccbar .mn b{font-size:12.5px;color:var(--ink);font-weight:600}
+#viewForm #ccbar .bchip{font-size:11.5px;color:var(--ink-3)}
+#viewForm #ccbar .bpass{font-size:12.5px;font-weight:600}
+#viewForm #ccbar .minigauge{background:var(--sunk);border-radius:3px}
+#viewForm #ccbar .seg.dark{background:var(--filed)}
+#viewForm #ccbar .seg.light{background:#9cc3a8}
+#viewForm #ccbar .oend{background:var(--stamp)}
+
+/* ---- controls. Four radii became one: 4px on everything you press or
+   type into, 8px on everything that holds them. ---- */
+#viewForm .toolbar{padding:14px 28px 0;gap:10px}
+#viewForm .btn{font-size:12.5px;font-weight:600;color:var(--ink-2);
+  background:var(--card);border:1px solid var(--rule);border-radius:var(--r-ctl);
+  padding:0 14px;min-height:36px;display:inline-flex;align-items:center;
+  justify-content:center;gap:7px}
+#viewForm .btn:hover:not(:disabled){background:var(--card);border-color:var(--ledger);
+  color:var(--ledger)}
+#viewForm .btn.p{background:var(--chrome);color:#fff;border-color:var(--chrome)}
+#viewForm .btn.p:hover:not(:disabled){background:var(--ledger);border-color:var(--ledger);
+  color:#fff}
+#viewForm .btn.sm{min-height:28px;padding:0 10px;font-size:11.5px}
+#viewForm .btn.teal{background:var(--filed);border-color:var(--filed);color:#fff}
+#viewForm .btn.teal:hover:not(:disabled){background:#25563a;border-color:#25563a;color:#fff}
+#viewForm .btn.excel{background:var(--filed);border-color:var(--filed);color:#fff}
+#viewForm .btn.excel:hover:not(:disabled){background:#25563a;border-color:#25563a;color:#fff}
+#viewForm .btn.ghost{background:var(--sunk);border-color:var(--sunk);color:var(--muted-2)}
+#viewForm .btn:disabled{background:transparent;border-color:var(--rule-soft);
+  color:var(--muted-2);opacity:1;transform:none}
+#viewForm .mini{font-size:11.5px;font-weight:600;color:var(--ink-2);background:var(--card);
+  border:1px solid var(--rule);border-radius:var(--r-ctl);padding:0 11px;min-height:30px;
+  display:inline-flex;align-items:center;gap:6px}
+#viewForm .mini:hover{border-color:var(--ledger);color:var(--ledger)}
+#viewForm .link,#viewForm .addrow{color:var(--ledger);font-weight:600}
+#viewForm .addrow{font-size:12.5px}
+#viewForm .addrow:hover{text-decoration:underline}
+#viewForm .ghostlink{color:var(--muted-2)}
+#viewForm .status{font-size:12px;color:var(--ink-3)}
+#viewForm .wrap{padding:20px 28px 44px}
+
+/* ---- the answer the product exists to give, at the size it deserves.
+   Three cards with gaps between them were three documents; this is one
+   document with three columns, and the first column carries the verdict
+   as a rule down its edge — the same marker, at the width of a card. ---- */
+/* overflow stays VISIBLE. The record checks and the gap list both open a panel
+   absolutely positioned below their row, inside this box — clipping the strip to
+   its own radius would cut the bottom off whichever of them is taller than the
+   strip, and the strip's height is decided by a different card entirely. The
+   corners are held instead by giving the first segment its own left radius, which
+   an inset shadow respects, so the verdict rule cannot poke out of the corner. */
+#viewForm .cc{gap:0;margin-bottom:16px;background:var(--card);
+  border:1px solid var(--rule);border-radius:var(--r-card);overflow:visible}
+#viewForm .ccard{background:none;border:0;border-left:1px solid var(--rule-soft);
+  border-radius:0;padding:18px 22px}
+#viewForm .ccard:first-child{border-left:0;
+  border-radius:var(--r-card) 0 0 var(--r-card);box-shadow:inset 3px 0 0 var(--ledger)}
+#viewForm .cc:has(.passbox.pass) .ccard:first-child{box-shadow:inset 3px 0 0 var(--filed)}
+#viewForm .cc:has(.passbox.over) .ccard:first-child{box-shadow:inset 3px 0 0 var(--stamp)}
+#viewForm .cck{font-size:10px;font-weight:600;letter-spacing:.12em;color:var(--ink-3)}
+/* flex-start, not baseline. The count beside this eyebrow is an inline-flex box a
+   point and a half larger, so aligning on the baseline pushed the eyebrow down and
+   the middle column's heading sat seven pixels below the two either side of it. */
+#viewForm .cckrow{align-items:flex-start}
+#viewForm .kills{color:var(--muted-2);font-style:normal;font-weight:500}
+#viewForm .cctitle{font-size:15px;font-weight:600;letter-spacing:-.01em;color:var(--ink);
+  margin:7px 0 3px;text-wrap:pretty}
+#viewForm .ccsub{font-size:12.5px;color:var(--ink-3)}
+#viewForm .afrow{gap:18px;margin-top:12px}
+#viewForm .gauge{height:8px;border-radius:4px;background:var(--sunk);
+  border:1px solid var(--rule-soft);overflow:hidden}
+#viewForm .gauge .seg.dark{background:var(--filed);border-radius:0}
+#viewForm .gauge .seg.light{background:#9cc3a8}
+#viewForm .gauge .seg.light.over{box-shadow:inset 0 0 0 1px rgba(255,255,255,.55)}
+#viewForm .gauge .oend{top:-3px;height:14px;width:2px;background:var(--stamp);border-radius:0}
+#viewForm .glabels{margin-top:9px}
+#viewForm .gl b{font-size:15px;font-weight:600}
+#viewForm .gl i{font-size:10.5px;color:var(--ink-3)}
+#viewForm .gl .amber{color:var(--prov-over)}
+#viewForm .passbox{border-radius:var(--r-ctl);padding:9px 15px;font-size:15px;font-weight:600}
+#viewForm .passbox small{font-size:10.5px;font-weight:500;margin-top:3px}
+#viewForm .lift{border-top:1px solid var(--rule-soft);margin-top:14px;padding-top:11px}
+#viewForm .lift>b{font-size:10px;font-weight:600;letter-spacing:.12em;color:var(--ink-3)}
+#viewForm .liftnums{margin-top:7px}
+#viewForm .liftnums span b{font-size:16px;font-weight:600;letter-spacing:-.015em}
+#viewForm .liftnums span i{font-size:10.5px;color:var(--ink-3)}
+#viewForm .liftnote{color:var(--ink-3)}
+#viewForm .teal{color:var(--filed)}
+
+/* record checks + this-package: the two quieter columns */
+#viewForm .chksum{font-size:11.5px;color:var(--ink-3);border-bottom:1px dotted var(--rule)}
+#viewForm .chkmore:hover .chksum,#viewForm .chkmore:focus-visible .chksum{
+  color:var(--ink-2);border-bottom-color:var(--ink-3)}
+#viewForm .chk b{font-size:12.5px;font-weight:600;color:var(--ink-2)}
+#viewForm .chk .sub{font-size:11px;color:var(--ink-3)}
+#viewForm .chk .ok{color:var(--filed)} #viewForm .chksum .ok{color:var(--filed)}
+#viewForm .chkall,#viewForm .gpall,#viewForm .gpop-in{background:var(--card);
+  border:1px solid var(--rule);border-radius:var(--r-card);
+  box-shadow:0 10px 26px rgba(16,29,43,.14)}
+#viewForm .pksrc{background:var(--sunk);border:1px solid var(--rule-soft);
+  border-radius:var(--r-ctl);margin-top:10px}
+#viewForm .pksrcrow{font-size:11.5px;color:var(--ink-2)}
+#viewForm .pksrcrow+.pksrcrow{border-top:1px solid var(--rule)}
+#viewForm .pksrcf{color:var(--ink-3)}
+#viewForm .drafts{font-size:12.5px;color:var(--ink-2);gap:6px 14px}
+#viewForm .wb{background:var(--sunk);border-radius:var(--r-ctl);color:var(--ink-3);
+  font-size:10.5px;font-weight:500;padding:8px 10px;text-align:left;
+  box-shadow:inset 3px 0 0 var(--ledger)}
+#viewForm .gpmore-t{color:var(--ink-3);border-bottom-color:var(--rule)}
+#viewForm .glbl{color:var(--ink-3);letter-spacing:.12em}
+
+/* the standing amber banner over the sections */
+#viewForm .attn{background:var(--prov-over-fill);border:0;border-radius:var(--r-ctl);
+  box-shadow:inset 3px 0 0 var(--prov-over);color:var(--prov-over);padding:11px 14px}
+#viewForm .attn .sub{color:var(--ink-2);font-size:12px}
+
+/* ---- the rail. Ten rows that jump and one indicator that travels —
+   that contract is untouched. It is a document on the desk now, like
+   everything else, and the indicator is the ledger blue the rest of
+   the app navigates with. ---- */
+/* The rail widened by 16px because the labels are numbered and ours are longer
+   than the mockup's: at 212 half of them wrapped to a second line, which is a
+   ragged left column pretending to be a list. The width lives behind a
+   min-width guard — an unguarded rule here outranks the ≤1050 media query
+   below (media queries add no specificity), which is what kept the page in two
+   columns at 860 with the right-hand cells running off the viewport. */
+@media(min-width:1051px){#viewForm .layout{grid-template-columns:228px minmax(0,1fr)}}
+#viewForm .layout{gap:24px}
+#viewForm .rail{background:var(--card);border:1px solid var(--rule);
+  border-radius:var(--r-card);padding:16px 14px;top:18px}
+body.scrolled #viewForm .rail{top:60px}
+#viewForm .rail .kick{font-size:10px;font-weight:600;letter-spacing:.12em;
+  color:var(--ink-3);margin:0 0 10px 6px}
+#viewForm .rail .railprog+.kick{margin:18px 0 10px 6px;padding-top:16px;
+  border-top:1px solid var(--rule)}
+#viewForm .railbar{background:var(--ledger);width:2px;border-radius:1px}
+#viewForm .railitem{font-size:13px;color:var(--ink-2);padding:7px 10px;
+  border-radius:var(--r-ctl);gap:9px}
+#viewForm .railitem:hover{background:var(--sunk);color:var(--ink)}
+#viewForm .railitem.on{background:var(--sunk);color:var(--ink);font-weight:600}
+#viewForm .railitem:focus-visible{outline:2px solid var(--ledger);outline-offset:-2px}
+#viewForm .ri{width:14px;height:14px;border-radius:0;background:none;font-size:11px;
+  font-weight:700}
+#viewForm .ri.ok{background:none;color:var(--filed)}
+#viewForm .ri.warn{background:none;color:var(--prov-over)}
+#viewForm .railattn{background:var(--prov-over-fill);border:0;border-radius:var(--r-ctl);
+  box-shadow:inset 3px 0 0 var(--prov-over);color:var(--prov-over);padding:11px 12px;
+  margin:16px 0 0;font-size:12px;font-weight:600}
+#viewForm .railattn .sub{color:var(--ink-2);font-size:12px;font-weight:400;
+  margin-top:6px;line-height:1.45}
+#viewForm .railprog{margin:16px 0 0;padding-top:16px;border-top:1px solid var(--rule);
+  font-size:13px;font-weight:600;color:var(--ink)}
+#viewForm .railprog .warnt{display:block;font-size:12.5px;font-weight:400;
+  color:var(--ink-3);margin-top:2px}
+#viewForm .track{height:6px;background:var(--sunk);border-radius:3px;margin-top:9px}
+#viewForm .track.sm{height:6px}
+#viewForm .track>div{border-radius:3px;background:var(--ledger)}
+/* The rule belongs above the heading, not between the heading and the list it
+   heads — two rules eleven pixels apart read as a mistake. */
+#viewForm .key{margin-top:0;padding-top:0;border-top:0;gap:8px;font-size:12px;
+  color:var(--ink-3)}
+#viewForm .key .sw{width:3px;height:14px;border:0;border-radius:2px}
+
+/* ---- a section is a document ---- */
+#viewForm .card{background:var(--card);border:1px solid var(--rule);
+  border-radius:var(--r-card);margin-bottom:14px;overflow:visible}
+#viewForm .chead{padding:14px 20px;border-bottom:1px solid var(--rule-soft);gap:12px}
+#viewForm .cnum{width:22px;height:22px;font-size:11px;font-weight:600;
+  background:var(--sunk);color:var(--ink-3)}
+#viewForm .card:has(.pill.ok) .cnum{background:var(--filed);color:#fff}
+#viewForm .card:has(.pill.warn) .cnum{background:var(--prov-over);color:#fff}
+#viewForm .ctitle{font-size:15px;font-weight:600;letter-spacing:-.01em;color:var(--ink)}
+#viewForm .chev{color:var(--muted-2)}
+/* The status is a word, not a badge. Four coloured lozenges down the page
+   competed with the one marker that has to be learned. */
+#viewForm .pill{background:none;padding:0;border-radius:0;font-size:10.5px;
+  font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+#viewForm .pill.ok{background:none;color:var(--filed)}
+#viewForm .pill.warn{background:none;color:var(--prov-over)}
+#viewForm .pill.neutral{background:none;color:var(--prov-cycle)}
+#viewForm .pill.empty{background:none;color:var(--ink-3)}
+#viewForm .cbody{padding:18px 20px}
+#viewForm .flabel,#viewForm .ulab,#viewForm .rhead{font-size:11.5px;font-weight:600;
+  color:var(--ink-3);letter-spacing:0;text-transform:none;margin-bottom:5px}
+#viewForm .prinhead span,#viewForm .sigpair .ofthe{color:var(--ink-3)}
+
+/* ---- THE CELL ----
+   Inset, because it is a box you write in. Plain white cells on a white
+   card have no figure against ground, which is how removing the fill
+   could come out flatter than the wall of blue it replaced. The rule
+   down the left edge states the save state for every cell; the two
+   states that want your hands keep a wash as well (their fills are set
+   inline, from CLR). ---- */
+#viewForm .fbox,#viewForm .rbox{border:1px solid var(--rule);
+  border-left:3px solid var(--prov-new);border-radius:var(--r-ctl);
+  background:var(--sunk);min-height:38px}
+#viewForm .ulabline{border:1px solid var(--rule);border-left:3px solid var(--prov-new);
+  border-radius:var(--r-ctl);background:var(--sunk)}
+/* The pairs below the unit-mix row mirror the cell's BOX so each lands under
+   its own control. Mirror the new width, or every pair steps a pixel right. */
+#viewForm .uracts>div:first-child,#viewForm .ucells .uracts.ucolacts.c1{
+  border-left:3px solid transparent}
+/* Focus outlines the box in ledger blue and leaves the left edge alone: the
+   cell's own rule still says what the record holds, and a focus ring that
+   painted over it would take that answer away exactly when you are in it. */
+#viewForm .fbox:focus-within,#viewForm .rbox:focus-within{border-color:var(--ledger)}
+/* The line-height is stated, not inherited. The desk's body is 1.5, and 1.5 on a
+   13.5px input makes it 38.25px tall inside a cell whose dropdown trigger is a
+   fixed 36 — so a cell holding both was two pixels taller than the trigger it
+   held, and the focus ring stopped being the same box as the control it was
+   ringing. 18 + the cell's own 9px padding either side is exactly the 36 the
+   trigger is, which is the 38px cell the mockup draws.
+   No padding here on purpose: the ≤1340px block above trims it, and an #id rule
+   restating it would outrank that and clip the figures it exists to protect. */
+#viewForm .fbox input,#viewForm .rbox input{font-size:13.5px;line-height:18px;
+  color:var(--ink)}
+#viewForm .fbox input::placeholder,#viewForm .rbox input::placeholder,
+#viewForm .ulab-in::placeholder{color:var(--muted-2);font-style:normal}
+#viewForm .fbox .pfx{background:rgba(16,24,34,.04);color:var(--ink-2);
+  border-right:1px solid var(--line-2)}
+#viewForm .fbox.addr select,#viewForm .rbox.brba select{font-size:13.5px;color:var(--ink)}
+#viewForm .adiv,#viewForm .utdiv{background:var(--line-2)}
+#viewForm .rbox.money .cur{color:var(--ink-3)}
+#viewForm .slash{color:var(--muted-2)}
+#viewForm .cvx{color:var(--muted-2)}
+#viewForm .uatrigger{font-size:13.5px;color:var(--ink)}
+#viewForm .uatrigger:focus-visible{outline:none;
+  box-shadow:inset 0 0 0 2px var(--ledger);border-radius:var(--r-ctl)}
+#viewForm .uamenu{background:var(--card);border:1px solid var(--rule);
+  border-radius:var(--r-card);box-shadow:0 10px 26px rgba(16,29,43,.14);margin-top:4px}
+#viewForm .uaopt{font-size:13px;color:var(--ink-2);padding:9px 12px}
+#viewForm .uaopt:hover{background:var(--sunk)}
+#viewForm .uaopt.sel{background:var(--sunk);color:var(--ink);font-weight:600}
+#viewForm .uaopt.sel:hover{background:var(--band-3)}
+#viewForm .uaopt.hl{background:var(--sunk);color:var(--ledger)}
+#viewForm .uasub{font-size:11px;color:var(--ink-3)}
+#viewForm .srctag{font-size:10.5px;color:var(--ink-3)}
+#viewForm .uac-in,#viewForm .rbox input.uac-in,#viewForm .mgmt-in,#viewForm .ulab-in{
+  color:var(--ink);border-bottom-color:var(--line-6)}
+#viewForm .uacustom{border-bottom-color:var(--kraft-line)}
+#viewForm .csclear{color:var(--muted-2)}
+#viewForm .csclear:hover{color:var(--stamp)}
+/* Six red crosses down the right of the unit mix out-shouted the two amber cells
+   that actually wanted reading. Delete is a destructive action, so it keeps the
+   stamp — but only once you are on it. */
+#viewForm .trash{color:var(--muted-2);opacity:1}
+#viewForm .trash:hover,#viewForm .trash:focus-visible{color:var(--stamp)}
+
+/* the save / revert pair, and the line that names what changed.
+   The line takes the colour of the state it is naming: it read amber under a
+   teal cell, so the sentence and the cell it belonged to disagreed about what
+   had happened. */
+#viewForm .ovnote{font-size:10.5px;color:var(--prov-over)}
+#viewForm .ovnote[data-mode="cycle"]{color:var(--prov-cycle)}
+#viewForm .ovnote[data-mode="new"]{color:var(--ink-3)}
+#viewForm .revert,#viewForm .urev,#viewForm .miniic{border:1px solid var(--kraft-line);
+  background:var(--prov-over-fill);color:var(--prov-over);border-radius:var(--r-ctl);
+  font-weight:600}
+#viewForm .save1,#viewForm .miniic.sv,#viewForm .urev.sv,#viewForm .undocommit{
+  border:1px solid var(--ok-line);background:var(--ok-tint);color:var(--filed);
+  border-radius:var(--r-ctl);font-weight:600}
+#viewForm .revert:hover,#viewForm .urev:hover,#viewForm .miniic:hover{
+  background:var(--prov-over);border-color:var(--prov-over);color:#fff}
+#viewForm .save1:hover,#viewForm .miniic.sv:hover,#viewForm .urev.sv:hover,
+#viewForm .undocommit:hover{background:var(--filed);border-color:var(--filed);color:#fff}
+/* Approving a conflicted figure is a decision about an amber cell, not a save
+   of a settled one: it belongs to the warning it sits under and takes its
+   colour, the way the mockup drew it. The generic ✓ keeps the green.
+   The attribute is paired with .urev deliberately: the green rule above is
+   (id + two classes), so an attribute selector alone loses to it and the
+   button stayed green. */
+#viewForm .urev[data-uaok],#viewForm .urev[data-safmrok]{background:var(--card);
+  border-color:var(--prov-over);color:var(--prov-over)}
+#viewForm .urev[data-uaok]:hover,#viewForm .urev[data-safmrok]:hover{
+  background:var(--prov-over);border-color:var(--prov-over);color:#fff}
+
+/* ---- the unit mix ---- */
+#viewForm .rgh{border-bottom:1px solid var(--rule);padding:0 2px 8px}
+#viewForm .rgh span{font-size:10px;font-weight:600;letter-spacing:.11em;color:var(--ink-3)}
+#viewForm .rgh .hsub{font-size:9.5px;font-weight:500;color:var(--muted-2);letter-spacing:.04em}
+#viewForm .urow{border-bottom:1px solid var(--rule-soft);padding:9px 2px}
+#viewForm .pdrow{border-bottom:1px solid var(--rule-soft)}
+#viewForm .partd{border-top:1px dashed var(--rule);margin-top:18px;padding-top:14px}
+#viewForm .pdhead{font-size:12.5px;font-weight:600;color:var(--ink-2)}
+#viewForm .pdhead .sub{color:var(--ink-3);font-size:11.5px;font-weight:400}
+#viewForm .ucnote,#viewForm .uanote{font-size:11px}
+#viewForm .ucnote.ok,#viewForm .uanote.ok,#viewForm .rmetric,
+#viewForm .ucmetric,#viewForm .urnmetric{color:var(--filed)}
+#viewForm .ucnote.warn,#viewForm .uanote.warn{color:var(--prov-over)}
+#viewForm .grossnote{color:var(--ink-3);font-size:11.5px}
+#viewForm .ph{background:var(--sunk);border-radius:var(--r-ctl);color:var(--ink-3);
+  font-style:normal;font-size:11.5px;padding:8px 10px}
+
+/* ---- Part B: a checkbox matrix. Positions stay fixed so muscle memory
+   holds. What changes is weight — an included item reads as present, an
+   excluded one recedes, so "what is in the rent" can be scanned without
+   reading twenty-four labels. ---- */
+#viewForm .pbnote{color:var(--ink-3);font-style:normal;font-size:12px;margin-bottom:10px}
+#viewForm .pbgrp{font-size:11px;font-weight:600;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--ink-3);margin:18px 0 7px;padding-bottom:7px;
+  border-bottom:1px solid var(--rule-soft)}
+#viewForm .cbody>.pbgrp:first-child,#viewForm .pbnote+.pbgrp{margin-top:0}
+#viewForm .cb{font-size:13.5px;color:var(--muted-2);min-height:30px}
+#viewForm .cb:has(input:checked),#viewForm .wi.checked{color:var(--ink);font-weight:500}
+/* The box paints itself from its own key — boxStyle() writes colour, border and
+   background inline, which is the provenance answer for a control that has no
+   left edge to carry one. Only its geometry belongs here; anything else in this
+   rule would be dead the moment the painter ran. */
+#viewForm .box{width:16px;height:16px;border-width:1.5px;border-radius:3px;
+  font-size:11px;font-weight:700}
+#viewForm .cb input[type=checkbox]:focus+.box{outline:2px solid var(--ledger);outline-offset:1px}
+#viewForm .wi .witext{border-bottom:1px dashed var(--rule);color:var(--ink)}
+#viewForm .wi .witext:focus{border-bottom-color:var(--ledger);border-bottom-style:solid}
+#viewForm .wi.unchecked .witext{color:var(--muted-2)}
+#viewForm .fuel,#viewForm .fuel3{font-size:10px;font-weight:600;color:var(--ink-3);
+  background:var(--sunk);border:1px solid var(--rule);border-radius:var(--r-ctl)}
+#viewForm .fuel.empty,#viewForm .fuel3.empty{color:var(--muted-2);border-color:var(--rule-soft);
+  background:var(--sunk)}
+#viewForm .fuel.ov,#viewForm .fuel3.ov{border-color:var(--kraft-line);
+  background:var(--prov-over-fill);color:var(--prov-over)}
+
+/* ---- the owner's checklist: seventeen items in four groups ---- */
+#viewForm .cltop{margin-bottom:12px;gap:10px}
+#viewForm .cltop b{font-size:15px;font-weight:600;color:var(--ink)}
+#viewForm .clhead{font-size:11px;font-weight:600;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--ink-3);margin:16px 0 5px;padding-bottom:6px;
+  border-bottom:1px solid var(--rule-soft)}
+#viewForm .clhead:first-child{margin-top:0}
+
+/* ---- section 1: the two documents the package is built from ---- */
+#viewForm .srcrow{border:1px solid var(--rule);border-radius:var(--r-card);
+  background:var(--card);padding:13px 15px}
+#viewForm .srcrow.dim{background:var(--sunk);border-style:dashed;opacity:1}
+#viewForm .sfname{font-size:13px;color:var(--ink);font-weight:500}
+#viewForm .srcrow b{font-size:13.5px;font-weight:600;color:var(--ink)}
+#viewForm .sfsub,#viewForm .srcrow .sub{font-size:11.5px;color:var(--ink-3)}
+#viewForm .srcrow .ok{color:var(--filed)}
+#viewForm .srcrow .warn{color:var(--prov-over)}
+#viewForm .srcrow .mut,#viewForm .missing{color:var(--muted-2)}
+#viewForm .parsed{color:var(--prov-cycle)}
+#viewForm .spin{border-color:var(--rule);border-top-color:var(--ledger)}
+#viewForm .srcfoot .sub{color:var(--ink-3);font-size:11.5px}
+
+/* ---- the generated package, and the tables that report it ---- */
+#viewForm .gnote{color:var(--prov-over);font-size:12.5px}
+#viewForm .gdoc{border-radius:var(--r-ctl)}
+#viewForm .gdoc-off{background:var(--sunk);border:1px dashed var(--rule);color:var(--ink-3)}
+#viewForm .gdoc-on{background:var(--card);border:1px solid var(--rule)}
+#viewForm .gdoc-on:hover{background:var(--sunk);border-color:var(--ledger)}
+#viewForm .gdoc-a{color:var(--ledger)}
+#viewForm .gtick{color:var(--filed)} #viewForm .gtick-off{color:var(--line-6)}
+#viewForm .gprim{background:var(--chrome);border-radius:var(--r-ctl)}
+#viewForm .gprim:hover{background:var(--ledger)}
+#viewForm table{border:1px solid var(--rule);border-radius:var(--r-card);font-size:12.5px}
+#viewForm th{background:var(--sunk);font-size:10px;font-weight:600;letter-spacing:.12em;
+  color:var(--ink-3);border-bottom:1px solid var(--rule);padding:10px 14px}
+#viewForm td{border-bottom:1px solid var(--rule-soft);color:var(--ink-3);padding:10px 14px}
+
+/* ---- the OCAF worksheet and the UAF matrix (sections 10 and 11).
+   Their markup belongs to another lane and is not touched here; what is
+   below is the token pass they never got, because they were written
+   against the old chrome and carry six hexes the desk does not have. ---- */
+#viewForm .ocpull>b,#viewForm .occode,#viewForm .uafname{color:var(--ink)}
+#viewForm .ocpull .sub{color:var(--ink-3)}
+#viewForm .ocwork,#viewForm .uafunit{background:var(--sunk);
+  border:1px solid var(--rule-soft);border-radius:var(--r-card)}
+#viewForm .ocline{border-bottom:1px dashed var(--rule);font-size:13px}
+#viewForm .oclab{color:var(--ink-2)}
+#viewForm .ocval{color:var(--ink);font-weight:600}
+#viewForm .ocnrrow{border-bottom:1px dashed var(--rule-soft)}
+#viewForm .uafres{color:var(--ink-2)}
+/* A two-way switch, in the segmented-control grammar the masthead's programme
+   picker uses: a wash, a thumb, and one radius from the three. */
+#viewForm .rateswitch{background:var(--sunk);border:1px solid var(--rule);
+  border-radius:var(--r-ctl)}
+#viewForm .rateswitch .rs-thumb{background:var(--chrome);border-radius:2px}
+#viewForm .rs-opt{color:var(--ink-3);border-radius:2px}
+#viewForm .rs-opt.on{color:#fff}
+#viewForm .hudbtn.off{background:var(--sunk);border-color:var(--rule);color:var(--muted-2)}
+#viewForm .hudbtn.done{color:var(--filed);border-color:var(--ok-line);background:var(--ok-tint)}
+
+/* ---- the footer. Never full width: a solid slab out-shouts the page. ---- */
+#viewForm .footer{background:var(--paper);border-top:1px solid var(--rule);
+  border-radius:0;box-shadow:none;padding:12px 10px;gap:10px}
+#viewForm .footer .btn{min-height:40px;padding:0 18px;font-size:13px}
+#viewForm .unsaved{color:var(--prov-over);font-size:12.5px;font-weight:600}
+
+/* Below ~1340 the unit-mix columns cannot carry a roomy cell's chrome AND its
+   figure — the house rule above already trims the money cells there, and the
+   allowance and ceiling cells now need the same. Tabular figures are a little
+   wider than the proportional ones this form used to set, and a four-digit
+   ceiling in a 1200px window is exactly where that lands. The figure wins. */
+@media(max-width:1340px){
+  #viewForm .ucells .rbox.uacell .uatrigger,#viewForm .pdrow .rbox.uacell .uatrigger{padding:0 6px}
+  #viewForm .ucells .rbox .cvx,#viewForm .pdrow .rbox .cvx{margin-left:3px}
+}
+
+@media(max-width:1050px){#viewForm .cc{grid-template-columns:1fr}
+  #viewForm .ccard{border-left:0;border-top:1px solid var(--rule-soft)}
+  #viewForm .ccard:first-child{border-top:0;
+    border-radius:var(--r-card) var(--r-card) 0 0}}
 </style></head>
 <body>
  <!-- ===================== SIGN IN ===================== -->
@@ -1618,8 +2147,8 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
      <div class="cc" id="cc"></div>
      <div class="layout">
        <div class="rail"><div class="kick">SECTIONS</div><div id="rail"></div><div class="railattn" id="railattn"></div><div class="railprog" id="railprog"></div>
-         <div class="kick" style="margin-top:12px">SOURCE KEY</div>
-         <div class="key"><span><i class="sw" style="background:#e8f0fe;border-left-color:var(--prov-db)"></i>On file (database)</span><span><i class="sw" style="background:var(--prov-cycle-fill);border-left-color:var(--prov-cycle)"></i>Filled from a source (this package) — not yet saved</span><span><i class="sw" style="background:var(--prov-over-fill);border-left-color:var(--prov-over)"></i>Overridden</span><span><i class="sw" style="background:var(--prov-new-fill);border-left-color:var(--prov-new)"></i>New &mdash; not yet saved</span></div>
+         <div class="kick">SOURCE KEY</div>
+         <div class="key"><span><i class="sw" style="background:var(--prov-db)"></i>On file (database)</span><span><i class="sw" style="background:var(--prov-cycle)"></i>Filled from a source (this package) — not yet saved</span><span><i class="sw" style="background:var(--prov-over)"></i>Overridden</span><span><i class="sw" style="background:var(--prov-new)"></i>New &mdash; not yet saved</span></div>
        </div>
        <div class="main"><div id="sections"></div><div class="footer"><span class="unsaved" id="unsavedTag">● Unsaved changes</span><span class="fsp"></span><button class="btn" id="bFillFooter">&#8635; Revert to saved</button><button class="btn p" id="bSave">Update property profile</button><button class="btn p" id="bGenerate">Generate package</button></div></div>
      </div>
