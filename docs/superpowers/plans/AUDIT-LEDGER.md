@@ -430,3 +430,98 @@ totals passes these.
 - **The unit-type label on the filed HUD-92458** — Colonial Village only (`1 BR` for 33
   three-bedroom units). Directly app-relevant: the app writes Col.1 from its own unit
   mix, so this is a row the OURS leg will either reproduce or get right.
+
+---
+
+## THREE-WAY — Colonial Village (75708), 2026 (RCS) — the first complete audit unit
+
+The OURS leg ran on Matt's Mac (`sweep-out/cv.json`, app frozen at `84677d0`) while
+SHOULD and FILED were read here by eye. **This is the first row set where all three legs
+exist, so it is the first place `app wrong` is reachable.**
+
+88 values compared; 56 matched; 10 are true mismatches (both sides carry a value). The
+remaining 22 are extraction gaps, judged separately below.
+
+### The app is right and the PM team is wrong — 5 of 5 defects I found by eye
+
+Every SHOULD-vs-FILED defect in the rent schedule, the app got right on its own:
+
+| key | SHOULD | OURS | FILED | verdict |
+|---|---|---|---|---|
+| `unit.0.ua` | **161** | **161** | `160` | team wrong |
+| `unit.0.gross` | **2,011** | **2,011** | `2,010` | team wrong |
+| `unit.1.type` | **3 Bedroom** | **`3BR/1BA`** | `1BR` | team wrong |
+| `sig.name_title` | **David Pearson, VP of General Partner** | **same** | `Matthew Finkle, VP of GP` | team wrong |
+| checklist "Scope of work" | **checked** | **`check.4 = 1`** | unticked on filed `03` | team wrong |
+
+This is the strongest evidence yet that the tool does the job it was built for. The
+utility-allowance case is the sharpest: the team carried `160` forward from the FY2025
+**draft**, and the app independently produced `161` — the value in the executed schedule
+and in the study. The app would have caught a live filing error on 32 units.
+
+The checklist row could not be compared mechanically (see extraction gaps) — it is
+established by combining the app's own `check.4 = 1` with my eye-read of the filed form.
+
+### The app is wrong — 1 confirmed
+
+| key | SHOULD | OURS | FILED | verdict |
+|---|---|---|---|---|
+| `unit.2.type` | **`2 BR Non Rev`** | **`2BR`** | `2BRNonRev` | **app wrong** |
+
+The app drops the non-revenue designation from Col. 1 row 3. Both the filed 2026
+schedule and the FY2025 executed schedule carry it, and Part D separately books the unit
+as a Leasing Office with `$1,850` of rent loss. A HUD-92458 whose Col. 1 does not
+distinguish the non-revenue unit invites it to be read as a 33rd revenue-producing
+two-bedroom. **Mechanism not yet traced — stays `undiagnosed`, no repair written.**
+
+### The app produced nothing where the filed document has a value — 1
+
+`principals.1.name` — the filed Part G names a second principal, *David Pearson, Vice
+President of General Partner*; the app emitted none. Whether Part G should carry the
+principal in addition to the entity and GP is a form-rules question I have not settled,
+so this is **`undetermined`**, not `app wrong`.
+
+### Style, not findings — 4
+
+`unit.0.type` `2BR/1BA` vs `2BR`, the same on both `analysisXlsx` rows, and
+`rent_schedule.eff_day` `01` vs `1`. The app is more specific than the filed form; the
+run brief excludes differences of style. Recorded so nobody re-derives them.
+
+### Instrument defects — the comparator, not the app or the team
+
+1. **`checklist · property.name` extracts as `7/7/2026`.** The filed checklist carries
+   *Colonial Village* as project name and *7/1/2026* as the date; the extractor is
+   reading a date into the name field. Reported by the pipeline as a high-severity
+   mismatch, it is **a false finding**. Either field misalignment in `extract.js`, or it
+   read `Owners Checklist v2 (signed).pdf`, which has no project identification at all.
+2. **21 `missing-theirs` rows on the checklist.** The filed checklist yields no
+   extractable field values, so all 17 app checkbox values plus heading and signature
+   have nothing to compare against. Not a defect on either side — but it means **the
+   checklist is currently unaudited mechanically**, and the one substantive finding in
+   it (Scope of work) had to be established by eye.
+3. **`coverLetter` counted as "the app did not generate".** `gen.js` exports both
+   `coverLetter` and `ownerLetter`, and the filed package holds two distinct letters.
+   More likely a pairing failure in the comparator than a generation gap. Needs
+   diagnosis before it is reported as an app defect.
+
+Per the lane brief — *trust no tool you have not tested* — items 1 and 3 are exactly the
+kind of confident-but-wrong output the audit is supposed to catch in its own instruments.
+
+### The interaction storm found a real app bug
+
+Three violations, all replaying from seed `601113841`. Two name `property.name` over a
+`ZZ-CORPUS` value and are probably harness artifacts. The third is not:
+
+> `partb.fuel.1` and `partb.fuel.4` hold `'E'` with source `new` after a completed save,
+> against a record holding `''` — and **neither cell is on screen**.
+
+Off-screen keys still differing after a settled save is the phantom-dirty shape. This is
+an `app wrong` candidate with a deterministic replay, found without any ground truth —
+which is why the storm runs on every package.
+
+### What this changes about the run
+
+The split now works: the driving leg on the Mac, the reading and analysis legs here, the
+repo as the channel. One package has been audited all three ways. **87 cycles remain**,
+and the SHOULD leg for four more (Westwood Village, Circle Park, Oceanport Gardens,
+Lansing Manor) is already written and waiting for its OURS.
