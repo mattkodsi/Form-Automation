@@ -6086,6 +6086,17 @@ async function boot(){
   openMenu();
 }
 const SELFTEST=(typeof location!=='undefined')&&/[?&]selftest=1(&|$)/.test(location.search||'');
+/* ?ra=1 — SEE the locked cells on this build.
+
+   window.RASource is injected by the RA integrator's port and by nothing else, so on the
+   Supabase build every RA-locked cell renders exactly as it always did and the
+   whole feature is invisible to the person who asked for it. This hatch stands
+   the seam up locally so the interaction can be looked at.
+
+   It invents NOTHING. It answers with the values this property already holds, so
+   the only thing that changes is that the two cells stop being editable. A demo
+   that made up a name would be showing something the app will never do. */
+const RADEMO=(typeof location!=='undefined')&&/[?&]ra=1(&|$)/.test(location.search||'');
 /* A property worth testing against.
 
    The stub record used to be a bare name, and the first-run migration rightly
@@ -6313,3 +6324,17 @@ __rcsFill:()=>rcsFillFromParsed(),/* The same door for the rent schedule. Fillin
   __fmt:{num:fmtNum,phone:fmtPhone,email:fmtEmail,date:fmtDate}};
 if(typeof module!=='undefined')module.exports=__API;
 if(SELFTEST)window.__t=__API;   // browser gets the identical surface, flag-gated
+if(RADEMO&&typeof window!=='undefined'&&!window.RASource)window.RASource={
+  listProperties:()=>[],
+  value:(k)=>{
+    try{
+      if(k==='property.name')return (form&&form['property.name']&&form['property.name'].value)
+        ||((mpdb&&(mpdb.listProperties()||[]).find(p=>p.id===activePid)||{}).name)||null;
+      if(k==='rent_schedule.date_rents_effective'){
+        const c=mpdb&&activeCid&&(mpdb.listCycles(activePid)||[]).find(x=>x.id===activeCid);
+        return (c&&c.effective_date)||null;
+      }
+    }catch(e){}
+    return null;
+  },
+};
