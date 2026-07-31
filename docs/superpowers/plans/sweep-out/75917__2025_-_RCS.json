@@ -4,52 +4,852 @@
  "folder": "75917 - Peterson Plaza - Section 8",
  "year": 2025,
  "cycleLabel": "2025 - RCS",
- "sha": "ccc4568",
+ "sha": "92a2be5",
  "orders": {
   "rs-first": {
-   "files": 3,
-   "tier": "unreadable:text",
+   "files": 5,
+   "tier": "text",
    "weakerTest": false,
-   "ocrCalls": 5,
-   "via": null,
+   "ocrCalls": 2,
+   "via": "text",
    "missing": null,
    "warnings": [
-    "the rent schedule was not readable (kind=text, Azure declined the page (429).) — no values can be applied from it",
     "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
-    "rent schedule: #rsApply never appeared — nothing was applied to the form",
-    "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “Peterson Plaza”, and the management address. A letterhead can be uploaded on the property page.",
-    "package dialog: Peterson Plaza · 1 of 6 ready · 5 not ready"
+    "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “Peterson Plaza Apartments (IL060052016)”, and the management address. A letterhead can be uploaded on the property page.",
+    "package dialog: Peterson Plaza Apartments (IL060052016) · 3 of 6 ready · 3 not ready"
    ],
    "errors": [],
    "docsExtracted": [
+    "checklist",
+    "rentSchedule",
     "analysisXlsx"
    ]
   },
   "rcs-first": {
-   "files": 3,
-   "tier": "unreadable:text",
+   "files": 5,
+   "tier": "text",
    "weakerTest": false,
-   "ocrCalls": 5,
-   "via": null,
+   "ocrCalls": 2,
+   "via": "text",
    "missing": null,
    "warnings": [
-    "the rent schedule was not readable (kind=text, Azure declined the page (429).) — no values can be applied from it",
     "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
-    "rent schedule: #rsApply never appeared — nothing was applied to the form",
-    "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “Peterson Plaza”, and the management address. A letterhead can be uploaded on the property page.",
-    "package dialog: Peterson Plaza · 1 of 6 ready · 5 not ready"
+    "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “Peterson Plaza Apartments (IL060052016)”, and the management address. A letterhead can be uploaded on the property page.",
+    "package dialog: Peterson Plaza Apartments (IL060052016) · 3 of 6 ready · 3 not ready"
    ],
    "errors": [],
    "docsExtracted": [
+    "checklist",
+    "rentSchedule",
     "analysisXlsx"
    ]
   }
  },
  "rows": [
   {
+   "doc": "checklist",
+   "key": "heading",
+   "ours": "Owner’s  Checklist for  RCS  Submission",
+   "theirs": "Owners Checklist  for RCS Submission",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "checklist",
+   "key": "property.name",
+   "ours": "PetersonPlazaApartments(IL060052016)",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.0",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.1",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.2",
+   "ours": "0",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.3",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.4",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.5",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.6",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.7",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.8",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.9",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.10",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.11",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.12",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.13",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.14",
+   "ours": "0",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.15",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.16",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "checklist",
+   "key": "checklist.signature",
+   "ours": "DavidPearson,VicePresidentofGP",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "property.name",
+   "ours": "PetersonPlazaApartments(IL060052016)",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "rent_schedule.date_eff",
+   "ours": "09/01/2025",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "rent_schedule.eff_month",
+   "ours": "09",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "rent_schedule.eff_day",
+   "ours": "01",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "rent_schedule.eff_year",
+   "ours": "2025",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "total.contract_rent",
+   "ours": "429050",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "total.annual",
+   "ours": "5148600",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "nonrev.total_rent",
+   "ours": "0",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "owner.entity_name",
+   "ours": "PetersonPlazaPreservation,L.P.",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "sig.name_title",
+   "ours": "DavidPearson,VicePresidentofGP",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "total.units",
+   "ours": "189",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.type",
+   "ours": "1BR/1BA",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.units",
+   "ours": "100",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.rent",
+   "ours": "2050",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.extension",
+   "ours": "205000",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.ua",
+   "ours": "86",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.gross",
+   "ours": "2136",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.row",
+   "ours": "0",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.type",
+   "ours": "1BR/1BA",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.units",
+   "ours": "30",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.rent",
+   "ours": "2025",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.extension",
+   "ours": "60750",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.ua",
+   "ours": "83",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.gross",
+   "ours": "2108",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.row",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.type",
+   "ours": "2BR",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.units",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.ua",
+   "ours": "111",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.row",
+   "ours": "2",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.3.type",
+   "ours": "2BR/1BA",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.3.units",
+   "ours": "42",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.3.rent",
+   "ours": "2650",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.3.extension",
+   "ours": "111300",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.3.ua",
+   "ours": "111",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.3.gross",
+   "ours": "2761",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.3.row",
+   "ours": "3",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.4.type",
+   "ours": "3BR/1.5BA",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.4.units",
+   "ours": "16",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.4.rent",
+   "ours": "3250",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.4.extension",
+   "ours": "52000",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.4.ua",
+   "ours": "131",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.4.gross",
+   "ours": "3381",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.4.row",
+   "ours": "4",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "owner.entity_type",
+   "ours": "LimitedPartnership",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.equipment.0",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.equipment.1",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.equipment.2",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.equipment.5",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.equipment.6",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.utilities.0",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.utilities.1",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.utilities.2",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.utilities.3",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.fuel.0",
+   "ours": "E",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.fuel.1",
+   "ours": "E",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.fuel.2",
+   "ours": "G",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.fuel.3",
+   "ours": "E",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.fuel.4",
+   "ours": "E",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "principals.0.name",
+   "ours": "PetersonPlazaPreservationGP,LLC",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "principals.0.title",
+   "ours": "GeneralPartner",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Peterson Plaza"
+  },
+  {
    "doc": "analysisXlsx",
    "key": "property.name",
-   "ours": "PetersonPlaza",
+   "ours": "PetersonPlazaApartments(IL060052016)",
    "theirs": null,
    "status": "missing-theirs",
    "cause": "undiagnosed",
@@ -81,6 +881,16 @@
    "key": "unit.0.units",
    "ours": "100",
    "theirs": "100",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.current",
+   "ours": "1656",
+   "theirs": "1656",
    "status": "match",
    "cause": "undiagnosed",
    "severity": "none",
@@ -138,6 +948,16 @@
   },
   {
    "doc": "analysisXlsx",
+   "key": "unit.1.current",
+   "ours": "1635",
+   "theirs": "1635",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "analysisXlsx",
    "key": "unit.1.proposed",
    "ours": "2025",
    "theirs": "2025",
@@ -169,31 +989,31 @@
   {
    "doc": "analysisXlsx",
    "key": "unit.2.type",
-   "ours": "2BR/1BA",
+   "ours": "2BR",
    "theirs": "2-BR",
-   "status": "mismatch",
+   "status": "match",
    "cause": "undiagnosed",
-   "severity": "high",
+   "severity": "none",
    "property": "Peterson Plaza"
   },
   {
    "doc": "analysisXlsx",
    "key": "unit.2.units",
-   "ours": "42",
+   "ours": "1",
    "theirs": "1",
-   "status": "mismatch",
+   "status": "match",
    "cause": "undiagnosed",
-   "severity": "high",
+   "severity": "none",
    "property": "Peterson Plaza"
   },
   {
    "doc": "analysisXlsx",
-   "key": "unit.2.proposed",
-   "ours": "2650",
-   "theirs": "2700",
-   "status": "mismatch",
+   "key": "unit.2.current",
+   "ours": "2000",
+   "theirs": "2000",
+   "status": "match",
    "cause": "undiagnosed",
-   "severity": "high",
+   "severity": "none",
    "property": "Peterson Plaza"
   },
   {
@@ -219,7 +1039,7 @@
   {
    "doc": "analysisXlsx",
    "key": "unit.3.type",
-   "ours": "3BR/1.5BA",
+   "ours": "2BR/1BA",
    "theirs": "2-BR",
    "status": "mismatch",
    "cause": "undiagnosed",
@@ -229,136 +1049,116 @@
   {
    "doc": "analysisXlsx",
    "key": "unit.3.units",
-   "ours": "16",
+   "ours": "42",
    "theirs": "42",
-   "status": "mismatch",
+   "status": "match",
    "cause": "undiagnosed",
-   "severity": "high",
-   "property": "Peterson Plaza"
-  },
-  {
-   "doc": "analysisXlsx",
-   "key": "unit.3.proposed",
-   "ours": "3250",
-   "theirs": "2650",
-   "status": "mismatch",
-   "cause": "undiagnosed",
-   "severity": "high",
-   "property": "Peterson Plaza"
-  },
-  {
-   "doc": "analysisXlsx",
-   "key": "unit.3.ua",
-   "ours": "131",
-   "theirs": "111",
-   "status": "mismatch",
-   "cause": "undiagnosed",
-   "severity": "high",
-   "property": "Peterson Plaza"
-  },
-  {
-   "doc": "analysisXlsx",
-   "key": "unit.3.safmr",
-   "ours": "2700",
-   "theirs": "2100",
-   "status": "mismatch",
-   "cause": "undiagnosed",
-   "severity": "high",
-   "property": "Peterson Plaza"
-  },
-  {
-   "doc": "analysisXlsx",
-   "key": "unit.0.current",
-   "ours": null,
-   "theirs": "1656",
-   "status": "missing-ours",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Peterson Plaza"
-  },
-  {
-   "doc": "analysisXlsx",
-   "key": "unit.1.current",
-   "ours": null,
-   "theirs": "1635",
-   "status": "missing-ours",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Peterson Plaza"
-  },
-  {
-   "doc": "analysisXlsx",
-   "key": "unit.2.current",
-   "ours": null,
-   "theirs": "2000",
-   "status": "missing-ours",
-   "cause": "undiagnosed",
-   "severity": "medium",
+   "severity": "none",
    "property": "Peterson Plaza"
   },
   {
    "doc": "analysisXlsx",
    "key": "unit.3.current",
-   "ours": null,
+   "ours": "1885",
    "theirs": "1885",
-   "status": "missing-ours",
+   "status": "match",
    "cause": "undiagnosed",
-   "severity": "medium",
+   "severity": "none",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.proposed",
+   "ours": "2650",
+   "theirs": "2650",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.ua",
+   "ours": "111",
+   "theirs": "111",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.safmr",
+   "ours": "2100",
+   "theirs": "2100",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
    "property": "Peterson Plaza"
   },
   {
    "doc": "analysisXlsx",
    "key": "unit.4.type",
-   "ours": null,
+   "ours": "3BR/1.5BA",
    "theirs": "3-BR",
-   "status": "missing-ours",
+   "status": "mismatch",
    "cause": "undiagnosed",
-   "severity": "medium",
+   "severity": "high",
    "property": "Peterson Plaza"
   },
   {
    "doc": "analysisXlsx",
    "key": "unit.4.units",
-   "ours": null,
+   "ours": "16",
    "theirs": "16",
-   "status": "missing-ours",
+   "status": "match",
    "cause": "undiagnosed",
-   "severity": "medium",
+   "severity": "none",
    "property": "Peterson Plaza"
   },
   {
    "doc": "analysisXlsx",
    "key": "unit.4.current",
-   "ours": null,
+   "ours": "2457",
    "theirs": "2457",
-   "status": "missing-ours",
+   "status": "match",
    "cause": "undiagnosed",
-   "severity": "medium",
+   "severity": "none",
    "property": "Peterson Plaza"
   },
   {
    "doc": "analysisXlsx",
    "key": "unit.4.proposed",
-   "ours": null,
+   "ours": "3250",
    "theirs": "3250",
-   "status": "missing-ours",
+   "status": "match",
    "cause": "undiagnosed",
-   "severity": "medium",
+   "severity": "none",
    "property": "Peterson Plaza"
   },
   {
    "doc": "analysisXlsx",
    "key": "unit.4.ua",
-   "ours": null,
+   "ours": "131",
    "theirs": "131",
-   "status": "missing-ours",
+   "status": "match",
    "cause": "undiagnosed",
-   "severity": "medium",
+   "severity": "none",
    "property": "Peterson Plaza"
   },
   {
    "doc": "analysisXlsx",
    "key": "unit.4.safmr",
+   "ours": "2700",
+   "theirs": "2700",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.proposed",
    "ours": null,
    "theirs": "2700",
    "status": "missing-ours",
@@ -367,62 +1167,743 @@
    "property": "Peterson Plaza"
   }
  ],
- "fillOrder": [],
- "drift": [],
+ "fillOrder": [
+  {
+   "doc": "rentSchedule",
+   "key": "total.contract_rent",
+   "ours": "429050",
+   "theirs": "456900",
+   "status": "mismatch",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Peterson Plaza",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "total.annual",
+   "ours": "5148600",
+   "theirs": "5482800",
+   "status": "mismatch",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Peterson Plaza",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.type",
+   "ours": "2BR",
+   "theirs": "2BR/1BA",
+   "status": "mismatch",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Peterson Plaza",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.3.type",
+   "ours": "2BR/1BA",
+   "theirs": "2BR/1.5BA",
+   "status": "mismatch",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Peterson Plaza",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.3.rent",
+   "ours": "2650",
+   "theirs": "3250",
+   "status": "mismatch",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Peterson Plaza",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.3.extension",
+   "ours": "111300",
+   "theirs": "136500",
+   "status": "mismatch",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Peterson Plaza",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.3.ua",
+   "ours": "111",
+   "theirs": "131",
+   "status": "mismatch",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Peterson Plaza",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.3.gross",
+   "ours": "2761",
+   "theirs": "3381",
+   "status": "mismatch",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Peterson Plaza",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.rent",
+   "ours": null,
+   "theirs": "2650",
+   "status": "missing-ours",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Peterson Plaza",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.extension",
+   "ours": null,
+   "theirs": "2650",
+   "status": "missing-ours",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Peterson Plaza",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.gross",
+   "ours": null,
+   "theirs": "2761",
+   "status": "missing-ours",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Peterson Plaza",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.type",
+   "ours": "2BR",
+   "theirs": "2BR/1BA",
+   "status": "mismatch",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Peterson Plaza",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.type",
+   "ours": "2BR/1BA",
+   "theirs": "2BR/1.5BA",
+   "status": "mismatch",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Peterson Plaza",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.proposed",
+   "ours": "2650",
+   "theirs": "3250",
+   "status": "mismatch",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Peterson Plaza",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.ua",
+   "ours": "111",
+   "theirs": "131",
+   "status": "mismatch",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Peterson Plaza",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.safmr",
+   "ours": "2100",
+   "theirs": "2700",
+   "status": "mismatch",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Peterson Plaza",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.proposed",
+   "ours": null,
+   "theirs": "2650",
+   "status": "missing-ours",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Peterson Plaza",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  }
+ ],
+ "drift": [
+  {
+   "doc": "checklist",
+   "side": "ours",
+   "line": "davidpearsonvpofgp",
+   "normalized": "davidpearsonvpofgp",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "davidpearsonvicepresidentofgeneralpartner",
+   "normalized": "davidpearsonvicepresidentofgeneralpartner",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "previouseditionsareobsolete",
+   "normalized": "previouseditionsareobsolete",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "individualshipjointtenancytenantsincommonotherspecify",
+   "normalized": "individualshipjointtenancytenantsincommonotherspecify",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "corporationtrust",
+   "normalized": "corporationtrust",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "listallprincipalscomprisingmortgagorentity",
+   "normalized": "listallprincipalscomprisingmortgagorentity",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "osecutionsitwillnotbe",
+   "normalized": "osecutionsitwillnotbe",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "instructions",
+   "normalized": "instructions",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "allprojectownersmustsubmittheformhudwhenrequestcolumnforunsubsidizedprojectsshowtherentyouintendto",
+   "normalized": "allprojectownersmustsubmittheformhudwhenrequestcolumnforunsubsidizedprojectsshowtherentyouintendto",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "inganadjustmenttoprojectrentshudestablishesandapproveschargeforeachunittypeforsubsidizedprojectsshowthecontract",
+   "normalized": "inganadjustmenttoprojectrentshudestablishesandapproveschargeforeachunittypeforsubsidizedprojectsshowthecontract",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "rentalchargesandutilityallowancesontheformtheownerisrentasdefinedinhudhandbookforeachunittype",
+   "normalized": "rentalchargesandutilityallowancesontheformtheownerisrentasdefinedinhudhandbookforeachunittype",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "responsiblefornotifyingtenantsoftheapprovedrents",
+   "normalized": "responsiblefornotifyingtenantsoftheapprovedrents",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "columnforeachlinemultiplythecontractrentincolumnbythe",
+   "normalized": "columnforeachlinemultiplythecontractrentincolumnbythe",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "generalforprojectswithfullyinsuredorhudheldmortgagesthenumberofunitsincolumnaddmonthlycontractrentpotentialsfor",
+   "normalized": "generalforprojectswithfullyinsuredorhudheldmortgagesthenumberofunitsincolumnaddmonthlycontractrentpotentialsfor",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "owneragentsubmitsthisformtothehudfieldofficeforprojectseachunitsizetocomputethetotalmonthlycontractrentpotential",
+   "normalized": "owneragentsubmitsthisformtothehudfieldofficeforprojectseachunitsizetocomputethetotalmonthlycontractrentpotential",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "withcoinsuredmortgagestheowneragentsubmitsthisformtothemultiplythemonthlytotalbytocomputetheannualcontractrent",
+   "normalized": "withcoinsuredmortgagestheowneragentsubmitsthisformtothemultiplythemonthlytotalbytocomputetheannualcontractrent",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "lenderpotential",
+   "normalized": "lenderpotential",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partaifthemonthlyrentpotentialyouareproposingislessthanorcolumnsandcompletethecolumnsonlyiftheprojecthasa",
+   "normalized": "partaifthemonthlyrentpotentialyouareproposingislessthanorcolumnsandcompletethecolumnsonlyiftheprojecthasa",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "equaltothemaximumallowablemonthlyrentpotentialapprovedbysubsidycontractwithhudandsomeutilitiesarenotincludedinthe",
+   "normalized": "equaltothemaximumallowablemonthlyrentpotentialapprovedbysubsidycontractwithhudandsomeutilitiesarenotincludedinthe",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "hudlenderonyouroriginalrentformulaoronyourmostrecentrentincolumnshowtheutilityallowanceforeachunittype",
+   "normalized": "hudlenderonyouroriginalrentformulaoronyourmostrecentrentincolumnshowtheutilityallowanceforeachunittype",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "rentcomputationworksheetcompleteallofpartaaccordingtothecomputethegrossrentforeachunittypebyaddingthecontractrent",
+   "normalized": "rentcomputationworksheetcompleteallofpartaaccordingtothecomputethegrossrentforeachunittypebyaddingthecontractrent",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "instructionsbelowifthemonthlyrentpotentialyouarerequestingincolumnandtheutilityallowanceincolumnshowthisamount",
+   "normalized": "instructionsbelowifthemonthlyrentpotentialyouarerequestingincolumnandtheutilityallowanceincolumnshowthisamount",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "exceedsthemaximumallowablemonthlyrentpotentialapprovedincolumn",
+   "normalized": "exceedsthemaximumallowablemonthlyrentpotentialapprovedincolumn",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "byhudlenderonyouroriginalrentformulaoronyourmostrecent",
+   "normalized": "byhudlenderonyouroriginalrentformulaoronyourmostrecent",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "columnsandcompletethesecolumnsonlyiftheprojectis",
+   "normalized": "columnsandcompletethesecolumnsonlyiftheprojectis",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "rentcomputationworksheetcompleteonlycolumnsand",
+   "normalized": "rentcomputationworksheetcompleteonlycolumnsand",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "receivingsectioninterestreductionpaymentsincolumn",
+   "normalized": "receivingsectioninterestreductionpaymentsincolumn",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "accordingtotheinstructionsbelowshowyourproposedrentsand",
+   "normalized": "accordingtotheinstructionsbelowshowyourproposedrentsand",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "showthemarketrentforeachunittypeincolumnforeachline",
+   "normalized": "showthemarketrentforeachunittypeincolumnforeachline",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "monthlyrentpotentialinthecoverlettertransmittingyourrent",
+   "normalized": "monthlyrentpotentialinthecoverlettertransmittingyourrent",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "multiplythemarketrentincolumnbythenumberofunitsincolumn",
+   "normalized": "multiplythemarketrentincolumnbythenumberofunitsincolumn",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "increaserequest",
+   "normalized": "increaserequest",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "addthemonthlymarketrentpotentialsforeachunitsizeto",
+   "normalized": "addthemonthlymarketrentpotentialsforeachunitsizeto",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "columnshoweachtypeofunitforwhichrentswillvaryshowthecomputethetotalmonthlymarketrentpotentialmultiplythemonthly",
+   "normalized": "columnshoweachtypeofunitforwhichrentswillvaryshowthecomputethetotalmonthlymarketrentpotentialmultiplythemonthly",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "numberofbedroomsandbathroomsandotherfeaturesthatcausetotalbytocomputetheannualmarketrentpotential",
+   "normalized": "numberofbedroomsandbathroomsandotherfeaturesthatcausetotalbytocomputetheannualmarketrentpotential",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "rentstovaryegbdmbdakettevsbdmbdrk",
+   "normalized": "rentstovaryegbdmbdakettevsbdmbdrk",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partsbcdandecompletethesepartsaccordingtothe",
+   "normalized": "partsbcdandecompletethesepartsaccordingtothe",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "usethefollowingsymbols",
+   "normalized": "usethefollowingsymbols",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "instructionsontherentschedule",
+   "normalized": "instructionsontherentschedule",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "bdmbedroomlrlivingroom",
+   "normalized": "bdmbedroomlrlivingroom",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partfdonotcompletethispartthehudfieldofficelenderwill",
+   "normalized": "partfdonotcompletethispartthehudfieldofficelenderwill",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "bbathdrdiningroom",
+   "normalized": "bbathdrdiningroom",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "completethispart",
+   "normalized": "completethispart",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "completethispart",
+   "normalized": "completethispart",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "kkitchendadiningalcove",
+   "normalized": "kkitchendadiningalcove",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "kettekitchenette",
+   "normalized": "kettekitchenette",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partsgandhcompletethesepartsaccordingtotheinstructions",
+   "normalized": "partsgandhcompletethesepartsaccordingtotheinstructions",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "ontherentschedule",
+   "normalized": "ontherentschedule",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "columnshowthenumberofunitsforeachunittypeincludenon",
+   "normalized": "columnshowthenumberofunitsforeachunittypeincludenon",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "revenueproducingunits",
+   "normalized": "revenueproducingunits",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partidonotcompletethispartthehudfieldofficelenderwill",
+   "normalized": "partidonotcompletethispartthehudfieldofficelenderwill",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "individualgeneralpartnershipjointtenancytenantsincommonotherspecify",
+   "normalized": "individualgeneralpartnershipjointtenancytenantsincommonotherspecify",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "corporationlimitedpartnershiptrust",
+   "normalized": "corporationlimitedpartnershiptrust",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "listallprincipalscomprisingmortgagorentityprovidenameandtitleofeachprincipaluseextrasheetsifneededifmortgagorisa",
+   "normalized": "listallprincipalscomprisingmortgagorentityprovidenameandtitleofeachprincipaluseextrasheetsifneededifmortgagorisa",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "corporationlistallofficersalldirectorsandeachstockholderhavingaormoreinterest",
+   "normalized": "corporationlistallofficersalldirectorsandeachstockholderhavingaormoreinterest",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "partnershiplistallgeneralpartnersandlimitedpartnershavingaormoreinterestinthepartnership",
+   "normalized": "partnershiplistallgeneralpartnersandlimitedpartnershavingaormoreinterestinthepartnership",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "trustlistallmanagersdirectorsortrusteesandeachbeneficiaryhavingatleastabeneficialinterestinthetrust",
+   "normalized": "trustlistallmanagersdirectorsortrusteesandeachbeneficiaryhavingatleastabeneficialinterestinthetrust",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "tothebestofmyknowledgealltheinformationstatedhereinaswellasanyinformationprovidedintheaccompanimentherewithistrueandaccurate",
+   "normalized": "tothebestofmyknowledgealltheinformationstatedhereinaswellasanyinformationprovidedintheaccompanimentherewithistrueandaccurate",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "warninghudwillprosecutefalseclaimsandstatementsconvictionmayresultincriminalandorcivilpenaltiesuscusc",
+   "normalized": "warninghudwillprosecutefalseclaimsandstatementsconvictionmayresultincriminalandorcivilpenaltiesuscusc",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "assetmanagernhcnationalhousingcompliance",
+   "normalized": "assetmanagernhcnationalhousingcompliance",
+   "severity": "low",
+   "property": "Peterson Plaza"
+  }
+ ],
  "notes": [
   "filed: filed side read from the combined package: Peterson Plaza (IL060052016) - 5-Year RCS Submission.pdf",
   "filed: submittalLetter read from 2 - Peterson Plaza - Submittal Cover Letter.pdf",
   "filed: rentSchedule read from 2025 Rent Schedule-Peterson Plaza eff. 09.01.25 (executed).pdf",
   "filed: analysisXlsx read from Peterson Plaza - RCS Analysis.xlsx"
  ],
- "verdict": "22 differences",
+ "verdict": "86 differences",
  "fuzz": {
-  "seed": 3897578680,
+  "seed": 3405159621,
   "counts": {
-   "edits": 3,
-   "escapes": 4,
-   "enters": 4,
-   "saves": 3,
-   "revertAlls": 3,
-   "drops": 2,
-   "clicks": 4,
+   "edits": 5,
+   "escapes": 7,
+   "enters": 1,
+   "saves": 2,
+   "revertAlls": 0,
+   "drops": 0,
+   "clicks": 7,
    "boundaries": 0,
-   "colourScans": 8,
-   "episodes": 8
+   "colourScans": 4,
+   "episodes": 4
   },
   "violations": [],
   "actions": [
-   "— episode 1/8 [escape] 138 controls on screen",
-   "open dropdown 11",
-   "pick menu row 0 of 6",
-   "click #viewForm [data-wibox][4]",
-   "open dropdown 12",
-   "pick menu row 1 of 8",
-   "type \"7\" into #viewForm input[data-k][36]",
-   "type \"2026-03-01\" into #viewForm input[data-k][40]",
+   "— episode 1/4 [save] 148 controls on screen",
+   "click #viewForm [data-fuel3][0]",
+   "click Update property profile",
+   "— episode 2/4 [escape] 153 controls on screen",
+   "click #viewForm [data-cb][12]",
+   "click #viewForm [data-csclear][4]",
+   "click #viewForm [data-fuel][4]",
    "escape (4 left)",
    "escape (2 left)",
    "escape (1 left)",
-   "— episode 2/8 [revertAll] 138 controls on screen",
-   "type \"\" into #viewForm input[data-k][28]",
-   "click #viewForm [data-wibox][5]",
-   "click Revert to saved",
-   "escape (1 left)",
-   "— episode 3/8 [escape] 0 controls on screen",
-   "— episode 4/8 [revertAll] 0 controls on screen",
-   "click Revert to saved",
-   "— episode 5/8 [revertAll] 0 controls on screen",
-   "click Revert to saved",
-   "— episode 6/8 [save] 0 controls on screen",
+   "— episode 3/4 [save] 153 controls on screen",
+   "type \"$1,234\" into #viewForm input[data-srcedit][7]",
+   "click #viewForm [data-cb][8]",
+   "click #viewForm [data-cb][8]",
    "enter (commit)",
+   "type \"abc\" into #viewForm input[data-k][25]",
    "click Update property profile",
-   "— episode 7/8 [save] 0 controls on screen",
-   "enter (commit)",
-   "enter (commit)",
-   "click Update property profile",
-   "— episode 8/8 [save] 0 controls on screen",
-   "enter (commit)",
-   "click Update property profile"
+   "— episode 4/4 [escape] 153 controls on screen",
+   "click #viewForm [data-cb][28]",
+   "type \"-5\" into #viewForm input[data-k][38]",
+   "type \"1.5\" into #viewForm input[data-srcedit][3]",
+   "type \"2,050\" into #viewForm input[data-k][31]",
+   "escape (5 left)",
+   "escape (3 left)",
+   "escape (2 left)",
+   "escape (1 left)"
   ]
  },
  "inputs": {
@@ -435,18 +1916,16 @@
   "sections",
   "coverLetter",
   "rcsStudy",
-  "checklist",
   "tenantNotice",
-  "submittalLetter",
-  "rentSchedule"
+  "submittalLetter"
  ],
  "notGeneratedWhy": null,
  "counts": {
-  "compared": 32,
-  "matched": 10,
-  "differing": 22,
-  "fillOrder": 0,
-  "drift": 0,
-  "notGenerated": 8
+  "compared": 112,
+  "matched": 26,
+  "differing": 86,
+  "fillOrder": 17,
+  "drift": 60,
+  "notGenerated": 6
  }
 }

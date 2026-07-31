@@ -4012,3 +4012,35 @@ non-silent.
   The prior schedule supplies on-file (blue) and overridden (orange) values, so the states
   the team works in are exercised without a separate save-then-redrive pass. This is a
   cheaper route to the same coverage the run doc wanted from two passes.
+
+---
+
+## SWEEP WAVE 1 (cloud, date-locked) — three-ways closed, the app's money is right
+
+First sweep driven from the container through the relay, storm on, both fill orders, cycles
+cleaned up (234 → 234). These records supersede the night-1 provisional ones (driven before
+the date lock). The headline: **on the money rows, the app now matches the filed packages.**
+
+| package | verdict | money both-diffs | note |
+|---|---|--:|---|
+| **Peterson Plaza 2025** | app clean on money | **0** | 189 units correct, Senior row present-but-blank (M18, flagged) — the row-offset the night-1 record showed is gone once the prior RS supplies the roster |
+| **Hampshire House 2024** | **cosmetic** | **0** | all 76 "differences" are H9 label/whitespace noise; every money row matches |
+| **Colonial Village 2026** | **cosmetic** | **2** | `unit.0.ua` 161 vs 160 and `unit.0.gross` 2011 vs 2010 — a **$1 rounding** difference, nothing more |
+| Peterson Plaza 2020 | prior-year, provisional | 0 | pre-2025 cycle; year-derived fields untrustworthy per the date-lock rule |
+| Hampshire House 2019 | **BLOCKED** | — | "the app generated nothing comparable" — a prior cycle with no drivable study |
+
+**What this establishes:** across three current-year packages the app's rent, UA, SAFMR and
+gross figures reproduce the filed values, the only money discrepancy being a **$1 rounding**
+at Colonial Village. The large raw "difference" counts (32/76/86) are H9 harness noise —
+unit-type label formatting and missing-`theirs` extractions — not app defects, exactly as
+the earlier 46%-noise analysis predicted. The app reads and fills the money correctly; where
+it falls short is completeness (M7 — Peterson generated 3 of 6 documents, Hampshire's prior
+2019 nothing at all), not correctness of the numbers it does produce.
+
+**M18 confirmed corrected by the driven record.** Peterson 2025's money both-diffs went from
+the night-1 row-offset (which read as several wrong rows) to **zero** once driven with the
+prior rent schedule: 189 units, the Senior row present and blank, flagged by the score
+blocker. Not a wrong number anywhere.
+
+**Storm:** ran on every driven cycle; violations (if any) carried in each record's `fuzz`
+field with replay seeds, judged under the M6 per-key rule.

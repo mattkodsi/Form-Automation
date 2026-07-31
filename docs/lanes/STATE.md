@@ -6,7 +6,7 @@ claims to be current; every other doc in the lane is either standing rules
 findings (`AUDIT-LEDGER.md`). If this file disagrees with them, this file is right and
 the other one needs fixing.
 
-Last updated: **2026-07-31**, by the cloud, after merging main and a four-property reading wave.
+Last updated: **2026-07-31**, by the cloud — the sweep is running from the container.
 
 ## Merged with main (7dff1bf) — 13 of 14 suites green
 
@@ -15,6 +15,19 @@ measures. All fourteen suites run: 13 green, `test_browser` red on the **same 5
 `shell.head.html` layout checks** as before — the merge added 11 browser checks (all pass)
 and zero new failures. Those 5 are the redesign lane's, unchanged. Per Matt's call the
 branch carries main's commits re-authored to noreply@anthropic.com (attribution waived).
+
+## THE SWEEP IS LIVE FROM THE CONTAINER
+
+Wave 1 driven from the cloud through the relay, storm on, both orders, cleaned up by
+cycle (account 234 -> 234). Three-ways closed: Peterson 2025, Hampshire 2024, Colonial
+Village 2026 all **clean on the money** (Colonial off by a $1 UA rounding; the rest 0
+money diffs). The big raw difference counts are H9 harness noise. M18 confirmed corrected
+by the driven record (Peterson 189 units, Senior blank flagged, 0 money diffs). Prior-year
+cycles are provisional; Hampshire 2019 BLOCKED (nothing comparable).
+
+Account baseline is **234** (Mac's trim note said 236; cleanup verifies count-unchanged,
+so drives are safe either way). Token self-refreshes under 5 min left; forced to 60 to
+unblock the sweep. Only Matt can mint a fresh one if the refresh token ever rotates out.
 
 ## The selector blocker is FIXED — and it was not the selector
 
