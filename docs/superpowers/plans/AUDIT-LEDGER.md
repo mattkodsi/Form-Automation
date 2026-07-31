@@ -841,3 +841,60 @@ Lansing Manor from a false finding.
 candidate record is an NJHMFA `.msg` in compressed RTF, unreadable here. Four different
 UA pairs circulate in this cycle (61/64, 38/53, 46/49, 40/51); the submitted package is
 internally consistent, and the change came after it.
+
+---
+
+## Findings — Peterson Plaza (75917), 2025 - RCS
+
+SHOULD vs FILED; no sweep record yet. Governing study is the **8 May 2025 "(updated)"**
+version — and for once the folder says why: `RCS Issue Memo … 5.7.25.docx` is a
+substantive review by Xandra LLC for the CA rejecting the 10 April study on one point
+(Rachel Walsh signed the RCS but was absent from Certification item 9). The updated
+study answers exactly that. **Concluded rents are identical between versions**, read side
+by side. The bound submission carries the *original* study because it completed on
+29 April, nine days before the correction — chronology, not a defect.
+
+| # | document | field | SHOULD | FILED | verdict |
+|--:|---|---|---|---|---|
+| 1 | RCS study (both versions) | street address | **5969 North Ravenswood Avenue** | **"5969 West Peterson Avenue"** on cover, transmittal and site description | team wrong |
+| 2 | RCS study p.19 | county / state | Cook County, **Illinois** | "Cook County, **Connecticut**" | team wrong |
+| 3 | RCS study, all 5 grids | "Subject's FHA #" | **07135706** | `IL060052016` — the HAP contract number | team wrong |
+| 4 | RCS study p.21 | assisted-unit count | 189 of 189 | narrative says "excluding 9 one-bedroom units" while the table above it shows 189 and 0 not-rent-restricted | team wrong |
+| 5 | `RCS Analysis.xlsx` `U5`,`U6`,`U7` | proposed UA | 71 / 71 / 125 (as approved and filed) | **99 / 99 / 124** | team wrong |
+| 6 | Baseline UA workbook `Summary!C3` | contract number | IL060052016 | **IL060025016** — 5 and 2 transposed | team wrong |
+| 7 | Baseline UA workbook `Summary!D9:E13` | bedroom row labels | 1BR ×2, 2BR ×2, 3BR | labelled "0 / 1 / 2 / 3 / 4 Bedroom" — **off by one bedroom throughout** | team wrong |
+
+### M1 is now *proved*, not just observed
+
+This is the first package where the property's **real FHA number is on the record**:
+`07135706`, printed under "FHA Project Number (if applicable)" on the CA's Exhibit A in
+both 2021 and the 2025 approval package, alongside "Section 8 Contract Number:
+IL060052016". The study's five grids print the *contract* number in the FHA field.
+
+So M1 is no longer an inference from "these projects have no FHA number" — here the FHA
+number exists, is documented, and the study prints a different number in its place.
+Seven of seven packages read now carry the mislabel.
+
+### A useful negative result — M5 does not hit everywhere
+
+Every summary column on this study was re-added and **all of it holds**: gross renewal
+potential 449,709 ✓, SAFMR gross 375,300 ✓ and ×1.5 = 562,950 ✓, per-bedroom 150%
+figures ✓, net rentable 126,898 sf ✓ and 671 sf average ✓, and every grid's line 44 =
+line 5 + line 43 across all 25 comparable columns ✓. **All five inequality glyphs are
+`<` and all five are true.**
+
+Circle Park's reversed glyph and Clinton Manor's grid conflict are therefore not
+universal to the appraiser's template — which makes them sharper findings, not weaker
+ones.
+
+### Unresolved, and worth someone's eyes
+
+The CA's approval letter reports the **2BR** electric average as **$70.70** — within a
+cent of the owner workbook's **1BR-B** average of $70.6909 — while the owner's own 2BR
+sample averaged **$98.79**. Whether the CA re-sampled or populated its 2BR column from
+the 1BR-B data cannot be told from these files. **The $28 gap flows straight into the
+filed Col.5 and therefore into every tenant's rent portion.** Not asserted as a defect.
+
+Separately, the baseline workbook counts one household twice: sheet `1A` row `B-02D` and
+sheet `1B` row `C-02D` carry the same twelve readings with months 1 and 2 transposed,
+both averaging 62.6725 — the same unit in two different unit-type samples.
