@@ -3270,3 +3270,123 @@ No new glyph shape beyond `N`-for-`H` (Market Square, Woodland Towers — both B
 digit error (`CA39L000060` for `…090`). **No thousands-separator claim was made by any of the
 five readers**, which is M8 holding. No post-certification alteration beyond the two already
 recorded — Woodland Towers was checked and came back explicitly clean.
+
+---
+
+# THREE-WAY CLOSURES — the OURS leg landed (night-1, 89 packages)
+
+The Mac swept 89 packages against the app frozen at `ccc4568`. I have SHOULD for 28 of them.
+This block closes what the sources support and says plainly what they do not.
+
+## First: most of the "differences" are not defects
+
+**304 rows have a value on both sides that differ.** Classified:
+
+| class | rows | what it is |
+|---|--:|---|
+| unit-type label (`1BR/1BA` vs `1-Bedroom` / `1BR` / `1B-Elderly`) | **120** | the app synthesises a type string; the filed doc uses free text. **Not a defect on either side.** |
+| **money or allowance** | **76** | **the actual signal** |
+| row alignment / count | 43 | extractor misalignment, see H9 |
+| checklist heading whitespace / curly apostrophe | 18 | normalisation |
+| `property.name` | 13 | mixed; at least one is an un-decoded ASCII−29 string |
+| everything else | 34 | scattered |
+
+**46% of the adjudicable set is normalisation noise.** Any headline built on "2,156 values
+differing" or even "285 both-sides differences" overstates the finding by roughly a factor of
+four. The number that matters is **76**.
+
+## H9 · The extractor, not the app — four separate harness bugs the sweep exposed
+
+**(a) A one-row offset in THEIRS, across at least four packages.** Marine Terrace 2026 is the
+clearest: `THEIRS unit.1.rent 3600` is OURS' unit.0, `THEIRS unit.2 5150` is OURS' unit.1,
+`THEIRS unit.3 6850` is OURS' unit.2, and OURS' unit.3 is empty. Same shape at Peterson
+Plaza, Marine Terrace 2021 and Morh Housing. **These rows are not disagreements; they are the
+same values read one row apart.**
+
+**(b) OURS is offset at Westwood Village 2025**, the other direction: OURS `1120,1120,1570,
+1570,1850` against THEIRS `930,1120,1120,1570`. Ours drops the first value. So the offset bug
+exists on **both** sides and cannot be assumed to be the filed document's fault.
+
+**(c) A comma parsed as a decimal point.** Marine Terrace 2021 yields `THEIRS unit.1.gross
+2.078` and `unit.3.rent 3.000` — these are `2,078` and `3,000`. **This is M8's mechanism
+biting our own reader**: the separator question was closed for *documents*, but `extract.js`
+is still mis-parsing it.
+
+**(d) The ASCII−29 decode is applied inconsistently.** Oceanport's checklist yields THEIRS
+`2FHDQSRUW6HQLRU&LWL]HQV`, which decodes to `OceanportSeniorCitizens` — **matching OURS
+except for a trailing contract number.** The decode ran on Lansing Manor and Holly House and
+did not run here. A known trap, half-handled.
+
+**Every one of these manufactures false differences.** They must be fixed before any
+difference count is quoted to anyone.
+
+## M7 confirmed at scale — the app still does not build a package
+
+**39 of 89 packages produced nothing comparable at all.** Among the 28 I have sources for,
+`notGenerated` runs to 4–8 documents each; `coverLetter`, `rcsStudy`, `notes` and `sections`
+are absent in nearly all of them. Three of my read packages produced **nothing**:
+
+| package | status |
+|---|---|
+| Crossroads of East Ravenswood 2026 | **BLOCKED** — app generated nothing comparable |
+| Woodland Towers 2026 | **BLOCKED** — app generated nothing comparable |
+| North Park 2025 | **BLOCKED** — no document the filed package also has |
+
+**These are BLOCKED, not done.** No verdict is possible on them.
+
+## Verdicts closed
+
+### app RIGHT, team WRONG — the app caught a filed defect (3)
+
+| package | evidence |
+|---|---|
+| **Marine Terrace 2026** | `total.units` OURS **444**, THEIRS **441**. My hand read (defect #4) found the filed Part A omits the non-revenue 2BR/3-unit row and should read 444. **The app produced the correct number.** Its gross figures `3716 / 5302 / 7028` also reproduce my hand-computed gross exactly — including the **$7,028** 3BR that M13 turns on. |
+| **Mapleview Towers 2026** | `unit.0.proposed` OURS **3095**, THEIRS **3200**. $3,095 is the filed *and* governing conclusion; **$3,200 is the rent Gill rejected three times**, which the team nonetheless bound into the package as the tenant notice (my defect #1). **App right, team wrong.** |
+| **Oak Center 2026** | OURS `3650 / 4300 / 4550` = the **governing** 21 Jan revision. THEIRS `4050 / 4475 / 4675` = the **superseded filed v1**. The app read the study that governs; the filed package did not. |
+
+**Morh Housing 2026** is the same shape — OURS `4475 / 5100` is the governing 21 Jan revision,
+THEIRS `4675 / 5275` the filed 4 Dec study — but its `unit.2` rows are row-shifted (H9a), so
+**I am recording the study-selection call as correct and leaving the UA rows open.**
+
+### app WRONG (3)
+
+| package | evidence | money |
+|---|---|--:|
+| **Noble Tower 2024** | OURS `total.contract_rent` **604,500**, THEIRS **636,675**. Both divide by the same 195 units: OURS used **$3,100/unit**, the filed used **$3,265**. $3,265 is the study's conclusion. **$3,100 is HCVA's quote** — one of the four competing numbers in the owner's appraiser-shopping workbook. **The app took a rejected bidder's figure instead of the study conclusion.** Not a row offset: the unit count is identical on both sides. | **−$32,175/mo** |
+| **Market Square 2026** | OURS **2,375**, THEIRS **2,325**. $2,375 is the *filed* 24 Sep study; **$2,325 is the 21 Nov revision that governs**. The app picked the superseded study — the H5 failure, made concrete. | $50/unit/mo |
+| **Westwood Village 2025** | OURS' SAFMR column is offset one row against THEIRS (H9b). The app's own reader is misaligned. | — |
+
+Noble Tower is the most serious finding in this block. **It is the first case where the app
+selected a number that exists nowhere in the filed package** — not a stale study, not a
+mis-read row, but a losing bid sitting in the same workbook.
+
+### both wrong / the package contradicts itself (1)
+
+**Friendship Court 2026** — OURS UA `61 / 85 / 100 / 107` is the **study's** set; THEIRS
+`66.02 / 82.07 / 108.91 / 124.47` is the **workbook's**. My hand read found a **third** set on
+the executed schedule (`65 / 83 / 105 / 118`) and could not reproduce it from any support in
+the folder (defect #6). Neither leg is wrong; **the package genuinely carries three utility
+allowance sets** and the app picked one of the real ones.
+
+### Already closed earlier, unchanged
+
+Colonial Village 2026 (the new record shows only a $1 rounding difference on UA/gross),
+Northcross 2024, Riverwood 2025, Westwood Village 2020.
+
+## Not closed — and why
+
+**Thirteen packages have a sweep record and a SHOULD, and I am NOT issuing a verdict**:
+Circle Park, Oceanport Gardens, Lansing Manor, Clinton Manor, Holly House, Peterson Plaza,
+Burt Farms I, Sycamore Green, New Horizons, Oaks on North Plaza, Hampshire House, Woodbury
+Oakwood, Noble Tower's remaining rows.
+
+Their money rows are real (Lansing UA 85 vs 116; Holly House 61/64 vs 38/53; Sycamore SAFMR
+990/1230 vs 1050/1310; New Horizons proposed 3150/4000/4350/5450 vs 3500/4300/5000/6000), but
+**adjudicating them requires matching each figure against the specific SHOULD values in that
+property's section above, and several sit inside the H9 offset.** Calling them now would be
+guessing which leg is displaced. They need one focused pass each, after H9(a)–(d) are fixed —
+because the fix will retire an unknown fraction of them outright.
+
+**H7 confirmed as predicted, at cost:** the Mac swept both folders for Colonial Village,
+Riverwood, Lansing Manor and Fairview Homes. Four packages driven twice, four extra
+`ZZ-CORPUS-*` properties written to the live account.
