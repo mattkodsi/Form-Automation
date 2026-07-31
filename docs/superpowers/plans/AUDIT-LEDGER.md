@@ -525,3 +525,41 @@ The split now works: the driving leg on the Mac, the reading and analysis legs h
 repo as the channel. One package has been audited all three ways. **87 cycles remain**,
 and the SHOULD leg for four more (Westwood Village, Circle Park, Oceanport Gardens,
 Lansing Manor) is already written and waiting for its OURS.
+
+---
+
+## Oceanport's $72,180 gap — the third-document hypothesis, tested and eliminated
+
+Matt's suggestion was that every previously unexplained allowance in this corpus turned
+out to live in a third document — a CA exhibit or UA workbook. **Tested here; it does
+not.** The gap's entry point is now located precisely even though its derivation is not.
+
+**Where it enters.** NJHMFA's determination letter of **05/02/2024**
+(`2024 - RCS/Oceanport Senior Citizens-M2M-UAF-FY2024.pdf`), read page by page as
+images. Its rent table is headed:
+
+> **"Adjusted Contract Rent Based on Owner's RCS"** — 2,590 / 2,600 / 2,615 / 3,220 /
+> 3,225 / 3,235
+
+The filed RCS concludes 2,525 / 2,535 / 2,550 / 3,200 / 3,210 / 3,215. **The letter's own
+column header names a basis its own numbers contradict.** Deltas +65/+65/+65/+20/+15/+20
+— not a uniform factor, so not an OCAF or UAF applied to the RCS.
+
+**What was ruled out, by looking rather than by inference.**
+
+| checked | result |
+|---|---|
+| The letter's **Enclosure** (pp. 3–5) | a **blank** HUD-92458 for the owner to complete — carries no figures at all |
+| The rest of the 2024 cycle folder | no CA exhibit, rent-adjustment worksheet or UA workbook for 2024. `RENT_ADJU_WORKSHEET` files exist for 2021 and 2022 only |
+| Whether the figures appear in the study | the study's whole text layer carries **one** occurrence, on p.54 — and that is **Comp #3's adjusted rent** of `$3,220` on line 44 of the Two-Bedroom-Medium grid, a comparable, not a conclusion. Line 46 of that grid reads **$3,210**, the RCS figure. Confirmed by rendering p.54 at 160 dpi and reading it |
+| Later cycles | `2025/` holds only a rent schedule and an archive; `2026/` an amendment. Neither restates the 2024 basis |
+| The UA leg | the letter's Adjusted Utility Allowances (43/40/45/63/73/19) are exactly `prior × 1.033` rounded, and match the study. **The gap is entirely in contract rent, not in the allowance** |
+
+**Verdict stays `undetermined`** — but the statement is now much tighter than "nobody
+derives them". The figures enter the record at the CA's determination, the determination
+cites the RCS as its basis, the RCS does not contain them, and nothing else in the
+property folder does either. Whatever produced them is outside this corpus.
+
+This also distinguishes it from the Westwood and Lansing allowance cases, where the
+unexplained figure was a *utility allowance* and the governing worksheet was present.
+Here the governing document is present, is the source, and disagrees with itself.
