@@ -3659,3 +3659,62 @@ Both packages above computed the threshold on an allowance superseded by one tak
 **No outcome changes at any of the four.** The mechanism is real and the arithmetic is not
 the point — the point is that four packages ran the mandatory test on a number the guidebook
 says is the wrong one.
+
+---
+
+## Oaks on North Plaza (75544), 2025 — **app wrong**, and it is NOT the Peterson defect
+
+The reader was sent to test whether `app.js:1579` drops a row here too. **It does not** —
+every row in this study's roster carries a bedroom count (`1 BR / 1 BA Apt`,
+`2 BR / 1 BA TH ADA`, …; `ADA`/`TH`/`Apt` are always suffixes after a full spec), so
+`rcsBrOf` never returns empty. **Testing the hypothesis rather than assuming it is what
+found a second, different defect.**
+
+**What actually happens.** The filed ordering is correct and agreed by three sources — the
+workbook, the executed HUD-92458 and the study's roster all carry the same six rows in the
+same order, 1BR first and 3BR-ADA last, 62 units, $121,105/mo. Part D is empty and rent loss
+is 0, so there is no non-revenue row.
+
+The app's own record reads:
+
+| | app row | app label | filed row |
+|---|--:|---|---|
+| 0 | 14 | `2BR/1BA` | 1 BR — 14 units |
+| 1 | 6 | `2BR/1BAADA` | 2 BR/1 BA — 6 |
+| 2 | 1 | `2BR/1.5BA` | 2 BR/1 BA-ADA — 1 |
+| 3 | 34 | `3BR` | 2 BR/1.5 BA — 34 |
+| 4 | 6 | `3BR/1.5BAADA` | 3BR — 6 |
+| 5 | **14** | `1BR/1BA` | 3 BR-ADA — **1** |
+
+The **counts and current rents are the filed rows 0–4 verbatim** — the app read them
+correctly. But **the type labels sit one row above the numbers they belong to**, and the
+1BR row was **appended as row 5 instead of claiming row 0**, duplicating its 14 units and
+**overwriting the 3BR-ADA row entirely**.
+
+**Consequence: the app's workbook totals 75 units against a true 62** — 13 phantom units,
+the 14-unit 1BR counted twice — and it is short the 3BR-ADA row's 1 unit, $1,198/mo current
+and $2,325/mo proposed. Its current-rent potential computes to $90,724 against the filed
+$91,922.
+
+### M18 · The app's unit rows are claimed positionally, and a roster that does not line up corrupts them — 2 properties
+
+| property | failure | result |
+|---|---|---|
+| **Peterson Plaza** | a roster row parses with no bedroom count and `app.js:1579` **drops** it | 188 units vs 189; **$32,400/yr short** |
+| **Oaks on North Plaza** | a roster row fails to claim its form row and is **appended**, duplicating one row and overwriting another | **75 units vs 62**; the 3BR-ADA row destroyed |
+
+Opposite symptoms, one seam: **which form row a study roster row claims.** One drops, one
+duplicates, and in both cases every individual figure the app read was *correct* — only the
+row it landed on was wrong. That is the signature of positional claiming with no key.
+
+**This is a repair I own**, and the two properties clear the plan's two-property bar without
+needing a code reading to generalise it. **Neither is diagnosed to a line yet on the Oaks
+side**: the likely trigger is that the prior rent schedule the app reads is a poor scan whose
+OCR yields `1 6R`, `3 613`, `2 l BA` — a bedroom-parse failure that would break positional
+claiming — but that is a hypothesis, not a finding. **Re-running the sweep for 75544 with the
+roster and `rcsBrOf` output logged per schedule row would settle it**, and that is the
+Mac's step 4.
+
+**A live trap recorded for the next reader:** the study's own "Subject Property Unit Mix"
+table (~p.15) lists 1BR as **16** units and **omits both ADA rows**. Any reader or parser
+that prefers that table over the roster gets a different, wrong mix.
