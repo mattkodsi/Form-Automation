@@ -6,7 +6,15 @@ claims to be current; every other doc in the lane is either standing rules
 findings (`AUDIT-LEDGER.md`). If this file disagrees with them, this file is right and
 the other one needs fixing.
 
-Last updated: **2026-07-31**, by the cloud, after repairing M18.
+Last updated: **2026-07-31**, by the cloud, after merging main and a four-property reading wave.
+
+## Merged with main (7dff1bf) — 13 of 14 suites green
+
+`origin/main` folded in, including the provenance-badge change (`2f8b4b7`) this audit
+measures. All fourteen suites run: 13 green, `test_browser` red on the **same 5
+`shell.head.html` layout checks** as before — the merge added 11 browser checks (all pass)
+and zero new failures. Those 5 are the redesign lane's, unchanged. Per Matt's call the
+branch carries main's commits re-authored to noreply@anthropic.com (attribution waived).
 
 ## The selector blocker is FIXED — and it was not the selector
 

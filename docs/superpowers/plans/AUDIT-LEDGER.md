@@ -3830,3 +3830,129 @@ than to mojibake**, which is the more dangerous shape: mojibake announces itself
 string reads as "the filed document has no value here."
 
 That closes every package that has both a sweep record and a SHOULD.
+
+---
+
+# Reading wave — Ebony Gardens, Gates Manor, Southport Mews, Walden
+
+Four unread properties, checked against sources. Each passes the aggregate 150% test; the
+findings are documents wrong against their own sources, and two mechanisms grow sharply.
+
+## Ebony Gardens (75566), 2025 - RCS — Belfry, job 25-053
+
+Aggregate passes: RCS gross $566,876/mo vs 150% SAFMR $597,465 — **under by $213.91/unit/mo**.
+Both sides gross, agree cell-for-cell. Study selection: **four revisions, the un-suffixed
+`RCS - 25-053` is the OLDEST and the job-numbered `Revised RCS - 25-053` is the NEWEST**;
+Oct 29 governs, +$225,900/yr entirely in the 24 three-bedroom units.
+
+| # | document | field | SHOULD | FILED | verdict |
+|--:|---|---|---|---|---|
+| 1 | study p3 | threshold caption | "< **150% OF** SAFMR" | "< SAFMR GROSS RENT" — words assert $566,876<$398,310, false | team wrong |
+| 2 | study p2 | per-bedroom table | none exists (§9-14.B) | prints one, net-vs-gross | team wrong |
+| 3 | study p26 | year built | 1982 (2018 Tobin RCS) | "2005 (Renovated 2021)", age "20 years" | team wrong |
+| 4 | study p63 | prior-services cert | disclose the May 2025 RCS + Apr grids | "have not provided any…in the three years preceding" | team wrong |
+| 5 | checklist | licence-copy box | unchecked (temp licence = N) | **checked** | team wrong |
+| 6 | study + workbook | 3BR UA | $125/$135 (executed 92458, monotone) | $129/$125 (small > large) | team wrong |
+| 7 | HUD-92458 Part B | parking as a service | checked (incl. in rent) | unchecked | team wrong |
+| 8 | study `/Title` | metadata | Ebony Gardens | **"April 14, 2008", author Mark Burgess** | cosmetic |
+| 9 | `Rent Analysis.xlsx` | G2/M2 headers | Ebony Gardens | **"Renzi - As Is" / "Renzi"** | open |
+
+**M17 (stale UA):** the executed 92458 adopts $100/$121/$135/$125; the study computed on
+$96/$117/$129/$125. Concurrent adjustment, immaterial to the aggregate. **Absent:** glyph
+substitution (`NY36H108040` clean ×15), incomplete grid, foreign property bound into the
+filed package.
+
+## Gates Manor (uncoded, contract IL06H121063), 2026 - RCS — Belfry, job 26-121
+
+51 × 1BR, one type. Passes: 51 × ($2,725+$33) = $140,658 vs 150% SAFMR $178,245 — **under by
+$736.99/unit/mo**. One study revision, the two candidates byte-identical. Rent movement
+requested +$503,064/yr.
+
+| # | document | field | SHOULD | FILED | verdict |
+|--:|---|---|---|---|---|
+| 1 | **`RCS Analysis.xlsx` Sheet1** | whose grids | Gates Manor | **"Crossroads of East Ravenswood — Belfry Rent Grids", 124 units, live** | team wrong |
+| 2 | checklist `/Title` | metadata | Gates Manor | **"…RCS Owners Checklist - New Horizons 3.25.24.pdf", author mwyckoff** | team wrong |
+| 3 | study transmittal | UA in 150% test | $33 (new UAF) | $31 (superseded) | team wrong |
+| 4 | study transmittal | threshold caption | "< **150% of** SAFMR" | "< SAFMR GROSS RENT $140,556<$178,245" | team wrong |
+| 5 | **HUD-92273-S8 grid** | "Subject's FHA #" | IL06H121063 | **IL06004814** — matches nothing else in the package | team wrong |
+| 6 | **Appendix 2** | form variant | rent-increase cert (245.310) | the **UA-DECREASE** variant, certifying a decrease while the UA *increases* $31→$33 | team wrong |
+| 7 | study | year built | one value | Improvements **1976**, grid line 7 **1979**, age "50 years" (only fits 1976) | team wrong |
+| 8 | study narrative p26 | ZIP | 60091 | **600091** | team wrong |
+| 9 | study | property name | Gates Manor | "GATE MANOR APARTMENTS" (title, transmittal, Neighborhood) | team wrong |
+| 10 | tenant notice | comment address | 1135 Wilmette Ave | **11135** Wilmette Ave; agency "Urban Housing and Development" | team wrong / cosmetic |
+
+**M17 (stale UA):** $31 vs concurrent $33. **Absent:** glyph substitution (only the `600091`
+digit error and the unrelated `IL06004814`); foreign material *bound into the transmitted
+package* (the Crossroads/New-Horizons leaks are in the component workbook and checklist,
+neither bound in — zero hits in the signed package).
+
+## Southport Mews (uncoded, contract NY360017014), 2025 — Renzi/Belfry, job 24-490
+
+Passes: SHOULD gross $181,929/mo vs 150% SAFMR $266,085 — **under by $1,314.94/unit/mo**.
+Study selection: **un-suffixed file is the newest, "v2" is the older**; both conclude the
+same; +$382,284/yr by the cycle. The grids on the filed study return **4 characters** to
+`pdftotext` — text-layer-only reading would call them blank; they are fully present at raster.
+
+| # | document | field | SHOULD | FILED | verdict |
+|--:|---|---|---|---|---|
+| 1 | study letter p2 | UA | $86/118/183/240 (concurrent, 1/1/2025) | **$38/72/107/175 (FY2024)** — superseded by the very renewal it supports | team wrong |
+| 2 | study letter p2 | total gross renewal | $181,929 | $178,183 | team wrong |
+| 3 | `RCS Comparison.xlsx` E7 | owner-side basis | gross (rent+UA) | **$172,425 net, no UA column** — net-vs-gross | team wrong |
+| 4 | **tenant notice** (bound pkg p78) | property in the operative sentence | Southport Mews | **"Luther Towers Apartments"** | team wrong |
+| 5 | **cover letter** (filed) | appraiser identity | Renzi & Associates | **"Gill Group"/"Gil Group", Jana Jones, Dexter MO** | team wrong |
+| 6 | cover letter (filed) | required certs | 30-day + perjury warning | both absent (present only in v2) | team wrong |
+| 7 | grids ×4 (filed) | "Grid was prepared" | one box checked | both blank | team wrong |
+| 8 | study cert p58 | date | dated | **undated** | team wrong |
+| 9 | HUD-92458 + Exhibit A | FHA Project No. | populated | blank on every copy, both cycles | team wrong |
+| 10 | `RCS Comparison.xlsx` rows 19-24 | foreign properties | — | **"Ebony Gardens", "Armory Plaza" columns** | open |
+
+**M17 (stale UA):** the sharpest yet — an $8,388/mo gap between the FY2024 allowance used and
+the concurrent one, $44,952/yr, still short of flipping the aggregate. **Absent:** glyph
+substitution (`NY360017014` clean ×11); checklist `/Title` empty (author `mwyckoff`, **no**
+New Horizons); malformed threshold sentence (**caption correct here** — the operator and
+"150% OF" are both right).
+
+## Walden (The Cedars) (75921, contract NY360002009), 2025 - RCS — Belfry, job 25-020
+
+Passes with room: RCS gross $201,310/mo vs 150% SAFMR $209,790 — **under by $96.36/unit/mo**.
+**Does NOT carry the stale-UA defect** — study, Exhibit A and executed 92458 all use the new
+45/53/75/96. Study selection: a Renzi-engaged Zabel grid (`24-578`, Oct 2024) and a
+Belfry-engaged Zabel full RCS (`25-020`, Feb 2025, +9.1% on the 3BR); only 25-020 filed.
+
+| # | document | field | SHOULD | FILED | verdict |
+|--:|---|---|---|---|---|
+| 1 | **Exhibit 4, Evidence of Debt Service** (loose + executed pp.80-82) | whose loan | Walden | **"WEST HAVERSTRAW SENIOR HOUSING", 119 Walnut Hill, loan 402372** — DocuSign-executed | team wrong |
+| 2 | cert p60 + App. 9-1-4 ¶3 | prior services | disclose Zabel's own Oct 2024 grids on this subject | "have not provided any…in the three years preceding" | team wrong |
+| 3 | checklist | licence-copy box | unchecked (temp licence = N) | **checked** | team wrong |
+| 4 | RCS p3 / checklist | 150% comparison | an express aggregate sentence | box checked; RCS has only a per-bedroom net-vs-gross table, no comparison sentence | team wrong |
+| 5 | 30-day owner's cert | signature date | after the period closes (~5/1) | one copy signed **4/22** (premature) | team wrong |
+| 6 | Exhibit 2 `/Title` | metadata | Walden | **"…RCS Owners Checklist - New Horizons 3.25.24.pdf", mwyckoff** | cosmetic |
+| 7 | Exhibit 1 | addressee | HUD/CA (CGI) | **"Walden Preservation, L.P." — addressed to itself** | cosmetic |
+| 8 | grids "Subject's FHA #" | — | 012GL005 | NY360002009 (the contract number) | cosmetic |
+
+**Absent:** stale-UA defect (uses the new allowance correctly — the negative that makes M17 a
+real pattern rather than universal); glyph substitution; year-built contradiction; incomplete
+grid; foreign text in the transmittal itself.
+
+## Mechanism updates from this wave
+
+**M12 — foreign material — two new sub-findings, both stronger than a single stray file:**
+
+1. **West Haverstraw's debt-service exhibit appears in TWO properties** — Southport Mews'
+   Exhibit 4 and Walden's Exhibit 4 are both West Haverstraw Senior Housing's loan, and
+   Walden's is **DocuSign-executed** as its own. One foreign exhibit, two filed packages.
+2. **The owner-side New Horizons checklist template reaches 5 properties** — Crossroads,
+   Woodland Towers, Fairview Homes, **Gates Manor, Walden** — all `/Title "…New Horizons
+   3.25.24.pdf"`, author `mwyckoff`. Plus Gates Manor's workbook carrying **Crossroads'**
+   rent grids, and Southport's carrying **Ebony Gardens + Armory Plaza** columns. The
+   owner-side artifacts are assembled by copying a neighbour's file and editing in place.
+
+**M17 — stale UA in the threshold — now 7 properties:** Morh Housing, Woodland Towers,
+Lansing Manor, Holly House, **Ebony Gardens, Gates Manor, Southport Mews**. Walden is the
+clean control — it used the concurrent allowance, so the pattern is a real error and not a
+universal one. Southport is the widest gap ($44,952/yr). **None flips its aggregate.**
+
+**M14 — malformed threshold, Belfry template — Ebony Gardens and Gates Manor added.**
+Southport (Renzi/Belfry mix) prints the caption **correctly**, and Walden prints **no
+comparison sentence at all** — two more shapes of the same missing-or-wrong aggregate
+statement.
