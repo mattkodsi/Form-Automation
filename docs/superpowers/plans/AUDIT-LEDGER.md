@@ -1435,3 +1435,102 @@ and four rents moved, but both reach $2,000 / $2,400. Which study the CA held at
 is undetermined; its letter cites no job number.
 
 M1: 10 of 10.
+
+---
+
+## M10 · The owner's workbook derives the RCS rent as an earlier conclusion plus a flat addend — 2 properties
+
+Recorded as cell contents. **No conclusion is drawn about intent, and none should be read
+into this entry.**
+
+| property | workbook cells | earlier study concluded | later study concluded | approved |
+|---|---|--:|--:|--:|
+| **New Horizons** 2024 | `E26 = 2800+F26`, `F26 = 225`; same $225 addend on all four unit types | JLL 26 Jan: 2,800 / 3,800 / 4,100 / 5,300 | JLL 26 Mar: 3,150 / 4,000 / 4,350 / 5,450 | JLL's |
+| **Woodbury Oakwood** 2026 | `E10 = 1800+Z10`, `E11 = 1975+Z11`, `Z10 = Z11 = 100`, under column headers **"Orig"** and **"Adder"** | Belfry 12 Mar: **1,800 / 1,975** | Belfry 9 Apr: **1,900 / 2,075** | **1,900 / 2,075, at 100% of the owner's RCS** |
+
+Two properties, two appraisal firms, two years — **clears the two-property bar.**
+
+In Woodbury Oakwood the arithmetic is exact in both directions: the "Orig" values are
+precisely the March study's conclusions, and `Orig + Adder` is precisely the April study's.
+The owner's own workbook records the post-March increase as a **flat additive nudge**
+rather than as an appraisal conclusion, and those are the rents NJHMFA approved at 100%.
+
+What is **not** established: the ordering. Whether the workbook anticipated the revision or
+recorded it afterwards cannot be told from these files, in either property. That question
+needs someone who can ask the appraiser and the asset manager.
+
+---
+
+## Findings — Woodbury Oakwood / Lakeside (75488), 2026 - RCS
+
+### The Fairview Homes documents — a foreign document, not embedded contamination
+
+`Exhibit 1 - RCS Owner Cover Letter **Fairview Homes** 05.07.25.pdf` is **wholly Fairview
+Homes' document**: addressee *Fairview Homes Preservation, L.P.*, Re line *Fairview Homes
+(NJ390013022)*, dated *April 4 2025*, naming a different owner representative, and
+**unsigned**. Fairview Homes is a separate property (75920, Newark). This is **not** the
+alias problem — Woodbury Oakwood / Lakeside Apartments are genuinely one property and the
+bound Exhibit 1 mixes those two names correctly.
+
+**It was not filed.** The bound 63-page executed submission carries the correct Lakeside
+letter at pp.4–5. Exposure is contained.
+
+**But it is one of five Fairview files in the folder, and two are unmarked** — this cover
+letter and `Exhibit 4 - Evidence of Debt Service - **Fairview Homes** Berkadia Mortgage
+Statement March 2025.pdf`, a statement for Fairview's loan 991063295 sitting beside the
+real Exhibit 4 (Wells Fargo, Woodbury Oakwood). Three others carry an `x` prefix marking
+them as templates. **The package was built by copying Fairview's and the sources were left
+behind, two of them indistinguishable by filename from live exhibits.** Given that one
+property in this corpus *did* file another's rent grids, this is the near-miss version of
+that failure.
+
+### The CA refused the study twice, and approved a version still carrying the defect
+
+| date | event |
+|---|---|
+| 20 Apr 2026 | NJHMFA reviewer: *"the reviewer cannot accept this RCS"* — building age, laundry photos, comparable ages |
+| 4 May | revised — ages harmonised to 1943, **but both grids left with no Effective Rent, no Adjusted Rent, no Estimated Market Rent** |
+| 6 May | second review: *"the grids on Page 19 and 27 are not complete. The reviewer cannot accept this report"* |
+| 12 May | revised again — working grids restored, **and the grids revert to Year Built 1960** |
+| **15 May** | **NJHMFA approves at 100% of the owner's RCS** |
+
+The April 20 review said in terms: *"Page 12 says the building was constructed in 1930
+while all of the grids state 1960. Please clarify."* **The approved study still states 1943
+in the Improvements section and 1960 in both grids.** Its Chronological Age prints **66
+years** against a stated 1943 — 66 is the age belonging to 1960, so the year was edited and
+the age was not. The bound April copy is worse: 1930, 1960 and 1960 in one report.
+
+### Other findings
+
+| # | document | field | SHOULD | FILED | verdict |
+|--:|---|---|---|---|---|
+| 1 | Both grids, bound **and** governing | "Grid was prepared" | one box ticked | **both render blank on the 2BR grid** (the 1BR grid has one ticked) | team wrong |
+| 2 | Bound transmittal | HAP clause cite | §6b(2)(b) | **"Section 6(2b)"** — and the superseded draft's "Section 6b (2)" was closer, so it *degraded* | team wrong |
+| 3 | Checklist | "Scope of Work" / licence copy | checked / unchecked | unchecked / **checked** (certification says temporary licence = N) | team wrong |
+| 4 | UAF letter | date | a full date | **"March 23rd"** — no year, on a copy executed under the submission's own envelope | team wrong |
+| 5 | Live `Submission/` folder | UAF copy | the signed one | the **unsigned** copy is live; the signed one is in `archive/` | team wrong |
+| 6 | **CA reviewer letters ×2** | contract number | `NJ39H085097` | **`NJ39H`O`85097`** — letter O, confirmed at 500 dpi against the digit 0 later in the same string | team wrong (CA) |
+| 7 | same | address / county / appraiser | 231 N Evergreen, Gloucester, Zabel | **731** N Evergreen, "Glouster", "Zabek" | team wrong (CA) |
+| 8 | CA letter 4/20 | "Current Utility Allowances" | $48 / $96 | **$53 / $106** — the *proposed* values | team wrong (CA) |
+
+**#6 is the first confirmed letter-O since Westwood Village** — and it is in the contract
+administrator's own documents, not the owner's.
+
+### Instrument notes
+
+- **M8 negative again.** Checked at 500 dpi on both 2026 schedules: the separator carries a
+  descender tail — comma, not period. Consistent with the retraction above.
+- **Post-certification alteration: none.** Archive draft and executed schedule share an
+  envelope; only Part F, Part I and Part C "N/A" strokes differ — all HUD-owned fields.
+  The agent noted pixel-diffing was **uninformative** here (different rendering pipelines
+  differ everywhere) and settled it by reading values off both renderings instead.
+- **"R" is not a version marker.** The five study versions run `26-029`, `26-029R`,
+  `26-029R`, `26-029`, `26-029R` in date order. Only the transmittal date orders them.
+
+**Study selection:** version 3 (9 Apr) is bound; version 5 (12 May) governs the approval.
+**Conclusions are identical** across versions 2–5, so the H5 pattern is present
+structurally but **harmless on the numbers here** — unlike Sycamore Green and Oaks, where
+it moved money. Version 2 was flagged "(WRONG UAs)" in its own filename and correctly
+excluded.
+
+M1: 11 of 11.
