@@ -7,20 +7,31 @@ The lane's deliverable has always been **a correct app, not a report**. As of th
 commit we have found a great deal and repaired nothing. That is the gap this file
 closes.
 
-## The division, and it is not negotiable
+## The division — CORRECTED 2026-07-31 by Matt, and the reasoning matters
 
-| | **Cloud** | **Mac (quarterback)** |
+**The cloud is the quarterback and owns the code. The Mac is a driving rig.**
+
+| | **Cloud (quarterback)** | **Mac** |
 |---|---|---|
 | reads sources by eye | ✅ the only one who can, at scale | never |
-| drives the app | never — chromium has no egress there, proved | ✅ the only one who can |
-| writes verdicts | ✅ | reviews |
-| traces mechanisms | ✅ | ✅ |
-| **edits code** | **never** | **✅ alone, serialized** |
-| runs the suites, delivers, pushes | never | ✅ |
+| writes verdicts, traces mechanisms | ✅ | reports what it observes |
+| **edits source, fixes bugs** | **✅ alone, serialized** | **never** |
+| runs the suites, `deliver.sh`, RA anchors | ✅ | on request, as a second opinion |
+| **drives the real signed-in app** | **never — no network egress** | **✅ the only one who can** |
+| cleanup of the live account | never | ✅ |
 
-**Only one machine edits source.** One mechanism usually spans many properties, and two
-agents in `app.js` collide. The cloud writes findings; the Mac writes fixes. A finding
-that needs a UI change is written down and handed over, never applied.
+**The correction to my own earlier claim:** I had assumed the cloud could not run the
+browser suites. It can, and has — 0 → 539 checks after it fixed `findChrome()`. Those
+suites serve a bundle on **loopback** and drive chromium against it, and loopback is not
+egress. What the cloud cannot do is drive the app **signed in against Supabase**, which
+is the corpus sweep and nothing else.
+
+So the boundary is narrower than I drew it: the cloud can build, test, deliver and fix.
+Only the live-account sweep needs the Mac.
+
+**Only one machine edits source**, and it is the cloud. One mechanism usually spans many
+properties and two agents in `app.js` collide. If the Mac sees something that needs a
+code change it writes it down and hands it over — it does not apply it.
 
 ## What counts as a real bug, in priority order
 
@@ -59,11 +70,16 @@ Not "diagnosed". A repair is done when **all** of these hold:
 
 ## The loop between us
 
-1. Mac drives → pushes records to `sweep-out/`.
-2. Cloud pulls → closes three-way verdicts → traces mechanisms → pushes the ledger.
-3. Mac pulls → picks the top mechanism → repairs it → tests → pushes.
-4. Mac re-drives the affected properties → confirms the numbers moved the right way.
+1. **Mac drives** → pushes records to `sweep-out/` and reports what the storm found.
+2. **Cloud pulls** → closes three-way verdicts → traces mechanisms → pushes the ledger.
+3. **Cloud repairs** the top mechanism → suites green → `deliver.sh` → pushes.
+4. **Mac pulls the fix and re-drives** the affected properties → reports whether the
+   numbers moved, and whether anything moved that should not have.
 5. Repeat.
+
+Step 4 is the Mac's real job and the reason the split exists: a repair is not finished
+because its tests pass, it is finished when the packages it was supposed to change
+changed and nothing else did. Only the Mac can produce that evidence.
 
 **Push after every wave, not when the wave feels finished.** The desync on 2026-07-31
 was one hour of my results sitting uncommitted while the cloud read against a repo that
