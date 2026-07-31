@@ -3453,3 +3453,105 @@ disappears.**
 **Worth testing directly on the Mac when convenient:** drive one property twice in a single
 run under two names and see whether the second produces nothing. If it does, H10 is a live
 bug in the driver that has nothing to do with the corpus — it would fire on any re-run.
+
+---
+
+# ⚠ MAJOR CORRECTION — I had the governing rule wrong, and I could have checked it all along
+
+H8 said the current Chapter 9 "cannot be closed from inside this corpus." That was true of the
+corpus and **false of this container**: `WebFetch`/`WebSearch` were available the whole time
+and I never loaded them. I marked the question as gating six properties and left it open for a
+day. The guidebook took four minutes to fetch.
+
+**Source now in the repo:** `docs/lanes/reference/hud-ch9-150-percent.md` — verbatim extract of
+the **Section 8 Renewal Guidebook, March 2023**, 174pp, from hud.gov.
+
+## There are TWO different 150% rules and I conflated them
+
+| | **Section 9-14** | **Section 3-4 / 3-5** |
+|---|---|---|
+| name | Mandatory Market Rent **Threshold** | 150 Percent Rent **Cap** |
+| basis | 150% of **SAFMR** | 150% of **FMR** |
+| applies to | all contracts except MTM | **only MUTM under Option One-A** |
+| consequence | **HUD commissions its own third-party RCS** | **an actual cap on the renewal rent** |
+
+**Everywhere this ledger says "the cap," "over the cap," "clears the cap," "headroom under the
+150% cap," it means the 9-14 threshold — which is not a cap.** Exceeding it does not make a
+package non-compliant and does not cap anything. It triggers HUD ordering its own study
+(9-14.C). The margins I recorded are still meaningful — they are the distance before HUD
+commissions a competing appraisal, which is a real commercial event — but the word was wrong
+and the word carried a claim.
+
+## M13 IS WRONG — there is no per-unit-type test
+
+Section 9-14.B, verbatim:
+
+> **Step 1:** *"…compute the gross renewal rent for the subject project's assisted units by
+> multiplying the RCS rent by the number of units for each renewal type, and by calculating a
+> monthly total gross rent."*
+>
+> **Step 3:** *"…compare the gross renewal rent determined under Step 1, with the SAFMR gross
+> rent for the relevant zip code as determined under Step 2."*
+
+HUD's own worked example totals two unit sizes into one Gross Renewal Rent ($127,875) and
+compares it to one 150%-of-SAFMR figure ($144,900). **The test is aggregate and unit-weighted.
+No per-bedroom-size comparison exists in the procedure.**
+
+**So the six per-unit-type "overages" in M13 are not compliance failures.** Friendship Court's
+1BR, Newberry Arms' 1BR, Marine Terrace's 3BR, Morh Housing's 3BR, Fairview Homes' 4BR and
+Oak Center's 2BR — **every one of those packages passes the actual test in aggregate**, which
+this ledger already verified property by property.
+
+**M13 is downgraded** from "gates six properties, the highest-value unknown in the audit" to:
+*several studies print a per-unit-type table HUD does not require, and compute it on a
+mismatched basis.* That is a presentation defect in an optional table. The two-property bar is
+met, but the severity was mine and it was invented.
+
+**M14 survives and is now better grounded**, because gross is defined: Step 1 says *"Include
+the most recent Utility Allowance in the calculation."* A comparison of net against gross is
+wrong on the binding test. But **at aggregate level only Marine Terrace's workbook does it**
+($2,258,550 net vs $2,431,620 gross) — Morh, Woodland Towers and Oak Center compute the
+aggregate correctly and err only in the optional per-type table. **One property at aggregate
+is below the bar; recorded as a single instance, not a mechanism.**
+
+## M17 · Stale utility allowance in the threshold computation — 2 properties, with a citation
+
+Section 9-14.B Step 1, verbatim:
+
+> *"Include the most recent Utility Allowance in the calculation as indicated. **If the Utility
+> Allowance is being adjusted concurrently with the HAP renewal, the new Utility Allowance
+> amount should be used.**"*
+
+| property | used | should have used | concurrent? |
+|---|---|---|---|
+| **Morh Housing** | FY2025 $102 / $138 | **FY2026 $107 / $144** | yes — the FY2026 UAF notice is in the same package and the executed schedule carries it |
+| **Woodland Towers** | 2025 $83 | **2026 $89** | yes — UAF signed 30 Apr 2026, effective 7/1/2026, and the rent schedule carries $89 |
+
+**This one is real, it is a mechanism at two properties, and it now has a rule behind it
+rather than my inference.** Neither package re-ran the threshold at the allowance that takes
+effect with the renewal. Both still pass, so no outcome changes — but the computation as filed
+is not the computation the guidebook specifies.
+
+## Noble Tower may be under the OTHER rule, and nobody has tested it
+
+Noble Tower's folder holds `Noble Tower - Option 1 RCS Submission Package.pdf` and an
+`Option 1 Submission Package`. **If it renewed under MUTM Option One-A, Section 3-4 applies a
+genuine cap — at 150% of FMR, not SAFMR** — and the renewal rent must be *the lesser of*
+comparable market rent or 150% of FMR.
+
+**That test has never been run on this corpus.** It needs the FY2024 **FMR** (not SAFMR) for
+the Oakland market area. Given Noble Tower's $5/unit margin against the SAFMR *threshold*, and
+that it is the property where the app took a losing bidder's $3,100, this is the highest-value
+open item now. **Recorded as open. I have not established that Noble Tower is Option One-A —
+only that its filenames say "Option 1."**
+
+## One observation about HUD's own document
+
+The worked example in 9-14.B is internally inconsistent. The 1BR row shows **50 units** at a
+SAFMR of **$610**, and prints a Gross Rent Potential of **$36,600** — which requires 60 units
+($610 × 50 = $30,500). The subtotals follow $36,600, so the printed total ($96,600) and the
+150% figure ($144,900) are consistent with each other and with the error. The owner's half of
+the same example uses 50 units for the 1BR.
+
+Not a finding about the corpus. Recorded because anyone reconciling a study against HUD's
+example will hit it, and because it is the sort of thing this lane exists to catch.
