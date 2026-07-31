@@ -4,7 +4,7 @@
  "folder": "75708 - Colonial Village - Section 8",
  "year": 2026,
  "cycleLabel": "2026 (RCS)",
- "sha": "4af2336",
+ "sha": "783ae31",
  "orders": {
   "rs-first": {
    "error": "timed out after 10s waiting for the Start-new-package dialog",
