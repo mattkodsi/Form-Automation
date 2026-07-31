@@ -4,7 +4,7 @@
  "folder": "4640013 - Riverwood - Section 8",
  "year": 2025,
  "cycleLabel": "2025 - RCS",
- "sha": "cce8502",
+ "sha": "ccc4568",
  "orders": {
   "rs-first": {
    "files": 3,
@@ -16,19 +16,23 @@
    "warnings": [
     "only the front half of the rent schedule was read — Parts F and G (ownership entity, principals, signatory) did not come through",
     "the study yielded no unit types — no values can be applied from it",
-    "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
-    "storm [save-left-dirt] after \"Update property profile\" settled, 25 key(s) still differ from the snapshot: property.name, property.fha, property.s8, principals.0.name, units.0.br, units.0.num_units  (seed 3272932102)",
+    "after the reload the property shows 2 packages, expected 1",
+    "storm [save-left-dirt] after \"Update property profile\" settled, 2 key(s) still differ from the snapshot: partb.fuel.0, check.11  (seed 3272932102)",
     "study: #rcsApply never appeared — nothing was applied to the form",
     "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “RIVERWOOD APTS”, and the management address. A letterhead can be uploaded on the property page.",
     "package dialog: RIVERWOOD APTS · 1 of 6 ready · 5 not ready"
    ],
-   "errors": [],
+   "errors": [
+    "after the reload the app is on a DIFFERENT property/package than order A used — the second order would be measuring another record",
+    "after the reload the rent-schedule upload is GONE (tile says \"Current executed rent schedule\") — order B has nothing to fill from, and re-uploading would pay for the read twice",
+    "after the reload the study upload is GONE (tile says \"Completed RCS report\") — order B has nothing to fill from"
+   ],
    "docsExtracted": [
     "analysisXlsx"
    ]
   },
   "rcs-first": {
-   "files": 3,
+   "files": 0,
    "tier": "text:half",
    "weakerTest": false,
    "ocrCalls": 1,
@@ -37,16 +41,16 @@
    "warnings": [
     "only the front half of the rent schedule was read — Parts F and G (ownership entity, principals, signatory) did not come through",
     "the study yielded no unit types — no values can be applied from it",
-    "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
-    "storm [save-left-dirt] after \"Update property profile\" settled, 25 key(s) still differ from the snapshot: property.name, property.fha, property.s8, principals.0.name, units.0.br, units.0.num_units  (seed 3272932102)",
-    "study: #rcsApply never appeared — nothing was applied to the form",
-    "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “RIVERWOOD APTS”, and the management address. A letterhead can be uploaded on the property page.",
-    "package dialog: RIVERWOOD APTS · 1 of 6 ready · 5 not ready"
+    "after the reload the property shows 2 packages, expected 1",
+    "storm [save-left-dirt] after \"Update property profile\" settled, 2 key(s) still differ from the snapshot: partb.fuel.0, check.11  (seed 3272932102)"
    ],
-   "errors": [],
-   "docsExtracted": [
-    "analysisXlsx"
-   ]
+   "errors": [
+    "after the reload the app is on a DIFFERENT property/package than order A used — the second order would be measuring another record",
+    "after the reload the rent-schedule upload is GONE (tile says \"Current executed rent schedule\") — order B has nothing to fill from, and re-uploading would pay for the read twice",
+    "after the reload the study upload is GONE (tile says \"Completed RCS report\") — order B has nothing to fill from",
+    "not run: an upload was lost across the reload, so this order could only have been produced by paying for a second read"
+   ],
+   "docsExtracted": []
   }
  },
  "rows": [
@@ -311,7 +315,224 @@
    "property": "Riverwood"
   }
  ],
- "fillOrder": [],
+ "fillOrder": [
+  {
+   "doc": "analysisXlsx",
+   "key": "property.name",
+   "ours": "RIVERWOODAPTS",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Riverwood",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "appr.firm",
+   "ours": "Appraiser",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Riverwood",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.type",
+   "ours": "1BR",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Riverwood",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.units",
+   "ours": "4",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Riverwood",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.current",
+   "ours": "1136",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Riverwood",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.ua",
+   "ours": "71",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Riverwood",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.type",
+   "ours": "1BRFamily",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Riverwood",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.units",
+   "ours": "23",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Riverwood",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.current",
+   "ours": "1165",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Riverwood",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.ua",
+   "ours": "71",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Riverwood",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.type",
+   "ours": "2BRFamily",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Riverwood",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.units",
+   "ours": "32",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Riverwood",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.current",
+   "ours": "1306",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Riverwood",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.ua",
+   "ours": "85",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Riverwood",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.type",
+   "ours": "3BRFamily",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Riverwood",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.units",
+   "ours": "24",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Riverwood",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.current",
+   "ours": "1393",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Riverwood",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.ua",
+   "ours": "142",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Riverwood",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  }
+ ],
  "drift": [],
  "notes": [
   "filed: filed side read from the combined package: Riverwood (VA36R000009) - 5-Year RCS Submission (cover signed).pdf",
@@ -324,13 +545,13 @@
  "fuzz": {
   "seed": 3272932102,
   "counts": {
-   "edits": 2,
-   "escapes": 4,
-   "enters": 0,
+   "edits": 6,
+   "escapes": 8,
+   "enters": 2,
    "saves": 2,
-   "revertAlls": 4,
-   "drops": 2,
-   "clicks": 3,
+   "revertAlls": 1,
+   "drops": 4,
+   "clicks": 12,
    "boundaries": 0,
    "colourScans": 8,
    "episodes": 8
@@ -338,27 +559,13 @@
   "violations": [
    {
     "kind": "save-left-dirt",
-    "msg": "after \"Update property profile\" settled, 25 key(s) still differ from the snapshot: property.name, property.fha, property.s8, principals.0.name, units.0.br, units.0.num_units",
+    "msg": "after \"Update property profile\" settled, 2 key(s) still differ from the snapshot: partb.fuel.0, check.11",
     "seed": 3272932102,
     "evidence": {
-     "property.name": {
+     "partb.fuel.0": {
       "form": {
-       "value": "RIVERWOOD APTS",
-       "source": "overridden",
-       "db_value": "ZZ-CORPUS-4640013-20260731-0602",
-       "prior_value": "ZZ-CORPUS-4640013-20260731-0602"
-      },
-      "snap": {
-       "value": "ZZ-CORPUS-4640013-20260731-0602",
-       "source": "database",
-       "db_value": "ZZ-CORPUS-4640013-20260731-0602"
-      },
-      "onScreen": true
-     },
-     "property.fha": {
-      "form": {
-       "value": "N/A",
-       "source": "this-cycle",
+       "value": "E",
+       "source": "new",
        "db_value": null,
        "prior_value": null
       },
@@ -367,105 +574,81 @@
        "source": "new",
        "db_value": null
       },
-      "onScreen": true
+      "onScreen": false
      },
-     "property.s8": {
+     "check.11": {
       "form": {
-       "value": "VA36R000009",
-       "source": "this-cycle",
+       "value": "",
+       "source": "new",
        "db_value": null,
        "prior_value": null
       },
       "snap": {
-       "value": "",
-       "source": "new",
-       "db_value": null
-      },
-      "onScreen": true
-     },
-     "principals.0.name": {
-      "form": {
        "value": "1",
        "source": "new",
-       "db_value": null,
-       "prior_value": null
-      },
-      "snap": {
-       "value": "",
-       "source": "new",
        "db_value": null
       },
-      "onScreen": true
-     },
-     "units.0.br": {
-      "form": {
-       "value": "1BR",
-       "source": "this-cycle",
-       "db_value": null,
-       "prior_value": null
-      },
-      "snap": {
-       "value": "",
-       "source": "new",
-       "db_value": null
-      },
-      "onScreen": true
-     },
-     "units.0.num_units": {
-      "form": {
-       "value": "4",
-       "source": "this-cycle",
-       "db_value": null,
-       "prior_value": null
-      },
-      "snap": {
-       "value": "",
-       "source": "new",
-       "db_value": null
-      },
-      "onScreen": true
+      "onScreen": false
      }
     },
     "after": [
-     "— episode 1/8 [escape] 138 controls on screen",
-     "click #viewForm [data-wibox][0]",
-     "— episode 2/8 [save] 138 controls on screen",
-     "open dropdown 11",
+     "— episode 1/8 [escape] 111 controls on screen",
+     "click #viewForm [data-wibox][2]",
+     "— episode 2/8 [save] 111 controls on screen",
+     "open dropdown 7",
      "escape the open menu",
      "click #viewForm [data-cb][29]",
-     "open dropdown 14",
-     "pick menu row 1 of 6",
-     "type \"1\" into #viewForm input[data-k][8]",
+     "click #viewForm [data-fuel][0]",
+     "type \"1.5\" into #viewForm input[data-k][31]",
+     "enter (commit)",
      "click Update property profile"
     ]
    }
   ],
   "actions": [
-   "— episode 1/8 [escape] 138 controls on screen",
-   "click #viewForm [data-wibox][0]",
-   "— episode 2/8 [save] 138 controls on screen",
-   "open dropdown 11",
+   "— episode 1/8 [escape] 111 controls on screen",
+   "click #viewForm [data-wibox][2]",
+   "— episode 2/8 [save] 111 controls on screen",
+   "open dropdown 7",
    "escape the open menu",
    "click #viewForm [data-cb][29]",
-   "open dropdown 14",
-   "pick menu row 1 of 6",
-   "type \"1\" into #viewForm input[data-k][8]",
+   "click #viewForm [data-fuel][0]",
+   "type \"1.5\" into #viewForm input[data-k][31]",
+   "enter (commit)",
    "click Update property profile",
+   "— episode 3/8 [escape] 111 controls on screen",
+   "click #viewForm [data-fuel][2]",
+   "type \"1234\" into #viewForm input[data-k][3]",
+   "open dropdown 3",
+   "escape the open menu",
+   "click #viewForm [data-cb][13]",
+   "escape (3 left)",
+   "escape (1 left)",
+   "— episode 4/8 [escape] 111 controls on screen",
+   "click #viewForm [data-wibox][3]",
+   "— episode 5/8 [save] 111 controls on screen",
+   "type \"1234\" into #viewForm input[data-k][43]",
+   "open dropdown 5",
+   "pick menu row 7 of 51",
+   "enter (commit)",
+   "click #viewForm [data-cb][33]",
+   "click Update property profile",
+   "— episode 6/8 [escape] 111 controls on screen",
+   "type \"N/A\" into #viewForm input[data-k][43]",
+   "type \"  \" into #viewForm input[data-k][22]",
+   "open dropdown 2",
+   "escape the open menu",
+   "click #viewForm [data-wibox][8]",
+   "escape (3 left)",
+   "escape (1 left)",
+   "— episode 7/8 [revertAll] 111 controls on screen",
+   "click #viewForm [data-wibox][1]",
+   "click #viewForm [data-cb][15]",
+   "type \"abc\" into #viewForm input[data-k][5]",
+   "click #viewForm [data-fuel3][0]",
+   "click Revert to saved",
    "escape (2 left)",
-   "escape (1 left)",
-   "— episode 3/8 [revertAll] 138 controls on screen",
-   "type \"-5\" into #viewForm input[data-k][45]",
-   "click Revert to saved",
-   "escape (1 left)",
-   "— episode 4/8 [revertAll] 0 controls on screen",
-   "click Revert to saved",
-   "— episode 5/8 [escape] 0 controls on screen",
-   "— episode 6/8 [revertAll] 0 controls on screen",
-   "click Revert to saved",
-   "— episode 7/8 [save] 0 controls on screen",
-   "click Update property profile",
-   "— episode 8/8 [revertAll] 0 controls on screen",
-   "click Revert to saved"
+   "— episode 8/8 [escape] 0 controls on screen"
   ]
  },
  "inputs": {
@@ -488,7 +671,7 @@
   "compared": 26,
   "matched": 8,
   "differing": 18,
-  "fillOrder": 0,
+  "fillOrder": 18,
   "drift": 0,
   "notGenerated": 8
  }

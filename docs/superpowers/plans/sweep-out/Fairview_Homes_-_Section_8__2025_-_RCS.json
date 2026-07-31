@@ -1,0 +1,32 @@
+{
+ "property": "Fairview Homes - Section 8",
+ "code": null,
+ "folder": "Fairview Homes - Section 8",
+ "year": 2025,
+ "cycleLabel": "2025 - RCS",
+ "sha": "ccc4568",
+ "orders": {
+  "rs-first": {
+   "error": "the signed-in app never reached the property gallery (first boot).\n  view now  : Auth\n  sign-in error text : \"\"\n  page errors : []\n  requests  : [\"GET https://p",
+   "files": 0
+  },
+  "rcs-first": {
+   "error": "the signed-in app never reached the property gallery (first boot).\n  view now  : Auth\n  sign-in error text : \"\"\n  page errors : []\n  requests  : [\"GET https://p",
+   "files": 0
+  }
+ },
+ "rows": [],
+ "fillOrder": [],
+ "drift": [],
+ "notes": [
+  "rs-first: drive threw -- the signed-in app never reached the property gallery (first boot).\n  view now  : Auth\n  sign-in error text : \"\"\n  page e",
+  "rcs-first: drive threw -- the signed-in app never reached the property gallery (first boot).\n  view now  : Auth\n  sign-in error text : \"\"\n  page e"
+ ],
+ "verdict": "the app generated nothing comparable",
+ "fuzz": null,
+ "inputs": {
+  "study": "2025 - RCS/Archive/Belfry RCS/25-007R - Fairview Homes, 86 17th Avenue, Newark, New Jersey (REVISED RCS).pdf",
+  "priorRs": "2024/Fairview Homes Rent Schedule eff. 5.7.24.pdf",
+  "priorRsRule": "year-1 folder"
+ }
+}

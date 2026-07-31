@@ -1,0 +1,3238 @@
+{
+ "property": "Oak Center",
+ "code": "75926",
+ "folder": "75926 - Oak Center - Section 8",
+ "year": 2026,
+ "cycleLabel": "2026 - RCS",
+ "sha": "ccc4568",
+ "orders": {
+  "rs-first": {
+   "files": 5,
+   "tier": "ocr",
+   "weakerTest": false,
+   "ocrCalls": 2,
+   "via": "ocr",
+   "missing": null,
+   "warnings": [
+    "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+    "storm [save-left-dirt] after \"Update property profile\" settled, 118 key(s) still differ from the snapshot: property.name, property.addr_street, property.addr_city, property.addr_state, property.addr_zip, property.s8  (seed 1848751915)",
+    "storm [escape-left-residue] after escaping every edit to rest, 2 key(s) still differ from the pre-episode form: check.2: \"\" -> \"1\" · principals.1.title: \"Co-GP\" -> \"1.5\"  (seed 1848751915)",
+    "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “Oak Center 1”, and the management address. A letterhead can be uploaded on the property page.",
+    "package dialog: Oak Center 1 · 3 of 6 ready · 3 not ready"
+   ],
+   "errors": [],
+   "docsExtracted": [
+    "checklist",
+    "rentSchedule",
+    "analysisXlsx"
+   ]
+  },
+  "rcs-first": {
+   "files": 5,
+   "tier": "ocr",
+   "weakerTest": false,
+   "ocrCalls": 2,
+   "via": "ocr",
+   "missing": null,
+   "warnings": [
+    "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+    "storm [save-left-dirt] after \"Update property profile\" settled, 118 key(s) still differ from the snapshot: property.name, property.addr_street, property.addr_city, property.addr_state, property.addr_zip, property.s8  (seed 1848751915)",
+    "storm [escape-left-residue] after escaping every edit to rest, 2 key(s) still differ from the pre-episode form: check.2: \"\" -> \"1\" · principals.1.title: \"Co-GP\" -> \"1.5\"  (seed 1848751915)",
+    "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “Oak Center 1”, and the management address. A letterhead can be uploaded on the property page.",
+    "package dialog: Oak Center 1 · 3 of 6 ready · 3 not ready"
+   ],
+   "errors": [],
+   "docsExtracted": [
+    "checklist",
+    "rentSchedule",
+    "analysisXlsx"
+   ]
+  }
+ },
+ "rows": [
+  {
+   "doc": "checklist",
+   "key": "heading",
+   "ours": "Owner’s  Checklist for  RCS  Submission",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "key": "property.name",
+   "ours": "OakCenter1",
+   "theirs": "OakCenter",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.0",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.1",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.2",
+   "ours": "0",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.3",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.4",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.5",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.6",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.7",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.8",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.9",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.10",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.11",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.12",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.13",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.14",
+   "ours": "0",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.15",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.16",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "key": "checklist.signature",
+   "ours": "DavidPearson,VPofGP",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "key": "checklist.sign_date",
+   "ours": null,
+   "theirs": "12/19/2025",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "property.name",
+   "ours": "OakCenter1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "rent_schedule.date_eff",
+   "ours": "04/01/2026",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "rent_schedule.eff_month",
+   "ours": "04",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "rent_schedule.eff_day",
+   "ours": "01",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "rent_schedule.eff_year",
+   "ours": "2026",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "total.contract_rent",
+   "ours": "277700",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "total.annual",
+   "ours": "3332400",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "nonrev.total_rent",
+   "ours": "1728",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "owner.entity_name",
+   "ours": "OakCenterCommunityPartners,LP",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "sig.name_title",
+   "ours": "DavidPearson,VPofGP",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "total.units",
+   "ours": "78",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.type",
+   "ours": "1BR/1BA",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.units",
+   "ours": "33",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.rent",
+   "ours": "2950",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.extension",
+   "ours": "97350",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.ua",
+   "ours": "44",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.gross",
+   "ours": "2994",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.row",
+   "ours": "0",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.type",
+   "ours": "2BR/1BA",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.units",
+   "ours": "20",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.rent",
+   "ours": "3650",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.extension",
+   "ours": "73000",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.ua",
+   "ours": "49",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.gross",
+   "ours": "3699",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.row",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.type",
+   "ours": "3BR/1BA",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.units",
+   "ours": "6",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.rent",
+   "ours": "4300",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.extension",
+   "ours": "25800",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.ua",
+   "ours": "62",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.gross",
+   "ours": "4362",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.row",
+   "ours": "2",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.3.type",
+   "ours": "3BR/1.5BATH",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.3.units",
+   "ours": "5",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.3.rent",
+   "ours": "4550",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.3.extension",
+   "ours": "22750",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.3.ua",
+   "ours": "67",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.3.gross",
+   "ours": "4617",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.3.row",
+   "ours": "3",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.4.type",
+   "ours": "4BR/1.5BA",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.4.units",
+   "ours": "12",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.4.rent",
+   "ours": "4900",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.4.extension",
+   "ours": "58800",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.4.ua",
+   "ours": "54",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.4.gross",
+   "ours": "4954",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.4.row",
+   "ours": "4",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.5.type",
+   "ours": "3BR",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.5.units",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.5.row",
+   "ours": "5",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.6.type",
+   "ours": "3BR",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.6.units",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.6.rent",
+   "ours": "0",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.6.extension",
+   "ours": "0",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.6.ua",
+   "ours": "0",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.6.gross",
+   "ours": "0",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.6.row",
+   "ours": "7",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "owner.entity_type",
+   "ours": "LimitedPartnership",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.equipment.0",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.equipment.1",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.equipment.3",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.equipment.4",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.equipment.5",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.equipment.6",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.utilities.2",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.fuel.0",
+   "ours": "G",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.fuel.2",
+   "ours": "G",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.fuel.3",
+   "ours": "G",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.fuel.4",
+   "ours": "E",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.writein.u1.on",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.writein.u1",
+   "ours": "Water",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.services.0",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.writein.e1.on",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.writein.e1",
+   "ours": "KitchenExhFan",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.writein.s1.on",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.writein.s1",
+   "ours": "TrashRemoval",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.writein.s2.on",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.writein.s2",
+   "ours": "CommunityRoom",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "nonrev.0.use",
+   "ours": "Manager'sUnit",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "nonrev.0.type",
+   "ours": "3BR",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "nonrev.0.rent",
+   "ours": "1728",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "principals.0.name",
+   "ours": "FFAHOakCenter,LLC",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "principals.0.title",
+   "ours": "GP",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "principals.1.name",
+   "ours": "OakCenterGP,LLC",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "principals.1.title",
+   "ours": "Co-GP",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "property.name",
+   "ours": "OakCenter1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "appr.firm",
+   "ours": "BelfryValuation,LLC",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.type",
+   "ours": "1BR/1BA",
+   "theirs": "1BR",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.units",
+   "ours": "33",
+   "theirs": "33",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.current",
+   "ours": "2717",
+   "theirs": "2717",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.proposed",
+   "ours": "2950",
+   "theirs": "2950",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.ua",
+   "ours": "44",
+   "theirs": "44",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.safmr",
+   "ours": "2010",
+   "theirs": "2010",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.type",
+   "ours": "2BR/1BA",
+   "theirs": "2BR",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.units",
+   "ours": "20",
+   "theirs": "20",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.current",
+   "ours": "3404",
+   "theirs": "3404",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.proposed",
+   "ours": "3650",
+   "theirs": "4050",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.ua",
+   "ours": "49",
+   "theirs": "49",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.safmr",
+   "ours": "2450",
+   "theirs": "2450",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.type",
+   "ours": "3BR/1BA",
+   "theirs": "3BR",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.units",
+   "ours": "6",
+   "theirs": "7",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.current",
+   "ours": "3911",
+   "theirs": "3911",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.proposed",
+   "ours": "4300",
+   "theirs": "4475",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.ua",
+   "ours": "62",
+   "theirs": "62",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.safmr",
+   "ours": "3130",
+   "theirs": "3130",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.type",
+   "ours": "3BR/1.5BATH",
+   "theirs": "3BRTH",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.units",
+   "ours": "5",
+   "theirs": "5",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.current",
+   "ours": "3971",
+   "theirs": "3971",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.proposed",
+   "ours": "4550",
+   "theirs": "4675",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.ua",
+   "ours": "67",
+   "theirs": "67",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.safmr",
+   "ours": "3130",
+   "theirs": "3130",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.4.type",
+   "ours": "4BR/1.5BA",
+   "theirs": "4BR",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.4.units",
+   "ours": "12",
+   "theirs": "12",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.4.current",
+   "ours": "4657",
+   "theirs": "4657",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.4.proposed",
+   "ours": "4900",
+   "theirs": "4900",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.4.ua",
+   "ours": "54",
+   "theirs": "54",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.4.safmr",
+   "ours": "3710",
+   "theirs": "3710",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.5.type",
+   "ours": "3BR",
+   "theirs": "1BR",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.5.units",
+   "ours": "1",
+   "theirs": "33",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.5.current",
+   "ours": "1728",
+   "theirs": "2717",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.5.safmr",
+   "ours": "3724",
+   "theirs": "2010",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.5.proposed",
+   "ours": null,
+   "theirs": "2950",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.5.ua",
+   "ours": null,
+   "theirs": "44",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.6.type",
+   "ours": null,
+   "theirs": "2BR",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.6.units",
+   "ours": null,
+   "theirs": "20",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.6.current",
+   "ours": null,
+   "theirs": "3404",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.6.proposed",
+   "ours": null,
+   "theirs": "3650",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.6.ua",
+   "ours": null,
+   "theirs": "49",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.6.safmr",
+   "ours": null,
+   "theirs": "2450",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.7.type",
+   "ours": null,
+   "theirs": "3BR",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.7.units",
+   "ours": null,
+   "theirs": "7",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.7.current",
+   "ours": null,
+   "theirs": "3911",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.7.proposed",
+   "ours": null,
+   "theirs": "4300",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.7.ua",
+   "ours": null,
+   "theirs": "62",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.7.safmr",
+   "ours": null,
+   "theirs": "3130",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.8.type",
+   "ours": null,
+   "theirs": "3BRTH",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.8.units",
+   "ours": null,
+   "theirs": "5",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.8.current",
+   "ours": null,
+   "theirs": "3971",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.8.proposed",
+   "ours": null,
+   "theirs": "4550",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.8.ua",
+   "ours": null,
+   "theirs": "67",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.8.safmr",
+   "ours": null,
+   "theirs": "3130",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.9.type",
+   "ours": null,
+   "theirs": "4BR",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.9.units",
+   "ours": null,
+   "theirs": "12",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.9.current",
+   "ours": null,
+   "theirs": "4657",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.9.proposed",
+   "ours": null,
+   "theirs": "4900",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.9.ua",
+   "ours": null,
+   "theirs": "54",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.9.safmr",
+   "ours": null,
+   "theirs": "3710",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Oak Center"
+  }
+ ],
+ "fillOrder": [],
+ "drift": [
+  {
+   "doc": "checklist",
+   "side": "ours",
+   "line": "signedcoverletter",
+   "normalized": "signedcoverletter",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "side": "ours",
+   "line": "scopeofrepair",
+   "normalized": "scopeofrepair",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "side": "ours",
+   "line": "rcsappraiserstransmittalletter",
+   "normalized": "rcsappraiserstransmittalletter",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "side": "ours",
+   "line": "descriptionofsubjectprojectincludingcolorphotographs",
+   "normalized": "descriptionofsubjectprojectincludingcolorphotographs",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "side": "ours",
+   "line": "identificationofthesubjectsmarketarea",
+   "normalized": "identificationofthesubjectsmarketarea",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "side": "ours",
+   "line": "descriptionofneighborhood",
+   "normalized": "descriptionofneighborhood",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "side": "ours",
+   "line": "narrativedescribingselectionofcomparables",
+   "normalized": "narrativedescribingselectionofcomparables",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "side": "ours",
+   "line": "locatormapforsubjectandcomparables",
+   "normalized": "locatormapforsubjectandcomparables",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "side": "ours",
+   "line": "rentcomparabilitygridforeachprimaryunittype",
+   "normalized": "rentcomparabilitygridforeachprimaryunittype",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "side": "ours",
+   "line": "narrativeexplainingadjustmentsandmarketrentconclusionsonesetofexplanationsfor",
+   "normalized": "narrativeexplainingadjustmentsandmarketrentconclusionsonesetofexplanationsfor",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "side": "ours",
+   "line": "comparableprojectprofileseachincludingacolorphoto",
+   "normalized": "comparableprojectprofileseachincludingacolorphoto",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "side": "ours",
+   "line": "rcsappraiserscertification",
+   "normalized": "rcsappraiserscertification",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "side": "ours",
+   "line": "copyofrcsappraiserslicenseonlyifrelyinguponatemporarylicense",
+   "normalized": "copyofrcsappraiserslicenseonlyifrelyinguponatemporarylicense",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "side": "ours",
+   "line": "computationoftheprojectsgrossrentsandthesafmrgrossrents",
+   "normalized": "computationoftheprojectsgrossrentsandthesafmrgrossrents",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "side": "ours",
+   "line": "comparisonofprojectsgrossrentstothesafmrgrossrents",
+   "normalized": "comparisonofprojectsgrossrentstothesafmrgrossrents",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "side": "ours",
+   "line": "appendixpublishedmarch",
+   "normalized": "appendixpublishedmarch",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "onerscheckistforrcssubmission",
+   "normalized": "onerscheckistforrcssubmission",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "isignedcoverletter",
+   "normalized": "isignedcoverletter",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "dscopeofrepair",
+   "normalized": "dscopeofrepair",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "rcsappraiserstrasmittalletter",
+   "normalized": "rcsappraiserstrasmittalletter",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "dscopeofwork",
+   "normalized": "dscopeofwork",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "idescriptionofsubjectprojectincludingcolorphotographs",
+   "normalized": "idescriptionofsubjectprojectincludingcolorphotographs",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "iidentifcationoftesubjectsmaketarea",
+   "normalized": "iidentifcationoftesubjectsmaketarea",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "idescriptionofneighborhood",
+   "normalized": "idescriptionofneighborhood",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "inarativedescribingselectionofcompaables",
+   "normalized": "inarativedescribingselectionofcompaables",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "ilocatormapfrsubjectadcompaables",
+   "normalized": "ilocatormapfrsubjectadcompaables",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "irentcompaabilitygridfreachprimayunittype",
+   "normalized": "irentcompaabilitygridfreachprimayunittype",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "narativeexplainingadjustmentsadmarketrentconclusionsonesetofexplaationsfr",
+   "normalized": "narativeexplainingadjustmentsadmarketrentconclusionsonesetofexplaationsfr",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "icompaableprojectprofleseachincludingacolorphoto",
+   "normalized": "icompaableprojectprofleseachincludingacolorphoto",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "ircsappraiserscertifcation",
+   "normalized": "ircsappraiserscertifcation",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "icopyofrcsappraiserslicenseonlyifrelyinguponatemporaylicense",
+   "normalized": "icopyofrcsappraiserslicenseonlyifrelyinguponatemporaylicense",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "icomputationofteprojectsgrossrentsadthesafmrgrossrents",
+   "normalized": "icomputationofteprojectsgrossrentsadthesafmrgrossrents",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "icompaisonofprojectsgrossrentstotesafmrgrossrents",
+   "normalized": "icompaisonofprojectsgrossrentstotesafmrgrossrents",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "davidpeasondate",
+   "normalized": "davidpeasondate",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "appendixpublishedmach",
+   "normalized": "appendixpublishedmach",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "usdepartmentofhousingombapprovalno",
+   "normalized": "usdepartmentofhousingombapprovalno",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "rentschedule",
+   "normalized": "rentschedule",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "andurbandevelopment",
+   "normalized": "andurbandevelopment",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "lowrenthousingofficeofhousing",
+   "normalized": "lowrenthousingofficeofhousing",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "federalhousingcommissioner",
+   "normalized": "federalhousingcommissioner",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "seepageforinstructionspublicburdenstatementandprivacyactrequirements",
+   "normalized": "seepageforinstructionspublicburdenstatementandprivacyactrequirements",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "projectnamefhaprojectnumberdaterentswillbeeffectivemmddyyyy",
+   "normalized": "projectnamefhaprojectnumberdaterentswillbeeffectivemmddyyyy",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partaapartmentrents",
+   "normalized": "partaapartmentrents",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "showtheactualrentsyouintendtochargeevenifthetotaloftheserentsislessthanthemaximumallowablemonthlyrentpotential",
+   "normalized": "showtheactualrentsyouintendtochargeevenifthetotaloftheserentsislessthanthemaximumallowablemonthlyrentpotential",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "colcolmarketrents",
+   "normalized": "colcolmarketrents",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "contractrents",
+   "normalized": "contractrents",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "unittypeutilitysecprojectsonly",
+   "normalized": "unittypeutilitysecprojectsonly",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "colallowancescolcol",
+   "normalized": "colallowancescolcol",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "includenonrevenuecolmonthlygrossrentcolmonthly",
+   "normalized": "includenonrevenuecolmonthlygrossrentcolmonthly",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "producingunitsnumbercolcontractrenteffectivedatecolcolrentmarketrent",
+   "normalized": "producingunitsnumbercolcontractrenteffectivedatecolcolrentmarketrent",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "ofunitsrentperunitpotentialmmddyyyyperunitpotential",
+   "normalized": "ofunitsrentperunitpotentialmmddyyyyperunitpotential",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "colxcolcolxcol",
+   "normalized": "colxcolcolxcol",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "monthlycontractrentpotentialmonthlymarketrentpotential",
+   "normalized": "monthlycontractrentpotentialmonthlymarketrentpotential",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "addcoladdcol",
+   "normalized": "addcoladdcol",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "yearlycontractrentpotentialyearlymarketrentpotential",
+   "normalized": "yearlycontractrentpotentialyearlymarketrentpotential",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "colsumxcolsumx",
+   "normalized": "colsumxcolsumx",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "theseamountsmaynotexceedthemaximumallowablemonthlyrentpotentialapprovedonthelastrentcomputationworksheetorrequestedonthe",
+   "normalized": "theseamountsmaynotexceedthemaximumallowablemonthlyrentpotentialapprovedonthelastrentcomputationworksheetorrequestedonthe",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "worksheetyouarenowsubmittingmarketrentpotentialappliesonlytosectionprojects",
+   "normalized": "worksheetyouarenowsubmittingmarketrentpotentialappliesonlytosectionprojects",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partbitemsincludedinrentpartdnonrevenueproducingspace",
+   "normalized": "partbitemsincludedinrentpartdnonrevenueproducingspace",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "equipmentfurnishingsinunitcheckthoseincludedinrent",
+   "normalized": "equipmentfurnishingsinunitcheckthoseincludedinrent",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "rangedishwasher",
+   "normalized": "rangedishwasher",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "useunittypecontractrent",
+   "normalized": "useunittypecontractrent",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "refrigeratorcarpet",
+   "normalized": "refrigeratorcarpet",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "airconditionerdrapes",
+   "normalized": "airconditionerdrapes",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "utilitiescheckthoseincludedinrentforeachitemeventhosenot",
+   "normalized": "utilitiescheckthoseincludedinrentforeachitemeventhosenot",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "includedinrententereforgonlinebesidethatitem",
+   "normalized": "includedinrententereforgonlinebesidethatitem",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "eelectricggasffueloilorcoal",
+   "normalized": "eelectricggasffueloilorcoal",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "totalrentlossduetononrevenueunits",
+   "normalized": "totalrentlossduetononrevenueunits",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "heatinghotlightsetc",
+   "normalized": "heatinghotlightsetc",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partecommercialspaceretailofficesgaragesetc",
+   "normalized": "partecommercialspaceretailofficesgaragesetc",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "coolingcooking",
+   "normalized": "coolingcooking",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "colcolrentalrate",
+   "normalized": "colcolrentalrate",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "servicesfacilitiescheckthoseincludedinrent",
+   "normalized": "servicesfacilitiescheckthoseincludedinrent",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "colmonthlyrentsquarepersqft",
+   "normalized": "colmonthlyrentsquarepersqft",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "usepotentialfootagecoldividedby",
+   "normalized": "usepotentialfootagecoldividedby",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "parkingnursingcare",
+   "normalized": "parkingnursingcare",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "laundrylinenmaidservice",
+   "normalized": "laundrylinenmaidservice",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "swimmingpool",
+   "normalized": "swimmingpool",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "tenniscourts",
+   "normalized": "tenniscourts",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partcchargesinadditiontorentegparkingcabletvmeals",
+   "normalized": "partcchargesinadditiontorentegparkingcabletvmeals",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "purposemonthlycharge",
+   "normalized": "purposemonthlycharge",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "totalcommercialrent",
+   "normalized": "totalcommercialrent",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partfmaximumallowablerentpotential",
+   "normalized": "partfmaximumallowablerentpotential",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "entermaximumallowablemonthlyrent",
+   "normalized": "entermaximumallowablemonthlyrent",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "potentialfromrentcomputation",
+   "normalized": "potentialfromrentcomputation",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "worksheettobecompletedbyhudorlender",
+   "normalized": "worksheettobecompletedbyhudorlender",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "previouseditionsareobsolete",
+   "normalized": "previouseditionsareobsolete",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "previouseditionsareobsolete",
+   "normalized": "previouseditionsareobsolete",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "previouseditionsareobsolete",
+   "normalized": "previouseditionsareobsolete",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partginformationonmortgagorentity",
+   "normalized": "partginformationonmortgagorentity",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "nameofentity",
+   "normalized": "nameofentity",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "typeofentity",
+   "normalized": "typeofentity",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "individualgeneralpartnershipjointtenancytenantsincommonotherspecify",
+   "normalized": "individualgeneralpartnershipjointtenancytenantsincommonotherspecify",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "corporationtrust",
+   "normalized": "corporationtrust",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "listallprincipalscomprisingmortgagorentity",
+   "normalized": "listallprincipalscomprisingmortgagorentity",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "nameandtitle",
+   "normalized": "nameandtitle",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "nameandtitle",
+   "normalized": "nameandtitle",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "nameandtitle",
+   "normalized": "nameandtitle",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "nameandtitle",
+   "normalized": "nameandtitle",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "nameandtitle",
+   "normalized": "nameandtitle",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "nameandtitle",
+   "normalized": "nameandtitle",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "nameandtitle",
+   "normalized": "nameandtitle",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "nameandtitle",
+   "normalized": "nameandtitle",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "nameandtitle",
+   "normalized": "nameandtitle",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "nameandtitle",
+   "normalized": "nameandtitle",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "nameandtitle",
+   "normalized": "nameandtitle",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "parthownercertification",
+   "normalized": "parthownercertification",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "nameandtitleauthorizedofficialssignature",
+   "normalized": "nameandtitleauthorizedofficialssignature",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "datemmddyyyy",
+   "normalized": "datemmddyyyy",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partihudlenderapproval",
+   "normalized": "partihudlenderapproval",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "addendumnumberbranchchieflenderofficialsignature",
+   "normalized": "addendumnumberbranchchieflenderofficialsignature",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "hapcontractnumberdatemmddyyyy",
+   "normalized": "hapcontractnumberdatemmddyyyy",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "exhibitnumberdirectorhousingmanagementdivisionsignature",
+   "normalized": "exhibitnumberdirectorhousingmanagementdivisionsignature",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "loanservicersignaturedatemmddyyyydatemmddyyyy",
+   "normalized": "loanservicersignaturedatemmddyyyydatemmddyyyy",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "osecutionsitwillnotbe",
+   "normalized": "osecutionsitwillnotbe",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "instructions",
+   "normalized": "instructions",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "allprojectownersmustsubmittheformhudwhenrequestcolumnforunsubsidizedprojectsshowtherentyouintendto",
+   "normalized": "allprojectownersmustsubmittheformhudwhenrequestcolumnforunsubsidizedprojectsshowtherentyouintendto",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "inganadjustmenttoprojectrentshudestablishesandapproveschargeforeachunittypeforsubsidizedprojectsshowthecontract",
+   "normalized": "inganadjustmenttoprojectrentshudestablishesandapproveschargeforeachunittypeforsubsidizedprojectsshowthecontract",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "rentalchargesandutilityallowancesontheformtheownerisrentasdefinedinhudhandbookforeachunittype",
+   "normalized": "rentalchargesandutilityallowancesontheformtheownerisrentasdefinedinhudhandbookforeachunittype",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "responsiblefornotifyingtenantsoftheapprovedrents",
+   "normalized": "responsiblefornotifyingtenantsoftheapprovedrents",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "columnforeachlinemultiplythecontractrentincolumnbythe",
+   "normalized": "columnforeachlinemultiplythecontractrentincolumnbythe",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "generalforprojectswithfullyinsuredorhudheldmortgagesthenumberofunitsincolumnaddmonthlycontractrentpotentialsfor",
+   "normalized": "generalforprojectswithfullyinsuredorhudheldmortgagesthenumberofunitsincolumnaddmonthlycontractrentpotentialsfor",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "owneragentsubmitsthisformtothehudfieldofficeforprojectseachunitsizetocomputethetotalmonthlycontractrentpotential",
+   "normalized": "owneragentsubmitsthisformtothehudfieldofficeforprojectseachunitsizetocomputethetotalmonthlycontractrentpotential",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "withcoinsuredmortgagestheowneragentsubmitsthisformtothemultiplythemonthlytotalbytocomputetheannualcontractrent",
+   "normalized": "withcoinsuredmortgagestheowneragentsubmitsthisformtothemultiplythemonthlytotalbytocomputetheannualcontractrent",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "lenderpotential",
+   "normalized": "lenderpotential",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partaifthemonthlyrentpotentialyouareproposingislessthanorcolumnsandcompletethecolumnsonlyiftheprojecthasa",
+   "normalized": "partaifthemonthlyrentpotentialyouareproposingislessthanorcolumnsandcompletethecolumnsonlyiftheprojecthasa",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "equaltothemaximumallowablemonthlyrentpotentialapprovedbysubsidycontractwithhudandsomeutilitiesarenotincludedinthe",
+   "normalized": "equaltothemaximumallowablemonthlyrentpotentialapprovedbysubsidycontractwithhudandsomeutilitiesarenotincludedinthe",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "hudlenderonyouroriginalrentformulaoronyourmostrecentrentincolumnshowtheutilityallowanceforeachunittype",
+   "normalized": "hudlenderonyouroriginalrentformulaoronyourmostrecentrentincolumnshowtheutilityallowanceforeachunittype",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "rentcomputationworksheetcompleteallofpartaaccordingtothecomputethegrossrentforeachunittypebyaddingthecontractrent",
+   "normalized": "rentcomputationworksheetcompleteallofpartaaccordingtothecomputethegrossrentforeachunittypebyaddingthecontractrent",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "instructionsbelowifthemonthlyrentpotentialyouarerequestingincolumnandtheutilityallowanceincolumnshowthisamount",
+   "normalized": "instructionsbelowifthemonthlyrentpotentialyouarerequestingincolumnandtheutilityallowanceincolumnshowthisamount",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "exceedsthemaximumallowablemonthlyrentpotentialapprovedincolumn",
+   "normalized": "exceedsthemaximumallowablemonthlyrentpotentialapprovedincolumn",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "byhudlenderonyouroriginalrentformulaoronyourmostrecent",
+   "normalized": "byhudlenderonyouroriginalrentformulaoronyourmostrecent",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "columnsandcompletethesecolumnsonlyiftheprojectis",
+   "normalized": "columnsandcompletethesecolumnsonlyiftheprojectis",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "rentcomputationworksheetcompleteonlycolumnsand",
+   "normalized": "rentcomputationworksheetcompleteonlycolumnsand",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "receivingsectioninterestreductionpaymentsincolumn",
+   "normalized": "receivingsectioninterestreductionpaymentsincolumn",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "accordingtotheinstructionsbelowshowyourproposedrentsand",
+   "normalized": "accordingtotheinstructionsbelowshowyourproposedrentsand",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "showthemarketrentforeachunittypeincolumnforeachline",
+   "normalized": "showthemarketrentforeachunittypeincolumnforeachline",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "monthlyrentpotentialinthecoverlettertransmittingyourrent",
+   "normalized": "monthlyrentpotentialinthecoverlettertransmittingyourrent",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "multiplythemarketrentincolumnbythenumberofunitsincolumn",
+   "normalized": "multiplythemarketrentincolumnbythenumberofunitsincolumn",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "increaserequest",
+   "normalized": "increaserequest",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "addthemonthlymarketrentpotentialsforeachunitsizeto",
+   "normalized": "addthemonthlymarketrentpotentialsforeachunitsizeto",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "columnshoweachtypeofunitforwhichrentswillvaryshowthecomputethetotalmonthlymarketrentpotentialmultiplythemonthly",
+   "normalized": "columnshoweachtypeofunitforwhichrentswillvaryshowthecomputethetotalmonthlymarketrentpotentialmultiplythemonthly",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "numberofbedroomsandbathroomsandotherfeaturesthatcausetotalbytocomputetheannualmarketrentpotential",
+   "normalized": "numberofbedroomsandbathroomsandotherfeaturesthatcausetotalbytocomputetheannualmarketrentpotential",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "rentstovaryegbdmbdakettevsbdmbdrk",
+   "normalized": "rentstovaryegbdmbdakettevsbdmbdrk",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partsbcdandecompletethesepartsaccordingtothe",
+   "normalized": "partsbcdandecompletethesepartsaccordingtothe",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "usethefollowingsymbols",
+   "normalized": "usethefollowingsymbols",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "instructionsontherentschedule",
+   "normalized": "instructionsontherentschedule",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "bdmbedroomlrlivingroom",
+   "normalized": "bdmbedroomlrlivingroom",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partfdonotcompletethispartthehudfieldofficelenderwill",
+   "normalized": "partfdonotcompletethispartthehudfieldofficelenderwill",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "bbathdrdiningroom",
+   "normalized": "bbathdrdiningroom",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "completethispart",
+   "normalized": "completethispart",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "completethispart",
+   "normalized": "completethispart",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "kkitchendadiningalcove",
+   "normalized": "kkitchendadiningalcove",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "kettekitchenette",
+   "normalized": "kettekitchenette",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partsgandhcompletethesepartsaccordingtotheinstructions",
+   "normalized": "partsgandhcompletethesepartsaccordingtotheinstructions",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "ontherentschedule",
+   "normalized": "ontherentschedule",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "columnshowthenumberofunitsforeachunittypeincludenon",
+   "normalized": "columnshowthenumberofunitsforeachunittypeincludenon",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "revenueproducingunits",
+   "normalized": "revenueproducingunits",
+   "severity": "low",
+   "property": "Oak Center"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partidonotcompletethispartthehudfieldofficelenderwill",
+   "normalized": "partidonotcompletethispartthehudfieldofficelenderwill",
+   "severity": "low",
+   "property": "Oak Center"
+  }
+ ],
+ "notes": [
+  "filed: filed side read from the combined package: Oak Center RCS Submission (Signed).pdf",
+  "filed: checklist read from Owner's Checklist - Oak Center.pdf",
+  "filed: tenantNotice read from Oak Center Tenant Notice of Rent Increase - Jan 26 - Revised.pdf",
+  "filed: rentSchedule read from Oak Center 1 - FY2026 Executed RS.pdf",
+  "filed: analysisXlsx read from Oak Center Rent Grid Analysis - 10.25.xlsx",
+  "filed: the analysis workbook holds 2 sheets; kept \"Belfry - 10.25\""
+ ],
+ "verdict": "146 differences",
+ "fuzz": {
+  "seed": 1848751915,
+  "counts": {
+   "edits": 11,
+   "escapes": 14,
+   "enters": 0,
+   "saves": 1,
+   "revertAlls": 0,
+   "drops": 2,
+   "clicks": 6,
+   "boundaries": 0,
+   "colourScans": 8,
+   "episodes": 8
+  },
+  "violations": [
+   {
+    "kind": "save-left-dirt",
+    "msg": "after \"Update property profile\" settled, 118 key(s) still differ from the snapshot: property.name, property.addr_street, property.addr_city, property.addr_state, property.addr_zip, property.s8",
+    "seed": 1848751915,
+    "evidence": {
+     "property.name": {
+      "form": {
+       "value": "Oak Center 1",
+       "source": "overridden",
+       "db_value": "ZZ-CORPUS-75926-20260731-0642",
+       "prior_value": "ZZ-CORPUS-75926-20260731-0642"
+      },
+      "snap": {
+       "value": "ZZ-CORPUS-75926-20260731-0642",
+       "source": "database",
+       "db_value": "ZZ-CORPUS-75926-20260731-0642"
+      },
+      "onScreen": true
+     },
+     "property.addr_street": {
+      "form": {
+       "value": "1601 Market Street",
+       "source": "this-cycle",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": true
+     },
+     "property.addr_city": {
+      "form": {
+       "value": "Oakland",
+       "source": "this-cycle",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": true
+     },
+     "property.addr_state": {
+      "form": {
+       "value": "CA",
+       "source": "this-cycle",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": true
+     },
+     "property.addr_zip": {
+      "form": {
+       "value": "94607",
+       "source": "this-cycle",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": true
+     },
+     "property.s8": {
+      "form": {
+       "value": "CA39L000090",
+       "source": "this-cycle",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": true
+     }
+    },
+    "after": [
+     "— episode 1/8 [escape] 165 controls on screen",
+     "type \"42\" into #viewForm input[data-k][9]",
+     "escape (1 left)",
+     "— episode 2/8 [save] 165 controls on screen",
+     "type \"1.5\" into #viewForm input[data-k][11]",
+     "type \"999999\" into #viewForm input[data-k][50]",
+     "click #viewForm [data-cb][20]",
+     "click Update property profile"
+    ]
+   },
+   {
+    "kind": "escape-left-residue",
+    "msg": "after escaping every edit to rest, 2 key(s) still differ from the pre-episode form: check.2: \"\" -> \"1\" · principals.1.title: \"Co-GP\" -> \"1.5\"",
+    "seed": 1848751915,
+    "evidence": {
+     "check.2": {
+      "form": {
+       "value": "1",
+       "source": "database",
+       "db_value": "1",
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": false
+     },
+     "principals.1.title": {
+      "form": {
+       "value": "1.5",
+       "source": "database",
+       "db_value": "1.5",
+       "prior_value": null
+      },
+      "snap": null,
+      "onScreen": true
+     }
+    },
+    "after": [
+     "type \"42\" into #viewForm input[data-k][50]",
+     "escape (4 left)",
+     "escape (2 left)",
+     "escape (1 left)",
+     "— episode 5/8 [escape] 165 controls on screen",
+     "open dropdown 22",
+     "pick menu row 3 of 7",
+     "type \"2026-03-01\" into #viewForm input[data-k][25]",
+     "type \"0\" into #viewForm input[data-k][26]",
+     "click #viewForm [data-cb][21]",
+     "click #viewForm [data-wibox][9]",
+     "escape (4 left)",
+     "escape (2 left)",
+     "escape (1 left)"
+    ]
+   }
+  ],
+  "actions": [
+   "— episode 1/8 [escape] 165 controls on screen",
+   "type \"42\" into #viewForm input[data-k][9]",
+   "escape (1 left)",
+   "— episode 2/8 [save] 165 controls on screen",
+   "type \"1.5\" into #viewForm input[data-k][11]",
+   "type \"999999\" into #viewForm input[data-k][50]",
+   "click #viewForm [data-cb][20]",
+   "click Update property profile",
+   "escape (3 left)",
+   "escape (2 left)",
+   "escape (1 left)",
+   "— episode 3/8 [escape] 165 controls on screen",
+   "type \"999999\" into #viewForm input[data-k][67]",
+   "type \"1.5\" into #viewForm input[data-k][3]",
+   "escape (2 left)",
+   "escape (1 left)",
+   "— episode 4/8 [escape] 165 controls on screen",
+   "type \"2,050\" into #viewForm input[data-k][13]",
+   "click #viewForm [data-csclear][1]",
+   "type \"42\" into #viewForm input[data-k][50]",
+   "escape (4 left)",
+   "escape (2 left)",
+   "escape (1 left)",
+   "— episode 5/8 [escape] 165 controls on screen",
+   "open dropdown 22",
+   "pick menu row 3 of 7",
+   "type \"2026-03-01\" into #viewForm input[data-k][25]",
+   "type \"0\" into #viewForm input[data-k][26]",
+   "click #viewForm [data-cb][21]",
+   "click #viewForm [data-wibox][9]",
+   "escape (4 left)",
+   "escape (2 left)",
+   "escape (1 left)",
+   "— episode 6/8 [escape] 170 controls on screen",
+   "type \"2050\" into #viewForm input[data-k][15]",
+   "open dropdown 24",
+   "escape the open menu",
+   "— episode 7/8 [escape] 170 controls on screen",
+   "click #viewForm [data-wibox][3]",
+   "— episode 8/8 [escape] 170 controls on screen",
+   "type \"  \" into #viewForm input[data-srcedit][1]",
+   "escape (2 left)"
+  ]
+ },
+ "inputs": {
+  "study": "2026 - RCS/25-183 - Oak Center, 1601 Market Street, Oakland, CA (revised 1.21).pdf",
+  "priorRs": "2025/Oak Center 1 FY2025 Executed RS.pdf",
+  "priorRsRule": "year-1 folder"
+ },
+ "notGenerated": [
+  "notes",
+  "sections",
+  "coverLetter",
+  "rcsStudy",
+  "tenantNotice"
+ ],
+ "notGeneratedWhy": null,
+ "counts": {
+  "compared": 167,
+  "matched": 21,
+  "differing": 146,
+  "fillOrder": 0,
+  "drift": 159,
+  "notGenerated": 5
+ }
+}

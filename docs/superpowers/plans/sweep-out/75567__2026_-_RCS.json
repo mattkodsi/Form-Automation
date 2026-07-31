@@ -1,0 +1,1679 @@
+{
+ "property": "Mapleview Towers",
+ "code": "75567",
+ "folder": "75567 - Mapleview Towers - Section 8",
+ "year": 2026,
+ "cycleLabel": "2026 - RCS",
+ "sha": "ccc4568",
+ "orders": {
+  "rs-first": {
+   "files": 5,
+   "tier": "text",
+   "weakerTest": false,
+   "ocrCalls": 0,
+   "via": "text",
+   "missing": null,
+   "warnings": [
+    "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+    "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “STAMFORD ELDERLY”, and the management address. A letterhead can be uploaded on the property page.",
+    "package dialog: MAPLEVIEW TOWER · 3 of 6 ready · 3 not ready"
+   ],
+   "errors": [],
+   "docsExtracted": [
+    "checklist",
+    "rentSchedule",
+    "analysisXlsx"
+   ]
+  },
+  "rcs-first": {
+   "files": 5,
+   "tier": "text",
+   "weakerTest": false,
+   "ocrCalls": 0,
+   "via": "text",
+   "missing": null,
+   "warnings": [
+    "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+    "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “STAMFORD ELDERLY”, and the management address. A letterhead can be uploaded on the property page.",
+    "package dialog: MAPLEVIEW TOWER · 3 of 6 ready · 3 not ready"
+   ],
+   "errors": [],
+   "docsExtracted": [
+    "checklist",
+    "rentSchedule",
+    "analysisXlsx"
+   ]
+  }
+ },
+ "rows": [
+  {
+   "doc": "checklist",
+   "key": "heading",
+   "ours": "Owner’s  Checklist for  RCS  Submission",
+   "theirs": "Owners Checklist  for RCS Submission",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "checklist",
+   "key": "property.name",
+   "ours": "MAPLEVIEWTOWER",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.0",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.1",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.2",
+   "ours": "0",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.3",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.4",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.5",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.6",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.7",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.8",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.9",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.10",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.11",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.12",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.13",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.14",
+   "ours": "0",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.15",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.16",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "checklist",
+   "key": "checklist.signature",
+   "ours": "DavidPearson,VPofGP",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "property.name",
+   "ours": "MAPLEVIEWTOWER/STAMFORDELDERLY",
+   "theirs": "N/A",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "property.fha",
+   "ours": "N/A",
+   "theirs": "04/01/2026",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "rent_schedule.date_eff",
+   "ours": "04/01/2026",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "rent_schedule.eff_month",
+   "ours": "04",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "rent_schedule.eff_day",
+   "ours": "01",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "rent_schedule.eff_year",
+   "ours": "2026",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "total.contract_rent",
+   "ours": "311948",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "total.annual",
+   "ours": "3743376",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "nonrev.total_rent",
+   "ours": "0",
+   "theirs": "RentalRate",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "owner.entity_name",
+   "ours": "MapleviewTowerPreservationL.P",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "sig.name_title",
+   "ours": "DavidPearson,VicePresidentofGeneralPartner",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "total.units",
+   "ours": "101",
+   "theirs": "Potential(AddCol.4)*",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.type",
+   "ours": "1BR/1BA",
+   "theirs": "1",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.units",
+   "ours": "100",
+   "theirs": "3095",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.rent",
+   "ours": "3095",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.extension",
+   "ours": "309500",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.ua",
+   "ours": "0",
+   "theirs": "0",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.gross",
+   "ours": "3095",
+   "theirs": "3095",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.row",
+   "ours": "0",
+   "theirs": "2",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.type",
+   "ours": "Non-Section8Rents",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.row",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.type",
+   "ours": "1BR",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.units",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.rent",
+   "ours": "2448",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.extension",
+   "ours": "2448",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.gross",
+   "ours": "2448",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.row",
+   "ours": "2",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "owner.entity_type",
+   "ours": "LimitedPartnership",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "principals.0.name",
+   "ours": "MapleviewTowersPreservationGP,LLC",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "principals.0.title",
+   "ours": "GeneralPartner",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.equipment.0",
+   "ours": null,
+   "theirs": "1",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.equipment.1",
+   "ours": null,
+   "theirs": "1",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.equipment.4",
+   "ours": null,
+   "theirs": "1",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.equipment.5",
+   "ours": null,
+   "theirs": "1",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.utilities.1",
+   "ours": null,
+   "theirs": "1",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.writein.u1",
+   "ours": null,
+   "theirs": "NursingCare",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.services.0",
+   "ours": null,
+   "theirs": "1",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.writein.s5.on",
+   "ours": null,
+   "theirs": "1",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.writein.s6",
+   "ours": null,
+   "theirs": "0.00",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "property.name",
+   "ours": "MAPLEVIEWTOWER",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "appr.firm",
+   "ours": "BelfryValuation,LLC",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.type",
+   "ours": "1BR/1BA",
+   "theirs": "1-Bedroom",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.units",
+   "ours": "100",
+   "theirs": "100",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.current",
+   "ours": "2448",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.proposed",
+   "ours": "3095",
+   "theirs": "3200",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.ua",
+   "ours": "0",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.safmr",
+   "ours": "2330",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Mapleview Towers"
+  }
+ ],
+ "fillOrder": [],
+ "drift": [
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "davidpearsonvicepresidentofgeneralpartner",
+   "normalized": "davidpearsonvicepresidentofgeneralpartner",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "usdepartmentofhousingombapprovalno",
+   "normalized": "usdepartmentofhousingombapprovalno",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "rentschedule",
+   "normalized": "rentschedule",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "lowrenthousingofficeofhousing",
+   "normalized": "lowrenthousingofficeofhousing",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "colcolmarketrents",
+   "normalized": "colcolmarketrents",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "contractrents",
+   "normalized": "contractrents",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "colallowancescolcol",
+   "normalized": "colallowancescolcol",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "includenonrevenuecolmonthlygrossrentcolmonthly",
+   "normalized": "includenonrevenuecolmonthlygrossrentcolmonthly",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "producingunitsnumbercolcontractrenteffectivedatecolcolrentmarketrent",
+   "normalized": "producingunitsnumbercolcontractrenteffectivedatecolcolrentmarketrent",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "ofunitsrentperunitpotentialmmddyyyyperunitpotential",
+   "normalized": "ofunitsrentperunitpotentialmmddyyyyperunitpotential",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "monthlycontractrentpotentialmonthlymarketrentpotential",
+   "normalized": "monthlycontractrentpotentialmonthlymarketrentpotential",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "addcoladdcol",
+   "normalized": "addcoladdcol",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "theseamountsmaynotexceedthemaximumallowablemonthlyrentpotentialapprovedonthelastrentcomputationworksheetorrequestedonthe",
+   "normalized": "theseamountsmaynotexceedthemaximumallowablemonthlyrentpotentialapprovedonthelastrentcomputationworksheetorrequestedonthe",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "worksheetyouarenowsubmittingmarketrentpotentialappliesonlytosectionprojects",
+   "normalized": "worksheetyouarenowsubmittingmarketrentpotentialappliesonlytosectionprojects",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "rangedishwasher",
+   "normalized": "rangedishwasher",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "useunittypecontractrent",
+   "normalized": "useunittypecontractrent",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "airconditionerdrapes",
+   "normalized": "airconditionerdrapes",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "colcolrentalrate",
+   "normalized": "colcolrentalrate",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "servicesfacilitiescheckthoseincludedinrent",
+   "normalized": "servicesfacilitiescheckthoseincludedinrent",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "colmonthlyrentsquarepersqft",
+   "normalized": "colmonthlyrentsquarepersqft",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "usepotentialfootagecoldividedby",
+   "normalized": "usepotentialfootagecoldividedby",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "parkingnursingcare",
+   "normalized": "parkingnursingcare",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "laundrylinenmaidservice",
+   "normalized": "laundrylinenmaidservice",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "previouseditionsareobsolete",
+   "normalized": "previouseditionsareobsolete",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "previouseditionsareobsolete",
+   "normalized": "previouseditionsareobsolete",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "individualshipjointtenancytenantsincommonotherspecify",
+   "normalized": "individualshipjointtenancytenantsincommonotherspecify",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "corporationtrust",
+   "normalized": "corporationtrust",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "listallprincipalscomprisingmortgagorentity",
+   "normalized": "listallprincipalscomprisingmortgagorentity",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "osecutionsitwillnotbe",
+   "normalized": "osecutionsitwillnotbe",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "instructions",
+   "normalized": "instructions",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "allprojectownersmustsubmittheformhudwhenrequestcolumnforunsubsidizedprojectsshowtherentyouintendto",
+   "normalized": "allprojectownersmustsubmittheformhudwhenrequestcolumnforunsubsidizedprojectsshowtherentyouintendto",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "inganadjustmenttoprojectrentshudestablishesandapproveschargeforeachunittypeforsubsidizedprojectsshowthecontract",
+   "normalized": "inganadjustmenttoprojectrentshudestablishesandapproveschargeforeachunittypeforsubsidizedprojectsshowthecontract",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "rentalchargesandutilityallowancesontheformtheownerisrentasdefinedinhudhandbookforeachunittype",
+   "normalized": "rentalchargesandutilityallowancesontheformtheownerisrentasdefinedinhudhandbookforeachunittype",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "responsiblefornotifyingtenantsoftheapprovedrents",
+   "normalized": "responsiblefornotifyingtenantsoftheapprovedrents",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "columnforeachlinemultiplythecontractrentincolumnbythe",
+   "normalized": "columnforeachlinemultiplythecontractrentincolumnbythe",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "generalforprojectswithfullyinsuredorhudheldmortgagesthenumberofunitsincolumnaddmonthlycontractrentpotentialsfor",
+   "normalized": "generalforprojectswithfullyinsuredorhudheldmortgagesthenumberofunitsincolumnaddmonthlycontractrentpotentialsfor",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "owneragentsubmitsthisformtothehudfieldofficeforprojectseachunitsizetocomputethetotalmonthlycontractrentpotential",
+   "normalized": "owneragentsubmitsthisformtothehudfieldofficeforprojectseachunitsizetocomputethetotalmonthlycontractrentpotential",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "withcoinsuredmortgagestheowneragentsubmitsthisformtothemultiplythemonthlytotalbytocomputetheannualcontractrent",
+   "normalized": "withcoinsuredmortgagestheowneragentsubmitsthisformtothemultiplythemonthlytotalbytocomputetheannualcontractrent",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "lenderpotential",
+   "normalized": "lenderpotential",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partaifthemonthlyrentpotentialyouareproposingislessthanorcolumnsandcompletethecolumnsonlyiftheprojecthasa",
+   "normalized": "partaifthemonthlyrentpotentialyouareproposingislessthanorcolumnsandcompletethecolumnsonlyiftheprojecthasa",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "equaltothemaximumallowablemonthlyrentpotentialapprovedbysubsidycontractwithhudandsomeutilitiesarenotincludedinthe",
+   "normalized": "equaltothemaximumallowablemonthlyrentpotentialapprovedbysubsidycontractwithhudandsomeutilitiesarenotincludedinthe",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "hudlenderonyouroriginalrentformulaoronyourmostrecentrentincolumnshowtheutilityallowanceforeachunittype",
+   "normalized": "hudlenderonyouroriginalrentformulaoronyourmostrecentrentincolumnshowtheutilityallowanceforeachunittype",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "rentcomputationworksheetcompleteallofpartaaccordingtothecomputethegrossrentforeachunittypebyaddingthecontractrent",
+   "normalized": "rentcomputationworksheetcompleteallofpartaaccordingtothecomputethegrossrentforeachunittypebyaddingthecontractrent",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "instructionsbelowifthemonthlyrentpotentialyouarerequestingincolumnandtheutilityallowanceincolumnshowthisamount",
+   "normalized": "instructionsbelowifthemonthlyrentpotentialyouarerequestingincolumnandtheutilityallowanceincolumnshowthisamount",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "exceedsthemaximumallowablemonthlyrentpotentialapprovedincolumn",
+   "normalized": "exceedsthemaximumallowablemonthlyrentpotentialapprovedincolumn",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "byhudlenderonyouroriginalrentformulaoronyourmostrecent",
+   "normalized": "byhudlenderonyouroriginalrentformulaoronyourmostrecent",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "columnsandcompletethesecolumnsonlyiftheprojectis",
+   "normalized": "columnsandcompletethesecolumnsonlyiftheprojectis",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "rentcomputationworksheetcompleteonlycolumnsand",
+   "normalized": "rentcomputationworksheetcompleteonlycolumnsand",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "receivingsectioninterestreductionpaymentsincolumn",
+   "normalized": "receivingsectioninterestreductionpaymentsincolumn",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "accordingtotheinstructionsbelowshowyourproposedrentsand",
+   "normalized": "accordingtotheinstructionsbelowshowyourproposedrentsand",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "showthemarketrentforeachunittypeincolumnforeachline",
+   "normalized": "showthemarketrentforeachunittypeincolumnforeachline",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "monthlyrentpotentialinthecoverlettertransmittingyourrent",
+   "normalized": "monthlyrentpotentialinthecoverlettertransmittingyourrent",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "multiplythemarketrentincolumnbythenumberofunitsincolumn",
+   "normalized": "multiplythemarketrentincolumnbythenumberofunitsincolumn",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "increaserequest",
+   "normalized": "increaserequest",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "addthemonthlymarketrentpotentialsforeachunitsizeto",
+   "normalized": "addthemonthlymarketrentpotentialsforeachunitsizeto",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "columnshoweachtypeofunitforwhichrentswillvaryshowthecomputethetotalmonthlymarketrentpotentialmultiplythemonthly",
+   "normalized": "columnshoweachtypeofunitforwhichrentswillvaryshowthecomputethetotalmonthlymarketrentpotentialmultiplythemonthly",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "numberofbedroomsandbathroomsandotherfeaturesthatcausetotalbytocomputetheannualmarketrentpotential",
+   "normalized": "numberofbedroomsandbathroomsandotherfeaturesthatcausetotalbytocomputetheannualmarketrentpotential",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "rentstovaryegbdmbdakettevsbdmbdrk",
+   "normalized": "rentstovaryegbdmbdakettevsbdmbdrk",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partsbcdandecompletethesepartsaccordingtothe",
+   "normalized": "partsbcdandecompletethesepartsaccordingtothe",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "usethefollowingsymbols",
+   "normalized": "usethefollowingsymbols",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "instructionsontherentschedule",
+   "normalized": "instructionsontherentschedule",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "bdmbedroomlrlivingroom",
+   "normalized": "bdmbedroomlrlivingroom",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partfdonotcompletethispartthehudfieldofficelenderwill",
+   "normalized": "partfdonotcompletethispartthehudfieldofficelenderwill",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "bbathdrdiningroom",
+   "normalized": "bbathdrdiningroom",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "completethispart",
+   "normalized": "completethispart",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "completethispart",
+   "normalized": "completethispart",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "kkitchendadiningalcove",
+   "normalized": "kkitchendadiningalcove",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "kettekitchenette",
+   "normalized": "kettekitchenette",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partsgandhcompletethesepartsaccordingtotheinstructions",
+   "normalized": "partsgandhcompletethesepartsaccordingtotheinstructions",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "ontherentschedule",
+   "normalized": "ontherentschedule",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "columnshowthenumberofunitsforeachunittypeincludenon",
+   "normalized": "columnshowthenumberofunitsforeachunittypeincludenon",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "revenueproducingunits",
+   "normalized": "revenueproducingunits",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partidonotcompletethispartthehudfieldofficelenderwill",
+   "normalized": "partidonotcompletethispartthehudfieldofficelenderwill",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "ombapprovalno",
+   "normalized": "ombapprovalno",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "rentscheduleusdepartmentofhousing",
+   "normalized": "rentscheduleusdepartmentofhousing",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "lowrenthousing",
+   "normalized": "lowrenthousing",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "officeofhousing",
+   "normalized": "officeofhousing",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "mapleviewtowerstamfordelderlyna",
+   "normalized": "mapleviewtowerstamfordelderlyna",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "colcontractrentscolmarketrents",
+   "normalized": "colcontractrentscolmarketrents",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "includenonrevenuecolcolcolallowancescolcolcol",
+   "normalized": "includenonrevenuecolcolcolallowancescolcolcol",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "producingunitsnumberrentperunitmonthlygrossrentrentmonthly",
+   "normalized": "producingunitsnumberrentperunitmonthlygrossrentrentmonthly",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "effectivedate",
+   "normalized": "effectivedate",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "ofunitscontractrentcolcolperunitmarketrent",
+   "normalized": "ofunitscontractrentcolcolperunitmarketrent",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "potentialpotential",
+   "normalized": "potentialpotential",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "nonsectionrents",
+   "normalized": "nonsectionrents",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "monthlycontractrentmonthlymarketrent",
+   "normalized": "monthlycontractrentmonthlymarketrent",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "potentialaddcol",
+   "normalized": "potentialaddcol",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "theseamountsmaynotexceedthemaximumallowablemonthlyrentpotentialapprovedonthelastrentcomputationworksheetorrequestedon",
+   "normalized": "theseamountsmaynotexceedthemaximumallowablemonthlyrentpotentialapprovedonthelastrentcomputationworksheetorrequestedon",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "theworksheetyouarenowsubmittingmarketrentpotentialappliesonlytosectionprojects",
+   "normalized": "theworksheetyouarenowsubmittingmarketrentpotentialappliesonlytosectionprojects",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "rangedishwasheruseunittypecontractrent",
+   "normalized": "rangedishwasheruseunittypecontractrent",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "employeeunitbedroom",
+   "normalized": "employeeunitbedroom",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "airconditionardrapes",
+   "normalized": "airconditionardrapes",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "disposalminiblinds",
+   "normalized": "disposalminiblinds",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "servicesfacilitiescheckthoseincludedinrentcol",
+   "normalized": "servicesfacilitiescheckthoseincludedinrentcol",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "squarepersqft",
+   "normalized": "squarepersqft",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "parkinguserent",
+   "normalized": "parkinguserent",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "footagecoldividedby",
+   "normalized": "footagecoldividedby",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "laundrylinenmaidservicecol",
+   "normalized": "laundrylinenmaidservicecol",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "previouseditionsareobsoletepageofformhud",
+   "normalized": "previouseditionsareobsoletepageofformhud",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "individualgeneralpartnershipjointtenancytenantsincommonotherspecify",
+   "normalized": "individualgeneralpartnershipjointtenancytenantsincommonotherspecify",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "corporationlimitedpartnershiptrust",
+   "normalized": "corporationlimitedpartnershiptrust",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "listallprincipalscomprisingmortgagorentityprovidenameandtitleofeachprincipaluseextrasheetsifneededifmortgagorisa",
+   "normalized": "listallprincipalscomprisingmortgagorentityprovidenameandtitleofeachprincipaluseextrasheetsifneededifmortgagorisa",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "corporationlistallofficersalldirectorsandeachstockholderhavingaormoreinterest",
+   "normalized": "corporationlistallofficersalldirectorsandeachstockholderhavingaormoreinterest",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "partnershiplistallgeneralpartnersandlimitedpartnershavingaormoreinterestinthepartnership",
+   "normalized": "partnershiplistallgeneralpartnersandlimitedpartnershavingaormoreinterestinthepartnership",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "trustlistallmanagersdirectorsortrusteesandeachbeneficiaryhavingatleastabeneficialinterestinthetrust",
+   "normalized": "trustlistallmanagersdirectorsortrusteesandeachbeneficiaryhavingatleastabeneficialinterestinthetrust",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "tothebestofmyknowledgealltheinformationstatedhereinaswellasanyinformationprovidedintheaccompanimentherewithistrueandaccurate",
+   "normalized": "tothebestofmyknowledgealltheinformationstatedhereinaswellasanyinformationprovidedintheaccompanimentherewithistrueandaccurate",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "warninghudwillprosecutefalseclaimsandstatementsconvictionmayresultincriminalandorcivilpenaltiesuscusc",
+   "normalized": "warninghudwillprosecutefalseclaimsandstatementsconvictionmayresultincriminalandorcivilpenaltiesuscusc",
+   "severity": "low",
+   "property": "Mapleview Towers"
+  }
+ ],
+ "notes": [
+  "filed: filed side read from the combined package: Mapleview Towers (CT26H037026) - 5-Year RCS Submission (signed).pdf",
+  "filed: rentSchedule read from FY2026 RS - Mapleview Towers eff. 04.01.26 (executed).pdf",
+  "filed: analysisXlsx read from Mapleview Towers - RCS Analysis.xlsx"
+ ],
+ "verdict": "63 differences",
+ "fuzz": {
+  "seed": 3475955620,
+  "counts": {
+   "edits": 10,
+   "escapes": 20,
+   "enters": 0,
+   "saves": 1,
+   "revertAlls": 1,
+   "drops": 1,
+   "clicks": 14,
+   "boundaries": 0,
+   "colourScans": 8,
+   "episodes": 8
+  },
+  "violations": [],
+  "actions": [
+   "— episode 1/8 [escape] 117 controls on screen",
+   "click #viewForm [data-cb][24]",
+   "type \"abc\" into #viewForm input[data-k][45]",
+   "type \"  \" into #viewForm input[data-k][45]",
+   "escape (3 left)",
+   "escape (1 left)",
+   "— episode 2/8 [escape] 117 controls on screen",
+   "type \"1850\" into #viewForm input[data-k][20]",
+   "click #viewForm [data-cb][30]",
+   "type \"$1,234\" into #viewForm input[data-k][12]",
+   "click #viewForm [data-csclear][1]",
+   "escape (5 left)",
+   "escape (3 left)",
+   "escape (2 left)",
+   "escape (1 left)",
+   "— episode 3/8 [escape] 117 controls on screen",
+   "type \"1850\" into #viewForm input[data-k][39]",
+   "click #viewForm [data-fuel][1]",
+   "escape (3 left)",
+   "escape (1 left)",
+   "— episode 4/8 [escape] 117 controls on screen",
+   "type \"1\" into #viewForm input[data-k][4]",
+   "click #viewForm [data-cb][13]",
+   "open dropdown 3",
+   "escape the open menu",
+   "click #viewForm [data-cb][28]",
+   "click #viewForm [data-wibox][10]",
+   "escape (4 left)",
+   "escape (2 left)",
+   "escape (1 left)",
+   "— episode 5/8 [revertAll] 117 controls on screen",
+   "type \"0\" into #viewForm input[data-k][42]",
+   "click #viewForm [data-cb][11]",
+   "type \"1.5\" into #viewForm input[data-srcedit][2]",
+   "click Revert to saved",
+   "escape (3 left)",
+   "escape (2 left)",
+   "— episode 6/8 [escape] 111 controls on screen",
+   "click #viewForm [data-cb][28]",
+   "type \"2026-03-01\" into #viewForm input[data-k][11]",
+   "click #viewForm [data-cb][31]",
+   "click #viewForm [data-wibox][8]",
+   "click #viewForm [data-cb][33]",
+   "escape (5 left)",
+   "escape (3 left)",
+   "escape (2 left)",
+   "escape (1 left)",
+   "— episode 7/8 [save] 111 controls on screen",
+   "click #viewForm [data-cb][14]",
+   "click Update property profile",
+   "— episode 8/8 [escape] 111 controls on screen",
+   "click #viewForm [data-cb][12]",
+   "type \"3/1/2026\" into #viewForm input[data-k][37]",
+   "escape (3 left)",
+   "escape (1 left)"
+  ]
+ },
+ "inputs": {
+  "study": "2026 - RCS/25-175 - Mapleview Towers, 51 Grove Street, Stamford, CT rev v3.pdf",
+  "priorRs": "2025/Mapleview Towers - FY2025 - Executed RS.pdf",
+  "priorRsRule": "year-1 folder"
+ },
+ "notGenerated": [
+  "notes",
+  "sections",
+  "coverLetter",
+  "rcsStudy",
+  "tenantNotice"
+ ],
+ "notGeneratedWhy": null,
+ "counts": {
+  "compared": 67,
+  "matched": 4,
+  "differing": 63,
+  "fillOrder": 0,
+  "drift": 107,
+  "notGenerated": 5
+ }
+}

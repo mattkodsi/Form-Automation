@@ -1,0 +1,1823 @@
+{
+ "property": "Market Square",
+ "code": "75568",
+ "folder": "75568 - Market Square - Section 8 (HAP)",
+ "year": 2026,
+ "cycleLabel": "2026 - RCS",
+ "sha": "ccc4568",
+ "orders": {
+  "rs-first": {
+   "files": 5,
+   "tier": "text",
+   "weakerTest": false,
+   "ocrCalls": 0,
+   "via": "text",
+   "missing": null,
+   "warnings": [
+    "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+    "storm [save-left-dirt] after \"Update property profile\" settled, 48 key(s) still differ from the snapshot: property.name, property.addr_street, property.addr_city, property.addr_state, property.addr_zip, property.fha  (seed 2226687370)",
+    "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “MARKET SQUARE”, and the management address. A letterhead can be uploaded on the property page.",
+    "package dialog: MARKET SQUARE · 3 of 6 ready · 3 not ready"
+   ],
+   "errors": [],
+   "docsExtracted": [
+    "checklist",
+    "rentSchedule",
+    "analysisXlsx"
+   ]
+  },
+  "rcs-first": {
+   "files": 5,
+   "tier": "text",
+   "weakerTest": false,
+   "ocrCalls": 0,
+   "via": "text",
+   "missing": null,
+   "warnings": [
+    "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+    "storm [save-left-dirt] after \"Update property profile\" settled, 48 key(s) still differ from the snapshot: property.name, property.addr_street, property.addr_city, property.addr_state, property.addr_zip, property.fha  (seed 2226687370)",
+    "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “MARKET SQUARE”, and the management address. A letterhead can be uploaded on the property page.",
+    "package dialog: MARKET SQUARE · 3 of 6 ready · 3 not ready"
+   ],
+   "errors": [],
+   "docsExtracted": [
+    "checklist",
+    "rentSchedule",
+    "analysisXlsx"
+   ]
+  }
+ },
+ "rows": [
+  {
+   "doc": "checklist",
+   "key": "heading",
+   "ours": "Owner’s  Checklist for  RCS  Submission",
+   "theirs": "Owners Checklist  for RCS Submission",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Market Square"
+  },
+  {
+   "doc": "checklist",
+   "key": "property.name",
+   "ours": "MARKETSQUARE",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.0",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.1",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.2",
+   "ours": "0",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.3",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.4",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.5",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.6",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.7",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.8",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.9",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.10",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.11",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.12",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.13",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.14",
+   "ours": "0",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.15",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.16",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "checklist",
+   "key": "checklist.signature",
+   "ours": "DavidPearson,VPofGP",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "property.name",
+   "ours": "MARKETSQUARE",
+   "theirs": "N/A",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "property.fha",
+   "ours": "N/A",
+   "theirs": "02/04/2026",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "rent_schedule.date_eff",
+   "ours": "02/04/2026",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "rent_schedule.eff_month",
+   "ours": "02",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "rent_schedule.eff_day",
+   "ours": "04",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "rent_schedule.eff_year",
+   "ours": "2026",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "total.contract_rent",
+   "ours": "179687",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "total.annual",
+   "ours": "2156244",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "nonrev.total_rent",
+   "ours": "0",
+   "theirs": "RentalRate",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "owner.entity_name",
+   "ours": "MarketSquarePreservation,LP",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "sig.name_title",
+   "ours": "DavidPearson,VicePresidentofGeneralPartner",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "total.units",
+   "ours": "76",
+   "theirs": "Potential(AddCol.4)*",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.type",
+   "ours": "1BR/1BA",
+   "theirs": "1",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.units",
+   "ours": "75",
+   "theirs": "2325",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.rent",
+   "ours": "2375",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.extension",
+   "ours": "178125",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.ua",
+   "ours": "0",
+   "theirs": "0",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.gross",
+   "ours": "2375",
+   "theirs": "2325",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.row",
+   "ours": "0",
+   "theirs": "2",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.type",
+   "ours": "Non-Section8Rents",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.row",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.type",
+   "ours": "1BR",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.units",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.rent",
+   "ours": "1562",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.extension",
+   "ours": "1562",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.gross",
+   "ours": "1562",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.row",
+   "ours": "2",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "owner.entity_type",
+   "ours": "LimitedPartnership",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "principals.0.name",
+   "ours": "MarketSquarePreservationGP,LLC",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "principals.0.title",
+   "ours": "GeneralPartner",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "principals.1.name",
+   "ours": "MarketSquarePreservationClassB,LLC",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "principals.1.title",
+   "ours": "ClassBLimitedPartner",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "principals.2.name",
+   "ours": "RaymondJamesHousingOpportunitiesFund56,LLC",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "principals.2.title",
+   "ours": "LimitedPartner",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.equipment.0",
+   "ours": null,
+   "theirs": "1",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.equipment.1",
+   "ours": null,
+   "theirs": "1",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.equipment.4",
+   "ours": null,
+   "theirs": "1",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.equipment.5",
+   "ours": null,
+   "theirs": "1",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.utilities.1",
+   "ours": null,
+   "theirs": "1",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.utilities.3",
+   "ours": null,
+   "theirs": "1",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.writein.u1",
+   "ours": null,
+   "theirs": "NursingCare",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.services.0",
+   "ours": null,
+   "theirs": "1",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.writein.s5.on",
+   "ours": null,
+   "theirs": "1",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.writein.s6",
+   "ours": null,
+   "theirs": "0.00",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "property.name",
+   "ours": "MARKETSQUARE",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "appr.firm",
+   "ours": "BelfryValuation,LLC",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.type",
+   "ours": "1BR/1BA",
+   "theirs": "1-Bedroom",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Market Square"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.units",
+   "ours": "75",
+   "theirs": "75",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Market Square"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.current",
+   "ours": "1562",
+   "theirs": "1562",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Market Square"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.proposed",
+   "ours": "2375",
+   "theirs": "2325",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Market Square"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.ua",
+   "ours": "0",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Market Square"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.safmr",
+   "ours": "1600",
+   "theirs": "1600",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Market Square"
+  }
+ ],
+ "fillOrder": [],
+ "drift": [
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "davidpearsonvicepresidentofgeneralpartner",
+   "normalized": "davidpearsonvicepresidentofgeneralpartner",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "usdepartmentofhousingombapprovalno",
+   "normalized": "usdepartmentofhousingombapprovalno",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "rentschedule",
+   "normalized": "rentschedule",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "lowrenthousingofficeofhousing",
+   "normalized": "lowrenthousingofficeofhousing",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "colcolmarketrents",
+   "normalized": "colcolmarketrents",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "contractrents",
+   "normalized": "contractrents",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "colallowancescolcol",
+   "normalized": "colallowancescolcol",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "includenonrevenuecolmonthlygrossrentcolmonthly",
+   "normalized": "includenonrevenuecolmonthlygrossrentcolmonthly",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "producingunitsnumbercolcontractrenteffectivedatecolcolrentmarketrent",
+   "normalized": "producingunitsnumbercolcontractrenteffectivedatecolcolrentmarketrent",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "ofunitsrentperunitpotentialmmddyyyyperunitpotential",
+   "normalized": "ofunitsrentperunitpotentialmmddyyyyperunitpotential",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "monthlycontractrentpotentialmonthlymarketrentpotential",
+   "normalized": "monthlycontractrentpotentialmonthlymarketrentpotential",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "addcoladdcol",
+   "normalized": "addcoladdcol",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "theseamountsmaynotexceedthemaximumallowablemonthlyrentpotentialapprovedonthelastrentcomputationworksheetorrequestedonthe",
+   "normalized": "theseamountsmaynotexceedthemaximumallowablemonthlyrentpotentialapprovedonthelastrentcomputationworksheetorrequestedonthe",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "worksheetyouarenowsubmittingmarketrentpotentialappliesonlytosectionprojects",
+   "normalized": "worksheetyouarenowsubmittingmarketrentpotentialappliesonlytosectionprojects",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "rangedishwasher",
+   "normalized": "rangedishwasher",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "useunittypecontractrent",
+   "normalized": "useunittypecontractrent",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "airconditionerdrapes",
+   "normalized": "airconditionerdrapes",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "colcolrentalrate",
+   "normalized": "colcolrentalrate",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "servicesfacilitiescheckthoseincludedinrent",
+   "normalized": "servicesfacilitiescheckthoseincludedinrent",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "colmonthlyrentsquarepersqft",
+   "normalized": "colmonthlyrentsquarepersqft",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "usepotentialfootagecoldividedby",
+   "normalized": "usepotentialfootagecoldividedby",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "parkingnursingcare",
+   "normalized": "parkingnursingcare",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "laundrylinenmaidservice",
+   "normalized": "laundrylinenmaidservice",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "swimmingpool",
+   "normalized": "swimmingpool",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "previouseditionsareobsolete",
+   "normalized": "previouseditionsareobsolete",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "previouseditionsareobsolete",
+   "normalized": "previouseditionsareobsolete",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "individualshipjointtenancytenantsincommonotherspecify",
+   "normalized": "individualshipjointtenancytenantsincommonotherspecify",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "corporationtrust",
+   "normalized": "corporationtrust",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "listallprincipalscomprisingmortgagorentity",
+   "normalized": "listallprincipalscomprisingmortgagorentity",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "osecutionsitwillnotbe",
+   "normalized": "osecutionsitwillnotbe",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "instructions",
+   "normalized": "instructions",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "allprojectownersmustsubmittheformhudwhenrequestcolumnforunsubsidizedprojectsshowtherentyouintendto",
+   "normalized": "allprojectownersmustsubmittheformhudwhenrequestcolumnforunsubsidizedprojectsshowtherentyouintendto",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "inganadjustmenttoprojectrentshudestablishesandapproveschargeforeachunittypeforsubsidizedprojectsshowthecontract",
+   "normalized": "inganadjustmenttoprojectrentshudestablishesandapproveschargeforeachunittypeforsubsidizedprojectsshowthecontract",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "rentalchargesandutilityallowancesontheformtheownerisrentasdefinedinhudhandbookforeachunittype",
+   "normalized": "rentalchargesandutilityallowancesontheformtheownerisrentasdefinedinhudhandbookforeachunittype",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "responsiblefornotifyingtenantsoftheapprovedrents",
+   "normalized": "responsiblefornotifyingtenantsoftheapprovedrents",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "columnforeachlinemultiplythecontractrentincolumnbythe",
+   "normalized": "columnforeachlinemultiplythecontractrentincolumnbythe",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "generalforprojectswithfullyinsuredorhudheldmortgagesthenumberofunitsincolumnaddmonthlycontractrentpotentialsfor",
+   "normalized": "generalforprojectswithfullyinsuredorhudheldmortgagesthenumberofunitsincolumnaddmonthlycontractrentpotentialsfor",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "owneragentsubmitsthisformtothehudfieldofficeforprojectseachunitsizetocomputethetotalmonthlycontractrentpotential",
+   "normalized": "owneragentsubmitsthisformtothehudfieldofficeforprojectseachunitsizetocomputethetotalmonthlycontractrentpotential",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "withcoinsuredmortgagestheowneragentsubmitsthisformtothemultiplythemonthlytotalbytocomputetheannualcontractrent",
+   "normalized": "withcoinsuredmortgagestheowneragentsubmitsthisformtothemultiplythemonthlytotalbytocomputetheannualcontractrent",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "lenderpotential",
+   "normalized": "lenderpotential",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partaifthemonthlyrentpotentialyouareproposingislessthanorcolumnsandcompletethecolumnsonlyiftheprojecthasa",
+   "normalized": "partaifthemonthlyrentpotentialyouareproposingislessthanorcolumnsandcompletethecolumnsonlyiftheprojecthasa",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "equaltothemaximumallowablemonthlyrentpotentialapprovedbysubsidycontractwithhudandsomeutilitiesarenotincludedinthe",
+   "normalized": "equaltothemaximumallowablemonthlyrentpotentialapprovedbysubsidycontractwithhudandsomeutilitiesarenotincludedinthe",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "hudlenderonyouroriginalrentformulaoronyourmostrecentrentincolumnshowtheutilityallowanceforeachunittype",
+   "normalized": "hudlenderonyouroriginalrentformulaoronyourmostrecentrentincolumnshowtheutilityallowanceforeachunittype",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "rentcomputationworksheetcompleteallofpartaaccordingtothecomputethegrossrentforeachunittypebyaddingthecontractrent",
+   "normalized": "rentcomputationworksheetcompleteallofpartaaccordingtothecomputethegrossrentforeachunittypebyaddingthecontractrent",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "instructionsbelowifthemonthlyrentpotentialyouarerequestingincolumnandtheutilityallowanceincolumnshowthisamount",
+   "normalized": "instructionsbelowifthemonthlyrentpotentialyouarerequestingincolumnandtheutilityallowanceincolumnshowthisamount",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "exceedsthemaximumallowablemonthlyrentpotentialapprovedincolumn",
+   "normalized": "exceedsthemaximumallowablemonthlyrentpotentialapprovedincolumn",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "byhudlenderonyouroriginalrentformulaoronyourmostrecent",
+   "normalized": "byhudlenderonyouroriginalrentformulaoronyourmostrecent",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "columnsandcompletethesecolumnsonlyiftheprojectis",
+   "normalized": "columnsandcompletethesecolumnsonlyiftheprojectis",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "rentcomputationworksheetcompleteonlycolumnsand",
+   "normalized": "rentcomputationworksheetcompleteonlycolumnsand",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "receivingsectioninterestreductionpaymentsincolumn",
+   "normalized": "receivingsectioninterestreductionpaymentsincolumn",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "accordingtotheinstructionsbelowshowyourproposedrentsand",
+   "normalized": "accordingtotheinstructionsbelowshowyourproposedrentsand",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "showthemarketrentforeachunittypeincolumnforeachline",
+   "normalized": "showthemarketrentforeachunittypeincolumnforeachline",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "monthlyrentpotentialinthecoverlettertransmittingyourrent",
+   "normalized": "monthlyrentpotentialinthecoverlettertransmittingyourrent",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "multiplythemarketrentincolumnbythenumberofunitsincolumn",
+   "normalized": "multiplythemarketrentincolumnbythenumberofunitsincolumn",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "increaserequest",
+   "normalized": "increaserequest",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "addthemonthlymarketrentpotentialsforeachunitsizeto",
+   "normalized": "addthemonthlymarketrentpotentialsforeachunitsizeto",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "columnshoweachtypeofunitforwhichrentswillvaryshowthecomputethetotalmonthlymarketrentpotentialmultiplythemonthly",
+   "normalized": "columnshoweachtypeofunitforwhichrentswillvaryshowthecomputethetotalmonthlymarketrentpotentialmultiplythemonthly",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "numberofbedroomsandbathroomsandotherfeaturesthatcausetotalbytocomputetheannualmarketrentpotential",
+   "normalized": "numberofbedroomsandbathroomsandotherfeaturesthatcausetotalbytocomputetheannualmarketrentpotential",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "rentstovaryegbdmbdakettevsbdmbdrk",
+   "normalized": "rentstovaryegbdmbdakettevsbdmbdrk",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partsbcdandecompletethesepartsaccordingtothe",
+   "normalized": "partsbcdandecompletethesepartsaccordingtothe",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "usethefollowingsymbols",
+   "normalized": "usethefollowingsymbols",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "instructionsontherentschedule",
+   "normalized": "instructionsontherentschedule",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "bdmbedroomlrlivingroom",
+   "normalized": "bdmbedroomlrlivingroom",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partfdonotcompletethispartthehudfieldofficelenderwill",
+   "normalized": "partfdonotcompletethispartthehudfieldofficelenderwill",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "bbathdrdiningroom",
+   "normalized": "bbathdrdiningroom",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "completethispart",
+   "normalized": "completethispart",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "completethispart",
+   "normalized": "completethispart",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "kkitchendadiningalcove",
+   "normalized": "kkitchendadiningalcove",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "kettekitchenette",
+   "normalized": "kettekitchenette",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partsgandhcompletethesepartsaccordingtotheinstructions",
+   "normalized": "partsgandhcompletethesepartsaccordingtotheinstructions",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "ontherentschedule",
+   "normalized": "ontherentschedule",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "columnshowthenumberofunitsforeachunittypeincludenon",
+   "normalized": "columnshowthenumberofunitsforeachunittypeincludenon",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "revenueproducingunits",
+   "normalized": "revenueproducingunits",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partidonotcompletethispartthehudfieldofficelenderwill",
+   "normalized": "partidonotcompletethispartthehudfieldofficelenderwill",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "ombapprovalno",
+   "normalized": "ombapprovalno",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "rentscheduleusdepartmentofhousing",
+   "normalized": "rentscheduleusdepartmentofhousing",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "lowrenthousing",
+   "normalized": "lowrenthousing",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "officeofhousing",
+   "normalized": "officeofhousing",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "marketsquarena",
+   "normalized": "marketsquarena",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "colcontractrentscolmarketrents",
+   "normalized": "colcontractrentscolmarketrents",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "includenonrevenuecolcolcolallowancescolcolcol",
+   "normalized": "includenonrevenuecolcolcolallowancescolcolcol",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "producingunitsnumberrentperunitmonthlygrossrentrentmonthly",
+   "normalized": "producingunitsnumberrentperunitmonthlygrossrentrentmonthly",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "effectivedate",
+   "normalized": "effectivedate",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "ofunitscontractrentcolcolperunitmarketrent",
+   "normalized": "ofunitscontractrentcolcolperunitmarketrent",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "potentialpotential",
+   "normalized": "potentialpotential",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "nonsectionrents",
+   "normalized": "nonsectionrents",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "monthlycontractrentmonthlymarketrent",
+   "normalized": "monthlycontractrentmonthlymarketrent",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "potentialaddcol",
+   "normalized": "potentialaddcol",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "theseamountsmaynotexceedthemaximumallowablemonthlyrentpotentialapprovedonthelastrentcomputationworksheetorrequestedon",
+   "normalized": "theseamountsmaynotexceedthemaximumallowablemonthlyrentpotentialapprovedonthelastrentcomputationworksheetorrequestedon",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "theworksheetyouarenowsubmittingmarketrentpotentialappliesonlytosectionprojects",
+   "normalized": "theworksheetyouarenowsubmittingmarketrentpotentialappliesonlytosectionprojects",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "rangedishwasheruseunittypecontractrent",
+   "normalized": "rangedishwasheruseunittypecontractrent",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "supervisorsunitbedroom",
+   "normalized": "supervisorsunitbedroom",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "airconditionardrapes",
+   "normalized": "airconditionardrapes",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "disposalverticalblinds",
+   "normalized": "disposalverticalblinds",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "servicesfacilitiescheckthoseincludedinrentcol",
+   "normalized": "servicesfacilitiescheckthoseincludedinrentcol",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "squarepersqft",
+   "normalized": "squarepersqft",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "parkingwateruserent",
+   "normalized": "parkingwateruserent",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "footagecoldividedby",
+   "normalized": "footagecoldividedby",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "laundrysewerlinenmaidservicecol",
+   "normalized": "laundrysewerlinenmaidservicecol",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "swimmingpooltrash",
+   "normalized": "swimmingpooltrash",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "previouseditionsareobsoletepageofformhud",
+   "normalized": "previouseditionsareobsoletepageofformhud",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "individualgeneralpartnershipjointtenancytenantsincommonotherspecify",
+   "normalized": "individualgeneralpartnershipjointtenancytenantsincommonotherspecify",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "corporationlimitedpartnershiptrust",
+   "normalized": "corporationlimitedpartnershiptrust",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "listallprincipalscomprisingmortgagorentityprovidenameandtitleofeachprincipaluseextrasheetsifneededifmortgagorisa",
+   "normalized": "listallprincipalscomprisingmortgagorentityprovidenameandtitleofeachprincipaluseextrasheetsifneededifmortgagorisa",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "corporationlistallofficersalldirectorsandeachstockholderhavingaormoreinterest",
+   "normalized": "corporationlistallofficersalldirectorsandeachstockholderhavingaormoreinterest",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "partnershiplistallgeneralpartnersandlimitedpartnershavingaormoreinterestinthepartnership",
+   "normalized": "partnershiplistallgeneralpartnersandlimitedpartnershavingaormoreinterestinthepartnership",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "trustlistallmanagersdirectorsortrusteesandeachbeneficiaryhavingatleastabeneficialinterestinthetrust",
+   "normalized": "trustlistallmanagersdirectorsortrusteesandeachbeneficiaryhavingatleastabeneficialinterestinthetrust",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "tothebestofmyknowledgealltheinformationstatedhereinaswellasanyinformationprovidedintheaccompanimentherewithistrueandaccurate",
+   "normalized": "tothebestofmyknowledgealltheinformationstatedhereinaswellasanyinformationprovidedintheaccompanimentherewithistrueandaccurate",
+   "severity": "low",
+   "property": "Market Square"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "warninghudwillprosecutefalseclaimsandstatementsconvictionmayresultincriminalandorcivilpenaltiesuscusc",
+   "normalized": "warninghudwillprosecutefalseclaimsandstatementsconvictionmayresultincriminalandorcivilpenaltiesuscusc",
+   "severity": "low",
+   "property": "Market Square"
+  }
+ ],
+ "notes": [
+  "filed: filed side read from the combined package: Market Square (CT26H037003) - 5-Year RCS Submission.pdf",
+  "filed: submittalLetter read from 2 - Market Square - Submittal Cover Letter.pdf",
+  "filed: rentSchedule read from Market Square-FY 2026 - RS (fully executed).pdf",
+  "filed: analysisXlsx read from Market Square - RCS Analysis.xlsx"
+ ],
+ "verdict": "67 differences",
+ "fuzz": {
+  "seed": 2226687370,
+  "counts": {
+   "edits": 4,
+   "escapes": 4,
+   "enters": 3,
+   "saves": 3,
+   "revertAlls": 3,
+   "drops": 1,
+   "clicks": 2,
+   "boundaries": 0,
+   "colourScans": 8,
+   "episodes": 8
+  },
+  "violations": [
+   {
+    "kind": "save-left-dirt",
+    "msg": "after \"Update property profile\" settled, 48 key(s) still differ from the snapshot: property.name, property.addr_street, property.addr_city, property.addr_state, property.addr_zip, property.fha",
+    "seed": 2226687370,
+    "evidence": {
+     "property.name": {
+      "form": {
+       "value": "MARKET SQUARE",
+       "source": "overridden",
+       "db_value": "ZZ-CORPUS-75568-20260731-0622",
+       "prior_value": "ZZ-CORPUS-75568-20260731-0622"
+      },
+      "snap": {
+       "value": "ZZ-CORPUS-75568-20260731-0622",
+       "source": "database",
+       "db_value": "ZZ-CORPUS-75568-20260731-0622"
+      },
+      "onScreen": true
+     },
+     "property.addr_street": {
+      "form": {
+       "value": "65 Constance Leigh Drive",
+       "source": "this-cycle",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": true
+     },
+     "property.addr_city": {
+      "form": {
+       "value": "Newington",
+       "source": "this-cycle",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": true
+     },
+     "property.addr_state": {
+      "form": {
+       "value": "CT",
+       "source": "this-cycle",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": true
+     },
+     "property.addr_zip": {
+      "form": {
+       "value": "06111",
+       "source": "this-cycle",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": true
+     },
+     "property.fha": {
+      "form": {
+       "value": "N/A",
+       "source": "this-cycle",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": true
+     }
+    },
+    "after": [
+     "— episode 1/8 [save] 121 controls on screen",
+     "open dropdown 8",
+     "pick menu row 3 of 6",
+     "type \"3/1/2026\" into #viewForm input[data-k][48]",
+     "type \"1850\" into #viewForm input[data-k][50]",
+     "enter (commit)",
+     "click Update property profile"
+    ]
+   }
+  ],
+  "actions": [
+   "— episode 1/8 [save] 121 controls on screen",
+   "open dropdown 8",
+   "pick menu row 3 of 6",
+   "type \"3/1/2026\" into #viewForm input[data-k][48]",
+   "type \"1850\" into #viewForm input[data-k][50]",
+   "enter (commit)",
+   "click Update property profile",
+   "escape (3 left)",
+   "escape (2 left)",
+   "escape (1 left)",
+   "— episode 2/8 [revertAll] 121 controls on screen",
+   "type \"$1,234\" into #viewForm input[data-k][10]",
+   "click Revert to saved",
+   "— episode 3/8 [revertAll] 122 controls on screen",
+   "type \"3/1/2026\" into #viewForm input[data-k][9]",
+   "click #viewForm [data-csclear][2]",
+   "click Revert to saved",
+   "escape (2 left)",
+   "— episode 4/8 [save] 0 controls on screen",
+   "enter (commit)",
+   "click Update property profile",
+   "— episode 5/8 [escape] 0 controls on screen",
+   "— episode 6/8 [save] 0 controls on screen",
+   "enter (commit)",
+   "click Update property profile",
+   "— episode 7/8 [escape] 0 controls on screen",
+   "— episode 8/8 [revertAll] 0 controls on screen",
+   "click Revert to saved"
+  ]
+ },
+ "inputs": {
+  "study": "2026 - RCS/Archive/25-123 - Market Square, 65 Constance Leigh Drive, Newington, CT (updated).pdf",
+  "priorRs": "2025/HUD 92458 - Rent Schedule - Market Square EXECUTED.pdf",
+  "priorRsRule": "year-1 folder"
+ },
+ "notGenerated": [
+  "notes",
+  "sections",
+  "coverLetter",
+  "rcsStudy",
+  "tenantNotice",
+  "submittalLetter"
+ ],
+ "notGeneratedWhy": null,
+ "counts": {
+  "compared": 72,
+  "matched": 5,
+  "differing": 67,
+  "fillOrder": 0,
+  "drift": 109,
+  "notGenerated": 6
+ }
+}

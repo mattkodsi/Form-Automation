@@ -1,0 +1,33 @@
+{
+ "property": "Market Square",
+ "code": "75568",
+ "folder": "75568 - Market Square - Section 8 (HAP)",
+ "year": 2019,
+ "cycleLabel": "Oct. 2019 RCS",
+ "sha": "ccc4568",
+ "orders": {
+  "rs-first": {
+   "error": "rent schedule: timed out after 300s waiting for rent schedule to finish reading \"HUD-92458 Market Square Draft Rent Schedule.xls\"\n  tile now : {\"name\":\"Current ",
+   "files": 0
+  },
+  "rcs-first": {
+   "error": "rent schedule: timed out after 300s waiting for rent schedule to finish reading \"HUD-92458 Market Square Draft Rent Schedule.xls\"\n  tile now : {\"name\":\"Current ",
+   "files": 0
+  }
+ },
+ "rows": [],
+ "fillOrder": [],
+ "drift": [],
+ "notes": [
+  "the manifest could not read this cycle's study; driving it anyway, because what the app does with an unreadable study is the observation",
+  "rs-first: drive threw -- rent schedule: timed out after 300s waiting for rent schedule to finish reading \"HUD-92458 Market Square Draft Rent Sche",
+  "rcs-first: drive threw -- rent schedule: timed out after 300s waiting for rent schedule to finish reading \"HUD-92458 Market Square Draft Rent Sche"
+ ],
+ "verdict": "the app generated nothing comparable",
+ "fuzz": null,
+ "inputs": {
+  "study": "Oct. 2019 RCS/ConnecticutNewingtonRentComparabilityStudyUpdate.pdf",
+  "priorRs": "2018 - HAP Renewal/Submission Documents/HUD-92458 Market Square Draft Rent Schedule.xls",
+  "priorRsRule": "year-1 folder"
+ }
+}

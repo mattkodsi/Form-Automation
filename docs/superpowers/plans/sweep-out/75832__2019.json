@@ -1,0 +1,32 @@
+{
+ "property": "Newberry Arms",
+ "code": "75832",
+ "folder": "75832 - Newberry Arms - Section 8",
+ "year": 2019,
+ "cycleLabel": "2019",
+ "sha": "ccc4568",
+ "orders": {
+  "rs-first": {
+   "error": "after the reload there is no property card named ZZ-CORPUS-75832-20260731-0630 — the record never reached the database",
+   "files": 0
+  },
+  "rcs-first": {
+   "error": "after the reload there is no property card named ZZ-CORPUS-75832-20260731-0630 — the record never reached the database",
+   "files": 0
+  }
+ },
+ "rows": [],
+ "fillOrder": [],
+ "drift": [],
+ "notes": [
+  "rs-first: drive threw -- after the reload there is no property card named ZZ-CORPUS-75832-20260731-0630 — the record never reached the database",
+  "rcs-first: drive threw -- after the reload there is no property card named ZZ-CORPUS-75832-20260731-0630 — the record never reached the database"
+ ],
+ "verdict": "the app generated nothing comparable",
+ "fuzz": null,
+ "inputs": {
+  "study": "2019/Newberry Final RCS.pdf",
+  "priorRs": "2018/Newberry 2018 Rent Schedule.pdf",
+  "priorRsRule": "year-1 folder"
+ }
+}

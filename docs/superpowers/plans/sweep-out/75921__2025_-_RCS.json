@@ -1,0 +1,412 @@
+{
+ "property": "Walden",
+ "code": "75921",
+ "folder": "75921 - Walden - Section 8",
+ "year": 2025,
+ "cycleLabel": "2025 - RCS",
+ "sha": "ccc4568",
+ "orders": {
+  "rs-first": {
+   "files": 3,
+   "tier": "ocr:half",
+   "weakerTest": false,
+   "ocrCalls": 3,
+   "via": "ocr",
+   "missing": null,
+   "warnings": [
+    "only the front half of the rent schedule was read — Parts F and G (ownership entity, principals, signatory) did not come through",
+    "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+    "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “The Cedars”, and the management address. A letterhead can be uploaded on the property page.",
+    "package dialog: The Cedars · 1 of 6 ready · 5 not ready"
+   ],
+   "errors": [],
+   "docsExtracted": [
+    "analysisXlsx"
+   ]
+  },
+  "rcs-first": {
+   "files": 3,
+   "tier": "ocr:half",
+   "weakerTest": false,
+   "ocrCalls": 3,
+   "via": "ocr",
+   "missing": null,
+   "warnings": [
+    "only the front half of the rent schedule was read — Parts F and G (ownership entity, principals, signatory) did not come through",
+    "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+    "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “The Cedars”, and the management address. A letterhead can be uploaded on the property page.",
+    "package dialog: The Cedars · 1 of 6 ready · 5 not ready"
+   ],
+   "errors": [],
+   "docsExtracted": [
+    "analysisXlsx"
+   ]
+  }
+ },
+ "rows": [
+  {
+   "doc": "analysisXlsx",
+   "key": "property.name",
+   "ours": "TheCedars",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Walden"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "appr.firm",
+   "ours": "BelfryValuation,LLC",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Walden"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.type",
+   "ours": "1BR/1BAA",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Walden"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.units",
+   "ours": "27",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Walden"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.current",
+   "ours": "1387",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Walden"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.proposed",
+   "ours": "2025",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Walden"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.ua",
+   "ours": "45",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Walden"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.safmr",
+   "ours": "1420",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Walden"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.type",
+   "ours": "1BR/1BAB",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Walden"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.units",
+   "ours": "30",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Walden"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.current",
+   "ours": "1444",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Walden"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.proposed",
+   "ours": "2150",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Walden"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.ua",
+   "ours": "53",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Walden"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.safmr",
+   "ours": "1420",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Walden"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.type",
+   "ours": "2BR/1BA",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Walden"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.units",
+   "ours": "26",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Walden"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.current",
+   "ours": "1693",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Walden"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.proposed",
+   "ours": "2400",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Walden"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.ua",
+   "ours": "75",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Walden"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.safmr",
+   "ours": "1820",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Walden"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.type",
+   "ours": "3BR/1.5BA",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Walden"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.units",
+   "ours": "5",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Walden"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.current",
+   "ours": "2055",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Walden"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.proposed",
+   "ours": "2900",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Walden"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.ua",
+   "ours": "96",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Walden"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.safmr",
+   "ours": "2320",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Walden"
+  }
+ ],
+ "fillOrder": [],
+ "drift": [],
+ "notes": [
+  "filed: filed side read from the combined package: Walden_(The_Cedars)_5_Year_RCS_Submission_3.28.25 (Executed).pdf",
+  "filed: tenantNotice unreadable: extractFacts: these bytes are a zip, not a PDF — did you mean docType ",
+  "filed: rentSchedule read from Walden aka The Cedars Rent Schedule eff. 7.16.25.pdf",
+  "filed: analysisXlsx read from Walden - Belfry RCS Impact Analysis 3.26.25.xlsx"
+ ],
+ "verdict": "26 differences",
+ "fuzz": {
+  "seed": 3171488628,
+  "counts": {
+   "edits": 12,
+   "escapes": 14,
+   "enters": 0,
+   "saves": 1,
+   "revertAlls": 2,
+   "drops": 2,
+   "clicks": 16,
+   "boundaries": 0,
+   "colourScans": 8,
+   "episodes": 8
+  },
+  "violations": [],
+  "actions": [
+   "— episode 1/8 [escape] 144 controls on screen",
+   "type \"-5\" into #viewForm input[data-k][16]",
+   "click #viewForm [data-wibox][10]",
+   "type \"3/1/2026\" into #viewForm input[data-k][37]",
+   "type \"1.5\" into #viewForm input[data-k][3]",
+   "type \"1.5\" into #viewForm input[data-srcedit][7]",
+   "escape (5 left)",
+   "escape (3 left)",
+   "escape (2 left)",
+   "escape (1 left)",
+   "— episode 2/8 [revertAll] 144 controls on screen",
+   "click #viewForm [data-wibox][0]",
+   "type \"1234\" into #viewForm input[data-k][8]",
+   "click #viewForm [data-cb][11]",
+   "type \"3/1/2026\" into #viewForm input[data-k][51]",
+   "open dropdown 18",
+   "escape the open menu",
+   "click Revert to saved",
+   "escape (3 left)",
+   "— episode 3/8 [escape] 111 controls on screen",
+   "click #viewForm [data-cb][33]",
+   "escape (2 left)",
+   "— episode 4/8 [escape] 111 controls on screen",
+   "open dropdown 8",
+   "pick menu row 1 of 6",
+   "click #viewForm [data-wibox][9]",
+   "click #viewForm [data-cb][30]",
+   "type \"$1,234\" into #viewForm input[data-k][31]",
+   "escape (3 left)",
+   "escape (1 left)",
+   "— episode 5/8 [escape] 111 controls on screen",
+   "click #viewForm [data-wibox][7]",
+   "click #viewForm [data-wibox][7]",
+   "click #viewForm [data-cb][33]",
+   "type \"1234\" into #viewForm input[data-k][8]",
+   "type \"129\" into #viewForm input[data-k][11]",
+   "escape (4 left)",
+   "escape (2 left)",
+   "escape (1 left)",
+   "— episode 6/8 [save] 111 controls on screen",
+   "click #viewForm [data-cb][22]",
+   "click #viewForm [data-cb][21]",
+   "type \"\" into #viewForm input[data-k][2]",
+   "click #viewForm [data-cb][34]",
+   "click Update property profile",
+   "— episode 7/8 [escape] 111 controls on screen",
+   "click #viewForm [data-cb][30]",
+   "click #viewForm [data-fuel][3]",
+   "click #viewForm [data-wibox][3]",
+   "escape (3 left)",
+   "escape (1 left)",
+   "— episode 8/8 [revertAll] 111 controls on screen",
+   "type \"1.5\" into #viewForm input[data-k][43]",
+   "type \"1234\" into #viewForm input[data-k][24]",
+   "click Revert to saved"
+  ]
+ },
+ "inputs": {
+  "study": "2025 - RCS/Archive/Submission/Exhibits/Exhibit 3 - 25-020 - Walden (The Cedars), 400 Cliff Street & 55 Main Street, Walden, NY (Full RCS).pdf",
+  "priorRs": "2024/Walden (The Cedars) Rent Schedule eff. 7.16.24.pdf",
+  "priorRsRule": "year-1 folder"
+ },
+ "notGenerated": [
+  "notes",
+  "sections",
+  "coverLetter",
+  "rcsStudy",
+  "checklist",
+  "rentSchedule"
+ ],
+ "notGeneratedWhy": null,
+ "counts": {
+  "compared": 26,
+  "matched": 0,
+  "differing": 26,
+  "fillOrder": 0,
+  "drift": 0,
+  "notGenerated": 6
+ }
+}

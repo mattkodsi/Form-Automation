@@ -1,0 +1,394 @@
+{
+ "property": "333 Holly",
+ "code": "75704",
+ "folder": "75704 - 333 Holly - Section 8",
+ "year": 2025,
+ "cycleLabel": "2025 - RCS",
+ "sha": "ccc4568",
+ "orders": {
+  "rs-first": {
+   "files": 3,
+   "tier": "text:half",
+   "weakerTest": false,
+   "ocrCalls": 1,
+   "via": "text",
+   "missing": null,
+   "warnings": [
+    "only the front half of the rent schedule was read — Parts F and G (ownership entity, principals, signatory) did not come through",
+    "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+    "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “333 Holly fka Holly Creek 11”, and the management address. A letterhead can be uploaded on the property page.",
+    "package dialog: 333 Holly fka Holly Creek 11 · 1 of 6 ready · 5 not ready"
+   ],
+   "errors": [],
+   "docsExtracted": [
+    "analysisXlsx"
+   ]
+  },
+  "rcs-first": {
+   "files": 3,
+   "tier": "text:half",
+   "weakerTest": false,
+   "ocrCalls": 1,
+   "via": "text",
+   "missing": null,
+   "warnings": [
+    "only the front half of the rent schedule was read — Parts F and G (ownership entity, principals, signatory) did not come through",
+    "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+    "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “333 Holly fka Holly Creek 11”, and the management address. A letterhead can be uploaded on the property page.",
+    "package dialog: 333 Holly fka Holly Creek 11 · 1 of 6 ready · 5 not ready"
+   ],
+   "errors": [],
+   "docsExtracted": [
+    "analysisXlsx"
+   ]
+  }
+ },
+ "rows": [
+  {
+   "doc": "analysisXlsx",
+   "key": "property.name",
+   "ours": "333HollyfkaHollyCreek11",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "333 Holly"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "appr.firm",
+   "ours": "CORNERSTONEVALUATIONSERVICES",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "333 Holly"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.type",
+   "ours": "1BR/1BA",
+   "theirs": "1BR",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "333 Holly"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.units",
+   "ours": "51",
+   "theirs": "51",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "333 Holly"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.current",
+   "ours": "1403",
+   "theirs": "1403",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "333 Holly"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.proposed",
+   "ours": "1710",
+   "theirs": "1710",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "333 Holly"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.ua",
+   "ours": "62",
+   "theirs": "62",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "333 Holly"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.safmr",
+   "ours": "1710",
+   "theirs": "1710",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "333 Holly"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.type",
+   "ours": "2BR/1BA",
+   "theirs": "2BR",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "333 Holly"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.units",
+   "ours": "41",
+   "theirs": "41",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "333 Holly"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.current",
+   "ours": "1590",
+   "theirs": "1590",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "333 Holly"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.proposed",
+   "ours": "1870",
+   "theirs": "1870",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "333 Holly"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.ua",
+   "ours": "78",
+   "theirs": "78",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "333 Holly"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.safmr",
+   "ours": "2040",
+   "theirs": "2040",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "333 Holly"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.type",
+   "ours": "2BR/2BA",
+   "theirs": "2BRLG",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "333 Holly"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.units",
+   "ours": "35",
+   "theirs": "35",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "333 Holly"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.current",
+   "ours": "1732",
+   "theirs": "1732",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "333 Holly"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.proposed",
+   "ours": "1975",
+   "theirs": "1975",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "333 Holly"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.ua",
+   "ours": "91",
+   "theirs": "91",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "333 Holly"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.safmr",
+   "ours": "2040",
+   "theirs": "2040",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "333 Holly"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.type",
+   "ours": "3BR/2BA",
+   "theirs": "3BR",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "333 Holly"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.units",
+   "ours": "12",
+   "theirs": "12",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "333 Holly"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.current",
+   "ours": "1992",
+   "theirs": "1992",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "333 Holly"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.proposed",
+   "ours": "2315",
+   "theirs": "2315",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "333 Holly"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.ua",
+   "ours": "103",
+   "theirs": "103",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "333 Holly"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.safmr",
+   "ours": "2720",
+   "theirs": "2720",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "333 Holly"
+  }
+ ],
+ "fillOrder": [],
+ "drift": [],
+ "notes": [
+  "filed: filed side read from the combined package: RCS Submission Pkg Signed 2025 Mar 19 - Holly.pdf",
+  "filed: analysisXlsx read from 333 Holly - RCS Rent Potential Analysis.xlsx"
+ ],
+ "verdict": "6 differences",
+ "fuzz": {
+  "seed": 2286709339,
+  "counts": {
+   "edits": 7,
+   "escapes": 5,
+   "enters": 4,
+   "saves": 4,
+   "revertAlls": 2,
+   "drops": 3,
+   "clicks": 8,
+   "boundaries": 0,
+   "colourScans": 8,
+   "episodes": 8
+  },
+  "violations": [],
+  "actions": [
+   "— episode 1/8 [escape] 138 controls on screen",
+   "click #viewForm [data-cb][33]",
+   "click #viewForm [data-cb][6]",
+   "escape (3 left)",
+   "escape (1 left)",
+   "— episode 2/8 [save] 138 controls on screen",
+   "type \"2050\" into #viewForm input[data-k][28]",
+   "type \"1\" into #viewForm input[data-k][11]",
+   "click #viewForm [data-wibox][1]",
+   "type \"2,050\" into #viewForm input[data-k][52]",
+   "open dropdown 1",
+   "pick menu row 0 of 9",
+   "click Update property profile",
+   "— episode 3/8 [escape] 142 controls on screen",
+   "click #viewForm [data-fuel][0]",
+   "open dropdown 2",
+   "pick menu row 0 of 1",
+   "type \"2,050\" into #viewForm input[data-k][16]",
+   "escape (3 left)",
+   "escape (1 left)",
+   "— episode 4/8 [revertAll] 142 controls on screen",
+   "open dropdown 14",
+   "pick menu row 5 of 6",
+   "type \"1.5\" into #viewForm input[data-k][33]",
+   "click #viewForm [data-cb][34]",
+   "type \"0\" into #viewForm input[data-k][35]",
+   "type \"  \" into #viewForm input[data-k][43]",
+   "click Revert to saved",
+   "escape (5 left)",
+   "— episode 5/8 [save] 0 controls on screen",
+   "enter (commit)",
+   "click Update property profile",
+   "— episode 6/8 [save] 0 controls on screen",
+   "enter (commit)",
+   "enter (commit)",
+   "click Update property profile",
+   "— episode 7/8 [revertAll] 0 controls on screen",
+   "click Revert to saved",
+   "— episode 8/8 [save] 0 controls on screen",
+   "enter (commit)",
+   "click Update property profile"
+  ]
+ },
+ "inputs": {
+  "study": "2025 - RCS/Archive/RCS - 333 Holly, The Woodlands, TX.pdf",
+  "priorRs": "2024/Archive/Rent Schedule Eff 2024 Jul 1 Signed 2024 Feb 16 - Holly.pdf",
+  "priorRsRule": "year-1 folder"
+ },
+ "notGenerated": [
+  "notes",
+  "sections",
+  "rcsStudy",
+  "rentSchedule"
+ ],
+ "notGeneratedWhy": null,
+ "counts": {
+  "compared": 26,
+  "matched": 20,
+  "differing": 6,
+  "fillOrder": 0,
+  "drift": 0,
+  "notGenerated": 4
+ }
+}

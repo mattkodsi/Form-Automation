@@ -1,0 +1,1947 @@
+{
+ "property": "Burt Farms I",
+ "code": "75109",
+ "folder": "75109 - Burt Farms I - Section 8",
+ "year": 2024,
+ "cycleLabel": "2024 - Renewal & RCS",
+ "sha": "ccc4568",
+ "orders": {
+  "rs-first": {
+   "files": 5,
+   "tier": "text",
+   "weakerTest": false,
+   "ocrCalls": 2,
+   "via": "text",
+   "missing": null,
+   "warnings": [
+    "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+    "storm [save-left-dirt] after \"Update property profile\" settled, 3 key(s) still differ from the snapshot: appr.email, partb.writein.s1, partb.writein.s1.on  (seed 1346832637)",
+    "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “Burt Farms I”, and the management address. A letterhead can be uploaded on the property page.",
+    "package dialog: Burt Farms I · 3 of 6 ready · 3 not ready"
+   ],
+   "errors": [],
+   "docsExtracted": [
+    "checklist",
+    "rentSchedule",
+    "analysisXlsx"
+   ]
+  },
+  "rcs-first": {
+   "files": 5,
+   "tier": "text",
+   "weakerTest": false,
+   "ocrCalls": 2,
+   "via": "text",
+   "missing": null,
+   "warnings": [
+    "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+    "storm [save-left-dirt] after \"Update property profile\" settled, 3 key(s) still differ from the snapshot: appr.email, partb.writein.s1, partb.writein.s1.on  (seed 1346832637)",
+    "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “Burt Farms I”, and the management address. A letterhead can be uploaded on the property page.",
+    "package dialog: Burt Farms I · 3 of 6 ready · 3 not ready"
+   ],
+   "errors": [],
+   "docsExtracted": [
+    "checklist",
+    "rentSchedule",
+    "analysisXlsx"
+   ]
+  }
+ },
+ "rows": [
+  {
+   "doc": "checklist",
+   "key": "heading",
+   "ours": "Owner’s  Checklist for  RCS  Submission",
+   "theirs": "Owner's Checklist for RCS Submission",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "checklist",
+   "key": "property.name",
+   "ours": "BurtFarmsI",
+   "theirs": "BurtFarmsI",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.0",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.1",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.2",
+   "ours": "0",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.3",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.4",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.5",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.6",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.7",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.8",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.9",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.10",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.11",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.12",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.13",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.14",
+   "ours": "0",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.15",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.16",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "checklist",
+   "key": "checklist.signature",
+   "ours": "DavidPearson,VPofGP",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "property.name",
+   "ours": "BurtFarmsI",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "rent_schedule.date_eff",
+   "ours": "06/26/2024",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "rent_schedule.eff_month",
+   "ours": "06",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "rent_schedule.eff_day",
+   "ours": "26",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "rent_schedule.eff_year",
+   "ours": "2024",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "total.contract_rent",
+   "ours": "91250",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "total.annual",
+   "ours": "1095000",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "nonrev.total_rent",
+   "ours": "0",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "owner.entity_name",
+   "ours": "WarwickSeniorHousingAssociates,L.P.",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "sig.name_title",
+   "ours": "DavidPearson,VicePresidentofGeneralPartner",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "total.units",
+   "ours": "51",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.type",
+   "ours": "1BR/1BA",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.units",
+   "ours": "50",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.rent",
+   "ours": "1825",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.extension",
+   "ours": "91250",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.ua",
+   "ours": "54",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.gross",
+   "ours": "1879",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.row",
+   "ours": "0",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.type",
+   "ours": "2BR",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.units",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.rent",
+   "ours": "0",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.extension",
+   "ours": "0",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.ua",
+   "ours": "0",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.gross",
+   "ours": "0",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.row",
+   "ours": "2",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "owner.entity_type",
+   "ours": "LimitedPartnership",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.equipment.0",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.equipment.1",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.equipment.5",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.utilities.0",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.utilities.2",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.fuel.0",
+   "ours": "G",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.fuel.1",
+   "ours": "E",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.fuel.2",
+   "ours": "G",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.fuel.3",
+   "ours": "E",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.fuel.4",
+   "ours": "E",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.services.0",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.services.1",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.writein.e1.on",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.writein.e1",
+   "ours": "Blinds",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.writein.s1.on",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.writein.s1",
+   "ours": "Comm.Room",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "nonrev.0.use",
+   "ours": "Super'sUnit",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "nonrev.0.type",
+   "ours": "2BR",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "nonrev.0.rent",
+   "ours": "0",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "principals.0.name",
+   "ours": "StephenM.Ross(MGP)",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "property.name",
+   "ours": "BurtFarmsI",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "appr.firm",
+   "ours": "Renzi&Associates",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.type",
+   "ours": "1BR/1BA",
+   "theirs": "1BR",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.units",
+   "ours": "50",
+   "theirs": "50",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.current",
+   "ours": "1439",
+   "theirs": "1439",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.proposed",
+   "ours": "1825",
+   "theirs": "1825",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.ua",
+   "ours": "54",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.safmr",
+   "ours": "1260",
+   "theirs": "1260",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Burt Farms I"
+  }
+ ],
+ "fillOrder": [],
+ "drift": [
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "davidpearson",
+   "normalized": "davidpearson",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "usdepartmentofhousingombapprovalno",
+   "normalized": "usdepartmentofhousingombapprovalno",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "rentschedule",
+   "normalized": "rentschedule",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "andurbandevelopment",
+   "normalized": "andurbandevelopment",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "lowrenthousingofficeofhousing",
+   "normalized": "lowrenthousingofficeofhousing",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "federalhousingcommissioner",
+   "normalized": "federalhousingcommissioner",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "seepageforinstructionspublicburdenstatementandprivacyactrequirements",
+   "normalized": "seepageforinstructionspublicburdenstatementandprivacyactrequirements",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "projectnamefhaprojectnumberdaterentswillbeeffectivemmddyyyy",
+   "normalized": "projectnamefhaprojectnumberdaterentswillbeeffectivemmddyyyy",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partaapartmentrents",
+   "normalized": "partaapartmentrents",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "showtheactualrentsyouintendtochargeevenifthetotaloftheserentsislessthanthemaximumallowablemonthlyrentpotential",
+   "normalized": "showtheactualrentsyouintendtochargeevenifthetotaloftheserentsislessthanthemaximumallowablemonthlyrentpotential",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "colcolmarketrents",
+   "normalized": "colcolmarketrents",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "contractrents",
+   "normalized": "contractrents",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "unittypeutilitysecprojectsonly",
+   "normalized": "unittypeutilitysecprojectsonly",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "colallowancescolcol",
+   "normalized": "colallowancescolcol",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "includenonrevenuecolmonthlygrossrentcolmonthly",
+   "normalized": "includenonrevenuecolmonthlygrossrentcolmonthly",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "producingunitsnumbercolcontractrenteffectivedatecolcolrentmarketrent",
+   "normalized": "producingunitsnumbercolcontractrenteffectivedatecolcolrentmarketrent",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "ofunitsrentperunitpotentialmmddyyyyperunitpotential",
+   "normalized": "ofunitsrentperunitpotentialmmddyyyyperunitpotential",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "colxcolcolxcol",
+   "normalized": "colxcolcolxcol",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "monthlycontractrentpotentialmonthlymarketrentpotential",
+   "normalized": "monthlycontractrentpotentialmonthlymarketrentpotential",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "addcoladdcol",
+   "normalized": "addcoladdcol",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "yearlycontractrentpotentialyearlymarketrentpotential",
+   "normalized": "yearlycontractrentpotentialyearlymarketrentpotential",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "colsumxcolsumx",
+   "normalized": "colsumxcolsumx",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "theseamountsmaynotexceedthemaximumallowablemonthlyrentpotentialapprovedonthelastrentcomputationworksheetorrequestedonthe",
+   "normalized": "theseamountsmaynotexceedthemaximumallowablemonthlyrentpotentialapprovedonthelastrentcomputationworksheetorrequestedonthe",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "worksheetyouarenowsubmittingmarketrentpotentialappliesonlytosectionprojects",
+   "normalized": "worksheetyouarenowsubmittingmarketrentpotentialappliesonlytosectionprojects",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partbitemsincludedinrentpartdnonrevenueproducingspace",
+   "normalized": "partbitemsincludedinrentpartdnonrevenueproducingspace",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "equipmentfurnishingsinunitcheckthoseincludedinrent",
+   "normalized": "equipmentfurnishingsinunitcheckthoseincludedinrent",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "rangedishwasher",
+   "normalized": "rangedishwasher",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "useunittypecontractrent",
+   "normalized": "useunittypecontractrent",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "refrigeratorcarpet",
+   "normalized": "refrigeratorcarpet",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "airconditionerdrapes",
+   "normalized": "airconditionerdrapes",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "utilitiescheckthoseincludedinrentforeachitemeventhosenot",
+   "normalized": "utilitiescheckthoseincludedinrentforeachitemeventhosenot",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "includedinrententereforgonlinebesidethatitem",
+   "normalized": "includedinrententereforgonlinebesidethatitem",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "eelectricggasffueloilorcoal",
+   "normalized": "eelectricggasffueloilorcoal",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "totalrentlossduetononrevenueunits",
+   "normalized": "totalrentlossduetononrevenueunits",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "heatinghotwaterlightsetc",
+   "normalized": "heatinghotwaterlightsetc",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partecommercialspaceretailofficesgaragesetc",
+   "normalized": "partecommercialspaceretailofficesgaragesetc",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "coolingcooking",
+   "normalized": "coolingcooking",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "colcolrentalrate",
+   "normalized": "colcolrentalrate",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "servicesfacilitiescheckthoseincludedinrent",
+   "normalized": "servicesfacilitiescheckthoseincludedinrent",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "colmonthlyrentsquarepersqft",
+   "normalized": "colmonthlyrentsquarepersqft",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "usepotentialfootagecoldividedby",
+   "normalized": "usepotentialfootagecoldividedby",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "parkingnursingcare",
+   "normalized": "parkingnursingcare",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "laundrylinenmaidservice",
+   "normalized": "laundrylinenmaidservice",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "swimmingpool",
+   "normalized": "swimmingpool",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "tenniscourts",
+   "normalized": "tenniscourts",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partcchargesinadditiontorentegparkingcabletvmeals",
+   "normalized": "partcchargesinadditiontorentegparkingcabletvmeals",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "purposemonthlycharge",
+   "normalized": "purposemonthlycharge",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "totalcommercialrent",
+   "normalized": "totalcommercialrent",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partfmaximumallowablerentpotential",
+   "normalized": "partfmaximumallowablerentpotential",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "entermaximumallowablemonthlyrent",
+   "normalized": "entermaximumallowablemonthlyrent",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "potentialfromrentcomputation",
+   "normalized": "potentialfromrentcomputation",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "worksheettobecompletedbyhudorlender",
+   "normalized": "worksheettobecompletedbyhudorlender",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "previouseditionsareobsolete",
+   "normalized": "previouseditionsareobsolete",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "previouseditionsareobsolete",
+   "normalized": "previouseditionsareobsolete",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "previouseditionsareobsolete",
+   "normalized": "previouseditionsareobsolete",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partginformationonmortgagorentity",
+   "normalized": "partginformationonmortgagorentity",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "nameofentity",
+   "normalized": "nameofentity",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "typeofentity",
+   "normalized": "typeofentity",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "individualgeneralpartnershipjointtenancytenantsincommonotherspecify",
+   "normalized": "individualgeneralpartnershipjointtenancytenantsincommonotherspecify",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "corporationtrust",
+   "normalized": "corporationtrust",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "listallprincipalscomprisingmortgagorentity",
+   "normalized": "listallprincipalscomprisingmortgagorentity",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "nameandtitle",
+   "normalized": "nameandtitle",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "nameandtitle",
+   "normalized": "nameandtitle",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "nameandtitle",
+   "normalized": "nameandtitle",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "nameandtitle",
+   "normalized": "nameandtitle",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "nameandtitle",
+   "normalized": "nameandtitle",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "nameandtitle",
+   "normalized": "nameandtitle",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "nameandtitle",
+   "normalized": "nameandtitle",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "nameandtitle",
+   "normalized": "nameandtitle",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "nameandtitle",
+   "normalized": "nameandtitle",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "nameandtitle",
+   "normalized": "nameandtitle",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "nameandtitle",
+   "normalized": "nameandtitle",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "parthownercertification",
+   "normalized": "parthownercertification",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "nameandtitleauthorizedofficialssignature",
+   "normalized": "nameandtitleauthorizedofficialssignature",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "datemmddyyyy",
+   "normalized": "datemmddyyyy",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partihudlenderapproval",
+   "normalized": "partihudlenderapproval",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "addendumnumberbranchchieflenderofficialsignature",
+   "normalized": "addendumnumberbranchchieflenderofficialsignature",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "hapcontractnumberdatemmddyyyy",
+   "normalized": "hapcontractnumberdatemmddyyyy",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "exhibitnumberdirectorhousingmanagementdivisionsignature",
+   "normalized": "exhibitnumberdirectorhousingmanagementdivisionsignature",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "loanservicersignaturedatemmddyyyydatemmddyyyy",
+   "normalized": "loanservicersignaturedatemmddyyyydatemmddyyyy",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "osecutionsitwillnotbe",
+   "normalized": "osecutionsitwillnotbe",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "instructions",
+   "normalized": "instructions",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "allprojectownersmustsubmittheformhudwhenrequestcolumnforunsubsidizedprojectsshowtherentyouintendto",
+   "normalized": "allprojectownersmustsubmittheformhudwhenrequestcolumnforunsubsidizedprojectsshowtherentyouintendto",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "inganadjustmenttoprojectrentshudestablishesandapproveschargeforeachunittypeforsubsidizedprojectsshowthecontract",
+   "normalized": "inganadjustmenttoprojectrentshudestablishesandapproveschargeforeachunittypeforsubsidizedprojectsshowthecontract",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "rentalchargesandutilityallowancesontheformtheownerisrentasdefinedinhudhandbookforeachunittype",
+   "normalized": "rentalchargesandutilityallowancesontheformtheownerisrentasdefinedinhudhandbookforeachunittype",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "responsiblefornotifyingtenantsoftheapprovedrents",
+   "normalized": "responsiblefornotifyingtenantsoftheapprovedrents",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "columnforeachlinemultiplythecontractrentincolumnbythe",
+   "normalized": "columnforeachlinemultiplythecontractrentincolumnbythe",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "generalforprojectswithfullyinsuredorhudheldmortgagesthenumberofunitsincolumnaddmonthlycontractrentpotentialsfor",
+   "normalized": "generalforprojectswithfullyinsuredorhudheldmortgagesthenumberofunitsincolumnaddmonthlycontractrentpotentialsfor",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "owneragentsubmitsthisformtothehudfieldofficeforprojectseachunitsizetocomputethetotalmonthlycontractrentpotential",
+   "normalized": "owneragentsubmitsthisformtothehudfieldofficeforprojectseachunitsizetocomputethetotalmonthlycontractrentpotential",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "withcoinsuredmortgagestheowneragentsubmitsthisformtothemultiplythemonthlytotalbytocomputetheannualcontractrent",
+   "normalized": "withcoinsuredmortgagestheowneragentsubmitsthisformtothemultiplythemonthlytotalbytocomputetheannualcontractrent",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "lenderpotential",
+   "normalized": "lenderpotential",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partaifthemonthlyrentpotentialyouareproposingislessthanorcolumnsandcompletethecolumnsonlyiftheprojecthasa",
+   "normalized": "partaifthemonthlyrentpotentialyouareproposingislessthanorcolumnsandcompletethecolumnsonlyiftheprojecthasa",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "equaltothemaximumallowablemonthlyrentpotentialapprovedbysubsidycontractwithhudandsomeutilitiesarenotincludedinthe",
+   "normalized": "equaltothemaximumallowablemonthlyrentpotentialapprovedbysubsidycontractwithhudandsomeutilitiesarenotincludedinthe",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "hudlenderonyouroriginalrentformulaoronyourmostrecentrentincolumnshowtheutilityallowanceforeachunittype",
+   "normalized": "hudlenderonyouroriginalrentformulaoronyourmostrecentrentincolumnshowtheutilityallowanceforeachunittype",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "rentcomputationworksheetcompleteallofpartaaccordingtothecomputethegrossrentforeachunittypebyaddingthecontractrent",
+   "normalized": "rentcomputationworksheetcompleteallofpartaaccordingtothecomputethegrossrentforeachunittypebyaddingthecontractrent",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "instructionsbelowifthemonthlyrentpotentialyouarerequestingincolumnandtheutilityallowanceincolumnshowthisamount",
+   "normalized": "instructionsbelowifthemonthlyrentpotentialyouarerequestingincolumnandtheutilityallowanceincolumnshowthisamount",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "exceedsthemaximumallowablemonthlyrentpotentialapprovedincolumn",
+   "normalized": "exceedsthemaximumallowablemonthlyrentpotentialapprovedincolumn",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "byhudlenderonyouroriginalrentformulaoronyourmostrecent",
+   "normalized": "byhudlenderonyouroriginalrentformulaoronyourmostrecent",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "columnsandcompletethesecolumnsonlyiftheprojectis",
+   "normalized": "columnsandcompletethesecolumnsonlyiftheprojectis",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "rentcomputationworksheetcompleteonlycolumnsand",
+   "normalized": "rentcomputationworksheetcompleteonlycolumnsand",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "receivingsectioninterestreductionpaymentsincolumn",
+   "normalized": "receivingsectioninterestreductionpaymentsincolumn",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "accordingtotheinstructionsbelowshowyourproposedrentsand",
+   "normalized": "accordingtotheinstructionsbelowshowyourproposedrentsand",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "showthemarketrentforeachunittypeincolumnforeachline",
+   "normalized": "showthemarketrentforeachunittypeincolumnforeachline",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "monthlyrentpotentialinthecoverlettertransmittingyourrent",
+   "normalized": "monthlyrentpotentialinthecoverlettertransmittingyourrent",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "multiplythemarketrentincolumnbythenumberofunitsincolumn",
+   "normalized": "multiplythemarketrentincolumnbythenumberofunitsincolumn",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "increaserequest",
+   "normalized": "increaserequest",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "addthemonthlymarketrentpotentialsforeachunitsizeto",
+   "normalized": "addthemonthlymarketrentpotentialsforeachunitsizeto",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "columnshoweachtypeofunitforwhichrentswillvaryshowthecomputethetotalmonthlymarketrentpotentialmultiplythemonthly",
+   "normalized": "columnshoweachtypeofunitforwhichrentswillvaryshowthecomputethetotalmonthlymarketrentpotentialmultiplythemonthly",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "numberofbedroomsandbathroomsandotherfeaturesthatcausetotalbytocomputetheannualmarketrentpotential",
+   "normalized": "numberofbedroomsandbathroomsandotherfeaturesthatcausetotalbytocomputetheannualmarketrentpotential",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "rentstovaryegbdmbdakettevsbdmbdrk",
+   "normalized": "rentstovaryegbdmbdakettevsbdmbdrk",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partsbcdandecompletethesepartsaccordingtothe",
+   "normalized": "partsbcdandecompletethesepartsaccordingtothe",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "usethefollowingsymbols",
+   "normalized": "usethefollowingsymbols",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "instructionsontherentschedule",
+   "normalized": "instructionsontherentschedule",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "bdmbedroomlrlivingroom",
+   "normalized": "bdmbedroomlrlivingroom",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partfdonotcompletethispartthehudfieldofficelenderwill",
+   "normalized": "partfdonotcompletethispartthehudfieldofficelenderwill",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "bbathdrdiningroom",
+   "normalized": "bbathdrdiningroom",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "completethispart",
+   "normalized": "completethispart",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "completethispart",
+   "normalized": "completethispart",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "kkitchendadiningalcove",
+   "normalized": "kkitchendadiningalcove",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "kettekitchenette",
+   "normalized": "kettekitchenette",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partsgandhcompletethesepartsaccordingtotheinstructions",
+   "normalized": "partsgandhcompletethesepartsaccordingtotheinstructions",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "ontherentschedule",
+   "normalized": "ontherentschedule",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "columnshowthenumberofunitsforeachunittypeincludenon",
+   "normalized": "columnshowthenumberofunitsforeachunittypeincludenon",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "revenueproducingunits",
+   "normalized": "revenueproducingunits",
+   "severity": "low",
+   "property": "Burt Farms I"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partidonotcompletethispartthehudfieldofficelenderwill",
+   "normalized": "partidonotcompletethispartthehudfieldofficelenderwill",
+   "severity": "low",
+   "property": "Burt Farms I"
+  }
+ ],
+ "notes": [
+  "filed: filed side read from the combined package: Burt Farms I Option 1-A Renewal Submission 3.19.2024.pdf",
+  "filed: coverLetter read from Burt Farms I Option 1-A Renewal Submission COVER LETTER 3.19.2024.pdf",
+  "filed: tenantNotice unreadable: extractFacts: these bytes are a zip, not a PDF — did you mean docType ",
+  "filed: rentSchedule read from Burt Farms I Rent Schedule eff. 6.26.2024.pdf",
+  "filed: analysisXlsx read from Burt Farms I - RCS Grid Analysis JLL & Renzi 1.27.24.xlsx"
+ ],
+ "verdict": "68 differences",
+ "fuzz": {
+  "seed": 1346832637,
+  "counts": {
+   "edits": 5,
+   "escapes": 9,
+   "enters": 4,
+   "saves": 2,
+   "revertAlls": 2,
+   "drops": 1,
+   "clicks": 9,
+   "boundaries": 0,
+   "colourScans": 8,
+   "episodes": 8
+  },
+  "violations": [
+   {
+    "kind": "save-left-dirt",
+    "msg": "after \"Update property profile\" settled, 3 key(s) still differ from the snapshot: appr.email, partb.writein.s1, partb.writein.s1.on",
+    "seed": 1346832637,
+    "evidence": {
+     "appr.email": {
+      "form": {
+       "value": "aaron@renziappraisal.com",
+       "source": "this-cycle",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": true
+     },
+     "partb.writein.s1": {
+      "form": {
+       "value": "1.5",
+       "source": "new",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": true
+     },
+     "partb.writein.s1.on": {
+      "form": {
+       "value": "1",
+       "source": "new",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": false
+     }
+    },
+    "after": [
+     "type \"1\" into #viewForm input[data-k][21]",
+     "click #viewForm [data-cb][2]",
+     "type \"1234\" into #viewForm input[data-k][26]",
+     "click Revert to saved",
+     "escape (3 left)",
+     "escape (2 left)",
+     "— episode 3/8 [escape] 111 controls on screen",
+     "click #viewForm [data-cb][9]",
+     "escape (2 left)",
+     "— episode 4/8 [save] 111 controls on screen",
+     "click #viewForm [data-wibox][4]",
+     "enter (commit)",
+     "type \"1.5\" into #viewForm input[data-k][41]",
+     "click Update property profile"
+    ]
+   }
+  ],
+  "actions": [
+   "— episode 1/8 [escape] 118 controls on screen",
+   "click #viewForm [data-cb][31]",
+   "open dropdown 6",
+   "pick menu row 5 of 8",
+   "escape (3 left)",
+   "escape (1 left)",
+   "— episode 2/8 [revertAll] 118 controls on screen",
+   "type \"1\" into #viewForm input[data-k][21]",
+   "click #viewForm [data-cb][2]",
+   "type \"1234\" into #viewForm input[data-k][26]",
+   "click Revert to saved",
+   "escape (3 left)",
+   "escape (2 left)",
+   "— episode 3/8 [escape] 111 controls on screen",
+   "click #viewForm [data-cb][9]",
+   "escape (2 left)",
+   "— episode 4/8 [save] 111 controls on screen",
+   "click #viewForm [data-wibox][4]",
+   "enter (commit)",
+   "type \"1.5\" into #viewForm input[data-k][41]",
+   "click Update property profile",
+   "escape (1 left)",
+   "— episode 5/8 [escape] 111 controls on screen",
+   "click #viewForm [data-wibox][0]",
+   "click #viewForm [data-cb][22]",
+   "type \"7\" into #viewForm input[data-k][26]",
+   "escape (3 left)",
+   "escape (1 left)",
+   "— episode 6/8 [revertAll] 111 controls on screen",
+   "type \"999999\" into #viewForm input[data-k][39]",
+   "click #viewForm [data-cb][18]",
+   "click #viewForm [data-wibox][6]",
+   "click Revert to saved",
+   "escape (2 left)",
+   "— episode 7/8 [save] 0 controls on screen",
+   "enter (commit)",
+   "enter (commit)",
+   "enter (commit)",
+   "click Update property profile",
+   "— episode 8/8 [escape] 0 controls on screen"
+  ]
+ },
+ "inputs": {
+  "study": "2024 - Renewal & RCS/Archive/Submission/Exhibit 4 - RCS (Renzi) Burt Farms I 3.22.24.pdf",
+  "priorRs": "2023/Burt Farms I Rent Schedule eff 6.26.23.pdf",
+  "priorRsRule": "year-1 folder"
+ },
+ "notGenerated": [
+  "notes",
+  "sections",
+  "rcsStudy",
+  "coverLetter"
+ ],
+ "notGeneratedWhy": null,
+ "counts": {
+  "compared": 74,
+  "matched": 6,
+  "differing": 68,
+  "fillOrder": 0,
+  "drift": 125,
+  "notGenerated": 4
+ }
+}

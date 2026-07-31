@@ -1,0 +1,647 @@
+{
+ "property": "New Horizons",
+ "code": "75474",
+ "folder": "75474 - New Horizons - Section 8",
+ "year": 2024,
+ "cycleLabel": "2024 - RCS",
+ "sha": "ccc4568",
+ "orders": {
+  "rs-first": {
+   "files": 3,
+   "tier": "ocr",
+   "weakerTest": false,
+   "ocrCalls": 2,
+   "via": "ocr",
+   "missing": null,
+   "warnings": [
+    "after the reload the property shows 3 packages, expected 1",
+    "the study was recalled without its bytes and could not be re-attached — document 04 will be missing or the folder download will fail",
+    "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “New Horizons”, and the management address. A letterhead can be uploaded on the property page.",
+    "package dialog: New Horizons · 1 of 6 ready · 5 not ready"
+   ],
+   "errors": [
+    "after the reload the app is on a DIFFERENT property/package than order A used — the second order would be measuring another record",
+    "after the reload the rent-schedule upload is GONE (tile says \"92458-47413signed.pdf\") — order B has nothing to fill from, and re-uploading would pay for the read twice",
+    "after the reload the study upload is GONE (tile says \"474 New Horizons RCS March 2014 _MVS_.pdf\") — order B has nothing to fill from"
+   ],
+   "docsExtracted": [
+    "analysisXlsx"
+   ]
+  },
+  "rcs-first": {
+   "files": 0,
+   "tier": "ocr",
+   "weakerTest": false,
+   "ocrCalls": 2,
+   "via": "ocr",
+   "missing": null,
+   "warnings": [
+    "after the reload the property shows 3 packages, expected 1",
+    "the study was recalled without its bytes and could not be re-attached — document 04 will be missing or the folder download will fail"
+   ],
+   "errors": [
+    "after the reload the app is on a DIFFERENT property/package than order A used — the second order would be measuring another record",
+    "after the reload the rent-schedule upload is GONE (tile says \"92458-47413signed.pdf\") — order B has nothing to fill from, and re-uploading would pay for the read twice",
+    "after the reload the study upload is GONE (tile says \"474 New Horizons RCS March 2014 _MVS_.pdf\") — order B has nothing to fill from",
+    "not run: an upload was lost across the reload, so this order could only have been produced by paying for a second read"
+   ],
+   "docsExtracted": []
+  }
+ },
+ "rows": [
+  {
+   "doc": "analysisXlsx",
+   "key": "property.name",
+   "ours": "NewHorizons",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "New Horizons"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "appr.firm",
+   "ours": "Appraiser",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "New Horizons"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.type",
+   "ours": "1BR/1BA",
+   "theirs": "1BR",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "New Horizons"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.units",
+   "ours": "6",
+   "theirs": "6",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "New Horizons"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.current",
+   "ours": "3053",
+   "theirs": "3053",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "New Horizons"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.proposed",
+   "ours": "3150",
+   "theirs": "3500",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "New Horizons"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.ua",
+   "ours": "132",
+   "theirs": "149",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "New Horizons"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.type",
+   "ours": "2BR/1BA",
+   "theirs": "2BR",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "New Horizons"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.units",
+   "ours": "19",
+   "theirs": "19",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "New Horizons"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.current",
+   "ours": "3875",
+   "theirs": "3875",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "New Horizons"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.proposed",
+   "ours": "4000",
+   "theirs": "4300",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "New Horizons"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.ua",
+   "ours": "138",
+   "theirs": "156",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "New Horizons"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.type",
+   "ours": "3BR/1BA",
+   "theirs": "3BR",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "New Horizons"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.units",
+   "ours": "16",
+   "theirs": "16",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "New Horizons"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.current",
+   "ours": "4228",
+   "theirs": "4228",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "New Horizons"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.proposed",
+   "ours": "4350",
+   "theirs": "5000",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "New Horizons"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.ua",
+   "ours": "151",
+   "theirs": "171",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "New Horizons"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.type",
+   "ours": "4BR/1BA",
+   "theirs": "4BR",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "New Horizons"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.units",
+   "ours": "6",
+   "theirs": "6",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "New Horizons"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.current",
+   "ours": "5285",
+   "theirs": "5285",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "New Horizons"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.proposed",
+   "ours": "5450",
+   "theirs": "6000",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "New Horizons"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.ua",
+   "ours": "140",
+   "theirs": "158",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "New Horizons"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.safmr",
+   "ours": null,
+   "theirs": "2320",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "New Horizons"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.safmr",
+   "ours": null,
+   "theirs": "2610",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "New Horizons"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.safmr",
+   "ours": null,
+   "theirs": "3260",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "New Horizons"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.safmr",
+   "ours": null,
+   "theirs": "3510",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "New Horizons"
+  }
+ ],
+ "fillOrder": [
+  {
+   "doc": "analysisXlsx",
+   "key": "property.name",
+   "ours": "NewHorizons",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "New Horizons",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "appr.firm",
+   "ours": "Appraiser",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "New Horizons",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.type",
+   "ours": "1BR/1BA",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "New Horizons",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.units",
+   "ours": "6",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "New Horizons",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.current",
+   "ours": "3053",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "New Horizons",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.proposed",
+   "ours": "3150",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "New Horizons",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.ua",
+   "ours": "132",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "New Horizons",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.type",
+   "ours": "2BR/1BA",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "New Horizons",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.units",
+   "ours": "19",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "New Horizons",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.current",
+   "ours": "3875",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "New Horizons",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.proposed",
+   "ours": "4000",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "New Horizons",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.ua",
+   "ours": "138",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "New Horizons",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.type",
+   "ours": "3BR/1BA",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "New Horizons",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.units",
+   "ours": "16",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "New Horizons",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.current",
+   "ours": "4228",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "New Horizons",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.proposed",
+   "ours": "4350",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "New Horizons",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.ua",
+   "ours": "151",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "New Horizons",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.type",
+   "ours": "4BR/1BA",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "New Horizons",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.units",
+   "ours": "6",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "New Horizons",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.current",
+   "ours": "5285",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "New Horizons",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.proposed",
+   "ours": "5450",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "New Horizons",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.ua",
+   "ours": "140",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "New Horizons",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  }
+ ],
+ "drift": [],
+ "notes": [
+  "filed: filed side read from the combined package: New Horizons 5th Year RCS Submission 3.27.24 (unexecuted).pdf",
+  "filed: tenantNotice read from New Horizons RCS Tenant Notice 3.27.24.pdf",
+  "filed: rentSchedule read from New Horizons_Rent Schedule (Owner Executed).pdf",
+  "filed: analysisXlsx read from New Horizons RCS Grid Analysis - Renzi & JLL (REVISED).xlsx"
+ ],
+ "verdict": "18 differences",
+ "fuzz": {
+  "seed": 109659977,
+  "counts": {
+   "edits": 4,
+   "escapes": 1,
+   "enters": 0,
+   "saves": 1,
+   "revertAlls": 5,
+   "drops": 0,
+   "clicks": 0,
+   "boundaries": 0,
+   "colourScans": 8,
+   "episodes": 8
+  },
+  "violations": [],
+  "actions": [
+   "— episode 1/8 [revertAll] 111 controls on screen",
+   "type \"  \" into #viewForm input[data-k][15]",
+   "type \"-5\" into #viewForm input[data-k][6]",
+   "type \"1.5\" into #viewForm input[data-k][32]",
+   "type \"1850\" into #viewForm input[data-k][39]",
+   "click Revert to saved",
+   "escape (4 left)",
+   "— episode 2/8 [revertAll] 0 controls on screen",
+   "click Revert to saved",
+   "— episode 3/8 [save] 0 controls on screen",
+   "click Update property profile",
+   "— episode 4/8 [revertAll] 0 controls on screen",
+   "click Revert to saved",
+   "— episode 5/8 [escape] 0 controls on screen",
+   "— episode 6/8 [revertAll] 0 controls on screen",
+   "click Revert to saved",
+   "— episode 7/8 [revertAll] 0 controls on screen",
+   "click Revert to saved",
+   "— episode 8/8 [escape] 0 controls on screen"
+  ]
+ },
+ "inputs": {
+  "study": "2024 - RCS/archive/JLL/VA-24-254935 - New Horizons - RCS - 3-12-24.pdf",
+  "priorRs": "2023/Unexecuted RS.pdf",
+  "priorRsRule": "year-1 folder"
+ },
+ "notGenerated": [
+  "notes",
+  "sections",
+  "coverLetter",
+  "rcsStudy",
+  "checklist",
+  "tenantNotice",
+  "rentSchedule"
+ ],
+ "notGeneratedWhy": null,
+ "counts": {
+  "compared": 26,
+  "matched": 8,
+  "differing": 18,
+  "fillOrder": 22,
+  "drift": 0,
+  "notGenerated": 7
+ }
+}

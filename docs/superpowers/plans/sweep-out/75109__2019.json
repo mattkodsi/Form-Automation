@@ -1,0 +1,125 @@
+{
+ "property": "Burt Farms I",
+ "code": "75109",
+ "folder": "75109 - Burt Farms I - Section 8",
+ "year": 2019,
+ "cycleLabel": "2019",
+ "sha": "ccc4568",
+ "orders": {
+  "rs-first": {
+   "files": 3,
+   "tier": "ocr",
+   "weakerTest": false,
+   "ocrCalls": 2,
+   "via": "ocr",
+   "missing": null,
+   "warnings": [
+    "the study yielded no unit types — no values can be applied from it",
+    "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+    "study: #rcsApply never appeared — nothing was applied to the form",
+    "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “Federal Housing”, and the management address. A letterhead can be uploaded on the property page.",
+    "package dialog: Federal Housing · 1 of 6 ready · 5 not ready"
+   ],
+   "errors": [],
+   "docsExtracted": [
+    "analysisXlsx"
+   ]
+  },
+  "rcs-first": {
+   "files": 3,
+   "tier": "ocr",
+   "weakerTest": false,
+   "ocrCalls": 2,
+   "via": "ocr",
+   "missing": null,
+   "warnings": [
+    "the study yielded no unit types — no values can be applied from it",
+    "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+    "study: #rcsApply never appeared — nothing was applied to the form",
+    "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “Federal Housing”, and the management address. A letterhead can be uploaded on the property page.",
+    "package dialog: Federal Housing · 1 of 6 ready · 5 not ready"
+   ],
+   "errors": [],
+   "docsExtracted": [
+    "analysisXlsx"
+   ]
+  }
+ },
+ "rows": [],
+ "fillOrder": [],
+ "drift": [],
+ "notes": [
+  "the manifest could not read this cycle's study; driving it anyway, because what the app does with an unreadable study is the observation",
+  "filed: filed side read from the combined package: Burt Farms - 2019 RCS Submission Package Exhibit pages.pdf",
+  "filed: tenantNotice read from Burt Farms I Tenant 30 Day Notice of Proposed Rent Increase Request 2019.pdf",
+  "filed: rentSchedule read from Burt Farms I Rent Schedule Effective 6-26-19.pdf"
+ ],
+ "verdict": "the app generated no document the filed package also has",
+ "fuzz": {
+  "seed": 3876900164,
+  "counts": {
+   "edits": 2,
+   "escapes": 1,
+   "enters": 6,
+   "saves": 4,
+   "revertAlls": 1,
+   "drops": 1,
+   "clicks": 4,
+   "boundaries": 0,
+   "colourScans": 8,
+   "episodes": 8
+  },
+  "violations": [],
+  "actions": [
+   "— episode 1/8 [save] 135 controls on screen",
+   "type \"0\" into #viewForm input[data-k][51]",
+   "click #viewForm [data-cb][25]",
+   "enter (commit)",
+   "click Update property profile",
+   "— episode 2/8 [save] 135 controls on screen",
+   "click #viewForm [data-wibox][9]",
+   "click #viewForm [data-wibox][2]",
+   "enter (commit)",
+   "open dropdown 0",
+   "pick menu row 8 of 51",
+   "enter (commit)",
+   "click Update property profile",
+   "— episode 3/8 [revertAll] 135 controls on screen",
+   "type \"1850\" into #viewForm input[data-k][31]",
+   "click Revert to saved",
+   "escape (1 left)",
+   "— episode 4/8 [escape] 0 controls on screen",
+   "— episode 5/8 [escape] 0 controls on screen",
+   "— episode 6/8 [save] 0 controls on screen",
+   "enter (commit)",
+   "click Update property profile",
+   "— episode 7/8 [escape] 0 controls on screen",
+   "— episode 8/8 [save] 0 controls on screen",
+   "enter (commit)",
+   "enter (commit)",
+   "click Update property profile"
+  ]
+ },
+ "inputs": {
+  "study": "2019/RCS/NewYorkWarwickRentComparabilityStudy updated 3.12.19.pdf",
+  "priorRs": "2018/Burt Farms I 6-26-18 Rent Schedule.pdf",
+  "priorRsRule": "year-1 folder"
+ },
+ "notGenerated": [
+  "notes",
+  "sections",
+  "coverLetter",
+  "rcsStudy",
+  "tenantNotice",
+  "rentSchedule"
+ ],
+ "notGeneratedWhy": null,
+ "counts": {
+  "compared": 0,
+  "matched": 0,
+  "differing": 0,
+  "fillOrder": 0,
+  "drift": 0,
+  "notGenerated": 6
+ }
+}

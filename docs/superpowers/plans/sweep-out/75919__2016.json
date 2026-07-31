@@ -1,0 +1,231 @@
+{
+ "property": "Northgate Terrace CA",
+ "code": "75919",
+ "folder": "75919 - Northgate Terrace CA - Section 8",
+ "year": 2016,
+ "cycleLabel": "2016",
+ "sha": "ccc4568",
+ "orders": {
+  "rs-first": {
+   "files": 3,
+   "tier": null,
+   "weakerTest": false,
+   "ocrCalls": 0,
+   "via": null,
+   "missing": null,
+   "warnings": [
+    "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+    "storm [save-left-dirt] after \"Update property profile\" settled, 21 key(s) still differ from the snapshot: property.name, property.addr_street, property.addr_city, property.addr_zip, appr.firm, appr.phone  (seed 2443757925)",
+    "rent schedule: #rsApply never appeared — nothing was applied to the form",
+    "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “550 24th Street”, and the management address. A letterhead can be uploaded on the property page.",
+    "package dialog: 550 24th Street · 1 of 6 ready · 5 not ready"
+   ],
+   "errors": [],
+   "docsExtracted": [
+    "analysisXlsx"
+   ]
+  },
+  "rcs-first": {
+   "files": 3,
+   "tier": null,
+   "weakerTest": false,
+   "ocrCalls": 0,
+   "via": null,
+   "missing": null,
+   "warnings": [
+    "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+    "storm [save-left-dirt] after \"Update property profile\" settled, 21 key(s) still differ from the snapshot: property.name, property.addr_street, property.addr_city, property.addr_zip, appr.firm, appr.phone  (seed 2443757925)",
+    "rent schedule: #rsApply never appeared — nothing was applied to the form",
+    "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “550 24th Street”, and the management address. A letterhead can be uploaded on the property page.",
+    "package dialog: 550 24th Street · 1 of 6 ready · 5 not ready"
+   ],
+   "errors": [],
+   "docsExtracted": [
+    "analysisXlsx"
+   ]
+  }
+ },
+ "rows": [],
+ "fillOrder": [],
+ "drift": [],
+ "notes": [
+  "filed: rentSchedule read from 75919 Northgate Terrace Rent Schedule 06-01-16 executed.pdf"
+ ],
+ "verdict": "the app generated no document the filed package also has",
+ "fuzz": {
+  "seed": 2443757925,
+  "counts": {
+   "edits": 2,
+   "escapes": 5,
+   "enters": 3,
+   "saves": 3,
+   "revertAlls": 2,
+   "drops": 2,
+   "clicks": 8,
+   "boundaries": 0,
+   "colourScans": 8,
+   "episodes": 8
+  },
+  "violations": [
+   {
+    "kind": "save-left-dirt",
+    "msg": "after \"Update property profile\" settled, 21 key(s) still differ from the snapshot: property.name, property.addr_street, property.addr_city, property.addr_zip, appr.firm, appr.phone",
+    "seed": 2443757925,
+    "evidence": {
+     "property.name": {
+      "form": {
+       "value": "550 24th Street",
+       "source": "overridden",
+       "db_value": "ZZ-CORPUS-75919-20260731-0636",
+       "prior_value": "ZZ-CORPUS-75919-20260731-0636"
+      },
+      "snap": {
+       "value": "ZZ-CORPUS-75919-20260731-0636",
+       "source": "database",
+       "db_value": "ZZ-CORPUS-75919-20260731-0636"
+      },
+      "onScreen": true
+     },
+     "property.addr_street": {
+      "form": {
+       "value": "Oakland, California",
+       "source": "this-cycle",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": true
+     },
+     "property.addr_city": {
+      "form": {
+       "value": "0",
+       "source": "new",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": true
+     },
+     "property.addr_zip": {
+      "form": {
+       "value": "00332",
+       "source": "this-cycle",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": true
+     },
+     "appr.firm": {
+      "form": {
+       "value": "Affordable Housing Valuation & Consulting Solutions Byron N. Lea, MAI",
+       "source": "this-cycle",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": true
+     },
+     "appr.phone": {
+      "form": {
+       "value": "(818) 914-1892",
+       "source": "this-cycle",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": true
+     }
+    },
+    "after": [
+     "click #viewForm [data-cb][28]",
+     "click #viewForm [data-cb][4]",
+     "escape (5 left)",
+     "escape (3 left)",
+     "escape (2 left)",
+     "escape (1 left)",
+     "— episode 2/8 [save] 120 controls on screen",
+     "click #viewForm [data-wibox][8]",
+     "click #viewForm [data-cb][10]",
+     "open dropdown 11",
+     "pick menu row 5 of 6",
+     "enter (commit)",
+     "type \"0\" into #viewForm input[data-k][3]",
+     "click Update property profile"
+    ]
+   }
+  ],
+  "actions": [
+   "— episode 1/8 [escape] 120 controls on screen",
+   "type \"129\" into #viewForm input[data-k][45]",
+   "click #viewForm [data-cb][2]",
+   "click #viewForm [data-cb][28]",
+   "click #viewForm [data-cb][4]",
+   "escape (5 left)",
+   "escape (3 left)",
+   "escape (2 left)",
+   "escape (1 left)",
+   "— episode 2/8 [save] 120 controls on screen",
+   "click #viewForm [data-wibox][8]",
+   "click #viewForm [data-cb][10]",
+   "open dropdown 11",
+   "pick menu row 5 of 6",
+   "enter (commit)",
+   "type \"0\" into #viewForm input[data-k][3]",
+   "click Update property profile",
+   "— episode 3/8 [revertAll] 120 controls on screen",
+   "click #viewForm [data-cb][12]",
+   "open dropdown 5",
+   "pick menu row 40 of 51",
+   "click Revert to saved",
+   "escape (2 left)",
+   "— episode 4/8 [save] 0 controls on screen",
+   "enter (commit)",
+   "enter (commit)",
+   "click Update property profile",
+   "— episode 5/8 [revertAll] 0 controls on screen",
+   "click Revert to saved",
+   "— episode 6/8 [save] 0 controls on screen",
+   "click Update property profile",
+   "— episode 7/8 [escape] 0 controls on screen",
+   "— episode 8/8 [escape] 0 controls on screen"
+  ]
+ },
+ "inputs": {
+  "study": "2016/Revised 2 23 15 WNC Northgate Terrace Oakland RCS.pdf",
+  "priorRs": null,
+  "priorRsRule": null
+ },
+ "notGenerated": [
+  "rentSchedule"
+ ],
+ "notGeneratedWhy": null,
+ "counts": {
+  "compared": 0,
+  "matched": 0,
+  "differing": 0,
+  "fillOrder": 0,
+  "drift": 0,
+  "notGenerated": 1
+ }
+}

@@ -1,0 +1,1727 @@
+{
+ "property": "Noble Tower",
+ "code": "75543",
+ "folder": "75543 - Noble Tower - Section 8",
+ "year": 2024,
+ "cycleLabel": "2024 - RCS",
+ "sha": "ccc4568",
+ "orders": {
+  "rs-first": {
+   "files": 5,
+   "tier": "ocr",
+   "weakerTest": false,
+   "ocrCalls": 2,
+   "via": "ocr",
+   "missing": null,
+   "warnings": [
+    "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+    "storm [save-left-dirt] after \"Update property profile\" settled, 37 key(s) still differ from the snapshot: property.name, property.addr_zip, property.s8, owner.entity_name, owner.entity_type, sig.name  (seed 2586074563)",
+    "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “Noble Tower”, and the management address. A letterhead can be uploaded on the property page.",
+    "package dialog: Noble Tower · 3 of 6 ready · 3 not ready"
+   ],
+   "errors": [],
+   "docsExtracted": [
+    "checklist",
+    "rentSchedule",
+    "analysisXlsx"
+   ]
+  },
+  "rcs-first": {
+   "files": 5,
+   "tier": "ocr",
+   "weakerTest": false,
+   "ocrCalls": 2,
+   "via": "ocr",
+   "missing": null,
+   "warnings": [
+    "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+    "storm [save-left-dirt] after \"Update property profile\" settled, 37 key(s) still differ from the snapshot: property.name, property.addr_zip, property.s8, owner.entity_name, owner.entity_type, sig.name  (seed 2586074563)",
+    "study: #rcsApply never appeared — nothing was applied to the form",
+    "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “Noble Tower”, and the management address. A letterhead can be uploaded on the property page.",
+    "package dialog: Noble Tower · 3 of 6 ready · 3 not ready"
+   ],
+   "errors": [],
+   "docsExtracted": [
+    "checklist",
+    "rentSchedule",
+    "analysisXlsx"
+   ]
+  }
+ },
+ "rows": [
+  {
+   "doc": "checklist",
+   "key": "heading",
+   "ours": "Owner’s  Checklist for  RCS  Submission",
+   "theirs": "Owner’s Checklist for RCS Submission",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "checklist",
+   "key": "property.name",
+   "ours": "NobleTower",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.0",
+   "ours": "1",
+   "theirs": "1",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.1",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.2",
+   "ours": "0",
+   "theirs": "1",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.3",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.4",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.5",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.6",
+   "ours": "1",
+   "theirs": "1",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.7",
+   "ours": "1",
+   "theirs": "1",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.8",
+   "ours": "1",
+   "theirs": "1",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.9",
+   "ours": "1",
+   "theirs": "1",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.10",
+   "ours": "1",
+   "theirs": "1",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.11",
+   "ours": "1",
+   "theirs": "1",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.12",
+   "ours": "1",
+   "theirs": "1",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.13",
+   "ours": "1",
+   "theirs": "1",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.14",
+   "ours": "0",
+   "theirs": "1",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.15",
+   "ours": "1",
+   "theirs": "1",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.16",
+   "ours": "1",
+   "theirs": "1",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "checklist",
+   "key": "checklist.signature",
+   "ours": "DavidPearson,VPofGP",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "property.name",
+   "ours": "NobleTower",
+   "theirs": "NobleTower",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "rent_schedule.date_eff",
+   "ours": "12/01/2024",
+   "theirs": "12/01/2024",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "rent_schedule.eff_month",
+   "ours": "12",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "rent_schedule.eff_day",
+   "ours": "01",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "rent_schedule.eff_year",
+   "ours": "2024",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "total.contract_rent",
+   "ours": "604500",
+   "theirs": "636675",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "total.annual",
+   "ours": "7254000",
+   "theirs": "7640100",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "nonrev.total_rent",
+   "ours": "0",
+   "theirs": "0",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "owner.entity_name",
+   "ours": "LakesideDriveSeniorHousingLP",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "sig.name_title",
+   "ours": "DavidPearson,VPofGP",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "total.units",
+   "ours": "195",
+   "theirs": "195",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.type",
+   "ours": "1BRA",
+   "theirs": "Section8",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.units",
+   "ours": "182",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.rent",
+   "ours": "3100",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.extension",
+   "ours": "564200",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.gross",
+   "ours": "3100",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.row",
+   "ours": "0",
+   "theirs": "0",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.type",
+   "ours": "1BRB",
+   "theirs": "1BedroomA",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.units",
+   "ours": "13",
+   "theirs": "182",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.rent",
+   "ours": "3100",
+   "theirs": "3265",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.extension",
+   "ours": "40300",
+   "theirs": "594230",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.gross",
+   "ours": "3100",
+   "theirs": "2650",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.row",
+   "ours": "1",
+   "theirs": "1",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "owner.entity_type",
+   "ours": "LimitedPartnership",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.equipment.0",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.equipment.1",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.equipment.3",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.equipment.4",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.equipment.5",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.equipment.6",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.utilities.0",
+   "ours": "1",
+   "theirs": "1",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.utilities.2",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.utilities.3",
+   "ours": "1",
+   "theirs": "1",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.utilities.4",
+   "ours": "1",
+   "theirs": "1",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.fuel.0",
+   "ours": "E",
+   "theirs": "E",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.fuel.2",
+   "ours": "G",
+   "theirs": "G",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.fuel.3",
+   "ours": "E",
+   "theirs": "E",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.fuel.4",
+   "ours": "E",
+   "theirs": "E",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.services.0",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "principals.0.name",
+   "ours": "LakesideDriveSeniorHousingGP,LLC",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "principals.0.title",
+   "ours": "AdministrativeGeneralPartner",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "principals.1.name",
+   "ours": "EBALDC1515LakesideLLC",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "principals.1.title",
+   "ours": "ManagingGeneralPartner",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.ua",
+   "ours": null,
+   "theirs": "03",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.type",
+   "ours": null,
+   "theirs": "1BedroomB",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.units",
+   "ours": null,
+   "theirs": "133",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.rent",
+   "ours": null,
+   "theirs": "26542",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.extension",
+   "ours": null,
+   "theirs": "445",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.ua",
+   "ours": null,
+   "theirs": "0",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.gross",
+   "ours": null,
+   "theirs": "3265",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.row",
+   "ours": null,
+   "theirs": "2",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.utilities.1",
+   "ours": null,
+   "theirs": "1",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.services.5",
+   "ours": null,
+   "theirs": "1",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "property.name",
+   "ours": "NobleTower",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "appr.firm",
+   "ours": "©2024VanHazingaAppraisal&ConsultingLLC",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.type",
+   "ours": "1BRA",
+   "theirs": "1BRA",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.units",
+   "ours": "182",
+   "theirs": "182",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.current",
+   "ours": "3106",
+   "theirs": "3106",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.proposed",
+   "ours": "3100",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.type",
+   "ours": "1BRB",
+   "theirs": "1BRB",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.units",
+   "ours": "13",
+   "theirs": "13",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.current",
+   "ours": "3219",
+   "theirs": "3219",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.proposed",
+   "ours": "3100",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Noble Tower"
+  }
+ ],
+ "fillOrder": [
+  {
+   "doc": "rentSchedule",
+   "key": "total.contract_rent",
+   "ours": "604500",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Noble Tower",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "total.annual",
+   "ours": "7254000",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Noble Tower",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.rent",
+   "ours": "3100",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Noble Tower",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.extension",
+   "ours": "564200",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Noble Tower",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.gross",
+   "ours": "3100",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Noble Tower",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.rent",
+   "ours": "3100",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Noble Tower",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.extension",
+   "ours": "40300",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Noble Tower",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.gross",
+   "ours": "3100",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Noble Tower",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "appr.firm",
+   "ours": "©2024VanHazingaAppraisal&ConsultingLLC",
+   "theirs": "Appraiser",
+   "status": "mismatch",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Noble Tower",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.proposed",
+   "ours": "3100",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Noble Tower",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.proposed",
+   "ours": "3100",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Noble Tower",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  }
+ ],
+ "drift": [
+  {
+   "doc": "checklist",
+   "side": "ours",
+   "line": "narrativeexplainingadjustmentsandmarketrentconclusionsonesetofexplanationsfor",
+   "normalized": "narrativeexplainingadjustmentsandmarketrentconclusionsonesetofexplanationsfor",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "checklist",
+   "side": "ours",
+   "line": "eachrentgrid",
+   "normalized": "eachrentgrid",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "checklist",
+   "side": "ours",
+   "line": "appendixpublishedmarch",
+   "normalized": "appendixpublishedmarch",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "narrativeexplainingadjustmentsandmarketrentconclusionsonesetof",
+   "normalized": "narrativeexplainingadjustmentsandmarketrentconclusionsonesetof",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "explanationsforeachrentgrid",
+   "normalized": "explanationsforeachrentgrid",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "chapterninepublishedjune",
+   "normalized": "chapterninepublishedjune",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "totalrentlossduetononrevenueunits",
+   "normalized": "totalrentlossduetononrevenueunits",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "heatinghotwaterlightsetc",
+   "normalized": "heatinghotwaterlightsetc",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "coolingcooking",
+   "normalized": "coolingcooking",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "previouseditionsareobsolete",
+   "normalized": "previouseditionsareobsolete",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "corporationtrust",
+   "normalized": "corporationtrust",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "osecutionsitwillnotbe",
+   "normalized": "osecutionsitwillnotbe",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "instructions",
+   "normalized": "instructions",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "allprojectownersmustsubmittheformhudwhenrequestcolumnforunsubsidizedprojectsshowtherentyouintendto",
+   "normalized": "allprojectownersmustsubmittheformhudwhenrequestcolumnforunsubsidizedprojectsshowtherentyouintendto",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "inganadjustmenttoprojectrentshudestablishesandapproveschargeforeachunittypeforsubsidizedprojectsshowthecontract",
+   "normalized": "inganadjustmenttoprojectrentshudestablishesandapproveschargeforeachunittypeforsubsidizedprojectsshowthecontract",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "rentalchargesandutilityallowancesontheformtheownerisrentasdefinedinhudhandbookforeachunittype",
+   "normalized": "rentalchargesandutilityallowancesontheformtheownerisrentasdefinedinhudhandbookforeachunittype",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "responsiblefornotifyingtenantsoftheapprovedrents",
+   "normalized": "responsiblefornotifyingtenantsoftheapprovedrents",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "columnforeachlinemultiplythecontractrentincolumnbythe",
+   "normalized": "columnforeachlinemultiplythecontractrentincolumnbythe",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "generalforprojectswithfullyinsuredorhudheldmortgagesthenumberofunitsincolumnaddmonthlycontractrentpotentialsfor",
+   "normalized": "generalforprojectswithfullyinsuredorhudheldmortgagesthenumberofunitsincolumnaddmonthlycontractrentpotentialsfor",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "owneragentsubmitsthisformtothehudfieldofficeforprojectseachunitsizetocomputethetotalmonthlycontractrentpotential",
+   "normalized": "owneragentsubmitsthisformtothehudfieldofficeforprojectseachunitsizetocomputethetotalmonthlycontractrentpotential",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "withcoinsuredmortgagestheowneragentsubmitsthisformtothemultiplythemonthlytotalbytocomputetheannualcontractrent",
+   "normalized": "withcoinsuredmortgagestheowneragentsubmitsthisformtothemultiplythemonthlytotalbytocomputetheannualcontractrent",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "lenderpotential",
+   "normalized": "lenderpotential",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partaifthemonthlyrentpotentialyouareproposingislessthanorcolumnsandcompletethecolumnsonlyiftheprojecthasa",
+   "normalized": "partaifthemonthlyrentpotentialyouareproposingislessthanorcolumnsandcompletethecolumnsonlyiftheprojecthasa",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "equaltothemaximumallowablemonthlyrentpotentialapprovedbysubsidycontractwithhudandsomeutilitiesarenotincludedinthe",
+   "normalized": "equaltothemaximumallowablemonthlyrentpotentialapprovedbysubsidycontractwithhudandsomeutilitiesarenotincludedinthe",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "hudlenderonyouroriginalrentformulaoronyourmostrecentrentincolumnshowtheutilityallowanceforeachunittype",
+   "normalized": "hudlenderonyouroriginalrentformulaoronyourmostrecentrentincolumnshowtheutilityallowanceforeachunittype",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "rentcomputationworksheetcompleteallofpartaaccordingtothecomputethegrossrentforeachunittypebyaddingthecontractrent",
+   "normalized": "rentcomputationworksheetcompleteallofpartaaccordingtothecomputethegrossrentforeachunittypebyaddingthecontractrent",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "instructionsbelowifthemonthlyrentpotentialyouarerequestingincolumnandtheutilityallowanceincolumnshowthisamount",
+   "normalized": "instructionsbelowifthemonthlyrentpotentialyouarerequestingincolumnandtheutilityallowanceincolumnshowthisamount",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "exceedsthemaximumallowablemonthlyrentpotentialapprovedincolumn",
+   "normalized": "exceedsthemaximumallowablemonthlyrentpotentialapprovedincolumn",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "byhudlenderonyouroriginalrentformulaoronyourmostrecent",
+   "normalized": "byhudlenderonyouroriginalrentformulaoronyourmostrecent",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "columnsandcompletethesecolumnsonlyiftheprojectis",
+   "normalized": "columnsandcompletethesecolumnsonlyiftheprojectis",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "rentcomputationworksheetcompleteonlycolumnsand",
+   "normalized": "rentcomputationworksheetcompleteonlycolumnsand",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "receivingsectioninterestreductionpaymentsincolumn",
+   "normalized": "receivingsectioninterestreductionpaymentsincolumn",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "accordingtotheinstructionsbelowshowyourproposedrentsand",
+   "normalized": "accordingtotheinstructionsbelowshowyourproposedrentsand",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "showthemarketrentforeachunittypeincolumnforeachline",
+   "normalized": "showthemarketrentforeachunittypeincolumnforeachline",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "monthlyrentpotentialinthecoverlettertransmittingyourrent",
+   "normalized": "monthlyrentpotentialinthecoverlettertransmittingyourrent",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "multiplythemarketrentincolumnbythenumberofunitsincolumn",
+   "normalized": "multiplythemarketrentincolumnbythenumberofunitsincolumn",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "increaserequest",
+   "normalized": "increaserequest",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "addthemonthlymarketrentpotentialsforeachunitsizeto",
+   "normalized": "addthemonthlymarketrentpotentialsforeachunitsizeto",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "columnshoweachtypeofunitforwhichrentswillvaryshowthecomputethetotalmonthlymarketrentpotentialmultiplythemonthly",
+   "normalized": "columnshoweachtypeofunitforwhichrentswillvaryshowthecomputethetotalmonthlymarketrentpotentialmultiplythemonthly",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "numberofbedroomsandbathroomsandotherfeaturesthatcausetotalbytocomputetheannualmarketrentpotential",
+   "normalized": "numberofbedroomsandbathroomsandotherfeaturesthatcausetotalbytocomputetheannualmarketrentpotential",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "rentstovaryegbdmbdakettevsbdmbdrk",
+   "normalized": "rentstovaryegbdmbdakettevsbdmbdrk",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partsbcdandecompletethesepartsaccordingtothe",
+   "normalized": "partsbcdandecompletethesepartsaccordingtothe",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "usethefollowingsymbols",
+   "normalized": "usethefollowingsymbols",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "instructionsontherentschedule",
+   "normalized": "instructionsontherentschedule",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "bdmbedroomlrlivingroom",
+   "normalized": "bdmbedroomlrlivingroom",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partfdonotcompletethispartthehudfieldofficelenderwill",
+   "normalized": "partfdonotcompletethispartthehudfieldofficelenderwill",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "bbathdrdiningroom",
+   "normalized": "bbathdrdiningroom",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "completethispart",
+   "normalized": "completethispart",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "completethispart",
+   "normalized": "completethispart",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "kkitchendadiningalcove",
+   "normalized": "kkitchendadiningalcove",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "kettekitchenette",
+   "normalized": "kettekitchenette",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partsgandhcompletethesepartsaccordingtotheinstructions",
+   "normalized": "partsgandhcompletethesepartsaccordingtotheinstructions",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "ontherentschedule",
+   "normalized": "ontherentschedule",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "columnshowthenumberofunitsforeachunittypeincludenon",
+   "normalized": "columnshowthenumberofunitsforeachunittypeincludenon",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "revenueproducingunits",
+   "normalized": "revenueproducingunits",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partidonotcompletethispartthehudfieldofficelenderwill",
+   "normalized": "partidonotcompletethispartthehudfieldofficelenderwill",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "gtotalrentlossduetononrevenueunits",
+   "normalized": "gtotalrentlossduetononrevenueunits",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "heatingehotwaterlightsetce",
+   "normalized": "heatingehotwaterlightsetce",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "coolingcookinge",
+   "normalized": "coolingcookinge",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "pageofpageof",
+   "normalized": "pageofpageof",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "pageofpageof",
+   "normalized": "pageofpageof",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "lakesidedriveseniorhousinglp",
+   "normalized": "lakesidedriveseniorhousinglp",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "corporationlimitedpartnershiptrust",
+   "normalized": "corporationlimitedpartnershiptrust",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "lakesidedriveseniorhousinggpllcadministrativegeneralpartner",
+   "normalized": "lakesidedriveseniorhousinggpllcadministrativegeneralpartner",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "managinggeneralpartner",
+   "normalized": "managinggeneralpartner",
+   "severity": "low",
+   "property": "Noble Tower"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "dylghduvrqri",
+   "normalized": "dylghduvrqri",
+   "severity": "low",
+   "property": "Noble Tower"
+  }
+ ],
+ "notes": [
+  "filed: filed side read from the combined package: Noble Tower - Option 1 RCS Submission Package.pdf",
+  "filed: rentSchedule read from Noble Tower FY2025 Executed RS.pdf",
+  "filed: analysisXlsx read from 2024 Rent Grid Analysis - Noble Tower.xlsx",
+  "filed: the analysis workbook holds 2 sheets; kept \"Comparison\""
+ ],
+ "verdict": "52 differences",
+ "fuzz": {
+  "seed": 2586074563,
+  "counts": {
+   "edits": 9,
+   "escapes": 7,
+   "enters": 1,
+   "saves": 1,
+   "revertAlls": 1,
+   "drops": 0,
+   "clicks": 3,
+   "boundaries": 0,
+   "colourScans": 8,
+   "episodes": 8,
+   "dialogs": 1
+  },
+  "violations": [
+   {
+    "kind": "save-left-dirt",
+    "msg": "after \"Update property profile\" settled, 37 key(s) still differ from the snapshot: property.name, property.addr_zip, property.s8, owner.entity_name, owner.entity_type, sig.name",
+    "seed": 2586074563,
+    "evidence": {
+     "property.name": {
+      "form": {
+       "value": "Noble Tower",
+       "source": "overridden",
+       "db_value": "ZZ-CORPUS-75543-20260731-0616",
+       "prior_value": "ZZ-CORPUS-75543-20260731-0616"
+      },
+      "snap": {
+       "value": "ZZ-CORPUS-75543-20260731-0616",
+       "source": "database",
+       "db_value": "ZZ-CORPUS-75543-20260731-0616"
+      },
+      "onScreen": true
+     },
+     "property.addr_zip": {
+      "form": {
+       "value": "1.5",
+       "source": "new",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": true
+     },
+     "property.s8": {
+      "form": {
+       "value": "CA39H113049",
+       "source": "this-cycle",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": true
+     },
+     "owner.entity_name": {
+      "form": {
+       "value": "42",
+       "source": "new",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": true
+     },
+     "owner.entity_type": {
+      "form": {
+       "value": "Limited Partnership",
+       "source": "this-cycle",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": true
+     },
+     "sig.name": {
+      "form": {
+       "value": "David Pearson",
+       "source": "this-cycle",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": true
+     }
+    },
+    "after": [
+     "— episode 1/8 [save] 123 controls on screen",
+     "click #viewForm [data-wibox][2]",
+     "click #viewForm [data-cb][23]",
+     "type \"1.5\" into #viewForm input[data-k][4]",
+     "type \"42\" into #viewForm input[data-k][5]",
+     "type \"2050\" into #viewForm input[data-k][16]",
+     "enter (commit)",
+     "click Update property profile",
+     "dialog \"That name is already takenAnother property is already called\" -> answered \"Use this name\""
+    ]
+   }
+  ],
+  "actions": [
+   "— episode 1/8 [save] 123 controls on screen",
+   "click #viewForm [data-wibox][2]",
+   "click #viewForm [data-cb][23]",
+   "type \"1.5\" into #viewForm input[data-k][4]",
+   "type \"42\" into #viewForm input[data-k][5]",
+   "type \"2050\" into #viewForm input[data-k][16]",
+   "enter (commit)",
+   "click Update property profile",
+   "dialog \"That name is already takenAnother property is already called\" -> answered \"Use this name\"",
+   "escape (4 left)",
+   "escape (3 left)",
+   "escape (2 left)",
+   "escape (1 left)",
+   "— episode 2/8 [escape] 123 controls on screen",
+   "type \"2050\" into #viewForm input[data-k][33]",
+   "type \"1\" into #viewForm input[data-k][1]",
+   "escape (2 left)",
+   "escape (1 left)",
+   "— episode 3/8 [revertAll] 123 controls on screen",
+   "type \"42\" into #viewForm input[data-k][14]",
+   "type \"1234\" into #viewForm input[data-k][40]",
+   "type \"abc\" into #viewForm input[data-k][51]",
+   "type \"129\" into #viewForm input[data-k][7]",
+   "click #viewForm [data-cb][24]",
+   "click Revert to saved",
+   "escape (5 left)",
+   "— episode 4/8 [escape] 0 controls on screen",
+   "— episode 5/8 [escape] 0 controls on screen",
+   "— episode 6/8 [escape] 0 controls on screen",
+   "— episode 7/8 [escape] 0 controls on screen",
+   "— episode 8/8 [escape] 0 controls on screen"
+  ]
+ },
+ "inputs": {
+  "study": "2024 - RCS/Archive/Noble Tower, Oakland, CA - RCS - A20240802 Final.pdf",
+  "priorRs": "2023/Noble Tower FY2024 Executed RS.pdf",
+  "priorRsRule": "year-1 folder"
+ },
+ "notGenerated": [
+  "notes",
+  "sections",
+  "coverLetter",
+  "rcsStudy"
+ ],
+ "notGeneratedWhy": null,
+ "counts": {
+  "compared": 83,
+  "matched": 31,
+  "differing": 52,
+  "fillOrder": 11,
+  "drift": 66,
+  "notGenerated": 4
+ }
+}

@@ -1,0 +1,33 @@
+{
+ "property": "Crossroads of East Ravenswood - Section 8",
+ "code": null,
+ "folder": "Crossroads of East Ravenswood - Section 8",
+ "year": 2021,
+ "cycleLabel": "2021",
+ "sha": "ccc4568",
+ "orders": {
+  "rs-first": {
+   "error": "the signed-in app never reached the property gallery (first boot).\n  view now  : Auth\n  sign-in error text : \"\"\n  page errors : [\"REJECTED TypeError: Failed to ",
+   "files": 0
+  },
+  "rcs-first": {
+   "error": "the signed-in app never reached the property gallery (first boot).\n  view now  : Auth\n  sign-in error text : \"\"\n  page errors : [\"REJECTED TypeError: Failed to ",
+   "files": 0
+  }
+ },
+ "rows": [],
+ "fillOrder": [],
+ "drift": [],
+ "notes": [
+  "the manifest could not read this cycle's study; driving it anyway, because what the app does with an unreadable study is the observation",
+  "rs-first: drive threw -- the signed-in app never reached the property gallery (first boot).\n  view now  : Auth\n  sign-in error text : \"\"\n  page e",
+  "rcs-first: drive threw -- the signed-in app never reached the property gallery (first boot).\n  view now  : Auth\n  sign-in error text : \"\"\n  page e"
+ ],
+ "verdict": "the app generated nothing comparable",
+ "fuzz": null,
+ "inputs": {
+  "study": "2021/21.104RCS Crossroads of East Ravenswood.pdf",
+  "priorRs": "2020/2020 - East Ravenswood Rent Schedule executed.pdf",
+  "priorRsRule": "year-1 folder"
+ }
+}

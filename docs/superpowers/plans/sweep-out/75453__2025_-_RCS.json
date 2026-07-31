@@ -1,0 +1,1176 @@
+{
+ "property": "Sycamore Green",
+ "code": "75453",
+ "folder": "75453 - Sycamore Green - Section 8",
+ "year": 2025,
+ "cycleLabel": "2025 - RCS",
+ "sha": "ccc4568",
+ "orders": {
+  "rs-first": {
+   "files": 5,
+   "tier": "text",
+   "weakerTest": false,
+   "ocrCalls": 2,
+   "via": "text",
+   "missing": null,
+   "warnings": [
+    "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+    "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “Sycamore Green”, and the management address. A letterhead can be uploaded on the property page.",
+    "package dialog: Sycamore Green · 3 of 6 ready · 3 not ready"
+   ],
+   "errors": [],
+   "docsExtracted": [
+    "checklist",
+    "rentSchedule",
+    "analysisXlsx"
+   ]
+  },
+  "rcs-first": {
+   "files": 5,
+   "tier": "text",
+   "weakerTest": false,
+   "ocrCalls": 2,
+   "via": "text",
+   "missing": null,
+   "warnings": [
+    "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+    "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “Sycamore Green”, and the management address. A letterhead can be uploaded on the property page.",
+    "package dialog: Sycamore Green · 3 of 6 ready · 3 not ready"
+   ],
+   "errors": [],
+   "docsExtracted": [
+    "checklist",
+    "rentSchedule",
+    "analysisXlsx"
+   ]
+  }
+ },
+ "rows": [
+  {
+   "doc": "checklist",
+   "key": "heading",
+   "ours": "Owner’s  Checklist for  RCS  Submission",
+   "theirs": "Owners Checklist  for RCS Submission",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "checklist",
+   "key": "property.name",
+   "ours": "SycamoreGreen",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.0",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.1",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.2",
+   "ours": "0",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.3",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.4",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.5",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.6",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.7",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.8",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.9",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.10",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.11",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.12",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.13",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.14",
+   "ours": "0",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.15",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.16",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "checklist",
+   "key": "checklist.signature",
+   "ours": "DavidPearson,VPofGP",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "property.name",
+   "ours": "SycamoreGreen",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "rent_schedule.date_eff",
+   "ours": "03/30/2025",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "rent_schedule.eff_month",
+   "ours": "03",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "rent_schedule.eff_day",
+   "ours": "30",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "rent_schedule.eff_year",
+   "ours": "2025",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "total.contract_rent",
+   "ours": "271300",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "total.annual",
+   "ours": "3255600",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "nonrev.total_rent",
+   "ours": "1450",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "owner.entity_name",
+   "ours": "IrondequoitPreservation,L.P.",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "sig.name_title",
+   "ours": "DavidPearson,VPofGP",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "total.units",
+   "ours": "195",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.type",
+   "ours": "1BR/1BA",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.units",
+   "ours": "40",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.rent",
+   "ours": "1200",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.extension",
+   "ours": "48000",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.ua",
+   "ours": "51",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.gross",
+   "ours": "1251",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.row",
+   "ours": "0",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.type",
+   "ours": "2BR/1BA",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.units",
+   "ours": "154",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.rent",
+   "ours": "1450",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.extension",
+   "ours": "223300",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.ua",
+   "ours": "64",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.gross",
+   "ours": "1514",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.row",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.type",
+   "ours": "2BR",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.units",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.rent",
+   "ours": "0",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.extension",
+   "ours": "0",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.ua",
+   "ours": "0",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.gross",
+   "ours": "0",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.row",
+   "ours": "3",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "owner.entity_type",
+   "ours": "LimitedPartnership",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.equipment.0",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.equipment.1",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.equipment.5",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.utilities.0",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.utilities.2",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.utilities.3",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.fuel.0",
+   "ours": "G",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.fuel.2",
+   "ours": "G",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.fuel.3",
+   "ours": "G",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.fuel.4",
+   "ours": "E",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.services.0",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.writein.e1.on",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.writein.e1",
+   "ours": "VenetianBlinds",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.writein.s1.on",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.writein.s1",
+   "ours": "2Playgrounds",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "nonrev.0.use",
+   "ours": "EmployeeUnit",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "nonrev.0.type",
+   "ours": "2BR",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "nonrev.0.rent",
+   "ours": "1450",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "principals.0.name",
+   "ours": "IrondequoitPreservationGP,LLCGeneralPartner",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "principals.1.name",
+   "ours": "IrondequoitPreservationGPII,LLCGeneralPartner",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "property.name",
+   "ours": "SycamoreGreen",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "appr.firm",
+   "ours": "Renzi&Associates",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.type",
+   "ours": "1BR/1BA",
+   "theirs": "1-Bedroom",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.units",
+   "ours": "40",
+   "theirs": "40",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.current",
+   "ours": "944",
+   "theirs": "944",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.proposed",
+   "ours": "1200",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.ua",
+   "ours": "51",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.safmr",
+   "ours": "990",
+   "theirs": "1050",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.type",
+   "ours": "2BR/1BA",
+   "theirs": "2-Bedroom",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.units",
+   "ours": "154",
+   "theirs": "154",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.current",
+   "ours": "1032",
+   "theirs": "1032",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.proposed",
+   "ours": "1450",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.ua",
+   "ours": "64",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.safmr",
+   "ours": "1230",
+   "theirs": "1310",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Sycamore Green"
+  }
+ ],
+ "fillOrder": [],
+ "drift": [
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "davidpearsonvicepresidentofmanaginggeneralpartner",
+   "normalized": "davidpearsonvicepresidentofmanaginggeneralpartner",
+   "severity": "low",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "corporationtrust",
+   "normalized": "corporationtrust",
+   "severity": "low",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "listallprincipalscomprisingmortgagorentity",
+   "normalized": "listallprincipalscomprisingmortgagorentity",
+   "severity": "low",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "osecutionsitwillnotbe",
+   "normalized": "osecutionsitwillnotbe",
+   "severity": "low",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "corporationlimitedpartnershiptrust",
+   "normalized": "corporationlimitedpartnershiptrust",
+   "severity": "low",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "listallprincipalscomprisingmortgagorentityprovidenameandtitleofeachprincipaluseextrasheetsifneededifmortgagorisa",
+   "normalized": "listallprincipalscomprisingmortgagorentityprovidenameandtitleofeachprincipaluseextrasheetsifneededifmortgagorisa",
+   "severity": "low",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "corporationlistallofficersalldirectorsandeachstockholderhavingaormoreinterest",
+   "normalized": "corporationlistallofficersalldirectorsandeachstockholderhavingaormoreinterest",
+   "severity": "low",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "partnershiplistallgeneralpartnersandlimitedpartnershavingaormoreinterestinthepartnership",
+   "normalized": "partnershiplistallgeneralpartnersandlimitedpartnershavingaormoreinterestinthepartnership",
+   "severity": "low",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "trustlistallmanagersdirectorsortrusteesandeachbeneficiaryhavingatleastabeneficialinterestinthetrust",
+   "normalized": "trustlistallmanagersdirectorsortrusteesandeachbeneficiaryhavingatleastabeneficialinterestinthetrust",
+   "severity": "low",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "irondequoitpreservationgpllcgeneralpartner",
+   "normalized": "irondequoitpreservationgpllcgeneralpartner",
+   "severity": "low",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "irondequoitpreservationgpiillccogeneralpartner",
+   "normalized": "irondequoitpreservationgpiillccogeneralpartner",
+   "severity": "low",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "tothebestofmyknowledgealltheinformationstatedhereinaswellasanyinformationprovidedintheaccompanimentherewithistrueandaccurate",
+   "normalized": "tothebestofmyknowledgealltheinformationstatedhereinaswellasanyinformationprovidedintheaccompanimentherewithistrueandaccurate",
+   "severity": "low",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "warninghudwillprosecutefalseclaimsandstatementsconvictionmayresultincriminalandorcivilpenaltiesuscusc",
+   "normalized": "warninghudwillprosecutefalseclaimsandstatementsconvictionmayresultincriminalandorcivilpenaltiesuscusc",
+   "severity": "low",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "publicreportingburdenforthiscollectionofinformationisestimatedtoaverageminutesperresponseincludingthetimeforreviewinginstructions",
+   "normalized": "publicreportingburdenforthiscollectionofinformationisestimatedtoaverageminutesperresponseincludingthetimeforreviewinginstructions",
+   "severity": "low",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "searchingexistingdatasourcesgatheringandmaintainingthedataneededandcompletingandreviewingthecollectionofinformationthisagency",
+   "normalized": "searchingexistingdatasourcesgatheringandmaintainingthedataneededandcompletingandreviewingthecollectionofinformationthisagency",
+   "severity": "low",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "maynotcollectthisinformationandyouarenotrequiredtocompletethisformunlessitdisplaysacurrentlyvalidombcontrolnumber",
+   "normalized": "maynotcollectthisinformationandyouarenotrequiredtocompletethisformunlessitdisplaysacurrentlyvalidombcontrolnumber",
+   "severity": "low",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "thiscollectionofinformationisauthorizedundersectionofthenationalhousingacttheinformationisnecessaryforthedepartmenttoensure",
+   "normalized": "thiscollectionofinformationisauthorizedundersectionofthenationalhousingacttheinformationisnecessaryforthedepartmenttoensure",
+   "severity": "low",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "thatprojectownersarenotoverchargingtheirtenantsandtoensurethattherentlevelsapprovedbythedepartmentarenotexceededthedepartment",
+   "normalized": "thatprojectownersarenotoverchargingtheirtenantsandtoensurethattherentlevelsapprovedbythedepartmentarenotexceededthedepartment",
+   "severity": "low",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "usesthisinformationtoenforcerentregulationswhichotherwisewouldbedifficultbecausetherewouldbenoclearrecordoftherentsandchargesthat",
+   "normalized": "usesthisinformationtoenforcerentregulationswhichotherwisewouldbedifficultbecausetherewouldbenoclearrecordoftherentsandchargesthat",
+   "severity": "low",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "thedepartmenthadapprovedinadditionthedepartmentneedstoperiodicallycollectinformationregardingprojectprincipalssounauthorized",
+   "normalized": "thedepartmenthadapprovedinadditionthedepartmentneedstoperiodicallycollectinformationregardingprojectprincipalssounauthorized",
+   "severity": "low",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "participationbypreviouslyexcludedorotherwiseundesirableownerscanbedetectedthisinformationisrequiredtoobtainbenefitshudmaydisclose",
+   "normalized": "participationbypreviouslyexcludedorotherwiseundesirableownerscanbedetectedthisinformationisrequiredtoobtainbenefitshudmaydisclose",
+   "severity": "low",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "certaininformationtofederalstateandlocalagencieswhenrelevanttocivilcriminalorregulatoryinvestigationsandprosecutionsitwillnotbe",
+   "normalized": "certaininformationtofederalstateandlocalagencieswhenrelevanttocivilcriminalorregulatoryinvestigationsandprosecutionsitwillnotbe",
+   "severity": "low",
+   "property": "Sycamore Green"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "otherwisedisclosedorreleasedoutsideofhudexceptasrequiredandpermittedbylaw",
+   "normalized": "otherwisedisclosedorreleasedoutsideofhudexceptasrequiredandpermittedbylaw",
+   "severity": "low",
+   "property": "Sycamore Green"
+  }
+ ],
+ "notes": [
+  "filed: filed side read from the combined package: Sycamore Green (NY0600006001) - 5-Year RCS Submission updated.pdf",
+  "filed: checklist read from Owner RCS Checklist - Sycamore Green.pdf",
+  "filed: tenantNotice read from 30-Day Notice to Tenants (rent increase) - Sycamore Green pdf.pdf",
+  "filed: rentSchedule read from Sycamore Green - Fully Executed RS eff. 03.30.25.pdf",
+  "filed: analysisXlsx read from Sycamore Green - RCS Analysis.xlsx"
+ ],
+ "verdict": "82 differences",
+ "fuzz": {
+  "seed": 3921407485,
+  "counts": {
+   "edits": 1,
+   "escapes": 1,
+   "enters": 4,
+   "saves": 3,
+   "revertAlls": 3,
+   "drops": 0,
+   "clicks": 2,
+   "boundaries": 0,
+   "colourScans": 8,
+   "episodes": 8
+  },
+  "violations": [],
+  "actions": [
+   "— episode 1/8 [save] 129 controls on screen",
+   "click #viewForm [data-fuel][2]",
+   "enter (commit)",
+   "click Update property profile",
+   "— episode 2/8 [revertAll] 131 controls on screen",
+   "click #viewForm [data-fuel][4]",
+   "type \"999999\" into #viewForm input[data-k][52]",
+   "click Revert to saved",
+   "escape (2 left)",
+   "— episode 3/8 [revertAll] 0 controls on screen",
+   "click Revert to saved",
+   "— episode 4/8 [revertAll] 0 controls on screen",
+   "click Revert to saved",
+   "— episode 5/8 [save] 0 controls on screen",
+   "enter (commit)",
+   "enter (commit)",
+   "click Update property profile",
+   "— episode 6/8 [save] 0 controls on screen",
+   "enter (commit)",
+   "click Update property profile",
+   "— episode 7/8 [escape] 0 controls on screen",
+   "— episode 8/8 [escape] 0 controls on screen"
+  ]
+ },
+ "inputs": {
+  "study": "2025 - RCS/24-406R - Sycamore Green, 55 Strathmore Circle, Rochester, NY v4.pdf",
+  "priorRs": "2024/Executed RS - Sycamore Green.pdf",
+  "priorRsRule": "year-1 folder"
+ },
+ "notGenerated": [
+  "notes",
+  "sections",
+  "coverLetter",
+  "rcsStudy",
+  "tenantNotice"
+ ],
+ "notGeneratedWhy": null,
+ "counts": {
+  "compared": 87,
+  "matched": 5,
+  "differing": 82,
+  "fillOrder": 0,
+  "drift": 23,
+  "notGenerated": 5
+ }
+}

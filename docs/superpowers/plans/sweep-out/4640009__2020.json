@@ -4,7 +4,7 @@
  "folder": "4640009 - Westwood Village - Section 8",
  "year": 2020,
  "cycleLabel": "2020",
- "sha": "cce8502",
+ "sha": "ccc4568",
  "orders": {
   "rs-first": {
    "files": 3,
@@ -15,23 +15,18 @@
    "missing": null,
    "warnings": [
     "the study yielded no unit types — no values can be applied from it",
-    "the study was recalled without its bytes and could not be re-attached — document 04 will be missing or the folder download will fail",
-    "storm [save-left-dirt] after \"Update property profile\" settled, 3 key(s) still differ from the snapshot: property.name, appr.addr_street, partb.services.4  (seed 4248152120)",
+    "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
     "study: #rcsApply never appeared — nothing was applied to the form",
     "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “Westwood Village”, and the management address. A letterhead can be uploaded on the property page.",
     "package dialog: Westwood Village · 1 of 6 ready · 5 not ready"
    ],
-   "errors": [
-    "after the reload the app is on a DIFFERENT property/package than order A used — the second order would be measuring another record",
-    "after the reload the rent-schedule upload is GONE (tile says \"Westwood Village Rent Schedule eff. 8.1.24.pdf\") — order B has nothing to fill from, and re-uploading would pay for the read twice",
-    "after the reload the study upload is GONE (tile says \"Exhibit 3 - 25-072 - Westwood Village_ 748 Westwood Boulevard_ Roanoke_ VA.pdf\") — order B has nothing to fill from"
-   ],
+   "errors": [],
    "docsExtracted": [
     "analysisXlsx"
    ]
   },
   "rcs-first": {
-   "files": 0,
+   "files": 3,
    "tier": "ocr",
    "weakerTest": false,
    "ocrCalls": 2,
@@ -39,45 +34,19 @@
    "missing": null,
    "warnings": [
     "the study yielded no unit types — no values can be applied from it",
-    "the study was recalled without its bytes and could not be re-attached — document 04 will be missing or the folder download will fail",
-    "storm [save-left-dirt] after \"Update property profile\" settled, 3 key(s) still differ from the snapshot: property.name, appr.addr_street, partb.services.4  (seed 4248152120)"
+    "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+    "study: #rcsApply never appeared — nothing was applied to the form",
+    "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “Westwood Village”, and the management address. A letterhead can be uploaded on the property page.",
+    "package dialog: Westwood Village · 1 of 6 ready · 5 not ready"
    ],
-   "errors": [
-    "after the reload the app is on a DIFFERENT property/package than order A used — the second order would be measuring another record",
-    "after the reload the rent-schedule upload is GONE (tile says \"Westwood Village Rent Schedule eff. 8.1.24.pdf\") — order B has nothing to fill from, and re-uploading would pay for the read twice",
-    "after the reload the study upload is GONE (tile says \"Exhibit 3 - 25-072 - Westwood Village_ 748 Westwood Boulevard_ Roanoke_ VA.pdf\") — order B has nothing to fill from",
-    "not run: an upload was lost across the reload, so this order could only have been produced by paying for a second read"
-   ],
-   "docsExtracted": []
+   "errors": [],
+   "docsExtracted": [
+    "analysisXlsx"
+   ]
   }
  },
  "rows": [],
- "fillOrder": [
-  {
-   "doc": "analysisXlsx",
-   "key": "property.name",
-   "ours": "WestwoodVillage",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "fill-order",
-   "severity": "critical",
-   "property": "Westwood Village",
-   "oursRun": "rs-first",
-   "theirsRun": "rcs-first"
-  },
-  {
-   "doc": "analysisXlsx",
-   "key": "appr.firm",
-   "ours": "Appraiser",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "fill-order",
-   "severity": "critical",
-   "property": "Westwood Village",
-   "oursRun": "rs-first",
-   "theirsRun": "rcs-first"
-  }
- ],
+ "fillOrder": [],
  "drift": [],
  "notes": [
   "the manifest could not read this cycle's study; driving it anyway, because what the app does with an unreadable study is the observation",
@@ -89,113 +58,58 @@
  "fuzz": {
   "seed": 4248152120,
   "counts": {
-   "edits": 5,
-   "escapes": 9,
+   "edits": 7,
+   "escapes": 8,
    "enters": 4,
-   "saves": 4,
-   "revertAlls": 0,
+   "saves": 3,
+   "revertAlls": 1,
    "drops": 0,
    "clicks": 7,
    "boundaries": 0,
    "colourScans": 8,
-   "episodes": 8
+   "episodes": 8,
+   "dialogs": 1
   },
-  "violations": [
-   {
-    "kind": "save-left-dirt",
-    "msg": "after \"Update property profile\" settled, 3 key(s) still differ from the snapshot: property.name, appr.addr_street, partb.services.4",
-    "seed": 4248152120,
-    "evidence": {
-     "property.name": {
-      "form": {
-       "value": "ZZ-CORPUS-4640009-20260731-0601 2",
-       "source": "overridden",
-       "db_value": "ZZ-CORPUS-4640009-20260731-0601",
-       "prior_value": "ZZ-CORPUS-4640009-20260731-0601"
-      },
-      "snap": {
-       "value": "ZZ-CORPUS-4640009-20260731-0601",
-       "source": "database",
-       "db_value": "ZZ-CORPUS-4640009-20260731-0601"
-      },
-      "onScreen": true
-     },
-     "appr.addr_street": {
-      "form": {
-       "value": "129",
-       "source": "new",
-       "db_value": null,
-       "prior_value": null
-      },
-      "snap": {
-       "value": "",
-       "source": "new",
-       "db_value": null
-      },
-      "onScreen": true
-     },
-     "partb.services.4": {
-      "form": {
-       "value": "1",
-       "source": "new",
-       "db_value": null,
-       "prior_value": null
-      },
-      "snap": {
-       "value": "",
-       "source": "new",
-       "db_value": null
-      },
-      "onScreen": false
-     }
-    },
-    "after": [
-     "— episode 1/8 [save] 111 controls on screen",
-     "type \"129\" into #viewForm input[data-k][23]",
-     "enter (commit)",
-     "click #viewForm [data-cb][16]",
-     "enter (commit)",
-     "click Update property profile"
-    ]
-   }
-  ],
+  "violations": [],
   "actions": [
-   "— episode 1/8 [save] 111 controls on screen",
-   "type \"129\" into #viewForm input[data-k][23]",
+   "— episode 1/8 [save] 159 controls on screen",
+   "type \"129\" into #viewForm input[data-k][34]",
    "enter (commit)",
-   "click #viewForm [data-cb][16]",
+   "click #viewForm [data-cb][9]",
    "enter (commit)",
    "click Update property profile",
-   "escape (2 left)",
-   "escape (1 left)",
-   "— episode 2/8 [save] 111 controls on screen",
+   "— episode 2/8 [save] 159 controls on screen",
    "click #viewForm [data-cb][33]",
    "enter (commit)",
-   "type \"\" into #viewForm input[data-k][32]",
+   "type \"\" into #viewForm input[data-k][46]",
    "click Update property profile",
-   "— episode 3/8 [escape] 111 controls on screen",
-   "click #viewForm [data-cb][9]",
-   "type \"1\" into #viewForm input[data-k][11]",
-   "click #viewForm [data-cb][15]",
+   "dialog \"Delete 1 unit type with no unit count?Saving will remove 1 r\" -> answered \"Cancel\"",
+   "— episode 3/8 [escape] 159 controls on screen",
+   "type \"1\" into #viewForm input[data-k][16]",
+   "click #viewForm [data-cb][7]",
+   "click #viewForm [data-cb][24]",
    "escape (4 left)",
    "escape (2 left)",
    "escape (1 left)",
-   "— episode 4/8 [save] 111 controls on screen",
-   "click #viewForm [data-cb][17]",
-   "click Update property profile",
-   "— episode 5/8 [escape] 111 controls on screen",
-   "type \"\" into #viewForm input[data-k][5]",
-   "type \"0\" into #viewForm input[data-k][42]",
-   "click #viewForm [data-fuel][4]",
-   "click #viewForm [data-cb][8]",
+   "— episode 4/8 [escape] 159 controls on screen",
+   "click #viewForm [data-fuel3][0]",
+   "type \"2026-03-01\" into #viewForm input[data-k][33]",
+   "type \"\" into #viewForm input[data-k][7]",
+   "type \"0\" into #viewForm input[data-k][60]",
    "escape (5 left)",
    "escape (3 left)",
    "escape (2 left)",
    "escape (1 left)",
-   "— episode 6/8 [escape] 0 controls on screen",
-   "— episode 7/8 [save] 0 controls on screen",
+   "— episode 5/8 [revertAll] 159 controls on screen",
+   "type \"1234\" into #viewForm input[data-k][72]",
+   "click #viewForm [data-cb][31]",
+   "click #viewForm [data-cb][19]",
+   "click Revert to saved",
+   "escape (3 left)",
+   "— episode 6/8 [save] 0 controls on screen",
    "enter (commit)",
    "click Update property profile",
+   "— episode 7/8 [escape] 0 controls on screen",
    "— episode 8/8 [escape] 0 controls on screen"
   ]
  },
@@ -213,7 +127,7 @@
   "compared": 0,
   "matched": 0,
   "differing": 0,
-  "fillOrder": 2,
+  "fillOrder": 0,
   "drift": 0,
   "notGenerated": 2
  }

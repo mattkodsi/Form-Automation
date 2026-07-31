@@ -1,0 +1,769 @@
+{
+ "property": "Westwood Village",
+ "code": "4640009",
+ "folder": "4640009 - Westwood Village - Section 8",
+ "year": 2025,
+ "cycleLabel": "2025 - RCS",
+ "sha": "ccc4568",
+ "orders": {
+  "rs-first": {
+   "files": 3,
+   "tier": "unreadable:text",
+   "weakerTest": false,
+   "ocrCalls": 2,
+   "via": null,
+   "missing": null,
+   "warnings": [
+    "the rent schedule was not readable (kind=text, The page was read and squared with the blank form, but the printed labels do not sit where the form puts them (they are out by about 7.1 points), so the values could not be placed with confidence.) — no values can be applied from it",
+    "rent schedule: #rsApply never appeared — nothing was applied to the form",
+    "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “Westwood Village”, and the management address. A letterhead can be uploaded on the property page.",
+    "package dialog: Westwood Village · 1 of 6 ready · 5 not ready"
+   ],
+   "errors": [
+    "after the reload the app is on a DIFFERENT property/package than order A used — the second order would be measuring another record",
+    "after the reload the rent-schedule upload is GONE (tile says \"Current executed rent schedule\") — order B has nothing to fill from, and re-uploading would pay for the read twice",
+    "after the reload the study upload is GONE (tile says \"Completed RCS report\") — order B has nothing to fill from"
+   ],
+   "docsExtracted": [
+    "analysisXlsx"
+   ]
+  },
+  "rcs-first": {
+   "files": 0,
+   "tier": "unreadable:text",
+   "weakerTest": false,
+   "ocrCalls": 2,
+   "via": null,
+   "missing": null,
+   "warnings": [
+    "the rent schedule was not readable (kind=text, The page was read and squared with the blank form, but the printed labels do not sit where the form puts them (they are out by about 7.1 points), so the values could not be placed with confidence.) — no values can be applied from it"
+   ],
+   "errors": [
+    "after the reload the app is on a DIFFERENT property/package than order A used — the second order would be measuring another record",
+    "after the reload the rent-schedule upload is GONE (tile says \"Current executed rent schedule\") — order B has nothing to fill from, and re-uploading would pay for the read twice",
+    "after the reload the study upload is GONE (tile says \"Completed RCS report\") — order B has nothing to fill from",
+    "not run: an upload was lost across the reload, so this order could only have been produced by paying for a second read"
+   ],
+   "docsExtracted": []
+  }
+ },
+ "rows": [
+  {
+   "doc": "analysisXlsx",
+   "key": "property.name",
+   "ours": "WestwoodVillage",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Westwood Village"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "appr.firm",
+   "ours": "BelfryValuation,LLC",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Westwood Village"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.type",
+   "ours": "2BR/1BA",
+   "theirs": "2Bed",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Westwood Village"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.units",
+   "ours": "65",
+   "theirs": "65",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Westwood Village"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.proposed",
+   "ours": "1200",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Westwood Village"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.ua",
+   "ours": "122",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Westwood Village"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.safmr",
+   "ours": "1120",
+   "theirs": "930",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Westwood Village"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.type",
+   "ours": "2BR/1BA",
+   "theirs": "2BedHC",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Westwood Village"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.units",
+   "ours": "3",
+   "theirs": "3",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Westwood Village"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.proposed",
+   "ours": "1200",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Westwood Village"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.ua",
+   "ours": "86",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Westwood Village"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.safmr",
+   "ours": "1120",
+   "theirs": "930",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Westwood Village"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.type",
+   "ours": "3BR/1BA",
+   "theirs": "3Bed",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Westwood Village"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.units",
+   "ours": "33",
+   "theirs": "33",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Westwood Village"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.proposed",
+   "ours": "1350",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Westwood Village"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.ua",
+   "ours": "145",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Westwood Village"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.safmr",
+   "ours": "1570",
+   "theirs": "1120",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Westwood Village"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.type",
+   "ours": "3BR/1BA",
+   "theirs": "3BedHC",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Westwood Village"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.units",
+   "ours": "3",
+   "theirs": "3",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Westwood Village"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.proposed",
+   "ours": "1350",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Westwood Village"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.ua",
+   "ours": "155",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Westwood Village"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.safmr",
+   "ours": "1570",
+   "theirs": "1120",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Westwood Village"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.4.type",
+   "ours": "4BR/2BA",
+   "theirs": "4Bed",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Westwood Village"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.4.units",
+   "ours": "9",
+   "theirs": "9",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Westwood Village"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.4.proposed",
+   "ours": "1600",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Westwood Village"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.4.ua",
+   "ours": "151",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Westwood Village"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.4.safmr",
+   "ours": "1850",
+   "theirs": "1570",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Westwood Village"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.current",
+   "ours": null,
+   "theirs": "753",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Westwood Village"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.current",
+   "ours": null,
+   "theirs": "760",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Westwood Village"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.current",
+   "ours": null,
+   "theirs": "887",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Westwood Village"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.current",
+   "ours": null,
+   "theirs": "880",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Westwood Village"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.4.current",
+   "ours": null,
+   "theirs": "973",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Westwood Village"
+  }
+ ],
+ "fillOrder": [
+  {
+   "doc": "analysisXlsx",
+   "key": "property.name",
+   "ours": "WestwoodVillage",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Westwood Village",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "appr.firm",
+   "ours": "BelfryValuation,LLC",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Westwood Village",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.type",
+   "ours": "2BR/1BA",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Westwood Village",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.units",
+   "ours": "65",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Westwood Village",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.proposed",
+   "ours": "1200",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Westwood Village",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.ua",
+   "ours": "122",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Westwood Village",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.safmr",
+   "ours": "1120",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Westwood Village",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.type",
+   "ours": "2BR/1BA",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Westwood Village",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.units",
+   "ours": "3",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Westwood Village",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.proposed",
+   "ours": "1200",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Westwood Village",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.ua",
+   "ours": "86",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Westwood Village",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.safmr",
+   "ours": "1120",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Westwood Village",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.type",
+   "ours": "3BR/1BA",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Westwood Village",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.units",
+   "ours": "33",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Westwood Village",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.proposed",
+   "ours": "1350",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Westwood Village",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.ua",
+   "ours": "145",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Westwood Village",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.safmr",
+   "ours": "1570",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Westwood Village",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.type",
+   "ours": "3BR/1BA",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Westwood Village",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.units",
+   "ours": "3",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Westwood Village",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.proposed",
+   "ours": "1350",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Westwood Village",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.ua",
+   "ours": "155",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Westwood Village",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.safmr",
+   "ours": "1570",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Westwood Village",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.4.type",
+   "ours": "4BR/2BA",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Westwood Village",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.4.units",
+   "ours": "9",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Westwood Village",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.4.proposed",
+   "ours": "1600",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Westwood Village",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.4.ua",
+   "ours": "151",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Westwood Village",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.4.safmr",
+   "ours": "1850",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Westwood Village",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  }
+ ],
+ "drift": [],
+ "notes": [
+  "filed: filed side read from the combined package: Westwood_Village_5th_Year_Adjustment_Request_RCS_Submission_(eff._8.1.25) (Executed).pdf",
+  "filed: tenantNotice read from Westwood Village - Resident 30 Day Notice of Rent Increase.pdf",
+  "filed: rentSchedule read from FY2025 Rent Schedule.pdf",
+  "filed: analysisXlsx read from Westwood - RCS RCS Grid Analysis 11.30.24.xlsx"
+ ],
+ "verdict": "27 differences",
+ "fuzz": {
+  "seed": 742772028,
+  "counts": {
+   "edits": 1,
+   "escapes": 1,
+   "enters": 3,
+   "saves": 3,
+   "revertAlls": 2,
+   "drops": 0,
+   "clicks": 0,
+   "boundaries": 0,
+   "colourScans": 8,
+   "episodes": 8,
+   "dialogs": 3
+  },
+  "violations": [],
+  "actions": [
+   "— episode 1/8 [revertAll] 111 controls on screen",
+   "type \"2050\" into #viewForm input[data-k][21]",
+   "click Revert to saved",
+   "escape (1 left)",
+   "— episode 2/8 [escape] 0 controls on screen",
+   "— episode 3/8 [save] 0 controls on screen",
+   "click Update property profile",
+   "dialog \"That name is already takenAnother property is already called\" -> answered \"Use this name\"",
+   "— episode 4/8 [save] 0 controls on screen",
+   "enter (commit)",
+   "click Update property profile",
+   "dialog \"That name is already takenAnother property is already called\" -> answered \"Open the other one\"",
+   "— episode 5/8 [save] 0 controls on screen",
+   "enter (commit)",
+   "enter (commit)",
+   "click Update property profile",
+   "dialog \"That name is already takenAnother property is already called\" -> answered \"Use this name\"",
+   "— episode 6/8 [escape] 0 controls on screen",
+   "— episode 7/8 [escape] 0 controls on screen",
+   "— episode 8/8 [revertAll] 0 controls on screen",
+   "click Revert to saved"
+  ]
+ },
+ "inputs": {
+  "study": "2025 - RCS/Submission/Exhibit 3 - 25-072 - Westwood Village, 748 Westwood Boulevard, Roanoke, VA.pdf",
+  "priorRs": "2024/Westwood Village Rent Schedule eff. 8.1.24.pdf",
+  "priorRsRule": "year-1 folder"
+ },
+ "notGenerated": [
+  "notes",
+  "sections",
+  "coverLetter",
+  "rcsStudy",
+  "checklist",
+  "tenantNotice",
+  "rentSchedule"
+ ],
+ "notGeneratedWhy": null,
+ "counts": {
+  "compared": 32,
+  "matched": 5,
+  "differing": 27,
+  "fillOrder": 27,
+  "drift": 0,
+  "notGenerated": 7
+ }
+}

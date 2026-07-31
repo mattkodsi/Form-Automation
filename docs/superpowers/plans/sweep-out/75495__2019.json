@@ -1,0 +1,2715 @@
+{
+ "property": "Hampshire House",
+ "code": "75495",
+ "folder": "75495 - Hampshire House - Section 8",
+ "year": 2019,
+ "cycleLabel": "2019",
+ "sha": "ccc4568",
+ "orders": {
+  "rs-first": {
+   "files": 5,
+   "tier": "ocr",
+   "weakerTest": false,
+   "ocrCalls": 2,
+   "via": "ocr",
+   "missing": null,
+   "warnings": [
+    "the study yielded no unit types — no values can be applied from it",
+    "after the reload the property shows 2 packages, expected 1",
+    "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+    "study: #rcsApply never appeared — nothing was applied to the form",
+    "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “Hampshire House”, and the management address. A letterhead can be uploaded on the property page.",
+    "package dialog: Hampshire House · 3 of 6 ready · 3 not ready"
+   ],
+   "errors": [],
+   "docsExtracted": [
+    "checklist",
+    "rentSchedule",
+    "analysisXlsx"
+   ]
+  },
+  "rcs-first": {
+   "files": 5,
+   "tier": "ocr",
+   "weakerTest": false,
+   "ocrCalls": 2,
+   "via": "ocr",
+   "missing": null,
+   "warnings": [
+    "the study yielded no unit types — no values can be applied from it",
+    "after the reload the property shows 2 packages, expected 1",
+    "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+    "study: #rcsApply never appeared — nothing was applied to the form",
+    "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “Hampshire House”, and the management address. A letterhead can be uploaded on the property page.",
+    "package dialog: Hampshire House · 3 of 6 ready · 3 not ready"
+   ],
+   "errors": [],
+   "docsExtracted": [
+    "checklist",
+    "rentSchedule",
+    "analysisXlsx"
+   ]
+  }
+ },
+ "rows": [
+  {
+   "doc": "checklist",
+   "key": "heading",
+   "ours": "Owner’s  Checklist for  RCS  Submission",
+   "theirs": "OwnersChecklistforRCSSubmission",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "key": "property.name",
+   "ours": "HampshireHouse",
+   "theirs": "MaylS,2019",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.0",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.1",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.2",
+   "ours": "0",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.3",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.4",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.5",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.6",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.7",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.8",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.9",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.10",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.11",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.12",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.13",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.14",
+   "ours": "0",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.15",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.16",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "key": "checklist.signature",
+   "ours": "MatthewFinkle,VicePresidentofGeneralPartner",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "property.name",
+   "ours": "HampshireHouse",
+   "theirs": "rojecNameHampshireHouse",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "property.fha",
+   "ours": "NJ390030010",
+   "theirs": "FrtAProject\\umbe",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "rent_schedule.date_eff",
+   "ours": "10/01/2019",
+   "theirs": "RentsWilBeEffectivemnVddfyy",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "rent_schedule.eff_month",
+   "ours": "10",
+   "theirs": "(nm/dd/yyyy)",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "rent_schedule.eff_day",
+   "ours": "01",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "rent_schedule.eff_year",
+   "ours": "2019",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "nonrev.total_rent",
+   "ours": "0",
+   "theirs": "0",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "owner.entity_name",
+   "ours": "HampshireHouseAssociates",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "sig.name_title",
+   "ours": "MatthewFinkle,VicePresidentofGeneralPartner",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "total.units",
+   "ours": "116",
+   "theirs": "116",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.type",
+   "ours": "1BR",
+   "theirs": "Non-Revenue2Bedroom",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.units",
+   "ours": "90",
+   "theirs": "1",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.ua",
+   "ours": "54",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.row",
+   "ours": "0",
+   "theirs": "4",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.type",
+   "ours": "2BR",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.units",
+   "ours": "25",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.ua",
+   "ours": "69",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.row",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.type",
+   "ours": "2BR",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.units",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.rent",
+   "ours": "0",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.extension",
+   "ours": "0",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.ua",
+   "ours": "0",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.gross",
+   "ours": "0",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.row",
+   "ours": "3",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "owner.entity_type",
+   "ours": "LimitedPartnership",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.equipment.0",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.equipment.1",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.utilities.0",
+   "ours": "1",
+   "theirs": "1",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.utilities.2",
+   "ours": "1",
+   "theirs": "1",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.fuel.0",
+   "ours": "G",
+   "theirs": "CE",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.fuel.1",
+   "ours": "E",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.fuel.2",
+   "ours": "G",
+   "theirs": "CE",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.fuel.3",
+   "ours": "E",
+   "theirs": "E",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.fuel.4",
+   "ours": "E",
+   "theirs": "E",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "nonrev.0.use",
+   "ours": "ManagerUnit",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "nonrev.0.type",
+   "ours": "2BR",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "principals.0.name",
+   "ours": "HampshirePreservationGP,LLC",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "total.contract_rent",
+   "ours": null,
+   "theirs": "5147.750",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "total.annual",
+   "ours": null,
+   "theirs": "51.773,000",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.extension",
+   "ours": null,
+   "theirs": "0",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.equipment.2",
+   "ours": null,
+   "theirs": "1",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.equipment.3",
+   "ours": null,
+   "theirs": "1",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.equipment.5",
+   "ours": null,
+   "theirs": "1",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.equipment.6",
+   "ours": null,
+   "theirs": "1",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.utilities.3",
+   "ours": null,
+   "theirs": "1",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.utilities.4",
+   "ours": null,
+   "theirs": "1",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.writein.u1.on",
+   "ours": null,
+   "theirs": "1",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.services.0",
+   "ours": null,
+   "theirs": "1",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.services.1",
+   "ours": null,
+   "theirs": "1",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.services.4",
+   "ours": null,
+   "theirs": "1",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.services.5",
+   "ours": null,
+   "theirs": "1",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.writein.e2.on",
+   "ours": null,
+   "theirs": "1",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.writein.e3.on",
+   "ours": null,
+   "theirs": "1",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.writein.e4.on",
+   "ours": null,
+   "theirs": "1",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.writein.e5.on",
+   "ours": null,
+   "theirs": "1",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.writein.s5.on",
+   "ours": null,
+   "theirs": "1",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "property.name",
+   "ours": "HampshireHouse",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "appr.firm",
+   "ours": "Appraiser",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.type",
+   "ours": "1BR",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.units",
+   "ours": "90",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.current",
+   "ours": "1106",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.ua",
+   "ours": "54",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.type",
+   "ours": "2BR",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.units",
+   "ours": "25",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.current",
+   "ours": "1377",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.ua",
+   "ours": "69",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Hampshire House"
+  }
+ ],
+ "fillOrder": [],
+ "drift": [
+  {
+   "doc": "checklist",
+   "side": "ours",
+   "line": "signedcoverletter",
+   "normalized": "signedcoverletter",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "ours",
+   "line": "scopeofrepair",
+   "normalized": "scopeofrepair",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "ours",
+   "line": "descriptionofsubjectprojectincludingcolorphotographs",
+   "normalized": "descriptionofsubjectprojectincludingcolorphotographs",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "ours",
+   "line": "locatormapforsubjectandcomparables",
+   "normalized": "locatormapforsubjectandcomparables",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "ours",
+   "line": "narrativeexplainingadjustmentsandmarketrentconclusionsonesetofexplanationsfor",
+   "normalized": "narrativeexplainingadjustmentsandmarketrentconclusionsonesetofexplanationsfor",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "ours",
+   "line": "eachrentgrid",
+   "normalized": "eachrentgrid",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "ours",
+   "line": "copyofrcsappraiserslicenseonlyifrelyinguponatemporarylicense",
+   "normalized": "copyofrcsappraiserslicenseonlyifrelyinguponatemporarylicense",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "ours",
+   "line": "computationoftheprojectsgrossrentsandthesafmrgrossrents",
+   "normalized": "computationoftheprojectsgrossrentsandthesafmrgrossrents",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "ours",
+   "line": "comparisonofprojectsgrossrentstothesafmrgrossrents",
+   "normalized": "comparisonofprojectsgrossrentstothesafmrgrossrents",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "ours",
+   "line": "davidpearsonvpofgp",
+   "normalized": "davidpearsonvpofgp",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "ours",
+   "line": "appendixpublishedmarch",
+   "normalized": "appendixpublishedmarch",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "shobanarayan",
+   "normalized": "shobanarayan",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "managerofsubsidyaccountingnewjerseyhousingmortgagefinanceagency",
+   "normalized": "managerofsubsidyaccountingnewjerseyhousingmortgagefinanceagency",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "rerentadjustmenteffective",
+   "normalized": "rerentadjustmenteffective",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "hampshirehouseapartmentstheproject",
+   "normalized": "hampshirehouseapartmentstheproject",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "sectionnumbernj",
+   "normalized": "sectionnumbernj",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "asoutlinedinthehapcontractfortheabovesitedatedinsectionbcontractrent",
+   "normalized": "asoutlinedinthehapcontractfortheabovesitedatedinsectionbcontractrent",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "attheexpirationofeachyearperiodoftherenewalcontracttermthecontractadministratorshall",
+   "normalized": "attheexpirationofeachyearperiodoftherenewalcontracttermthecontractadministratorshall",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "compareexistingcontractrentswithcomparablemarketrentsforthemarketareaatsuch",
+   "normalized": "compareexistingcontractrentswithcomparablemarketrentsforthemarketareaatsuch",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "anniversaryoftherenewalcontractthecontractadministratorshallmakeanyadjustmentsinthe",
+   "normalized": "anniversaryoftherenewalcontractthecontractadministratorshallmakeanyadjustmentsinthe",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "monthlycontractrentsasreasonablydeterminedbythecontractadministratorinaccordancewith",
+   "normalized": "monthlycontractrentsasreasonablydeterminedbythecontractadministratorinaccordancewith",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "hudrequirementsnecessarytosetthecontractrentsforallunitsizesatcomparablemarketrents",
+   "normalized": "hudrequirementsnecessarytosetthecontractrentsforallunitsizesatcomparablemarketrents",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "suchadjustmentsmayresultinanegativeadjustmentdecreaseorpositiveadjustmentincreaseof",
+   "normalized": "suchadjustmentsmayresultinanegativeadjustmentdecreaseorpositiveadjustmentincreaseof",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "thecontractrentsforoneormoreunitsizes",
+   "normalized": "thecontractrentsforoneormoreunitsizes",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "enclosedforyourreviewpleasefindtherentcomparabilitystudyrcsfortheabovereferenced",
+   "normalized": "enclosedforyourreviewpleasefindtherentcomparabilitystudyrcsfortheabovereferenced",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "shouldyouhaveanyquestionsregardingtherentadjustmentrequestpleasedonothesitateto",
+   "normalized": "shouldyouhaveanyquestionsregardingtherentadjustmentrequestpleasedonothesitateto",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "contactmichaelherzogatormichaelherzogrelatedcom",
+   "normalized": "contactmichaelherzogatormichaelherzogrelatedcom",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "vicepresidentofgeneralpartner",
+   "normalized": "vicepresidentofgeneralpartner",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "exhibitrentcomparabilitystudy",
+   "normalized": "exhibitrentcomparabilitystudy",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "exhibitproposedrentschedule",
+   "normalized": "exhibitproposedrentschedule",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "relatedaffordableeocolumbuscirclenewyorknyfaxmmreiatedcom",
+   "normalized": "relatedaffordableeocolumbuscirclenewyorknyfaxmmreiatedcom",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "hampshireurbanrenewalpreservationlp",
+   "normalized": "hampshireurbanrenewalpreservationlp",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "dotherelatedcompanieslp",
+   "normalized": "dotherelatedcompanieslp",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "columbuscircle",
+   "normalized": "columbuscircle",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "rercssubmittalcoverletterforhampshirehousenj",
+   "normalized": "rercssubmittalcoverletterforhampshirehousenj",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "ihavereviewedthecontentofthercsandconcludedthatthercsincludesallmaterialrequiredby",
+   "normalized": "ihavereviewedthecontentofthercsandconcludedthatthercsincludesallmaterialrequiredby",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "chapternineandtheownerschecklistinappendix",
+   "normalized": "chapternineandtheownerschecklistinappendix",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "thercsappraisersdoylerealestateadvisorsdoylenarrativesandrentgridaccuratelydescribe",
+   "normalized": "thercsappraisersdoylerealestateadvisorsdoylenarrativesandrentgridaccuratelydescribe",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "thesubjectprojectandproperlytreatnonshelterservicesandtheirfundingsourcesasrequiredby",
+   "normalized": "thesubjectprojectandproperlytreatnonshelterservicesandtheirfundingsourcesasrequiredby",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "sectionandappendix",
+   "normalized": "sectionandappendix",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "thereisnofamilyrelationshiporidentityofinterestbetweentheprincipalsofthesubjectsownershipor",
+   "normalized": "thereisnofamilyrelationshiporidentityofinterestbetweentheprincipalsofthesubjectsownershipor",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "managementagententityandtheprincipalsthatmanageowntheprojectsusedascomparables",
+   "normalized": "managementagententityandtheprincipalsthatmanageowntheprojectsusedascomparables",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "icertifythataneithertheselectionofthercsappraisernorthercsappraiserscompensationwasis",
+   "normalized": "icertifythataneithertheselectionofthercsappraisernorthercsappraiserscompensationwasis",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "contingentuponthercsappraiserreportingapredeterminedrentnordirectioninrentandbtothe",
+   "normalized": "contingentuponthercsappraiserreportingapredeterminedrentnordirectioninrentandbtothe",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "bestoftheownersknowledgethercsappraisermeetssectionasconditionsregardingabsence",
+   "normalized": "bestoftheownersknowledgethercsappraisermeetssectionasconditionsregardingabsence",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "offinancialemploymentandfamilyrelationships",
+   "normalized": "offinancialemploymentandfamilyrelationships",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "icertifythatthefeepaidforthercsistheonlycompensationthercsappraiserwillreceiveforthe",
+   "normalized": "icertifythatthefeepaidforthercsistheonlycompensationthercsappraiserwillreceiveforthe",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "rcsworkandthereisnosideagreementorotherconsideration",
+   "normalized": "rcsworkandthereisnosideagreementorotherconsideration",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "thefollowingpersonisourpointofcontactforhudcasdecisionletterortoaddressanyquestions",
+   "normalized": "thefollowingpersonisourpointofcontactforhudcasdecisionletterortoaddressanyquestions",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "thatthehudcastaffmayhaveonthercs",
+   "normalized": "thatthehudcastaffmayhaveonthercs",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "representativeofowner",
+   "normalized": "representativeofowner",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "michaelherzog",
+   "normalized": "michaelherzog",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "michaelherzogrelatedcom",
+   "normalized": "michaelherzogrelatedcom",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "hudcamaytalkwiththercsappraiserdirectlyandcopythercsappraiseronwrittenmaterialsthe",
+   "normalized": "hudcamaytalkwiththercsappraiserdirectlyandcopythercsappraiseronwrittenmaterialsthe",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "rcsappraiserscontactinformationisprovidedbelow",
+   "normalized": "rcsappraiserscontactinformationisprovidedbelow",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "doylerealestateadvisors",
+   "normalized": "doylerealestateadvisors",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "walnutstreet",
+   "normalized": "walnutstreet",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "philadelphiapa",
+   "normalized": "philadelphiapa",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "johnedoylemaijdoyledoyleadvisorscom",
+   "normalized": "johnedoylemaijdoyledoyleadvisorscom",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "certifythattheaboveisalltrue",
+   "normalized": "certifythattheaboveisalltrue",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "fgeneralpartnerdate",
+   "normalized": "fgeneralpartnerdate",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "endownerschecklistrcs",
+   "normalized": "endownerschecklistrcs",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "relatedaffordablecolumbuscirclenewyorknyfaxwrelatedcom",
+   "normalized": "relatedaffordablecolumbuscirclenewyorknyfaxwrelatedcom",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "elsignedcoverletter",
+   "normalized": "elsignedcoverletter",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "uscopeofrepair",
+   "normalized": "uscopeofrepair",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "uscopeofwork",
+   "normalized": "uscopeofwork",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "lidescriptionofsubjectprojectincludingcolorphotographs",
+   "normalized": "lidescriptionofsubjectprojectincludingcolorphotographs",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "lilocatormapforsubjectandcomparables",
+   "normalized": "lilocatormapforsubjectandcomparables",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "usnarrativeexplainingadjustmentsandmarketrentconclusionsonesetof",
+   "normalized": "usnarrativeexplainingadjustmentsandmarketrentconclusionsonesetof",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "explanationsforeachrentgrid",
+   "normalized": "explanationsforeachrentgrid",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "licopyofrcsappraiserslicenseonlyifrelyinguponatemporarylicense",
+   "normalized": "licopyofrcsappraiserslicenseonlyifrelyinguponatemporarylicense",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "distributionofrcsrentsandsubjectprojectsmedianrent",
+   "normalized": "distributionofrcsrentsandsubjectprojectsmedianrent",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "comparisonofprojectsmedianrenttothemediangrossrent",
+   "normalized": "comparisonofprojectsmedianrenttothemediangrossrent",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "usdepartmentofhousingombapprovalno",
+   "normalized": "usdepartmentofhousingombapprovalno",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "andurbandevelopment",
+   "normalized": "andurbandevelopment",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "lowrenthousingofficeofhousing",
+   "normalized": "lowrenthousingofficeofhousing",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "seepageforinstructionspublicburdenstatementandprivacyactrequirements",
+   "normalized": "seepageforinstructionspublicburdenstatementandprivacyactrequirements",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "projectnamefhaprojectnumberdaterentswillbeeffectivemmddyyyy",
+   "normalized": "projectnamefhaprojectnumberdaterentswillbeeffectivemmddyyyy",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "showtheactualrentsyouintendtochargeevenifthetotaloftheserentsislessthanthemaximumallowablemonthlyrentpotential",
+   "normalized": "showtheactualrentsyouintendtochargeevenifthetotaloftheserentsislessthanthemaximumallowablemonthlyrentpotential",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "colcolmarketrents",
+   "normalized": "colcolmarketrents",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "unittypeutilitysecprojectsonly",
+   "normalized": "unittypeutilitysecprojectsonly",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "colallowancescolcol",
+   "normalized": "colallowancescolcol",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "includenonrevenuecolmonthlygrossrentcolmonthly",
+   "normalized": "includenonrevenuecolmonthlygrossrentcolmonthly",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "producingunitsnumbercolcontractrenteffectivedatecolcolrentmarketrent",
+   "normalized": "producingunitsnumbercolcontractrenteffectivedatecolcolrentmarketrent",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "ofunitsrentperunitpotentialmmddyyyyperunitpotential",
+   "normalized": "ofunitsrentperunitpotentialmmddyyyyperunitpotential",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "colxcolcolxcol",
+   "normalized": "colxcolcolxcol",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "monthlycontractrentpotentialmonthlymarketrentpotential",
+   "normalized": "monthlycontractrentpotentialmonthlymarketrentpotential",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "addcoladdcol",
+   "normalized": "addcoladdcol",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "yearlycontractrentpotentialyearlymarketrentpotential",
+   "normalized": "yearlycontractrentpotentialyearlymarketrentpotential",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "colsumxcolsumx",
+   "normalized": "colsumxcolsumx",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "theseamountsmaynotexceedthemaximumallowablemonthlyrentpotentialapprovedonthelastrentcomputationworksheetorrequestedonthe",
+   "normalized": "theseamountsmaynotexceedthemaximumallowablemonthlyrentpotentialapprovedonthelastrentcomputationworksheetorrequestedonthe",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partbitemsincludedinrentpartdnonrevenueproducingspace",
+   "normalized": "partbitemsincludedinrentpartdnonrevenueproducingspace",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "useunittypecontractrent",
+   "normalized": "useunittypecontractrent",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "totalrentlossduetononrevenueunits",
+   "normalized": "totalrentlossduetononrevenueunits",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "heatinghotwaterlightsetc",
+   "normalized": "heatinghotwaterlightsetc",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partecommercialspaceretailofficesgaragesetc",
+   "normalized": "partecommercialspaceretailofficesgaragesetc",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "coolingcooking",
+   "normalized": "coolingcooking",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "colcolrentalrate",
+   "normalized": "colcolrentalrate",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "servicesfacilitiescheckthoseincludedinrent",
+   "normalized": "servicesfacilitiescheckthoseincludedinrent",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "colmonthlyrentsquarepersqft",
+   "normalized": "colmonthlyrentsquarepersqft",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "usepotentialfootagecoldividedby",
+   "normalized": "usepotentialfootagecoldividedby",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "totalcommercialrent",
+   "normalized": "totalcommercialrent",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partfmaximumallowablerentpotential",
+   "normalized": "partfmaximumallowablerentpotential",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "entermaximumallowablemonthlyrent",
+   "normalized": "entermaximumallowablemonthlyrent",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "worksheettobecompletedbyhudorlender",
+   "normalized": "worksheettobecompletedbyhudorlender",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "previouseditionsareobsolete",
+   "normalized": "previouseditionsareobsolete",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "previouseditionsareobsolete",
+   "normalized": "previouseditionsareobsolete",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partginformationonmortgagorentity",
+   "normalized": "partginformationonmortgagorentity",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "nameofentity",
+   "normalized": "nameofentity",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "typeofentity",
+   "normalized": "typeofentity",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "individualgeneralpartnershipjointtenancytenantsincommonotherspecify",
+   "normalized": "individualgeneralpartnershipjointtenancytenantsincommonotherspecify",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "corporationtrust",
+   "normalized": "corporationtrust",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "listallprincipalscomprisingmortgagorentity",
+   "normalized": "listallprincipalscomprisingmortgagorentity",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "nameandtitle",
+   "normalized": "nameandtitle",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "nameandtitle",
+   "normalized": "nameandtitle",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "nameandtitle",
+   "normalized": "nameandtitle",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "nameandtitle",
+   "normalized": "nameandtitle",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "nameandtitle",
+   "normalized": "nameandtitle",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "nameandtitle",
+   "normalized": "nameandtitle",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "nameandtitle",
+   "normalized": "nameandtitle",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "nameandtitle",
+   "normalized": "nameandtitle",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "nameandtitle",
+   "normalized": "nameandtitle",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "nameandtitle",
+   "normalized": "nameandtitle",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "nameandtitle",
+   "normalized": "nameandtitle",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "parthownercertification",
+   "normalized": "parthownercertification",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "nameandtitleauthorizedofficialssignature",
+   "normalized": "nameandtitleauthorizedofficialssignature",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "datemmddyyyy",
+   "normalized": "datemmddyyyy",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partihudlenderapproval",
+   "normalized": "partihudlenderapproval",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "addendumnumberbranchchieflenderofficialsignature",
+   "normalized": "addendumnumberbranchchieflenderofficialsignature",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "hapcontractnumberdatemmddyyyy",
+   "normalized": "hapcontractnumberdatemmddyyyy",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "exhibitnumberdirectorhousingmanagementdivisionsignature",
+   "normalized": "exhibitnumberdirectorhousingmanagementdivisionsignature",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "loanservicersignaturedatemmddyyyydatemmddyyyy",
+   "normalized": "loanservicersignaturedatemmddyyyydatemmddyyyy",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "osecutionsitwillnotbe",
+   "normalized": "osecutionsitwillnotbe",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "instructions",
+   "normalized": "instructions",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "allprojectownersmustsubmittheformhudwhenrequestcolumnforunsubsidizedprojectsshowtherentyouintendto",
+   "normalized": "allprojectownersmustsubmittheformhudwhenrequestcolumnforunsubsidizedprojectsshowtherentyouintendto",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "inganadjustmenttoprojectrentshudestablishesandapproveschargeforeachunittypeforsubsidizedprojectsshowthecontract",
+   "normalized": "inganadjustmenttoprojectrentshudestablishesandapproveschargeforeachunittypeforsubsidizedprojectsshowthecontract",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "rentalchargesandutilityallowancesontheformtheownerisrentasdefinedinhudhandbookforeachunittype",
+   "normalized": "rentalchargesandutilityallowancesontheformtheownerisrentasdefinedinhudhandbookforeachunittype",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "responsiblefornotifyingtenantsoftheapprovedrents",
+   "normalized": "responsiblefornotifyingtenantsoftheapprovedrents",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "columnforeachlinemultiplythecontractrentincolumnbythe",
+   "normalized": "columnforeachlinemultiplythecontractrentincolumnbythe",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "generalforprojectswithfullyinsuredorhudheldmortgagesthenumberofunitsincolumnaddmonthlycontractrentpotentialsfor",
+   "normalized": "generalforprojectswithfullyinsuredorhudheldmortgagesthenumberofunitsincolumnaddmonthlycontractrentpotentialsfor",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "owneragentsubmitsthisformtothehudfieldofficeforprojectseachunitsizetocomputethetotalmonthlycontractrentpotential",
+   "normalized": "owneragentsubmitsthisformtothehudfieldofficeforprojectseachunitsizetocomputethetotalmonthlycontractrentpotential",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "withcoinsuredmortgagestheowneragentsubmitsthisformtothemultiplythemonthlytotalbytocomputetheannualcontractrent",
+   "normalized": "withcoinsuredmortgagestheowneragentsubmitsthisformtothemultiplythemonthlytotalbytocomputetheannualcontractrent",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "lenderpotential",
+   "normalized": "lenderpotential",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partaifthemonthlyrentpotentialyouareproposingislessthanorcolumnsandcompletethecolumnsonlyiftheprojecthasa",
+   "normalized": "partaifthemonthlyrentpotentialyouareproposingislessthanorcolumnsandcompletethecolumnsonlyiftheprojecthasa",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "equaltothemaximumallowablemonthlyrentpotentialapprovedbysubsidycontractwithhudandsomeutilitiesarenotincludedinthe",
+   "normalized": "equaltothemaximumallowablemonthlyrentpotentialapprovedbysubsidycontractwithhudandsomeutilitiesarenotincludedinthe",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "hudlenderonyouroriginalrentformulaoronyourmostrecentrentincolumnshowtheutilityallowanceforeachunittype",
+   "normalized": "hudlenderonyouroriginalrentformulaoronyourmostrecentrentincolumnshowtheutilityallowanceforeachunittype",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "rentcomputationworksheetcompleteallofpartaaccordingtothecomputethegrossrentforeachunittypebyaddingthecontractrent",
+   "normalized": "rentcomputationworksheetcompleteallofpartaaccordingtothecomputethegrossrentforeachunittypebyaddingthecontractrent",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "instructionsbelowifthemonthlyrentpotentialyouarerequestingincolumnandtheutilityallowanceincolumnshowthisamount",
+   "normalized": "instructionsbelowifthemonthlyrentpotentialyouarerequestingincolumnandtheutilityallowanceincolumnshowthisamount",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "exceedsthemaximumallowablemonthlyrentpotentialapprovedincolumn",
+   "normalized": "exceedsthemaximumallowablemonthlyrentpotentialapprovedincolumn",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "byhudlenderonyouroriginalrentformulaoronyourmostrecent",
+   "normalized": "byhudlenderonyouroriginalrentformulaoronyourmostrecent",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "columnsandcompletethesecolumnsonlyiftheprojectis",
+   "normalized": "columnsandcompletethesecolumnsonlyiftheprojectis",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "rentcomputationworksheetcompleteonlycolumnsand",
+   "normalized": "rentcomputationworksheetcompleteonlycolumnsand",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "receivingsectioninterestreductionpaymentsincolumn",
+   "normalized": "receivingsectioninterestreductionpaymentsincolumn",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "accordingtotheinstructionsbelowshowyourproposedrentsand",
+   "normalized": "accordingtotheinstructionsbelowshowyourproposedrentsand",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "showthemarketrentforeachunittypeincolumnforeachline",
+   "normalized": "showthemarketrentforeachunittypeincolumnforeachline",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "monthlyrentpotentialinthecoverlettertransmittingyourrent",
+   "normalized": "monthlyrentpotentialinthecoverlettertransmittingyourrent",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "multiplythemarketrentincolumnbythenumberofunitsincolumn",
+   "normalized": "multiplythemarketrentincolumnbythenumberofunitsincolumn",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "increaserequest",
+   "normalized": "increaserequest",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "addthemonthlymarketrentpotentialsforeachunitsizeto",
+   "normalized": "addthemonthlymarketrentpotentialsforeachunitsizeto",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "columnshoweachtypeofunitforwhichrentswillvaryshowthecomputethetotalmonthlymarketrentpotentialmultiplythemonthly",
+   "normalized": "columnshoweachtypeofunitforwhichrentswillvaryshowthecomputethetotalmonthlymarketrentpotentialmultiplythemonthly",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "numberofbedroomsandbathroomsandotherfeaturesthatcausetotalbytocomputetheannualmarketrentpotential",
+   "normalized": "numberofbedroomsandbathroomsandotherfeaturesthatcausetotalbytocomputetheannualmarketrentpotential",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "rentstovaryegbdmbdakettevsbdmbdrk",
+   "normalized": "rentstovaryegbdmbdakettevsbdmbdrk",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partsbcdandecompletethesepartsaccordingtothe",
+   "normalized": "partsbcdandecompletethesepartsaccordingtothe",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "usethefollowingsymbols",
+   "normalized": "usethefollowingsymbols",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "instructionsontherentschedule",
+   "normalized": "instructionsontherentschedule",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "bdmbedroomlrlivingroom",
+   "normalized": "bdmbedroomlrlivingroom",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partfdonotcompletethispartthehudfieldofficelenderwill",
+   "normalized": "partfdonotcompletethispartthehudfieldofficelenderwill",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "bbathdrdiningroom",
+   "normalized": "bbathdrdiningroom",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "completethispart",
+   "normalized": "completethispart",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "completethispart",
+   "normalized": "completethispart",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "kkitchendadiningalcove",
+   "normalized": "kkitchendadiningalcove",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "kettekitchenette",
+   "normalized": "kettekitchenette",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partsgandhcompletethesepartsaccordingtotheinstructions",
+   "normalized": "partsgandhcompletethesepartsaccordingtotheinstructions",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "ontherentschedule",
+   "normalized": "ontherentschedule",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "columnshowthenumberofunitsforeachunittypeincludenon",
+   "normalized": "columnshowthenumberofunitsforeachunittypeincludenon",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "revenueproducingunits",
+   "normalized": "revenueproducingunits",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "partidonotcompletethispartthehudfieldofficelenderwill",
+   "normalized": "partidonotcompletethispartthehudfieldofficelenderwill",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "usdepartmentofhousingmbapprovalno",
+   "normalized": "usdepartmentofhousingmbapprovalno",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "andurbandevelopmentexpd",
+   "normalized": "andurbandevelopmentexpd",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "lowrenthousingolficeofhousing",
+   "normalized": "lowrenthousingolficeofhousing",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "seepageforinstructionspublicburdenstatementandprivacyact",
+   "normalized": "seepageforinstructionspublicburdenstatementandprivacyact",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "requirements",
+   "normalized": "requirements",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "rojecnamefrtaproject",
+   "normalized": "rojecnamefrtaproject",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "hampshirehouse",
+   "normalized": "hampshirehouse",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "showtheactualrentsyouintendtochargeevenifthetotaloftheserentsismaximum",
+   "normalized": "showtheactualrentsyouintendtochargeevenifthetotaloftheserentsismaximum",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "lessthantheallowablemonthlyrentpotential",
+   "normalized": "lessthantheallowablemonthlyrentpotential",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "unittypeutility",
+   "normalized": "unittypeutility",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "secproiectsonly",
+   "normalized": "secproiectsonly",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "cclallowancesccl",
+   "normalized": "cclallowancesccl",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "includenonrevenuecolmonthly",
+   "normalized": "includenonrevenuecolmonthly",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "grossrentcclmonthly",
+   "normalized": "grossrentcclmonthly",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "producingunitsnumbercolcontractrenteffectivedate",
+   "normalized": "producingunitsnumbercolcontractrenteffectivedate",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "cclcclrentmarketrent",
+   "normalized": "cclcclrentmarketrent",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "ofunitsrentperunitpotentialper",
+   "normalized": "ofunitsrentperunitpotentialper",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "unjtpotential",
+   "normalized": "unjtpotential",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "cotxcolcolxcol",
+   "normalized": "cotxcolcolxcol",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "monthlycontractrentpotentialmonthlymarketrent",
+   "normalized": "monthlycontractrentpotentialmonthlymarketrent",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "addcoladdcot",
+   "normalized": "addcoladdcot",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "yearlycontractrentpotentialyearlymarketrent",
+   "normalized": "yearlycontractrentpotentialyearlymarketrent",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "theseamountsmaynotexceedthemaximumallowablemonthlyrent",
+   "normalized": "theseamountsmaynotexceedthemaximumallowablemonthlyrent",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "potentialapprovedonthelastrentcomputationworksheetorrequestedihe",
+   "normalized": "potentialapprovedonthelastrentcomputationworksheetorrequestedihe",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "partbitemsincludedinrent",
+   "normalized": "partbitemsincludedinrent",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "partdnonrevenueproducingspace",
+   "normalized": "partdnonrevenueproducingspace",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "unittypecontractrent",
+   "normalized": "unittypecontractrent",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "heatingchotwatercfllightsetcetotalrentlossduetononrevenueunits",
+   "normalized": "heatingchotwatercfllightsetcetotalrentlossduetononrevenueunits",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "coolingecookingepartecommercialspaceretailofficesgaragesetc",
+   "normalized": "coolingecookingepartecommercialspaceretailofficesgaragesetc",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "servicesfacilitiescheckthoseincludedinrentcotcotrentalrate",
+   "normalized": "servicesfacilitiescheckthoseincludedinrentcotcotrentalrate",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "cotmonthlyrentsquarepersqft",
+   "normalized": "cotmonthlyrentsquarepersqft",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "usepotentialfootagecotdividedby",
+   "normalized": "usepotentialfootagecotdividedby",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "commercialrent",
+   "normalized": "commercialrent",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "spartfmaximumallowablerentpotential",
+   "normalized": "spartfmaximumallowablerentpotential",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "entermaximum",
+   "normalized": "entermaximum",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "eallowablemonthlyrent",
+   "normalized": "eallowablemonthlyrent",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "worksheettobecompleted",
+   "normalized": "worksheettobecompleted",
+   "severity": "low",
+   "property": "Hampshire House"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "byhudorlender",
+   "normalized": "byhudorlender",
+   "severity": "low",
+   "property": "Hampshire House"
+  }
+ ],
+ "notes": [
+  "the manifest could not read this cycle's study; driving it anyway, because what the app does with an unreadable study is the observation",
+  "filed: filed side read from the combined package: Hampshire House Submission.pdf",
+  "filed: checklist read from Hampshire House Signed Cover Letter and Owner Checklist.pdf"
+ ],
+ "verdict": "80 differences",
+ "fuzz": {
+  "seed": 1957520020,
+  "counts": {
+   "edits": 2,
+   "escapes": 3,
+   "enters": 1,
+   "saves": 1,
+   "revertAlls": 2,
+   "drops": 2,
+   "clicks": 4,
+   "boundaries": 0,
+   "colourScans": 8,
+   "episodes": 8
+  },
+  "violations": [],
+  "actions": [
+   "— episode 1/8 [save] 127 controls on screen",
+   "click #viewForm [data-wibox][8]",
+   "enter (commit)",
+   "open dropdown 4",
+   "escape the open menu",
+   "type \"42\" into #viewForm input[data-k][33]",
+   "click Update property profile",
+   "— episode 2/8 [revertAll] 127 controls on screen",
+   "click #viewForm [data-wibox][3]",
+   "open dropdown 0",
+   "escape the open menu",
+   "type \"N/A\" into #viewForm input[data-k][8]",
+   "click #viewForm [data-wibox][7]",
+   "click #viewForm [data-cb][22]",
+   "click Revert to saved",
+   "escape (2 left)",
+   "— episode 3/8 [escape] 0 controls on screen",
+   "— episode 4/8 [escape] 0 controls on screen",
+   "— episode 5/8 [escape] 0 controls on screen",
+   "— episode 6/8 [escape] 0 controls on screen",
+   "— episode 7/8 [revertAll] 0 controls on screen",
+   "click Revert to saved",
+   "— episode 8/8 [escape] 0 controls on screen"
+  ]
+ },
+ "inputs": {
+  "study": "2019/Hampshire House Rent Study, 5-9-2019, John E. Doyle, MAI.pdf",
+  "priorRs": "2018/Submission/Hampshire Rent Schedule - Signed.pdf",
+  "priorRsRule": "year-1 folder"
+ },
+ "notGenerated": [
+  "notes",
+  "sections",
+  "rcsStudy"
+ ],
+ "notGeneratedWhy": null,
+ "counts": {
+  "compared": 87,
+  "matched": 7,
+  "differing": 80,
+  "fillOrder": 0,
+  "drift": 215,
+  "notGenerated": 3
+ }
+}

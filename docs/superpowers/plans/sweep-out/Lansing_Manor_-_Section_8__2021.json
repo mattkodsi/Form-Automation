@@ -1,0 +1,33 @@
+{
+ "property": "Lansing Manor - Section 8",
+ "code": null,
+ "folder": "Lansing Manor - Section 8",
+ "year": 2021,
+ "cycleLabel": "2021",
+ "sha": "ccc4568",
+ "orders": {
+  "rs-first": {
+   "error": "fetch failed",
+   "files": 0
+  },
+  "rcs-first": {
+   "error": "fetch failed",
+   "files": 0
+  }
+ },
+ "rows": [],
+ "fillOrder": [],
+ "drift": [],
+ "notes": [
+  "the manifest could not read this cycle's study; driving it anyway, because what the app does with an unreadable study is the observation",
+  "rs-first: drive threw -- fetch failed",
+  "rcs-first: drive threw -- fetch failed"
+ ],
+ "verdict": "the app generated nothing comparable",
+ "fuzz": null,
+ "inputs": {
+  "study": "2021/RCS/Archive/Lansing Manor - 5600 W Mall Drive, Lansing, MI 48917 (Final).pdf",
+  "priorRs": "2020/800010652 - Approved Rent Schedule - 10-23-19 - Lansing Manor (Village Green III).pdf",
+  "priorRsRule": "year-1 folder"
+ }
+}

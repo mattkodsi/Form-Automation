@@ -1,0 +1,239 @@
+{
+ "property": "Northgate Terrace CA",
+ "code": "75919",
+ "folder": "75919 - Northgate Terrace CA - Section 8",
+ "year": 2020,
+ "cycleLabel": "2020 (RCS)",
+ "sha": "ccc4568",
+ "orders": {
+  "rs-first": {
+   "files": 3,
+   "tier": "ocr",
+   "weakerTest": false,
+   "ocrCalls": 2,
+   "via": "ocr",
+   "missing": null,
+   "warnings": [
+    "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+    "storm [save-left-dirt] after \"Update property profile\" settled, 3 key(s) still differ from the snapshot: units.0.safmr_source, principals.3.name, units.0.safmr_custom  (seed 2699750503)",
+    "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “See page 3 for instruction. Public Burden Statement and Privacy Act requirements Project Name”, and the management address. A letterhead can be uploaded on the property page.",
+    "package dialog: See page 3 for instruction. Public Burden Statement and Privacy Act requirements Project Name · 1 of 6 ready · 5 not ready"
+   ],
+   "errors": [],
+   "docsExtracted": [
+    "analysisXlsx"
+   ]
+  },
+  "rcs-first": {
+   "files": 3,
+   "tier": "ocr",
+   "weakerTest": false,
+   "ocrCalls": 2,
+   "via": "ocr",
+   "missing": null,
+   "warnings": [
+    "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+    "storm [save-left-dirt] after \"Update property profile\" settled, 3 key(s) still differ from the snapshot: units.0.safmr_source, principals.3.name, units.0.safmr_custom  (seed 2699750503)",
+    "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “See page 3 for instruction. Public Burden Statement and Privacy Act requirements Project Name”, and the management address. A letterhead can be uploaded on the property page.",
+    "package dialog: See page 3 for instruction. Public Burden Statement and Privacy Act requirements Project Name · 1 of 6 ready · 5 not ready"
+   ],
+   "errors": [],
+   "docsExtracted": [
+    "analysisXlsx"
+   ]
+  }
+ },
+ "rows": [],
+ "fillOrder": [
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.type",
+   "ours": "Studio",
+   "theirs": "Studio/1BA",
+   "status": "mismatch",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Northgate Terrace CA",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.type",
+   "ours": "1BR",
+   "theirs": "1BR/1BA",
+   "status": "mismatch",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Northgate Terrace CA",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.proposed",
+   "ours": null,
+   "theirs": "2075",
+   "status": "missing-ours",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Northgate Terrace CA",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.proposed",
+   "ours": null,
+   "theirs": "2095",
+   "status": "missing-ours",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Northgate Terrace CA",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  }
+ ],
+ "drift": [],
+ "notes": [
+  "filed: filed side read from the combined package: Northgate Terrace - 2020 RCS Submission Package_1.31.2020.pdf",
+  "filed: coverLetter unreadable: extractFacts: these bytes are a zip, not a PDF — did you mean docType ",
+  "filed: rentSchedule read from Northgate FY2020 RS - Owner Signed - to be signed.pdf"
+ ],
+ "verdict": "the app generated no document the filed package also has",
+ "fuzz": {
+  "seed": 2699750503,
+  "counts": {
+   "edits": 9,
+   "escapes": 7,
+   "enters": 2,
+   "saves": 2,
+   "revertAlls": 3,
+   "drops": 1,
+   "clicks": 7,
+   "boundaries": 0,
+   "colourScans": 8,
+   "episodes": 8
+  },
+  "violations": [
+   {
+    "kind": "save-left-dirt",
+    "msg": "after \"Update property profile\" settled, 3 key(s) still differ from the snapshot: units.0.safmr_source, principals.3.name, units.0.safmr_custom",
+    "seed": 2699750503,
+    "evidence": {
+     "units.0.safmr_source": {
+      "form": {
+       "value": "custom",
+       "source": "new",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": false
+     },
+     "principals.3.name": {
+      "form": {
+       "value": "Name and Title",
+       "source": "this-cycle",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": null,
+      "onScreen": true
+     },
+     "units.0.safmr_custom": {
+      "form": {
+       "value": "20260301",
+       "source": "new",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": null,
+      "onScreen": true
+     }
+    },
+    "after": [
+     "click Revert to saved",
+     "escape (4 left)",
+     "escape (3 left)",
+     "escape (2 left)",
+     "— episode 2/8 [escape] 111 controls on screen",
+     "type \"999999\" into #viewForm input[data-k][45]",
+     "escape (1 left)",
+     "— episode 3/8 [save] 111 controls on screen",
+     "type \"2026-03-01\" into #viewForm input[data-k][34]",
+     "click #viewForm [data-cb][7]",
+     "click #viewForm [data-wibox][10]",
+     "enter (commit)",
+     "click #viewForm [data-wibox][8]",
+     "click Update property profile"
+    ]
+   }
+  ],
+  "actions": [
+   "— episode 1/8 [revertAll] 156 controls on screen",
+   "type \"999999\" into #viewForm input[data-k][55]",
+   "type \"0\" into #viewForm input[data-k][82]",
+   "open dropdown 17",
+   "pick menu row 3 of 6",
+   "type \"3/1/2026\" into #viewForm input[data-k][14]",
+   "click Revert to saved",
+   "escape (4 left)",
+   "escape (3 left)",
+   "escape (2 left)",
+   "— episode 2/8 [escape] 111 controls on screen",
+   "type \"999999\" into #viewForm input[data-k][45]",
+   "escape (1 left)",
+   "— episode 3/8 [save] 111 controls on screen",
+   "type \"2026-03-01\" into #viewForm input[data-k][34]",
+   "click #viewForm [data-cb][7]",
+   "click #viewForm [data-wibox][10]",
+   "enter (commit)",
+   "click #viewForm [data-wibox][8]",
+   "click Update property profile",
+   "— episode 4/8 [escape] 113 controls on screen",
+   "click #viewForm [data-wibox][8]",
+   "type \"0\" into #viewForm input[data-k][9]",
+   "click #viewForm [data-fuel][4]",
+   "type \"0\" into #viewForm input[data-k][36]",
+   "escape (4 left)",
+   "escape (2 left)",
+   "— episode 5/8 [revertAll] 113 controls on screen",
+   "click #viewForm [data-wibox][8]",
+   "type \"1850\" into #viewForm input[data-k][47]",
+   "type \"\" into #viewForm input[data-k][25]",
+   "click Revert to saved",
+   "escape (2 left)",
+   "— episode 6/8 [save] 0 controls on screen",
+   "enter (commit)",
+   "click Update property profile",
+   "— episode 7/8 [revertAll] 0 controls on screen",
+   "click Revert to saved",
+   "— episode 8/8 [escape] 0 controls on screen"
+  ]
+ },
+ "inputs": {
+  "study": "2020 (RCS)/Northgate Terrace - 2020 RCS.pdf",
+  "priorRs": "2019/Northgate FY2019 Fully Ex RS.PDF",
+  "priorRsRule": "year-1 folder"
+ },
+ "notGenerated": [
+  "notes",
+  "sections",
+  "rcsStudy",
+  "rentSchedule"
+ ],
+ "notGeneratedWhy": null,
+ "counts": {
+  "compared": 0,
+  "matched": 0,
+  "differing": 0,
+  "fillOrder": 4,
+  "drift": 0,
+  "notGenerated": 4
+ }
+}

@@ -1,0 +1,300 @@
+{
+ "property": "Oak Center",
+ "code": "75926",
+ "folder": "75926 - Oak Center - Section 8",
+ "year": 2021,
+ "cycleLabel": "2021",
+ "sha": "ccc4568",
+ "orders": {
+  "rs-first": {
+   "files": 3,
+   "tier": "ocr",
+   "weakerTest": false,
+   "ocrCalls": 2,
+   "via": "ocr",
+   "missing": null,
+   "warnings": [
+    "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+    "storm [save-left-dirt] after \"Update property profile\" settled, 69 key(s) still differ from the snapshot: property.name, property.s8, owner.entity_name, owner.entity_type, principals.0.name, principals.0.title  (seed 436713229)",
+    "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “Oak Center 1”, and the management address. A letterhead can be uploaded on the property page.",
+    "package dialog: Oak Center 1 · 1 of 6 ready · 5 not ready"
+   ],
+   "errors": [],
+   "docsExtracted": [
+    "analysisXlsx"
+   ]
+  },
+  "rcs-first": {
+   "files": 3,
+   "tier": "ocr",
+   "weakerTest": false,
+   "ocrCalls": 2,
+   "via": "ocr",
+   "missing": null,
+   "warnings": [
+    "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+    "storm [save-left-dirt] after \"Update property profile\" settled, 69 key(s) still differ from the snapshot: property.name, property.s8, owner.entity_name, owner.entity_type, principals.0.name, principals.0.title  (seed 436713229)",
+    "study: #rcsApply never appeared — nothing was applied to the form",
+    "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “Oak Center 1”, and the management address. A letterhead can be uploaded on the property page.",
+    "package dialog: Oak Center 1 · 1 of 6 ready · 5 not ready"
+   ],
+   "errors": [],
+   "docsExtracted": [
+    "analysisXlsx"
+   ]
+  }
+ },
+ "rows": [],
+ "fillOrder": [
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.type",
+   "ours": "1BR/1BA",
+   "theirs": "1BR",
+   "status": "mismatch",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Oak Center",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.proposed",
+   "ours": "2500",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Oak Center",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.type",
+   "ours": "2BR/1BA",
+   "theirs": "2BR",
+   "status": "mismatch",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Oak Center",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.proposed",
+   "ours": "2800",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Oak Center",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  }
+ ],
+ "drift": [],
+ "notes": [
+  "filed: filed side read from the combined package: Oak Center - RCS Submission Package_12.3.2020.pdf"
+ ],
+ "verdict": "the app generated no document the filed package also has",
+ "fuzz": {
+  "seed": 436713229,
+  "counts": {
+   "edits": 7,
+   "escapes": 17,
+   "enters": 0,
+   "saves": 1,
+   "revertAlls": 0,
+   "drops": 4,
+   "clicks": 10,
+   "boundaries": 0,
+   "colourScans": 8,
+   "episodes": 8,
+   "dialogs": 1
+  },
+  "violations": [
+   {
+    "kind": "save-left-dirt",
+    "msg": "after \"Update property profile\" settled, 69 key(s) still differ from the snapshot: property.name, property.s8, owner.entity_name, owner.entity_type, principals.0.name, principals.0.title",
+    "seed": 436713229,
+    "evidence": {
+     "property.name": {
+      "form": {
+       "value": "Oak Center 1",
+       "source": "overridden",
+       "db_value": "ZZ-CORPUS-75926-20260731-0643",
+       "prior_value": "ZZ-CORPUS-75926-20260731-0643"
+      },
+      "snap": {
+       "value": "ZZ-CORPUS-75926-20260731-0643",
+       "source": "database",
+       "db_value": "ZZ-CORPUS-75926-20260731-0643"
+      },
+      "onScreen": true
+     },
+     "property.s8": {
+      "form": {
+       "value": "CA39L000090",
+       "source": "this-cycle",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": true
+     },
+     "owner.entity_name": {
+      "form": {
+       "value": "Oak Center Community Partners, LP",
+       "source": "this-cycle",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": true
+     },
+     "owner.entity_type": {
+      "form": {
+       "value": "Limited Partnership",
+       "source": "this-cycle",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": true
+     },
+     "principals.0.name": {
+      "form": {
+       "value": "FFAH Oak Center, LLC",
+       "source": "this-cycle",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": true
+     },
+     "principals.0.title": {
+      "form": {
+       "value": "GP",
+       "source": "this-cycle",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": true
+     }
+    },
+    "after": [
+     "click #viewForm [data-cb][31]",
+     "type \"1234\" into #viewForm input[data-k][0]",
+     "click #viewForm [data-cb][5]",
+     "click #viewForm [data-fuel][4]",
+     "escape (5 left)",
+     "escape (3 left)",
+     "escape (2 left)",
+     "escape (1 left)",
+     "— episode 3/8 [save] 174 controls on screen",
+     "type \"$1,234\" into #viewForm input[data-srcedit][2]",
+     "open dropdown 19",
+     "pick menu row 4 of 7",
+     "click Update property profile",
+     "dialog \"That name is already takenAnother property is already called\" -> answered \"Use this name\""
+    ]
+   }
+  ],
+  "actions": [
+   "— episode 1/8 [escape] 174 controls on screen",
+   "click #viewForm [data-fuel][4]",
+   "escape (2 left)",
+   "— episode 2/8 [escape] 174 controls on screen",
+   "click #viewForm [data-cb][31]",
+   "type \"1234\" into #viewForm input[data-k][0]",
+   "click #viewForm [data-cb][5]",
+   "click #viewForm [data-fuel][4]",
+   "escape (5 left)",
+   "escape (3 left)",
+   "escape (2 left)",
+   "escape (1 left)",
+   "— episode 3/8 [save] 174 controls on screen",
+   "type \"$1,234\" into #viewForm input[data-srcedit][2]",
+   "open dropdown 19",
+   "pick menu row 4 of 7",
+   "click Update property profile",
+   "dialog \"That name is already takenAnother property is already called\" -> answered \"Use this name\"",
+   "escape (2 left)",
+   "escape (1 left)",
+   "— episode 4/8 [escape] 174 controls on screen",
+   "type \"0\" into #viewForm input[data-k][68]",
+   "open dropdown 3",
+   "escape the open menu",
+   "— episode 5/8 [escape] 174 controls on screen",
+   "type \"42\" into #viewForm input[data-k][55]",
+   "open dropdown 7",
+   "escape the open menu",
+   "open dropdown 16",
+   "escape the open menu",
+   "— episode 6/8 [escape] 174 controls on screen",
+   "type \"7\" into #viewForm input[data-k][71]",
+   "type \"-5\" into #viewForm input[data-k][3]",
+   "click #viewForm [data-cb][19]",
+   "escape (4 left)",
+   "escape (2 left)",
+   "escape (1 left)",
+   "— episode 7/8 [escape] 174 controls on screen",
+   "click #viewForm [data-cb][24]",
+   "click #viewForm [data-wibox][11]",
+   "type \"7\" into #viewForm input[data-k][45]",
+   "escape (3 left)",
+   "escape (1 left)",
+   "— episode 8/8 [escape] 174 controls on screen",
+   "click #viewForm [data-cb][18]",
+   "click #viewForm [data-cb][6]",
+   "escape (3 left)",
+   "escape (1 left)"
+  ]
+ },
+ "inputs": {
+  "study": "2021/Archive/Oakland, CA - Oak Center - RCS (2020) - final 2.pdf",
+  "priorRs": "2020/Oak Center 1 CA39L000090 - Executed Rent Schedule eff. 4.1.2020.pdf",
+  "priorRsRule": "year-1 folder"
+ },
+ "notGenerated": [
+  "notes",
+  "sections",
+  "checklist",
+  "coverLetter",
+  "rcsStudy",
+  "rentSchedule"
+ ],
+ "notGeneratedWhy": null,
+ "counts": {
+  "compared": 0,
+  "matched": 0,
+  "differing": 0,
+  "fillOrder": 4,
+  "drift": 0,
+  "notGenerated": 6
+ }
+}

@@ -1,0 +1,104 @@
+{
+ "property": "New Horizons",
+ "code": "75474",
+ "folder": "75474 - New Horizons - Section 8",
+ "year": 2014,
+ "cycleLabel": "2014",
+ "sha": "ccc4568",
+ "orders": {
+  "rs-first": {
+   "files": 0,
+   "tier": "unreadable:scan",
+   "weakerTest": false,
+   "ocrCalls": 4,
+   "via": null,
+   "missing": null,
+   "warnings": [
+    "the rent schedule was not readable (kind=scan, The scan came back, but only 7 of the blank form’s printed labels were recognised on the page (it needs 8 to line the page up).) — no values can be applied from it",
+    "the study yielded no unit types — no values can be applied from it",
+    "after the reload the property shows 3 packages, expected 1",
+    "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+    "the generated documents carry the harness name \"ZZ-CORPUS-75474-20260731-0612\" — the schedule supplied no property name to overwrite it, so property.name WILL mismatch the filed package",
+    "rent schedule: #rsApply never appeared — nothing was applied to the form",
+    "study: #rcsApply never appeared — nothing was applied to the form"
+   ],
+   "errors": [
+    "rs-first: the app refused to generate — Cannot generate the package with zero units — the first unit type needs a unit count."
+   ],
+   "docsExtracted": []
+  },
+  "rcs-first": {
+   "files": 0,
+   "tier": "unreadable:scan",
+   "weakerTest": false,
+   "ocrCalls": 4,
+   "via": null,
+   "missing": null,
+   "warnings": [
+    "the rent schedule was not readable (kind=scan, The scan came back, but only 7 of the blank form’s printed labels were recognised on the page (it needs 8 to line the page up).) — no values can be applied from it",
+    "the study yielded no unit types — no values can be applied from it",
+    "after the reload the property shows 3 packages, expected 1",
+    "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+    "the generated documents carry the harness name \"ZZ-CORPUS-75474-20260731-0612\" — the schedule supplied no property name to overwrite it, so property.name WILL mismatch the filed package",
+    "study: #rcsApply never appeared — nothing was applied to the form",
+    "rent schedule: #rsApply never appeared — nothing was applied to the form"
+   ],
+   "errors": [
+    "rcs-first: the app refused to generate — Cannot generate the package with zero units — the first unit type needs a unit count."
+   ],
+   "docsExtracted": []
+  }
+ },
+ "rows": [],
+ "fillOrder": [],
+ "drift": [],
+ "notes": [
+  "the manifest could not read this cycle's study; driving it anyway, because what the app does with an unreadable study is the observation"
+ ],
+ "verdict": "the app generated nothing comparable",
+ "fuzz": {
+  "seed": 1127306785,
+  "counts": {
+   "edits": 2,
+   "escapes": 5,
+   "enters": 0,
+   "saves": 1,
+   "revertAlls": 3,
+   "drops": 0,
+   "clicks": 3,
+   "boundaries": 0,
+   "colourScans": 8,
+   "episodes": 8
+  },
+  "violations": [],
+  "actions": [
+   "— episode 1/8 [escape] 111 controls on screen",
+   "click #viewForm [data-cb][17]",
+   "type \"2026-03-01\" into #viewForm input[data-k][45]",
+   "escape (3 left)",
+   "escape (1 left)",
+   "— episode 2/8 [escape] 111 controls on screen",
+   "type \"N/A\" into #viewForm input[data-k][30]",
+   "click #viewForm [data-fuel][0]",
+   "click #viewForm [data-cb][11]",
+   "escape (4 left)",
+   "escape (2 left)",
+   "escape (1 left)",
+   "— episode 3/8 [revertAll] 0 controls on screen",
+   "click Revert to saved",
+   "— episode 4/8 [revertAll] 0 controls on screen",
+   "click Revert to saved",
+   "— episode 5/8 [escape] 0 controls on screen",
+   "— episode 6/8 [escape] 0 controls on screen",
+   "— episode 7/8 [revertAll] 0 controls on screen",
+   "click Revert to saved",
+   "— episode 8/8 [save] 0 controls on screen",
+   "click Update property profile"
+  ]
+ },
+ "inputs": {
+  "study": "2014/474 New Horizons RCS March 2014 (MVS).pdf",
+  "priorRs": "2013/92458-47413signed.pdf",
+  "priorRsRule": "year-1 folder"
+ }
+}

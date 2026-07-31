@@ -4,7 +4,7 @@
  "folder": "75708 - Colonial Village - Section 8",
  "year": 2026,
  "cycleLabel": "2026 (RCS)",
- "sha": "84677d0",
+ "sha": "ccc4568",
  "orders": {
   "rs-first": {
    "files": 5,
@@ -15,9 +15,9 @@
    "missing": null,
    "warnings": [
     "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
-    "storm [save-left-dirt] after \"Update property profile\" settled, 7 key(s) still differ from the snapshot: property.name, property.addr_city, appr.name, partb.equipment.4, partb.writein.s6, partb.writein.s6.on  (seed 601113841)",
-    "storm [save-left-dirt] after \"Update property profile\" settled, 2 key(s) still differ from the snapshot: property.name, partb.equipment.3  (seed 601113841)",
-    "storm [save-left-dirt] after \"Update property profile\" settled, 2 key(s) still differ from the snapshot: partb.fuel.1, partb.fuel.4  (seed 601113841)",
+    "storm [save-left-dirt] after \"Update property profile\" settled, 72 key(s) still differ from the snapshot: property.name, property.addr_street, property.addr_city, property.addr_state, property.addr_zip, property.s8  (seed 2975096134)",
+    "storm [save-left-dirt] after \"Update property profile\" settled, 72 key(s) still differ from the snapshot: property.name, property.addr_street, property.addr_city, property.addr_state, property.addr_zip, property.s8  (seed 2975096134)",
+    "storm [save-left-dirt] after \"Update property profile\" settled, 72 key(s) still differ from the snapshot: property.name, property.addr_street, property.addr_city, property.addr_state, property.addr_zip, property.s8  (seed 2975096134)",
     "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “White Oak Townhomes”, and the management address. A letterhead can be uploaded on the property page.",
     "package dialog: Colonial Village · 3 of 6 ready · 3 not ready"
    ],
@@ -37,9 +37,9 @@
    "missing": null,
    "warnings": [
     "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
-    "storm [save-left-dirt] after \"Update property profile\" settled, 7 key(s) still differ from the snapshot: property.name, property.addr_city, appr.name, partb.equipment.4, partb.writein.s6, partb.writein.s6.on  (seed 601113841)",
-    "storm [save-left-dirt] after \"Update property profile\" settled, 2 key(s) still differ from the snapshot: property.name, partb.equipment.3  (seed 601113841)",
-    "storm [save-left-dirt] after \"Update property profile\" settled, 2 key(s) still differ from the snapshot: partb.fuel.1, partb.fuel.4  (seed 601113841)",
+    "storm [save-left-dirt] after \"Update property profile\" settled, 72 key(s) still differ from the snapshot: property.name, property.addr_street, property.addr_city, property.addr_state, property.addr_zip, property.s8  (seed 2975096134)",
+    "storm [save-left-dirt] after \"Update property profile\" settled, 72 key(s) still differ from the snapshot: property.name, property.addr_street, property.addr_city, property.addr_state, property.addr_zip, property.s8  (seed 2975096134)",
+    "storm [save-left-dirt] after \"Update property profile\" settled, 72 key(s) still differ from the snapshot: property.name, property.addr_street, property.addr_city, property.addr_state, property.addr_zip, property.s8  (seed 2975096134)",
     "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “White Oak Townhomes”, and the management address. A letterhead can be uploaded on the property page.",
     "package dialog: Colonial Village · 3 of 6 ready · 3 not ready"
    ],
@@ -1130,15 +1130,15 @@
  ],
  "verdict": "32 differences",
  "fuzz": {
-  "seed": 601113841,
+  "seed": 2975096134,
   "counts": {
-   "edits": 7,
-   "escapes": 13,
+   "edits": 13,
+   "escapes": 19,
    "enters": 2,
    "saves": 3,
-   "revertAlls": 2,
-   "drops": 1,
-   "clicks": 11,
+   "revertAlls": 0,
+   "drops": 4,
+   "clicks": 14,
    "boundaries": 0,
    "colourScans": 8,
    "episodes": 8,
@@ -1147,27 +1147,41 @@
   "violations": [
    {
     "kind": "save-left-dirt",
-    "msg": "after \"Update property profile\" settled, 7 key(s) still differ from the snapshot: property.name, property.addr_city, appr.name, partb.equipment.4, partb.writein.s6, partb.writein.s6.on",
-    "seed": 601113841,
+    "msg": "after \"Update property profile\" settled, 72 key(s) still differ from the snapshot: property.name, property.addr_street, property.addr_city, property.addr_state, property.addr_zip, property.s8",
+    "seed": 2975096134,
     "evidence": {
      "property.name": {
       "form": {
        "value": "Colonial Village",
        "source": "overridden",
-       "db_value": "ZZ-CORPUS-75708-20260731-0555",
-       "prior_value": "ZZ-CORPUS-75708-20260731-0555"
+       "db_value": "ZZ-CORPUS-75708-20260731-0628",
+       "prior_value": "ZZ-CORPUS-75708-20260731-0628"
       },
       "snap": {
-       "value": "ZZ-CORPUS-75708-20260731-0555",
+       "value": "ZZ-CORPUS-75708-20260731-0628",
        "source": "database",
-       "db_value": "ZZ-CORPUS-75708-20260731-0555"
+       "db_value": "ZZ-CORPUS-75708-20260731-0628"
+      },
+      "onScreen": true
+     },
+     "property.addr_street": {
+      "form": {
+       "value": "3641 Irving Street",
+       "source": "this-cycle",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
       },
       "onScreen": true
      },
      "property.addr_city": {
       "form": {
-       "value": "1234",
-       "source": "new",
+       "value": "Cincinnati",
+       "source": "this-cycle",
        "db_value": null,
        "prior_value": null
       },
@@ -1178,10 +1192,10 @@
       },
       "onScreen": true
      },
-     "appr.name": {
+     "property.addr_state": {
       "form": {
-       "value": "$1,234",
-       "source": "new",
+       "value": "OH",
+       "source": "this-cycle",
        "db_value": null,
        "prior_value": null
       },
@@ -1192,24 +1206,10 @@
       },
       "onScreen": true
      },
-     "partb.equipment.4": {
+     "property.addr_zip": {
       "form": {
-       "value": "1",
-       "source": "new",
-       "db_value": null,
-       "prior_value": null
-      },
-      "snap": {
-       "value": "",
-       "source": "new",
-       "db_value": null
-      },
-      "onScreen": false
-     },
-     "partb.writein.s6": {
-      "form": {
-       "value": "129",
-       "source": "new",
+       "value": "45220",
+       "source": "this-cycle",
        "db_value": null,
        "prior_value": null
       },
@@ -1220,10 +1220,10 @@
       },
       "onScreen": true
      },
-     "partb.writein.s6.on": {
+     "property.s8": {
       "form": {
-       "value": "1",
-       "source": "new",
+       "value": "OH10M000236",
+       "source": "this-cycle",
        "db_value": null,
        "prior_value": null
       },
@@ -1232,49 +1232,49 @@
        "source": "new",
        "db_value": null
       },
-      "onScreen": false
+      "onScreen": true
      }
     },
     "after": [
-     "click #viewForm [data-cb][17]",
-     "open dropdown 4",
-     "escape the open menu",
-     "click Revert to saved",
+     "click #viewForm [data-wibox][5]",
+     "type \"7\" into #viewForm input[data-k][42]",
+     "type \"1.5\" into #viewForm input[data-k][40]",
+     "type \"$1,234\" into #viewForm input[data-k][46]",
+     "escape (3 left)",
      "escape (2 left)",
-     "— episode 2/8 [save] 111 controls on screen",
-     "type \"1234\" into #viewForm input[data-k][3]",
-     "enter (commit)",
-     "type \"$1,234\" into #viewForm input[data-k][21]",
-     "type \"129\" into #viewForm input[data-k][46]",
-     "click #viewForm [data-cb][4]",
-     "click #viewForm [data-cb][24]",
+     "escape (1 left)",
+     "— episode 4/8 [save] 127 controls on screen",
+     "type \"7\" into #viewForm input[data-k][38]",
+     "click #viewForm [data-cb][9]",
+     "click #viewForm [data-cb][1]",
+     "type \"1234\" into #viewForm input[data-k][42]",
      "click Update property profile",
      "dialog \"That name is already takenAnother property is already called\" -> answered \"Use this name\""
     ]
    },
    {
     "kind": "save-left-dirt",
-    "msg": "after \"Update property profile\" settled, 2 key(s) still differ from the snapshot: property.name, partb.equipment.3",
-    "seed": 601113841,
+    "msg": "after \"Update property profile\" settled, 72 key(s) still differ from the snapshot: property.name, property.addr_street, property.addr_city, property.addr_state, property.addr_zip, property.s8",
+    "seed": 2975096134,
     "evidence": {
      "property.name": {
       "form": {
        "value": "Colonial Village",
        "source": "overridden",
-       "db_value": "ZZ-CORPUS-75708-20260731-0555",
-       "prior_value": "ZZ-CORPUS-75708-20260731-0555"
+       "db_value": "ZZ-CORPUS-75708-20260731-0628",
+       "prior_value": "ZZ-CORPUS-75708-20260731-0628"
       },
       "snap": {
-       "value": "ZZ-CORPUS-75708-20260731-0555",
+       "value": "ZZ-CORPUS-75708-20260731-0628",
        "source": "database",
-       "db_value": "ZZ-CORPUS-75708-20260731-0555"
+       "db_value": "ZZ-CORPUS-75708-20260731-0628"
       },
       "onScreen": true
      },
-     "partb.equipment.3": {
+     "property.addr_street": {
       "form": {
-       "value": "1",
-       "source": "new",
+       "value": "3641 Irving Street",
+       "source": "this-cycle",
        "db_value": null,
        "prior_value": null
       },
@@ -1283,129 +1283,257 @@
        "source": "new",
        "db_value": null
       },
-      "onScreen": false
+      "onScreen": true
+     },
+     "property.addr_city": {
+      "form": {
+       "value": "Cincinnati",
+       "source": "this-cycle",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": true
+     },
+     "property.addr_state": {
+      "form": {
+       "value": "OH",
+       "source": "this-cycle",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": true
+     },
+     "property.addr_zip": {
+      "form": {
+       "value": "45220",
+       "source": "this-cycle",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": true
+     },
+     "property.s8": {
+      "form": {
+       "value": "OH10M000236",
+       "source": "this-cycle",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": true
      }
     },
     "after": [
-     "type \"129\" into #viewForm input[data-k][46]",
-     "click #viewForm [data-cb][4]",
-     "click #viewForm [data-cb][24]",
-     "click Update property profile",
-     "dialog \"That name is already takenAnother property is already called\" -> answered \"Use this name\"",
-     "escape (5 left)",
+     "type \"42\" into #viewForm input[data-k][35]",
+     "type \"-5\" into #viewForm input[data-k][52]",
+     "open dropdown 12",
+     "pick menu row 5 of 7",
+     "escape (6 left)",
      "escape (4 left)",
      "escape (3 left)",
      "escape (2 left)",
-     "escape (1 left)",
-     "— episode 3/8 [save] 111 controls on screen",
-     "click #viewForm [data-cb][3]",
+     "— episode 6/8 [save] 127 controls on screen",
+     "type \"1\" into #viewForm input[data-srcedit][3]",
+     "type \"1.5\" into #viewForm input[data-k][40]",
+     "enter (commit)",
      "click Update property profile",
      "dialog \"That name is already takenAnother property is already called\" -> answered \"Use this name\""
     ]
    },
    {
     "kind": "save-left-dirt",
-    "msg": "after \"Update property profile\" settled, 2 key(s) still differ from the snapshot: partb.fuel.1, partb.fuel.4",
-    "seed": 601113841,
+    "msg": "after \"Update property profile\" settled, 72 key(s) still differ from the snapshot: property.name, property.addr_street, property.addr_city, property.addr_state, property.addr_zip, property.s8",
+    "seed": 2975096134,
     "evidence": {
-     "partb.fuel.1": {
+     "property.name": {
       "form": {
-       "value": "E",
-       "source": "new",
-       "db_value": "",
-       "prior_value": null
+       "value": "Colonial Village",
+       "source": "overridden",
+       "db_value": "ZZ-CORPUS-75708-20260731-0628",
+       "prior_value": "ZZ-CORPUS-75708-20260731-0628"
       },
       "snap": {
-       "value": "",
+       "value": "ZZ-CORPUS-75708-20260731-0628",
        "source": "database",
-       "db_value": ""
+       "db_value": "ZZ-CORPUS-75708-20260731-0628"
       },
-      "onScreen": false
+      "onScreen": true
      },
-     "partb.fuel.4": {
+     "property.addr_street": {
       "form": {
-       "value": "E",
-       "source": "new",
-       "db_value": "",
+       "value": "3641 Irving Street",
+       "source": "this-cycle",
+       "db_value": null,
        "prior_value": null
       },
       "snap": {
        "value": "",
-       "source": "database",
-       "db_value": ""
+       "source": "new",
+       "db_value": null
       },
-      "onScreen": false
+      "onScreen": true
+     },
+     "property.addr_city": {
+      "form": {
+       "value": "Cincinnati",
+       "source": "this-cycle",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": true
+     },
+     "property.addr_state": {
+      "form": {
+       "value": "OH",
+       "source": "this-cycle",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": true
+     },
+     "property.addr_zip": {
+      "form": {
+       "value": "45220",
+       "source": "this-cycle",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": true
+     },
+     "property.s8": {
+      "form": {
+       "value": "OH10M000236",
+       "source": "this-cycle",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": true
      }
     },
     "after": [
-     "escape (1 left)",
-     "— episode 3/8 [save] 111 controls on screen",
-     "click #viewForm [data-cb][3]",
-     "click Update property profile",
-     "dialog \"That name is already takenAnother property is already called\" -> answered \"Use this name\"",
-     "— episode 4/8 [revertAll] 111 controls on screen",
-     "click #viewForm [data-wibox][5]",
-     "click Revert to saved",
-     "— episode 5/8 [save] 111 controls on screen",
-     "click #viewForm [data-fuel][1]",
+     "— episode 7/8 [escape] 127 controls on screen",
+     "click #viewForm [data-cb][10]",
+     "escape (2 left)",
+     "— episode 8/8 [save] 127 controls on screen",
+     "click #viewForm [data-wibox][4]",
+     "open dropdown 7",
+     "pick menu row 6 of 7",
+     "click #viewForm [data-cb][21]",
      "enter (commit)",
-     "click #viewForm [data-fuel][4]",
+     "type \"-5\" into #viewForm input[data-k][20]",
+     "open dropdown 7",
+     "pick menu row 5 of 7",
      "click Update property profile",
-     "dialog \"That name is already takenAnother property is already called\" -> answered \"Open the other one\""
+     "dialog \"That name is already takenAnother property is already called\" -> answered \"Use this name\""
     ]
    }
   ],
   "actions": [
-   "— episode 1/8 [revertAll] 127 controls on screen",
-   "type \"42\" into #viewForm input[data-k][0]",
-   "click #viewForm [data-cb][17]",
-   "open dropdown 4",
-   "escape the open menu",
-   "click Revert to saved",
+   "— episode 1/8 [escape] 127 controls on screen",
+   "click #viewForm [data-wibox][2]",
+   "type \"7\" into #viewForm input[data-k][30]",
+   "type \"N/A\" into #viewForm input[data-k][42]",
+   "click #viewForm [data-fuel][0]",
+   "click #viewForm [data-fuel][2]",
+   "escape (5 left)",
+   "escape (3 left)",
    "escape (2 left)",
-   "— episode 2/8 [save] 111 controls on screen",
-   "type \"1234\" into #viewForm input[data-k][3]",
-   "enter (commit)",
-   "type \"$1,234\" into #viewForm input[data-k][21]",
-   "type \"129\" into #viewForm input[data-k][46]",
-   "click #viewForm [data-cb][4]",
-   "click #viewForm [data-cb][24]",
+   "escape (1 left)",
+   "— episode 2/8 [escape] 127 controls on screen",
+   "type \"42\" into #viewForm input[data-srcedit][2]",
+   "escape (2 left)",
+   "— episode 3/8 [escape] 127 controls on screen",
+   "click #viewForm [data-wibox][5]",
+   "type \"7\" into #viewForm input[data-k][42]",
+   "type \"1.5\" into #viewForm input[data-k][40]",
+   "type \"$1,234\" into #viewForm input[data-k][46]",
+   "escape (3 left)",
+   "escape (2 left)",
+   "escape (1 left)",
+   "— episode 4/8 [save] 127 controls on screen",
+   "type \"7\" into #viewForm input[data-k][38]",
+   "click #viewForm [data-cb][9]",
+   "click #viewForm [data-cb][1]",
+   "type \"1234\" into #viewForm input[data-k][42]",
    "click Update property profile",
    "dialog \"That name is already takenAnother property is already called\" -> answered \"Use this name\"",
-   "escape (5 left)",
    "escape (4 left)",
    "escape (3 left)",
    "escape (2 left)",
    "escape (1 left)",
-   "— episode 3/8 [save] 111 controls on screen",
-   "click #viewForm [data-cb][3]",
+   "— episode 5/8 [escape] 127 controls on screen",
+   "click #viewForm [data-cb][33]",
+   "open dropdown 7",
+   "pick menu row 1 of 7",
+   "type \"42\" into #viewForm input[data-k][35]",
+   "type \"-5\" into #viewForm input[data-k][52]",
+   "open dropdown 12",
+   "pick menu row 5 of 7",
+   "escape (6 left)",
+   "escape (4 left)",
+   "escape (3 left)",
+   "escape (2 left)",
+   "— episode 6/8 [save] 127 controls on screen",
+   "type \"1\" into #viewForm input[data-srcedit][3]",
+   "type \"1.5\" into #viewForm input[data-k][40]",
+   "enter (commit)",
    "click Update property profile",
    "dialog \"That name is already takenAnother property is already called\" -> answered \"Use this name\"",
-   "— episode 4/8 [revertAll] 111 controls on screen",
-   "click #viewForm [data-wibox][5]",
-   "click Revert to saved",
-   "— episode 5/8 [save] 111 controls on screen",
-   "click #viewForm [data-fuel][1]",
-   "enter (commit)",
-   "click #viewForm [data-fuel][4]",
-   "click Update property profile",
-   "dialog \"That name is already takenAnother property is already called\" -> answered \"Open the other one\"",
    "escape (2 left)",
    "escape (1 left)",
-   "— episode 6/8 [escape] 111 controls on screen",
-   "click #viewForm [data-wibox][11]",
-   "click #viewForm [data-fuel][3]",
-   "type \"129\" into #viewForm input[data-k][31]",
-   "escape (3 left)",
-   "escape (1 left)",
-   "— episode 7/8 [escape] 111 controls on screen",
-   "click #viewForm [data-wibox][2]",
-   "click #viewForm [data-wibox][7]",
-   "type \"1234\" into #viewForm input[data-k][7]",
-   "escape (1 left)",
-   "— episode 8/8 [escape] 111 controls on screen",
-   "type \"-5\" into #viewForm input[data-k][2]",
-   "escape (1 left)"
+   "— episode 7/8 [escape] 127 controls on screen",
+   "click #viewForm [data-cb][10]",
+   "escape (2 left)",
+   "— episode 8/8 [save] 127 controls on screen",
+   "click #viewForm [data-wibox][4]",
+   "open dropdown 7",
+   "pick menu row 6 of 7",
+   "click #viewForm [data-cb][21]",
+   "enter (commit)",
+   "type \"-5\" into #viewForm input[data-k][20]",
+   "open dropdown 7",
+   "pick menu row 5 of 7",
+   "click Update property profile",
+   "dialog \"That name is already takenAnother property is already called\" -> answered \"Use this name\""
   ]
  },
  "inputs": {

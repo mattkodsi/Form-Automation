@@ -1,0 +1,32 @@
+{
+ "property": "Woodland Towers - Section 8",
+ "code": null,
+ "folder": "Woodland Towers - Section 8",
+ "year": 2026,
+ "cycleLabel": "2026 - RCS",
+ "sha": "ccc4568",
+ "orders": {
+  "rs-first": {
+   "error": "fetch failed",
+   "files": 0
+  },
+  "rcs-first": {
+   "error": "fetch failed",
+   "files": 0
+  }
+ },
+ "rows": [],
+ "fillOrder": [],
+ "drift": [],
+ "notes": [
+  "rs-first: drive threw -- fetch failed",
+  "rcs-first: drive threw -- fetch failed"
+ ],
+ "verdict": "the app generated nothing comparable",
+ "fuzz": null,
+ "inputs": {
+  "study": "2026 - RCS/Submission/4. 26-069 - Woodland Towers 306 Pine Lake Road Collinsville IL.pdf",
+  "priorRs": "2025/2025 - Rent Schedule - Woodland Towers - FULLY EXECUTED.pdf",
+  "priorRsRule": "year-1 folder"
+ }
+}

@@ -1,0 +1,123 @@
+{
+ "property": "Ebony Gardens",
+ "code": "75566",
+ "folder": "75566 - Ebony Gardens - Section 8",
+ "year": 2018,
+ "cycleLabel": "2018",
+ "sha": "ccc4568",
+ "orders": {
+  "rs-first": {
+   "files": 3,
+   "tier": "ocr",
+   "weakerTest": false,
+   "ocrCalls": 2,
+   "via": "ocr",
+   "missing": null,
+   "warnings": [
+    "the study yielded no unit types — no values can be applied from it",
+    "after the reload the property shows 2 packages, expected 1",
+    "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+    "study: #rcsApply never appeared — nothing was applied to the form",
+    "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “Federal Housing See page 3 for instruction, Public Burden Statement and Privacy Act requirements”, and the management address. A letterhead can be uploaded on the property page.",
+    "package dialog: Federal Housing See page 3 for instruction, Public Burden Statement and Privacy Act requirements · 1 of 6 ready · 5 not ready"
+   ],
+   "errors": [],
+   "docsExtracted": [
+    "analysisXlsx"
+   ]
+  },
+  "rcs-first": {
+   "files": 3,
+   "tier": "ocr",
+   "weakerTest": false,
+   "ocrCalls": 2,
+   "via": "ocr",
+   "missing": null,
+   "warnings": [
+    "the study yielded no unit types — no values can be applied from it",
+    "after the reload the property shows 2 packages, expected 1",
+    "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+    "study: #rcsApply never appeared — nothing was applied to the form",
+    "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “Federal Housing See page 3 for instruction, Public Burden Statement and Privacy Act requirements”, and the management address. A letterhead can be uploaded on the property page.",
+    "package dialog: Federal Housing See page 3 for instruction, Public Burden Statement and Privacy Act requirements · 1 of 6 ready · 5 not ready"
+   ],
+   "errors": [],
+   "docsExtracted": [
+    "analysisXlsx"
+   ]
+  }
+ },
+ "rows": [],
+ "fillOrder": [],
+ "drift": [],
+ "notes": [
+  "the manifest could not read this cycle's study; driving it anyway, because what the app does with an unreadable study is the observation",
+  "filed: filed side read from the combined package: Ebony Gardens 5th Year Adjustment Request RCS submission 11-1-2018 (Tobin).pdf",
+  "filed: coverLetter unreadable: Failed to parse PDF document (line:92 col:894 offset=29696): No PDF he",
+  "filed: tenantNotice read from Ebony Gardens 30-Day Utility Decrease Tenant Notice.pdf"
+ ],
+ "verdict": "the app generated no document the filed package also has",
+ "fuzz": {
+  "seed": 779618962,
+  "counts": {
+   "edits": 2,
+   "escapes": 2,
+   "enters": 3,
+   "saves": 2,
+   "revertAlls": 3,
+   "drops": 0,
+   "clicks": 4,
+   "boundaries": 0,
+   "colourScans": 8,
+   "episodes": 8
+  },
+  "violations": [],
+  "actions": [
+   "— episode 1/8 [revertAll] 147 controls on screen",
+   "click #viewForm [data-wibox][1]",
+   "click #viewForm [data-cb][1]",
+   "click Revert to saved",
+   "escape (1 left)",
+   "— episode 2/8 [revertAll] 111 controls on screen",
+   "type \"2026-03-01\" into #viewForm input[data-k][38]",
+   "click #viewForm [data-cb][18]",
+   "click #viewForm [data-wibox][5]",
+   "type \"1\" into #viewForm input[data-k][10]",
+   "click Revert to saved",
+   "escape (3 left)",
+   "— episode 3/8 [escape] 0 controls on screen",
+   "— episode 4/8 [escape] 0 controls on screen",
+   "— episode 5/8 [save] 0 controls on screen",
+   "enter (commit)",
+   "enter (commit)",
+   "click Update property profile",
+   "— episode 6/8 [escape] 0 controls on screen",
+   "— episode 7/8 [revertAll] 0 controls on screen",
+   "click Revert to saved",
+   "— episode 8/8 [save] 0 controls on screen",
+   "enter (commit)",
+   "click Update property profile"
+  ]
+ },
+ "inputs": {
+  "study": "2018/1 - NewYorkMountVernonHUDRentComparabilityStudy.pdf",
+  "priorRs": "2017/Ebony Gardens 2017 Rent Schedule.pdf",
+  "priorRsRule": "year-1 folder"
+ },
+ "notGenerated": [
+  "notes",
+  "sections",
+  "rcsStudy",
+  "rentSchedule",
+  "tenantNotice"
+ ],
+ "notGeneratedWhy": null,
+ "counts": {
+  "compared": 0,
+  "matched": 0,
+  "differing": 0,
+  "fillOrder": 0,
+  "drift": 0,
+  "notGenerated": 5
+ }
+}

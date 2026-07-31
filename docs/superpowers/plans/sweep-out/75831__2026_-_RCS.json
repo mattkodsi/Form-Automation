@@ -1,0 +1,1639 @@
+{
+ "property": "Friendship Court",
+ "code": "75831",
+ "folder": "75831 - Friendship Court - Section 8",
+ "year": 2026,
+ "cycleLabel": "2026 - RCS",
+ "sha": "ccc4568",
+ "orders": {
+  "rs-first": {
+   "files": 5,
+   "tier": "text",
+   "weakerTest": false,
+   "ocrCalls": 0,
+   "via": "text",
+   "missing": null,
+   "warnings": [
+    "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+    "storm [save-left-dirt] after \"Update property profile\" settled, 103 key(s) still differ from the snapshot: property.name, property.addr_street, property.addr_city, property.addr_state, property.addr_zip, property.s8  (seed 3055169361)",
+    "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “Friendship Court”, and the management address. A letterhead can be uploaded on the property page.",
+    "package dialog: Friendship Court · 3 of 6 ready · 3 not ready"
+   ],
+   "errors": [],
+   "docsExtracted": [
+    "checklist",
+    "rentSchedule",
+    "analysisXlsx"
+   ]
+  },
+  "rcs-first": {
+   "files": 5,
+   "tier": "text",
+   "weakerTest": false,
+   "ocrCalls": 0,
+   "via": "text",
+   "missing": null,
+   "warnings": [
+    "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+    "storm [save-left-dirt] after \"Update property profile\" settled, 103 key(s) still differ from the snapshot: property.name, property.addr_street, property.addr_city, property.addr_state, property.addr_zip, property.s8  (seed 3055169361)",
+    "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “Friendship Court”, and the management address. A letterhead can be uploaded on the property page.",
+    "package dialog: Friendship Court · 3 of 6 ready · 3 not ready"
+   ],
+   "errors": [],
+   "docsExtracted": [
+    "checklist",
+    "rentSchedule",
+    "analysisXlsx"
+   ]
+  }
+ },
+ "rows": [
+  {
+   "doc": "checklist",
+   "key": "heading",
+   "ours": "Owner’s  Checklist for  RCS  Submission",
+   "theirs": "Owners Checklist  for RCS Submission",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "checklist",
+   "key": "property.name",
+   "ours": "FriendshipCourt",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.0",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.1",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.2",
+   "ours": "0",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.3",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.4",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.5",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.6",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.7",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.8",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.9",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.10",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.11",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.12",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.13",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.14",
+   "ours": "0",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.15",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "checklist",
+   "key": "check.16",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "checklist",
+   "key": "checklist.signature",
+   "ours": "DavidPearson,VPofGP",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "property.name",
+   "ours": "FriendshipCourt",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "property.fha",
+   "ours": "N/A",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "rent_schedule.date_eff",
+   "ours": "01/01/2026",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "rent_schedule.eff_month",
+   "ours": "01",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "rent_schedule.eff_day",
+   "ours": "01",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "rent_schedule.eff_year",
+   "ours": "2026",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "total.contract_rent",
+   "ours": "126800",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "total.annual",
+   "ours": "1521600",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "nonrev.total_rent",
+   "ours": "0",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "owner.entity_name",
+   "ours": "FriendshipSCPreservation,L.P.",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "sig.name_title",
+   "ours": "DavidPearson,VicePresidentofGeneralPartner",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "total.units",
+   "ours": "80",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.type",
+   "ours": "1BR/1BA",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.units",
+   "ours": "20",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.rent",
+   "ours": "1375",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.extension",
+   "ours": "27500",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.ua",
+   "ours": "61",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.gross",
+   "ours": "1436",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.0.row",
+   "ours": "0",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.type",
+   "ours": "2BR/1BA",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.units",
+   "ours": "24",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.rent",
+   "ours": "1500",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.extension",
+   "ours": "36000",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.ua",
+   "ours": "85",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.gross",
+   "ours": "1585",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.1.row",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.type",
+   "ours": "3BR/1BA",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.units",
+   "ours": "24",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.rent",
+   "ours": "1675",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.extension",
+   "ours": "40200",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.ua",
+   "ours": "100",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.gross",
+   "ours": "1775",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.2.row",
+   "ours": "2",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.3.type",
+   "ours": "4BR/1BA",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.3.units",
+   "ours": "12",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.3.rent",
+   "ours": "1925",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.3.extension",
+   "ours": "23100",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.3.ua",
+   "ours": "107",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.3.gross",
+   "ours": "2032",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "unit.3.row",
+   "ours": "3",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "owner.entity_type",
+   "ours": "LimitedPartnership",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.equipment.0",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.equipment.1",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.equipment.5",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.fuel.0",
+   "ours": "E",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.fuel.1",
+   "ours": "E",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.fuel.2",
+   "ours": "E",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.fuel.3",
+   "ours": "E",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.fuel.4",
+   "ours": "E",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.writein.u1.on",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.writein.u1",
+   "ours": "water/sewer",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.services.0",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.writein.e1.on",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.writein.e1",
+   "ours": "miniblinds",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.writein.e2.on",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.writein.e2",
+   "ours": "smokedetector",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.writein.e3.on",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.writein.e3",
+   "ours": "vinylflooring",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.writein.e4.on",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.writein.e4",
+   "ours": "tile",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.writein.s1.on",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.writein.s1",
+   "ours": "trashremoval",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.writein.s2.on",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.writein.s2",
+   "ours": "landscaping",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.writein.s3.on",
+   "ours": "1",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "partb.writein.s3",
+   "ours": "exterminator",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "principals.0.name",
+   "ours": "FriendshipSCPreservationGP,LLC",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "principals.0.title",
+   "ours": "GeneralPartner",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "principals.1.name",
+   "ours": "FriendshipSCPreservationClassB,LLC",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "key": "principals.1.title",
+   "ours": "ClassBLimitedPartner",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "property.name",
+   "ours": "FriendshipCourt",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "appr.firm",
+   "ours": "BelfryValuation,LLC",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.type",
+   "ours": "1BR/1BA",
+   "theirs": "1-Bedroom",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.units",
+   "ours": "20",
+   "theirs": "20",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.current",
+   "ours": "873",
+   "theirs": "873",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.proposed",
+   "ours": "1375",
+   "theirs": "1375",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.ua",
+   "ours": "61",
+   "theirs": "66.02",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.safmr",
+   "ours": "840",
+   "theirs": "840",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.type",
+   "ours": "2BR/1BA",
+   "theirs": "2-Bedroom",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.units",
+   "ours": "24",
+   "theirs": "24",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.current",
+   "ours": "1001",
+   "theirs": "1001",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.proposed",
+   "ours": "1500",
+   "theirs": "1500",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.ua",
+   "ours": "85",
+   "theirs": "82.07",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.safmr",
+   "ours": "1010",
+   "theirs": "1010",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.type",
+   "ours": "3BR/1BA",
+   "theirs": "3-Bedroom",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.units",
+   "ours": "24",
+   "theirs": "24",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.current",
+   "ours": "1191",
+   "theirs": "1191",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.proposed",
+   "ours": "1675",
+   "theirs": "1675",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.ua",
+   "ours": "100",
+   "theirs": "108.91",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.safmr",
+   "ours": "1280",
+   "theirs": "1280",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.type",
+   "ours": "4BR/1BA",
+   "theirs": "4-Bedroom",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.units",
+   "ours": "12",
+   "theirs": "12",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.current",
+   "ours": "1338",
+   "theirs": "1338",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.proposed",
+   "ours": "1925",
+   "theirs": "1925",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.ua",
+   "ours": "107",
+   "theirs": "124.47",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.safmr",
+   "ours": "1690",
+   "theirs": "1690",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Friendship Court"
+  }
+ ],
+ "fillOrder": [],
+ "drift": [
+  {
+   "doc": "checklist",
+   "side": "theirs",
+   "line": "davidpearsonvicepresidentofgeneralpartner",
+   "normalized": "davidpearsonvicepresidentofgeneralpartner",
+   "severity": "low",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "rangedishwasher",
+   "normalized": "rangedishwasher",
+   "severity": "low",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "airconditionerdrapes",
+   "normalized": "airconditionerdrapes",
+   "severity": "low",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "totalrentlossduetononrevenueunits",
+   "normalized": "totalrentlossduetononrevenueunits",
+   "severity": "low",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "heatinghotwaterlightsetc",
+   "normalized": "heatinghotwaterlightsetc",
+   "severity": "low",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "coolingcooking",
+   "normalized": "coolingcooking",
+   "severity": "low",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "parkingnursingcare",
+   "normalized": "parkingnursingcare",
+   "severity": "low",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "laundrylinenmaidservice",
+   "normalized": "laundrylinenmaidservice",
+   "severity": "low",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "swimmingpool",
+   "normalized": "swimmingpool",
+   "severity": "low",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "individualshipjointtenancytenantsincommonotherspecify",
+   "normalized": "individualshipjointtenancytenantsincommonotherspecify",
+   "severity": "low",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "ours",
+   "line": "corporationtrust",
+   "normalized": "corporationtrust",
+   "severity": "low",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "friendshipcourtna",
+   "normalized": "friendshipcourtna",
+   "severity": "low",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "rangedishwashersmokedetector",
+   "normalized": "rangedishwashersmokedetector",
+   "severity": "low",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "vinylflooring",
+   "normalized": "vinylflooring",
+   "severity": "low",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "airconditionerdrapestile",
+   "normalized": "airconditionerdrapestile",
+   "severity": "low",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "disposalminiblinds",
+   "normalized": "disposalminiblinds",
+   "severity": "low",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "eetotalrentlossduetononrevenueunits",
+   "normalized": "eetotalrentlossduetononrevenueunits",
+   "severity": "low",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "heatingehotwaterlightsetc",
+   "normalized": "heatingehotwaterlightsetc",
+   "severity": "low",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "coolingecookingewatersewer",
+   "normalized": "coolingecookingewatersewer",
+   "severity": "low",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "parkingtrashremovalnursingcare",
+   "normalized": "parkingtrashremovalnursingcare",
+   "severity": "low",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "laundrylandscapinglinenmaidservice",
+   "normalized": "laundrylandscapinglinenmaidservice",
+   "severity": "low",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "swimmingpoolexterminator",
+   "normalized": "swimmingpoolexterminator",
+   "severity": "low",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "friendshipscpreservationlp",
+   "normalized": "friendshipscpreservationlp",
+   "severity": "low",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "individualgeneralpartnershipjointtenancytenantsincommonotherspecify",
+   "normalized": "individualgeneralpartnershipjointtenancytenantsincommonotherspecify",
+   "severity": "low",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "corporationlimitedpartnershiptrust",
+   "normalized": "corporationlimitedpartnershiptrust",
+   "severity": "low",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "friendshipscpreservationgpllc",
+   "normalized": "friendshipscpreservationgpllc",
+   "severity": "low",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "generalpartner",
+   "normalized": "generalpartner",
+   "severity": "low",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "friendshipscpreservationclassbllcclassblimitedpartner",
+   "normalized": "friendshipscpreservationclassbllcclassblimitedpartner",
+   "severity": "low",
+   "property": "Friendship Court"
+  },
+  {
+   "doc": "rentSchedule",
+   "side": "theirs",
+   "line": "davidpearsonvicepresidentofgeneralpartner",
+   "normalized": "davidpearsonvicepresidentofgeneralpartner",
+   "severity": "low",
+   "property": "Friendship Court"
+  }
+ ],
+ "notes": [
+  "filed: filed side read from the combined package: Friendship_Court_(SC16-M000-048)_-_5-Year_RCS_Submission.pdf",
+  "filed: submittalLetter read from 2 - Friendship Court - Submittal Cover Letter.pdf",
+  "filed: rentSchedule read from Friendship Court (SC16-M000-048) - 2026 Rent Schedule (signed).pdf",
+  "filed: analysisXlsx read from Friendship Court - RCS Analysis.xlsx"
+ ],
+ "verdict": "99 differences",
+ "fuzz": {
+  "seed": 3055169361,
+  "counts": {
+   "edits": 7,
+   "escapes": 8,
+   "enters": 2,
+   "saves": 1,
+   "revertAlls": 3,
+   "drops": 1,
+   "clicks": 7,
+   "boundaries": 0,
+   "colourScans": 8,
+   "episodes": 8
+  },
+  "violations": [
+   {
+    "kind": "save-left-dirt",
+    "msg": "after \"Update property profile\" settled, 103 key(s) still differ from the snapshot: property.name, property.addr_street, property.addr_city, property.addr_state, property.addr_zip, property.s8",
+    "seed": 3055169361,
+    "evidence": {
+     "property.name": {
+      "form": {
+       "value": "Friendship Court",
+       "source": "overridden",
+       "db_value": "ZZ-CORPUS-75831-20260731-0629",
+       "prior_value": "ZZ-CORPUS-75831-20260731-0629"
+      },
+      "snap": {
+       "value": "ZZ-CORPUS-75831-20260731-0629",
+       "source": "database",
+       "db_value": "ZZ-CORPUS-75831-20260731-0629"
+      },
+      "onScreen": true
+     },
+     "property.addr_street": {
+      "form": {
+       "value": "719 West Mauldin Street",
+       "source": "this-cycle",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": true
+     },
+     "property.addr_city": {
+      "form": {
+       "value": "Anderson",
+       "source": "this-cycle",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": true
+     },
+     "property.addr_state": {
+      "form": {
+       "value": "SC",
+       "source": "this-cycle",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": true
+     },
+     "property.addr_zip": {
+      "form": {
+       "value": "29625",
+       "source": "this-cycle",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": true
+     },
+     "property.s8": {
+      "form": {
+       "value": "SC16M000048",
+       "source": "this-cycle",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": true
+     }
+    },
+    "after": [
+     "escape (3 left)",
+     "escape (1 left)",
+     "— episode 2/8 [escape] 141 controls on screen",
+     "click #viewForm [data-fuel3][0]",
+     "click #viewForm [data-csclear][0]",
+     "escape (3 left)",
+     "escape (1 left)",
+     "— episode 3/8 [save] 141 controls on screen",
+     "type \"42\" into #viewForm input[data-k][7]",
+     "enter (commit)",
+     "type \"1234\" into #viewForm input[data-k][55]",
+     "type \"1234\" into #viewForm input[data-k][42]",
+     "enter (commit)",
+     "click Update property profile"
+    ]
+   }
+  ],
+  "actions": [
+   "— episode 1/8 [escape] 141 controls on screen",
+   "type \"999999\" into #viewForm input[data-k][25]",
+   "click #viewForm [data-cb][1]",
+   "escape (3 left)",
+   "escape (1 left)",
+   "— episode 2/8 [escape] 141 controls on screen",
+   "click #viewForm [data-fuel3][0]",
+   "click #viewForm [data-csclear][0]",
+   "escape (3 left)",
+   "escape (1 left)",
+   "— episode 3/8 [save] 141 controls on screen",
+   "type \"42\" into #viewForm input[data-k][7]",
+   "enter (commit)",
+   "type \"1234\" into #viewForm input[data-k][55]",
+   "type \"1234\" into #viewForm input[data-k][42]",
+   "enter (commit)",
+   "click Update property profile",
+   "— episode 4/8 [escape] 141 controls on screen",
+   "type \"  \" into #viewForm input[data-k][26]",
+   "type \"1.5\" into #viewForm input[data-k][41]",
+   "click #viewForm [data-cb][4]",
+   "click #viewForm [data-cb][30]",
+   "open dropdown 14",
+   "pick menu row 2 of 6",
+   "escape (4 left)",
+   "escape (2 left)",
+   "escape (1 left)",
+   "— episode 5/8 [revertAll] 145 controls on screen",
+   "type \"N/A\" into #viewForm input[data-k][15]",
+   "click #viewForm [data-cb][19]",
+   "click Revert to saved",
+   "escape (1 left)",
+   "— episode 6/8 [revertAll] 0 controls on screen",
+   "click Revert to saved",
+   "— episode 7/8 [escape] 0 controls on screen",
+   "— episode 8/8 [revertAll] 0 controls on screen",
+   "click Revert to saved"
+  ]
+ },
+ "inputs": {
+  "study": "2026 - RCS/25-094 - Friendship Court, 719 West Mauldin Street, Anderson, SC (updated) v2.pdf",
+  "priorRs": "2025/Friendship Court (SC16-M000-048) - 2025 Rent Schedule.pdf",
+  "priorRsRule": "year-1 folder"
+ },
+ "notGenerated": [
+  "notes",
+  "sections",
+  "coverLetter",
+  "rcsStudy",
+  "tenantNotice",
+  "submittalLetter"
+ ],
+ "notGeneratedWhy": null,
+ "counts": {
+  "compared": 116,
+  "matched": 17,
+  "differing": 99,
+  "fillOrder": 0,
+  "drift": 29,
+  "notGenerated": 6
+ }
+}

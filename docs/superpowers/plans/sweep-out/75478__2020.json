@@ -1,0 +1,752 @@
+{
+ "property": "North Park",
+ "code": "75478",
+ "folder": "75478 - North Park - Section 8",
+ "year": 2020,
+ "cycleLabel": "2020",
+ "sha": "ccc4568",
+ "orders": {
+  "rs-first": {
+   "files": 3,
+   "tier": "ocr",
+   "weakerTest": false,
+   "ocrCalls": 2,
+   "via": "ocr",
+   "missing": null,
+   "warnings": [
+    "after the reload the property shows 3 packages, expected 1",
+    "the study was recalled without its bytes and could not be re-attached — document 04 will be missing or the folder download will fail",
+    "storm [save-left-dirt] after \"Update property profile\" settled, 1 key(s) still differ from the snapshot: nonrev.0.ba  (seed 78067003)",
+    "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “Low Rent Housing Office of Housing Federal Housing”, and the management address. A letterhead can be uploaded on the property page.",
+    "package dialog: Low Rent Housing Office of Housing Federal Housing · 1 of 6 ready · 5 not ready"
+   ],
+   "errors": [
+    "after the reload the app is on a DIFFERENT property/package than order A used — the second order would be measuring another record",
+    "after the reload the rent-schedule upload is GONE (tile says \"North Park 2018 Rent Schedule.pdf\") — order B has nothing to fill from, and re-uploading would pay for the read twice",
+    "after the reload the study upload is GONE (tile says \"18-1263 - 14-20 West 102nd Street - North Park Apartments - Final 03.21.2019.pdf\") — order B has nothing to fill from"
+   ],
+   "docsExtracted": [
+    "analysisXlsx"
+   ]
+  },
+  "rcs-first": {
+   "files": 0,
+   "tier": "ocr",
+   "weakerTest": false,
+   "ocrCalls": 2,
+   "via": "ocr",
+   "missing": null,
+   "warnings": [
+    "after the reload the property shows 3 packages, expected 1",
+    "the study was recalled without its bytes and could not be re-attached — document 04 will be missing or the folder download will fail",
+    "storm [save-left-dirt] after \"Update property profile\" settled, 1 key(s) still differ from the snapshot: nonrev.0.ba  (seed 78067003)"
+   ],
+   "errors": [
+    "after the reload the app is on a DIFFERENT property/package than order A used — the second order would be measuring another record",
+    "after the reload the rent-schedule upload is GONE (tile says \"North Park 2018 Rent Schedule.pdf\") — order B has nothing to fill from, and re-uploading would pay for the read twice",
+    "after the reload the study upload is GONE (tile says \"18-1263 - 14-20 West 102nd Street - North Park Apartments - Final 03.21.2019.pdf\") — order B has nothing to fill from",
+    "not run: an upload was lost across the reload, so this order could only have been produced by paying for a second read"
+   ],
+   "docsExtracted": []
+  }
+ },
+ "rows": [
+  {
+   "doc": "analysisXlsx",
+   "key": "property.name",
+   "ours": "LowRentHousingOfficeofHousingFederalHousing",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "North Park"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "appr.firm",
+   "ours": "METROPOLITANVALUATIONSERVICES,INC.",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "North Park"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.type",
+   "ours": "Studio",
+   "theirs": "0BR",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "North Park"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.units",
+   "ours": "32",
+   "theirs": "32",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "North Park"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.current",
+   "ours": "2520",
+   "theirs": "2520",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "North Park"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.proposed",
+   "ours": "2625",
+   "theirs": "2625",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "North Park"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.ua",
+   "ours": "70",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "North Park"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.safmr",
+   "ours": "2529",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "North Park"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.type",
+   "ours": "1BR",
+   "theirs": "1BR",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "North Park"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.units",
+   "ours": "33",
+   "theirs": "33",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "North Park"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.current",
+   "ours": "3429",
+   "theirs": "3429",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "North Park"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.proposed",
+   "ours": "3550",
+   "theirs": "3550",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "North Park"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.ua",
+   "ours": "73",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "North Park"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.safmr",
+   "ours": "2655",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "North Park"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.type",
+   "ours": "3BR",
+   "theirs": "2BR",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "North Park"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.units",
+   "ours": "525",
+   "theirs": "52",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "North Park"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.current",
+   "ours": "44305082",
+   "theirs": "4430",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "North Park"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.proposed",
+   "ours": "5095",
+   "theirs": "4550",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "North Park"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.ua",
+   "ours": "8599",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "North Park"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.safmr",
+   "ours": "3644",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "North Park"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.type",
+   "ours": "2BR",
+   "theirs": "3BR",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "North Park"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.units",
+   "ours": "52",
+   "theirs": "5",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "North Park"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.proposed",
+   "ours": "4550",
+   "theirs": "5095",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "North Park"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.safmr",
+   "ours": "2910",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "North Park"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.current",
+   "ours": null,
+   "theirs": "5082",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "North Park"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.4.type",
+   "ours": null,
+   "theirs": "2BR",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "North Park"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.4.units",
+   "ours": null,
+   "theirs": "1",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "North Park"
+  }
+ ],
+ "fillOrder": [
+  {
+   "doc": "analysisXlsx",
+   "key": "property.name",
+   "ours": "LowRentHousingOfficeofHousingFederalHousing",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "North Park",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "appr.firm",
+   "ours": "METROPOLITANVALUATIONSERVICES,INC.",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "North Park",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.type",
+   "ours": "Studio",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "North Park",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.units",
+   "ours": "32",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "North Park",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.current",
+   "ours": "2520",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "North Park",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.proposed",
+   "ours": "2625",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "North Park",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.ua",
+   "ours": "70",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "North Park",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.safmr",
+   "ours": "2529",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "North Park",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.type",
+   "ours": "1BR",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "North Park",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.units",
+   "ours": "33",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "North Park",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.current",
+   "ours": "3429",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "North Park",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.proposed",
+   "ours": "3550",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "North Park",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.ua",
+   "ours": "73",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "North Park",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.safmr",
+   "ours": "2655",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "North Park",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.type",
+   "ours": "3BR",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "North Park",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.units",
+   "ours": "525",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "North Park",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.current",
+   "ours": "44305082",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "North Park",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.proposed",
+   "ours": "5095",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "North Park",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.ua",
+   "ours": "8599",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "North Park",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.safmr",
+   "ours": "3644",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "North Park",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.type",
+   "ours": "2BR",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "North Park",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.units",
+   "ours": "52",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "North Park",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.proposed",
+   "ours": "4550",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "North Park",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.safmr",
+   "ours": "2910",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "North Park",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  }
+ ],
+ "drift": [],
+ "notes": [
+  "filed: filed side read from the combined package: 2020 North Park 5 Yr RCS Submission.pdf",
+  "filed: checklist read from rcs-owners-checklist - north park.pdf",
+  "filed: rentSchedule read from Unexecuted RS.pdf",
+  "filed: analysisXlsx read from Noth Park Rent Analysis.xlsx",
+  "filed: the analysis workbook holds 3 sheets; kept \"Sheet1\""
+ ],
+ "verdict": "20 differences",
+ "fuzz": {
+  "seed": 78067003,
+  "counts": {
+   "edits": 6,
+   "escapes": 13,
+   "enters": 2,
+   "saves": 2,
+   "revertAlls": 2,
+   "drops": 3,
+   "clicks": 11,
+   "boundaries": 0,
+   "colourScans": 8,
+   "episodes": 8,
+   "dialogs": 2
+  },
+  "violations": [
+   {
+    "kind": "save-left-dirt",
+    "msg": "after \"Update property profile\" settled, 1 key(s) still differ from the snapshot: nonrev.0.ba",
+    "seed": 78067003,
+    "evidence": {
+     "nonrev.0.ba": {
+      "form": {
+       "value": "2BA",
+       "source": "overridden",
+       "db_value": "3BA",
+       "prior_value": "3BA"
+      },
+      "snap": {
+       "value": "3BA",
+       "source": "database",
+       "db_value": "3BA"
+      },
+      "onScreen": true
+     }
+    },
+    "after": [
+     "type \"N/A\" into #viewForm input[data-k][41]",
+     "open dropdown 6",
+     "pick menu row 5 of 8",
+     "click #viewForm [data-cb][8]",
+     "type \"  \" into #viewForm input[data-k][39]",
+     "escape (5 left)",
+     "escape (3 left)",
+     "escape (2 left)",
+     "escape (1 left)",
+     "— episode 2/8 [save] 117 controls on screen",
+     "open dropdown 10",
+     "pick menu row 3 of 6",
+     "click Update property profile",
+     "dialog \"Delete 1 unit type with no unit count?Saving will remove 1 n\" -> answered \"Save anyway\""
+    ]
+   }
+  ],
+  "actions": [
+   "— episode 1/8 [escape] 117 controls on screen",
+   "type \"N/A\" into #viewForm input[data-k][41]",
+   "open dropdown 6",
+   "pick menu row 5 of 8",
+   "click #viewForm [data-cb][8]",
+   "type \"  \" into #viewForm input[data-k][39]",
+   "escape (5 left)",
+   "escape (3 left)",
+   "escape (2 left)",
+   "escape (1 left)",
+   "— episode 2/8 [save] 117 controls on screen",
+   "open dropdown 10",
+   "pick menu row 3 of 6",
+   "click Update property profile",
+   "dialog \"Delete 1 unit type with no unit count?Saving will remove 1 n\" -> answered \"Save anyway\"",
+   "escape (1 left)",
+   "— episode 3/8 [revertAll] 117 controls on screen",
+   "type \"\" into #viewForm input[data-k][23]",
+   "click #viewForm [data-cb][21]",
+   "open dropdown 7",
+   "pick menu row 5 of 7",
+   "click Revert to saved",
+   "escape (3 left)",
+   "escape (1 left)",
+   "— episode 4/8 [escape] 117 controls on screen",
+   "click #viewForm [data-cb][17]",
+   "click #viewForm [data-cb][31]",
+   "click #viewForm [data-fuel][3]",
+   "click #viewForm [data-cb][15]",
+   "type \"1.5\" into #viewForm input[data-k][29]",
+   "escape (6 left)",
+   "escape (4 left)",
+   "escape (3 left)",
+   "escape (2 left)",
+   "escape (1 left)",
+   "— episode 5/8 [revertAll] 117 controls on screen",
+   "type \"  \" into #viewForm input[data-k][9]",
+   "type \"  \" into #viewForm input[data-k][1]",
+   "click #viewForm [data-cb][2]",
+   "click #viewForm [data-cb][11]",
+   "click Revert to saved",
+   "escape (4 left)",
+   "— episode 6/8 [escape] 0 controls on screen",
+   "— episode 7/8 [save] 0 controls on screen",
+   "enter (commit)",
+   "enter (commit)",
+   "click Update property profile",
+   "dialog \"Delete 1 unit type with no unit count?Saving will remove 1 n\" -> answered \"Cancel\"",
+   "— episode 8/8 [escape] 0 controls on screen"
+  ]
+ },
+ "inputs": {
+  "study": "2020/RCS Submission/2019 North Park Apartment RCS FINAL.pdf",
+  "priorRs": "2019/North Park - Exec Rent Schedule.pdf",
+  "priorRsRule": "year-1 folder"
+ },
+ "notGenerated": [
+  "notes",
+  "sections",
+  "coverLetter",
+  "rcsStudy",
+  "checklist",
+  "rentSchedule"
+ ],
+ "notGeneratedWhy": null,
+ "counts": {
+  "compared": 27,
+  "matched": 7,
+  "differing": 20,
+  "fillOrder": 24,
+  "drift": 0,
+  "notGenerated": 6
+ }
+}

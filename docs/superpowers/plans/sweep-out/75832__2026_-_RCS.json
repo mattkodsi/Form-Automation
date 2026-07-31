@@ -1,0 +1,568 @@
+{
+ "property": "Newberry Arms",
+ "code": "75832",
+ "folder": "75832 - Newberry Arms - Section 8",
+ "year": 2026,
+ "cycleLabel": "2026 - RCS",
+ "sha": "ccc4568",
+ "orders": {
+  "rs-first": {
+   "files": 3,
+   "tier": "unreadable:scan",
+   "weakerTest": false,
+   "ocrCalls": 3,
+   "via": null,
+   "missing": null,
+   "warnings": [
+    "the rent schedule was not readable (kind=scan, Azure declined the page (429).) — no values can be applied from it",
+    "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+    "storm [save-left-dirt] after \"Update property profile\" settled, 58 key(s) still differ from the snapshot: property.name, property.addr_street, property.addr_city, property.addr_state, property.addr_zip, property.s8  (seed 2998879348)",
+    "storm [escape-left-residue] after escaping every edit to rest, 2 key(s) still differ from the pre-episode form: tenant.sender_title: \"\" -> \"-5\" · units.3.label: \"\" -> \"1.5\"  (seed 2998879348)",
+    "rent schedule: #rsApply never appeared — nothing was applied to the form",
+    "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “Newberry Arms”, and the management address. A letterhead can be uploaded on the property page.",
+    "package dialog: Newberry Arms · 1 of 6 ready · 5 not ready"
+   ],
+   "errors": [],
+   "docsExtracted": [
+    "analysisXlsx"
+   ]
+  },
+  "rcs-first": {
+   "files": 3,
+   "tier": "unreadable:scan",
+   "weakerTest": false,
+   "ocrCalls": 3,
+   "via": null,
+   "missing": null,
+   "warnings": [
+    "the rent schedule was not readable (kind=scan, Azure declined the page (429).) — no values can be applied from it",
+    "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+    "storm [save-left-dirt] after \"Update property profile\" settled, 58 key(s) still differ from the snapshot: property.name, property.addr_street, property.addr_city, property.addr_state, property.addr_zip, property.s8  (seed 2998879348)",
+    "storm [escape-left-residue] after escaping every edit to rest, 2 key(s) still differ from the pre-episode form: tenant.sender_title: \"\" -> \"-5\" · units.3.label: \"\" -> \"1.5\"  (seed 2998879348)",
+    "rent schedule: #rsApply never appeared — nothing was applied to the form",
+    "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “Newberry Arms”, and the management address. A letterhead can be uploaded on the property page.",
+    "package dialog: Newberry Arms · 1 of 6 ready · 5 not ready"
+   ],
+   "errors": [],
+   "docsExtracted": [
+    "analysisXlsx"
+   ]
+  }
+ },
+ "rows": [
+  {
+   "doc": "analysisXlsx",
+   "key": "property.name",
+   "ours": "NewberryArms",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Newberry Arms"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "appr.firm",
+   "ours": "BelfryValuation,LLC",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Newberry Arms"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.type",
+   "ours": "1BR/1BA",
+   "theirs": "1BEDROOM",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Newberry Arms"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.units",
+   "ours": "12",
+   "theirs": "12",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Newberry Arms"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.proposed",
+   "ours": "1175",
+   "theirs": "1175",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Newberry Arms"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.ua",
+   "ours": "88",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Newberry Arms"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.safmr",
+   "ours": "780",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Newberry Arms"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.type",
+   "ours": "2BR/1.5BA",
+   "theirs": "2BEDROOM",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Newberry Arms"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.units",
+   "ours": "24",
+   "theirs": "24",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Newberry Arms"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.proposed",
+   "ours": "1375",
+   "theirs": "1375",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Newberry Arms"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.ua",
+   "ours": "141",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Newberry Arms"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.safmr",
+   "ours": "1020",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Newberry Arms"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.type",
+   "ours": "3BR/1.5BA",
+   "theirs": "3BEDROOM",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Newberry Arms"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.units",
+   "ours": "18",
+   "theirs": "18",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Newberry Arms"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.proposed",
+   "ours": "1650",
+   "theirs": "1650",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Newberry Arms"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.ua",
+   "ours": "144",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Newberry Arms"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.safmr",
+   "ours": "1230",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Newberry Arms"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.type",
+   "ours": "4BR/2.5BA",
+   "theirs": "4BEDROOM",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Newberry Arms"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.units",
+   "ours": "6",
+   "theirs": "6",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Newberry Arms"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.proposed",
+   "ours": "1850",
+   "theirs": "1850",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Newberry Arms"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.ua",
+   "ours": "147",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Newberry Arms"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.safmr",
+   "ours": "1350",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Newberry Arms"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.current",
+   "ours": null,
+   "theirs": "872",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Newberry Arms"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.current",
+   "ours": null,
+   "theirs": "991",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Newberry Arms"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.current",
+   "ours": null,
+   "theirs": "1204",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Newberry Arms"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.3.current",
+   "ours": null,
+   "theirs": "1372",
+   "status": "missing-ours",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Newberry Arms"
+  }
+ ],
+ "fillOrder": [],
+ "drift": [],
+ "notes": [
+  "filed: filed side read from the combined package: Newberry_Arms_(SC16-0061-002)_-_5-Year_RCS_Submission.pdf",
+  "filed: submittalLetter read from 2 - Newberry Arms - Submittal Cover Letter.pdf",
+  "filed: rentSchedule read from Newberry Arms (SC16-0061-002) - 2026 Rent Schedule (signed).pdf",
+  "filed: analysisXlsx read from Newberry Arms - Rent Analysis.xlsx"
+ ],
+ "verdict": "18 differences",
+ "fuzz": {
+  "seed": 2998879348,
+  "counts": {
+   "edits": 10,
+   "escapes": 11,
+   "enters": 0,
+   "saves": 1,
+   "revertAlls": 2,
+   "drops": 3,
+   "clicks": 9,
+   "boundaries": 0,
+   "colourScans": 8,
+   "episodes": 8
+  },
+  "violations": [
+   {
+    "kind": "save-left-dirt",
+    "msg": "after \"Update property profile\" settled, 58 key(s) still differ from the snapshot: property.name, property.addr_street, property.addr_city, property.addr_state, property.addr_zip, property.s8",
+    "seed": 2998879348,
+    "evidence": {
+     "property.name": {
+      "form": {
+       "value": "Newberry Arms",
+       "source": "database",
+       "db_value": "Newberry Arms",
+       "prior_value": null
+      },
+      "snap": {
+       "value": "ZZ-CORPUS-75832-20260731-0630",
+       "source": "database",
+       "db_value": "ZZ-CORPUS-75832-20260731-0630"
+      },
+      "onScreen": true
+     },
+     "property.addr_street": {
+      "form": {
+       "value": "186 Newberry Arms Drive",
+       "source": "database",
+       "db_value": "186 Newberry Arms Drive",
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": true
+     },
+     "property.addr_city": {
+      "form": {
+       "value": "Newberry",
+       "source": "database",
+       "db_value": "Newberry",
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": true
+     },
+     "property.addr_state": {
+      "form": {
+       "value": "SC",
+       "source": "database",
+       "db_value": "SC",
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": true
+     },
+     "property.addr_zip": {
+      "form": {
+       "value": "29108",
+       "source": "database",
+       "db_value": "29108",
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": true
+     },
+     "property.s8": {
+      "form": {
+       "value": "SC160061002",
+       "source": "database",
+       "db_value": "SC160061002",
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": true
+     }
+    },
+    "after": [
+     "open dropdown 15",
+     "pick menu row 0 of 8",
+     "click #viewForm [data-cb][19]",
+     "click #viewForm [data-fuel][4]",
+     "escape (5 left)",
+     "escape (3 left)",
+     "escape (2 left)",
+     "escape (1 left)",
+     "— episode 2/8 [save] 138 controls on screen",
+     "click #viewForm [data-wibox][3]",
+     "open dropdown 3",
+     "escape the open menu",
+     "type \"2050\" into #viewForm input[data-k][19]",
+     "click Update property profile"
+    ]
+   },
+   {
+    "kind": "escape-left-residue",
+    "msg": "after escaping every edit to rest, 2 key(s) still differ from the pre-episode form: tenant.sender_title: \"\" -> \"-5\" · units.3.label: \"\" -> \"1.5\"",
+    "seed": 2998879348,
+    "evidence": {
+     "tenant.sender_title": {
+      "form": {
+       "value": "-5",
+       "source": "new",
+       "db_value": "",
+       "prior_value": null
+      },
+      "snap": {
+       "value": "-5",
+       "source": "new",
+       "db_value": ""
+      },
+      "onScreen": true
+     },
+     "units.3.label": {
+      "form": {
+       "value": "1.5",
+       "source": "new",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": {
+       "value": "1.5",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": true
+     }
+    },
+    "after": [
+     "click #viewForm [data-cb][15]",
+     "click #viewForm [data-cb][14]",
+     "escape (3 left)",
+     "escape (1 left)",
+     "— episode 4/8 [escape] 142 controls on screen",
+     "click #viewForm [data-cb][25]",
+     "escape (2 left)",
+     "— episode 5/8 [escape] 142 controls on screen",
+     "type \"-5\" into #viewForm input[data-k][58]",
+     "click #viewForm [data-cb][28]",
+     "type \"1.5\" into #viewForm input[data-k][41]",
+     "type \"1850\" into #viewForm input[data-k][33]",
+     "open dropdown 2",
+     "escape the open menu"
+    ]
+   }
+  ],
+  "actions": [
+   "— episode 1/8 [escape] 138 controls on screen",
+   "type \"abc\" into #viewForm input[data-k][46]",
+   "type \"1234\" into #viewForm input[data-srcedit][6]",
+   "open dropdown 15",
+   "pick menu row 0 of 8",
+   "click #viewForm [data-cb][19]",
+   "click #viewForm [data-fuel][4]",
+   "escape (5 left)",
+   "escape (3 left)",
+   "escape (2 left)",
+   "escape (1 left)",
+   "— episode 2/8 [save] 138 controls on screen",
+   "click #viewForm [data-wibox][3]",
+   "open dropdown 3",
+   "escape the open menu",
+   "type \"2050\" into #viewForm input[data-k][19]",
+   "click Update property profile",
+   "escape (1 left)",
+   "— episode 3/8 [escape] 142 controls on screen",
+   "click #viewForm [data-cb][15]",
+   "click #viewForm [data-cb][14]",
+   "escape (3 left)",
+   "escape (1 left)",
+   "— episode 4/8 [escape] 142 controls on screen",
+   "click #viewForm [data-cb][25]",
+   "escape (2 left)",
+   "— episode 5/8 [escape] 142 controls on screen",
+   "type \"-5\" into #viewForm input[data-k][58]",
+   "click #viewForm [data-cb][28]",
+   "type \"1.5\" into #viewForm input[data-k][41]",
+   "type \"1850\" into #viewForm input[data-k][33]",
+   "open dropdown 2",
+   "escape the open menu",
+   "— episode 6/8 [revertAll] 142 controls on screen",
+   "type \"$1,234\" into #viewForm input[data-k][45]",
+   "type \"N/A\" into #viewForm input[data-k][1]",
+   "click #viewForm [data-cb][6]",
+   "type \"abc\" into #viewForm input[data-k][57]",
+   "type \"1\" into #viewForm input[data-k][54]",
+   "click Revert to saved",
+   "escape (5 left)",
+   "— episode 7/8 [escape] 0 controls on screen",
+   "— episode 8/8 [revertAll] 0 controls on screen",
+   "click Revert to saved"
+  ]
+ },
+ "inputs": {
+  "study": "2026 - RCS/25-095R - Newberry Arms, 186 Newberry Arms Drive, Newberry, SC (updated).pdf",
+  "priorRs": "2025/Newberry Arms - Rent Schedule eff 1.1.25 (executed).pdf",
+  "priorRsRule": "year-1 folder"
+ },
+ "notGenerated": [
+  "notes",
+  "sections",
+  "coverLetter",
+  "rcsStudy",
+  "checklist",
+  "tenantNotice",
+  "submittalLetter",
+  "rentSchedule"
+ ],
+ "notGeneratedWhy": null,
+ "counts": {
+  "compared": 26,
+  "matched": 8,
+  "differing": 18,
+  "fillOrder": 0,
+  "drift": 0,
+  "notGenerated": 8
+ }
+}

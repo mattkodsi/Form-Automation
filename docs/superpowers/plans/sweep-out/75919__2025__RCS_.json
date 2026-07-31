@@ -1,0 +1,129 @@
+{
+ "property": "Northgate Terrace CA",
+ "code": "75919",
+ "folder": "75919 - Northgate Terrace CA - Section 8",
+ "year": 2025,
+ "cycleLabel": "2025 (RCS)",
+ "sha": "ccc4568",
+ "orders": {
+  "rs-first": {
+   "files": 3,
+   "tier": "unreadable:scan",
+   "weakerTest": false,
+   "ocrCalls": 2,
+   "via": null,
+   "missing": null,
+   "warnings": [
+    "the rent schedule was not readable (kind=scan, That page is too large to read (4MB limit).) — no values can be applied from it",
+    "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+    "rent schedule: #rsApply never appeared — nothing was applied to the form",
+    "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “Northgate Terrace Apartments”, and the management address. A letterhead can be uploaded on the property page.",
+    "package dialog: Northgate Terrace Apartments · 1 of 6 ready · 5 not ready"
+   ],
+   "errors": [],
+   "docsExtracted": [
+    "analysisXlsx"
+   ]
+  },
+  "rcs-first": {
+   "files": 3,
+   "tier": "unreadable:scan",
+   "weakerTest": false,
+   "ocrCalls": 2,
+   "via": null,
+   "missing": null,
+   "warnings": [
+    "the rent schedule was not readable (kind=scan, That page is too large to read (4MB limit).) — no values can be applied from it",
+    "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+    "rent schedule: #rsApply never appeared — nothing was applied to the form",
+    "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “Northgate Terrace Apartments”, and the management address. A letterhead can be uploaded on the property page.",
+    "package dialog: Northgate Terrace Apartments · 1 of 6 ready · 5 not ready"
+   ],
+   "errors": [],
+   "docsExtracted": [
+    "analysisXlsx"
+   ]
+  }
+ },
+ "rows": [],
+ "fillOrder": [],
+ "drift": [],
+ "notes": [
+  "filed: coverLetter read from Northgate Terrace - Cover Letter.pdf",
+  "filed: rentSchedule read from Northgate Terrace FY2025 Executed RS.pdf"
+ ],
+ "verdict": "the app generated no document the filed package also has",
+ "fuzz": {
+  "seed": 2316899572,
+  "counts": {
+   "edits": 9,
+   "escapes": 7,
+   "enters": 1,
+   "saves": 1,
+   "revertAlls": 3,
+   "drops": 2,
+   "clicks": 6,
+   "boundaries": 0,
+   "colourScans": 8,
+   "episodes": 8
+  },
+  "violations": [],
+  "actions": [
+   "— episode 1/8 [save] 120 controls on screen",
+   "type \"2050\" into #viewForm input[data-k][31]",
+   "click #viewForm [data-cb][15]",
+   "click #viewForm [data-wibox][8]",
+   "click #viewForm [data-fuel][4]",
+   "enter (commit)",
+   "type \"3/1/2026\" into #viewForm input[data-k][40]",
+   "click Update property profile",
+   "— episode 2/8 [revertAll] 122 controls on screen",
+   "type \"1850\" into #viewForm input[data-k][8]",
+   "type \"N/A\" into #viewForm input[data-k][12]",
+   "open dropdown 10",
+   "escape the open menu",
+   "click #viewForm [data-wibox][11]",
+   "click Revert to saved",
+   "— episode 3/8 [escape] 122 controls on screen",
+   "type \"129\" into #viewForm input[data-k][43]",
+   "type \"abc\" into #viewForm input[data-k][38]",
+   "click #viewForm [data-cb][12]",
+   "escape (4 left)",
+   "escape (2 left)",
+   "escape (1 left)",
+   "— episode 4/8 [escape] 122 controls on screen",
+   "type \"\" into #viewForm input[data-k][40]",
+   "open dropdown 1",
+   "pick menu row 4 of 9",
+   "escape (3 left)",
+   "escape (1 left)",
+   "— episode 5/8 [revertAll] 122 controls on screen",
+   "type \"-5\" into #viewForm input[data-k][48]",
+   "type \"-5\" into #viewForm input[data-k][22]",
+   "click Revert to saved",
+   "escape (2 left)",
+   "— episode 6/8 [revertAll] 0 controls on screen",
+   "click Revert to saved",
+   "— episode 7/8 [escape] 0 controls on screen",
+   "— episode 8/8 [escape] 0 controls on screen"
+  ]
+ },
+ "inputs": {
+  "study": "2025 (RCS)/Northgate Terrace, 550 24th Street, Oakland, CA.pdf",
+  "priorRs": "2024/Northgate Terrace FY2024 Executed RS.pdf",
+  "priorRsRule": "year-1 folder"
+ },
+ "notGenerated": [
+  "coverLetter",
+  "rentSchedule"
+ ],
+ "notGeneratedWhy": null,
+ "counts": {
+  "compared": 0,
+  "matched": 0,
+  "differing": 0,
+  "fillOrder": 0,
+  "drift": 0,
+  "notGenerated": 2
+ }
+}

@@ -1,0 +1,118 @@
+{
+ "property": "Friendship Court",
+ "code": "75831",
+ "folder": "75831 - Friendship Court - Section 8",
+ "year": 2018,
+ "cycleLabel": "2018",
+ "sha": "ccc4568",
+ "orders": {
+  "rs-first": {
+   "files": 0,
+   "tier": "unreadable:scan",
+   "weakerTest": false,
+   "ocrCalls": 3,
+   "via": null,
+   "missing": null,
+   "warnings": [
+    "the rent schedule was not readable (kind=scan, The scan came back and 8 labels were recognised, but the page could not be squared with the blank form — it may be rotated or cropped.) — no values can be applied from it",
+    "the study yielded no unit types — no values can be applied from it",
+    "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+    "the generated documents carry the harness name \"ZZ-CORPUS-75831-20260731-0630\" — the schedule supplied no property name to overwrite it, so property.name WILL mismatch the filed package",
+    "rent schedule: #rsApply never appeared — nothing was applied to the form",
+    "study: #rcsApply never appeared — nothing was applied to the form"
+   ],
+   "errors": [
+    "rs-first: the app refused to generate — Cannot generate the package with zero units — the first unit type needs a unit count."
+   ],
+   "docsExtracted": []
+  },
+  "rcs-first": {
+   "files": 0,
+   "tier": "unreadable:scan",
+   "weakerTest": false,
+   "ocrCalls": 3,
+   "via": null,
+   "missing": null,
+   "warnings": [
+    "the rent schedule was not readable (kind=scan, The scan came back and 8 labels were recognised, but the page could not be squared with the blank form — it may be rotated or cropped.) — no values can be applied from it",
+    "the study yielded no unit types — no values can be applied from it",
+    "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+    "the generated documents carry the harness name \"ZZ-CORPUS-75831-20260731-0630\" — the schedule supplied no property name to overwrite it, so property.name WILL mismatch the filed package",
+    "study: #rcsApply never appeared — nothing was applied to the form",
+    "rent schedule: #rsApply never appeared — nothing was applied to the form"
+   ],
+   "errors": [
+    "rcs-first: the app refused to generate — Cannot generate the package with zero units — the first unit type needs a unit count."
+   ],
+   "docsExtracted": []
+  }
+ },
+ "rows": [],
+ "fillOrder": [],
+ "drift": [],
+ "notes": [],
+ "verdict": "the app generated nothing comparable",
+ "fuzz": {
+  "seed": 3990039163,
+  "counts": {
+   "edits": 9,
+   "escapes": 9,
+   "enters": 1,
+   "saves": 2,
+   "revertAlls": 1,
+   "drops": 0,
+   "clicks": 10,
+   "boundaries": 0,
+   "colourScans": 8,
+   "episodes": 8
+  },
+  "violations": [],
+  "actions": [
+   "— episode 1/8 [save] 111 controls on screen",
+   "click #viewForm [data-cb][2]",
+   "click #viewForm [data-cb][13]",
+   "type \"1234\" into #viewForm input[data-k][18]",
+   "click Update property profile",
+   "— episode 2/8 [escape] 111 controls on screen",
+   "click #viewForm [data-cb][1]",
+   "type \"999999\" into #viewForm input[data-k][7]",
+   "click #viewForm [data-cb][24]",
+   "click #viewForm [data-cb][30]",
+   "click #viewForm [data-cb][34]",
+   "escape (6 left)",
+   "escape (4 left)",
+   "escape (3 left)",
+   "escape (2 left)",
+   "escape (1 left)",
+   "— episode 3/8 [escape] 111 controls on screen",
+   "type \"2050\" into #viewForm input[data-k][39]",
+   "escape (1 left)",
+   "— episode 4/8 [escape] 111 controls on screen",
+   "type \"1\" into #viewForm input[data-k][37]",
+   "click #viewForm [data-cb][34]",
+   "escape (3 left)",
+   "escape (1 left)",
+   "— episode 5/8 [save] 111 controls on screen",
+   "type \"1850\" into #viewForm input[data-k][37]",
+   "type \"3/1/2026\" into #viewForm input[data-k][11]",
+   "type \"$1,234\" into #viewForm input[data-k][36]",
+   "click #viewForm [data-wibox][1]",
+   "enter (commit)",
+   "click Update property profile",
+   "— episode 6/8 [revertAll] 111 controls on screen",
+   "click #viewForm [data-wibox][6]",
+   "click #viewForm [data-wibox][11]",
+   "type \"7\" into #viewForm input[data-k][1]",
+   "type \"abc\" into #viewForm input[data-k][40]",
+   "click Revert to saved",
+   "escape (2 left)",
+   "— episode 7/8 [escape] 0 controls on screen",
+   "— episode 8/8 [escape] 0 controls on screen"
+  ]
+ },
+ "inputs": {
+  "study": "2018/3a - Final RCS Unlocked.pdf",
+  "priorRs": "2017/Friendship Court 2017 Rent Schedule.pdf",
+  "priorRsRule": "year-1 folder"
+ }
+}

@@ -1,0 +1,32 @@
+{
+ "property": "Lansing Manor - Section 8",
+ "code": null,
+ "folder": "Lansing Manor - Section 8",
+ "year": 2026,
+ "cycleLabel": "2026 - RCS",
+ "sha": "ccc4568",
+ "orders": {
+  "rs-first": {
+   "error": "fetch failed",
+   "files": 0
+  },
+  "rcs-first": {
+   "error": "fetch failed",
+   "files": 0
+  }
+ },
+ "rows": [],
+ "fillOrder": [],
+ "drift": [],
+ "notes": [
+  "rs-first: drive threw -- fetch failed",
+  "rcs-first: drive threw -- fetch failed"
+ ],
+ "verdict": "the app generated nothing comparable",
+ "fuzz": null,
+ "inputs": {
+  "study": "2026 - RCS/25-119 - Lansing Manor, 5600 Mall Drive West, Lansing MI (updated).pdf",
+  "priorRs": "2025/800010652 - Approved Rent Schedule - 10-8-24 - Lansing Manor.pdf",
+  "priorRsRule": "year-1 folder"
+ }
+}

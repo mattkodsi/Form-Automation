@@ -1,0 +1,164 @@
+{
+ "property": "Fairview Homes",
+ "code": "75920",
+ "folder": "75920 - Fairview Homes - Section 8",
+ "year": null,
+ "cycleLabel": "(no cycle folder)",
+ "sha": "ccc4568",
+ "orders": {
+  "rs-first": {
+   "files": 0,
+   "tier": null,
+   "weakerTest": false,
+   "ocrCalls": 0,
+   "via": null,
+   "missing": null,
+   "warnings": [
+    "the study yielded no unit types — no values can be applied from it",
+    "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+    "storm [save-left-dirt] after \"Update property profile\" settled, 2 key(s) still differ from the snapshot: appr.addr_street, partb.fuel.0  (seed 3316624651)",
+    "the generated documents carry the harness name \"ZZ-CORPUS-75920-20260731-0638\" — the schedule supplied no property name to overwrite it, so property.name WILL mismatch the filed package",
+    "rent schedule: #rsApply never appeared — nothing was applied to the form",
+    "study: #rcsApply never appeared — nothing was applied to the form"
+   ],
+   "errors": [
+    "rs-first: the app refused to generate — Cannot generate the package with zero units — the first unit type needs a unit count."
+   ],
+   "docsExtracted": []
+  },
+  "rcs-first": {
+   "files": 0,
+   "tier": null,
+   "weakerTest": false,
+   "ocrCalls": 0,
+   "via": null,
+   "missing": null,
+   "warnings": [
+    "the study yielded no unit types — no values can be applied from it",
+    "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+    "storm [save-left-dirt] after \"Update property profile\" settled, 2 key(s) still differ from the snapshot: appr.addr_street, partb.fuel.0  (seed 3316624651)",
+    "the generated documents carry the harness name \"ZZ-CORPUS-75920-20260731-0638\" — the schedule supplied no property name to overwrite it, so property.name WILL mismatch the filed package",
+    "study: #rcsApply never appeared — nothing was applied to the form",
+    "rent schedule: #rsApply never appeared — nothing was applied to the form"
+   ],
+   "errors": [
+    "rcs-first: the app refused to generate — Cannot generate the package with zero units — the first unit type needs a unit count."
+   ],
+   "docsExtracted": []
+  }
+ },
+ "rows": [],
+ "fillOrder": [],
+ "drift": [],
+ "notes": [],
+ "verdict": "the app generated nothing comparable",
+ "fuzz": {
+  "seed": 3316624651,
+  "counts": {
+   "edits": 7,
+   "escapes": 9,
+   "enters": 0,
+   "saves": 1,
+   "revertAlls": 2,
+   "drops": 0,
+   "clicks": 7,
+   "boundaries": 0,
+   "colourScans": 8,
+   "episodes": 8
+  },
+  "violations": [
+   {
+    "kind": "save-left-dirt",
+    "msg": "after \"Update property profile\" settled, 2 key(s) still differ from the snapshot: appr.addr_street, partb.fuel.0",
+    "seed": 3316624651,
+    "evidence": {
+     "appr.addr_street": {
+      "form": {
+       "value": "0",
+       "source": "new",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": true
+     },
+     "partb.fuel.0": {
+      "form": {
+       "value": "E",
+       "source": "new",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": false
+     }
+    },
+    "after": [
+     "escape (4 left)",
+     "escape (2 left)",
+     "escape (1 left)",
+     "— episode 2/8 [escape] 111 controls on screen",
+     "type \"1850\" into #viewForm input[data-k][8]",
+     "type \"\" into #viewForm input[data-k][20]",
+     "escape (2 left)",
+     "— episode 3/8 [revertAll] 111 controls on screen",
+     "click #viewForm [data-wibox][6]",
+     "click Revert to saved",
+     "— episode 4/8 [save] 111 controls on screen",
+     "type \"0\" into #viewForm input[data-k][23]",
+     "click #viewForm [data-fuel][0]",
+     "click Update property profile"
+    ]
+   }
+  ],
+  "actions": [
+   "— episode 1/8 [escape] 111 controls on screen",
+   "click #viewForm [data-fuel][4]",
+   "type \"N/A\" into #viewForm input[data-k][10]",
+   "click #viewForm [data-cb][13]",
+   "escape (4 left)",
+   "escape (2 left)",
+   "escape (1 left)",
+   "— episode 2/8 [escape] 111 controls on screen",
+   "type \"1850\" into #viewForm input[data-k][8]",
+   "type \"\" into #viewForm input[data-k][20]",
+   "escape (2 left)",
+   "— episode 3/8 [revertAll] 111 controls on screen",
+   "click #viewForm [data-wibox][6]",
+   "click Revert to saved",
+   "— episode 4/8 [save] 111 controls on screen",
+   "type \"0\" into #viewForm input[data-k][23]",
+   "click #viewForm [data-fuel][0]",
+   "click Update property profile",
+   "escape (2 left)",
+   "escape (1 left)",
+   "— episode 5/8 [escape] 111 controls on screen",
+   "type \"2026-03-01\" into #viewForm input[data-k][25]",
+   "click #viewForm [data-cb][15]",
+   "escape (3 left)",
+   "escape (1 left)",
+   "— episode 6/8 [revertAll] 111 controls on screen",
+   "click #viewForm [data-wibox][6]",
+   "type \"0\" into #viewForm input[data-k][47]",
+   "type \"42\" into #viewForm input[data-k][2]",
+   "click #viewForm [data-wibox][6]",
+   "click Revert to saved",
+   "escape (2 left)",
+   "— episode 7/8 [escape] 0 controls on screen",
+   "— episode 8/8 [escape] 0 controls on screen"
+  ]
+ },
+ "inputs": {
+  "study": "RCS/R1542R2017.pdf",
+  "priorRs": null,
+  "priorRsRule": null
+ }
+}
