@@ -4781,6 +4781,10 @@ const LOCKMK='<svg class="lockmk" viewBox="0 0 24 24" aria-hidden="true">'
 /* Not greyed out. Grey reads as broken rather than governed, and the value still
    has to be legible on a document nobody can retype. Full contrast, no border
    the eye reads as an input, no hover, no caret — and the lock carries the why. */
+/* The same look outside the form, where there is no cell to key it to. */
+function lockedLine(text,why){
+  return '<div class="fbox locked" title="'+esc(why||'')+'">'
+    +'<span class="lockv">'+esc(text)+'</span>'+LOCKMK+'</div>';}
 function lockedField(cell,label,text){
   return '<div class="field"><div class="flabel">'+label+'</div>'
     +'<div class="fbox locked" data-box="'+esc(cell)+'" title="'+esc(RA_LOCK_WHY[cell]||'')+'">'
@@ -9432,6 +9436,16 @@ function newCycleDialog(pre){
      the published factor, never both, and the old dialog enforced that by
      quietly unticking whichever you had ticked first — a rule you could only
      learn by watching it happen to you. */
+  /* Started FROM the schedule: it has already answered both questions, and the
+     answer is not this app's to overrule. Started from "+ Start a package" it
+     has answered nothing, and everything stays editable — which is the door a
+     property the schedule does not carry, and a standalone utility-allowance
+     revision, both have to come through. UAF is live either way: the tracker's
+     Next UA Baseline column is empty on all 2853 rows, so it has no opinion. */
+  const _fixProg=(pre&&pre.program)||'',_fixEff=(pre&&pre.effective)||'';
+  const _fixed=!!(_fixProg&&_fixEff);
+  const _WHY_PROG='The renewal schedule says this is '+(_fixProg==='ocaf'?'an OCAF':'an RCS')+' year. Change it in the schedule to revise it.';
+  const _WHY_EFF='The date the renewal schedule carries. Once this package is created it keeps this date, whatever the schedule says later.';
   const card=(id,tag,name,sub)=>'<label class="cypg" for="'+id+'">'
     +'<input type="radio" name="cyprog" id="'+id+'">'
     +'<span class="cyc-tag">'+tag+'</span>'
@@ -9439,27 +9453,35 @@ function newCycleDialog(pre){
     +'<span class="cyc-s">'+sub+'</span></label>';
   modal('<div class="dlg-t">Start new package</div>'
     +'<div class="dlg-sub">'+esc((((mpdb.listProperties()||[]).find(p=>p.id===activePid))||{}).name||'')+(effPh?(' \u00b7 the next one after '+esc(String(effPh).slice(-4))):'')+'</div>'
-    +((pre&&pre.effective)?'<div class="lh-note" style="margin:-4px 0 12px">'+esc('The renewal schedule has this as an '+(pre.type||'')+' effective '+fmtDateLong(pre.effective)+'.')+'</div>':'')
+    +((_fixed||!(pre&&pre.effective))?'':'<div class="lh-note" style="margin:-4px 0 12px">'+esc('The renewal schedule has this as an '+(pre.type||'')+' effective '+fmtDateLong(pre.effective)+'.')+'</div>')
     +'<div class="dlg-field"><label>How are the rents being set?</label>'
-    +'<div class="cypgs">'+card('cyRCS','RCS','Market reset','A rent comparability study sets the rents.')
-                            +card('cyOCAF','OCAF','Factor adjustment','HUD\u2019s published factor sets the rents.')+'</div></div>'
+    +(_fixed?lockedLine((_fixProg==='ocaf'?'OCAF \u2014 HUD\u2019s published factor sets the rents':'RCS \u2014 a rent comparability study sets the rents'),_WHY_PROG)
+      :('<div class="cypgs">'+card('cyRCS','RCS','Market reset','A rent comparability study sets the rents.')
+                            +card('cyOCAF','OCAF','Factor adjustment','HUD\u2019s published factor sets the rents.')+'</div>'))+'</div>'
     +'<div class="dlg-field"><label class="cyaddl">Also in this package</label>'
     +'<label class="cyopt cyadd"><input type="checkbox" id="cyUAF"> <span><b>UAF</b> \u2014 revise the utility allowances</span></label></div>'
-    +'<div class="dlg-field"><label>Rents effective</label><input id="cyEff" autocomplete="off" value="'+esc((pre&&pre.effective)?fmtDate(pre.effective):effPh)+'" placeholder="'+esc(effPh||'mm/dd/yyyy')+'"></div>'
+    +'<div class="dlg-field"><label>Rents effective</label>'
+    +(_fixed?lockedLine(fmtDateLong(_fixEff),_WHY_EFF)
+      :('<input id="cyEff" autocomplete="off" value="'+esc((pre&&pre.effective)?fmtDate(pre.effective):effPh)+'" placeholder="'+esc(effPh||'mm/dd/yyyy')+'">'))+'</div>'
     +'<div class="autherr" id="cyErr"></div>'
     +'<div class="dlg-row"><button class="btn" id="dlgCancel">Cancel</button><span class="dlg-sp"></span><button class="btn p" id="dlgOk">Create</button></div>');
   const rcs=el('cyRCS'),ocaf=el('cyOCAF'),uaf=el('cyUAF'),err=el('cyErr');
   if(pre&&pre.program==='ocaf'&&ocaf)ocaf.checked=true;
   else if(pre&&pre.program==='rcs'&&rcs)rcs.checked=true;
-  const ce=el('cyEff');if(ce)ce.addEventListener('input',()=>{ce.value=fmtDateInput(ce.value);});
+  const ce=el('cyEff');if(ce&&ce.addEventListener)ce.addEventListener('input',()=>{ce.value=fmtDateInput(ce.value);});
   _dlgEnter=()=>{const ok=el('dlgOk');if(ok)ok.click();};
   /* One radio group. The exclusion is the control's own, not a pair of
      handlers reaching across to each other. */
   el('dlgCancel').onclick=closeModal;
   el('dlgOk').onclick=async()=>{
-    const programs=[];if(rcs.checked)programs.push('rcs');if(ocaf.checked)programs.push('ocaf');if(uaf.checked)programs.push('uaf');
-    if(!rcs.checked&&!ocaf.checked){err.textContent='Choose how the rents are being set \u2014 a market reset or a factor adjustment.';return;}
-    const eff=fmtDateInput((el('cyEff').value||'').trim())||effPh;   // left blank, the package takes the date shown in gray: a year on from the last one
+    const programs=[];
+    if(_fixed)programs.push(_fixProg);
+    else{if(rcs.checked)programs.push('rcs');if(ocaf.checked)programs.push('ocaf');}
+    if(uaf.checked)programs.push('uaf');
+    if(!programs.length){err.textContent='Choose how the rents are being set \u2014 a market reset or a factor adjustment.';return;}
+    /* No cyEff input exists when the schedule fixed the date, so read the fact,
+       not the control that would have held it. */
+    const eff=_fixed?_fixEff:(fmtDateInput((el('cyEff').value||'').trim())||effPh);   // left blank, the package takes the date shown in gray: a year on from the last one
     const label=(eff.match(/(\d{4})/)||[])[1]||String(new Date().getFullYear());
     closeModal();
     try{const r=await mpdb.createCycle(activePid,{programs,label,effective_date:eff});renderLauncher();await openCycleForm(r.cid);_cyFresh=r.cid;}
