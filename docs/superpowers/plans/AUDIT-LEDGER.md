@@ -1534,3 +1534,92 @@ it moved money. Version 2 was flagged "(WRONG UAs)" in its own filename and corr
 excluded.
 
 M1: 11 of 11.
+
+---
+
+## Findings — Noble Tower (75543), 2024 - RCS
+
+**SHOULD/FILED only — no sweep record.** Not a three-way; the app has never driven this
+package. Read against the sources; nothing here is an app claim.
+
+### The tightest margin in the corpus — and the record understates it 13-fold
+
+The study concludes **$3,265**. Against the SAFMR the study itself prints (**$2,180**),
+150% is $3,270 — **$5/unit/month of clearance, 0.153%**. Against the SAFMR the owner's
+workbook carries (**$2,220**), 150% is $3,330 and clearance is $65/unit — **$975/month**
+across the units, thirteen times what the study's own arithmetic shows.
+
+Two SAFMRs for one property in one package, and the smaller one is the one printed. The
+reconciliation above is **mine, not the agent's** — it is arithmetic over the four reported
+figures and is consistent with all of them, but which SAFMR is *correct* was not settled
+from the source and is open. Whichever it is, this package clears the cap by a margin
+narrower than any other in the corpus, and a $5 error in either direction flips it.
+
+### The workbook is an appraiser-shopping record — and the folder tree corroborates it
+
+The 2024 Rent Grid Analysis workbook carries four conclusions: **Renzi $3,450 · VHA $3,265
+· HCVA $3,100 · Novogradac $2,450**. The filed study concludes the second.
+
+Verified independently against the folder, which names all four:
+
+| appraiser | artefact in the folder | quote |
+|---|---|---|
+| Renzi | `RCS/Invoices/Renzi - … INVOICE.pdf` | $3,450 |
+| VanHazinga | `Archive/VanHazinga - Noble Tower - Proposal.pdf` | $3,265 |
+| HCVA | `Archive/HCVA - … RCS Proposal.pdf` (+ a Consulting Proposal) | $3,100 |
+| Novogradac | `RCS/Grids/Novo - Noble Tower Preliminary Grids.pdf` | $2,450 |
+
+**Open, not a finding:** the only *invoice* in the folder is Renzi's, but the conclusion
+filed is VHA's. Nobody has read the invoice. Do not infer who was paid for what.
+
+Four appraisers priced this property and the spread is **$1,000/unit/month** — 41% of the
+lowest. No intent is claimed. But the range is the reason the $5 margin above matters:
+the conclusion is not a measurement with a $5 tolerance.
+
+### Contamination is *inside the filed study*, not beside it
+
+Unlike Woodbury Oakwood (where the foreign documents sat in the folder and were not filed),
+here the foreign text is bound into the governing document:
+
+| # | where | prints | should be | verdict |
+|--:|---|---|---|---|
+| 1 | Unit Summary subtitle | **"Hostmark of Village Cove, Poulsbo, WA"** | Noble Tower, Oakland, CA | team wrong |
+| 2 | running header | **"Raymond J. Lord Manor"** | Noble Tower | team wrong |
+| 3 | both grids | **`CH39H113049`** | `CA39H113049` | team wrong |
+| 4 | `Archive/Noble Tower - Option 1 Submission Package.pdf` | the **HUD Chapter Nine guide** | a submission package | team wrong |
+
+**#1 is not random.** `RCS/Archive/Hostmark - Wellness Program Analysis - A20240605.pdf`
+and `2024 - RCS/Noble Tower - Wellness Program Analysis - A20240605.pdf` are the **same
+date-coded document under two property names**, and two Hostmark newsletter mock-ups sit
+beside it. The template-reuse mechanism that produced the subtitle is visible in the file
+tree — this is the same class as Woodbury's Fairview files, one step further along: the
+copy was made, and this time the source name reached the filed page.
+
+**#3 is a new glyph class.** `CH` for `CA` is not the letter-O/digit-0 confusion (Westwood,
+Woodbury) — it is a wrong letter, on both grids, in the contract number that identifies the
+HAP contract. A real FHA number (`121-98056`) does exist on the 2018 schedule, so the
+package is not short of correct identifiers; this one was typed wrong and copied.
+
+### Study selection — H5 present, harmless on the numbers
+
+Two revisions: `Archive/… - A20240802 Final.pdf` (92pp) and the live
+`Noble Tower, Oakland, CA - RCS.pdf` (91pp). **Both conclude $3,265.** The manifest ranks
+the **Archive** copy above the live one (rank 5.00 vs 4.00) — H5 would fire here and pick a
+study out of `Archive/`. As at Woodbury, identical conclusions make it harmless *on the
+numbers*; it is still the wrong selection rule. H5 stands at 3 properties (Northcross,
+Sycamore Green, Oaks moved money; Woodbury and Noble Tower are structural only).
+
+### M8 — a 400 dpi observation, logged against the retraction, NOT reviving it
+
+Period separators were read on the **2018** schedule at 400 dpi, **mixed with commas on the
+same page**. Mixed glyphs on one page are not what a uniform rendering artefact produces,
+so this is worth keeping. It is **not** evidence for M8: 400 dpi is precisely the resolution
+that produced the original wrong claim, and Hampshire House only resolved at 1200 dpi.
+
+**M8 stays retracted.** Anyone reviving it owes a 1200 dpi read of this page — and the fact
+that this schedule is *2018*, six years before the cycle under audit and from a different
+producer, means even a confirmed period here would not carry to the filed 2024 documents.
+
+### Ledger position
+
+M1: 11 of 11 (unchanged — no new alias evidence).
