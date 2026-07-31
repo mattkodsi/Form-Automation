@@ -305,3 +305,36 @@ folder. The 150% SAFMR test still passes on the higher rents (270,257 vs 356,250
 #1 affects 60 of 100 units, and the filed schedule's 2,590 is $90 above even the grid.
 The other five grids match their summaries exactly, so it is isolated. Contamination
 check **negative** across all four workbooks.
+
+## Findings — Lansing Manor (75500), 2026 - RCS
+
+SHOULD vs FILED only; OURS absent. Four copies of the Belfry 25-119 study exist; the
+**7 Oct** version is the one bound into the filed submission. The 17 Oct "(updated)"
+version differs only in grid line 33 (heat adjustment −26 → −41, adding the MSHDA $15
+gas service charge) and **line 46, the concluded rent, is unchanged in both** — so the
+choice is immaterial to every figure below.
+
+| # | document | field | SHOULD | FILED | verdict |
+|--:|---|---|---|---|---|
+| 1 | RCS study p.3 | utility allowance | **116** in force (prior executed RS + team's own workbook `I3`) | **85** | team wrong |
+| 2 | RCS study p.3 | owner's gross renewal potential | on 116 → 131,280 | 40,800 / 87,380 / **128,180** on the 85 | team wrong |
+| 3 | RCS study p.3 | first 150% SAFMR table | a genuine FY2025 comparison (910 → 1,365) | headed "150% **2025** SAFMR" but fed by the 2026 column at 1,560 — a duplicate of the table below it | team wrong |
+| 4 | RCS study p.2/p.23/p.30 | "FHA Project No." | `N/A` | **MI330005001** (that is the HAP contract number) | team wrong |
+| 5 | RCS study p.1/p.14 vs p.2/p.23/p.30 | county | one county | **Ingham** on title/site ("Inghram"), **Eaton** in the letter and both grids | undetermined |
+| 6 | Appendix 2 (21 Nov) | ZIP / project no. / entity | 48917 / MI330005001 / …Association, LLC | **48971** / **MI1330005001** / "…**Associaton LP**" | team wrong |
+| 7 | CA rent determination letter | 1BR-Patio current rent | 897 | **997** | undetermined (CA's error, did not propagate) |
+
+**$85 appears in no other document in the cycle.** The 150% conclusion survives
+recomputation on the correct 116 (131,280 < 156,000), but the printed gross figures are
+wrong. #6 is three transcription errors on one page.
+
+**Not contamination.** Both workbooks are named "Senior World" but hold Lansing Manor's
+own data — "Senior World" and "Village Green III" are aliases of this property, and no
+separate Senior World exists anywhere in the corpus. The Belfry `SAFMR Analysis.xlsx`
+"Proposed Rents" column is a ceiling back-solve (`=150%SAFMR − UA`), a pre-engagement
+feasibility screen, not a concluded rent — and it was not filed.
+
+**Signature caveat worth carrying forward:** the three loose components in the folder
+root render unsigned, while the copies bound into the filed submission are all
+DocuSigned. Judging a package by its loose files would report false "unsigned" defects —
+the bound submission is the operative artifact.
