@@ -882,10 +882,10 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
 #viewMenu .mgrid.rows.live .pc-due{font-size:13px;font-weight:600;white-space:nowrap}
 #viewMenu .mgrid.rows.live .pc-eff,#viewMenu .mgrid.rows.live .pc-units{font-size:13px}
 #viewMenu .mgrid.rows.live .pc-act .btn{min-height:40px;padding:0 18px;font-size:13px;
-  font-weight:600;border-radius:var(--r-ctl);background:#101d2b;border-color:#101d2b;
-  letter-spacing:0;text-transform:none}
-#viewMenu .mgrid.rows.live .pc-act .btn:hover:not(:disabled){background:var(--ledger);border-color:var(--ledger)}
-#viewMenu .mgrid.rows.live .pc-act .btn:disabled{background:transparent;border-color:var(--ln);color:var(--i4)}
+  font-weight:600;border-radius:var(--r-ctl);background:#101d2b;border-color:#101d2b;color:#fff;
+  letter-spacing:0;text-transform:none;transition:background .12s,transform .08s,box-shadow .12s}
+#viewMenu .mgrid.rows.live .pc-act .btn:hover:not(:disabled){background:#1c3247;border-color:#1c3247;box-shadow:0 2px 6px rgba(16,29,43,.35);transform:translateY(-1px)}
+#viewMenu .mgrid.rows.live .pc-act .btn:disabled{background:transparent;border-color:var(--ln);color:var(--i4);box-shadow:none;transform:none}
 /* ---- the past-due drawer ----
    Flush under the masthead and edge to edge, so it reads as attached to the
    navy rather than as the first item of the list. It sits ABOVE the page's own
@@ -990,12 +990,13 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
 #viewMenu .mgrid.rows .pc-units{grid-column:5;grid-row:1;justify-self:end;
   white-space:nowrap}
 #viewMenu .mgrid.rows .pc-act{grid-column:6}
-#viewMenu .mgrid.rows .pc-act .btn{text-align:center;padding:5px 10px;width:100%;
-  background:none;border:1px solid transparent;border-radius:var(--r-ctl);color:var(--i3);
-  font-weight:600;font-size:12px;padding:0;width:auto}
-#viewMenu .mgrid.rows .pcard:hover .pc-act .btn{color:var(--ledger);
-  border-color:var(--ln);background:var(--card)}
-#viewMenu .mgrid.rows .pc-act .btn:hover{border-color:var(--ledger);color:var(--ledger)}
+#viewMenu .mgrid.rows .pc-act .btn{text-align:center;width:auto;
+  background:#101d2b;border:1px solid #101d2b;border-radius:var(--r-ctl);color:#fff;
+  font-weight:600;font-size:12px;padding:6px 14px;transition:background .12s,transform .08s,box-shadow .12s}
+#viewMenu .mgrid.rows .pc-act .btn:disabled{background:transparent;border-color:var(--ln);color:var(--i4);box-shadow:none;transform:none}
+#viewMenu .mgrid.rows .pcard:hover .pc-act .btn:not(:disabled){color:#fff;
+  border-color:#1c3247;background:#1c3247;box-shadow:0 2px 6px rgba(16,29,43,.35);transform:translateY(-1px)}
+#viewMenu .mgrid.rows .pc-act .btn:hover:not(:disabled){border-color:#1c3247;background:#1c3247;color:#fff;box-shadow:0 2px 6px rgba(16,29,43,.35);transform:translateY(-1px)}
 /* "make that an actual button" — Matt, of the ledger's hover-only affordance.
    The live panel that used to carry a solid slab is gone, so the emphasis moves
    onto the rows themselves: everything from today back to the start of the
@@ -1003,10 +1004,10 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
    keep the quiet text affordance, because 145 solid buttons rank nothing. */
 #viewMenu .mgrid.rows .pcard[data-band="now"] .pc-act .btn,
 #viewMenu .mgrid.rows .pcard[data-band="past"] .pc-act .btn{
-  border-color:var(--ln);background:var(--card);color:var(--i1);padding:6px 12px}
+  border-color:#101d2b;background:#101d2b;color:#fff;padding:6px 12px}
 #viewMenu .mgrid.rows .pcard[data-band="now"] .pc-act .btn:hover:not(:disabled),
 #viewMenu .mgrid.rows .pcard[data-band="past"] .pc-act .btn:hover:not(:disabled){
-  background:#101d2b;border-color:#101d2b;color:#fff}
+  background:#1c3247;border-color:#1c3247;color:#fff;box-shadow:0 2px 6px rgba(16,29,43,.35);transform:translateY(-1px)}
 #viewMenu .mgrid.rows .pc-act .btn:disabled{background:none;border-color:transparent;color:var(--i4)}
 #viewMenu .mcols{grid-template-columns:minmax(0,1fr) 110px 150px 150px 90px 116px}
 #viewMenu .mcols .r{text-align:right}
@@ -3366,6 +3367,28 @@ function packageScore(read,ctx){
   docs.forEach(d=>{
     if(d.produce==='upload'){if(d.required)g2.push({key:'@'+d.id,label:d.id==='rcs'?'the completed RCS report (document 04)':'the CA package',sec:1,ok:d.ready});return;}
     d.reqs.forEach(r=>{if(!owned['k:'+r.key])g2.push(r);});});
+  /* A priced study line the reader could not place is a BLOCKER, not a caveat.
+     The distinction at the top of this file is "blockers stop a document being
+     written; caveats do not", and this one has to stop it: the line carries
+     units and a rent, no form row claims it, so the rent schedule that gets
+     written is short by exactly those units and that money — and the app can
+     prove it before printing.
+
+     Peterson Plaza is why. Its study prices five lines; four parse, and the
+     fifth reads only "Senior" with no bedroom count, one unit at $2,700. The
+     schedule came out 188 units against a filed 189. The app already NOTICED —
+     rcsChecks() has warned about it since the reader was written — but a warning
+     on a review panel does not stop a HUD form being generated wrong, and this
+     one was generated wrong anyway.
+
+     Only when a line is PRICED. An unpriced line the reader could not place
+     tells us nothing about the money and must not hold a package hostage. */
+  if(ctx.unplacedPriced>0)
+    g2.push({key:'@unplaced',sec:6,ok:false,
+      label:ctx.unplacedPriced===1
+        ? 'a priced line in the study that no unit row claims — the rent schedule would be short by it'
+        : ctx.unplacedPriced+' priced lines in the study that no unit row claims — the rent schedule would be short by them'});
+
   g2=dedupe(g2.map(r=>Object.assign({},r)));
   const g2done=g2.filter(x=>x.ok).length;
 
@@ -4184,17 +4207,53 @@ function makeSupabaseDb(client) {
     if (isPerCycleKey(key)) p.percycle[key] = cell; else p.durable[key] = cell;
   };
 
+  /* PostgREST answers an unbounded select with its OWN page size, not the whole
+     table, and says so only in a 206 and a Content-Range nobody was reading. On
+     2026-07-31 hap_schedule held 4,273 rows and this loader received exactly
+     1,000 of them.
+
+     Nothing threw. The app simply believed the tracker ended a third of the way
+     through, and the damage surfaced two callers away: the Renewals page showed
+     87 of 88 properties "Awaiting the next schedule", and the corpus driver
+     refused Colonial Village 2026 for want of a startable row the table
+     certainly holds. Brewster Mews was the tell — it found a row eight years
+     late rather than none at all, which is what a truncated table looks like
+     and a broken date comparison does not.
+
+     It was invisible until today only because the previous export began at each
+     property's NEXT renewal, so the first 1,000 rows happened to be the ones
+     that mattered. New data did not break this; it stopped concealing it.
+
+     Paged for EVERY table, not just the one that broke. property is at 249 and
+     unit_type/ns8_unit grow with every package, so each of these is the same
+     bug waiting for its own row count. A short page ends the walk; a full one
+     means there may be more. */
+  const PAGE = 1000;
+  async function selectAll(table) {
+    const out = [];
+    for (let from = 0; ; from += PAGE) {
+      const r = await client.from(table).select('*').range(from, from + PAGE - 1);
+      if (r && r.error) return { data: out, error: r.error };
+      const got = (r && r.data) || [];
+      out.push(...got);
+      if (got.length < PAGE) return { data: out, error: null };
+      /* A table that keeps answering full pages forever is a paging bug, not a
+         big table. Refuse to spin. */
+      if (out.length > 500000) return { data: out, error: new Error('refusing to page past 500,000 rows of ' + table) };
+    }
+  }
+
   async function load() {
     const [pr, ur, nr, li, ct, dr, cy, hp, au] = await Promise.all([
-      client.from('property').select('*'),
-      client.from('unit_type').select('*'),
-      client.from('nonrev_unit').select('*'),
-      client.from('ns8_unit').select('*'),
-      client.from('pm_contact').select('*'),
-      client.from('app_contact').select('*'),
-      client.from('cycle').select('*'),
-      client.from('hap_schedule').select('*'),
-      client.from('app_user').select('*'),
+      selectAll('property'),
+      selectAll('unit_type'),
+      selectAll('nonrev_unit'),
+      selectAll('ns8_unit'),
+      selectAll('pm_contact'),
+      selectAll('app_contact'),
+      selectAll('cycle'),
+      selectAll('hap_schedule'),
+      selectAll('app_user'),
     ]);
     for (const q of [pr, ur, nr, li, ct, dr, cy]) if (q && q.error) throw q.error;
     D = { props: {}, contacts: [], dir: [], activePid: null, cycles: {}, hap: [], hapError: '', pmName: '' };
@@ -10410,6 +10469,11 @@ function scoreCtx(){
   let lh=null;try{lh=mpdb&&mpdb.getLetterhead?mpdb.getLetterhead(activePid):null;}catch(e){}
   return {programs:cycleProgs(),units:UNITS,checklistLen:CHECKLIST_FLAT.length,
     hasLetterhead:!!(lh&&lh.name),hasStudy:!!_rcsUpload,hasCaPkg:!!_rcsUpload,
+    /* Only the form session knows this — the data layers score from stored
+       cells and have no upload, so their ctx leaves it undefined and no blocker
+       fires there. That is right: a menu card cannot know about a study nobody
+       has opened. */
+    unplacedPriced:(typeof rcsUnplaced==='function'?rcsUnplaced().length:0),
     rateType:get('ocaf.rate_type'),uafDec:uafAnalysis().dec.length};}
 function docMissing(id){return window.RCSScore.docMissing(get,scoreCtx(),id);}
 function docWarns(id){return window.RCSScore.docWarns(get,scoreCtx(),id);}
