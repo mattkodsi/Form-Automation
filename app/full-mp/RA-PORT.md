@@ -53,6 +53,30 @@ next handoff.
    passes the picked registry id through natively; the Supabase adapter ignores
    the 2nd arg, the RA adapter uses it for read-only AUM prefill)
 
+## What the RASource seam is now ASKED for (2026-07-30)
+
+`window.RASource.value(k)` was consulted only for per-cell source ROWS — an
+offer the user could take or leave. It now also decides two cells outright:
+whenever it answers, the cell stops being editable, because the renewal calendar
+and this app cannot both own one fact.
+
+| `k` | What the app does with an answer |
+|---|---|
+| `property.name` | Locks the name cell; the rename dialog becomes the tenant alias alone |
+| `rent_schedule.date_rents_effective` | Locks the effective-date cell; stored as `date_eff_ra`, outranks the executed schedule and any typed date, and sets the package's own effective date |
+
+Three things worth knowing on the Azure side:
+
+1. **Answer only for properties AUM really covers.** `null` is not a failure — it
+   means "this app owns the field", which is exactly right for a property somebody
+   created here. The lock is conditional on a non-null answer, so nothing needs a
+   flag or a tracker code.
+2. **Any date shape is fine.** `mm/dd/yyyy` and ISO both parse; anything else is
+   treated as no answer rather than guessed at.
+3. **The answer is read when a form OPENS, and frozen into that package.** Changing
+   the row afterwards does not move a package already under way — deliberately, and
+   the tooltip on the cell says so. A new package picks up the new answer.
+
 Note on escaping: `build-ra.py` is Python — any literal `\uXXXX` text inside our
 JS (e.g. in comments) must be written double-backslashed in its anchor strings.
 

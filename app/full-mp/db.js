@@ -24,7 +24,7 @@ function isPerCycleKey(k) {
     || (/^ocaf\./.test(k) && k !== 'ocaf.rate_type' && k !== 'ocaf.ds_annual') // debt-service defaults live on the template
     || /^uaf\./.test(k)
     || k === 'checklist.sign_date' || k === 'tenant.date_of_notice' || k === 'rent_schedule.date_rents_effective'
-    || k === 'rent_schedule.date_eff_rs' || k === 'rent_schedule.date_eff_source' || k === 'rent_schedule.date_eff_custom';
+    || k === 'rent_schedule.date_eff_rs' || k === 'rent_schedule.date_eff_ra' || k === 'rent_schedule.date_eff_source' || k === 'rent_schedule.date_eff_custom';
 }
 
 /* ---- crosswalk: UI flat key -> v7 dictionary key + home (for extraction) -
@@ -450,8 +450,12 @@ async function makeDb(adapter, opts) {
   function cySyncEff(c) {
     // the form's date-rents-effective drives the cycle's date + year label
     const src = (c.cells['rent_schedule.date_eff_source'] || {}).value;
-    const eff = cyISO(src === 'custom' ? (c.cells['rent_schedule.date_eff_custom'] || {}).value
-      : ((c.cells['rent_schedule.date_eff_rs'] || {}).value || (c.cells['rent_schedule.date_eff_custom'] || {}).value));
+    /* Related Affordable outranks both. It is written only when their database
+       answered, and it is per-cycle and non-carrying, so it stays the answer for
+       THIS package even if that database later says something else. */
+    const eff = cyISO((c.cells['rent_schedule.date_eff_ra'] || {}).value
+      || (src === 'custom' ? (c.cells['rent_schedule.date_eff_custom'] || {}).value
+      : ((c.cells['rent_schedule.date_eff_rs'] || {}).value || (c.cells['rent_schedule.date_eff_custom'] || {}).value)));
     if (eff) { c.effective_date = eff; const y = eff.slice(0, 4); if (y) c.label = y; }
   }
   function cycleAnalysisOf(cid) {

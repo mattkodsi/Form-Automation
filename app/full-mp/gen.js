@@ -338,7 +338,7 @@ const addrLine=(street,city,state,zip)=>{
           _raw[String(n)]=String(num); out=_show(n,num); }
         f.setText(out); f.setFontSize(9); f.updateAppearances(font); _wrote++; }catch(e){ _missed++; } };
     const C=n=>{ try{ form.getCheckBox(String(n)).check(); }catch(e){} };
-    const _de=(g('rent_schedule.date_eff_source')==='custom'?(g('rent_schedule.date_eff_custom')||g('rent_schedule.date_eff_rs')||g('rent_schedule.date_rents_effective')):(g('rent_schedule.date_eff_rs')||g('rent_schedule.date_eff_custom')||g('rent_schedule.date_rents_effective')));
+    const _de=(g('rent_schedule.date_eff_ra')||(g('rent_schedule.date_eff_source')==='custom'?(g('rent_schedule.date_eff_custom')||g('rent_schedule.date_eff_rs')||g('rent_schedule.date_rents_effective')):(g('rent_schedule.date_eff_rs')||g('rent_schedule.date_eff_custom')||g('rent_schedule.date_rents_effective'))));
     const _dei=_toISO(_de);
     /* Both names, the way the executed copy prints them. app.js splits a slashed
        Part A project name on the way IN - "Sample Property/Sample Property"
@@ -607,7 +607,7 @@ const addrLine=(street,city,state,zip)=>{
   const m2=n=>'$'+(Number(n)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
   const idxOf=(rec,pre)=>[...new Set(Object.keys(rec).map(k=>(k.match(new RegExp('^'+pre+'\\.(\\d+)\\.'))||[])[1]).filter(x=>x!=null))].sort((a,b)=>a-b);
   const utype2=(br,ba,dg)=>{const b=String(br||'').replace(/(\d+)\s*BR/i,'$1 BR').trim();const a=String(ba||'').replace(/(\d+(?:\.\d+)?)\s*BA/i,'$1 BA').trim();const t=(b&&a)?(b+' / '+a):(b||a||'—');const d=String(dg||'').trim();return d?(t+' '+d):t;};
-  const effOf=rec=>{const g=k=>rec[k]!=null?String(rec[k]):'';const de=(g('rent_schedule.date_eff_source')==='custom'?(g('rent_schedule.date_eff_custom')||g('rent_schedule.date_eff_rs')||g('rent_schedule.date_rents_effective')):(g('rent_schedule.date_eff_rs')||g('rent_schedule.date_eff_custom')||g('rent_schedule.date_rents_effective')));
+  const effOf=rec=>{const g=k=>rec[k]!=null?String(rec[k]):'';const de=(g('rent_schedule.date_eff_ra')||(g('rent_schedule.date_eff_source')==='custom'?(g('rent_schedule.date_eff_custom')||g('rent_schedule.date_eff_rs')||g('rent_schedule.date_rents_effective')):(g('rent_schedule.date_eff_rs')||g('rent_schedule.date_eff_custom')||g('rent_schedule.date_rents_effective'))));
     const s=String(de||'').trim();let m=s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);if(m)return monthY(m[3]+'-'+('0'+m[1]).slice(-2)+'-'+('0'+m[2]).slice(-2));return monthY(s);};
   const UAF_UTILS_G=[['oil','Oil'],['gas','Natural Gas'],['electric','Electric'],['water','Water / Sewer / Trash']];
   function ocafCalcRec(rec){
