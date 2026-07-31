@@ -2201,30 +2201,40 @@ Plus two `/Title` traces of the source document (Crossroads' checklist is titled
 names). **The mechanism is template reuse without renaming**, and it has now been caught at
 every stage from "left in the folder" to "signed under penalty of perjury."
 
-### M13 · A unit type over 150% of its own SAFMR, absorbed by the aggregate test — 3 properties
+### M13 · A unit type over 150% of its own SAFMR, absorbed by the aggregate test — 4 properties, 2 of them concealed
 
-| property | unit | concluded | 150% SAFMR | over by | disclosed? |
+| property | unit | RCS gross | 150% SAFMR | over by | disclosed? |
 |---|---|--:|--:|--:|---|
 | Friendship Court | 1BR | $1,375 | $1,260 | $115/unit/mo (163.7%) | **yes**, on the study's own summary |
 | Newberry Arms | 1BR | $1,175 | $1,170 | $5/unit/mo | **yes** |
-| **Marine Terrace** | **3BR** | **$7,028** | **$6,900** | **$128/unit/mo** | **no — actively masked**, see M14 |
+| **Marine Terrace** | **3BR** | **$7,028** | **$6,900** | **$128/unit/mo** | **no — masked** |
+| **Morh Housing** | **3BR** | **$4,777** | **$4,695** | **$82/unit/mo** ($55,104/yr) | **no — masked twice** |
 
 The first two **disclose** the overage and rest on the gross test, which is the binding one.
-For those, this is not a defect but a **product requirement**: the app's 150% check computes
-an aggregate, and a reviewer reading only the app's verdict would not see a unit type over
-its own cap.
+For those this is not a defect but a **product requirement**: the app's 150% check computes
+an aggregate, and a reviewer reading only its verdict would not see a unit type over its own
+cap.
 
-**Marine Terrace changes the stakes.** There the overage is not disclosed — the study's
-transmittal table compares *net* RCS rent to the *gross* 150% figure, and the difference
-between the two bases is precisely the difference between "under" and "over." The owner's
-workbook makes the mirror-image basis error, overstating headroom by $66,618/mo. So the
-app's aggregate does not merely hide a disclosed detail; on a package like this one it would
-**agree with a filed conclusion that a correct per-unit computation contradicts.**
+**The other two are a different finding.** In both, the study's transmittal table compares
+*net* RCS rent to the *gross* 150% figure — and that basis gap is precisely the under/over
+gap. Morh Housing masks it a second time by netting the 3BR overage against a 4BR surplus
+inside the aggregate. So the app's aggregate would not merely hide a disclosed detail; on
+either package it would **agree with a filed conclusion that a correct per-unit computation
+contradicts.**
 
-**Product consequence:** the 150% check must report per unit type as well as aggregate, and
-must state the basis (gross, including UA) on both sides of the comparison.
+**And in both, the owner's workbook fails the same way independently.** Morh Housing states
+the mechanism exactly: `MORH Rent Grid Analysis.xlsx` carries "RCS Rents + UA" in column Q
+and "150% SAFMR" in column U — **adjacent** — and its `R19` test reads only the aggregate.
+The per-unit comparison is not computed wrongly; **both correct figures sit one column apart
+and nothing subtracts them.** Marine Terrace's workbook makes the mirror-image basis error,
+overstating headroom by $66,618/mo.
 
-### M14 · The threshold statement — the one sentence that says whether the package passes — is malformed in every package that prints it: 4 properties
+**Product consequence, now load-bearing:** the 150% check must report per unit type as well
+as aggregate, and must print the basis (gross, including UA) on both sides of the comparison.
+An aggregate-only verdict reproduces the exact failure two independent appraisal firms and
+two independent workbooks have already shipped.
+
+### M14 · The threshold statement — the one sentence that says whether the package passes — is malformed in every package that prints it: 5 properties
 
 | property | what it prints | what is wrong | arithmetic |
 |---|---|---|---|
@@ -2232,8 +2242,13 @@ must state the basis (gross, including UA) on both sides of the comparison.
 | Newberry Arms | "RCS GROSS RENT < SAFMR GROSS RENT $95,814 <$96,120" | $96,120 is **150% of** SAFMR gross, not SAFMR gross | right |
 | Market Square | same caption, `$174,375<$180,000`; concluded rent printed under a **"SAFMR RENTS"** column head | SAFMR gross is $120,000 — the caption omits "150% of" twice over | right |
 | **Marine Terrace** | same caption — but compares **net** RCS rent to the **gross** 150% figure | **the bases do not match, and the mismatch is what makes a 3BR overage read as compliant** | **wrong** |
+| **Morh Housing** | same caption, `$641,009<$646,905` — while the **same table** defines "TOTAL GROSS SAFMR RENT: **$431,270**" two lines above | as written the sentence asserts $641,009 < $431,270, **which is false**; and its per-unit table is net-against-gross | **wrong** |
 
-Three firms, four properties, one malformed template.
+Three firms, five properties, one malformed template.
+
+**Morh Housing is the sharpest instance:** the sentence is not merely under-labelled, it is
+contradicted by a figure printed two lines above it in the same table. A reviewer who
+believed the caption would have to conclude the package fails.
 
 In the first three the arithmetic behind the sentence is correct and **only the sentence is
 wrong** — which is the version most likely to survive review, because a reviewer who checks
@@ -2436,3 +2451,161 @@ preparation and the re-dated transmittal.
 **This is a lead, not a rule.** It is read off superseded guidance and must not be applied
 to any package until the current Chapter 9 is in hand and the deadline is confirmed to have
 survived. Recorded so it is not re-derived, and so nobody mistakes it for settled.
+
+---
+
+## Findings — Morh Housing (75927), 2026 - RCS
+
+**SHOULD/FILED only — no sweep record.** The second confirmed concealment of a per-unit-type
+failure, and the one that names the mechanism precisely.
+
+### A 3BR overage, masked twice
+
+SAFMR agreed on both sides (ZIP 94607, "HUD 2026 SAFMR": 3BR $3,130, 4BR $3,710 → 150% =
+$4,695 / $5,565; aggregate cap $646,905/mo). **No divergence.**
+
+The study's per-unit-type table captions its left column **"RCS RENTS"** — the *net*
+contract rent — and compares it to **"150% SAFMR"**, a *gross* figure. The two tables below
+it correctly use gross. Corrected to gross-vs-gross on the study's own UA ($102/$138), under
+the **filed** (4 Dec) conclusions:
+
+| | RCS gross | 150% SAFMR | margin/unit/mo |
+|---|--:|--:|--:|
+| 3BR (56 units) | $4,777 | $4,695 | **−$82 — OVER by 1.75%** |
+| 4BR (69 units) | $5,413 | $5,565 | +$152 |
+| aggregate | $641,009 | $646,905 | +$5,896 (0.91%) |
+
+**The 3BR overage — $4,592/mo, $55,104/yr — is masked twice:** once by the net-vs-gross
+caption, and again by netting against the 4BR surplus inside the aggregate.
+
+**And the wrong UA vintage is in use.** Both study and workbook carry FY2025 UA
+($102/$138). The FY2026 UA effective 1 Apr 2026 is **$107/$144** — computed in the property's
+own `FY2026 UAF Notice.pdf` and carried by the executed rent schedule and Exhibit A. On the
+correct UA the filed 3BR is over by **$87** and aggregate headroom falls to 0.80%.
+
+**The governing (21 Jan) revision cures it.** 3BR $4,582 vs $4,695 (+$113), 4BR $5,244 vs
+$5,565 (+$321), aggregate +4.40%. Money moved: −$200/unit 3BR, −$175/unit 4BR =
+**−$23,275/mo, −$279,300/yr**. **No CA letter of any kind exists in the folder**, so whether
+the revision answered an objection or was volunteered cannot be determined.
+
+### The workbook has the right two columns side by side and never compares them
+
+`MORH Rent Grid Analysis.xlsx` carries column **Q** ("RCS Rents + UA" = $4,777 / $5,413) and
+column **U** ("150% SAFMR" = $4,695 / $5,565) **adjacent**. The "Below 150%?" test at `R19`
+reads only the aggregate — $641,009 vs $646,905 → YES.
+
+This is the mechanism Marine Terrace also showed, stated exactly: **the per-unit-type
+comparison is not wrong in the workbook, it is never performed.** Both figures are present,
+correctly computed, one column apart, and no cell subtracts them.
+
+### The threshold sentence is false against its own table
+
+Operator direction is correct (`<`) and the arithmetic is right against $646,905. The
+caption is not:
+
+> `RCS GROSS RENT < SAFMR GROSS RENT    $641,009<$646,905`
+
+Two lines above, **the same table defines "TOTAL GROSS SAFMR RENT: $431,270."** As written
+the sentence asserts $641,009 < $431,270, which is false. "150% OF" is omitted. Present in
+**both** versions. This is the sharpest instance of M14 yet — the document contradicts itself
+within one table.
+
+### Study selection
+
+| file | transmittal / cert | 3BR / 4BR |
+|---|---|---|
+| `Archive/25-063 …` (2pp grid extract, 6/9/2025) | none | not concluded on the pages present |
+| `Grids/25-161 … (10.14.25)` (3pp) | none | preliminary Belfry grids |
+| `Grids/MORH (Novoco) Preliminary Grids_10.2025` (31pp) | none | **second appraiser** (Novogradac); workbook shows $4,300 / $4,900 |
+| `Archive/25-184 …` **≡ `RCS Submission/25-184 …`** (md5 `ac0c0750…`, byte-identical) | **4 Dec 2025** | **$4,675 / $5,275** |
+| `25-184 … (Revised 1.21)` (md5 `9a53a9f2…`) | **21 Jan 2026** | **$4,475 / $5,100** |
+
+**FILED:** the 4 Dec study, bound as Exhibit 3 at pp.9–62 of the signed submission (envelope
+`BEEC3BD6`, 16–18 Dec 2025). **GOVERNS:** the 21 Jan revision — its rents are on the executed
+HUD-92458 (25 Feb 2026), Exhibit A and the tenant notice. The revision also replaced comps 3
+and 5 and moved the renovation year 2016→2017. **A second appraiser priced this property**
+(Novogradac at $4,300/$4,900), the appraiser-shopping shape first seen at Noble Tower.
+
+### Defects
+
+| # | document | field | SHOULD | FILED | verdict |
+|--:|---|---|---|---|---|
+| 1 | filed study, transmittal p.2 | per-unit-type 150% test, 3BR | gross $4,777 > $4,695 — **FAILS** | `$4,675<$4,695` — net against gross | team wrong |
+| 2 | **both** studies, transmittal p.2 | threshold caption | "… < **150% OF** SAFMR GROSS RENT" | "… < SAFMR GROSS RENT" — false against the same table's $431,270 | team wrong |
+| 3 | both studies + workbook | utility allowance | $107 / $144 (FY2026 UAF) | $102 / $138 (FY2025) | team wrong |
+| 4 | `MORH Rent Grid Analysis.xlsx` | 150% test | per unit type **and** aggregate | aggregate only (`R19`/`R40`) | team wrong |
+| 5 | filed grids pp.26 & 34 | "Grid was prepared:" | one box ticked | **both blank** (300 dpi) | team wrong |
+| 6 | filed grids | rendering | vector text | 694×887 px raster at **107 dpi** | team wrong |
+| 7 | **both studies**, grid signature | date ≥ the figures it certifies | **11/17/2025** on a grid whose research ran to 12/4/2025 — **and unchanged on the 21 Jan revision after comps and rents changed** | post-certification alteration | team wrong |
+| 8 | `Owner's Checklist MORH (12.26).pdf` | envelope integrity | a new envelope for re-signed content | **the same envelope `BEEC3BD6`** as the bound 12/16 checklist — but "Scope of Work" is now ticked and the date reads 12/26/2025 | team wrong |
+| 9 | bound checklist (pkg p.7) | "Scope of Work" | ticked — the study has a Scope of Assignment at p.1 | unticked | team wrong |
+| 10 | bound checklist | date vs cover letter | ≥ 12/18/2025 | dated 12/16/2025 yet certifies a "Signed Cover Letter" executed 12/18/2025 | team wrong |
+| 11 | HUD-92458 (executed + both prelims) | FHA Project Number | populated or "N/A" | **blank**, while study and grids print "FHA #: CA39L000088" — which Exhibit A shows is the *S8 contract* number | team wrong |
+| 12 | tenant notice (2/2/2026) | inspection address | 741 Filbert St (or 727–737) | **701 Filbert Street** | team wrong |
+| 13 | tenant notice | owner signature | signed | blank line under "Signed by managing owner/agent" | team wrong |
+| 14 | owner's certification of compliance v2 | signature | signed | blank line; typed name + "2.18.26" only | team wrong |
+| 15 | FY2026 UAF notice | owner signature | signed | blank line; date only | team wrong |
+| 16 | both studies, cover + transmittal | county | "ALAMEDA COUNTY" | **"ALMEDA COUNTY"** — correct elsewhere in the same document | cosmetic |
+| 17 | both `25-184` PDFs | `/Title` metadata | the subject or report name | **"April 14, 2008"** — stale Word template | cosmetic |
+| 18 | filed vs governing | year renovated | one value | 2016 (filed, all three places) vs 2017 (governing, all three places) | open |
+| 19 | Novogradac preliminary sheet | 4BR unit count | 69 | **70** — raising its 150% divisor to $652,470 | cosmetic |
+| 20 | filenames | tenant notice | — | `Archive/…December 2025.pdf` is dated 2/2/2026 and describes the 21 Jan revision | cosmetic |
+
+**#8 is the sharpest document-integrity finding in the audit so far.** A checklist was
+re-signed with a box newly ticked and a new date — **under the DocuSign envelope ID of the
+already-bound copy.** The envelope is the thing that is supposed to make a signature
+non-repudiable; reusing it across changed content is what it exists to prevent.
+
+**#17 is a cross-link.** Friendship Court's study carries the identical stale `/Title`,
+`April 14, 2008`. Two properties, two different appraisal firms, one 2008 Word template still
+in circulation.
+
+**#11 is the third FHA-box finding** and pulls the same way as Crossroads' (downgraded to
+`open` above) and Marine Terrace's (verified *correct*). Here the study prints the S8 contract
+number in an FHA field — the same category error as Newberry Arms #10 and Friendship Court #11.
+
+### Patterns explicitly ABSENT
+
+Glyph substitution: **none** — `CA39L000088` is character-identical across ten documents.
+Foreign-property material: **none** (the 2008 `/Title` is template residue, not another
+property). **No CA or HUD letter of any kind in the 2026 folder** — no approval, no
+objection, no decision. Incomplete grids: **none** (lines 44/45/46 populated on all four
+grids in both versions). UA current-vs-proposed swap: **none** — both move up, and the
+24 CFR 245.410 decrease trigger correctly does not fire. 30-day notice: **clean** — served
+2/2 for a 4/1 effective date, and the notice's rent table matches the governing study and
+executed schedule exactly. Separator: **no claim made.**
+
+### Instrument notes
+
+- **The filed grid's embedded raster is 107 ppi** (`pdfimages -list`) — rendering above that
+  upsamples. Checkbox and line 44/46 verdicts were read at 300 dpi off that upsample and
+  stated as such. Third property where the *filed* copy is the least legible one.
+- The executed rent schedule is Print-To-PDF with **zero widgets** — read by rendering; the
+  two preliminary schedules have text layers and agree on every Part A figure.
+- **Could not determine:** whether $3,130/$3,710 are the true published FY2026 SAFMRs for
+  94607 (no offline HUD source — **and both sides agree, so a shared error would be
+  invisible**); which renovation year is correct; whether the CA ever objected; the
+  conclusion on `25-063`, whose two pages stop before grid line 46.
+
+### M16 · Post-certification alteration — the signature no longer covers the page it is on: 2 properties
+
+The class Woodbury Oakwood was checked for and cleared. Two properties do not clear it.
+
+| property | the instrument | what is wrong |
+|---|---|---|
+| **Market Square** | executed HUD-92458 | page 1 carries **December** figures; page 2's Part H owner certification reads **7 Oct 2025, envelope `8872250A`** — the October signing. The December signing (`68757971`) is on a different document. **The owner certified numbers that are not the numbers on the page.** |
+| **Morh Housing** | grid signature | dated **11/17/2025** on a grid whose research ran to **12/4/2025** — and **left unchanged on the 21 Jan revision** after comparables 3 and 5 were replaced and every concluded rent moved |
+| **Morh Housing** | owner's checklist | `Owner's Checklist MORH (12.26).pdf` re-signed with "Scope of Work" newly ticked and the date moved to 12/26 — **under the same DocuSign envelope `BEEC3BD6` as the bound 12/16 copy** |
+
+The envelope ID is the mechanism that makes a DocuSign signature non-repudiable: it binds a
+signer to a specific document state. **Reusing one across changed content is the precise
+failure it exists to prevent**, and Morh Housing does it on the very document whose function
+is to certify what the package contains (M15).
+
+Neither reader claims intent, and neither should. What is established is that in both
+packages **a signature is affixed to content it demonstrably did not cover**, and in Morh's
+case the same is true twice over.
+
+**For the app:** every document it generates carries figures that a human then signs. If the
+app can regenerate a document after certification without invalidating the signature block,
+it can manufacture this defect. That is a design constraint, not a bug report.
