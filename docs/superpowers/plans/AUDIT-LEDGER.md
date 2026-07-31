@@ -211,3 +211,97 @@ belongs to another lane, so these are written down rather than fixed (run order 
 
 Checks 1–2 say the page scrolls horizontally at common laptop widths — a usability
 defect rather than a cosmetic one. Not diagnosed here.
+
+---
+
+## Findings — Westwood Village (4640009), 2025 - RCS
+
+SHOULD vs FILED only; OURS absent. Sources: Belfry study 25-072 (24 Jun 2025) and the
+FY2024 executed schedule. ~110 fields checked.
+
+| # | document | field | SHOULD | FILED | verdict |
+|--:|---|---|---|---|---|
+| 1 | Rent schedule | 3BR-HC utility allowance | **155** (baseline wkbk `F18` = electric 98 + gas 57) | **161** | team wrong |
+| 2 | Rent schedule | 3BR-HC gross rent | 1,505 | 1,511 | team wrong |
+| 3 | Rent schedule | 4BR utility allowance | **151** (`F19` = 82 + 69) | **150** | team wrong |
+| 4 | Rent schedule | 4BR gross rent | 1,751 | 1,750 | team wrong |
+| 5 | Rent schedule | Part B "Trash" | checked (study p.42 + grid row 39; HUD screening checklist) | unchecked | team wrong |
+| 6 | RCS transmittal | contract number | **VA36H027152** | **VA36H026152** | team wrong |
+| 7 | Owner's checklist | "Scope of Work" | checked (study has a Scope of Assignment) | unchecked | team wrong |
+| 8 | RCS body p.13 | who pays hot water | tenant (gas) — per its own grid row 36 and p.42 | "owner provides cold and hot water" | team wrong |
+
+Both bad allowances flow through to **Exhibit A**, the document that tells the site what
+to bill. Neither appears in either 30-day UA notice nor in the CA's written correction:
+the CA's 17 Jul 2025 email corrected only 2BR→121 and 2BR-HC→87 and struck the 3BR-HC
+and 4BR rows from the tenant notice. **$161 and $150 have no documented source in the
+folder.** Observation, not a conclusion: 161 = 98 (3BR-**HC** electric) + 63 (the
+**non-HC** 3BR gas figure).
+
+Contamination check **negative** — both grid workbooks hold a single `Westwood` sheet.
+Two working files (not filed) carry defects: the 6.20.25 workbook's second block has
+`#REF!` in its pass/fail cell, and the superseded 11.30.24 workbook assigned SAFMRs one
+bedroom low and grossed UAs by a flat 10% instead of measuring them.
+
+## Findings — Circle Park (75833), 2026 - RCS
+
+SHOULD vs FILED only; OURS absent. Governing study is the **25 Nov 2025** 87-page
+revision (HUD's issues memo forced it); the 11 Nov 80-page version is superseded. Rent
+conclusions are identical between the two, so nothing downstream turns on the choice.
+
+| # | document | field | SHOULD | FILED | verdict |
+|--:|---|---|---|---|---|
+| 1 | RCS study p.4 | 150% SAFMR test line | `864,296 < 959,940` | prints **`$864,296>$959,940`** | team wrong |
+| 2 | RCS study p.4 | Total Gross SAFMR Rent | **639,960** (its own five lines) | **639,690** (transposed) | team wrong |
+| 3 | RCS study p.3 | Gross potential, 1BR line | **365,880** (120 × 3,049) | **365,800** | team wrong |
+| 4 | RCS transmittal | FHA/project number | **IL060054027** | **IL00054027** | team wrong |
+| 5 | RCS study p.2/p.74 | "Prepared Grid (Y/N)" 3BR-TH | Y (grid is at p.65) | renders blank | team wrong |
+| 6 | RCS study p.18 | unit-breakdown column vs total | column and TOTAL must agree | 120/4/55/2/58 = 239 under a TOTAL of 418 | team wrong |
+| 7 | Tenant Notice Certification | signature + date | signed and dated | both render blank | team wrong |
+| 8 | Combined package | which study is embedded | the 25 Nov study of record | the superseded 11 Nov study | team wrong |
+| 9 | 13 Jan rent-schedule drafts | Part B utilities | unchecked (UAs are non-zero) | Heating/Cooling/Hot Water/Cooking **checked** | team wrong (superseded) |
+
+The test **does** pass; #1 is a printed glyph asserting the opposite, and #2/#3 are line
+items whose own totals were computed off the correct figures. #9 did not reach the
+executed form but was in the file the owner DocuSigned.
+
+**Unresolved:** the study and the workbook disagree on the FY vintage of the SAFMR table
+(study 2,340/2,640/3,390 vs workbook 2,370/2,670/3,440). No HUD SAFMR printout is in the
+folder. Outcome is unaffected — the project passes on either set.
+
+**Adjacent, outside this cycle:** Circle Park's **2025** tenant-notice certification
+certifies on behalf of *Marshall Field Preservation L.P.* — a different Related property.
+
+## Findings — Oceanport Gardens (75563), 2024 - RCS
+
+SHOULD vs FILED only; OURS absent. Renzi & Associates job 24-067 governs; the JLL study
+is an internal comparison and appears nowhere in the submission.
+
+**The central finding is a rent gap nobody in the folder derives.**
+
+The filed RCS concludes 2,525 / 2,535 / 2,550 / 3,200 / 3,210 / 3,215. The rents executed
+effective 1 Jul 2024 are 2,590 / 2,600 / 2,615 / 3,220 / 3,225 / 3,235 — **$6,015/month,
+$72,180/year above what the filed study supports.** Both the NJHMFA approval letter
+(2 May 2024) and its transmittal (7 May) describe these as *"100% of Owner's Rent
+Comparability Study."*
+
+Nothing in the folder produces those numbers: not the Renzi report, not its preliminary
+grids, not the JLL study, and not any workbook dated before the CA's letter. The
+`5.3.24` workbook records them *after* the CA issued them. They are not an OCAF or UAF
+applied to the RCS rents — the implied 1BR multiplier does not reproduce the 2BR values.
+**Marked `undetermined`, not `team wrong`: the mismatch is not in doubt, its origin is.**
+
+Downstream, stated without proposing anything: the 16 Apr 2024 tenant notice told
+residents 2,525–3,215. The adopted rents are higher, and no corrected notice is in the
+folder. The 150% SAFMR test still passes on the higher rents (270,257 vs 356,250).
+
+| # | document | field | SHOULD | FILED | verdict |
+|--:|---|---|---|---|---|
+| 1 | RCS grid p.25 vs summaries | 1BR-Small concluded rent | one value | grid says **2,500 / $4.53**, every summary says **2,525 / $4.57** | team wrong |
+| 2 | RCS title page | ZIP | 07757 | **60657** | team wrong |
+| 3 | RCS pp.32, 41 | tenancy narrative | a senior-citizens project | "specializes on individuals struggling with homelessness and with special needs" | team wrong |
+| 4 | Owner's checklist | owner signature | signed (its own "Signed Owner's Checklist" is ticked) | signature line renders blank | team wrong |
+| 5 | Exhibit A | contract form cited | **HUD-9638** Mark-Up-to-Market | **HUD-9637** Basic Renewal | team wrong |
+
+#1 affects 60 of 100 units, and the filed schedule's 2,590 is $90 above even the grid.
+The other five grids match their summaries exactly, so it is isolated. Contamination
+check **negative** across all four workbooks.
