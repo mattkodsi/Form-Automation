@@ -1068,3 +1068,79 @@ right and the label wrong; the HUD-9624's FHA cell, left blank, is the only stri
 correct treatment in the package.
 
 **Eight of eight packages read now carry the M1 mislabel.**
+
+---
+
+## Findings — Burt Farms I (75109), 2024 - Renewal & RCS
+
+SHOULD vs FILED; no sweep record yet.
+
+**What this filing is.** An **Option 1-A entitlement Mark-Up-To-Market renewal** on
+HUD-9624, consummated on **HUD-9638**. The old contract expired 6/25/2024 and a *new*
+five-year contract began 6/26/2024. So — like Westwood 2020 — a modern six-document RCS
+package is only partly applicable. **Legitimately absent:** any OCAF worksheet (MUTM sets
+rents at market, so no factor applies) and any scope of repair (as-is study). **Unlike**
+Westwood 2020, nothing is structurally impossible: all six promised exhibits are present.
+
+**My brief's premise was wrong and the agent inverted it.** I flagged the study (3.22.24)
+as post-dating the submission (3.19.24). It does not: the grid is signed 3/4, the
+transmittal is dated 3/18, and the DocuSign certificate shows the *whole package* was
+executed **3/22/2024 5:05:48 PM ET**. "3.19.2024" is a nominal date typed three days
+ahead of actual execution across every document. Recorded because a brief that asserts a
+sequence can manufacture a finding.
+
+### The two serious ones
+
+| # | document | field | SHOULD | FILED | verdict |
+|--:|---|---|---|---|---|
+| 1 | HUD-9624 worksheet | Initial Eligibility Worksheet | present — the signed form certifies *"I have attached … and completed the 'Initial Eligibility Worksheet'"* and claims market potential *"at or above 100% of the published Fair Market Rents"* | **absent**, and **no published FMR appears anywhere in the 60 pages** — only SAFMRs | team wrong |
+| 2 | HUD-9624 worksheet | debarment certification | exactly one of two mutually exclusive boxes | **both checked** — the executed form certifies the owner both is *and is not* suspended or debarred | team wrong |
+
+Item 1 is the weightiest: **the 100%-of-FMR entitlement gate for Option 1-A is asserted
+and never demonstrated.** That gate is what qualifies the project for MUTM at all.
+
+### The rest
+
+| # | document | field | SHOULD | FILED | verdict |
+|--:|---|---|---|---|---|
+| 3 | RCS Scope of Assignment | effective date | March 4, **2024** (grid signed 3/4/24; comps last leased Feb–Mar 24; Conclusion says 2024) | *"as of March 4, **2023**"*, research window from 2/22/**2023** | team wrong |
+| 4 | RCS narrative, Comp 5 | neighborhood adjustment | **downward** ($70 as the grid applies) | *"adjusted **upward** at 4% of the unadjusted rent"* — and 4% of $1,850 is $74; the $70 is the stale January figure from when the comp's rent was $1,700 | team wrong |
+| 5 | RCS narrative | SAFMR vintage | FY2024 | *"the HUD **2023** Small Area Fair Market Rents"* for a March-2024 study supporting a 6/26/2024 effective date | undetermined |
+| 6 | Threshold summary row | per-unit comparison | $1,879 < $1,890 (gross vs gross) | **`$1,825<$1,890`** — **net** rent against a **gross** threshold. Outcome holds, but the true margin is **$11/unit**, not the $65 implied | team wrong |
+| 7 | Tenant notice | signature block | Burt Farms I | *"Regional Manager, **Burt Farms II**"* (900 dpi) | team wrong |
+| 8 | Tenant notice | rate-table header | an increase | **`RCS Increase`** holds the new rent $1,825, beside "Proposed Increase 386" | team wrong |
+| 9 | Tenant notice | submission date | executed 3/22, sent to CGI 3/22–23 | served 3/27 saying *"on March 27, 2024 we plan to submit"* | team wrong |
+| 10 | Owner's checklist | "Scope of Work" | checked (RCS carries it as *Scope of Assignment*) | unchecked | team wrong |
+| 11 | Grid analysis workbook `O10` | UAF | `52*1.04` (the owner's own UAF, signed three weeks earlier) | **`52*1.05`** → 54.6, carrying to a gross of 93,980 not 93,950 | team wrong |
+| 12 | Cover letter | expiring-contract date | 6/25/2024 | *"terminates on June 26, 2024"* — contradicting the HUD-9624 in the same package | team wrong |
+
+**Item 10 is the fifth instance of M4** (Colonial Village, Westwood 2025, Oceanport,
+Holly House, Burt Farms I).
+
+### M9 · The tenant notice's "RCS Increase" column holds the new rent — 3 properties
+
+Holly House, Oceanport Gardens and Burt Farms I all print the **new contract rent** under
+a header reading *"RCS Increase"*, with the actual increase in a separate column. Three
+properties clears the bar. On a §245.410 resident-facing notice the header misdescribes
+the number beneath it — a resident reading "RCS Increase $1,825" against a current rent
+of $1,439 sees an increase four times the real one.
+
+### Two useful negatives
+
+- **M8 does not appear here.** Both ambiguous figures were re-rendered at **900 dpi** and
+  are **commas** — `1,439` and `1,825`. The period convention is not universal, which
+  makes it a per-document property a reader must detect rather than assume.
+- **No post-certification alteration.** A page-by-page comparison of the executed
+  60-page copy against the loose one shows **zero** value differences — only the DocuSign
+  stamp. The Clinton Manor shape is not endemic.
+
+### The two-firm bake-off, recorded not judged
+
+Renzi (job 24-013) concluded **$1,825** on 1/23; JLL (VA-24-254936) concluded **$1,475**
+on 1/26; the comparison workbook was built 1/27; Renzi was then engaged for the full RCS
+on 2/21. **A $350/month spread, and the higher was retained for the study that sets the
+rents.** Not a defect on this evidence — JLL's product was a restricted due-diligence
+grid, not a Chapter 9 RCS — but it is the second property (with Oceanport) where two
+firms were commissioned and the higher conclusion went forward.
+
+**M1 is 9 of 9.** No letter-O substitution here; all zeros verified as digits at 400 dpi.
