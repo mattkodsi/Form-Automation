@@ -136,6 +136,19 @@ Done:
   documents rather than only the screen — now FORM-RULES 20, because the first
   version did it on one of the two paths that open a form and not the other.
 
+- **The new-package dialog states the schedule's answer** instead of pre-filling
+  it. Started from a tracker card, the programme and the effective date are
+  locked lines; started from "+ Start a package" nothing is locked, because that
+  is the only door a property the schedule does not carry can come through. UAF
+  stays a live checkbox either way.
+
+Verified by probe, not currently pinned by a suite check: when the seam's name
+differs from the one the app already stored, the form takes the seam's, the save
+writes it to the record, and the gallery follows — `Gates Manor Apartments` →
+`Gates Manor Apartments II`. Pinning it means saving inside the browser suite's
+tail, which would leave that name behind for whatever runs after; the 19 checks
+around it cover the lock itself.
+
 Still open, deliberately:
 
 - **Storing the tracker row on the package.** Not needed once RASource answers
