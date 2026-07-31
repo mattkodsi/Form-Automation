@@ -6,7 +6,7 @@ claims to be current; every other doc in the lane is either standing rules
 findings (`AUDIT-LEDGER.md`). If this file disagrees with them, this file is right and
 the other one needs fixing.
 
-Last updated: **2026-07-31**, by the cloud, after fixing the dialog wall and booting the real app through the relay.
+Last updated: **2026-07-31**, by the cloud, after driving 75708 end to end through the relay.
 
 ## The selector blocker is FIXED — and it was not the selector
 
@@ -54,14 +54,17 @@ properties, 4,273 tracker rows, zero JS errors**, `renderMenu()` at 174 ms. Impl
 fetch shim behind `--relay-supabase`, so `SUPABASE_URL` and the derived storage key are
 unchanged and only the transport moves.
 
-**Still not proved: the WRITE path.** No cycle has been created through the relay — the
-classifier here blocks a live-account write, which is a reasonable gate. Token refresh under
-write load and the `_pending` queue are untested.
+**The WRITE path is now proved.** 75708 drove end to end through the relay on 2026-07-31:
+cycle created, both fill orders, one upload each, five files each, reload re-find, cleanup.
+Token refresh survived write load. Account verified independently afterwards — **249
+properties, 0 cycles, 0 outstanding ledger entries**.
 
-**The division of labour STANDS, and not merely for want of proof.** The Mac's argument is
-the right one: if the driving leg moves to the container, nothing independently checks the
-container. Two records disagreeing is a signal; one machine has none. The relay's value is
-diagnosis without a round-trip — the 75708 wall was found here in minutes, read-only.
+**The package took `2026-10-01` from the tracker** — the one thing neither machine had
+confirmed end to end, and the whole reason the tracker was reloaded.
+
+The Mac's argument against the move — that nothing then independently checks the container —
+was overruled by Matt, not answered. It is still true, and the mitigation is that the Mac
+drives on request as a second opinion.
 
 Chromium still cannot reach Supabase *directly* — reconfirmed on the correct proxy port
 (35069; an earlier probe hardcoded 34565, so that negative was worthless) and against a
@@ -108,10 +111,19 @@ properties, and it needs a re-drive to confirm.
 
 ## Who does what
 
-**Cloud** reads sources, writes verdicts, traces mechanisms, and is the only machine that
-edits source, builds, tests and delivers. **Mac** drives the real signed-in app, cleans
-the account, and after any repair re-drives and reports whether the right things moved.
-The Mac does not edit source.
+**Matt moved the driving leg to the cloud on 2026-07-31**, overruling the Mac's argument for
+keeping the split. `.claude/settings.json` carries the permission grant and travels with the
+repo.
+
+**Cloud** now does all of it: reads sources, writes verdicts, traces mechanisms, edits
+source, builds, tests, delivers, **and drives the real signed-in app**. **Mac** reviews,
+reads, argues with findings, and drives only on request as a second opinion.
+
+**THE SESSION TOKEN IS SINGLE-USE AND SHARED.** Supabase rotates the refresh token on every
+use, so whoever spends it holds the session and the other machine's copy is dead. It killed
+this lane twice in one day. The cloud holds it; the Mac asks in the inbox before driving
+anything. `signin.js` needs a typed password, so **only Matt can mint a new one** — a
+container restart locks the cloud out until he is awake.
 
 ## How we talk
 

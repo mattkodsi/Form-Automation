@@ -18,7 +18,7 @@
    ocr.js would move billing somewhere nothing is counting; that is the failure
    these guard now. */
 const fs=require('fs'),path=require('path'),cp=require('child_process');
-const MIN_CHECKS=32;   // 2026-07-31: six portfolio-safety rails added - cleanup deletes
+const MIN_CHECKS=34;   // 2026-07-31: six portfolio-safety rails added - cleanup deletes
                        // CYCLES not properties, and the driver fails closed on create.
                        // 2026-07-30: check 5 became five real ones - the rail moved
                        // out of this file and into sweep.js/drive.js, so it can be DRIVEN.
@@ -205,6 +205,17 @@ const fakeBoth=(name,calls,delay)=>{
     && !/waitFor\(c, `!!document\.getElementById\('cyRCS'\)`/.test(dsrc));
   T('and a dialog that DOES offer radios is reported, not silently clicked past',
     /the new-package dialog offered program radios/.test(dsrc));
+
+  /* The reload re-find, same regression class as #cyRCS one step later: it
+     hunted the scratch property name the driver no longer creates. It is now
+     matched on the property ID, which also survives the app overwriting
+     property.name from a parsed schedule (app.js:1844) — a trap this lane has
+     already been bitten by once. Named for Colonial Village 75708. */
+  T('the reload re-find matches the property by data-open ID, never by name',
+    /find\(x=>x\.getAttribute\('data-open'\)===want\)/.test(dsrc)
+    && !/\.pc-name[\s\S]{0,80}indexOf\(q\)===0/.test(dsrc));
+  T('and the failure message names the id it could not find, not a scratch name',
+    /no property card carries id/.test(dsrc));
 
   T('the effective date is never typed - a tracker row locks it',
     !/typeInto\(c,\s*'cyEff'/.test(dsrc));

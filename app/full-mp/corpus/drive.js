@@ -1202,13 +1202,27 @@ async function driveBoth(opts) {
        rather than an assumption. A property with no tracker row is an orphan
        and always shows, and any search query forces the All view
        (renderMenu, app.js:3384), so no lens can hide it. */
-    await typeInto(c, 'menuSearch', runName);
+    /* Found by ID, never by name. Two reasons, and both have cost this lane a
+       run: the driver no longer creates a scratch property, so `runName` names
+       nothing that exists; and the app OVERWRITES `property.name` from a
+       readable rent schedule (app.js:1844), so even the correct name is a
+       moving target between the click and the reload. The id is what the run
+       already holds and the one thing a parsed document cannot change.
+
+       The search box still gets typed into — a query forces the All view
+       (renderMenu, app.js:3384) so no lens can hide the card — but what it is
+       given is the property's own name for display, and what is MATCHED is
+       `data-open`. */
+    const findName = await c.eval(`try{const p=(mpdb.listProperties()||[]).find(x=>x.id===${J(ids.pid)});
+      return p?String(p.name||''):'';}catch(e){return '';}`).catch(() => '');
+    await typeInto(c, 'menuSearch', findName || String(propertyCode));
     await sleep(500);
-    const cardPid = await c.eval(`const q=${J(runName)};
+    const cardPid = await c.eval(`const want=${J(ids.pid)};
       const b=[].slice.call(document.querySelectorAll('#menuGrid [data-open]'))
-        .find(x=>((x.querySelector('.pc-name')||{}).textContent||'').indexOf(q)===0);
+        .find(x=>x.getAttribute('data-open')===want);
       if(!b)return null; b.click(); return b.getAttribute('data-open');`);
-    if (!cardPid) throw new Error('after the reload there is no property card named ' + runName + ' — the record never reached the database');
+    if (!cardPid) throw new Error('after the reload no property card carries id ' + ids.pid
+      + ' (searched ' + J(findName || String(propertyCode)) + ') — the record never reached the database');
     await waitFor(c, `(function(){const v=document.getElementById('viewLauncher');return !!(v&&v.style.display!=='none');})()`,
       { timeout: 20000, label: 'the property page after the reload' });
     const cyc = await c.eval(`const xs=[].slice.call(document.querySelectorAll('[data-cyopen]'));
@@ -1650,6 +1664,10 @@ if (require.main === module) {
     driveBoth({
       propertyFolder: prop.folder, propertyCode: prop.code, propertyName: prop.name,
       studyPath: pickStudy(cyc), priorRsPath: cyc.priorRs,
+      /* sweep.js has always passed this; the CLI printed it and then dropped it,
+         so a hand-driven run reached the tracker step with cycleLabel null and
+         skipped for want of a year it had already displayed one line earlier. */
+      cycleLabel: cyc.cycleLabel || (cyc.year != null ? String(cyc.year) : null),
       outRoot, corpusRoot, cacheRoot: cacheRoot && cacheRoot !== '-' ? cacheRoot : null,
       sessionFile: opt('--session'), log: console.log,
     }).then(r => {
