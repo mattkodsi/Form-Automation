@@ -3390,3 +3390,66 @@ because the fix will retire an unknown fraction of them outright.
 **H7 confirmed as predicted, at cost:** the Mac swept both folders for Colonial Village,
 Riverwood, Lansing Manor and Fairview Homes. Four packages driven twice, four extra
 `ZZ-CORPUS-*` properties written to the live account.
+
+---
+
+## The blocked half, adjudicated — 52 is a DEFECT, not an inventory error
+
+The open question on night-1 was whether the 52 blocked packages are real filed packages or
+staging debris. **They are overwhelmingly real.** Adjudicated against the corpus:
+
+| bucket | count | what it is |
+|---|--:|---|
+| **real filed package, app produced nothing comparable** | **39** | **a genuine app defect** |
+| cycle carries no filed documents at all | 8 | correctly blocked — nothing existed to compare |
+| no manifest cycle (Village Court, null) | 1 | inventory |
+| **duplicate-copy collision — see H10** | **4** | harness |
+
+**39 of 52 — 75% — is the app failing on a package that has filed documents to compare
+against.** Several carry the full set: North Park 2025 (5 documents), Riverwood 2020 (4),
+Burt Farms I 2019 (4), Ebony Gardens 2018 (4), Oak Center 2021, Morh Housing 2021, Northgate
+Terrace, Mapleview 2020, Westwood Village 2020, Shiloh Village, The Pines.
+
+**The "Cherry Garden cohort" is not staging debris.** The uncoded folders carry 1–7 filed
+documents each, and two spot-checks on disk settle it:
+
+- `Gates Manor - Section 8/2026 - RCS/` — **`Gates Manor - RCS Submission Package (signed).pdf`**, a signed Appendix 2, the RCS analysis workbook, a tenant notice, and `RCS`/`RCS Package`/`UAF` subfolders.
+- `Manhattan Plaza - Section 8/2022/` — **`MP_Fully Executed RS 2022.pdf`**, a signed rent schedule, owner's checklist, cover letter, 30-day notice, Exhibit A, compliance certificate, and the CA's final Mark-to-Comp notification as a saved `.msg`.
+
+These are complete filed packages. The missing code prefix is a **folder-naming state**
+(H7: a rename migration caught mid-flight), not a signal about content.
+
+### The honest read against my earlier deflation
+
+Last block I cut the "2,156 differing values" headline down to 76 real money rows, because
+46% of it was label formatting. **This one does not deflate.** Taking 39 out of 52 and adding
+the 39-of-89 that generated nothing at all, **M7 is confirmed at scale and it is the
+dominant finding of the whole sweep**: the app does not build a package. Comparing the
+values it does produce is secondary to that.
+
+## H10 · A package that compares fine from one folder produces nothing from its byte-identical twin
+
+Four packages were swept twice under H7's duplicate folders. **In every case the coded path
+compared and the uncoded path produced nothing:**
+
+| package | coded folder | uncoded twin |
+|---|--:|--:|
+| Colonial Village 2026 (RCS) | **88 compared** | **0** |
+| Riverwood 2025 - RCS | **26 compared** | **0** |
+| Lansing Manor 2026 - RCS | **87 compared** | **0** |
+| Fairview Homes 2025 - RCS | **109 compared** | **0** |
+
+**The inputs are byte-identical** — H7 established that by `cmp` on the file trees, differing
+only in Excel lock files. So the documents cannot explain it. Something in processing the
+*second* copy of the same property fails, and the most likely candidate is a collision on
+the derived property name in the live account — which is exactly the surface `10ff2fa` just
+rewrote for cleanup.
+
+**Consequence:** these 4 are not app failures on those packages, and they should come out of
+any blocked count. They are the second cost of the duplicate manifest entries, after the
+wasted Mac time and the extra `ZZ-CORPUS-*` records. **Dedupe the manifest and this class
+disappears.**
+
+**Worth testing directly on the Mac when convenient:** drive one property twice in a single
+run under two names and see whether the second produces nothing. If it does, H10 is a live
+bug in the driver that has nothing to do with the corpus — it would fire on any re-run.
