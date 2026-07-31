@@ -22,7 +22,7 @@ edit source.** What it observes it writes down and hands over.
 The account is no longer a scratch pad. On 2026-07-31, with Matt's explicit blessing, it
 was emptied and rebuilt from the HAP tracker:
 
-- **249 real portfolio properties**, imported with their `ra_property_code`.
+- **236 real portfolio properties**, imported with their `ra_property_code`.
 - **4,273 tracker rows** in `hap_schedule`, carrying rent-increase years **2014–2046**
   where the previous export effectively began at the next renewal.
 - What was deleted is snapshotted at
@@ -79,7 +79,7 @@ against a record that already holds it is not a simulation of the workflow — i
 ## What the Mac does once the change lands
 
 1. Drive the 43 drivable property-years, both fill orders, storm on.
-2. Cleanup by cycle; confirm the property count is still **249** and unchanged.
+2. Cleanup by cycle; confirm the property count is still **236** and unchanged.
 3. Commit `docs/superpowers/plans/sweep-out/` and push after every wave, not at the end.
 4. Re-drive after every repair and report what moved.
 
@@ -106,8 +106,11 @@ nobody asked.
 
 ## Rails that have each cost a run
 
-- **The property count is 249 and must stay 249.** If it changes, something deleted or
-  created a portfolio record and the run stops.
+- **The property count is 236 and must stay 236.** If it changes, something deleted or
+  created a portfolio record and the run stops. (Was 249 until 2026-07-31, when the
+  tracker was filtered to OCAF/RCS only and the 15 properties whose every tracker row was
+  EXPIRES or Request — never a rent renewal — were removed. See the inbox note. That trim
+  was deliberate and done through admin SQL, so it did not spend the session token.)
 - A scratch record can rename itself out of any name-based check — the app overwrites
   `property.name` from a readable schedule. `drive.js` records ids; trust ids, never names.
 - Never pipe a suite through `| tail` — the exit status becomes tail's.

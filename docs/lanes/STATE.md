@@ -130,7 +130,7 @@ safety 34 · compare 91 · extract 120.
 
 ## The environment, as of now
 
-- Account: **249 real portfolio properties**, 0 cycles, 0 scratch records. Rebuilt from
+- Account: **236 real portfolio properties**, 0 cycles, 0 scratch records. Rebuilt from
   the HAP tracker 2026-07-31 with Matt's blessing; what it replaced is snapshotted at
   `docs/superpowers/plans/account-snapshot-before-reset.json`.
 - Tracker: **4,273 rows**, rent-increase years **2014–2046**, loaded into `hap_schedule`.
@@ -138,7 +138,7 @@ safety 34 · compare 91 · extract 120.
 - **43 of the corpus's 66 property-years are drivable.** The other 23 are pre-2020 years
   the export does not reach, plus Sycamore Green, which the tracker never lists.
 - Driver: finds the property by `ra_property_code`, creates none, records and deletes
-  **cycles**. Verified on 75708 — account unchanged at 249/0/0.
+  **cycles**. Verified on 75708 — account unchanged at 236/0/0.
 - Not built: the **two-pass** drive (prior cycle → save → current cycle), which is the
   only way to reach the on-file and overridden provenance states.
 
