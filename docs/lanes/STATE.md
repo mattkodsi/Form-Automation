@@ -25,6 +25,23 @@ money diffs). The big raw difference counts are H9 harness noise. M18 confirmed 
 by the driven record (Peterson 189 units, Senior blank flagged, 0 money diffs). Prior-year
 cycles are provisional; Hampshire 2019 BLOCKED (nothing comparable).
 
+**Wave 2 driven and closed (2026-07-31, cloud).** Five properties / eight cycles;
+account 234 -> 234, cleaned up by cycle. **All five producing cycles clean on the money —
+zero app money defects.** Northcross 2024 (re-confirmed), Circle Park 2026, Clinton Manor
+2026 and Burt Farms I 2024 clean; three prior-year cycles (Westwood 2020, Clinton 2019,
+Burt Farms 2019) BLOCKED (nothing comparable). Two findings:
+- **Phantom-dirty reproduced on a new key class.** `safmr_hud` flips database->overridden
+  after a storm that never touches it (Westwood seed 3805780444; Clinton seed 2565671169;
+  both onScreen:false, 0 actions). With Colonial's `partb.fuel` that is three deterministic
+  seeds — **app wrong, confirmed.** Next source repair: a coupledKeys/recompute path writing
+  without going through `editForm`.
+- **A HARNESS bug that manufactures a false money mismatch.** Westwood 2025's "app vs filed"
+  SAFMR ladder (ours 1120/1570/1850 vs "filed" 930/1120/1570) was the comparator reading the
+  **superseded 11.30.24 draft workbook** as the filed `analysisXlsx`. Both the app AND the
+  submitted study are right (true SAFMR = 1120/1570/1850, confirmed against study 25-072 p.2
+  and the executed 6.20.25 workbook). Fix: pick the filed grid workbook by executed/newest,
+  not the first/superseded draft.
+
 Account baseline is **234** (Mac's trim note said 236; cleanup verifies count-unchanged,
 so drives are safe either way). Token self-refreshes under 5 min left; forced to 60 to
 unblock the sweep. Only Matt can mint a fresh one if the refresh token ever rotates out.

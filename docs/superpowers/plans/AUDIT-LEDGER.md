@@ -4044,3 +4044,103 @@ blocker. Not a wrong number anywhere.
 
 **Storm:** ran on every driven cycle; violations (if any) carried in each record's `fuzz`
 field with replay seeds, judged under the M6 per-key rule.
+
+---
+
+## THREE-WAY — Sweep Wave 2, driven from the container (Northcross · Westwood · Clinton Manor · Circle Park · Burt Farms)
+
+Wave 2 drove five properties (eight cycles) through the relay, storm on, both fill orders,
+cleaned up by cycle afterward — **account 234 → 234, zero cycles left behind**. Five current-year
+cycles produced a comparable package; three prior-year cycles (Westwood 2020, Clinton 2019,
+Burt Farms 2019) generated **nothing comparable** and are **BLOCKED**, not clean.
+
+Of 118 values compared, 61 differ; of those only **23** are rows where both sides carried a
+value. **All but five of those 23 are unit-type label formatting** (`2BR/1BA` vs `2-Bedroom`,
+`2BR/1.5BAFlat` vs `2BR-Flat`) — the H9 harness class, not app defects. The five that are money
+all sit on one property, Westwood Village, and are the SAFMR ladder below.
+
+### The money verdict, per producing cycle
+
+| cycle | money both-diffs | verdict on the money |
+|---|--:|---|
+| Northcross 2024 (2640001) | **0** | clean — re-confirms the earlier three-way on a second drive |
+| Circle Park 2026 (75833) | **0** | clean — OURS SAFMR `2340/2640/3390` reproduces the study's own set exactly |
+| Clinton Manor 2026 (75830) | **0** | clean — OURS reproduces the (altered) executed Col.5/Col.6, see below |
+| Burt Farms I 2024 (75109) | **0** | clean — MUTM Option 1-A, app still produced a comparable analysisXlsx |
+| Westwood Village 2025 (4640009) | **5** | SAFMR one bedroom-tier apart — adjudicated below |
+
+**Circle Park — app right, money clean.** Every one of its five mismatch rows is a unit-type
+label; its SAFMR (`2340/2640/3390` by bedroom) matches the 25 Nov study's printed set. The
+study/workbook SAFMR-vintage disagreement noted in the earlier findings (`2,340/2,640/3,390`
+study vs `2,370/2,670/3,440` workbook) is a **team** matter and the app picked the study's
+figures; outcome is unaffected either way. **Verdict: cosmetic-only; the app's money is right.**
+
+**Clinton Manor — app right on the money; the serious defect is the team's and predates any
+output.** OURS reproduces the executed HUD-92458 Col.5/Col.6 the audit already flagged as
+**altered after the owner's 27 Oct signature** (95→98, 154→150, 149→167 with the same envelope
+ID). The app reads the *executed* schedule as its source, so it faithfully carries the altered
+figures — the alteration is a filed-document integrity finding (**team wrong**), not something
+the app caused or could have caught from the schedule alone. **Verdict on the app: money clean.**
+
+**Burt Farms I — app right on the money; the package is an Option 1-A MUTM the app is not built
+to complete.** One mismatch, a unit-type label. The substantive defects (no Initial Eligibility
+Worksheet, both debarment boxes checked, 2023-vs-2024 effective-date typos) are all **team wrong**
+and structural to a Mark-Up-To-Market renewal; the app produced a comparable analysisXlsx anyway.
+**Verdict on the app: money clean.**
+
+**Northcross — re-confirmed.** Second drive, again 0 money both-diffs (three unit-type labels).
+The earlier three-way's `unit.1.ua` question (221 vs 222, undetermined-not-app-wrong) is unchanged;
+the second drive shows the app's numbers are stable across drives.
+
+### The interaction storm found the phantom-dirty bug again — on a new key class
+
+Colonial Village first showed it on `partb.fuel` (seed `601113841`). Wave 2 reproduced the **same
+shape on `safmr_hud`**, twice, from two different properties and two different episode kinds:
+
+| property | key | before → after | source flip | onScreen | actions touching key | seed |
+|---|---|---|---|:--:|:--:|---|
+| Westwood Village 2025 | `units.4.safmr_hud` | `2828` → `1422` | database → **overridden** | **false** | **0** | `3805780444` |
+| Clinton Manor 2026 | `units.1.safmr_hud` | `1700` → `2803` | database → **overridden** | **false** | **0** | `2565671169` |
+
+In each, a random storm that **never touched that cell** (0 of 27 / 0 of 29 actions name it, and it
+is off screen) left it `overridden` against a `database` snapshot after the episode settled — Westwood
+after an "Update property profile" save, Clinton after Escape-to-rest. This is no longer a
+fuel-specific curiosity: a **mutating handler rewrites a per-unit SAFMR as a side effect without
+recording the edit through `_pending`/the undo run**, so the form reports an override the user never
+made. Two deterministic replays on `safmr_hud`, one on `partb.fuel` — **app wrong, confirmed, three
+independent seeds.** This is the next repair to make in source (a `coupledKeys`/recompute path that
+writes without going through `editForm`). It is a distinct bug from Westwood's SAFMR row below —
+that one turned out not to be an app defect at all.
+
+### Westwood Village 2025 — the "money mismatch" was the HARNESS reading a superseded draft
+
+Westwood carried the wave's only five both-valued money rows. OURS sat exactly one bedroom-tier
+**above** the value labeled FILED:
+
+| bedroom | OURS (app) | labeled "FILED" | true SAFMR |
+|---|--:|--:|--:|
+| 2BR | 1120 | 930 | **1120** |
+| 3BR | 1570 | 1120 | **1570** |
+| 4BR | 1850 | 1570 | **1850** |
+
+A focused source read settled it, and it inverts the first read. **The app is right and so is the
+submitted study** — the true SAFMR is **1120 / 1570 / 1850**, confirmed two independent ways: the
+filed Belfry study 25-072, Exhibit 3 p.2 "SAFMR Gross Renewal Potential Calculation" (subject ZIP
+24017), and the executed grid workbook **`… 6.20.25.xlsx`** cells S9/S11/S13 (150% = 1680/2355/2775).
+
+The `930 / 1120 / 1570` set the comparator labeled "FILED" exists **only in the superseded
+`… 11.30.24.xlsx` draft** — the very workbook the ledger already flagged as "SAFMRs one bedroom low."
+And the record's own provenance proves how it got there:
+
+> `filed: analysisXlsx read from Westwood - RCS RCS Grid Analysis **11.30.24.xlsx**`
+
+**The corpus comparator picked the superseded 11.30.24 draft workbook as the filed `analysisXlsx`,
+when the executed 6.20.25 workbook was in the same folder.** That manufactured a false "app wrong on
+the money." Verdict: **not app wrong, not team wrong — HARNESS wrong.** A comparator/`build-manifest`
+document-selection bug that grabs a stale grid workbook. This is the M2 "which schedule got picked
+up" mechanism, but on the *comparator's* side, and it is exactly the confident-but-wrong self-instrument
+output the audit exists to catch. **Fix: select the filed `analysisXlsx` by executed/newest, or by the
+workbook whose date matches the study of record — never the first or the superseded draft.** Until then,
+every folder holding more than one grid workbook is a false-money-mismatch risk; Westwood is the proof.
+
+**Net for Wave 2: all five producing cycles are clean on the money — zero app money defects.**
