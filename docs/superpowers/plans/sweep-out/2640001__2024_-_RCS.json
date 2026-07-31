@@ -1,0 +1,340 @@
+{
+ "property": "Northcross",
+ "code": "2640001",
+ "folder": "2640001 - Northcross - Section 8",
+ "year": 2024,
+ "cycleLabel": "2024 - RCS",
+ "sha": "cce8502",
+ "orders": {
+  "rs-first": {
+   "files": 3,
+   "tier": "text:half",
+   "weakerTest": false,
+   "ocrCalls": 2,
+   "via": "text",
+   "missing": null,
+   "warnings": [
+    "only the front half of the rent schedule was read — Parts F and G (ownership entity, principals, signatory) did not come through",
+    "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+    "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “Northcross Townhomes”, and the management address. A letterhead can be uploaded on the property page.",
+    "package dialog: Northcross Townhomes · 1 of 6 ready · 5 not ready"
+   ],
+   "errors": [],
+   "docsExtracted": [
+    "analysisXlsx"
+   ]
+  },
+  "rcs-first": {
+   "files": 3,
+   "tier": "text:half",
+   "weakerTest": false,
+   "ocrCalls": 2,
+   "via": "text",
+   "missing": null,
+   "warnings": [
+    "only the front half of the rent schedule was read — Parts F and G (ownership entity, principals, signatory) did not come through",
+    "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+    "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “Northcross Townhomes”, and the management address. A letterhead can be uploaded on the property page.",
+    "package dialog: Northcross Townhomes · 1 of 6 ready · 5 not ready"
+   ],
+   "errors": [],
+   "docsExtracted": [
+    "analysisXlsx"
+   ]
+  }
+ },
+ "rows": [
+  {
+   "doc": "analysisXlsx",
+   "key": "property.name",
+   "ours": "NorthcrossTownhomes",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Northcross"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "appr.firm",
+   "ours": "Renzi&Associates",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Northcross"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.type",
+   "ours": "2BR/1BA",
+   "theirs": "2-Bedroom",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Northcross"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.units",
+   "ours": "45",
+   "theirs": "45",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Northcross"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.current",
+   "ours": "1220",
+   "theirs": "1220",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Northcross"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.proposed",
+   "ours": "1450",
+   "theirs": "1450",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Northcross"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.ua",
+   "ours": "180",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Northcross"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.0.safmr",
+   "ours": "1520",
+   "theirs": "1520",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Northcross"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.type",
+   "ours": "3BR/1.5BA",
+   "theirs": "3-Bedroom",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Northcross"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.units",
+   "ours": "40",
+   "theirs": "40",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Northcross"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.current",
+   "ours": "1457",
+   "theirs": "1457",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Northcross"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.proposed",
+   "ours": "1850",
+   "theirs": "1850",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Northcross"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.ua",
+   "ours": "221",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Northcross"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.1.safmr",
+   "ours": "1890",
+   "theirs": "1890",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Northcross"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.type",
+   "ours": "4BR/1.5BA",
+   "theirs": "4-Bedroom",
+   "status": "mismatch",
+   "cause": "undiagnosed",
+   "severity": "high",
+   "property": "Northcross"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.units",
+   "ours": "14",
+   "theirs": "14",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Northcross"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.current",
+   "ours": "1662",
+   "theirs": "1662",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Northcross"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.proposed",
+   "ours": "2100",
+   "theirs": "2100",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Northcross"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.ua",
+   "ours": "246",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "undiagnosed",
+   "severity": "medium",
+   "property": "Northcross"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "unit.2.safmr",
+   "ours": "2430",
+   "theirs": "2430",
+   "status": "match",
+   "cause": "undiagnosed",
+   "severity": "none",
+   "property": "Northcross"
+  }
+ ],
+ "fillOrder": [],
+ "drift": [],
+ "notes": [
+  "filed: filed side read from the combined package: Northcross Townhomes (NC19-E000-007) - 5-Year RCS Submission (signed).pdf",
+  "filed: checklist read from Owner RCS Checklist - Northcross.pdf",
+  "filed: tenantNotice read from 30-Day Notice to Tenants (rent increase) - Northcross.pdf",
+  "filed: rentSchedule read from Northcross Townhomes (NC19-E000-007) - 2024 Rent Schedule eff. 10.01.24 (signed).pdf",
+  "filed: analysisXlsx read from Northcross - RCS Analysis.xlsx"
+ ],
+ "verdict": "8 differences",
+ "fuzz": {
+  "seed": 2971696428,
+  "counts": {
+   "edits": 7,
+   "escapes": 12,
+   "enters": 0,
+   "saves": 0,
+   "revertAlls": 3,
+   "drops": 2,
+   "clicks": 9,
+   "boundaries": 0,
+   "colourScans": 8,
+   "episodes": 8
+  },
+  "violations": [],
+  "actions": [
+   "— episode 1/8 [escape] 129 controls on screen",
+   "type \"7\" into #viewForm input[data-k][4]",
+   "type \"2050\" into #viewForm input[data-k][52]",
+   "click #viewForm [data-fuel3][0]",
+   "escape (2 left)",
+   "escape (1 left)",
+   "— episode 2/8 [revertAll] 129 controls on screen",
+   "click #viewForm [data-cb][25]",
+   "click #viewForm [data-cb][10]",
+   "click Revert to saved",
+   "escape (2 left)",
+   "— episode 3/8 [escape] 111 controls on screen",
+   "type \"999999\" into #viewForm input[data-k][14]",
+   "type \"129\" into #viewForm input[data-k][28]",
+   "type \"abc\" into #viewForm input[data-k][13]",
+   "escape (3 left)",
+   "escape (2 left)",
+   "escape (1 left)",
+   "— episode 4/8 [escape] 111 controls on screen",
+   "click #viewForm [data-cb][13]",
+   "click #viewForm [data-cb][8]",
+   "open dropdown 4",
+   "pick menu row 45 of 51",
+   "click #viewForm [data-cb][3]",
+   "click #viewForm [data-cb][30]",
+   "escape (6 left)",
+   "escape (4 left)",
+   "escape (3 left)",
+   "escape (2 left)",
+   "escape (1 left)",
+   "— episode 5/8 [revertAll] 111 controls on screen",
+   "type \"N/A\" into #viewForm input[data-k][4]",
+   "type \"N/A\" into #viewForm input[data-k][28]",
+   "open dropdown 5",
+   "pick menu row 49 of 51",
+   "click Revert to saved",
+   "escape (3 left)",
+   "— episode 6/8 [revertAll] 0 controls on screen",
+   "click Revert to saved",
+   "— episode 7/8 [escape] 0 controls on screen",
+   "— episode 8/8 [escape] 0 controls on screen"
+  ]
+ },
+ "inputs": {
+  "study": "2024 - RCS/24-127-Northcross Townhomes RCS v2 06.14.24.pdf",
+  "priorRs": "2023/Northcross Townhomes Rent Schedule 10-1-2023 (signed).pdf",
+  "priorRsRule": "year-1 folder"
+ },
+ "notGenerated": [
+  "notes",
+  "sections",
+  "coverLetter",
+  "rcsStudy",
+  "checklist",
+  "tenantNotice",
+  "rentSchedule"
+ ],
+ "notGeneratedWhy": null,
+ "counts": {
+  "compared": 20,
+  "matched": 12,
+  "differing": 8,
+  "fillOrder": 0,
+  "drift": 0,
+  "notGenerated": 7
+ }
+}

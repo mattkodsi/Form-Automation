@@ -1,0 +1,220 @@
+{
+ "property": "Westwood Village",
+ "code": "4640009",
+ "folder": "4640009 - Westwood Village - Section 8",
+ "year": 2020,
+ "cycleLabel": "2020",
+ "sha": "cce8502",
+ "orders": {
+  "rs-first": {
+   "files": 3,
+   "tier": "ocr",
+   "weakerTest": false,
+   "ocrCalls": 2,
+   "via": "ocr",
+   "missing": null,
+   "warnings": [
+    "the study yielded no unit types — no values can be applied from it",
+    "the study was recalled without its bytes and could not be re-attached — document 04 will be missing or the folder download will fail",
+    "storm [save-left-dirt] after \"Update property profile\" settled, 3 key(s) still differ from the snapshot: property.name, appr.addr_street, partb.services.4  (seed 4248152120)",
+    "study: #rcsApply never appeared — nothing was applied to the form",
+    "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “Westwood Village”, and the management address. A letterhead can be uploaded on the property page.",
+    "package dialog: Westwood Village · 1 of 6 ready · 5 not ready"
+   ],
+   "errors": [
+    "after the reload the app is on a DIFFERENT property/package than order A used — the second order would be measuring another record",
+    "after the reload the rent-schedule upload is GONE (tile says \"Westwood Village Rent Schedule eff. 8.1.24.pdf\") — order B has nothing to fill from, and re-uploading would pay for the read twice",
+    "after the reload the study upload is GONE (tile says \"Exhibit 3 - 25-072 - Westwood Village_ 748 Westwood Boulevard_ Roanoke_ VA.pdf\") — order B has nothing to fill from"
+   ],
+   "docsExtracted": [
+    "analysisXlsx"
+   ]
+  },
+  "rcs-first": {
+   "files": 0,
+   "tier": "ocr",
+   "weakerTest": false,
+   "ocrCalls": 2,
+   "via": "ocr",
+   "missing": null,
+   "warnings": [
+    "the study yielded no unit types — no values can be applied from it",
+    "the study was recalled without its bytes and could not be re-attached — document 04 will be missing or the folder download will fail",
+    "storm [save-left-dirt] after \"Update property profile\" settled, 3 key(s) still differ from the snapshot: property.name, appr.addr_street, partb.services.4  (seed 4248152120)"
+   ],
+   "errors": [
+    "after the reload the app is on a DIFFERENT property/package than order A used — the second order would be measuring another record",
+    "after the reload the rent-schedule upload is GONE (tile says \"Westwood Village Rent Schedule eff. 8.1.24.pdf\") — order B has nothing to fill from, and re-uploading would pay for the read twice",
+    "after the reload the study upload is GONE (tile says \"Exhibit 3 - 25-072 - Westwood Village_ 748 Westwood Boulevard_ Roanoke_ VA.pdf\") — order B has nothing to fill from",
+    "not run: an upload was lost across the reload, so this order could only have been produced by paying for a second read"
+   ],
+   "docsExtracted": []
+  }
+ },
+ "rows": [],
+ "fillOrder": [
+  {
+   "doc": "analysisXlsx",
+   "key": "property.name",
+   "ours": "WestwoodVillage",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Westwood Village",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  },
+  {
+   "doc": "analysisXlsx",
+   "key": "appr.firm",
+   "ours": "Appraiser",
+   "theirs": null,
+   "status": "missing-theirs",
+   "cause": "fill-order",
+   "severity": "critical",
+   "property": "Westwood Village",
+   "oursRun": "rs-first",
+   "theirsRun": "rcs-first"
+  }
+ ],
+ "drift": [],
+ "notes": [
+  "the manifest could not read this cycle's study; driving it anyway, because what the app does with an unreadable study is the observation",
+  "filed: coverLetter unreadable: extractFacts: these bytes are a zip, not a PDF — did you mean docType ",
+  "filed: checklist read from 3c - Owners-Checklist-for-RCS-Submission - Westwood Village.pdf",
+  "filed: rentSchedule read from 2020_Westwood Village rent schedule fully executed.pdf"
+ ],
+ "verdict": "the app generated no document the filed package also has",
+ "fuzz": {
+  "seed": 4248152120,
+  "counts": {
+   "edits": 5,
+   "escapes": 9,
+   "enters": 4,
+   "saves": 4,
+   "revertAlls": 0,
+   "drops": 0,
+   "clicks": 7,
+   "boundaries": 0,
+   "colourScans": 8,
+   "episodes": 8
+  },
+  "violations": [
+   {
+    "kind": "save-left-dirt",
+    "msg": "after \"Update property profile\" settled, 3 key(s) still differ from the snapshot: property.name, appr.addr_street, partb.services.4",
+    "seed": 4248152120,
+    "evidence": {
+     "property.name": {
+      "form": {
+       "value": "ZZ-CORPUS-4640009-20260731-0601 2",
+       "source": "overridden",
+       "db_value": "ZZ-CORPUS-4640009-20260731-0601",
+       "prior_value": "ZZ-CORPUS-4640009-20260731-0601"
+      },
+      "snap": {
+       "value": "ZZ-CORPUS-4640009-20260731-0601",
+       "source": "database",
+       "db_value": "ZZ-CORPUS-4640009-20260731-0601"
+      },
+      "onScreen": true
+     },
+     "appr.addr_street": {
+      "form": {
+       "value": "129",
+       "source": "new",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": true
+     },
+     "partb.services.4": {
+      "form": {
+       "value": "1",
+       "source": "new",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": false
+     }
+    },
+    "after": [
+     "— episode 1/8 [save] 111 controls on screen",
+     "type \"129\" into #viewForm input[data-k][23]",
+     "enter (commit)",
+     "click #viewForm [data-cb][16]",
+     "enter (commit)",
+     "click Update property profile"
+    ]
+   }
+  ],
+  "actions": [
+   "— episode 1/8 [save] 111 controls on screen",
+   "type \"129\" into #viewForm input[data-k][23]",
+   "enter (commit)",
+   "click #viewForm [data-cb][16]",
+   "enter (commit)",
+   "click Update property profile",
+   "escape (2 left)",
+   "escape (1 left)",
+   "— episode 2/8 [save] 111 controls on screen",
+   "click #viewForm [data-cb][33]",
+   "enter (commit)",
+   "type \"\" into #viewForm input[data-k][32]",
+   "click Update property profile",
+   "— episode 3/8 [escape] 111 controls on screen",
+   "click #viewForm [data-cb][9]",
+   "type \"1\" into #viewForm input[data-k][11]",
+   "click #viewForm [data-cb][15]",
+   "escape (4 left)",
+   "escape (2 left)",
+   "escape (1 left)",
+   "— episode 4/8 [save] 111 controls on screen",
+   "click #viewForm [data-cb][17]",
+   "click Update property profile",
+   "— episode 5/8 [escape] 111 controls on screen",
+   "type \"\" into #viewForm input[data-k][5]",
+   "type \"0\" into #viewForm input[data-k][42]",
+   "click #viewForm [data-fuel][4]",
+   "click #viewForm [data-cb][8]",
+   "escape (5 left)",
+   "escape (3 left)",
+   "escape (2 left)",
+   "escape (1 left)",
+   "— episode 6/8 [escape] 0 controls on screen",
+   "— episode 7/8 [save] 0 controls on screen",
+   "enter (commit)",
+   "click Update property profile",
+   "— episode 8/8 [escape] 0 controls on screen"
+  ]
+ },
+ "inputs": {
+  "study": "2020/3a - Westwood Village Roanoke VA HUD RCS 2020, Federal Appraisal.pdf",
+  "priorRs": "2019/Westwood - Rent Schedule - Eff 10-1-19.pdf",
+  "priorRsRule": "year-1 folder"
+ },
+ "notGenerated": [
+  "checklist",
+  "rentSchedule"
+ ],
+ "notGeneratedWhy": null,
+ "counts": {
+  "compared": 0,
+  "matched": 0,
+  "differing": 0,
+  "fillOrder": 2,
+  "drift": 0,
+  "notGenerated": 2
+ }
+}
