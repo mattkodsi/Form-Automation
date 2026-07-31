@@ -640,6 +640,24 @@ async function makeDb(adapter, opts) {
       return persist();
     },
     setCyclePrograms(cid, programs) { const c = D.cycles[cid]; if (!c) return Promise.resolve(); c.programs = (programs || []).join(','); c.updated_at = now(); return persist(); },
+    /* ---- one UAF per property per year (Matt, 2026-07-31) ----
+       At most one cycle may carry `uaf` for a property in a given year. Returns
+       the OTHER cycle already holding this year's UAF, or null. Used both to
+       block a second UAF (the app offers to fold-in/replace) and to feed a
+       sibling RCS/OCAF that one UAF's result (getFlatCycle overlay). Year is the
+       effective date's year, falling back to the label. API PARITY with
+       db.supabase.js. */
+    uafHolderForYear(pid, year, skipCid) {
+      const y = String(year == null ? '' : year).slice(0, 4); if (!y) return null;
+      for (const cid in D.cycles) {
+        if (cid === skipCid) continue;
+        const c = D.cycles[cid];
+        if (!c || c.property_id !== pid || PROGS_OF(c).indexOf('uaf') < 0) continue;
+        const cy = String(c.effective_date || '').slice(0, 4) || String(c.label || '').slice(0, 4);
+        if (cy === y) return { id: cid, programs: PROGS_OF(c), label: c.label, effective_date: c.effective_date };
+      }
+      return null;
+    },
     /* API parity with db.supabase.js's rs_doc surface — see CLAUDE.md: a
        stand-in that answers differently from the real backend makes every test
        that uses it a fiction. */

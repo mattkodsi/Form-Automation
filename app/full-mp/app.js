@@ -4036,6 +4036,26 @@ function dialogConfirm(title,body,okLabel,danger,onOk){
   modal('<div class="dlg-t">'+esc(title)+'</div><div class="dlg-b">'+body+'</div><div class="dlg-row"><button class="btn" id="dlgCancel">Cancel</button><span class="dlg-sp"></span><button class="btn '+(danger?'danger':'p')+'" id="dlgOk">'+esc(okLabel||'OK')+'</button></div>');
   el('dlgCancel').onclick=closeModal;el('dlgOk').onclick=()=>{closeModal();onOk();};
 }
+/* At most one UAF per property per year (FORM invariant). When a UAF is turned on
+   and another cycle already holds this year's UAF, we do not hard-stop and we do
+   not silently double it: the PM is offered a MOVE — fold this into the package
+   that already has it, or replace the one there. `existing` is a db
+   uafHolderForYear() record {id,programs,label,effective_date}. */
+function _uafHolderName(h){const rent=(h.programs||[]).filter(x=>x!=='uaf').map(x=>PROG_NAMES[x]||x);
+  return rent.length?(rent.join(' + ')+' package'):'standalone UAF';}
+function uafMoveDialog(existing,onFoldIn,onReplace){
+  const yr=String(existing.label||'').slice(0,4)||String(existing.effective_date||'').slice(0,4);
+  const nm=_uafHolderName(existing);
+  const foldLabel=(existing.programs||[]).filter(x=>x!=='uaf').length?('Fold into the '+nm):'Open the standalone UAF';
+  modal('<div class="dlg-t">This property already has a UAF for '+esc(yr)+'</div>'
+    +'<div class="dlg-b">Its <b>'+esc(nm)+'</b> already carries this year\u2019s utility-allowance factor, and a property holds only one UAF per year. Fold this revision into that package, or replace the one there with this.</div>'
+    +'<div class="dlg-row"><button class="btn" id="dlgCancel">Cancel</button><span class="dlg-sp"></span>'
+    +'<button class="btn" id="dlgFold">'+esc(foldLabel)+'</button>'
+    +'<button class="btn danger" id="dlgRepl">Replace it</button></div>');
+  el('dlgCancel').onclick=closeModal;
+  el('dlgFold').onclick=()=>{closeModal();onFoldIn();};
+  el('dlgRepl').onclick=()=>{closeModal();onReplace();};
+}
 
 /* ---- MENU: the property gallery -------------------------------------- */
 function openMenu(){activeCid=null;renderWho();renderMenu();show('Menu');}
@@ -5313,21 +5333,40 @@ function newCycleDialog(pre){
        not the control that would have held it. */
     const eff=_fixed?_fixEff:(fmtDateInput((el('cyEff').value||'').trim())||effPh);   // left blank, the package takes the date shown in gray: a year on from the last one
     const label=(eff.match(/(\d{4})/)||[])[1]||String(new Date().getFullYear());
-    closeModal();
-    try{const r=await mpdb.createCycle(activePid,{programs,label,effective_date:eff});renderLauncher();await openCycleForm(r.cid);_cyFresh=r.cid;}
-    catch(e){
-      /* A clash is not a failure. The rule is one package per programme per
-         effective date, and the data layer hands back the cid of the one already
-         holding it — so the answer to "start an OCAF effective Oct 1" when that
-         package exists is to OPEN it, the same courtesy a duplicate property name
-         already gets. Reporting "save failed" would be a lie about what happened. */
-      if(e&&e.code==='DUP_PACKAGE_PROGRAM'&&e.cid){
-        closeModal();renderLauncher();await openCycleForm(e.cid);
-        setStatus('That package already exists \u2014 opened it.');
-        return;
+    const doCreate=async(progs)=>{
+      closeModal();
+      try{const r=await mpdb.createCycle(activePid,{programs:progs,label,effective_date:eff});renderLauncher();await openCycleForm(r.cid);_cyFresh=r.cid;}
+      catch(e){
+        /* A clash is not a failure. The rule is one package per programme per
+           effective date, and the data layer hands back the cid of the one already
+           holding it — so the answer to "start an OCAF effective Oct 1" when that
+           package exists is to OPEN it, the same courtesy a duplicate property name
+           already gets. Reporting "save failed" would be a lie about what happened. */
+        if(e&&e.code==='DUP_PACKAGE_PROGRAM'&&e.cid){
+          closeModal();renderLauncher();await openCycleForm(e.cid);
+          setStatus('That package already exists \u2014 opened it.');
+          return;
+        }
+        saveFailedModal(e);
       }
-      saveFailedModal(e);
+    };
+    /* One UAF per property per year. If another cycle already carries this
+       year's UAF, offer to fold this into it or replace the one there — never
+       silently create a second UAF that would double-adjust the allowance. */
+    const holder=(programs.indexOf('uaf')>=0&&mpdb.uafHolderForYear)?mpdb.uafHolderForYear(activePid,label,null):null;
+    if(holder){
+      uafMoveDialog(holder,
+        async()=>{ // fold in: the UAF stays where it is; make only the rent side, if any
+          const rest=programs.filter(x=>x!=='uaf');
+          if(!rest.length){renderLauncher();await openCycleForm(holder.id);setStatus('Opened the package that already holds this year\u2019s UAF.');return;}
+          await doCreate(rest);},
+        async()=>{ // replace: strip the UAF from the holder, then make this one with it
+          const stripped=(holder.programs||[]).filter(x=>x!=='uaf');
+          try{if(stripped.length)await mpdb.setCyclePrograms(holder.id,stripped);else await mpdb.deleteCycle(holder.id);}catch(e){saveFailedModal(e);return;}
+          await doCreate(programs);});
+      return;
     }
+    await doCreate(programs);
   };
 }
 async function openCycleForm(cid){
@@ -5514,6 +5553,20 @@ async function toggleCycleProg(p){
   const has=cy.programs.indexOf(p)>=0;
   if(!has&&p==='rcs'&&cy.programs.indexOf('ocaf')>=0){setStatus('RCS and OCAF never share a package \u2014 remove the OCAF first.');return;}
   if(!has&&p==='ocaf'&&cy.programs.indexOf('rcs')>=0){setStatus('RCS and OCAF never share a package \u2014 remove the RCS first.');return;}
+  /* One UAF per property per year. If another cycle already holds this year's
+     UAF, offer to fold this into it or replace it rather than double-adjust. */
+  if(!has&&p==='uaf'&&mpdb.uafHolderForYear){
+    const yr=String(cy.effective_date||'').slice(0,4)||String(cy.label||'').slice(0,4);
+    const holder=mpdb.uafHolderForYear(activePid,yr,activeCid);
+    if(holder){
+      uafMoveDialog(holder,
+        async()=>{await openCycleForm(holder.id);setStatus('Opened the package that already holds this year\u2019s UAF.');},
+        async()=>{const stripped=(holder.programs||[]).filter(x=>x!=='uaf');
+          try{if(stripped.length)await mpdb.setCyclePrograms(holder.id,stripped);else await mpdb.deleteCycle(holder.id);}catch(e){saveFailedModal(e);return;}
+          await toggleCycleProg('uaf');});
+      return;
+    }
+  }
   const programs=has?cy.programs.filter(x=>x!==p):cy.programs.concat([p]);
   if(!programs.length){setStatus('A package needs at least one program.');return;}
   try{await mpdb.setCyclePrograms(activeCid,programs);}catch(e){saveFailedModal(e);return;}

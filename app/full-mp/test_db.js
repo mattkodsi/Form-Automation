@@ -5,7 +5,7 @@
    shows it, and MIN_CHECKS catches a run that dies partway — a short count is
    a failure, not a pass. Adding checks? Raise MIN_CHECKS. */
 const { makeDb, memoryAdapter, isPerCycleKey, migrate, computeAnalysis, computeSalutation, CROSSWALK } = require('./db.js');
-const MIN_CHECKS = 209;   // 2026-07-31: +4 ua_uaf per-cycle routing + no-carry; 2026-07-30 merge union was 205
+const MIN_CHECKS = 220;   // 2026-07-31: +11 uafHolderForYear one-UAF-per-year (Piece 3); +4 ua_uaf per-cycle routing + no-carry; 2026-07-30 merge union was 205
                         //;   // 2026-07-30: +4 current rents and executed UA carry on no programme
                         //;   // 2026-07-30: +2 the appraiser carries, a non-revenue contract rent does not
                         //;   // 2026-07-30: +8 Related Affordable outranks the schedule for the effective date
@@ -259,6 +259,34 @@ function jsonAdapter() { let s = null; return { get: async () => (s ? JSON.parse
       /assertProgramsFree/.test(sup) && /DUP_PACKAGE_PROGRAM/.test(sup), true);
     ok('and calls it from createCycle',
       /createCycle\(pid, opts\)[\s\S]{0,400}?assertProgramsFree\(/.test(sup), true);
+  }
+
+  /* ---- one UAF per property per year (Matt, 2026-07-31) ----
+     A property must never carry both a standalone UAF and a bundled RCS/OCAF+UAF
+     for the same year — that double-adjusts the allowance and makes ua_uaf
+     ambiguous. uafHolderForYear is the seam the app checks at both places a UAF
+     turns on (the creation modal and the pill), and the seam Piece 2 reads to
+     feed a sibling. It answers by YEAR, not date: Luther Towers-style two
+     packages in one year are fine when they are not both UAFs. */
+  console.log('\n─ 8c1c · ONE UAF PER PROPERTY PER YEAR ─');
+  const uy = cdb.createProperty('UAF Year Guard').pid;
+  const { cid: uy1 } = await cdb.createCycle(uy, { programs: ['uaf'], effective_date: '2026-03-01' });
+  ok('a year with no UAF has no holder', cdb.uafHolderForYear(uy, '2027', null), null);
+  ok('a blank year asks nothing', cdb.uafHolderForYear(uy, '', null), null);
+  ok('the standalone UAF is this year\'s holder', (cdb.uafHolderForYear(uy, '2026', null) || {}).id, uy1);
+  ok('and it names the programme it lives in', (cdb.uafHolderForYear(uy, '2026', null) || {}).programs, ['uaf']);
+  ok('skipping the holder itself finds no other', cdb.uafHolderForYear(uy, '2026', uy1), null);
+  const { cid: uy2 } = await cdb.createCycle(uy, { programs: ['rcs'], effective_date: '2026-09-01' });
+  ok('an RCS-only sibling that year does not hold the UAF', (cdb.uafHolderForYear(uy, '2026', null) || {}).id, uy1);
+  ok('and asking AS that sibling still points at the standalone UAF', (cdb.uafHolderForYear(uy, '2026', uy2) || {}).id, uy1);
+  const { cid: uy3 } = await cdb.createCycle(uy, { programs: ['ocaf', 'uaf'], effective_date: '2027-09-01' });
+  ok('a UAF in another year is THAT year\'s holder, matched by year not date', (cdb.uafHolderForYear(uy, '2027', null) || {}).id, uy3);
+  ok('a bundled RCS/OCAF+UAF counts as the holder', ((cdb.uafHolderForYear(uy, '2027', null) || {}).programs || []).indexOf('uaf') >= 0, true);
+  ok('and 2026 still resolves to its own standalone UAF', (cdb.uafHolderForYear(uy, '2026', null) || {}).id, uy1);
+  {
+    const _fs = require('fs'), _p = require('path');
+    const sup = _fs.readFileSync(_p.join(__dirname, 'db.supabase.js'), 'utf8');
+    ok('db.supabase.js carries uafHolderForYear too, at parity', /uafHolderForYear\(pid, year, skipCid\)/.test(sup), true);
   }
 
   console.log('\n─ 8c2 · THE PARSED RENT SCHEDULE ─');

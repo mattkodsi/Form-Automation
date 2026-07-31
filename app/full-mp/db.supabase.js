@@ -697,6 +697,22 @@ function makeSupabaseDb(client) {
         return enqueue('cy' + cid, () => pushCycle(cid));
       },
       setCyclePrograms(cid, programs) { const c = D.cycles[cid]; if (!c) return Promise.resolve(); c.programs = (programs || []).join(','); c.updated_at = now(); return enqueue('cy' + cid, () => pushCycle(cid)); },
+      /* ---- one UAF per property per year (Matt, 2026-07-31) ----
+         At most one cycle carries `uaf` for a property in a given year. Returns
+         the OTHER cycle already holding this year's UAF, or null -- used to
+         block a second UAF and to feed a sibling RCS/OCAF that one UAF's result.
+         API PARITY with db.js. */
+      uafHolderForYear(pid, year, skipCid) {
+        const y = String(year == null ? '' : year).slice(0, 4); if (!y) return null;
+        for (const cid in D.cycles) {
+          if (cid === skipCid) continue;
+          const c = D.cycles[cid];
+          if (!c || c.property_id !== pid || PROGS_OF(c).indexOf('uaf') < 0) continue;
+          const cy = String(c.effective_date || '').slice(0, 4) || String(c.label || '').slice(0, 4);
+          if (cy === y) return { id: cid, programs: PROGS_OF(c), label: c.label, effective_date: c.effective_date };
+        }
+        return null;
+      },
       /* The parsed executed rent schedule, kept with its package. Stores the
          reading, never the PDF bytes: nothing downstream reads _rsUpload.bytes,
          and a schedule is a megabyte the record does not need. Without this the
