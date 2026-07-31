@@ -4322,3 +4322,43 @@ Oak Center non-revenue-unit, and the UA study-vs-executed *decision*), 1 documen
 (Lansing), 1 precision note (Friendship Court), the rest **harness** — the comparator reading a
 superseded draft, a label cell, or a row-shifted table. **Two small residuals stay unread and are
 not asserted either way.** No package with a driven record now lacks a three-way disposition.
+
+### Sycamore Green 2025 — the same root, now on SAFMR, and the spine of the whole family
+
+Source read (HUD `fy2025_safmrs.xlsx` + the executed schedule + both study revisions):
+
+- **SAFMR — app WRONG.** The app printed **990 / 1230**; the true HUD FY2025 SAFMR for ZIP 14609
+  is **1,050 / 1,310** — matching the filed grid, the RAP `RCS Analysis.xlsx` workbook, and the
+  **original** study v1. The app's 990/1230 was read from the **revised study v4's summary table,
+  which carries an appraiser error** (v4's own narrative still cites 1,050/1,300). The app took the
+  study's transcription over the published federal figure and inherited the appraiser's mistake.
+- **UA — my earlier premise REFUTED.** The reader confirms the filed package uses the study's
+  51/64, but Sycamore's **current (FY2025) executed schedule (eff 03.30.25, signed + fully
+  executed) also carries 51/64** — the `42/50` in `test_gen.js:455` is the **prior (FY2024)**
+  schedule the app holds as `ua_exec`. So the correct current-term UA (51/64) equals the study
+  here, while the app's prior-executed proxy is stale.
+
+**The spine of the source-selection family — the app defaults to the appraiser's study figures and
+inherits their errors wherever an authoritative source exists.** Two precedences encode it:
+
+- `defSafmrSrc` (app.js:307 / score.js:63): `r>0?'rcs':(h>0?'hud':'custom')` — prefers the study's
+  **printed** SAFMR over the **HUD API** value. But SAFMR is a *published federal number*; the study
+  merely transcribes it, and Sycamore proves the transcription can be wrong. Since HUD is objective
+  truth, **HUD should win when present** (`h>0?'hud':(r>0?'rcs':'custom')`). Reverses `592101a` —
+  recommended, but a deliberate reversal, so flagged for Matt. *(Most SAFMR "mismatches" this audit
+  were harness-superseded-draft with the app right; Sycamore is the one real app SAFMR error, and it
+  is this precedence.)*
+- `defUaSrc`: prefers the study's UA over the executed. But the correct current-term UA is neither
+  reliably the study **nor** the app's prior-executed proxy — it is the **current executed / UA
+  workbook**, which the app does not ingest. Sometimes the study equals it (Sycamore 51/64),
+  sometimes not (Holly House study 61/64 vs of-record 40/51).
+
+So the fix is one idea, not five: **surface the study-vs-authoritative disagreement instead of
+silently taking the study** (block the conflict, M18 pattern), and for SAFMR prefer the objective
+HUD value. Both hinge on Matt's call about reversing the two deliberate "trust the study" defaults.
+
+**Candidate reporting-inconsistency (to verify, not yet asserted):** app.js:3041 captions a SAFMR
+conflict *"HUD vs RCS differ — using HUD,"* but `defSafmrSrc`/`safmrResolvedOf` resolve a conflict
+to the **study** (`rcs`) by default. If the caption shows while the resolver uses the study, the app
+says "using HUD" while printing the study's number — a reporting lie of exactly the class the audit
+hunts. Needs the conflict-state condition traced before it is a finding.
