@@ -6,7 +6,7 @@ claims to be current; every other doc in the lane is either standing rules
 findings (`AUDIT-LEDGER.md`). If this file disagrees with them, this file is right and
 the other one needs fixing.
 
-Last updated: **2026-07-31**, by the cloud, after driving 75708 end to end through the relay.
+Last updated: **2026-07-31**, by the cloud, after repairing M18.
 
 ## The selector blocker is FIXED — and it was not the selector
 
@@ -90,10 +90,35 @@ for** — 8 cycles carry no filed documents at all, 1 has no manifest cycle, and
 duplicate-folder collision (H10). That, with the 39 of 89 that generated nothing, makes M7
 the dominant finding of the sweep: the app does not build a package.
 
-**Repairs queued, blocked on delivery:** M18 — the app drops or duplicates a unit row
-depending on how a study roster row claims a form row (`app.js:1579`). Peterson Plaza comes
-out 188 units against a filed 189; Oaks on North Plaza 75 against 62. One seam, two
-properties, and it needs a re-drive to confirm.
+**M18 REPAIRED — and it was not what I recorded.** I wrote that the app dropped a unit row
+*silently*. It does not: `rcsUnplaced()` has caught these since the reader was written and
+`rcsChecks()` warns *"The study prices a unit type we could not read"*. What was missing is
+that **nothing acted on it** — `chk()` renders a coloured line and there is no blocking
+severity, so the app noticed the schedule would be short and generated it anyway.
+
+Verified by running the real parser over both studies rather than reasoning about them:
+
+| property | lines parsed | unplaced |
+|---|---|---|
+| Peterson Plaza | 5 | `type="Senior"`, no bedroom count, **1 unit at $2,700**, priced |
+| Oaks on North Plaza | 6 | **none — all six parse cleanly**, totalling 62 units |
+
+So Peterson is 100+30+1+42+16 = **189**, the app writes **188**. And **Oaks has no parser
+defect at all** — my earlier "75 against 62" came from a reader's reconstruction, not from a
+driven record, and the parser evidence contradicts it. Treat that half of M18 as withdrawn
+until a driven record shows otherwise.
+
+**The fix:** an unplaced *priced* line is now a **blocker** in `score.js`, not a caveat —
+"blockers stop a document being written; caveats do not" is that file's own rule, and this
+one has to stop it. Only when priced: an unplaced line with no money tells us nothing and
+must not hold a package hostage. `scoreCtx()` supplies the count; the data layers pass no
+upload so no blocker fires on a menu card, which is correct.
+
+`test_db.js` 200 → 205, negative-controlled two ways (blocker removed, and demoted to a
+caveat). Suites green: db 205 · interactions 144 · smoke 222 · gen 131 · rcs 444 · hap 189 ·
+safety 34 · compare 91 · extract 120.
+
+**Still to do:** re-drive Peterson Plaza to confirm the blocker fires on a real package.
 
 ## The environment, as of now
 

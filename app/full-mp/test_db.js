@@ -5,7 +5,7 @@
    shows it, and MIN_CHECKS catches a run that dies partway — a short count is
    a failure, not a pass. Adding checks? Raise MIN_CHECKS. */
 const { makeDb, memoryAdapter, isPerCycleKey, migrate, computeAnalysis, computeSalutation, CROSSWALK } = require('./db.js');
-const MIN_CHECKS = 200;   // 2026-07-30 merge: union of both branches, counted off a real run (was ours 169 / main 186)
+const MIN_CHECKS = 205;   // 2026-07-30 merge: union of both branches, counted off a real run (was ours 169 / main 186)
                         //;   // 2026-07-30: +4 current rents and executed UA carry on no programme
                         //;   // 2026-07-30: +2 the appraiser carries, a non-revenue contract rent does not
                         //;   // 2026-07-30: +8 Related Affordable outranks the schedule for the effective date
@@ -525,6 +525,26 @@ function jsonAdapter() { let s = null; return { get: async () => (s ? JSON.parse
   ok('no study caps the package below 70', sc(rec, { hasStudy: false }).pct, 65);
   ok('and names it as the blocker', sc(rec, { hasStudy: false }).blockers.map(b => b.label), ['the completed RCS report (document 04)']);
   ok('the letterhead is a caveat, not a blocker', sc(rec, { hasLetterhead: false }).pct, 95);
+
+  /* M18. A priced study line no unit row claims means the rent schedule will be
+     written short by exactly those units and that money, and the app can prove
+     it before printing. Peterson Plaza is the case: five priced lines, four
+     parse, the fifth reads only "Senior" — one unit at $2,700 — and the schedule
+     came out 188 units against a filed 189. rcsChecks() had warned about it all
+     along, but a warning on a review panel does not stop a HUD form being
+     generated wrong. It is a blocker now. */
+  ok('an unplaced PRICED study line blocks the package (Peterson Plaza, 188 vs 189)',
+    sc(rec, { unplacedPriced: 1 }).blockers.map(b => b.label),
+    ['a priced line in the study that no unit row claims — the rent schedule would be short by it']);
+  ok('and it caps the package below 70, the same as a missing study',
+    sc(rec, { unplacedPriced: 1 }).pct < 70, true);
+  ok('two of them are named in the plural, so the count is not lost',
+    sc(rec, { unplacedPriced: 2 }).blockers.map(b => b.label),
+    ['2 priced lines in the study that no unit row claims — the rent schedule would be short by them']);
+  /* An unpriced line tells us nothing about the money and must not hold a
+     package hostage — the ctx the data layers pass has no upload at all. */
+  ok('no unplaced line, no blocker', sc(rec, { unplacedPriced: 0 }).blockers.map(b => b.label), []);
+  ok('and a ctx that never heard of the field is unaffected', sc(rec).blockers.map(b => b.label), []);
 
   /* The old ring's ten keys, and nothing else. This is the reported defect. */
   const TEN = {}; ['property.name', 'property.s8', 'property.addr_street', 'property.addr_city', 'property.addr_state',

@@ -290,6 +290,28 @@ function packageScore(read,ctx){
   docs.forEach(d=>{
     if(d.produce==='upload'){if(d.required)g2.push({key:'@'+d.id,label:d.id==='rcs'?'the completed RCS report (document 04)':'the CA package',sec:1,ok:d.ready});return;}
     d.reqs.forEach(r=>{if(!owned['k:'+r.key])g2.push(r);});});
+  /* A priced study line the reader could not place is a BLOCKER, not a caveat.
+     The distinction at the top of this file is "blockers stop a document being
+     written; caveats do not", and this one has to stop it: the line carries
+     units and a rent, no form row claims it, so the rent schedule that gets
+     written is short by exactly those units and that money — and the app can
+     prove it before printing.
+
+     Peterson Plaza is why. Its study prices five lines; four parse, and the
+     fifth reads only "Senior" with no bedroom count, one unit at $2,700. The
+     schedule came out 188 units against a filed 189. The app already NOTICED —
+     rcsChecks() has warned about it since the reader was written — but a warning
+     on a review panel does not stop a HUD form being generated wrong, and this
+     one was generated wrong anyway.
+
+     Only when a line is PRICED. An unpriced line the reader could not place
+     tells us nothing about the money and must not hold a package hostage. */
+  if(ctx.unplacedPriced>0)
+    g2.push({key:'@unplaced',sec:6,ok:false,
+      label:ctx.unplacedPriced===1
+        ? 'a priced line in the study that no unit row claims — the rent schedule would be short by it'
+        : ctx.unplacedPriced+' priced lines in the study that no unit row claims — the rent schedule would be short by them'});
+
   g2=dedupe(g2.map(r=>Object.assign({},r)));
   const g2done=g2.filter(x=>x.ok).length;
 

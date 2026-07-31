@@ -5559,6 +5559,11 @@ function scoreCtx(){
   let lh=null;try{lh=mpdb&&mpdb.getLetterhead?mpdb.getLetterhead(activePid):null;}catch(e){}
   return {programs:cycleProgs(),units:UNITS,checklistLen:CHECKLIST_FLAT.length,
     hasLetterhead:!!(lh&&lh.name),hasStudy:!!_rcsUpload,hasCaPkg:!!_rcsUpload,
+    /* Only the form session knows this — the data layers score from stored
+       cells and have no upload, so their ctx leaves it undefined and no blocker
+       fires there. That is right: a menu card cannot know about a study nobody
+       has opened. */
+    unplacedPriced:(typeof rcsUnplaced==='function'?rcsUnplaced().length:0),
     rateType:get('ocaf.rate_type'),uafDec:uafAnalysis().dec.length};}
 function docMissing(id){return window.RCSScore.docMissing(get,scoreCtx(),id);}
 function docWarns(id){return window.RCSScore.docWarns(get,scoreCtx(),id);}
