@@ -1250,7 +1250,7 @@ async function driveBoth(opts) {
 
     const reopen = {
       propertyIdMatched: ids2.pid === ids.pid, cycleIdMatched: ids2.cid === ids.cid,
-      propertyIdFromDom: cardPid, cycleIdFromDom: cyc.ids[0],
+      propertyIdReopened: ids2.pid, cycleIdFromDom: cyc.ids[0],
       formEmpty: leaked.length === 0, diffs, leaked,
       rsRetained, rcsRetained, rsTile: tiles2.rs, rcsTile: tiles2.rcs,
       held, studyReattached: false,

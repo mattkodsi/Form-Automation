@@ -3956,3 +3956,59 @@ universal one. Southport is the widest gap ($44,952/yr). **None flips its aggreg
 Southport (Renzi/Belfry mix) prints the caption **correctly**, and Walden prints **no
 comparison sentence at all** — two more shapes of the same missing-or-wrong aggregate
 statement.
+
+---
+
+## THREE-WAY — Peterson Plaza (75917), 2025 - RCS — driven from the container, M18 corrected
+
+First package driven end to end from the cloud container through the relay, both fill
+orders, with the prior rent schedule uploaded. This supersedes the reconstruction the M18
+entry rested on.
+
+**SHOULD** (reader, from the sources): 5 unit types / 189 units, including a single 2BR/1BA
+**"Senior"** unit at $2,700. Filed total $431,750/mo.
+
+**OURS** (this drive, rs-first, 5 files generated):
+
+| unit row | units | rent | extension |
+|---|--:|--:|--:|
+| 1 BR / 1 BA | 100 | 2,050 | 205,000 |
+| 1 BR / 1 BA | 30 | 2,025 | 60,750 |
+| **2 BR (the Senior row)** | **1** | **blank** | **blank** |
+| 2 BR / 1 BA | 42 | 2,650 | 111,300 |
+| 3 BR / 1.5 BA | 16 | 3,250 | 52,000 |
+| **Total Units** | **189** | | **$429,050** |
+
+**FILED**: 189 units, $431,750 (Senior priced at $2,700).
+
+**Verdict: NOT the app defect I recorded.** The row is **not dropped** — the app produces
+**189 units**, the Senior row present. Its rent is **blank**, because the study's "Senior"
+line carries no bedroom count to match that row (the unplaceable-priced-line case), so the
+app declines to guess a rent it cannot determine. The gap is $2,700/mo, and it manifests as
+a **visible blank cell**, not a silently wrong number and not a missing row. My M18
+score-blocker flags the package with "a priced line the study prices that no unit row
+claims." **Blank + flag is defensible behavior**, not a defect.
+
+### M18 downgraded
+
+The original entry ("app silently drops a unit row, 188 vs 189, $32,400/yr short") was a
+**reconstruction from code paths without a prior rent schedule uploaded**. Driven with the
+prior RS — which supplies the unit roster — the count is **189, correct**, and the defect is
+a single **unpriced** row, visible and flagged. The "188/dropped" outcome only occurs when
+no prior schedule is available to supply the roster; even then the app now flags it (the
+score-blocker). **M18 is reclassified from "produces a wrong schedule silently" to "leaves an
+unmatchable rent blank and flags the package" — a product-appropriate response to ambiguous
+input, not a bug.** The score-blocker (test_db 205) stays: it is what makes the blank
+non-silent.
+
+### What this drive also proved
+
+- **The container drives the live app end to end through the relay** — property found by
+  `ra_property_code`, tracker-dated 2025-09-01, cycle created, both orders, reopen after
+  reload, cleanup by cycle, account 234 → 234. The write path is production-proven now, not
+  just probe-proven.
+- **Provenance reached the states the two-pass drive was meant to force** — a single drive
+  with the prior RS uploaded recorded `{database:2, overridden:1, this-cycle:89, new:101}`.
+  The prior schedule supplies on-file (blue) and overridden (orange) values, so the states
+  the team works in are exercised without a separate save-then-redrive pass. This is a
+  cheaper route to the same coverage the run doc wanted from two passes.
