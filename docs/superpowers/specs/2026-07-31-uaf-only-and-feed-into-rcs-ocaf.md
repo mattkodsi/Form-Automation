@@ -59,3 +59,47 @@ The corpus audit's UA findings were chasing this gap. Specifically:
 ## Status
 
 Captured, not built. Next step is to scope pieces 1–3 as an implementation plan.
+
+## Concrete design (Matt, 2026-07-31)
+
+**UA resolution precedence: `UAF → RS → RCS`.** The saved **UAF submission** value wins; absent one,
+the **executed RS** (`ua_exec`) baseline; the **RCS study** (`ua_rcs`) is last, a cross-check. (Custom
+remains an explicit override.)
+
+**A new "UAF submission" source on the UA dropdown**, on both the RCS and OCAF forms. The UA cell
+(`uaBox`, app.js:797) already renders an "Executed RS / RCS report / Custom…" menu via `srcOptRow`;
+add a top row `data-uaopt="uaf"` labeled "UAF submission", carrying the UAF-computed per-unit value.
+
+**Combined RCS/OCAF + UAF auto-repopulates the cell.** When the package includes a UAF, the UAF
+calculation (factor × baseline, by effective date) writes the per-unit `ua_uaf` value and the cell
+resolves to it automatically — no hand-pick. A standalone **UAF-only** submission saves the same
+`ua_uaf` for a later RCS/OCAF to pick up.
+
+### Implementation plan (files → change)
+
+1. **New per-unit key `units.N.ua_uaf`** — register in `FIELDS` (app.js ~56), route it to the
+   per-cycle bucket in `db.js`/`db.supabase.js` (it changes each cycle), and add it to `coupledKeys`
+   for the UA cell so save/revert/undo carry it with the pair.
+2. **Precedence** — `defUaSrc` (app.js:294 **and** score.js:58, kept in parity):
+   `uaHas(uaf)?'uaf':(uaHas(exec)?'exec':(uaHas(rcs)?'rcs':'custom'))`. Add the `uaf` branch to
+   `uaResolvedOf` (app.js:308, score.js:59) and to gen.js's inline resolver (gen.js:425).
+3. **Dropdown option** — add the `data-uaopt="uaf"` row in `uaBox` (and wherever the OCAF form renders
+   the UA cell); the existing `.uaopt` click handler (app.js:3741) already routes `data-uaopt` values
+   through `srcSetSource`, so `"uaf"` needs no new handler, only inclusion in `names`/fallback lists
+   (app.js:3619) and the label logic in `uaBox`.
+4. **The UAF calculation feeds `ua_uaf`** — compute per-unit `ua_uaf` from the saved UAF factor
+   applied to the executed baseline (the OCAF path already holds `uaf.f_*` and `uafFigures`); in a
+   combined package write it and let the cell resolve to it. Standalone UAF-only entry writes the same.
+5. **Provenance + notes** — `uaCellColors`/`uaNoteCell` gain a "UAF submission" label; the exec-vs-rcs
+   conflict note becomes a cross-check flag (study disagrees), not a source-picker.
+6. **Tests** — flip `test_gen.js:455` (executed/UAF wins, study is a cross-check), add `ua_uaf`
+   resolution + precedence cases to `test_rcs.js` (the score parity block) and `test_db.js` (per-cycle
+   routing), and a `test_interactions.js` case that the new option saves/reverts as one cell.
+
+### Scope note
+
+Pieces 1–5 are this lane (app.js / score.js / gen.js / db*.js logic; the dropdown reuses existing CSS
+classes, no new styling). The **standalone UAF-only entry point** (a place in the UI to start a UAF
+submission on its own) is the one piece that may want the redesign lane. Build order: precedence +
+`ua_uaf` + dropdown option + feed (1–5) first, since they make the combined-package path correct; the
+standalone entry point second.
