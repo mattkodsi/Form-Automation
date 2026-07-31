@@ -55,7 +55,7 @@ const SEED={ // key manifest only — the VALUES are never read (ALL_KEYS below 
   'units.0.br':['',D],'units.0.ba':['',D],'units.0.label':['',D],'units.0.num_units':['',D],'units.0.current':['',T],'units.0.proposed':['',T],
   'units.0.ua_exec':['',T],'units.0.ua_rcs':['',T],'units.0.ua_source':['',T],'units.0.ua_reviewed':['',T],'units.0.ua_custom':['',T],
   'units.0.safmr_rcs':['',T],'units.0.safmr_hud':['',T],'units.0.safmr_source':['',T],'units.0.safmr_reviewed':['',T],
-  'rent_schedule.date_eff_rs':['',T],'rent_schedule.date_eff_source':['',T],'rent_schedule.date_eff_custom':['',T],'rent_schedule.date_rents_effective':['',T],
+  'rent_schedule.date_eff_rs':['',T],'rent_schedule.date_eff_ra':['',T],'rent_schedule.date_eff_source':['',T],'rent_schedule.date_eff_custom':['',T],'rent_schedule.date_rents_effective':['',T],
   'tenant.sender_name':['',D],'tenant.sender_title':['',D],'tenant.mgmt_source':['',D],'tenant.property_alias':['',D],
   'tenant.mgmt_street':['',D],'tenant.mgmt_city':['',D],'tenant.mgmt_state':['',D],'tenant.mgmt_zip':['',D],
   'ocaf.g':['',T],'ocaf.rate_type':['',D],'ocaf.ds_annual':['',D],'ocaf.ds_t12':['',T],'ocaf.ds_f12':['',T],
@@ -107,7 +107,14 @@ const store=makeStore(bridge,ALL_KEYS);
 let form=store.emptyForm(); let UNITS=[0]; let NONREV=[]; let NS8=[]; let PRINCIPALS=[0]; let _undoStack=[]; let _undoNR=[]; let _undoLI=[]; let _undoPR=[]; let _pending=null,_refocusSel=null,_pendingSnap=null; let _rcsUpload=null; let _rcsBusy=null; let _rsUpload=null; let _rsArm=false;let _rsBusy=null;   // while set, the upload row shows what is being read
 let _dlgEnter=null;                  // while a dialog is open, Enter presses its primary button
 
-const CLR={database:['#2563eb','#e8f0fe','On file'],'this-cycle':['#0f766e','#e9f5f2','API / this package'],overridden:['#b45309','#fbf1e6','Overridden'],'auto-calculated':['#2563eb','#e8f0fe','Auto-calc'],'new':['#64748b','#f6f7f9','New']};
+/* [hue, fill, label]. The HUES are a contract with tests behind them and do not
+   move. The FILLS did: on file and new now sit on the same inset surface every
+   cell sits on (--sunk), and only the two states that want your hands still
+   carry a wash. What answers "is this saved?" is the 3px rule down the cell's
+   left edge — the same marker the home page uses for urgency, at cell scale.
+   These values are twinned with the --prov-*-fill tokens in the #viewForm block
+   of shell.head.html. Change one, change both. */
+const CLR={database:['#2563eb','#eef1f5','On file'],'this-cycle':['#0f766e','#e9f5f2','API / this package'],overridden:['#b45309','#fbf1e6','Overridden'],'auto-calculated':['#2563eb','#eef1f5','Auto-calc'],'new':['#64748b','#eef1f5','New']};
 /* Dates are stamped in New York, not UTC. toISOString() rolls over at 7 or 8pm
    Eastern, so a package generated in the evening was dated tomorrow — and the
    tenant notice's date is what starts the 30-day comment clock. */
@@ -122,7 +129,7 @@ function sK(n){const a=Math.abs(n),sg=(n<0?'-$':'+$');return a>=1e6?sg+(a/1e6).t
 /* A fall is not good news dressed in green. Sign drives the color on every lift
    figure — teal for a rise, red for a fall, grey for exactly nothing — and the
    caption follows it, so a decrease is never captioned "increase". */
-const liftClr=n=>n>0?'#0f766e':(n<0?'#b91c1c':'#64748b');
+const liftClr=n=>n>0?'#2f6a45':(n<0?'#9c2b18':'#636c77');
 const liftWord=n=>n<0?'decrease':'increase';
 /* ---- display formatting -------------------------------------------------
    Every figure this product shows is formatted at the point of display; the
@@ -344,8 +351,15 @@ function csDrop(key,options,ph,cls,clearable,tint,claim,subs){const cur=get(key)
      mouse was the odd one out. One pattern: if it holds a value, it can be
      cleared where you are looking at it. */
   const clr=(has&&clearable!==false)?'<span class="csclear" data-csclear="'+key+'" title="Clear">✕</span>':'';return '<div class="uadrop cs '+(cls||'')+(has?' clearable':'')+'"><div class="uatrigger" tabindex="0" data-trigfor="'+key+'"'+(tint?' style="'+tint+'"':'')+'><span class="ualab">'+esc(lab)+'</span>'+(groupOf(key)?'':srcTags(key))+clr+'<span class="cvx">▾</span></div><div class="uamenu">'+menu+'</div></div>';}
-function dateEffResolved(){const src=get('rent_schedule.date_eff_source')||(get('rent_schedule.date_eff_rs')?'rs':'custom');return src==='custom'?(get('rent_schedule.date_eff_custom')||get('rent_schedule.date_rents_effective')):get('rent_schedule.date_eff_rs');}
-function dateEffCell(){const rs=get('rent_schedule.date_eff_rs');const src=get('rent_schedule.date_eff_source')||(rs?'rs':'custom');
+function dateEffResolved(){const ra=get('rent_schedule.date_eff_ra');if(ra)return ra;
+  const src=get('rent_schedule.date_eff_source')||(get('rent_schedule.date_eff_rs')?'rs':'custom');return src==='custom'?(get('rent_schedule.date_eff_custom')||get('rent_schedule.date_rents_effective')):get('rent_schedule.date_eff_rs');}
+function dateEffCell(){
+  /* Locked, so no menu: a dropdown offering "A year after the executed RS" and
+     "Custom…" beside a value that answers to neither would be a control that
+     does nothing. The lock replaces the cell rather than disabling its parts. */
+  if(isLocked('rent_schedule.date_eff'))
+    return lockedField('rent_schedule.date_eff','Date rents will be effective',raLockShow('rent_schedule.date_eff'));
+  const rs=get('rent_schedule.date_eff_rs');const src=get('rent_schedule.date_eff_source')||(rs?'rs':'custom');
   /* Whichever key answers, it reaches the box in the form the reader types into
      it. The legacy key is stored ISO, and raw ISO in a data-date box is not just
      ugly: the first keystroke reformats 2026-03-01 to 20/26/0301, and 0301 is
@@ -442,6 +456,87 @@ function dirCell(f){const k=f.k;const P=DIR_PICK[k];const list=dirList(P.kind);c
    uniformly. The form never writes back to the RA platform. */
 function raProps(){try{const p=window.RASource;const l=(p&&p.listProperties)?p.listProperties():[];return Array.isArray(l)?l:[];}catch(e){return [];}}
 function raVal(k){try{const p=window.RASource;const v=(p&&p.value)?p.value(k):null;return (v==null||v==='')?null:String(v);}catch(e){return null;}}
+
+/* ── RA-LOCKED CELLS ──────────────────────────────────────────────────────
+   The renewal calendar decides WHEN a package is due and what it is called;
+   this app decides WHAT goes in it. Two systems cannot both own one fact,
+   because a disagreement between them has no arbiter — so the handful of cells
+   Kinley's database answers for are not editable here.
+
+   The lock is conditional on RASource HAVING an answer. That is what keeps a
+   property created in this app, backed by no database row, fully editable:
+   raVal returns null and the cell renders exactly as it always did. No tracker
+   code to plumb, no per-property branch.
+
+   The whole feature is this predicate and the early returns that read it.
+   Turning it off again is `return false`.
+   Design: docs/superpowers/specs/2026-07-30-tracker-is-definitive-design.md */
+const RA_LOCKED={
+  'property.name':{ask:'property.name',write:'property.name'},
+  /* The cell is keyed 'rent_schedule.date_eff' — its own stable identity, which
+     is NOT one of the three keys it flips data-box between (rule 9). `ask` is
+     the ordinary flat key, so Kinley's aumValue maps a name that already means
+     something on his side; `write` is where the answer lands on our side. */
+  'rent_schedule.date_eff':{ask:'rent_schedule.date_rents_effective',write:'rent_schedule.date_eff_ra',
+    /* Kinley's database answers in whatever shape it holds. Everything below this
+       line assumes ISO, and a raw US date in a data-date box reformats itself on
+       the first keystroke — the fault this cell already carries a comment about. */
+    norm:v=>{const p=dateParts(v);return p?(String(p.y)+'-'+String(p.m).padStart(2,'0')+'-'+String(p.d).padStart(2,'0')):null;},
+    show:v=>fmtDateLong(v)},
+};
+const RA_LOCK_WHY={
+  'property.name':'The property name comes from Related Affordable. Change it there to revise it.',
+  'rent_schedule.date_eff':'Set from Related Affordable when this package was started, and fixed from then on. A later change there does not move a package already under way.',
+};
+function raLockVal(cell){const d=RA_LOCKED[cell];if(!d)return null;
+  const v=raVal(d.ask);if(v==null)return null;
+  return d.norm?d.norm(v):v;}          // a value we cannot read is no answer at all
+function raLockShow(cell){const d=RA_LOCKED[cell],v=raLockVal(cell);
+  return v==null?'':(d&&d.show?d.show(v):v);}
+/* Rule 17: the refusal belongs to the write, not to the widget that would have
+   made it. Removing the input stops a person typing; it does nothing about the
+   rent schedule, whose parser sets property.name and the effective date from a
+   document that is often a year older than the record. Both fills ask this, so
+   a third fill inherits the rule by calling the same function rather than by
+   somebody remembering it.
+
+   Deliberately NOT in db.js: the authority here is a browser seam
+   (window.RASource), and a pure data layer that reads a global to decide what
+   it will store is a data layer nobody can test in node. What the data layer
+   owns is name UNIQUENESS (assertNameFree); what this owns is name AUTHORITY. */
+function raLockedKey(k){
+  for(const cell in RA_LOCKED) if(RA_LOCKED[cell].write===k&&isLocked(cell))return true;
+  return false;}
+/* The locked value is not decoration. It names the package in the header and
+   prints on six documents, so it is written INTO the form rather than only
+   displayed. Before snapForm, deliberately: a value nobody can change must
+   never open the form dirty asking to be saved. "Update property profile"
+   carries it to the record from there, like any other pulled figure. */
+function applyRaLocked(){
+  Object.keys(RA_LOCKED).forEach(cell=>{
+    const v=raLockVal(cell);if(v==null)return;
+    const k=RA_LOCKED[cell].write;if(!k||!form[k])return;
+    if(String(form[k].value||'')===String(v))return;
+    form=store.editForm(form,k,String(v));markCycle(k);
+  });
+}
+function isLocked(cell){return raLockVal(cell)!=null;}
+/* Drawn, not typed: a padlock emoji renders in a different family on every
+   platform, and rule 16's spirit is that nothing user-visible is left to chance. */
+const LOCKMK='<svg class="lockmk" viewBox="0 0 24 24" aria-hidden="true">'
+  +'<path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>'
+  +'<rect x="5" y="10" width="14" height="9.5" rx="2" fill="currentColor"/></svg>';
+/* Not greyed out. Grey reads as broken rather than governed, and the value still
+   has to be legible on a document nobody can retype. Full contrast, no border
+   the eye reads as an input, no hover, no caret — and the lock carries the why. */
+/* The same look outside the form, where there is no cell to key it to. */
+function lockedLine(text,why){
+  return '<div class="fbox locked" title="'+esc(why||'')+'">'
+    +'<span class="lockv">'+esc(text)+'</span>'+LOCKMK+'</div>';}
+function lockedField(cell,label,text){
+  return '<div class="field"><div class="flabel">'+label+'</div>'
+    +'<div class="fbox locked" data-box="'+esc(cell)+'" title="'+esc(RA_LOCK_WHY[cell]||'')+'">'
+    +'<span class="lockv">'+esc(text)+'</span>'+LOCKMK+'</div></div>';}
 /* Rule 16 belongs to the row builder, not to its callers — see rule 17. The UA
    and SAFMR menus formatted at their own call sites and so looked right, which
    is exactly how every other source row was missed: srcPick printed whatever
@@ -468,7 +563,14 @@ function srcPick(k,rows){
 }
 /* Per-cell source rows in precedence order (spec \u00a73). val:null renders dim. */
 const SRCPICK_ROWS={
- 'property.name':()=>[{tag:'Executed RS',val:rsVal('property.name')},{tag:'Related Affordable',val:raVal('property.name')},{tag:'RCS report',val:rcsVal('property.name')}],
+ 'property.name':()=>[{tag:'Executed RS',val:splitProjectName(rsVal('property.name')).name},
+   {tag:'Related Affordable',val:splitProjectName(raVal('property.name')).name},
+   {tag:'RCS report',val:splitProjectName(rcsVal('property.name')).name}],
+ /* Rule 1: the row is declared whether or not this document carries a second
+    name — dim reads as "the RS does not say", which is the truth. Offering
+    nothing at all reads as "this cell has no source", which is not. */
+ 'tenant.property_alias':()=>[{tag:'Executed RS',val:splitProjectName(rsVal('property.name')).alias},
+   {tag:'RCS report',val:splitProjectName(rcsVal('property.name')).alias}],
  'property.fha':()=>[{tag:'Executed RS',val:rsVal('property.fha')},{tag:'Related Affordable',val:raVal('property.fha')}],
  'property.s8':()=>[{tag:'Executed RS',val:rsVal('property.s8')},{tag:'RCS report',val:rcsVal('property.s8')}],
  'owner.entity_type_other':()=>[{tag:'Executed RS',val:rsVal('owner.entity_type_other')}],
@@ -550,7 +652,7 @@ function sigTitleCell(f){const c=cellColors('sig.title');const pk='sig.principal
   let dd=csDrop(pk,_opts,'Select\u2026','',true,'',_pcl?_rp:null,sigPrincipalSubs());
   dd=dd.replace('<div class="uamenu">','<div class="uamenu">'+dim);
   return `<div class="fpair sigpair"><div class="field"><div class="flabel">${f.label}</div><div class="fbox" data-box="sig.title" style="background:${c[1]};border-left-color:${c[0]}"><input type="text" data-k="sig.title" value="${esc(get('sig.title'))}" autocomplete="off">${srcTags('sig.title')}${srcPick('sig.title',SRCPICK_ROWS['sig.title']())}</div>${ovNote('sig.title')}</div><div class="ofthe">of the</div><div class="field"><div class="flabel">Principal</div><div class="fbox seldrop" data-box="${pk}" style="background:${pc[1]};border-left-color:${pc[0]}">${dd}</div>${ovNote(pk)}</div></div>`;}
-function fieldCell(f){if(f.type==='sigtitle')return sigTitleCell(f);if(f.type==='pair')return '<div class="fpair">'+f.items.map(fieldCell).join('')+'</div>';if(f.type==='addr')return addrCell();if(f.type==='caaddr')return caAddrCell();if(f.type==='appraddr')return apprAddrCell();if(f.type==='mgmtaddr')return mgmtCell();if(f.type==='select')return selectCell(f);if(f.k==='poc.name')return pocCell();if(DIR_PICK[f.k])return dirCell(f);
+function fieldCell(f){if(isLocked(f.k))return lockedField(f.k,f.label,raLockShow(f.k));if(f.type==='sigtitle')return sigTitleCell(f);if(f.type==='pair')return '<div class="fpair">'+f.items.map(fieldCell).join('')+'</div>';if(f.type==='addr')return addrCell();if(f.type==='caaddr')return caAddrCell();if(f.type==='appraddr')return apprAddrCell();if(f.type==='mgmtaddr')return mgmtCell();if(f.type==='select')return selectCell(f);if(f.k==='poc.name')return pocCell();if(DIR_PICK[f.k])return dirCell(f);
   const s=form[f.k]||{value:'',source:'new'};
   const c=f.prefix?groupColors([f.prefix,f.k]):cellColors(f.k);
   const pre=f.prefix?csDrop(f.prefix,['Ms.','Mr.','Dr.','Mx.'],'—','csnarrow',true,partHot(f.prefix)?tintStyle(f.prefix):''):'';
@@ -794,7 +896,7 @@ function capNote(){const c=rsCapacity();if(!c.msgs.length)return '';return '<div
 function refreshFlags(){document.querySelectorAll('[data-pill]').forEach(p=>{const n=+p.getAttribute('data-pill');const st=sectionStatus(n);p.className='pill '+(st==='warn'?'warn':'ok');p.textContent=st==='warn'?'review':'confirmed';});renderRail();renderAttention();}
 function unitCard(i,pos){const trash=UNITS.length>1?`<button class="trash" data-delunit="${i}" title="Delete this unit type">✕</button>`:'';
   const _c=numf(get('units.'+i+'.current')),_p=numf(get('units.'+i+'.proposed'));const _d=_p-_c,_pc=_c>0?Math.round(_d/_c*100):0;
-  const metric=(_c>0&&_p>0)?`<span class="ucmetric" data-metric="${i}" style="color:${_d>=0?'#166534':'#b91c1c'}">${sMoney(_d)} · ${sPct(_pc)}</span>`:`<span class="ucmetric" data-metric="${i}"></span>`;
+  const metric=(_c>0&&_p>0)?`<span class="ucmetric" data-metric="${i}" style="color:${_d>=0?'#2f6a45':'#9c2b18'}">${sMoney(_d)} · ${sPct(_pc)}</span>`:`<span class="ucmetric" data-metric="${i}"></span>`;
   /* The compact .ovic pair inside the cell squeezed the bed/bath dropdowns from
      96px to 70px the moment it appeared, so a row changed shape once edited and
      "2BR" collided with its own clear icon. Roomy cells put save/revert in the
@@ -1128,6 +1230,23 @@ function rcsBrBa(k){const m=String(k||'').match(/^units\.(\d+)\.(br|ba)$/);
 function rcsCsRow(k){const v=rcsBrBa(k);
   return v?('<div class="uaopt srcopt'+((String(get(k)==null?'':get(k))===String(v))?' sel':'')+'" data-cskey="'+k+'" data-csopt="'+esc(v)+'">'+esc(v)+'<span class="uasub">RCS report</span></div>')
           :'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">RCS report \u00b7 not available</span></div>';}
+/* HUD-92458 Part A has ONE project-name box, and a property known to its tenants
+   by another name is typed into it as "Colonial Village/White Oak Townhomes".
+   Two facts in one field: the registry name, and the name on the tenant notice.
+
+   Splitting it was written into the FILL and nowhere else, so pressing "Fill form
+   from RS" put the halves in the right two cells while the property name's own
+   source row offered the whole slashed string — one rule, applied on one of the
+   two paths that use it (rule 17). The alias had no source row at all, so the
+   only way to get the half the document plainly contains was to retype it.
+
+   Only a single slash splits. Two would mean we cannot tell which half is which,
+   and a name that merely contains a slash is likelier than a third fact. */
+function splitProjectName(v){
+  const s=(v==null?'':String(v)).trim();
+  if(!s)return {name:null,alias:null};
+  const parts=s.split('/').map(x=>x.trim()).filter(Boolean);
+  return parts.length===2?{name:parts[0],alias:parts[1]}:{name:s,alias:null};}
 function rsVal(k){try{const p=_rsUpload&&_rsUpload.parsed;const v=p&&p.scalars?p.scalars[k]:null;return (v==null||v==='')?null:String(v);}catch(e){return null;}}
 /* The reading outlives the page that made it. _rsUpload was a plain variable
    set on upload and cleared on every form open, so every source row that reads
@@ -1379,7 +1498,7 @@ function rcsFillFromParsed(){
   const _wrote=[];
   const mark=k=>{markCycle(k);if(form[k])form[k].fromParse=true;if(_wrote.indexOf(k)<0)_wrote.push(k);};
   const put=(k,v)=>{if(v!=null&&v!==''){form=store.editForm(form,k,String(v));mark(k);}};
-  const setk=(k,v)=>{if(rsOffers(k))return;put(k,v);};      // RS > RCS — see rsOffers
+  const setk=(k,v)=>{if(rsOffers(k)||raLockedKey(k))return;put(k,v);};   // RA > RS > RCS — see rsOffers, raLockedKey
 
   /* The study carries none of these, so none is ever sourced from it: the FHA
      effective date, the contract administrator.
@@ -2452,12 +2571,10 @@ async function parseRsPdf(bytes,onStep){
 function rsFillFromParsed(){const P=_rsUpload&&_rsUpload.parsed;if(!P)return;
   const _wrote=[];
   const mark=k=>{markCycle(k);if(form[k])form[k].fromParse=true;if(_wrote.indexOf(k)<0)_wrote.push(k);};   // came from the schedule, not typed — tags an override as "parsed", not just "changed", in its note text
-  const setk=(k,v)=>{if(v!=null&&v!==''){form=store.editForm(form,k,String(v));mark(k);}};
-  { const pn=P.scalars['property.name'];
-    if(pn&&pn.indexOf('/')>=0){const parts=pn.split('/').map(x=>x.trim()).filter(Boolean);
-      if(parts.length===2){setk('property.name',parts[0]);setk('tenant.property_alias',parts[1]);}
-      else setk('property.name',pn);}
-    else setk('property.name',pn); }
+  const setk=(k,v)=>{if(raLockedKey(k))return;if(v!=null&&v!==''){form=store.editForm(form,k,String(v));mark(k);}};
+  { const pn=splitProjectName(P.scalars['property.name']);
+    setk('property.name',pn.name);
+    if(pn.alias)setk('tenant.property_alias',pn.alias); }
   setk('property.fha',P.scalars['property.fha']);
   setk('property.s8',P.scalars['property.s8']);
   setk('owner.entity_name',P.scalars['owner.entity_name']);
@@ -2872,7 +2989,7 @@ function _renderCommand(){const a=analysis();const pCur=a.ceil>0?clamp(a.cg/a.ce
   const uaHave=UNITS.some(i=>numf(get('units.'+i+'.ua_exec'))>0||numf(get('units.'+i+'.ua_rcs'))>0||numf(get('units.'+i+'.ua_custom'))>0);
   const ua=!uaHave?['warn','not entered — '+secRef(6)]:(conf===0?['ok',(hasProg('rcs')&&UNITS.some(i=>numf(get('units.'+i+'.ua_exec'))>0&&numf(get('units.'+i+'.ua_rcs'))>0))?'exec & RCS agree':'as entered']:(unres===0?['ok','UA conflicts resolved per unit type']:['warn',unres+' of '+conf+' unit type'+(conf>1?'s':'')+' need'+(unres===1?'s':'')+' a UA source']));
   const uaStrip=()=>{const U=uafAnalysis();let dMo=0,types=0;UNITS.forEach(i=>{const r=uafRow(i);if(r.curSum>0&&r.newSum>0){types++;dMo+=numf(get('units.'+i+'.num_units'))*(r.newSum-r.curSum);}});
-    return `<div class="lift"><b>UTILITY ALLOWANCE CHANGE</b><div class="liftnums"><span><b class="teal">${types}</b><i>unit type${types===1?'':'s'}</i></span><span><b style="color:${liftClr(dMo)}">${sMoney(dMo)}</b><i>UA /mo across units</i></span><span><b style="color:${U.dec.length?'#b45309':'#166534'}">${U.dec.length}</b><i>decrease${U.dec.length===1?'':'s'}</i></span></div></div>`;};
+    return `<div class="lift"><b>UTILITY ALLOWANCE CHANGE</b><div class="liftnums"><span><b class="teal">${types}</b><i>unit type${types===1?'':'s'}</i></span><span><b style="color:${liftClr(dMo)}">${sMoney(dMo)}</b><i>UA /mo across units</i></span><span><b style="color:${U.dec.length?'#b45309':'#2f6a45'}">${U.dec.length}</b><i>decrease${U.dec.length===1?'':'s'}</i></span></div></div>`;};
   let card1;
   if(hasProg('rcs')){
     /* With no proposed rent on any type, a.pg is nothing but utility allowance, so
@@ -2890,9 +3007,9 @@ function _renderCommand(){const a=analysis();const pCur=a.ceil>0?clamp(a.cg/a.ce
     card1=`<div class="ccard afford"><div class="cck">AFFORDABILITY PROOF</div><div class="cctitle">${a.ceil>0?(priced?('Proposed rents '+(PASS?'clear':'exceed')+' the 150% SAFMR ceiling'+(partial?' for the '+a.tPr+' of '+a.tTot+' unit types priced so far':'')):'Enter the proposed rents to run the 150% test'):(a.countsMissing&&a.safmrHave?'Add the unit counts to run the 150% test':'Enter or pull a SAFMR to run the 150% test')}</div><div class="ccsub">Monthly gross rent potential (rent + UA)</div>
      <div class="afrow"><div class="afbar">
         <div class="gauge">${gaugeSegs(priced?gCur:pCur,priced?gPro:0)}<div class="oend"></div></div>
-        <div class="glabels"><div class="gl l"><b style="color:#2f7d57">${money(priced?CG:a.cg)}</b><i>current</i></div><div class="gl c"><b style="color:${priced?'#47a377':'#94a3b8'}">${priced?money(PG):'—'}</b><i>proposed</i></div><div class="gl r"><b>${(priced?CEIL:a.ceil)>0?money(priced?CEIL:a.ceil):'—'}</b><i>150% ceiling · HUD SAFMR</i>${partial?`<i class="amber">⚠ ${a.tTot-a.tPr} unit type${a.tTot-a.tPr===1?'':'s'} not priced yet</i>`:''}${a.safmrConflict?`<i class="amber">⚠ RCS differs on ≥1 type</i>`:(a.safmrMissing?`<i class="amber">⚠ SAFMR needed</i>`:(a.countsMissing&&a.safmrHave?`<i class="amber">⚠ unit counts needed</i>`:''))}</div></div>
+        <div class="glabels"><div class="gl l"><b style="color:#2f6a45">${money(priced?CG:a.cg)}</b><i>current</i></div><div class="gl c"><b style="color:${priced?'#5c9c78':'#636c77'}">${priced?money(PG):'—'}</b><i>proposed</i></div><div class="gl r"><b>${(priced?CEIL:a.ceil)>0?money(priced?CEIL:a.ceil):'—'}</b><i>150% ceiling · HUD SAFMR</i>${partial?`<i class="amber">⚠ ${a.tTot-a.tPr} unit type${a.tTot-a.tPr===1?'':'s'} not priced yet</i>`:''}${a.safmrConflict?`<i class="amber">⚠ RCS differs on ≥1 type</i>`:(a.safmrMissing?`<i class="amber">⚠ SAFMR needed</i>`:(a.countsMissing&&a.safmrHave?`<i class="amber">⚠ unit counts needed</i>`:''))}</div></div>
        </div>
-       ${(a.ceil>0&&priced)?`<div class="passbox" style="background:${PASS?'#dcfce7':'#fee2e2'};color:${PASS?'#166534':'#b91c1c'};border-color:${PASS?'#86efac':'#fca5a5'}">${PASS?'✓ PASS':'✗ OVER'}<small>${money(Math.abs(HEAD))} ${PASS?'headroom':'over'}${partial?' · so far':''}</small></div>`:`<div class="passbox" style="background:#f1f4f9;color:#64748b;border-color:#d7deea">${a.ceil>0?'Proposed rents needed':(a.countsMissing&&a.safmrHave?'Unit counts needed':'SAFMR needed')}<small>${a.ceil>0?('enter them in '+secRef(6)):(a.countsMissing&&a.safmrHave?('add the number of units in '+secRef(6)):(hudBlockerShort()||'enter or pull from HUD'))}</small></div>`}</div>
+       ${(a.ceil>0&&priced)?`<div class="passbox ${PASS?'pass':'over'}" style="background:${PASS?'#e7efea':'#f7ece8'};color:${PASS?'#2f6a45':'#9c2b18'};border-color:${PASS?'#a9c4b4':'#d9ab9e'}">${PASS?'✓ PASS':'✗ OVER'}<small>${money(Math.abs(HEAD))} ${PASS?'headroom':'over'}${partial?' · so far':''}</small></div>`:`<div class="passbox wait" style="background:#eef1f5;color:#556270;border-color:#c2cbd6">${a.ceil>0?'Proposed rents needed':(a.countsMissing&&a.safmrHave?'Unit counts needed':'SAFMR needed')}<small>${a.ceil>0?('enter them in '+secRef(6)):(a.countsMissing&&a.safmrHave?('add the number of units in '+secRef(6)):(hudBlockerShort()||'enter or pull from HUD'))}</small></div>`}</div>
      <div class="lift"><b>RCS increase over the current rent roll</b>${!priced?`<div class="liftnote">The lift appears once proposed rents are entered in ${secRef(6)}.</div>`:`<div class="liftnums"><span><b style="color:${liftClr(a.pct)}">${sPct(a.pct)}</b><i>${liftWord(a.pct)}</i></span><span><b style="color:${liftClr(a.perUnit)}">${sMoney(a.perUnit)}</b><i>per unit</i></span><span><b style="color:${liftClr(a.dMo)}">${sMoney(a.dMo)}</b><i>per month</i></span><span><b style="color:${liftClr(a.dYr)}">${sK(a.dYr)}</b><i>per year</i></span></div>`}</div>
    </div>`;
   } else {
@@ -3021,7 +3138,7 @@ function renderRail(){const vis=visibleSections();const st={};vis.forEach(n=>st[
   el('rail').innerHTML='<div class="railbar nofx" id="railbar" aria-hidden="true"></div>'+vis.map(n=>`<button type="button" class="railitem" data-rsec="${n}"><span class="ri ${st[n]==='warn'?'warn':'ok'}">${st[n]==='warn'?'!':'✓'}</span><span class="rname">${_secPos[n]||n}. ${SECTION_TITLES[n]}</span></button>`).join('');
   if(_afs){const _r=document.querySelector('#rail .railitem[data-rsec="'+_afs+'"]');if(_r&&_r.focus)_r.focus({preventScroll:true});}
   railApply();const _rb=el('railbar');if(_rb&&window.requestAnimationFrame)requestAnimationFrame(()=>{if(_rb.classList)_rb.classList.remove('nofx');});
-  el('railprog').innerHTML=`<b>${conf} of ${vis.length} confirmed</b>${need?`<div class="warnt">${need} section${need===1?"":"s"} still to confirm</div>`:''}<div class="track sm"><div style="width:${conf/vis.length*100}%;background:#166534"></div></div>`;
+  el('railprog').innerHTML=`<b>${conf} of ${vis.length} confirmed</b>${need?`<div class="warnt">${need} section${need===1?"":"s"} still to confirm</div>`:''}<div class="track sm"><div style="width:${conf/vis.length*100}%;background:#1f5480"></div></div>`;
   const fl=attnFlags();el('railattn').style.display=fl.length?'block':'none';el('railattn').innerHTML=fl.length?`⚠ <b>${fl.length} thing${fl.length===1?"":"s"} to look at</b>${fl.map(x=>`<div class="sub" style="margin-top:6px">${x}</div>`).join('')}`:'';}
 function renderAttention(){/* the section rail carries the attention list; the old top banner duplicated it */}
 
@@ -3170,7 +3287,7 @@ window.addEventListener('scroll',railSync,{passive:true});
 window.addEventListener('resize',()=>{railObserve();railSync();});
 
 function renderBar(){const a=analysis();const conf=UNITS.filter(uaConflict).length,unres=UNITS.filter(uaUnresolved).length;const uaOk=conf===0||unres===0;
- const bc=(st,l)=>{const ic=st==='warn'?'⚠':(st==='info'?'ⓘ':'✓');const c=st==='warn'?'#b45309':(st==='info'?'#2563eb':'#166534');return `<span class="bchip ${st}" title="${l}"><b style="color:${c}">${ic}</b> <span class="bcl">${l}</span></span>`;};
+ const bc=(st,l)=>{const ic=st==='warn'?'⚠':(st==='info'?'ⓘ':'✓');const c=st==='warn'?'#b45309':(st==='info'?'#2563eb':'#2f6a45');return `<span class="bchip ${st}" title="${l}"><b style="color:${c}">${ic}</b> <span class="bcl">${l}</span></span>`;};
  const chks=`${bc(hasReal('property.name')?'ok':'warn','Name')}${bc(hasReal('property.s8')?'ok':'warn','Section 8 #')}${bc(hasReal('sig.name')?'ok':'warn','Signatory')}${bc(uaOk?'ok':'warn','UA')}`;
  if(!hasProg('rcs')){
    const C=ocafCalc();let dMo=0;UNITS.forEach(i=>{const n=numf(get('units.'+i+'.num_units')),cur=numf(get('units.'+i+'.current'));if(n&&cur&&C.R>0)dMo+=n*(Math.round(cur*C.R)-cur);});
@@ -3179,7 +3296,7 @@ function renderBar(){const a=analysis();const conf=UNITS.filter(uaConflict).leng
      +(hasProg('uaf')?((hasProg('ocaf')?' · ':'')+'<b>'+sMoney(uaMo)+'</b> UA /mo'+(U.dec.length?' · <b style="color:#b45309">'+U.dec.length+' UA decrease'+(U.dec.length>1?'s':'')+'</b>':'')):'');
    const ready=hasProg('ocaf')?(C.R>0):(U.rows?U.rows.length>0:false);
    const readyTxt=hasProg('ocaf')?(C.R>0?'✓ worksheet ready':'worksheet incomplete'):((uafAnalysis().any)?'✓ UA computed':'UA components needed');
-   el('ccbar').innerHTML=`<div class="bl"><div class="mn">${left}</div></div><div class="bchks">${chks}</div><div class="bpass" style="color:${ready?'#166534':'#64748b'}">${readyTxt}</div>`;
+   el('ccbar').innerHTML=`<div class="bl"><div class="mn">${left}</div></div><div class="bchks">${chks}</div><div class="bpass" style="color:${ready?'#2f6a45':'#556270'}">${readyTxt}</div>`;
    return;
  }
  const pCur=a.ceil>0?clamp(a.cg/a.ceil*100):0,pPro=a.ceil>0?clamp(a.pg/a.ceil*100):0;
@@ -3187,7 +3304,7 @@ function renderBar(){const a=analysis();const conf=UNITS.filter(uaConflict).leng
  const CG=partial?a.cgC:a.cg,PG=partial?a.pgC:a.pg,CEIL=partial?a.ceilC:a.ceil;
  const PASS=CEIL>0&&PG<CEIL,HEAD=CEIL-PG;
  const gCur=CEIL>0?clamp(CG/CEIL*100):0,gPro=CEIL>0?clamp(PG/CEIL*100):0;
- el('ccbar').innerHTML=`<div class="bl"><div class="minigauge">${gaugeSegs(priced?gCur:pCur,priced?gPro:0)}<div class="oend"></div></div><div class="mn"><b style="color:#2f7d57">${money(priced?CG:a.cg)}</b> current · <b style="color:${priced?'#47a377':'#94a3b8'}">${priced?money(PG):'—'}</b> proposed · <b>${(priced?CEIL:a.ceil)>0?money(priced?CEIL:a.ceil):'—'}</b> ceiling${priced?' · <b style="color:'+liftClr(a.pct)+'">'+sPct(a.pct)+'</b> RCS '+(a.pct===0?'change':liftWord(a.pct)):''}${partial?' · <b style="color:#b45309">'+(a.tTot-a.tPr)+' type'+(a.tTot-a.tPr===1?'':'s')+' unpriced</b>':''}</div><div class="bpass" style="color:${(a.ceil>0&&priced)?(PASS?'#166534':'#b91c1c'):'#64748b'}">${(a.ceil>0&&priced)?((PASS?'✓ PASS':'✗ OVER')+' · '+money(Math.abs(HEAD))):(a.ceil>0?'proposed rents needed':'SAFMR needed')}</div></div><div class="bchks">${chks}${bc(a.safmrMissing||a.safmrOver?'warn':(a.safmrConflict?'info':'ok'),'SAFMR')}</div>`;}
+ el('ccbar').innerHTML=`<div class="bl"><div class="minigauge">${gaugeSegs(priced?gCur:pCur,priced?gPro:0)}<div class="oend"></div></div><div class="mn"><b style="color:#2f6a45">${money(priced?CG:a.cg)}</b> current · <b style="color:${priced?'#5c9c78':'#636c77'}">${priced?money(PG):'—'}</b> proposed · <b>${(priced?CEIL:a.ceil)>0?money(priced?CEIL:a.ceil):'—'}</b> ceiling${priced?' · <b style="color:'+liftClr(a.pct)+'">'+sPct(a.pct)+'</b> RCS '+(a.pct===0?'change':liftWord(a.pct)):''}${partial?' · <b style="color:#b45309">'+(a.tTot-a.tPr)+' type'+(a.tTot-a.tPr===1?'':'s')+' unpriced</b>':''}</div><div class="bpass" style="color:${(a.ceil>0&&priced)?(PASS?'#166534':'#b91c1c'):'#64748b'}">${(a.ceil>0&&priced)?((PASS?'✓ PASS':'✗ OVER')+' · '+money(Math.abs(HEAD))):(a.ceil>0?'proposed rents needed':'SAFMR needed')}</div></div><div class="bchks">${chks}${bc(a.safmrMissing||a.safmrOver?'warn':(a.safmrConflict?'info':'ok'),'SAFMR')}</div>`;}
 /* A "reviewed" flag exists only to silence a warning about a conflict. When the
    conflict itself goes away — a figure retyped, a source switched, a row cleared —
    the flag is meaningless, and it was the last thing on the form still differing
@@ -3859,29 +3976,6 @@ function ringColor(pct){const p=Math.max(0,Math.min(100,pct))/100;
    something nobody had asked for yet, on a page nobody opens to fill a
    profile. Where it belongs is the property's own page, next to the fields it
    is talking about. */
-function profileChip(p){
-  const m=(p&&p.profile&&p.profile.missing)||[];
-  if(!m.length)return '';
-  const names=m.map(x=>x.label);
-  /* "4 missing from the profile" named nothing. The count was the whole chip and
-     the four labels lived in a title attribute, so the one question it provoked —
-     which four? — was the one it would not answer without a hover nobody knows to
-     try. It names as many as fit, and the rest are one hover away in a panel of
-     the app's own rather than a native tooltip that makes you wait and then
-     truncates the answer.
-
-     Flat rows, not the generate modal's jump buttons: a property with no package
-     has no form open to jump into, and a control that does nothing is worse than
-     no control at all. */
-  const shown=names.length<=3?andJoin(names):(names.slice(0,2).join(', ')+' and '+(names.length-2)+' more');
-  const rows=m.map(x=>{
-    const w=(typeof whyShort==='function'?whyShort(x.key,x.why):'')||(x.sec?(SECTION_TITLES[x.sec]||''):'');
-    return '<span class="gpf gpf-flat"><span class="gpf-n">'+esc(x.label)+'</span>'
-      +(w?'<span class="gpf-w">'+esc(w)+'</span>':'')+'</span>';}).join('');
-  return '<span class="gpw pchipw"><button type="button" class="pchip" aria-haspopup="true">Needs '
-    +esc(shown)+'</button><div class="gpop"><div class="gpop-in">'
-    +'<div class="gpop-h">Needed before this package can be generated</div>'
-    +'<div class="gpop-l">'+rows+'</div></div></div></span>';}
 function ringSvg(pct,size){size=size||36;const r=size/2-3;const c=2*Math.PI*r;const off=c*(1-Math.max(0,Math.min(100,pct))/100);const col=ringColor(pct);
   return '<svg class="ringsvg" width="'+size+'" height="'+size+'" viewBox="0 0 '+size+' '+size+'"><circle cx="'+size/2+'" cy="'+size/2+'" r="'+r+'" fill="none" stroke="#e9edf4" stroke-width="3.4"/><circle cx="'+size/2+'" cy="'+size/2+'" r="'+r+'" fill="none" stroke="'+col+'" stroke-width="3.4" stroke-linecap="round" stroke-dasharray="'+c.toFixed(1)+'" stroke-dashoffset="'+off.toFixed(1)+'" transform="rotate(-90 '+size/2+' '+size/2+')"/><text x="50%" y="53%" dominant-baseline="middle" text-anchor="middle" font-size="'+(size<44?10:12.5)+'" font-weight="700" fill="#33405c">'+pct+'</text></svg>';}
 function niceDate(d){if(!d)return '—';const m=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];const p=String(d).slice(0,10).split('-');if(p.length!==3)return d;return m[(+p[1])-1]+' '+(+p[2])+', '+p[0];}
@@ -4169,12 +4263,18 @@ function hapProperties(){
          "0 units" on every unstarted row — a figure, and wrong. */
       total_units:(rec&&rec.total_units)||(+String(any.units||'').replace(/[^0-9]/g,'')||0),
       unit_types:(rec&&rec.unit_types)||0,
-      completeness:rec?rec.completeness:0, updated_at:(rec&&rec.updated_at)||'',
+      /* THIS renewal's package, not the property's newest one. rec.completeness is
+         scoreOfPid, which scores the dominant cycle — so a row for a renewal
+         nobody has started showed a percentage earned by LAST year's package, and
+         read as being partway through work not yet begun. act.cid is the package
+         this row is about, or nothing, and nothing scores zero. */
+      completeness:(act&&act.cid&&mpdb.cycleScore)?(mpdb.cycleScore(act.cid).pct/100):0,
+      updated_at:(rec&&rec.updated_at)||'',
       /* Carried, not recomputed. Without these two the profile chip and the
          card's hover caption were dead on every scheduled property — the chip
          showed on records with no tracker code and nowhere else, which read as
          "only uncoded records have gaps". */
-      profile:(rec&&rec.profile)||null, caption:(rec&&rec.caption)||'',
+      caption:(rec&&rec.caption)||'',
       /* The pill shows an unrecognised increase type verbatim rather than going
          blank: "displayed verbatim, never silently dropped" applies to the pill
          as much as to the button. */
@@ -4982,9 +5082,16 @@ function cyclePane(c){
    The reason sentence is shown as prose here, not only as a title: the card has
    no room for it, the profile does, and an unrecognised increase type or an
    expiring contract is exactly the thing that needs reading properly. */
+/* The schedule's answer to "what is next here" — but ONLY while nothing here
+   answers it already. Once a package exists for that renewal the page was printing
+   the same fact twice, a strip saying RCS effective October 1 with a View button
+   over a card saying RCS effective October 1 with the figures in it, and it read as
+   two RCSs. There is one package per programme per date; there is one box. The card
+   takes the deadline line and the strip stands down. */
 function nextUpHtml(){
   const p=hapForPid(activePid);if(!p||!p.action||p.action.kind==='none')return '';
   const a=p.action,lab=actionLabel(a),why=actionReason(a);
+  if(a.cid&&(mpdb.listCycles(activePid)||[]).some(c=>c.id===a.cid))return '';
   /* One fact line, then the deadline underneath it — and the deadline line only
      where there IS a renewal to count down to. Printing both for an expiring
      contract said "Contract expires March 17, 2025" twice, one line under the
@@ -5008,8 +5115,11 @@ function nextUpHtml(){
    is what was filed. So: the current renewal keeps its card and its figures, and
    each earlier package collapses to one line — what it was, when it took effect,
    and whether it went out. */
-function cyclesHtml(hasAction){
+function cyclesHtml(hasAction,hap){
   const cs=mpdb.listCycles(activePid);
+  /* The one the schedule is pointing at. It shows the deadline the strip used to
+     show, because it is now the only thing on the page saying so. */
+  const _due=(hap&&hap.action&&hap.action.cid)?hap.action.cid:null;
   /* Two independent questions, and conflating them labelled a fourth package
      "Start a package". How LOUD the control is answers "is there another way in?"
      — quiet when the schedule offers one above, primary when it does not. What it
@@ -5024,19 +5134,36 @@ function cyclesHtml(hasAction){
   const eff=c=>String((c&&c.effective_date)||'');
   const cur=eff(dom)?cs.filter(c=>eff(c)===eff(dom)):[dom];
   const past=cs.filter(c=>cur.indexOf(c)<0);
-  const gen=c=>!!(c.generated&&c.generated.at);
-  const stChip=c=>'<span class="cy-st'+(gen(c)?' ok':'')+'">'+(gen(c)?'Generated':'Draft')+'</span>';
+  /* Draft/Generated says only whether a button has been pressed. What a reader
+     wants is how far along the package is and what is holding it — which score.js
+     has computed all along, for the property ring, and which the cards had no way
+     to ask for one package at a time. Matt: "the generated tag tells you NOTHING.
+     what happened to that intensive code session creating the ultimate scoring
+     system for package completion?" */
+  const scOf=c=>{try{return mpdb.cycleScore?mpdb.cycleScore(c.id):null;}catch(e){return null;}};
+  const stChip=(c,s)=>(s?('<span class="cy-st'+(s.pct>=100?' ok':'')+'">'+s.pct+'%</span>'):'');
+  const capOf=s=>{const t=(s&&window.RCSScore&&window.RCSScore.scoreCaption)?window.RCSScore.scoreCaption(s):'';
+    return t?('<div class="cy-cap">'+esc(t)+'</div>'):'';};
   const card=c=>'<div class="cycard'+(c.dominant?' dom':'')+'" data-cyopen="'+c.id+'">'
     +'<div class="cy-h">'+progChips(c.programs)
     +'<b class="cy-t">'+esc(c.effective_date?('Effective '+fmtDateLong(c.effective_date)):(c.label||'No date'))+'</b>'
     +(c.dominant?'<span class="cy-dom">Current</span>':'')
-    +stChip(c)+'</div>'
+    +stChip(c,scOf(c))+'</div>'
+    +((_due&&c.id===_due&&hap)?dueLine(hap):'')
+    +capOf(scOf(c))
     +cyclePane(c)
-    +'<div class="cy-act"><button class="txtbtn del" data-cydel="'+c.id+'">Delete</button></div></div>';
+    /* The action comes INTO the card with the deadline. Merging the strip away
+       without it would have left the one box the schedule points at as the only
+       thing on the page with nothing to press. Same id, so the same wiring reaches
+       the same handler the strip's button used. */
+    +'<div class="cy-act"><button class="txtbtn del" data-cydel="'+c.id+'">Delete</button>'
+    +((_due&&c.id===_due&&hap&&actionLabel(hap.action))
+      ?('<button class="btn p" id="nuGo">'+esc(actionLabel(hap.action))+'</button>'):'')
+    +'</div></div>';
   const row=c=>'<div class="cyrow" data-cyopen="'+c.id+'">'
     +'<span class="cyr-p">'+esc(c.programs.map(x=>PROG_NAMES[x]||String(x).toUpperCase()).join(' + '))+'</span>'
     +'<span class="cyr-e">'+esc(c.effective_date?fmtDateLong(c.effective_date):'No date')+'</span>'
-    +stChip(c)
+    +stChip(c,scOf(c))
     +'<button class="txtbtn del" data-cydel="'+c.id+'">Delete</button></div>';
   return cur.map(card).join('')
     +(past.length?('<div class="cyhist"><div class="cyh-t">Earlier</div>'
@@ -5047,29 +5174,11 @@ function wireCycles(){
   /* Wrapped, not passed by reference: newCycleDialog now takes a prefill, and a
      bare handler would hand it the click event. */
   const b=el('bNewCycle');if(b)b.onclick=()=>newCycleDialog();
-  const nu=el('nuGo');if(nu)nu.onclick=()=>{const h=hapForPid(activePid);if(h)primaryActionClick(h.code);};
+  const nu=el('nuGo');if(nu)nu.onclick=(e)=>{if(e&&e.stopPropagation)e.stopPropagation();
+    const h=hapForPid(activePid);if(h)primaryActionClick(h.code);};
   document.querySelectorAll('[data-cyopen]').forEach(x=>x.onclick=()=>openCycleForm(x.getAttribute('data-cyopen')));
   document.querySelectorAll('[data-cydel]').forEach(x=>x.onclick=(e)=>{e.stopPropagation();const id=x.getAttribute('data-cydel');
     dialogConfirm('Delete package','This permanently removes the package and its saved data. The property record is untouched.','Delete',true,async()=>{try{await mpdb.deleteCycle(id);renderLauncher();}catch(e){saveFailedModal(e);}});});
-}
-function bootstrapFirstCycle(p){
-  // migration: an existing single-record property becomes its own cycle #1
-  window.__cyBoot=window.__cyBoot||{};
-  if(mpdb.listCycles(activePid).length||window.__cyBoot[activePid])return;
-  if(!(p&&p.total_units>0))return;   // real unit data = a record worth migrating; a fresh name-only property is not
-  window.__cyBoot[activePid]=1;
-  const m=mpdb.getFlat(activePid);
-  const eff=(m['rent_schedule.date_rents_effective']&&m['rent_schedule.date_rents_effective'].value)||'';
-  const yr=(String(eff).match(/(\d{4})/)||[])[1]||String(new Date().getFullYear());
-  const pid=activePid;
-  /* This runs ONCE per property to turn an existing record into package #1. If a
-     package already holds rcs at that date the migration has nothing to do, and
-     saying "save failed" about a no-op would be alarming and wrong. */
-  Promise.resolve(mpdb.createCycle(pid,{full:true,programs:['rcs'],label:yr,effective_date:eff}))
-    .then(()=>{if(activePid===pid)renderLauncher();})
-    .catch(e=>{
-      if(e&&e.code==='DUP_PACKAGE_PROGRAM'){if(activePid===pid)renderLauncher();return;}
-      saveFailedModal(e);});
 }
 /* `pre` is the tracker's answer, handed in by the card's Start button:
    {program, effective, type, deadline}. It PRE-FILLS this dialog rather than
@@ -5097,6 +5206,16 @@ function newCycleDialog(pre){
      the published factor, never both, and the old dialog enforced that by
      quietly unticking whichever you had ticked first — a rule you could only
      learn by watching it happen to you. */
+  /* Started FROM the schedule: it has already answered both questions, and the
+     answer is not this app's to overrule. Started from "+ Start a package" it
+     has answered nothing, and everything stays editable — which is the door a
+     property the schedule does not carry, and a standalone utility-allowance
+     revision, both have to come through. UAF is live either way: the tracker's
+     Next UA Baseline column is empty on all 2853 rows, so it has no opinion. */
+  const _fixProg=(pre&&pre.program)||'',_fixEff=(pre&&pre.effective)||'';
+  const _fixed=!!(_fixProg&&_fixEff);
+  const _WHY_PROG='The renewal schedule says this is '+(_fixProg==='ocaf'?'an OCAF':'an RCS')+' year. Change it in the schedule to revise it.';
+  const _WHY_EFF='The date the renewal schedule carries. Once this package is created it keeps this date, whatever the schedule says later.';
   const card=(id,tag,name,sub)=>'<label class="cypg" for="'+id+'">'
     +'<input type="radio" name="cyprog" id="'+id+'">'
     +'<span class="cyc-tag">'+tag+'</span>'
@@ -5104,27 +5223,35 @@ function newCycleDialog(pre){
     +'<span class="cyc-s">'+sub+'</span></label>';
   modal('<div class="dlg-t">Start new package</div>'
     +'<div class="dlg-sub">'+esc((((mpdb.listProperties()||[]).find(p=>p.id===activePid))||{}).name||'')+(effPh?(' \u00b7 the next one after '+esc(String(effPh).slice(-4))):'')+'</div>'
-    +((pre&&pre.effective)?'<div class="lh-note" style="margin:-4px 0 12px">'+esc('The renewal schedule has this as an '+(pre.type||'')+' effective '+fmtDateLong(pre.effective)+'.')+'</div>':'')
+    +((_fixed||!(pre&&pre.effective))?'':'<div class="lh-note" style="margin:-4px 0 12px">'+esc('The renewal schedule has this as an '+(pre.type||'')+' effective '+fmtDateLong(pre.effective)+'.')+'</div>')
     +'<div class="dlg-field"><label>How are the rents being set?</label>'
-    +'<div class="cypgs">'+card('cyRCS','RCS','Market reset','A rent comparability study sets the rents.')
-                            +card('cyOCAF','OCAF','Factor adjustment','HUD\u2019s published factor sets the rents.')+'</div></div>'
+    +(_fixed?lockedLine((_fixProg==='ocaf'?'OCAF \u2014 HUD\u2019s published factor sets the rents':'RCS \u2014 a rent comparability study sets the rents'),_WHY_PROG)
+      :('<div class="cypgs">'+card('cyRCS','RCS','Market reset','A rent comparability study sets the rents.')
+                            +card('cyOCAF','OCAF','Factor adjustment','HUD\u2019s published factor sets the rents.')+'</div>'))+'</div>'
     +'<div class="dlg-field"><label class="cyaddl">Also in this package</label>'
     +'<label class="cyopt cyadd"><input type="checkbox" id="cyUAF"> <span><b>UAF</b> \u2014 revise the utility allowances</span></label></div>'
-    +'<div class="dlg-field"><label>Rents effective</label><input id="cyEff" autocomplete="off" value="'+esc((pre&&pre.effective)?fmtDate(pre.effective):effPh)+'" placeholder="'+esc(effPh||'mm/dd/yyyy')+'"></div>'
+    +'<div class="dlg-field"><label>Rents effective</label>'
+    +(_fixed?lockedLine(fmtDateLong(_fixEff),_WHY_EFF)
+      :('<input id="cyEff" autocomplete="off" value="'+esc((pre&&pre.effective)?fmtDate(pre.effective):effPh)+'" placeholder="'+esc(effPh||'mm/dd/yyyy')+'">'))+'</div>'
     +'<div class="autherr" id="cyErr"></div>'
     +'<div class="dlg-row"><button class="btn" id="dlgCancel">Cancel</button><span class="dlg-sp"></span><button class="btn p" id="dlgOk">Create</button></div>');
   const rcs=el('cyRCS'),ocaf=el('cyOCAF'),uaf=el('cyUAF'),err=el('cyErr');
   if(pre&&pre.program==='ocaf'&&ocaf)ocaf.checked=true;
   else if(pre&&pre.program==='rcs'&&rcs)rcs.checked=true;
-  const ce=el('cyEff');if(ce)ce.addEventListener('input',()=>{ce.value=fmtDateInput(ce.value);});
+  const ce=el('cyEff');if(ce&&ce.addEventListener)ce.addEventListener('input',()=>{ce.value=fmtDateInput(ce.value);});
   _dlgEnter=()=>{const ok=el('dlgOk');if(ok)ok.click();};
   /* One radio group. The exclusion is the control's own, not a pair of
      handlers reaching across to each other. */
   el('dlgCancel').onclick=closeModal;
   el('dlgOk').onclick=async()=>{
-    const programs=[];if(rcs.checked)programs.push('rcs');if(ocaf.checked)programs.push('ocaf');if(uaf.checked)programs.push('uaf');
-    if(!rcs.checked&&!ocaf.checked){err.textContent='Choose how the rents are being set \u2014 a market reset or a factor adjustment.';return;}
-    const eff=fmtDateInput((el('cyEff').value||'').trim())||effPh;   // left blank, the package takes the date shown in gray: a year on from the last one
+    const programs=[];
+    if(_fixed)programs.push(_fixProg);
+    else{if(rcs.checked)programs.push('rcs');if(ocaf.checked)programs.push('ocaf');}
+    if(uaf.checked)programs.push('uaf');
+    if(!programs.length){err.textContent='Choose how the rents are being set \u2014 a market reset or a factor adjustment.';return;}
+    /* No cyEff input exists when the schedule fixed the date, so read the fact,
+       not the control that would have held it. */
+    const eff=_fixed?_fixEff:(fmtDateInput((el('cyEff').value||'').trim())||effPh);   // left blank, the package takes the date shown in gray: a year on from the last one
     const label=(eff.match(/(\d{4})/)||[])[1]||String(new Date().getFullYear());
     closeModal();
     try{const r=await mpdb.createCycle(activePid,{programs,label,effective_date:eff});renderLauncher();await openCycleForm(r.cid);_cyFresh=r.cid;}
@@ -5160,7 +5287,9 @@ async function openCycleForm(cid){
      nothing on it is retired. deriveUnits() first: every unit key a record names
      is read through UNITS. */
   if(!fillSurvived(_rsFill,rsTag))_rsFill=null;
-  if(!fillSurvived(_rcsFill,rcsTag))_rcsFill=null;snapForm();renderFormHeader();renderBody();
+  if(!fillSurvived(_rcsFill,rcsTag))_rcsFill=null;
+  applyRaLocked();
+  snapForm();renderFormHeader();renderBody();
   show('Form');window.scrollTo(0,0);
   if(cy&&cy.dominant&&cy.programs.indexOf('rcs')>=0)ensureHudSafmr({});   // auto-pull: dominant RCS cycles only
   if(cy&&cy.programs.indexOf('ocaf')>=0)pullOcafFactor({auto:true});      // year-verified; empty fields only
@@ -5169,12 +5298,18 @@ async function openCycleForm(cid){
 function renderLauncher(){
   const p=mpdb.listProperties().find(x=>x.id===activePid);if(!p){openMenu();return;}
   const _al=(p.alias||'').trim();const _showAl=_al&&_al.toLowerCase()!==String(p.name||'').trim().toLowerCase();
-  const pct=Math.round(p.completeness*100);const a=mpdb.propertyAnalysis(activePid);const lh=mpdb.getLetterhead(activePid);
-  const _domCy=mpdb.listCycles(activePid).find(c=>c.dominant);
-  const rcsLine=(_domCy&&_domCy.programs.indexOf('rcs')<0)?(_domCy.programs.map(x=>PROG_NAMES[x]||x).join(' + ')+' package &middot; see the package card below'):((a.total_units&&a.proposed_gpr)?((a.pass?'PASS':'OVER')+' &middot; '+sPct(a.pct)+' &middot; '+money(a.proposed_gpr)+'/mo'):(a.total_units?'rents not entered yet':'set up units &amp; rents'));
+  /* rcsLine, propertyAnalysis and pct went with the single-profile page they were
+     written for: one property, one summary of its one package. The packages list
+     below says it per package now, and that line had been computed on every render
+     and printed nowhere for some time. */
+  const lh=mpdb.getLetterhead(activePid);
   const _meta=[(p.fha&&p.fha!=='\u2014')?esc(p.fha):'',p.city_state?esc(p.city_state):'',
     p.total_units?(fmtNum(p.total_units)+' units'):''].filter(Boolean).join(' &middot; ');
+  const _hap=hapForPid(activePid);
   const _nu=nextUpHtml();
+  /* "Is there another way in above this?" — the strip is one, and so is a package
+     card that the schedule is pointing at. Either way the start control stays quiet. */
+  const _entry=!!_nu||!!(_hap&&_hap.action&&_hap.action.cid);
   const lhIsPdf=String(lh.data||'').indexOf('data:application/pdf')===0;
   const lhSub=lh.data?(lhIsPdf?'PDF letterhead &middot; the tenant notice prints on it full-page':'Property letterhead &middot; reused on every package'):'<span style="color:#b4552d">Not print-ready &mdash; re-upload the letterhead (PDF, PNG or JPG) so it prints on the tenant notice</span>';
   const letter=lh.name
@@ -5187,21 +5322,28 @@ function renderLauncher(){
          line under the name and read as a rendering fault. */
       +(_meta?('<div class="lh-meta">'+_meta+'</div>'):'')
       +(p.entity?'<div class="lh-entity">'+esc(p.entity)+'</div>':'')+'</div>'
-      +'<div class="lh-right"><div class="lh-tools"><button class="txtbtn" id="pRename">Rename</button><span class="dotsep">&middot;</span><button class="txtbtn del" id="pDelete">Delete</button></div><div class="lh-prof">'+(profileChip(p)||'<span class="pchip ok">Profile complete</span>')+'</div></div></div>'
+      +'<div class="lh-right"><div class="lh-tools"><button class="txtbtn" id="pRename">'+(isLocked('property.name')?'Tenant name':'Rename')+'</button><span class="dotsep">&middot;</span><button class="txtbtn del" id="pDelete">Delete</button></div></div></div>'
     +'<div class="lsec"><div class="lsec-t">Property letterhead</div>'+letter+'<div class="lh-note">The uploaded letterhead appears on the tenant notice. All other letterheads are built into the document templates.</div><input type="file" id="lhFile" accept="image/*,.pdf,application/pdf" style="display:none"></div>'
-    +'<div class="lsec"><div class="lsec-t">Packages</div>'+_nu+cyclesHtml(!!_nu)
+    +'<div class="lsec"><div class="lsec-t">Packages</div>'+_nu+cyclesHtml(_entry,_hap)
       +'<div class="cysoon">BBRA \u00b7 Budget-Based Rent Adjustment \u2014 not yet available</div></div>';
   wireCycles();
-  bootstrapFirstCycle(p);
   el('pRename').onclick=async()=>{
     // The tenant-facing name lives with the property, not the package, so it is
     // editable from here rather than only inside a form.
     let alias='';try{const fl=await mpdb.getFlat(activePid);alias=(fl&&fl['tenant.property_alias']&&fl['tenant.property_alias'].value)||'';}catch(e){}
+    const _hint='Optional \u2014 used on the tenant notice when residents know the property by another name.';
+    /* With the registry name locked there is one field left worth showing, so the
+       dialog becomes that field rather than a name box nobody may edit sitting
+       above it. Same write either way. */
+    if(isLocked('property.name'))
+      return dialogInput('Tenant-facing name','Also known to tenants as',alias,'Save',async (al)=>{
+        try{await mpdb.saveFlat(activePid,{'tenant.property_alias':{value:al,source:'database'}});
+          renderLauncher();}catch(e){saveFailedModal(e);}});
     dialogInput('Rename property','Property name',p.name,'Save',async (nm,al)=>{if(!nm)return;
       try{await mpdb.renameProperty(activePid,nm);
         if(al!==undefined&&al!==alias)await mpdb.saveFlat(activePid,{'tenant.property_alias':{value:al,source:'database'}});
         renderLauncher();}catch(e){saveFailedModal(e);}},
-      {label:'Also known to tenants as',value:alias,hint:'Optional \u2014 used on the tenant notice when residents know the property by another name.'});};
+      {label:'Also known to tenants as',value:alias,hint:_hint});};
   el('pDelete').onclick=()=>dialogConfirm('Delete property','This permanently removes <b>'+esc(p.name)+'</b> and its stored record.','Delete',true,async()=>{try{await mpdb.deleteProperty(activePid);openMenu();}catch(e){saveFailedModal(e);}});
   wireLetterhead();
 }
@@ -5288,7 +5430,7 @@ function requestSave(afterSave){
    literal 17, because a list that grows and a loop that does not is how the
    last item of a form goes quietly unset. */
 function applyChecklistDefaults(){if(Object.keys(DBSNAP).some(k=>/^check\.\d+$/.test(k)))return;for(let i=0;i<CHECKLIST_FLAT.length;i++)form=store.editForm(form,'check.'+i,checkSeed(i));}
-async function openForm(program){activeProgram=program||'RCS';_undoStack=[];_undoNR=[];_undoLI=[];_undoPR=[];_undoChain=[];_rcsUpload=null;_rsUpload=null;_rsArm=false;_rsFill=null;_rcsFill=null;await mpdb.setActive(activePid);await refreshSnap();form=await store.fillForm();fixSavedToggles();applyChecklistDefaults();deriveUnits();snapForm();renderFormHeader();renderBody();show('Form');window.scrollTo(0,0);ensureHudSafmr({});}
+async function openForm(program){activeProgram=program||'RCS';_undoStack=[];_undoNR=[];_undoLI=[];_undoPR=[];_undoChain=[];_rcsUpload=null;_rsUpload=null;_rsArm=false;_rsFill=null;_rcsFill=null;await mpdb.setActive(activePid);await refreshSnap();form=await store.fillForm();fixSavedToggles();applyChecklistDefaults();deriveUnits();applyRaLocked();snapForm();renderFormHeader();renderBody();show('Form');window.scrollTo(0,0);ensureHudSafmr({});}
 function renderFormHeader(){
   if(el('hdrProp'))el('hdrProp').textContent=(get('property.name')||'(unnamed property)');
   if(el('hdrProgram'))el('hdrProgram').textContent=activeProgram+' Package';
@@ -5973,6 +6115,17 @@ async function boot(){
   openMenu();
 }
 const SELFTEST=(typeof location!=='undefined')&&/[?&]selftest=1(&|$)/.test(location.search||'');
+/* ?ra=1 — SEE the locked cells on this build.
+
+   window.RASource is injected by Kinley's port and by nothing else, so on the
+   Supabase build every RA-locked cell renders exactly as it always did and the
+   whole feature is invisible to the person who asked for it. This hatch stands
+   the seam up locally so the interaction can be looked at.
+
+   It invents NOTHING. It answers with the values this property already holds, so
+   the only thing that changes is that the two cells stop being editable. A demo
+   that made up a name would be showing something the app will never do. */
+const RADEMO=(typeof location!=='undefined')&&/[?&]ra=1(&|$)/.test(location.search||'');
 /* A property worth testing against.
 
    The stub record used to be a bare name, and the first-run migration rightly
@@ -6131,7 +6284,8 @@ const __API={LABEL_HINTS,rsParseUnitType,rsNum,ocrMapPages:(p)=>ocrMapPages(p),o
   /* The selftest property carries no unit data, so the first-run migration
      rightly refuses to invent a package for it — and without a package there
      are no program pills to drive. Make one. */
-  __newCycle:(o)=>mpdb.createCycle(activePid,Object.assign({full:true,programs:['rcs'],label:'TEST'},o||{})),
+  __isLocked:(cell)=>isLocked(cell),__raLockedKey:(k)=>raLockedKey(k),
+ __newCycle:(o)=>mpdb.createCycle(activePid,Object.assign({full:true,programs:['rcs'],label:'TEST'},o||{})),
   __progsOf:(cid)=>{const c=(mpdb?mpdb.listCycles(activePid):[]).find(x=>x.id===cid);return c?c.programs.slice():[];},
 /* The handler at #upRcs sets _rcsUpload, clears the fill record and calls
      rcsRemember(); a door that skipped the last two left every suite testing a
@@ -6199,3 +6353,17 @@ __rcsFill:()=>rcsFillFromParsed(),/* The same door for the rent schedule. Fillin
   __fmt:{num:fmtNum,phone:fmtPhone,email:fmtEmail,date:fmtDate}};
 if(typeof module!=='undefined')module.exports=__API;
 if(SELFTEST)window.__t=__API;   // browser gets the identical surface, flag-gated
+if(RADEMO&&typeof window!=='undefined'&&!window.RASource)window.RASource={
+  listProperties:()=>[],
+  value:(k)=>{
+    try{
+      if(k==='property.name')return (form&&form['property.name']&&form['property.name'].value)
+        ||((mpdb&&(mpdb.listProperties()||[]).find(p=>p.id===activePid)||{}).name)||null;
+      if(k==='rent_schedule.date_rents_effective'){
+        const c=mpdb&&activeCid&&(mpdb.listCycles(activePid)||[]).find(x=>x.id===activeCid);
+        return (c&&c.effective_date)||null;
+      }
+    }catch(e){}
+    return null;
+  },
+};

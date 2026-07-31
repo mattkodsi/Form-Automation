@@ -5,8 +5,10 @@
    shows it, and MIN_CHECKS catches a run that dies partway — a short count is
    a failure, not a pass. Adding checks? Raise MIN_CHECKS. */
 const { makeDb, memoryAdapter, isPerCycleKey, migrate, computeAnalysis, computeSalutation, CROSSWALK } = require('./db.js');
-const MIN_CHECKS = 190;   // 2026-07-30 merge: union of both branches, counted off a real run (was ours 169 / main 186)
+const MIN_CHECKS = 200;   // 2026-07-30 merge: union of both branches, counted off a real run (was ours 169 / main 186)
                         //;   // 2026-07-30: +4 current rents and executed UA carry on no programme
+                        //;   // 2026-07-30: +2 the appraiser carries, a non-revenue contract rent does not
+                        //;   // 2026-07-30: +8 Related Affordable outranks the schedule for the effective date
 let fails = 0, n = 0, verdict = null;
 const BAR = '═'.repeat(68);
 function fail(msg, err) {
@@ -68,6 +70,7 @@ function jsonAdapter() { let s = null; return { get: async () => (s ? JSON.parse
   truthy('percycle: appraiser', raw.percycle['appr.firm']);
   ok('isPerCycleKey rent', isPerCycleKey('units.3.proposed'), true);
   ok('isPerCycleKey num_units durable', isPerCycleKey('units.3.num_units'), false);
+  ok('isPerCycleKey the RA effective date', isPerCycleKey('rent_schedule.date_eff_ra'), true);
 
   console.log('\n─ 3 · GATES NUMBERS (executed-RS accurate, UA $31) ─');
   let form = db.loadForm(gates); let a = computeAnalysis(form);
@@ -154,6 +157,9 @@ function jsonAdapter() { let s = null; return { get: async () => (s ? JSON.parse
   ok('the menu card counts units from the dominant cycle', cdb.listProperties().find(p => p.id === cpid).total_units, 51);
 
   console.log('\n─ 8b · WHAT CARRIES INTO A NEW CYCLE ─');
+  await cdb.saveFlatCycle(cid, { 'nonrev.0.br': { value: '2BR', source: 'database' },
+    'nonrev.0.num_units': { value: '1', source: 'database' },
+    'nonrev.0.rent': { value: '1450', source: 'database' } });
   const { cid: cid2 } = await cdb.createCycle(cpid, { programs: ['rcs'], effective_date: '2027-09-01' });
   const c2 = cdb.getFlatCycle(cid2);
   /* What took effect is whatever the CA returned after the owner submitted, and
@@ -171,7 +177,12 @@ function jsonAdapter() { let s = null; return { get: async () => (s ? JSON.parse
   ok('nor the owner\'s checklist, which is signed per package', c2['check.0'], undefined);
   ok('unit mix carries forward', c2['units.0.num_units'].value, '51');
   ok('last cycle\'s PROPOSED rents do not', c2['units.0.proposed'], undefined);
-  ok('the appraiser does not', c2['appr.firm'], undefined);
+  /* The appraiser is the one name we DO carry. The same firm usually comes back,
+     and a new one is a five-field correction; a stale name is visible on the
+     transmittal letter in a way a stale rent never is on a schedule. (2026-07-30.) */
+  ok('the appraiser carries, unlike every figure', c2['appr.firm'].value, 'Belfry Valuation');
+  ok('a non-revenue contract rent does not', c2['nonrev.0.rent'], undefined);
+  ok('though the row it belongs to survives', c2['nonrev.0.br'].value, '2BR');
   ok('the date chosen at creation wins', c2['rent_schedule.date_eff_custom'].value, '2027-09-01');
   ok('and is marked custom', c2['rent_schedule.date_eff_source'].value, 'custom');
   ok('identity is stamped from the property record', c2['property.name'].value, 'Gates Manor Apartments');
@@ -307,6 +318,33 @@ function jsonAdapter() { let s = null; return { get: async () => (s ? JSON.parse
   await cdb.deleteDir(d1);
   ok('delete removes it', cdb.listDir('appraiser').length, 1);
   ok('other kinds are untouched', cdb.listDir('ca').length, 1);
+
+  /* ─ 8e2 · RELATED AFFORDABLE OUTRANKS THE SCHEDULE ─
+     The effective date had two answers: a year after the executed RS, or one
+     somebody typed. Kinley's database is a third, and it is the one that
+     decides — so it is stored in its own key rather than laundered through
+     date_eff_custom, which means "the user typed this" and was the honest
+     complaint the start-a-package dialog existed to answer. */
+  console.log('\n─ 8e2 · RELATED AFFORDABLE OUTRANKS THE SCHEDULE ─');
+  const rapid = (await cdb.createProperty('Rowan Court')).pid;
+  const { cid: racid } = await cdb.createCycle(rapid, { programs: ['rcs'], label: '2026', effective_date: '2026-03-01' });
+  ok('the package starts on the date it was created with', cdb.listCycles(rapid)[0].effective_date, '2026-03-01');
+  await cdb.saveFlatCycle(racid, { 'rent_schedule.date_eff_rs': { value: '2026-05-01' },
+    'rent_schedule.date_eff_source': { value: 'rs' } });
+  ok('the schedule moves it, as it always has', cdb.listCycles(rapid)[0].effective_date, '2026-05-01');
+  await cdb.saveFlatCycle(racid, { 'rent_schedule.date_eff_ra': { value: '2026-10-01' } });
+  ok('and Related Affordable outranks the schedule', cdb.listCycles(rapid)[0].effective_date, '2026-10-01');
+  ok('the year label follows it too', cdb.listCycles(rapid)[0].label, '2026');
+  /* The point of storing it rather than asking the seam again: a package under
+     way does not move because a database row changed after it was started. */
+  await cdb.saveFlatCycle(racid, { 'rent_schedule.date_eff_rs': { value: '2027-01-01' } });
+  ok('a later schedule date does not move a package RA has answered for',
+    cdb.listCycles(rapid)[0].effective_date, '2026-10-01');
+  const { cid: racid2 } = await cdb.createCycle(rapid, { programs: ['ocaf'], label: '2027', effective_date: '2027-10-01' });
+  ok('and it never carries into the next package',
+    cdb.getFlatCycle(racid2)['rent_schedule.date_eff_ra'], undefined);
+  ok('so that package keeps the date it was created with',
+    cdb.listCycles(rapid).find(c => c.id === racid2).effective_date, '2027-10-01');
 
   console.log('\n─ 8f · CYCLES SURVIVE A REOPEN ─');
   const cadapter = jsonAdapter();

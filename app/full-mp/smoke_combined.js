@@ -406,18 +406,27 @@ const T=(label,v)=>eq(label,!!v,true);
   T('an uncoded property gets no next-renewal strip', !/NEXT RENEWAL/.test(lb1));
   app.openLauncher(rpid);
   const lbT=els.launcherBody.innerHTML;
-  T('a tracker property gets one',        /NEXT RENEWAL/.test(lbT));
-  T('naming the program and the date',    /OCAF · effective/.test(lbT));
-  T('and offering the same action the card does', /id="nuGo"/.test(lbT));
+  /* And a tracker property whose renewal ALREADY HAS a package gets no strip
+     either — the card is that renewal. The page was printing the same fact twice,
+     a strip saying RCS effective October 1 over a card saying RCS effective
+     October 1, and it read as two RCSs. The deadline and the action move into the
+     card; there is one box per renewal because there is one package per programme
+     per date. */
+  T('a tracker property whose renewal has a package gets no strip either',
+    !/NEXT RENEWAL/.test(lbT));
+  T('the card carries the deadline the strip used to',   /pc-due/.test(lbT));
+  T('and the action, so the one box still has something to press', /id="nuGo"/.test(lbT));
   T('nothing undefined leaked into it',   !/undefined/.test(lbT));
+  /* A package is created because someone asked for one. Opening a property
+     used to create one by itself — leftover migration code that turned an old
+     single-record property into package #1, and went on firing years after
+     that migration was done. Removed 2026-07-30; a package now comes only from
+     the Start button, which is what this stands in for. */
+  await db.createCycle(pid,{full:true,programs:['rcs'],label:'2026',effective_date:'2026-09-01'});
   app.openLauncher(pid);
-
-  /* bootstrapFirstCycle migrates an existing single-record property into its
-     own package #1, asynchronously, then re-renders. That re-render is the
-     state a returning user actually sees, so it is the one worth asserting. */
   for(let i=0;i<8;i++) await new Promise(r=>setTimeout(r,0));
   const lb2=els.launcherBody.innerHTML;
-  T('the existing record is migrated into package #1', /class="cycard/.test(lb2));
+  T('the package the property record fed renders as a card', /class="cycard/.test(lb2));
   T('that package is marked as the current one',       /cy-dom/.test(lb2));
   T('it is labelled by the date it takes effect',      /Effective September 1, 2026/.test(lb2));
   T('the affordability check renders inside the card', /AFFORDABILITY CHECK/.test(lb2));

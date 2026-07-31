@@ -35,7 +35,7 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=539;   // 2026-07-30 merge: union of both branches, counted off a real run (was ours 435 / main 399)
+const MIN_CHECKS=573;   // 2026-07-31: +8 the project-name box carries two names   // 2026-07-30: +19 a locked cell is not a control, +4 the two doors into a package   // 2026-07-30 merge: union of both branches, counted off a real run (was ours 435 / main 399)
                         //;   // 2026-07-30 merge: the union of both branches, counted off a real run.
                         // ours: +81 for the section rail — the indicator's choice of section swept
                         //   across the whole document, the jump landing clear of a #ccbar that is now
@@ -2307,27 +2307,53 @@ const FULL=process.argv.includes('--full');
 
       await c.eval('document.querySelector(\'[data-pact="ST001"]\').click();return 1');
       await sleep(500);
-      const dlg=await c.eval('return {open:document.getElementById("scrim").classList.contains("open"),'
-        +'ocaf:!!(document.getElementById("cyOCAF")||{}).checked,'
-        +'rcs:!!(document.getElementById("cyRCS")||{}).checked,'
-        +'uaf:!!(document.getElementById("cyUAF")||{}).checked,'
-        +'eff:(document.getElementById("cyEff")||{}).value||"",'
-        +'note:(document.querySelector("#dialog .lh-note")||{}).textContent||""};');
+      const dlg=await c.eval(`return {open:document.getElementById("scrim").classList.contains("open"),
+        radios:!!document.getElementById("cyRCS")||!!document.getElementById("cyOCAF"),
+        dateInput:!!document.getElementById("cyEff"),
+        uafBox:!!document.getElementById("cyUAF"),
+        uaf:!!(document.getElementById("cyUAF")||{}).checked,
+        locked:[...document.querySelectorAll("#dialog .fbox.locked .lockv")].map(x=>x.textContent),
+        titles:[...document.querySelectorAll("#dialog .fbox.locked")].map(x=>x.getAttribute("title")||"")};`);
       T('pressing Start opens the new-package dialog',dlg.open);
-      /* Pre-filled, not silent. createCycle records an effective date as
-         date_eff_source='custom' — "the user typed this" — so starting silently
-         would have the app assert a hand-entered date nobody ever saw. */
-      T('with the tracker\'s program pre-selected',dlg.ocaf&&!dlg.rcs);
-      eq('and its date pre-filled and visible',dlg.eff,'01/01/2030');
-      T('and the schedule named as where that came from',/renewal schedule/i.test(dlg.note));
-      /* The tracker's Next UA Baseline column is empty on all 2853 rows, so it
-         has no opinion about utility allowances and we do not invent one. */
-      T('UAF is not pre-ticked — the tracker says nothing about it',!dlg.uaf);
+      /* It used to PRE-FILL both answers and let you overrule them. It states
+         them now: the schedule decides when a renewal is due and what it is,
+         and two systems that both own one fact have no arbiter when they
+         disagree. The dialog is still a confirming click, not a silent create —
+         createCycle would otherwise record the date as date_eff_source='custom',
+         which means "the user typed this" about a value nobody ever saw. */
+      eq('the programme is stated, not offered',dlg.locked[0],'OCAF — HUD’s published factor sets the rents');
+      eq('and so is the date',dlg.locked[1],'January 1, 2030');
+      T('neither is a control any more',!dlg.radios&&!dlg.dateInput);
+      T('and each says where to change it',/renewal schedule/i.test(dlg.titles[0]||''));
+      /* The date the package is created with is the date it KEEPS. A schedule
+         that moves afterwards does not drag a submission along behind it. */
+      T('the date says it is fixed from here on',/keeps this date/i.test(dlg.titles[1]||''));
+      /* UAF stays a live choice: the tracker's Next UA Baseline column is empty
+         on all 2853 rows, so it has no opinion about utility allowances and we
+         neither invent one nor take the option away. */
+      T('UAF is still a choice',dlg.uafBox);
+      T('and is not pre-ticked — the tracker says nothing about it',!dlg.uaf);
 
       await c.eval('document.getElementById("dlgOk").click();return 1');
       await sleep(700);
       const cy=await c.eval('return (window.__t.__cycles()||[]).map(c=>({e:c.effective_date,p:c.programs}))');
       eq('confirming creates the package the tracker described',cy,[{e:'2030-01-01',p:['ocaf']}]);
+
+      /* THE OTHER DOOR. "+ Start a package" answers to no schedule row, and it
+         is how a property the tracker does not carry — and a standalone utility
+         allowance revision, whose date is a judgement — get made at all. It must
+         stay fully editable, or locking the tracker's answer quietly removes the
+         only way to file anything the tracker did not predict. */
+      await c.eval('document.getElementById("bNewCycle").click();return 1');
+      await sleep(500);
+      const man=await c.eval(`return {radios:!!document.getElementById("cyRCS")&&!!document.getElementById("cyOCAF"),
+        dateInput:!!document.getElementById("cyEff"),
+        locked:document.querySelectorAll("#dialog .fbox.locked").length};`);
+      T('starting one by hand still offers both programmes',man.radios);
+      T('and a date you can type',man.dateInput);
+      eq('and locks nothing',man.locked,0);
+      await c.eval('document.getElementById("dlgCancel").click();return 1');
+      await sleep(300);
 
       /* Starting a package is not a deadline, so it moves nothing. The rail
          lifted the property out of "Needs you" the moment a draft existed,
@@ -2359,8 +2385,12 @@ const FULL=process.argv.includes('--full');
         return {strip:/NEXT RENEWAL/.test(document.getElementById('launcherBody').innerHTML),
                 label:(document.getElementById('nuGo')||{}).textContent||'',
                 newcy:!!document.getElementById('bNewCycle')};`);
-      T('the property profile shows the next renewal',nu.strip);
-      eq('and its button says what the card says',nu.label,'Continue 2030 OCAF');
+      /* No strip where the renewal already has a package — that card IS the
+         renewal, and the strip over it said the same thing a second time. The
+         button moves into the card and keeps saying what the gallery card says. */
+      T('no second box for a renewal that already has a package',!nu.strip);
+      eq('the card carries the action, saying what the gallery card says',
+        nu.label,'Continue 2030 OCAF');
       T('while "+ Start new package" survives beside it',nu.newcy);
     }
 
@@ -2632,10 +2662,18 @@ const FULL=process.argv.includes('--full');
       /* ---- rule 2, three ways in ---- */
       const arrivals=[];
       for(const [name,fn] of [
+        /* Dispatched WITHOUT awaiting each round trip. Awaiting one puts a hole
+           of a whole CDP turnaround between wheel events — fine on an idle
+           machine, 150ms+ when deliver.sh is running twelve suites — and a hole
+           longer than ARM_QUIET (120ms) is, by design, the end of one gesture
+           and the start of another. So the assertion below was really asking
+           whether the host was busy. It failed exactly once, under deliver, and
+           passed four standalone runs; the fault is the harness's, not the
+           page's. Real momentum arrives every 8-16ms and never pauses. */
         ['a decaying fling',async()=>{let d=-320;
-          for(let i=0;i<40;i++){await wheel(Math.min(-1,Math.round(d)));d*=0.9;await sleep(16);}}],
-        ['a steady wheel',async()=>{for(let i=0;i<22;i++){await wheel(-120);await sleep(30);}}],
-        ['a fast wheel',async()=>{for(let i=0;i<30;i++){await wheel(-120);await sleep(12);}}]]){
+          for(let i=0;i<40;i++){wheel(Math.min(-1,Math.round(d))).catch(()=>{});d*=0.9;await sleep(16);}}],
+        ['a steady wheel',async()=>{for(let i=0;i<22;i++){wheel(-120).catch(()=>{});await sleep(30);}}],
+        ['a fast wheel',async()=>{for(let i=0;i<30;i++){wheel(-120).catch(()=>{});await sleep(12);}}]]){
         await shut(2400);
         const b=await bobbed(fn);
         const r=await read();
@@ -2982,7 +3020,12 @@ const FULL=process.argv.includes('--full');
     eq('Tab finishes a section’s left column before it crosses to the right',crossedBack,[]);
     eq('and inside a column it only ever moves down the page',wentUp,[]);
 
-    const PROPERTY=['property.name','▾ property.name','tenant.property_alias',
+    /* 'tenant.property_alias' gained its own ▾ on 2026-07-31: HUD-92458 Part A
+       holds the tenant-facing name in the same box as the registry one, so the
+       cell has a source to declare and a stop to be tabbed to. A cell with a
+       source row the keyboard cannot reach would be the exact fault rule 7 is
+       about, so this list grows rather than the row being made unreachable. */
+    const PROPERTY=['property.name','▾ property.name','tenant.property_alias','▾ tenant.property_alias',
       'property.addr_street','property.addr_city','▾ property.addr_state','property.addr_zip',
       '▾ property.addr','owner.entity_name','▾ owner.entity_name','▾ owner.entity_type',
       'property.s8','▾ property.s8','property.fha','▾ property.fha'];
@@ -3024,9 +3067,13 @@ const FULL=process.argv.includes('--full');
        tells you less than a suite that says which line is red. */
     const con=await c.eval('const r=window.__k.ring();const s=r&&r.owner&&r.owner.shadow;'
       +'const m=s&&s.match(/rgba?\\([^)]*\\)/);if(!m)return [];const col=m[0];'
-      +'return ["#e8f0fe","#e9f5f2","#fbf1e6","#f6f7f9","#ffffff"].map(h=>{const n=parseInt(h.slice(1),16);'
+      +'return ["#eef1f5","#e9f5f2","#fbf1e6","#ffffff","#d8dde4"].map(h=>{const n=parseInt(h.slice(1),16);'
       +'return window.__k.contrast(col,"rgb("+[(n>>16)&255,(n>>8)&255,n&255].join(",")+")");});');
-    T('and reads against all five provenance backgrounds'
+    /* The five surfaces a ring can land on since the provenance fill became a
+       rule: the inset cell (--sunk, which is now what "on file" and "new" both
+       sit on), the two washes that survive, the card behind them, and the paper
+       behind that. */
+    T('and reads against every surface a cell can sit on'
       +(con.length?' ('+con.join(', ')+':1)':' \u2014 but there is no ring to measure'),
       con.length===5&&Math.min.apply(null,con)>=3);
 
@@ -3532,6 +3579,126 @@ const FULL=process.argv.includes('--full');
     T(`the launcher still renders (${views.l.body} chars)`,views.l.shown&&views.l.body>200);
     eq('and the rail did not leak into that either',views.l.stray,0);
     await c.send('Emulation.clearDeviceMetricsOverride');
+    await openForm();
+
+    /* ── RA-LOCKED CELLS ───────────────────────────────────────────────
+       Two systems cannot both own the effective date and the property name, so
+       the cells Kinley's database answers for stop being controls. This is the
+       only suite that can prove it: the cell is decided by a render branch and
+       a global that does not exist in node, and the form paints provenance
+       twice (renderBody / paintCell), so a test calling a render function
+       directly can pass while the page is visibly wrong. */
+    console.log('\n── a locked cell is not a control ─────────────────────');
+    await openForm();
+    const _lkOff=await c.eval(`const b=document.querySelector('[data-box="property.name"]');
+      return {input:!!(b&&b.querySelector('input[data-k="property.name"]')),
+              locked:!!(b&&b.classList&&b.classList.contains('locked')),
+              dateBox:!!document.querySelector('[data-box="rent_schedule.date_eff_custom"],[data-box="rent_schedule.date_eff_source"]')};`);
+    T('with no Related Affordable answer the name is an ordinary input',_lkOff.input&&!_lkOff.locked);
+    T('and the effective date keeps the cell it has always had',_lkOff.dateBox);
+    eq('a form nobody has touched is not dirty',await c.eval('return window.__t.isDirty()'),false);
+
+    await c.eval(`window.RASource={listProperties:()=>[],value:k=>
+      k==='property.name'?'Rowan Court':
+      k==='rent_schedule.date_rents_effective'?'10/01/2026':null};return 1`);
+    /* Reopen rather than re-render: the answer is WRITTEN INTO the form when a
+       form opens, which is the only moment it can be, and Kinley's port sets the
+       seam at boot so every form open sees it. A re-render would paint the
+       locked value over a record that never received it — the two disagreeing is
+       exactly the state this reopen exists to rule out. */
+    await openForm();
+    const _lkOn=await c.eval(`const b=document.querySelector('[data-box="property.name"]'),
+        d=document.querySelector('[data-box="rent_schedule.date_eff"]');
+      const foc=el=>el?el.querySelectorAll('input,select,textarea,button,[tabindex]').length:-1;
+      return {locked:!!(b&&b.classList.contains('locked')),text:b?b.textContent.trim():'',
+              title:(b&&b.getAttribute('title'))||'',focusables:foc(b),
+              dateLocked:!!(d&&d.classList.contains('locked')),dateText:d?d.textContent.trim():'',
+              dateFocusables:foc(d),
+              oldDateBox:!!document.querySelector('[data-box="rent_schedule.date_eff_custom"],[data-box="rent_schedule.date_eff_source"]')};`);
+    T('with one, the name cell is locked',_lkOn.locked);
+    eq('and shows what that database says',_lkOn.text,'Rowan Court');
+    T('with a note saying where to change it',/Related Affordable/.test(_lkOn.title));
+    /* Rule 7 says every KIND OF CELL answers Enter and Escape. A locked cell
+       answers neither because it is not a cell in that sense — it holds nothing
+       focusable at all, which is the invariant worth pinning: a control you can
+       reach but cannot use is the state that rule exists to prevent. */
+    eq('and nothing inside it can be reached by keyboard',_lkOn.focusables,0);
+    T('the effective date is locked the same way',_lkOn.dateLocked);
+    eq('showing the date that database gave, in words',_lkOn.dateText,'October 1, 2026');
+    eq('with nothing focusable there either',_lkOn.dateFocusables,0);
+    /* Not merely disabled: the rs/custom dropdown is GONE. A menu offering two
+       answers beside a value that answers to neither is a control that lies. */
+    T('and the source dropdown it replaces is not left behind',!_lkOn.oldDateBox);
+    eq('a locked value does not open the form dirty',await c.eval('return window.__t.isDirty()'),false);
+    eq('the name reaches the record, not just the screen',
+      await c.eval("return (window.__t.__form()['property.name']||{}).value"),'Rowan Court');
+    eq('and the date is stored as ISO, whatever shape it arrived in',
+      await c.eval("return (window.__t.__form()['rent_schedule.date_eff_ra']||{}).value"),'2026-10-01');
+    /* The refusal is on the WRITE (rule 17). Removing the input stops a person;
+       the rent schedule's parser is the one that actually sets these keys. */
+    eq('the parse path is refused the name',await c.eval("return window.__t.__raLockedKey('property.name')"),true);
+    eq('and the date',await c.eval("return window.__t.__raLockedKey('rent_schedule.date_eff_ra')"),true);
+    eq('while the tenant alias stays ours to edit',
+      await c.eval("return window.__t.__raLockedKey('tenant.property_alias')"),false);
+    T('and its input is still on the page',
+      await c.eval(`return !!document.querySelector('input[data-k="tenant.property_alias"]')`));
+    /* Put the seam back the way the rest of the suite expects to find it. */
+    await c.eval('delete window.RASource;return 1');
+    await c.eval('return window.__t.__renderBody()');
+    T('removing the answer returns the ordinary input',
+      await c.eval(`return !!document.querySelector('input[data-k="property.name"]')`));
+
+    /* ── ONE BOX ON THE FORM, TWO FACTS IN IT ──────────────────────────
+       HUD-92458 Part A has a single project-name box, and a property its
+       tenants know by another name is typed into it as
+       "Colonial Village/White Oak Townhomes". Splitting that was written into
+       the FILL and nowhere else, so pressing "Fill form from RS" put the halves
+       in the right two cells while the property name's own source row offered
+       the whole slashed string — and the alias had no source row at all, so the
+       only way to get the half the document plainly contains was to retype it.
+       One rule on one of the two paths that use it (rule 17). */
+    console.log('\n── the project-name box carries two names ─────────────');
+    await openForm();
+    await c.eval(`window.__t.__setRsParsed({scalars:{'property.name':'Colonial Village/White Oak Townhomes'},
+      units:[],nonrev:[],ns8:[],principals:[]});window.__t.__renderBody();return 1`);
+    await sleep(350);
+    const _sp=await c.eval(`const grab=k=>{const b=document.querySelector('[data-box="'+k+'"]');
+        if(!b)return ['(no cell)'];
+        return [...b.querySelectorAll('.uaopt.srcopt')].map(o=>
+          (o.classList.contains('srcdim')?'DIM':o.textContent.replace(/\\s+/g,' ').trim()));};
+      return {name:grab('property.name'),alias:grab('tenant.property_alias')};`);
+    eq('the name row offers the registry half alone',_sp.name[0],'Colonial VillageExecuted RS');
+    T('and the tenant name has a row of its own',_sp.alias.length>0);
+    eq('offering the other half',_sp.alias[0],'White Oak TownhomesExecuted RS');
+    /* Rule 1: declared whether or not this document carries a second name. Dim
+       reads as "the RS does not say"; offering nothing reads as "this cell has
+       no source", which is a different and untrue claim. */
+    eq('and the study is declared there too, dim',_sp.alias[1],'DIM');
+    eq('picking the name row lands the registry half',
+      await c.eval(`const o=document.querySelector('[data-box="property.name"] .uaopt.srcopt');if(o)o.click();
+        return (window.__t.__form()['property.name']||{}).value`),'Colonial Village');
+    eq('and picking the alias row lands the other',
+      await c.eval(`const o=document.querySelector('[data-box="tenant.property_alias"] .uaopt.srcopt');if(o)o.click();
+        return (window.__t.__form()['tenant.property_alias']||{}).value`),'White Oak Townhomes');
+    /* The fill and the rows must agree — that they did not is the whole defect. */
+    await openForm();
+    await c.eval(`window.__t.__setRsParsed({scalars:{'property.name':'Colonial Village/White Oak Townhomes'},
+      units:[],nonrev:[],ns8:[],principals:[]});return 1`);
+    await c.eval('return window.__t.__rsFill&&window.__t.__rsFill()');
+    const _fl=await c.eval(`const f=window.__t.__form();
+      return [(f['property.name']||{}).value,(f['tenant.property_alias']||{}).value]`);
+    eq('and Fill form from RS agrees with them',_fl,['Colonial Village','White Oak Townhomes']);
+    /* A name with no slash is one fact, and must not be halved. */
+    await openForm();
+    await c.eval(`window.__t.__setRsParsed({scalars:{'property.name':'Gates Manor Apartments'},
+      units:[],nonrev:[],ns8:[],principals:[]});window.__t.__renderBody();return 1`);
+    await sleep(300);
+    const _one=await c.eval(`const b=document.querySelector('[data-box="tenant.property_alias"] .uaopt.srcopt');
+      return {aliasDim:!!(b&&b.classList.contains('srcdim')),
+        name:(document.querySelector('[data-box="property.name"] .uaopt.srcopt')||{}).textContent||''};`);
+    T('an unslashed name offers the tenant cell nothing',_one.aliasDim);
+    T('and reaches the name cell whole',/Gates Manor Apartments/.test(_one.name));
+    await c.eval('window.__t.__setRsParsed(null);return 1');
     await openForm();
 
     console.log('\n── the console stayed quiet ───────────────────────────');

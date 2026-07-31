@@ -19,12 +19,22 @@ data. **After one "Update property profile" every key in the form has been saved
 of them blank.** Assume that state when you reason about anything; it is the state
 that broke the address revert, the source pointers, and the Escape path.
 
-| Colour | rgb | Asserts |
-|---|---|---|
-| blue | `232,240,254` | on file — the record holds this |
-| green | `233,245,242` | pulled or parsed this package, not saved yet |
-| orange | `251,241,230` | overridden — differs from the record |
-| grey | `246,247,249` | new — nothing on file |
+**The state is a 3px rule down the cell's left edge, not a fill.** Every cell sits on
+the same inset surface (`--sunk`, `238,241,245`); what differs is the rule. Two states
+keep a wash as well, because those are the two that want your hands.
+
+| Rule | rgb | Wash | Asserts |
+|---|---|---|---|
+| blue | `37,99,235` | none — `--sunk` | on file — the record holds this |
+| teal | `15,118,110` | `233,245,242` | pulled or parsed this package, not saved yet |
+| amber | `180,83,9` | `251,241,230` | overridden — differs from the record |
+| grey | `100,116,139` | none — `--sunk` | new — nothing on file |
+
+The rule colours are the contract; `CLR` in `app.js` holds them, twinned with the
+`--prov-*-fill` tokens in the `#viewForm` block of `shell.head.html` — change one and
+you change both. `test_browser.js` reads `borderLeftColor` off `[data-box]`, so the rule
+is what is asserted, and it must survive focus: a focus ring that paints over the left
+edge takes away the one answer you are not allowed to remove while someone is typing.
 
 Colour answers *is this saved?*; the badge answers *where did it come from?* They are
 orthogonal and a HUD filing needs both. That is why a source-backed cell keeps a
@@ -271,6 +281,36 @@ the form is clean. Nothing ever crossed a session boundary, and this defect does
 not exist inside a single load. **Add the reload to the sweep:** after filling
 from a document, reopen the package and confirm every source row still offers
 what it offered a moment ago.
+
+## 20. A locked cell displays a value AND stores it, on every path that opens a form
+
+A cell whose answer comes from Kinley's database (`isLocked`, `RA_LOCKED` in app.js)
+renders as text instead of an input. That value is not decoration: it names the package
+in the header, it drives the record checks, and it prints on six documents. So
+`applyRaLocked()` writes it INTO the form — **before `snapForm()`**, so a value nobody
+can change never opens the form dirty asking to be saved.
+
+**Why:** the write-through was added to `openCycleForm` and not to `openForm`. Through
+that second door the locked value was painted over a record that had never received it:
+the cell read "Colonial Village" while the header read "(unnamed property)" and Record
+Checks said the property name was missing. Displaying and storing are one operation, and
+it belongs to *opening a form*, not to one of the two functions that do it.
+
+Two more things that fall out of the same idea:
+
+- **Locked is not a fifth provenance colour.** The four all answer *is this saved?*; this
+  one answers *who decides this*. It takes none of them — flat surface, neutral rule where
+  the provenance bar would be. Not greyed out either: grey reads as broken rather than
+  governed, and the value still has to be legible on a document nobody can retype.
+- **Rule 7 does not apply to it, because nothing in it is focusable.** A locked cell holds
+  no input, no trigger, no tabindex. That is the invariant to assert — a control you can
+  reach but cannot use is the state rule 7 exists to prevent. And when a cell locks, the
+  dropdown it replaces must be *gone*, not disabled: a menu offering two answers beside a
+  value that answers to neither is a control that lies.
+
+The refusal itself is rule 17's, not this one's: removing an input stops a person, and does
+nothing about the rent-schedule parser, which sets these very keys from a document often a
+year older than the record. Every fill asks `raLockedKey(k)` first.
 
 ## Before you deliver
 
