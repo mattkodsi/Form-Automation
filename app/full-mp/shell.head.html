@@ -1907,6 +1907,14 @@ body.scrolled #viewForm .rail{top:60px}
   background:var(--sunk);min-height:38px}
 #viewForm .ulabline{border:1px solid var(--rule);border-left:3px solid var(--prov-new);
   border-radius:var(--r-ctl);background:var(--sunk)}
+/* A locked cell is outside the provenance vocabulary — it answers "who decides
+   this", not "is this saved" — so it takes a neutral rule and none of the four.
+   Restated here because the rule above is an #id rule and would otherwise hand
+   it the grey of "new — nothing on file", which is the one answer it must not
+   give about a figure Related Affordable holds. */
+#viewForm .fbox.locked{border-color:var(--rule);border-left-color:var(--line-2)}
+#viewForm .fbox.locked .lockv{font-size:13.5px;line-height:18px;color:var(--ink)}
+#viewForm .fbox.locked .lockmk{color:var(--muted-2)}
 /* The pairs below the unit-mix row mirror the cell's BOX so each lands under
    its own control. Mirror the new width, or every pair steps a pixel right. */
 #viewForm .uracts>div:first-child,#viewForm .ucells .uracts.ucolacts.c1{
