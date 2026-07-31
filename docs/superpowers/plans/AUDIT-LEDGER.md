@@ -4144,3 +4144,181 @@ workbook whose date matches the study of record — never the first or the super
 every folder holding more than one grid workbook is a false-money-mismatch risk; Westwood is the proof.
 
 **Net for Wave 2: all five producing cycles are clean on the money — zero app money defects.**
+
+---
+
+## The holistic reconciliation — this is not a money audit
+
+Reframed after Matt's steer: the audit is not "does the app get the rent right." Money is one
+lens. Intake/parsing, form-user dynamics, provenance, saving, what the app *reports* about its
+own state, what it *generates*, and what carries into next year are the rest — and most of the
+real defects live outside the money columns. Run across all **61 container-driven records**.
+
+### 1 · Two failures at once — a flaky FILED extractor AND a real app source-selection bug
+
+Seven source reads on the money mismatches split almost evenly, and that split is the finding:
+**the comparator's FILED leg is unreliable, and the app has a real source-selection defect.**
+Neither leg can be trusted without reading the executed document of record.
+
+| property · year | "FILED" the comparator read | truth (executed 92458 / study of record) | who was wrong |
+|---|---|---|---|
+| Westwood Village 2025 | `… 11.30.24.xlsx` superseded draft (SAFMR 930/1120/1570) | study 25-072 p.2 + `6.20.25.xlsx` → **1120/1570/1850** = app | **harness** (app right) |
+| Morningside Court 2026 | `RCS Analysis …xlsx` internal grid (UA 68/66/120) | signed study 26-048 p.3 → **UA 34/33/57, SAFMR 1780/1780/2000** = app | **harness** (app right) |
+| Morh Housing 2026 | superseded original grid block + a row-shift | revised block + 25-184 → **4475/5100/5100** = app | **harness** (app right) |
+| New Horizons 2024 | Renzi grid (proposed 3500/4300/5000/6000) | executed RS → proposed **3150/4000/4350/5450** = app | **harness** on proposed (app right) |
+| New Horizons 2024 — **UA** | Renzi UA 149/156/171/158 | executed Col.5 → **149/156/171/158**; app has 132/138/151/140 | **APP** (stale UA) |
+| **Noble Tower 2024** | 4-firm bid workbook | executed 92458 + Van Hazinga study → **3,265 → $636,675/mo**; app read the rejected **HCVA $3,100 → $604,500** | **APP** (wrong appraiser) |
+| **Holly House 2025** | Belfry draft (38/53) | executed Col.5 → **UA 40/51**; app has the study allowance **61/64** | **APP** (study vs executed UA) |
+| **Oak Center 2026** | superseded original grid (units 1–3) | revised grid + executed → app's proposed **3650/4300/4550** right; app's `unit.5` = the **non-revenue manager's unit $1,728**, not the 1BR | harness on 1–3; **APP** on unit.5 (row-shift onto non-rev unit) |
+
+**The app half is a family of source-selection defects — three distinct mechanisms, one root.**
+The app does not reliably pick the *executed / of-record* value:
+1. **Wrong appraiser column** (Noble Tower) — it read the **rejected HCVA bid $3,100** from a
+   four-firm comparison workbook; the executed 92458 and Van Hazinga study both conclude **$3,265
+   → $636,675/mo**. A **wrong concluded rent on the federal form, ~$32k/month.** The single
+   most serious money defect in the audit. Mechanism: the parser has no notion of "which of these
+   bids is the one of record," so it takes a column.
+2. **Non-revenue unit as a comparable** (Oak Center `unit.5`) — a row-shift put the **manager's
+   non-revenue unit ($1,728)** where the 1BR should be. Mechanism: unit-row selection does not
+   exclude non-revenue rows.
+3. **UA: study allowance vs executed Col.5** (Holly House, New Horizons) — the app printed the
+   **study's** UA where the readers found the **executed** was of-record. **But this one is not a
+   simple app bug** — see below.
+
+**The UA case is a genuine per-property conflict, not a fixable default.** `defUaSrc` (app.js:294 /
+score.js:58 / gen.js:425) defaults to the study allowance, and score.js treats a study-vs-executed
+disagreement as a **caveat, not a blocker** (score.js:323) — so the app generates with the study
+value unresolved. Holly House and New Horizons show that default is *wrong* for them. But
+`test_gen.js:455` pins the **opposite** with three real properties — **Sycamore Green, Burt Farms,
+Northcross filed the study's UA**, their executed schedule holding only *last term's* allowance.
+The corpus is **split**: no static default (study *or* executed) is right for all of them. So the
+real defect is that the app **resolves a genuine conflict silently** instead of forcing the choice;
+the candidate fix is to make an unresolved exec-vs-study disagreement a **blocker** (the M18
+pattern), or to ingest the **UA workbook / PHA allowance** where the true current-term figure lives.
+**Flipping the default would only move the wrong answer to the other three properties** — recorded
+here because it is exactly the kind of one-sided conclusion the two-machine cross-check exists to
+catch, and this time reading the existing test caught it before it shipped. **Owner: awaiting Matt's
+call on which fix.**
+
+Every prior "clean on the money" verdict inherits the §1 rule: it holds only where a reader opened
+the executed document. Mechanisms 1 and 2 are unambiguous app defects to fix by mechanism; 3 is a
+decision.
+
+The non-money reconciliation shows the same rot on the FILED side across the corpus — these are
+the comparator's extractions, not the app's output:
+
+- **OCR text-bleed:** `unit.0.units` filed as `"90/ndFloor"` (Hampshire), `"20/nd"` (Oceanport),
+  `"45/Floor"` (Fairview) — a "2nd Floor" heading bleeding into a number cell.
+- **Template placeholders read as values:** `rent_schedule.eff_month` filed `"mm/dd/yyyy"`,
+  `owner.entity_name` filed `"Name01Entity"`, `sig.name_title` filed `"PartIHUD/LenderApproval"`,
+  `date_eff` filed `"Rer;tsWitBecffectve(wn/ddlyyyy)06/30/2021"` (Marine Terrace).
+- **Header/label cells read as values:** `total.units` filed `"Potential(AddCol.4)*"` (Mapleview),
+  `"YearlyContractRentPotential"` (Barnum).
+- **Row-shift:** Marine Terrace `unit.N.units` and every rent row are `ours[n] == filed[n+1]`.
+- **Digit mangling:** North Park `unit.2.units "525/52"`, `unit.2.current "44305082 vs 4430"`.
+
+**Consequence — the load-bearing one:** no OURS-vs-FILED value difference, money or not, can be
+called an app defect without a source read. The instrument fails the lane's own first rule,
+*trust no tool you have not tested*. Every money three-way in this audit that was closed on the
+comparator alone needs the "which filed document, and did the extractor mangle it" check before
+"app wrong" is written. Two-for-two so far, the app was right and the harness was wrong.
+
+**Two harness repairs fall out of this** (corpus tooling, not the product): (a) `build-manifest`
+must pick the filed `analysisXlsx` by executed/newest or by the study of record, never the first
+or an internal Belfry "RCS Analysis" grid; (b) `extract.js` must reject label/placeholder/heading
+cells and detect row-shift, or the FILED leg will keep inventing app errors.
+
+### 2 · The interaction storm — the trustworthy app defects (form dynamics · provenance · saving)
+
+The storm drives the **real app** and reads its dirty/provenance state directly, so unlike §1 it
+does not depend on the flaky extractor. It found the audit's most systemic product defect:
+**phantom-dirty is not `safmr_hud`-specific — any off-screen, un-edited key can be left
+`overridden`/dirty after an unrelated save or Escape.** Twelve genuine instances (off-screen,
+≤5 keys, not the `property.name`/ZZ-CORPUS harness class), across seven key families:
+
+| property · year | key(s) left dirty off-screen | episode | seed |
+|---|---|---|---|
+| Westwood Village 2025 | `units.4.safmr_hud` | save | `3805780444` |
+| Clinton Manor 2026 | `units.1.safmr_hud` | escape | `2565671169` |
+| Riverwood 2025 | `partb.fuel.0`, `check.11` | save | `3272932102` |
+| Sycamore Green 2020 | `partb.equipment.0`, `partb.services.1/5`, `check.1` | save | `509383021` |
+| Sycamore Green 2020 | `partb.services.5` | escape | `509383021` |
+| North Park 2019 | `units.0.ua_exec`, `partb.equipment.1` | save | `2074059211` |
+| **Noble Tower 2018** | **`rent_schedule.date_eff_source`** | save | `2376641855` |
+| **Marine Terrace 2021** | **`rent_schedule.date_eff_source`** | save | `2771342179` |
+| **Northgate Terrace CA 2020** | **`units.0.safmr_source`** | save | `2699750503` |
+| Mapleview Towers 2020 | `partb.equipment.0` | save | `1686782825` |
+| Fairview Homes | `partb.fuel.0` | save | `3316624651` |
+| Oak Center 2026 | `check.2` | escape | `1848751915` |
+
+The three bolded are the worst: the storm corrupts the **provenance-source keys** — the record of
+*where the effective date and the SAFMR came from* — on the very field (`date_eff_source`) the RA
+tracker-lock exists to protect. This is simultaneously a **saving glitch** (a settled save/Escape
+leaves residue) and a **provenance lie** (the form asserts an override the user never made). With
+Colonial Village's original `partb.fuel` seed, that is **13 deterministic replays** of one bug.
+
+**Mechanism (hypothesis, to confirm in source):** a `coupledKeys`/recompute path writes a paired
+or derived cell without routing through `editForm`/`_pending`, so the undo run and the source
+derivation never see it. **App wrong, systemic — the next source repair, and higher priority than
+any single value.**
+
+### 3 · Generation — the app does not build the package (M7, quantified)
+
+Counted as "the filed package has this document, the app produced no counterpart," across 61
+records — the app's *own* deliverables:
+
+| app deliverable | records where the app produced nothing to compare | of 61 |
+|---|--:|--:|
+| cover letter | **37** | 61 |
+| rent schedule | **25** | 61 |
+| tenant notice | **21** | 61 |
+| owner's checklist | **15** | 61 |
+| submittal/transmittal letter | **10** | 61 |
+
+(`rcsStudy`/`notes`/`sections` also show ~40 each, but those are the appraiser's study and
+narrative — not app deliverables, so their absence is expected, not a defect.) This is the
+dominant gap in the corpus: on more than half the records the app cannot even produce the cover
+letter, and on a quarter to a third it produces no rent schedule or tenant notice. Every "the app
+generated nothing comparable" BLOCKED record (25 of 61) is an instance of this. **The correctness
+of the numbers the app *does* print is a smaller question than the documents it never prints.**
+
+### 4 · Carry-forward — the untested axis, and the storm says it is at risk
+
+The two-pass drive (prior cycle → save → current cycle) is **not built**, so the `database`/`on-file`
+and `overridden` provenance states, and the year-to-year carry of an executed value into next
+year's "prior," are **unverified end to end**. §2 makes this the highest-risk unexamined dimension:
+if a settled save can corrupt `date_eff_source` and `safmr_source` off-screen, the mechanism that
+carries this year's executed schedule into next year's `database` bucket cannot be assumed sound.
+This is the next thing to actually drive.
+
+### What this changes about every prior "app wrong on the money" verdict
+
+Nothing money-side survives §1 without a source read. The clean/BLOCKED counts stand (0 and
+"nothing comparable" are not extraction-sensitive), but each non-zero money mismatch is now
+*presumed harness-contaminated until a reader confirms otherwise* — the opposite of the earlier
+default. Readers are out on the remaining mismatches; verdicts fold in below as they land.
+
+### Remaining money-mismatch records — disposition (completing the 18)
+
+Seven were adjudicated by source read above. Of the rest, the ones marked **harness** carry
+the evidence in hand: the value the comparator labeled FILED is **not a number** (a header/label
+cell or OCR bleed) or is **row-shifted** — so no app claim is even possible, per §1. The small
+residuals are flagged **unread** rather than assumed.
+
+| record | the "FILED" value | disposition |
+|---|---|---|
+| North Park 2020 | `unit.2.current 44305082` (digit concatenation), proposed `5095↔4550` swapped | **harness** — extraction garbage + row-swap |
+| Marine Terrace 2021 | every rent row `ours[n]=filed[n+1]`; gross `2.078`/`3.000` (decimal bleed) | **harness** — whole-table row-shift |
+| Marine Terrace 2026 | same row-shift; `total.units 444 vs 441` | **harness** — whole-table row-shift |
+| Barnum House 2026 | `total.units 83 vs "YearlyContractRentPotential"` | **harness** — label cell read as value |
+| Fairview Homes 2025 | `total.contract_rent 416000 vs "effective"` | **harness** — label cell read as value |
+| Mapleview Towers 2026 | `total.units 101 vs "Potential(AddCol.4)*"` | **harness** on the total; `unit.0.proposed 3095 vs 3200` **unread** (small; superseded-draft is the likely cause by pattern, not asserted) |
+| Market Square 2026 | `total.units 76 vs "Potential(AddCol.4)*"` | **harness** on the total; `unit.0 gross/proposed 2375 vs 2325` **unread** (small; not asserted) |
+| Lansing Manor 2026 | `unit.0/1.ua 85 vs 116` | **undetermined, documented** — the UA basis ambiguity already in this ledger (study priced on 85, 116 in force, 99 approved; the figure appears nowhere in the cycle) |
+| Friendship Court 2026 | `unit.N.ua 61/85/100/107 vs 66.02/82.07/108.91/124.47` | **precision** — the app prints whole-dollar UA; the filed workbook carries cents. Low severity; note whether Col.5 wants cents before calling it a defect |
+
+**Net across all 18 money mismatches:** 3 unambiguous app defects (Noble Tower appraiser-column,
+Oak Center non-revenue-unit, and the UA study-vs-executed *decision*), 1 documented-undetermined
+(Lansing), 1 precision note (Friendship Court), the rest **harness** — the comparator reading a
+superseded draft, a label cell, or a row-shifted table. **Two small residuals stay unread and are
+not asserted either way.** No package with a driven record now lacks a three-way disposition.

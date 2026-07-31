@@ -8,13 +8,51 @@ the other one needs fixing.
 
 Last updated: **2026-07-31**, by the cloud — the sweep is running from the container.
 
-## Merged with main (7dff1bf) — 13 of 14 suites green
+## Merged with main (d5ee71d) — ALL suites green now
 
-`origin/main` folded in, including the provenance-badge change (`2f8b4b7`) this audit
-measures. All fourteen suites run: 13 green, `test_browser` red on the **same 5
-`shell.head.html` layout checks** as before — the merge added 11 browser checks (all pass)
-and zero new failures. Those 5 are the redesign lane's, unchanged. Per Matt's call the
-branch carries main's commits re-authored to noreply@anthropic.com (attribution waived).
+`origin/main` folded in again (through `dcd7282`): the loader paging fix (`1b58fa1`, same
+`selectAll` logic as our `52b7b96` — reconciled `db.supabase.js` with `--ours`), the
+source-badge change this audit measures, and the redesign lane's Start-button/layout work.
+That last set **fixed the 5 `shell.head.html` layout checks** that were red — `run_tests.sh`
+now exits 0 with every suite green. `index.html` rebuilt from the merged source (not the
+line-merge) and RA anchor gate passes.
+
+## The audit is a FIX-THE-APP job, not a report (Matt's correction, 2026-07-31)
+
+Matt reset the mandate mid-session: **check whether the app produces correct HUD packages and
+FIX the app by mechanism** (trace generated doc → cell → parser → source; failing test first;
+all suites pass), holistically — parsing, form dynamics, provenance, saving, reporting,
+generation, carry-forward — **not money only**. See the ledger's "holistic reconciliation".
+
+### Real APP defects found by reading the actual source documents (7 money mismatches adjudicated)
+
+The comparator's FILED extraction is unreliable (superseded-draft workbooks, OCR bleed,
+label cells, row-shift), so **every OURS-vs-FILED value diff needs a source read** — half the
+"app errors" are the harness. But reading the executed documents caught real app defects, all
+one family — **source selection** (the app doesn't pick the executed/of-record value):
+
+- **Noble Tower 2024 — app read the REJECTED HCVA bid ($3,100)** from a four-firm comparison
+  workbook; executed 92458 + Van Hazinga study conclude **$3,265 → $636,675/mo**. A wrong
+  concluded rent on the federal form, ~$32k/month. **The headline money defect.** To fix.
+- **Oak Center 2026 — app took the non-revenue manager's unit ($1,728)** as a comparable (row
+  shift). To fix (exclude non-revenue rows).
+- **UA (Holly House, New Horizons) — app prints the STUDY allowance, not the executed Col.5.**
+  But the corpus is **split**: `test_gen.js:455` pins three properties (Sycamore Green, Burt
+  Farms, Northcross) that filed the STUDY's UA. No static default is right — flipping `defUaSrc`
+  to exec would break those three. **Matt was asked and picked "default to executed," then the
+  test evidence showed that's a regression — the fix is per-property (block the unresolved
+  exec-vs-study conflict, M18 pattern, or ingest the UA workbook). AWAITING MATT'S REVISED CALL.**
+
+Harness-not-app (app right, comparator read a superseded draft): Westwood 2025, Morningside
+2026, Morh 2026, New Horizons proposed rents, Oak Center proposed rents.
+
+### Phantom-dirty mechanism traced (not yet fixed)
+
+The `safmr_hud`/`safmr_source` off-screen dirt = the **900ms debounced SAFMR auto-pull**
+(`scheduleHudRefresh`, app.js:979 → `applyHudSafmr`, app.js:1009) firing *async* after a
+save/escape and writing the cell off the undo run. Gated on the live backend, so it only
+reproduces via the relay (the fixture storm can't reach it). Fix = a settle (save/revert)
+cancels the pending timer ("a save is a wall"). Not yet written — needs relay to verify.
 
 ## THE SWEEP IS LIVE FROM THE CONTAINER
 
