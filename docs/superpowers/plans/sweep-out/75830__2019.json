@@ -4,99 +4,26 @@
  "folder": "75830 - Clinton Manor - Section 8",
  "year": 2019,
  "cycleLabel": "2019",
- "sha": "ccc4568",
+ "sha": "0d44de8",
  "orders": {
   "rs-first": {
-   "files": 0,
-   "tier": "unreadable:scan",
-   "weakerTest": false,
-   "ocrCalls": 3,
-   "via": null,
-   "missing": null,
-   "warnings": [
-    "the rent schedule was not readable (kind=scan, The scan came back and 8 labels were recognised, but the page could not be squared with the blank form — it may be rotated or cropped.) — no values can be applied from it",
-    "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
-    "rent schedule: #rsApply never appeared — nothing was applied to the form"
-   ],
-   "errors": [
-    "rs-first: the app refused to generate — Cannot generate the package with zero units — the first unit type needs a unit count."
-   ],
-   "docsExtracted": []
+   "error": "the tracker cannot date 75830 2019 — its nearest startable row is 2022-01-01",
+   "files": 0
   },
   "rcs-first": {
-   "files": 0,
-   "tier": "unreadable:scan",
-   "weakerTest": false,
-   "ocrCalls": 3,
-   "via": null,
-   "missing": null,
-   "warnings": [
-    "the rent schedule was not readable (kind=scan, The scan came back and 8 labels were recognised, but the page could not be squared with the blank form — it may be rotated or cropped.) — no values can be applied from it",
-    "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
-    "rent schedule: #rsApply never appeared — nothing was applied to the form"
-   ],
-   "errors": [
-    "rcs-first: the app refused to generate — Cannot generate the package with zero units — the first unit type needs a unit count."
-   ],
-   "docsExtracted": []
+   "error": "the tracker cannot date 75830 2019 — its nearest startable row is 2022-01-01",
+   "files": 0
   }
  },
  "rows": [],
  "fillOrder": [],
  "drift": [],
- "notes": [],
+ "notes": [
+  "rs-first: drive threw -- the tracker cannot date 75830 2019 — its nearest startable row is 2022-01-01",
+  "rcs-first: drive threw -- the tracker cannot date 75830 2019 — its nearest startable row is 2022-01-01"
+ ],
  "verdict": "the app generated nothing comparable",
- "fuzz": {
-  "seed": 4242889464,
-  "counts": {
-   "edits": 5,
-   "escapes": 9,
-   "enters": 0,
-   "saves": 0,
-   "revertAlls": 5,
-   "drops": 0,
-   "clicks": 6,
-   "boundaries": 0,
-   "colourScans": 8,
-   "episodes": 8
-  },
-  "violations": [],
-  "actions": [
-   "— episode 1/8 [revertAll] 111 controls on screen",
-   "type \"999999\" into #viewForm input[data-k][2]",
-   "type \"0\" into #viewForm input[data-k][22]",
-   "click Revert to saved",
-   "escape (2 left)",
-   "escape (1 left)",
-   "— episode 2/8 [escape] 111 controls on screen",
-   "type \"3/1/2026\" into #viewForm input[data-k][34]",
-   "escape (1 left)",
-   "— episode 3/8 [revertAll] 111 controls on screen",
-   "click #viewForm [data-wibox][7]",
-   "click Revert to saved",
-   "— episode 4/8 [escape] 111 controls on screen",
-   "click #viewForm [data-fuel][4]",
-   "click #viewForm [data-cb][34]",
-   "click #viewForm [data-cb][19]",
-   "click #viewForm [data-cb][23]",
-   "type \"N/A\" into #viewForm input[data-k][34]",
-   "escape (6 left)",
-   "escape (4 left)",
-   "escape (3 left)",
-   "escape (2 left)",
-   "escape (1 left)",
-   "— episode 5/8 [revertAll] 111 controls on screen",
-   "type \"1234\" into #viewForm input[data-k][27]",
-   "click #viewForm [data-wibox][7]",
-   "click Revert to saved",
-   "escape (1 left)",
-   "— episode 6/8 [revertAll] 0 controls on screen",
-   "click Revert to saved",
-   "— episode 7/8 [revertAll] 0 controls on screen",
-   "click Revert to saved",
-   "— episode 8/8 [escape] 0 controls on screen"
-  ]
- },
+ "fuzz": null,
  "inputs": {
   "study": "2019/RCS/Clinton Manor FINAL RCS 4.19.19.pdf",
   "priorRs": "2018/Clinton Manor Form HUD-92458 Rent Schedule 2018 - - Executed.pdf",

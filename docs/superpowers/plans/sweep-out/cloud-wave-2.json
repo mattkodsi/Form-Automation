@@ -1,0 +1,2125 @@
+{
+ "sha": "0d44de8",
+ "label": "cloud-wave-2",
+ "records": [
+  {
+   "property": "Burt Farms I",
+   "code": "75109",
+   "folder": "75109 - Burt Farms I - Section 8",
+   "year": 2024,
+   "cycleLabel": "2024 - Renewal & RCS",
+   "sha": "0d44de8",
+   "orders": {
+    "rs-first": {
+     "files": 3,
+     "tier": "text:half",
+     "weakerTest": false,
+     "ocrCalls": 2,
+     "via": "text",
+     "missing": null,
+     "warnings": [
+      "only the front half of the rent schedule was read — Parts F and G (ownership entity, principals, signatory) did not come through",
+      "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+      "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “Burt Farms I”, and the management address. A letterhead can be uploaded on the property page.",
+      "package dialog: Burt Farms I · 1 of 6 ready · 5 not ready"
+     ],
+     "errors": [],
+     "docsExtracted": [
+      "analysisXlsx"
+     ]
+    },
+    "rcs-first": {
+     "files": 3,
+     "tier": "text:half",
+     "weakerTest": false,
+     "ocrCalls": 2,
+     "via": "text",
+     "missing": null,
+     "warnings": [
+      "only the front half of the rent schedule was read — Parts F and G (ownership entity, principals, signatory) did not come through",
+      "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+      "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “Burt Farms I”, and the management address. A letterhead can be uploaded on the property page.",
+      "package dialog: Burt Farms I · 1 of 6 ready · 5 not ready"
+     ],
+     "errors": [],
+     "docsExtracted": [
+      "analysisXlsx"
+     ]
+    }
+   },
+   "rows": [
+    {
+     "doc": "analysisXlsx",
+     "key": "property.name",
+     "ours": "BurtFarmsI",
+     "theirs": null,
+     "status": "missing-theirs",
+     "cause": "undiagnosed",
+     "severity": "medium",
+     "property": "Burt Farms I"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "appr.firm",
+     "ours": "Renzi&Associates",
+     "theirs": null,
+     "status": "missing-theirs",
+     "cause": "undiagnosed",
+     "severity": "medium",
+     "property": "Burt Farms I"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.0.type",
+     "ours": "1BR/1BA",
+     "theirs": "1BR",
+     "status": "mismatch",
+     "cause": "undiagnosed",
+     "severity": "high",
+     "property": "Burt Farms I"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.0.units",
+     "ours": "50",
+     "theirs": "50",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Burt Farms I"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.0.current",
+     "ours": "1439",
+     "theirs": "1439",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Burt Farms I"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.0.proposed",
+     "ours": "1825",
+     "theirs": "1825",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Burt Farms I"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.0.ua",
+     "ours": "54",
+     "theirs": null,
+     "status": "missing-theirs",
+     "cause": "undiagnosed",
+     "severity": "medium",
+     "property": "Burt Farms I"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.0.safmr",
+     "ours": "1260",
+     "theirs": "1260",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Burt Farms I"
+    }
+   ],
+   "fillOrder": [],
+   "drift": [],
+   "notes": [
+    "filed: filed side read from the combined package: Burt Farms I Option 1-A Renewal Submission 3.19.2024.pdf",
+    "filed: coverLetter read from Burt Farms I Option 1-A Renewal Submission COVER LETTER 3.19.2024.pdf",
+    "filed: tenantNotice unreadable: extractFacts: these bytes are a zip, not a PDF — did you mean docType ",
+    "filed: rentSchedule read from Burt Farms I Rent Schedule eff. 6.26.2024.pdf",
+    "filed: analysisXlsx read from Burt Farms I - RCS Grid Analysis JLL & Renzi 1.27.24.xlsx"
+   ],
+   "verdict": "4 differences",
+   "fuzz": {
+    "seed": 3586431133,
+    "counts": {
+     "edits": 8,
+     "escapes": 11,
+     "enters": 1,
+     "saves": 1,
+     "revertAlls": 1,
+     "drops": 2,
+     "clicks": 9,
+     "boundaries": 0,
+     "colourScans": 4,
+     "episodes": 4
+    },
+    "violations": [],
+    "actions": [
+     "— episode 1/4 [escape] 117 controls on screen",
+     "click #viewForm [data-cb][5]",
+     "click #viewForm [data-wibox][8]",
+     "open dropdown 4",
+     "pick menu row 45 of 51",
+     "click #viewForm [data-cb][31]",
+     "type \"1.5\" into #viewForm input[data-k][8]",
+     "escape (5 left)",
+     "escape (3 left)",
+     "escape (2 left)",
+     "escape (1 left)",
+     "— episode 2/4 [escape] 117 controls on screen",
+     "click #viewForm [data-cb][8]",
+     "type \"3/1/2026\" into #viewForm input[data-k][3]",
+     "type \"  \" into #viewForm input[data-k][40]",
+     "open dropdown 6",
+     "pick menu row 4 of 8",
+     "click #viewForm [data-wibox][1]",
+     "escape (5 left)",
+     "escape (3 left)",
+     "escape (2 left)",
+     "escape (1 left)",
+     "— episode 3/4 [revertAll] 117 controls on screen",
+     "type \"129\" into #viewForm input[data-k][33]",
+     "type \"42\" into #viewForm input[data-k][7]",
+     "type \"2026-03-01\" into #viewForm input[data-k][35]",
+     "click #viewForm [data-cb][21]",
+     "click Revert to saved",
+     "escape (4 left)",
+     "escape (3 left)",
+     "escape (2 left)",
+     "— episode 4/4 [save] 111 controls on screen",
+     "click #viewForm [data-cb][4]",
+     "type \"2050\" into #viewForm input[data-k][19]",
+     "enter (commit)",
+     "type \"2026-03-01\" into #viewForm input[data-k][5]",
+     "click Update property profile"
+    ]
+   },
+   "inputs": {
+    "study": "2024 - Renewal & RCS/Archive/Submission/Exhibit 4 - RCS (Renzi) Burt Farms I 3.22.24.pdf",
+    "priorRs": "2023/Burt Farms I Rent Schedule eff 6.26.23.pdf",
+    "priorRsRule": "year-1 folder"
+   },
+   "notGenerated": [
+    "notes",
+    "sections",
+    "rcsStudy",
+    "checklist",
+    "coverLetter",
+    "rentSchedule"
+   ],
+   "notGeneratedWhy": null,
+   "counts": {
+    "compared": 8,
+    "matched": 4,
+    "differing": 4,
+    "fillOrder": 0,
+    "drift": 0,
+    "notGenerated": 6
+   }
+  },
+  {
+   "property": "Burt Farms I",
+   "code": "75109",
+   "folder": "75109 - Burt Farms I - Section 8",
+   "year": 2019,
+   "cycleLabel": "2019",
+   "sha": "0d44de8",
+   "orders": {
+    "rs-first": {
+     "error": "the tracker cannot date 75109 2019 — its nearest startable row is 2020-06-26",
+     "files": 0
+    },
+    "rcs-first": {
+     "error": "the tracker cannot date 75109 2019 — its nearest startable row is 2020-06-26",
+     "files": 0
+    }
+   },
+   "rows": [],
+   "fillOrder": [],
+   "drift": [],
+   "notes": [
+    "the manifest could not read this cycle's study; driving it anyway, because what the app does with an unreadable study is the observation",
+    "rs-first: drive threw -- the tracker cannot date 75109 2019 — its nearest startable row is 2020-06-26",
+    "rcs-first: drive threw -- the tracker cannot date 75109 2019 — its nearest startable row is 2020-06-26"
+   ],
+   "verdict": "the app generated nothing comparable",
+   "fuzz": null,
+   "inputs": {
+    "study": "2019/RCS/NewYorkWarwickRentComparabilityStudy updated 3.12.19.pdf",
+    "priorRs": "2018/Burt Farms I 6-26-18 Rent Schedule.pdf",
+    "priorRsRule": "year-1 folder"
+   }
+  },
+  {
+   "property": "Circle Park",
+   "code": "75833",
+   "folder": "75833 - Circle Park - Section 8",
+   "year": 2026,
+   "cycleLabel": "2026 - RCS",
+   "sha": "0d44de8",
+   "orders": {
+    "rs-first": {
+     "files": 3,
+     "tier": "text:half",
+     "weakerTest": false,
+     "ocrCalls": 2,
+     "via": "text",
+     "missing": null,
+     "warnings": [
+      "only the front half of the rent schedule was read — Parts F and G (ownership entity, principals, signatory) did not come through",
+      "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+      "storm [save-left-dirt] after \"Update property profile\" settled, 94 key(s) still differ from the snapshot: property.name, property.addr_street, property.addr_city, property.addr_state, property.addr_zip, property.s8  (seed 2074983486)",
+      "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “Circle Park Apartments (IL060054027)”, and the management address. A letterhead can be uploaded on the property page.",
+      "package dialog: Circle Park Apartments (IL060054027) · 1 of 6 ready · 5 not ready"
+     ],
+     "errors": [],
+     "docsExtracted": [
+      "analysisXlsx"
+     ]
+    },
+    "rcs-first": {
+     "files": 3,
+     "tier": "text:half",
+     "weakerTest": false,
+     "ocrCalls": 2,
+     "via": "text",
+     "missing": null,
+     "warnings": [
+      "only the front half of the rent schedule was read — Parts F and G (ownership entity, principals, signatory) did not come through",
+      "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+      "storm [save-left-dirt] after \"Update property profile\" settled, 94 key(s) still differ from the snapshot: property.name, property.addr_street, property.addr_city, property.addr_state, property.addr_zip, property.s8  (seed 2074983486)",
+      "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “Circle Park Apartments (IL060054027)”, and the management address. A letterhead can be uploaded on the property page.",
+      "package dialog: Circle Park Apartments (IL060054027) · 1 of 6 ready · 5 not ready"
+     ],
+     "errors": [],
+     "docsExtracted": [
+      "analysisXlsx"
+     ]
+    }
+   },
+   "rows": [
+    {
+     "doc": "analysisXlsx",
+     "key": "property.name",
+     "ours": "CircleParkApartments(IL060054027)",
+     "theirs": null,
+     "status": "missing-theirs",
+     "cause": "undiagnosed",
+     "severity": "medium",
+     "property": "Circle Park"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "appr.firm",
+     "ours": "BelfryValuation,LLC",
+     "theirs": null,
+     "status": "missing-theirs",
+     "cause": "undiagnosed",
+     "severity": "medium",
+     "property": "Circle Park"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.0.type",
+     "ours": "1BR/1BAElderly",
+     "theirs": "1B-Elderly",
+     "status": "mismatch",
+     "cause": "undiagnosed",
+     "severity": "high",
+     "property": "Circle Park"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.0.units",
+     "ours": "120",
+     "theirs": "120",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Circle Park"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.0.current",
+     "ours": "1951",
+     "theirs": "1951",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Circle Park"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.0.proposed",
+     "ours": "2975",
+     "theirs": "2975",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Circle Park"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.0.ua",
+     "ours": "74",
+     "theirs": "74",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Circle Park"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.0.safmr",
+     "ours": "2340",
+     "theirs": null,
+     "status": "missing-theirs",
+     "cause": "undiagnosed",
+     "severity": "medium",
+     "property": "Circle Park"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.1.type",
+     "ours": "2BR/1.5BAFlat",
+     "theirs": "2BR-Flat",
+     "status": "mismatch",
+     "cause": "undiagnosed",
+     "severity": "high",
+     "property": "Circle Park"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.1.units",
+     "ours": "4",
+     "theirs": "4",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Circle Park"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.1.current",
+     "ours": "2341",
+     "theirs": "2341",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Circle Park"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.1.proposed",
+     "ours": "3200",
+     "theirs": "3200",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Circle Park"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.1.ua",
+     "ours": "100",
+     "theirs": "100",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Circle Park"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.1.safmr",
+     "ours": "2640",
+     "theirs": null,
+     "status": "missing-theirs",
+     "cause": "undiagnosed",
+     "severity": "medium",
+     "property": "Circle Park"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.2.type",
+     "ours": "2BR/1.5BATH",
+     "theirs": "2BR-TH",
+     "status": "mismatch",
+     "cause": "undiagnosed",
+     "severity": "high",
+     "property": "Circle Park"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.2.units",
+     "ours": "55",
+     "theirs": "55",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Circle Park"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.2.current",
+     "ours": "2453",
+     "theirs": "2453",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Circle Park"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.2.proposed",
+     "ours": "3400",
+     "theirs": "3400",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Circle Park"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.2.ua",
+     "ours": "128",
+     "theirs": "128",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Circle Park"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.2.safmr",
+     "ours": "2640",
+     "theirs": null,
+     "status": "missing-theirs",
+     "cause": "undiagnosed",
+     "severity": "medium",
+     "property": "Circle Park"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.3.type",
+     "ours": "3BR/1.5BAFlat",
+     "theirs": "3BR-Flat",
+     "status": "mismatch",
+     "cause": "undiagnosed",
+     "severity": "high",
+     "property": "Circle Park"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.3.units",
+     "ours": "2",
+     "theirs": "2",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Circle Park"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.3.current",
+     "ours": "2675",
+     "theirs": "2675",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Circle Park"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.3.proposed",
+     "ours": "4550",
+     "theirs": "4550",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Circle Park"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.3.ua",
+     "ours": "185",
+     "theirs": "185",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Circle Park"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.3.safmr",
+     "ours": "3390",
+     "theirs": null,
+     "status": "missing-theirs",
+     "cause": "undiagnosed",
+     "severity": "medium",
+     "property": "Circle Park"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.4.type",
+     "ours": "3BR/1.5BATH",
+     "theirs": "3BR-TH",
+     "status": "mismatch",
+     "cause": "undiagnosed",
+     "severity": "high",
+     "property": "Circle Park"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.4.units",
+     "ours": "58",
+     "theirs": "58",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Circle Park"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.4.current",
+     "ours": "2787",
+     "theirs": "2787",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Circle Park"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.4.proposed",
+     "ours": "4675",
+     "theirs": "4675",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Circle Park"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.4.ua",
+     "ours": "182",
+     "theirs": "182",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Circle Park"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.4.safmr",
+     "ours": "3390",
+     "theirs": null,
+     "status": "missing-theirs",
+     "cause": "undiagnosed",
+     "severity": "medium",
+     "property": "Circle Park"
+    }
+   ],
+   "fillOrder": [],
+   "drift": [],
+   "notes": [
+    "filed: filed side read from the combined package: 0. Circle Park RCS Submission - Signed.pdf",
+    "filed: checklist read from 3. Circle Park - Owner RCS Checklist.pdf",
+    "filed: tenantNotice read from Circle Park Tenant Notice Certification - UA Decrease.pdf",
+    "filed: rentSchedule read from 2026-Rent Schedule-Circle Park Apts IL060054027 - EXECUTED.pdf",
+    "filed: analysisXlsx read from Circle Park - Rent Analysis.xlsx"
+   ],
+   "verdict": "12 differences",
+   "fuzz": {
+    "seed": 2074983486,
+    "counts": {
+     "edits": 5,
+     "escapes": 9,
+     "enters": 2,
+     "saves": 1,
+     "revertAlls": 0,
+     "drops": 3,
+     "clicks": 10,
+     "boundaries": 0,
+     "colourScans": 4,
+     "episodes": 4,
+     "dialogs": 1
+    },
+    "violations": [
+     {
+      "kind": "save-left-dirt",
+      "msg": "after \"Update property profile\" settled, 94 key(s) still differ from the snapshot: property.name, property.addr_street, property.addr_city, property.addr_state, property.addr_zip, property.s8",
+      "seed": 2074983486,
+      "evidence": {
+       "property.name": {
+        "form": {
+         "value": "Circle Park Apartments (IL060054027)",
+         "source": "overridden",
+         "db_value": "Circle Park Apartments",
+         "prior_value": "Circle Park Apartments"
+        },
+        "snap": {
+         "value": "Circle Park Apartments",
+         "source": "database",
+         "db_value": "Circle Park Apartments"
+        },
+        "onScreen": true
+       },
+       "property.addr_street": {
+        "form": {
+         "value": "1111 South Ashland Avenue",
+         "source": "this-cycle",
+         "db_value": null,
+         "prior_value": null
+        },
+        "snap": {
+         "value": "",
+         "source": "new",
+         "db_value": null
+        },
+        "onScreen": true
+       },
+       "property.addr_city": {
+        "form": {
+         "value": "Chicago",
+         "source": "this-cycle",
+         "db_value": null,
+         "prior_value": null
+        },
+        "snap": {
+         "value": "",
+         "source": "new",
+         "db_value": null
+        },
+        "onScreen": true
+       },
+       "property.addr_state": {
+        "form": {
+         "value": "IL",
+         "source": "this-cycle",
+         "db_value": null,
+         "prior_value": null
+        },
+        "snap": {
+         "value": "",
+         "source": "new",
+         "db_value": null
+        },
+        "onScreen": true
+       },
+       "property.addr_zip": {
+        "form": {
+         "value": "60607",
+         "source": "this-cycle",
+         "db_value": null,
+         "prior_value": null
+        },
+        "snap": {
+         "value": "",
+         "source": "new",
+         "db_value": null
+        },
+        "onScreen": true
+       },
+       "property.s8": {
+        "form": {
+         "value": "IL060054027",
+         "source": "this-cycle",
+         "db_value": null,
+         "prior_value": null
+        },
+        "snap": {
+         "value": "",
+         "source": "new",
+         "db_value": null
+        },
+        "onScreen": true
+       }
+      },
+      "after": [
+       "escape (4 left)",
+       "escape (2 left)",
+       "escape (1 left)",
+       "— episode 4/4 [save] 147 controls on screen",
+       "click #viewForm [data-wibox][8]",
+       "enter (commit)",
+       "open dropdown 3",
+       "escape the open menu",
+       "type \"1.5\" into #viewForm input[data-k][39]",
+       "enter (commit)",
+       "click #viewForm [data-cb][11]",
+       "type \"  \" into #viewForm input[data-k][42]",
+       "click Update property profile",
+       "dialog \"Delete 1 unit type with no unit count?Saving will remove 1 r\" -> answered \"Save anyway\""
+      ]
+     }
+    ],
+    "actions": [
+     "— episode 1/4 [escape] 147 controls on screen",
+     "type \"$1,234\" into #viewForm input[data-k][15]",
+     "type \"abc\" into #viewForm input[data-k][42]",
+     "open dropdown 13",
+     "pick menu row 5 of 7",
+     "type \"2,050\" into #viewForm input[data-k][53]",
+     "escape (5 left)",
+     "escape (3 left)",
+     "escape (2 left)",
+     "escape (1 left)",
+     "— episode 2/4 [escape] 147 controls on screen",
+     "click #viewForm [data-wibox][10]",
+     "open dropdown 11",
+     "pick menu row 2 of 6",
+     "escape (2 left)",
+     "— episode 3/4 [escape] 147 controls on screen",
+     "click #viewForm [data-wibox][2]",
+     "click #viewForm [data-cb][1]",
+     "click #viewForm [data-cb][18]",
+     "click #viewForm [data-cb][16]",
+     "click #viewForm [data-wibox][11]",
+     "escape (4 left)",
+     "escape (2 left)",
+     "escape (1 left)",
+     "— episode 4/4 [save] 147 controls on screen",
+     "click #viewForm [data-wibox][8]",
+     "enter (commit)",
+     "open dropdown 3",
+     "escape the open menu",
+     "type \"1.5\" into #viewForm input[data-k][39]",
+     "enter (commit)",
+     "click #viewForm [data-cb][11]",
+     "type \"  \" into #viewForm input[data-k][42]",
+     "click Update property profile",
+     "dialog \"Delete 1 unit type with no unit count?Saving will remove 1 r\" -> answered \"Save anyway\""
+    ]
+   },
+   "inputs": {
+    "study": "2026 - RCS/RCS_Revised - 25-165 - Circle Park 1111 South Ashland Avenue Chicago IL (004).pdf",
+    "priorRs": "2025/2025/2025 - Rent Schedule - Circle Park (FULLY EXECUTED).pdf",
+    "priorRsRule": "year-1 folder"
+   },
+   "notGenerated": [
+    "notes",
+    "sections",
+    "coverLetter",
+    "submittalLetter",
+    "rcsStudy",
+    "checklist",
+    "tenantNotice",
+    "rentSchedule"
+   ],
+   "notGeneratedWhy": null,
+   "counts": {
+    "compared": 32,
+    "matched": 20,
+    "differing": 12,
+    "fillOrder": 0,
+    "drift": 0,
+    "notGenerated": 8
+   }
+  },
+  {
+   "property": "Clinton Manor",
+   "code": "75830",
+   "folder": "75830 - Clinton Manor - Section 8",
+   "year": 2019,
+   "cycleLabel": "2019",
+   "sha": "0d44de8",
+   "orders": {
+    "rs-first": {
+     "error": "the tracker cannot date 75830 2019 — its nearest startable row is 2022-01-01",
+     "files": 0
+    },
+    "rcs-first": {
+     "error": "the tracker cannot date 75830 2019 — its nearest startable row is 2022-01-01",
+     "files": 0
+    }
+   },
+   "rows": [],
+   "fillOrder": [],
+   "drift": [],
+   "notes": [
+    "rs-first: drive threw -- the tracker cannot date 75830 2019 — its nearest startable row is 2022-01-01",
+    "rcs-first: drive threw -- the tracker cannot date 75830 2019 — its nearest startable row is 2022-01-01"
+   ],
+   "verdict": "the app generated nothing comparable",
+   "fuzz": null,
+   "inputs": {
+    "study": "2019/RCS/Clinton Manor FINAL RCS 4.19.19.pdf",
+    "priorRs": "2018/Clinton Manor Form HUD-92458 Rent Schedule 2018 - - Executed.pdf",
+    "priorRsRule": "year-1 folder"
+   }
+  },
+  {
+   "property": "Clinton Manor",
+   "code": "75830",
+   "folder": "75830 - Clinton Manor - Section 8",
+   "year": 2026,
+   "cycleLabel": "2026 - RCS",
+   "sha": "0d44de8",
+   "orders": {
+    "rs-first": {
+     "files": 3,
+     "tier": "unreadable:scan",
+     "weakerTest": false,
+     "ocrCalls": 3,
+     "via": null,
+     "missing": null,
+     "warnings": [
+      "the rent schedule was not readable (kind=scan, The scan came back, but only 7 of the blank form’s printed labels were recognised on the page (it needs 8 to line the page up).) — no values can be applied from it",
+      "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+      "storm [escape-left-residue] after escaping every edit to rest, 1 key(s) still differ from the pre-episode form: units.1.safmr_hud: \"1700\" -> \"2803\"  (seed 2565671169)",
+      "rent schedule: #rsApply never appeared — nothing was applied to the form",
+      "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “Clinton Manor Apartments”, and the management address. A letterhead can be uploaded on the property page.",
+      "package dialog: Clinton Manor Apartments · 1 of 6 ready · 5 not ready"
+     ],
+     "errors": [],
+     "docsExtracted": [
+      "analysisXlsx"
+     ]
+    },
+    "rcs-first": {
+     "files": 3,
+     "tier": "unreadable:scan",
+     "weakerTest": false,
+     "ocrCalls": 3,
+     "via": null,
+     "missing": null,
+     "warnings": [
+      "the rent schedule was not readable (kind=scan, The scan came back, but only 7 of the blank form’s printed labels were recognised on the page (it needs 8 to line the page up).) — no values can be applied from it",
+      "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+      "storm [escape-left-residue] after escaping every edit to rest, 1 key(s) still differ from the pre-episode form: units.1.safmr_hud: \"1700\" -> \"2803\"  (seed 2565671169)",
+      "rent schedule: #rsApply never appeared — nothing was applied to the form",
+      "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “Clinton Manor Apartments”, and the management address. A letterhead can be uploaded on the property page.",
+      "package dialog: Clinton Manor Apartments · 1 of 6 ready · 5 not ready"
+     ],
+     "errors": [],
+     "docsExtracted": [
+      "analysisXlsx"
+     ]
+    }
+   },
+   "rows": [
+    {
+     "doc": "analysisXlsx",
+     "key": "property.name",
+     "ours": "ClintonManorApartments",
+     "theirs": null,
+     "status": "missing-theirs",
+     "cause": "undiagnosed",
+     "severity": "medium",
+     "property": "Clinton Manor"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "appr.firm",
+     "ours": "BelfryValuation,LLC",
+     "theirs": null,
+     "status": "missing-theirs",
+     "cause": "undiagnosed",
+     "severity": "medium",
+     "property": "Clinton Manor"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.0.type",
+     "ours": "1BR/1BA",
+     "theirs": "1-Bedroom",
+     "status": "mismatch",
+     "cause": "undiagnosed",
+     "severity": "high",
+     "property": "Clinton Manor"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.0.units",
+     "ours": "12",
+     "theirs": "12",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Clinton Manor"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.0.proposed",
+     "ours": "1035",
+     "theirs": "1035",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Clinton Manor"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.0.ua",
+     "ours": "116",
+     "theirs": "116",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Clinton Manor"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.0.safmr",
+     "ours": "720",
+     "theirs": "720",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Clinton Manor"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.1.type",
+     "ours": "2BR/1BA",
+     "theirs": "2-Bedroom",
+     "status": "mismatch",
+     "cause": "undiagnosed",
+     "severity": "high",
+     "property": "Clinton Manor"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.1.units",
+     "ours": "24",
+     "theirs": "24",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Clinton Manor"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.1.proposed",
+     "ours": "1335",
+     "theirs": "1335",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Clinton Manor"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.1.ua",
+     "ours": "134",
+     "theirs": "134",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Clinton Manor"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.1.safmr",
+     "ours": "950",
+     "theirs": "950",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Clinton Manor"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.2.type",
+     "ours": "3BR/1.5BA",
+     "theirs": "3-Bedroom",
+     "status": "mismatch",
+     "cause": "undiagnosed",
+     "severity": "high",
+     "property": "Clinton Manor"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.2.units",
+     "ours": "18",
+     "theirs": "18",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Clinton Manor"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.2.proposed",
+     "ours": "1495",
+     "theirs": "1495",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Clinton Manor"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.2.ua",
+     "ours": "168",
+     "theirs": "168",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Clinton Manor"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.2.safmr",
+     "ours": "1160",
+     "theirs": "1160",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Clinton Manor"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.3.type",
+     "ours": "4BR/2.5BA",
+     "theirs": "4-Bedroom",
+     "status": "mismatch",
+     "cause": "undiagnosed",
+     "severity": "high",
+     "property": "Clinton Manor"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.3.units",
+     "ours": "6",
+     "theirs": "6",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Clinton Manor"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.3.proposed",
+     "ours": "1725",
+     "theirs": "1725",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Clinton Manor"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.3.ua",
+     "ours": "196",
+     "theirs": "196",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Clinton Manor"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.3.safmr",
+     "ours": "1340",
+     "theirs": "1340",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Clinton Manor"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.0.current",
+     "ours": null,
+     "theirs": "832",
+     "status": "missing-ours",
+     "cause": "undiagnosed",
+     "severity": "medium",
+     "property": "Clinton Manor"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.1.current",
+     "ours": null,
+     "theirs": "1016",
+     "status": "missing-ours",
+     "cause": "undiagnosed",
+     "severity": "medium",
+     "property": "Clinton Manor"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.2.current",
+     "ours": null,
+     "theirs": "1185",
+     "status": "missing-ours",
+     "cause": "undiagnosed",
+     "severity": "medium",
+     "property": "Clinton Manor"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.3.current",
+     "ours": null,
+     "theirs": "1337",
+     "status": "missing-ours",
+     "cause": "undiagnosed",
+     "severity": "medium",
+     "property": "Clinton Manor"
+    }
+   ],
+   "fillOrder": [],
+   "drift": [],
+   "notes": [
+    "filed: filed side read from the combined package: Clinton_Manor_(SC16-0061-005)_-_5-Year_RCS_Submission.pdf",
+    "filed: submittalLetter read from 2 - Clinton Manor - Submittal Cover Letter.pdf",
+    "filed: rentSchedule read from Final Copies - Clinton Manor (SC16-0061-005) Rent Schedule eff. 01.01.26 (executed).pdf",
+    "filed: analysisXlsx read from Clinton Manor - RCS Analysis.xlsx"
+   ],
+   "verdict": "10 differences",
+   "fuzz": {
+    "seed": 2565671169,
+    "counts": {
+     "edits": 4,
+     "escapes": 6,
+     "enters": 0,
+     "saves": 1,
+     "revertAlls": 1,
+     "drops": 4,
+     "clicks": 9,
+     "boundaries": 0,
+     "colourScans": 4,
+     "episodes": 4
+    },
+    "violations": [
+     {
+      "kind": "escape-left-residue",
+      "msg": "after escaping every edit to rest, 1 key(s) still differ from the pre-episode form: units.1.safmr_hud: \"1700\" -> \"2803\"",
+      "seed": 2565671169,
+      "evidence": {
+       "units.1.safmr_hud": {
+        "form": {
+         "value": "2803",
+         "source": "overridden",
+         "db_value": "1700",
+         "prior_value": "1700"
+        },
+        "snap": {
+         "value": "1700",
+         "source": "database",
+         "db_value": "1700"
+        },
+        "onScreen": false
+       }
+      },
+      "after": [
+       "type \"1850\" into #viewForm input[data-k][51]",
+       "click #viewForm [data-wibox][7]",
+       "open dropdown 9",
+       "pick menu row 7 of 8",
+       "type \"$1,234\" into #viewForm input[data-k][35]",
+       "type \"-5\" into #viewForm input[data-srcedit][7]",
+       "click Update property profile",
+       "— episode 3/4 [escape] 142 controls on screen",
+       "click #viewForm [data-fuel][1]",
+       "open dropdown 11",
+       "pick menu row 1 of 6",
+       "open dropdown 0",
+       "escape the open menu",
+       "escape (2 left)"
+      ]
+     }
+    ],
+    "actions": [
+     "— episode 1/4 [escape] 138 controls on screen",
+     "open dropdown 16",
+     "pick menu row 2 of 7",
+     "click #viewForm [data-cb][13]",
+     "click #viewForm [data-cb][32]",
+     "click #viewForm [data-cb][18]",
+     "escape (5 left)",
+     "escape (3 left)",
+     "escape (2 left)",
+     "escape (1 left)",
+     "— episode 2/4 [save] 138 controls on screen",
+     "type \"1850\" into #viewForm input[data-k][51]",
+     "click #viewForm [data-wibox][7]",
+     "open dropdown 9",
+     "pick menu row 7 of 8",
+     "type \"$1,234\" into #viewForm input[data-k][35]",
+     "type \"-5\" into #viewForm input[data-srcedit][7]",
+     "click Update property profile",
+     "— episode 3/4 [escape] 142 controls on screen",
+     "click #viewForm [data-fuel][1]",
+     "open dropdown 11",
+     "pick menu row 1 of 6",
+     "open dropdown 0",
+     "escape the open menu",
+     "escape (2 left)",
+     "— episode 4/4 [revertAll] 142 controls on screen",
+     "type \"42\" into #viewForm input[data-k][18]",
+     "click #viewForm [data-wibox][1]",
+     "click Revert to saved"
+    ]
+   },
+   "inputs": {
+    "study": "2026 - RCS/4 - 25-093 - Clinton Manor Apt, 100 Clinton Manor, Clinton, SC.pdf",
+    "priorRs": "2025/Clinton Manor - Rent Schedule eff 1.1.25 (executed).pdf",
+    "priorRsRule": "year-1 folder"
+   },
+   "notGenerated": [
+    "notes",
+    "sections",
+    "coverLetter",
+    "rcsStudy",
+    "checklist",
+    "tenantNotice",
+    "submittalLetter",
+    "rentSchedule"
+   ],
+   "notGeneratedWhy": null,
+   "counts": {
+    "compared": 26,
+    "matched": 16,
+    "differing": 10,
+    "fillOrder": 0,
+    "drift": 0,
+    "notGenerated": 8
+   }
+  },
+  {
+   "property": "Northcross",
+   "code": "2640001",
+   "folder": "2640001 - Northcross - Section 8",
+   "year": 2024,
+   "cycleLabel": "2024 - RCS",
+   "sha": "0d44de8",
+   "orders": {
+    "rs-first": {
+     "files": 3,
+     "tier": "text",
+     "weakerTest": false,
+     "ocrCalls": 2,
+     "via": "text",
+     "missing": null,
+     "warnings": [
+      "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+      "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “Northcross Townhomes”, and the management address. A letterhead can be uploaded on the property page.",
+      "package dialog: Northcross Townhomes · 1 of 6 ready · 5 not ready"
+     ],
+     "errors": [],
+     "docsExtracted": [
+      "analysisXlsx"
+     ]
+    },
+    "rcs-first": {
+     "files": 3,
+     "tier": "text",
+     "weakerTest": false,
+     "ocrCalls": 2,
+     "via": "text",
+     "missing": null,
+     "warnings": [
+      "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+      "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “Northcross Townhomes”, and the management address. A letterhead can be uploaded on the property page.",
+      "package dialog: Northcross Townhomes · 1 of 6 ready · 5 not ready"
+     ],
+     "errors": [],
+     "docsExtracted": [
+      "analysisXlsx"
+     ]
+    }
+   },
+   "rows": [
+    {
+     "doc": "analysisXlsx",
+     "key": "property.name",
+     "ours": "NorthcrossTownhomes",
+     "theirs": null,
+     "status": "missing-theirs",
+     "cause": "undiagnosed",
+     "severity": "medium",
+     "property": "Northcross"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "appr.firm",
+     "ours": "Renzi&Associates",
+     "theirs": null,
+     "status": "missing-theirs",
+     "cause": "undiagnosed",
+     "severity": "medium",
+     "property": "Northcross"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.0.type",
+     "ours": "2BR/1BA",
+     "theirs": "2-Bedroom",
+     "status": "mismatch",
+     "cause": "undiagnosed",
+     "severity": "high",
+     "property": "Northcross"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.0.units",
+     "ours": "45",
+     "theirs": "45",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Northcross"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.0.current",
+     "ours": "1220",
+     "theirs": "1220",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Northcross"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.0.proposed",
+     "ours": "1450",
+     "theirs": "1450",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Northcross"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.0.ua",
+     "ours": "180",
+     "theirs": null,
+     "status": "missing-theirs",
+     "cause": "undiagnosed",
+     "severity": "medium",
+     "property": "Northcross"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.0.safmr",
+     "ours": "1520",
+     "theirs": "1520",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Northcross"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.1.type",
+     "ours": "3BR/1.5BA",
+     "theirs": "3-Bedroom",
+     "status": "mismatch",
+     "cause": "undiagnosed",
+     "severity": "high",
+     "property": "Northcross"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.1.units",
+     "ours": "40",
+     "theirs": "40",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Northcross"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.1.current",
+     "ours": "1457",
+     "theirs": "1457",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Northcross"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.1.proposed",
+     "ours": "1850",
+     "theirs": "1850",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Northcross"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.1.ua",
+     "ours": "221",
+     "theirs": null,
+     "status": "missing-theirs",
+     "cause": "undiagnosed",
+     "severity": "medium",
+     "property": "Northcross"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.1.safmr",
+     "ours": "1890",
+     "theirs": "1890",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Northcross"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.2.type",
+     "ours": "4BR/1.5BA",
+     "theirs": "4-Bedroom",
+     "status": "mismatch",
+     "cause": "undiagnosed",
+     "severity": "high",
+     "property": "Northcross"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.2.units",
+     "ours": "14",
+     "theirs": "14",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Northcross"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.2.current",
+     "ours": "1662",
+     "theirs": "1662",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Northcross"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.2.proposed",
+     "ours": "2100",
+     "theirs": "2100",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Northcross"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.2.ua",
+     "ours": "246",
+     "theirs": null,
+     "status": "missing-theirs",
+     "cause": "undiagnosed",
+     "severity": "medium",
+     "property": "Northcross"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.2.safmr",
+     "ours": "2430",
+     "theirs": "2430",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Northcross"
+    }
+   ],
+   "fillOrder": [],
+   "drift": [],
+   "notes": [
+    "filed: filed side read from the combined package: Northcross Townhomes (NC19-E000-007) - 5-Year RCS Submission (signed).pdf",
+    "filed: checklist read from Owner RCS Checklist - Northcross.pdf",
+    "filed: tenantNotice read from 30-Day Notice to Tenants (rent increase) - Northcross.pdf",
+    "filed: rentSchedule read from Northcross Townhomes (NC19-E000-007) - 2024 Rent Schedule eff. 10.01.24 (signed).pdf",
+    "filed: analysisXlsx read from Northcross - RCS Analysis.xlsx"
+   ],
+   "verdict": "8 differences",
+   "fuzz": {
+    "seed": 3354317324,
+    "counts": {
+     "edits": 4,
+     "escapes": 8,
+     "enters": 1,
+     "saves": 1,
+     "revertAlls": 1,
+     "drops": 3,
+     "clicks": 4,
+     "boundaries": 0,
+     "colourScans": 4,
+     "episodes": 4
+    },
+    "violations": [],
+    "actions": [
+     "— episode 1/4 [escape] 131 controls on screen",
+     "type \"2,050\" into #viewForm input[data-srcedit][2]",
+     "type \"1234\" into #viewForm input[data-k][35]",
+     "type \"999999\" into #viewForm input[data-k][51]",
+     "click #viewForm [data-cb][4]",
+     "escape (5 left)",
+     "escape (3 left)",
+     "escape (2 left)",
+     "escape (1 left)",
+     "— episode 2/4 [save] 131 controls on screen",
+     "open dropdown 12",
+     "pick menu row 2 of 8",
+     "click #viewForm [data-fuel3][0]",
+     "open dropdown 2",
+     "escape the open menu",
+     "enter (commit)",
+     "click Update property profile",
+     "— episode 3/4 [revertAll] 134 controls on screen",
+     "open dropdown 9",
+     "escape the open menu",
+     "click Revert to saved",
+     "— episode 4/4 [escape] 134 controls on screen",
+     "click #viewForm [data-cb][4]",
+     "type \"-5\" into #viewForm input[data-k][36]",
+     "escape (3 left)",
+     "escape (1 left)"
+    ]
+   },
+   "inputs": {
+    "study": "2024 - RCS/24-127-Northcross Townhomes RCS v2 06.14.24.pdf",
+    "priorRs": "2023/Northcross Townhomes Rent Schedule 10-1-2023 (signed).pdf",
+    "priorRsRule": "year-1 folder"
+   },
+   "notGenerated": [
+    "notes",
+    "sections",
+    "coverLetter",
+    "rcsStudy",
+    "checklist",
+    "tenantNotice",
+    "rentSchedule"
+   ],
+   "notGeneratedWhy": null,
+   "counts": {
+    "compared": 20,
+    "matched": 12,
+    "differing": 8,
+    "fillOrder": 0,
+    "drift": 0,
+    "notGenerated": 7
+   }
+  },
+  {
+   "property": "Westwood Village",
+   "code": "4640009",
+   "folder": "4640009 - Westwood Village - Section 8",
+   "year": 2020,
+   "cycleLabel": "2020",
+   "sha": "0d44de8",
+   "orders": {
+    "rs-first": {
+     "error": "the tracker cannot date 4640009 2020 — its nearest startable row is 2021-08-01",
+     "files": 0
+    },
+    "rcs-first": {
+     "error": "the tracker cannot date 4640009 2020 — its nearest startable row is 2021-08-01",
+     "files": 0
+    }
+   },
+   "rows": [],
+   "fillOrder": [],
+   "drift": [],
+   "notes": [
+    "the manifest could not read this cycle's study; driving it anyway, because what the app does with an unreadable study is the observation",
+    "rs-first: drive threw -- the tracker cannot date 4640009 2020 — its nearest startable row is 2021-08-01",
+    "rcs-first: drive threw -- the tracker cannot date 4640009 2020 — its nearest startable row is 2021-08-01"
+   ],
+   "verdict": "the app generated nothing comparable",
+   "fuzz": null,
+   "inputs": {
+    "study": "2020/3a - Westwood Village Roanoke VA HUD RCS 2020, Federal Appraisal.pdf",
+    "priorRs": "2019/Westwood - Rent Schedule - Eff 10-1-19.pdf",
+    "priorRsRule": "year-1 folder"
+   }
+  },
+  {
+   "property": "Westwood Village",
+   "code": "4640009",
+   "folder": "4640009 - Westwood Village - Section 8",
+   "year": 2025,
+   "cycleLabel": "2025 - RCS",
+   "sha": "0d44de8",
+   "orders": {
+    "rs-first": {
+     "files": 3,
+     "tier": "unreadable:text",
+     "weakerTest": false,
+     "ocrCalls": 2,
+     "via": null,
+     "missing": null,
+     "warnings": [
+      "the rent schedule was not readable (kind=text, The page was read and squared with the blank form, but the printed labels do not sit where the form puts them (they are out by about 7.1 points), so the values could not be placed with confidence.) — no values can be applied from it",
+      "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+      "storm [save-left-dirt] after \"Update property profile\" settled, 1 key(s) still differ from the snapshot: units.4.safmr_hud  (seed 3805780444)",
+      "rent schedule: #rsApply never appeared — nothing was applied to the form",
+      "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “Westwood Village”, and the management address. A letterhead can be uploaded on the property page.",
+      "package dialog: Westwood Village · 1 of 6 ready · 5 not ready"
+     ],
+     "errors": [],
+     "docsExtracted": [
+      "analysisXlsx"
+     ]
+    },
+    "rcs-first": {
+     "files": 3,
+     "tier": "unreadable:text",
+     "weakerTest": false,
+     "ocrCalls": 2,
+     "via": null,
+     "missing": null,
+     "warnings": [
+      "the rent schedule was not readable (kind=text, The page was read and squared with the blank form, but the printed labels do not sit where the form puts them (they are out by about 7.1 points), so the values could not be placed with confidence.) — no values can be applied from it",
+      "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+      "storm [save-left-dirt] after \"Update property profile\" settled, 1 key(s) still differ from the snapshot: units.4.safmr_hud  (seed 3805780444)",
+      "rent schedule: #rsApply never appeared — nothing was applied to the form",
+      "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “Westwood Village”, and the management address. A letterhead can be uploaded on the property page.",
+      "package dialog: Westwood Village · 1 of 6 ready · 5 not ready"
+     ],
+     "errors": [],
+     "docsExtracted": [
+      "analysisXlsx"
+     ]
+    }
+   },
+   "rows": [
+    {
+     "doc": "analysisXlsx",
+     "key": "property.name",
+     "ours": "WestwoodVillage",
+     "theirs": null,
+     "status": "missing-theirs",
+     "cause": "undiagnosed",
+     "severity": "medium",
+     "property": "Westwood Village"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "appr.firm",
+     "ours": "BelfryValuation,LLC",
+     "theirs": null,
+     "status": "missing-theirs",
+     "cause": "undiagnosed",
+     "severity": "medium",
+     "property": "Westwood Village"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.0.type",
+     "ours": "2BR/1BA",
+     "theirs": "2Bed",
+     "status": "mismatch",
+     "cause": "undiagnosed",
+     "severity": "high",
+     "property": "Westwood Village"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.0.units",
+     "ours": "65",
+     "theirs": "65",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Westwood Village"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.0.proposed",
+     "ours": "1200",
+     "theirs": null,
+     "status": "missing-theirs",
+     "cause": "undiagnosed",
+     "severity": "medium",
+     "property": "Westwood Village"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.0.ua",
+     "ours": "122",
+     "theirs": null,
+     "status": "missing-theirs",
+     "cause": "undiagnosed",
+     "severity": "medium",
+     "property": "Westwood Village"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.0.safmr",
+     "ours": "1120",
+     "theirs": "930",
+     "status": "mismatch",
+     "cause": "undiagnosed",
+     "severity": "high",
+     "property": "Westwood Village"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.1.type",
+     "ours": "2BR/1BA",
+     "theirs": "2BedHC",
+     "status": "mismatch",
+     "cause": "undiagnosed",
+     "severity": "high",
+     "property": "Westwood Village"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.1.units",
+     "ours": "3",
+     "theirs": "3",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Westwood Village"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.1.proposed",
+     "ours": "1200",
+     "theirs": null,
+     "status": "missing-theirs",
+     "cause": "undiagnosed",
+     "severity": "medium",
+     "property": "Westwood Village"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.1.ua",
+     "ours": "86",
+     "theirs": null,
+     "status": "missing-theirs",
+     "cause": "undiagnosed",
+     "severity": "medium",
+     "property": "Westwood Village"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.1.safmr",
+     "ours": "1120",
+     "theirs": "930",
+     "status": "mismatch",
+     "cause": "undiagnosed",
+     "severity": "high",
+     "property": "Westwood Village"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.2.type",
+     "ours": "3BR/1BA",
+     "theirs": "3Bed",
+     "status": "mismatch",
+     "cause": "undiagnosed",
+     "severity": "high",
+     "property": "Westwood Village"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.2.units",
+     "ours": "33",
+     "theirs": "33",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Westwood Village"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.2.proposed",
+     "ours": "1350",
+     "theirs": null,
+     "status": "missing-theirs",
+     "cause": "undiagnosed",
+     "severity": "medium",
+     "property": "Westwood Village"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.2.ua",
+     "ours": "145",
+     "theirs": null,
+     "status": "missing-theirs",
+     "cause": "undiagnosed",
+     "severity": "medium",
+     "property": "Westwood Village"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.2.safmr",
+     "ours": "1570",
+     "theirs": "1120",
+     "status": "mismatch",
+     "cause": "undiagnosed",
+     "severity": "high",
+     "property": "Westwood Village"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.3.type",
+     "ours": "3BR/1BA",
+     "theirs": "3BedHC",
+     "status": "mismatch",
+     "cause": "undiagnosed",
+     "severity": "high",
+     "property": "Westwood Village"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.3.units",
+     "ours": "3",
+     "theirs": "3",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Westwood Village"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.3.proposed",
+     "ours": "1350",
+     "theirs": null,
+     "status": "missing-theirs",
+     "cause": "undiagnosed",
+     "severity": "medium",
+     "property": "Westwood Village"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.3.ua",
+     "ours": "155",
+     "theirs": null,
+     "status": "missing-theirs",
+     "cause": "undiagnosed",
+     "severity": "medium",
+     "property": "Westwood Village"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.3.safmr",
+     "ours": "1570",
+     "theirs": "1120",
+     "status": "mismatch",
+     "cause": "undiagnosed",
+     "severity": "high",
+     "property": "Westwood Village"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.4.type",
+     "ours": "4BR/2BA",
+     "theirs": "4Bed",
+     "status": "mismatch",
+     "cause": "undiagnosed",
+     "severity": "high",
+     "property": "Westwood Village"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.4.units",
+     "ours": "9",
+     "theirs": "9",
+     "status": "match",
+     "cause": "undiagnosed",
+     "severity": "none",
+     "property": "Westwood Village"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.4.proposed",
+     "ours": "1600",
+     "theirs": null,
+     "status": "missing-theirs",
+     "cause": "undiagnosed",
+     "severity": "medium",
+     "property": "Westwood Village"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.4.ua",
+     "ours": "151",
+     "theirs": null,
+     "status": "missing-theirs",
+     "cause": "undiagnosed",
+     "severity": "medium",
+     "property": "Westwood Village"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.4.safmr",
+     "ours": "1850",
+     "theirs": "1570",
+     "status": "mismatch",
+     "cause": "undiagnosed",
+     "severity": "high",
+     "property": "Westwood Village"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.0.current",
+     "ours": null,
+     "theirs": "753",
+     "status": "missing-ours",
+     "cause": "undiagnosed",
+     "severity": "medium",
+     "property": "Westwood Village"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.1.current",
+     "ours": null,
+     "theirs": "760",
+     "status": "missing-ours",
+     "cause": "undiagnosed",
+     "severity": "medium",
+     "property": "Westwood Village"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.2.current",
+     "ours": null,
+     "theirs": "887",
+     "status": "missing-ours",
+     "cause": "undiagnosed",
+     "severity": "medium",
+     "property": "Westwood Village"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.3.current",
+     "ours": null,
+     "theirs": "880",
+     "status": "missing-ours",
+     "cause": "undiagnosed",
+     "severity": "medium",
+     "property": "Westwood Village"
+    },
+    {
+     "doc": "analysisXlsx",
+     "key": "unit.4.current",
+     "ours": null,
+     "theirs": "973",
+     "status": "missing-ours",
+     "cause": "undiagnosed",
+     "severity": "medium",
+     "property": "Westwood Village"
+    }
+   ],
+   "fillOrder": [],
+   "drift": [],
+   "notes": [
+    "filed: filed side read from the combined package: Westwood_Village_5th_Year_Adjustment_Request_RCS_Submission_(eff._8.1.25) (Executed).pdf",
+    "filed: tenantNotice read from Westwood Village - Resident 30 Day Notice of Rent Increase.pdf",
+    "filed: rentSchedule read from FY2025 Rent Schedule.pdf",
+    "filed: analysisXlsx read from Westwood - RCS RCS Grid Analysis 11.30.24.xlsx"
+   ],
+   "verdict": "27 differences",
+   "fuzz": {
+    "seed": 3805780444,
+    "counts": {
+     "edits": 6,
+     "escapes": 3,
+     "enters": 2,
+     "saves": 3,
+     "revertAlls": 0,
+     "drops": 2,
+     "clicks": 7,
+     "boundaries": 0,
+     "colourScans": 4,
+     "episodes": 4
+    },
+    "violations": [
+     {
+      "kind": "save-left-dirt",
+      "msg": "after \"Update property profile\" settled, 1 key(s) still differ from the snapshot: units.4.safmr_hud",
+      "seed": 3805780444,
+      "evidence": {
+       "units.4.safmr_hud": {
+        "form": {
+         "value": "1422",
+         "source": "overridden",
+         "db_value": "2828",
+         "prior_value": "2828"
+        },
+        "snap": {
+         "value": "2828",
+         "source": "database",
+         "db_value": "2828"
+        },
+        "onScreen": false
+       }
+      },
+      "after": [
+       "— episode 1/4 [escape] 147 controls on screen",
+       "type \"999999\" into #viewForm input[data-k][13]",
+       "type \"129\" into #viewForm input[data-k][22]",
+       "type \"3/1/2026\" into #viewForm input[data-k][41]",
+       "escape (3 left)",
+       "escape (2 left)",
+       "escape (1 left)",
+       "— episode 2/4 [save] 147 controls on screen",
+       "open dropdown 18",
+       "pick menu row 3 of 8",
+       "open dropdown 3",
+       "pick menu row 0 of 4",
+       "click #viewForm [data-cb][19]",
+       "click Update property profile"
+      ]
+     }
+    ],
+    "actions": [
+     "— episode 1/4 [escape] 147 controls on screen",
+     "type \"999999\" into #viewForm input[data-k][13]",
+     "type \"129\" into #viewForm input[data-k][22]",
+     "type \"3/1/2026\" into #viewForm input[data-k][41]",
+     "escape (3 left)",
+     "escape (2 left)",
+     "escape (1 left)",
+     "— episode 2/4 [save] 147 controls on screen",
+     "open dropdown 18",
+     "pick menu row 3 of 8",
+     "open dropdown 3",
+     "pick menu row 0 of 4",
+     "click #viewForm [data-cb][19]",
+     "click Update property profile",
+     "— episode 3/4 [save] 153 controls on screen",
+     "type \"  \" into #viewForm input[data-k][45]",
+     "type \"2026-03-01\" into #viewForm input[data-k][46]",
+     "click Update property profile",
+     "— episode 4/4 [save] 153 controls on screen",
+     "click #viewForm [data-cb][5]",
+     "click #viewForm [data-wibox][6]",
+     "enter (commit)",
+     "click #viewForm [data-fuel][0]",
+     "click #viewForm [data-wibox][2]",
+     "enter (commit)",
+     "type \"3/1/2026\" into #viewForm input[data-k][54]",
+     "click Update property profile"
+    ]
+   },
+   "inputs": {
+    "study": "2025 - RCS/Submission/Exhibit 3 - 25-072 - Westwood Village, 748 Westwood Boulevard, Roanoke, VA.pdf",
+    "priorRs": "2024/Westwood Village Rent Schedule eff. 8.1.24.pdf",
+    "priorRsRule": "year-1 folder"
+   },
+   "notGenerated": [
+    "notes",
+    "sections",
+    "coverLetter",
+    "rcsStudy",
+    "checklist",
+    "tenantNotice",
+    "rentSchedule"
+   ],
+   "notGeneratedWhy": null,
+   "counts": {
+    "compared": 32,
+    "matched": 5,
+    "differing": 27,
+    "fillOrder": 0,
+    "drift": 0,
+    "notGenerated": 7
+   }
+  }
+ ]
+}

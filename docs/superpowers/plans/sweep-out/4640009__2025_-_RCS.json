@@ -4,7 +4,7 @@
  "folder": "4640009 - Westwood Village - Section 8",
  "year": 2025,
  "cycleLabel": "2025 - RCS",
- "sha": "ccc4568",
+ "sha": "0d44de8",
  "orders": {
   "rs-first": {
    "files": 3,
@@ -15,36 +15,36 @@
    "missing": null,
    "warnings": [
     "the rent schedule was not readable (kind=text, The page was read and squared with the blank form, but the printed labels do not sit where the form puts them (they are out by about 7.1 points), so the values could not be placed with confidence.) — no values can be applied from it",
+    "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+    "storm [save-left-dirt] after \"Update property profile\" settled, 1 key(s) still differ from the snapshot: units.4.safmr_hud  (seed 3805780444)",
     "rent schedule: #rsApply never appeared — nothing was applied to the form",
     "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “Westwood Village”, and the management address. A letterhead can be uploaded on the property page.",
     "package dialog: Westwood Village · 1 of 6 ready · 5 not ready"
    ],
-   "errors": [
-    "after the reload the app is on a DIFFERENT property/package than order A used — the second order would be measuring another record",
-    "after the reload the rent-schedule upload is GONE (tile says \"Current executed rent schedule\") — order B has nothing to fill from, and re-uploading would pay for the read twice",
-    "after the reload the study upload is GONE (tile says \"Completed RCS report\") — order B has nothing to fill from"
-   ],
+   "errors": [],
    "docsExtracted": [
     "analysisXlsx"
    ]
   },
   "rcs-first": {
-   "files": 0,
+   "files": 3,
    "tier": "unreadable:text",
    "weakerTest": false,
    "ocrCalls": 2,
    "via": null,
    "missing": null,
    "warnings": [
-    "the rent schedule was not readable (kind=text, The page was read and squared with the blank form, but the printed labels do not sit where the form puts them (they are out by about 7.1 points), so the values could not be placed with confidence.) — no values can be applied from it"
+    "the rent schedule was not readable (kind=text, The page was read and squared with the blank form, but the printed labels do not sit where the form puts them (they are out by about 7.1 points), so the values could not be placed with confidence.) — no values can be applied from it",
+    "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
+    "storm [save-left-dirt] after \"Update property profile\" settled, 1 key(s) still differ from the snapshot: units.4.safmr_hud  (seed 3805780444)",
+    "rent schedule: #rsApply never appeared — nothing was applied to the form",
+    "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “Westwood Village”, and the management address. A letterhead can be uploaded on the property page.",
+    "package dialog: Westwood Village · 1 of 6 ready · 5 not ready"
    ],
-   "errors": [
-    "after the reload the app is on a DIFFERENT property/package than order A used — the second order would be measuring another record",
-    "after the reload the rent-schedule upload is GONE (tile says \"Current executed rent schedule\") — order B has nothing to fill from, and re-uploading would pay for the read twice",
-    "after the reload the study upload is GONE (tile says \"Completed RCS report\") — order B has nothing to fill from",
-    "not run: an upload was lost across the reload, so this order could only have been produced by paying for a second read"
-   ],
-   "docsExtracted": []
+   "errors": [],
+   "docsExtracted": [
+    "analysisXlsx"
+   ]
   }
  },
  "rows": [
@@ -369,332 +369,7 @@
    "property": "Westwood Village"
   }
  ],
- "fillOrder": [
-  {
-   "doc": "analysisXlsx",
-   "key": "property.name",
-   "ours": "WestwoodVillage",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "fill-order",
-   "severity": "critical",
-   "property": "Westwood Village",
-   "oursRun": "rs-first",
-   "theirsRun": "rcs-first"
-  },
-  {
-   "doc": "analysisXlsx",
-   "key": "appr.firm",
-   "ours": "BelfryValuation,LLC",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "fill-order",
-   "severity": "critical",
-   "property": "Westwood Village",
-   "oursRun": "rs-first",
-   "theirsRun": "rcs-first"
-  },
-  {
-   "doc": "analysisXlsx",
-   "key": "unit.0.type",
-   "ours": "2BR/1BA",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "fill-order",
-   "severity": "critical",
-   "property": "Westwood Village",
-   "oursRun": "rs-first",
-   "theirsRun": "rcs-first"
-  },
-  {
-   "doc": "analysisXlsx",
-   "key": "unit.0.units",
-   "ours": "65",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "fill-order",
-   "severity": "critical",
-   "property": "Westwood Village",
-   "oursRun": "rs-first",
-   "theirsRun": "rcs-first"
-  },
-  {
-   "doc": "analysisXlsx",
-   "key": "unit.0.proposed",
-   "ours": "1200",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "fill-order",
-   "severity": "critical",
-   "property": "Westwood Village",
-   "oursRun": "rs-first",
-   "theirsRun": "rcs-first"
-  },
-  {
-   "doc": "analysisXlsx",
-   "key": "unit.0.ua",
-   "ours": "122",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "fill-order",
-   "severity": "critical",
-   "property": "Westwood Village",
-   "oursRun": "rs-first",
-   "theirsRun": "rcs-first"
-  },
-  {
-   "doc": "analysisXlsx",
-   "key": "unit.0.safmr",
-   "ours": "1120",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "fill-order",
-   "severity": "critical",
-   "property": "Westwood Village",
-   "oursRun": "rs-first",
-   "theirsRun": "rcs-first"
-  },
-  {
-   "doc": "analysisXlsx",
-   "key": "unit.1.type",
-   "ours": "2BR/1BA",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "fill-order",
-   "severity": "critical",
-   "property": "Westwood Village",
-   "oursRun": "rs-first",
-   "theirsRun": "rcs-first"
-  },
-  {
-   "doc": "analysisXlsx",
-   "key": "unit.1.units",
-   "ours": "3",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "fill-order",
-   "severity": "critical",
-   "property": "Westwood Village",
-   "oursRun": "rs-first",
-   "theirsRun": "rcs-first"
-  },
-  {
-   "doc": "analysisXlsx",
-   "key": "unit.1.proposed",
-   "ours": "1200",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "fill-order",
-   "severity": "critical",
-   "property": "Westwood Village",
-   "oursRun": "rs-first",
-   "theirsRun": "rcs-first"
-  },
-  {
-   "doc": "analysisXlsx",
-   "key": "unit.1.ua",
-   "ours": "86",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "fill-order",
-   "severity": "critical",
-   "property": "Westwood Village",
-   "oursRun": "rs-first",
-   "theirsRun": "rcs-first"
-  },
-  {
-   "doc": "analysisXlsx",
-   "key": "unit.1.safmr",
-   "ours": "1120",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "fill-order",
-   "severity": "critical",
-   "property": "Westwood Village",
-   "oursRun": "rs-first",
-   "theirsRun": "rcs-first"
-  },
-  {
-   "doc": "analysisXlsx",
-   "key": "unit.2.type",
-   "ours": "3BR/1BA",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "fill-order",
-   "severity": "critical",
-   "property": "Westwood Village",
-   "oursRun": "rs-first",
-   "theirsRun": "rcs-first"
-  },
-  {
-   "doc": "analysisXlsx",
-   "key": "unit.2.units",
-   "ours": "33",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "fill-order",
-   "severity": "critical",
-   "property": "Westwood Village",
-   "oursRun": "rs-first",
-   "theirsRun": "rcs-first"
-  },
-  {
-   "doc": "analysisXlsx",
-   "key": "unit.2.proposed",
-   "ours": "1350",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "fill-order",
-   "severity": "critical",
-   "property": "Westwood Village",
-   "oursRun": "rs-first",
-   "theirsRun": "rcs-first"
-  },
-  {
-   "doc": "analysisXlsx",
-   "key": "unit.2.ua",
-   "ours": "145",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "fill-order",
-   "severity": "critical",
-   "property": "Westwood Village",
-   "oursRun": "rs-first",
-   "theirsRun": "rcs-first"
-  },
-  {
-   "doc": "analysisXlsx",
-   "key": "unit.2.safmr",
-   "ours": "1570",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "fill-order",
-   "severity": "critical",
-   "property": "Westwood Village",
-   "oursRun": "rs-first",
-   "theirsRun": "rcs-first"
-  },
-  {
-   "doc": "analysisXlsx",
-   "key": "unit.3.type",
-   "ours": "3BR/1BA",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "fill-order",
-   "severity": "critical",
-   "property": "Westwood Village",
-   "oursRun": "rs-first",
-   "theirsRun": "rcs-first"
-  },
-  {
-   "doc": "analysisXlsx",
-   "key": "unit.3.units",
-   "ours": "3",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "fill-order",
-   "severity": "critical",
-   "property": "Westwood Village",
-   "oursRun": "rs-first",
-   "theirsRun": "rcs-first"
-  },
-  {
-   "doc": "analysisXlsx",
-   "key": "unit.3.proposed",
-   "ours": "1350",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "fill-order",
-   "severity": "critical",
-   "property": "Westwood Village",
-   "oursRun": "rs-first",
-   "theirsRun": "rcs-first"
-  },
-  {
-   "doc": "analysisXlsx",
-   "key": "unit.3.ua",
-   "ours": "155",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "fill-order",
-   "severity": "critical",
-   "property": "Westwood Village",
-   "oursRun": "rs-first",
-   "theirsRun": "rcs-first"
-  },
-  {
-   "doc": "analysisXlsx",
-   "key": "unit.3.safmr",
-   "ours": "1570",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "fill-order",
-   "severity": "critical",
-   "property": "Westwood Village",
-   "oursRun": "rs-first",
-   "theirsRun": "rcs-first"
-  },
-  {
-   "doc": "analysisXlsx",
-   "key": "unit.4.type",
-   "ours": "4BR/2BA",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "fill-order",
-   "severity": "critical",
-   "property": "Westwood Village",
-   "oursRun": "rs-first",
-   "theirsRun": "rcs-first"
-  },
-  {
-   "doc": "analysisXlsx",
-   "key": "unit.4.units",
-   "ours": "9",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "fill-order",
-   "severity": "critical",
-   "property": "Westwood Village",
-   "oursRun": "rs-first",
-   "theirsRun": "rcs-first"
-  },
-  {
-   "doc": "analysisXlsx",
-   "key": "unit.4.proposed",
-   "ours": "1600",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "fill-order",
-   "severity": "critical",
-   "property": "Westwood Village",
-   "oursRun": "rs-first",
-   "theirsRun": "rcs-first"
-  },
-  {
-   "doc": "analysisXlsx",
-   "key": "unit.4.ua",
-   "ours": "151",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "fill-order",
-   "severity": "critical",
-   "property": "Westwood Village",
-   "oursRun": "rs-first",
-   "theirsRun": "rcs-first"
-  },
-  {
-   "doc": "analysisXlsx",
-   "key": "unit.4.safmr",
-   "ours": "1850",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "fill-order",
-   "severity": "critical",
-   "property": "Westwood Village",
-   "oursRun": "rs-first",
-   "theirsRun": "rcs-first"
-  }
- ],
+ "fillOrder": [],
  "drift": [],
  "notes": [
   "filed: filed side read from the combined package: Westwood_Village_5th_Year_Adjustment_Request_RCS_Submission_(eff._8.1.25) (Executed).pdf",
@@ -704,43 +379,86 @@
  ],
  "verdict": "27 differences",
  "fuzz": {
-  "seed": 742772028,
+  "seed": 3805780444,
   "counts": {
-   "edits": 1,
-   "escapes": 1,
-   "enters": 3,
+   "edits": 6,
+   "escapes": 3,
+   "enters": 2,
    "saves": 3,
-   "revertAlls": 2,
-   "drops": 0,
-   "clicks": 0,
+   "revertAlls": 0,
+   "drops": 2,
+   "clicks": 7,
    "boundaries": 0,
-   "colourScans": 8,
-   "episodes": 8,
-   "dialogs": 3
+   "colourScans": 4,
+   "episodes": 4
   },
-  "violations": [],
+  "violations": [
+   {
+    "kind": "save-left-dirt",
+    "msg": "after \"Update property profile\" settled, 1 key(s) still differ from the snapshot: units.4.safmr_hud",
+    "seed": 3805780444,
+    "evidence": {
+     "units.4.safmr_hud": {
+      "form": {
+       "value": "1422",
+       "source": "overridden",
+       "db_value": "2828",
+       "prior_value": "2828"
+      },
+      "snap": {
+       "value": "2828",
+       "source": "database",
+       "db_value": "2828"
+      },
+      "onScreen": false
+     }
+    },
+    "after": [
+     "— episode 1/4 [escape] 147 controls on screen",
+     "type \"999999\" into #viewForm input[data-k][13]",
+     "type \"129\" into #viewForm input[data-k][22]",
+     "type \"3/1/2026\" into #viewForm input[data-k][41]",
+     "escape (3 left)",
+     "escape (2 left)",
+     "escape (1 left)",
+     "— episode 2/4 [save] 147 controls on screen",
+     "open dropdown 18",
+     "pick menu row 3 of 8",
+     "open dropdown 3",
+     "pick menu row 0 of 4",
+     "click #viewForm [data-cb][19]",
+     "click Update property profile"
+    ]
+   }
+  ],
   "actions": [
-   "— episode 1/8 [revertAll] 111 controls on screen",
-   "type \"2050\" into #viewForm input[data-k][21]",
-   "click Revert to saved",
+   "— episode 1/4 [escape] 147 controls on screen",
+   "type \"999999\" into #viewForm input[data-k][13]",
+   "type \"129\" into #viewForm input[data-k][22]",
+   "type \"3/1/2026\" into #viewForm input[data-k][41]",
+   "escape (3 left)",
+   "escape (2 left)",
    "escape (1 left)",
-   "— episode 2/8 [escape] 0 controls on screen",
-   "— episode 3/8 [save] 0 controls on screen",
+   "— episode 2/4 [save] 147 controls on screen",
+   "open dropdown 18",
+   "pick menu row 3 of 8",
+   "open dropdown 3",
+   "pick menu row 0 of 4",
+   "click #viewForm [data-cb][19]",
    "click Update property profile",
-   "dialog \"That name is already takenAnother property is already called\" -> answered \"Use this name\"",
-   "— episode 4/8 [save] 0 controls on screen",
-   "enter (commit)",
+   "— episode 3/4 [save] 153 controls on screen",
+   "type \"  \" into #viewForm input[data-k][45]",
+   "type \"2026-03-01\" into #viewForm input[data-k][46]",
    "click Update property profile",
-   "dialog \"That name is already takenAnother property is already called\" -> answered \"Open the other one\"",
-   "— episode 5/8 [save] 0 controls on screen",
+   "— episode 4/4 [save] 153 controls on screen",
+   "click #viewForm [data-cb][5]",
+   "click #viewForm [data-wibox][6]",
    "enter (commit)",
+   "click #viewForm [data-fuel][0]",
+   "click #viewForm [data-wibox][2]",
    "enter (commit)",
-   "click Update property profile",
-   "dialog \"That name is already takenAnother property is already called\" -> answered \"Use this name\"",
-   "— episode 6/8 [escape] 0 controls on screen",
-   "— episode 7/8 [escape] 0 controls on screen",
-   "— episode 8/8 [revertAll] 0 controls on screen",
-   "click Revert to saved"
+   "type \"3/1/2026\" into #viewForm input[data-k][54]",
+   "click Update property profile"
   ]
  },
  "inputs": {
@@ -762,7 +480,7 @@
   "compared": 32,
   "matched": 5,
   "differing": 27,
-  "fillOrder": 27,
+  "fillOrder": 0,
   "drift": 0,
   "notGenerated": 7
  }

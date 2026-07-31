@@ -4,880 +4,48 @@
  "folder": "75833 - Circle Park - Section 8",
  "year": 2026,
  "cycleLabel": "2026 - RCS",
- "sha": "ccc4568",
+ "sha": "0d44de8",
  "orders": {
   "rs-first": {
-   "files": 5,
-   "tier": "ocr",
+   "files": 3,
+   "tier": "text:half",
    "weakerTest": false,
-   "ocrCalls": 6,
-   "via": "ocr",
+   "ocrCalls": 2,
+   "via": "text",
    "missing": null,
    "warnings": [
+    "only the front half of the rent schedule was read — Parts F and G (ownership entity, principals, signatory) did not come through",
     "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
-    "storm [save-left-dirt] after \"Update property profile\" settled, 2 key(s) still differ from the snapshot: property.addr_city, partb.equipment.1  (seed 192877470)",
+    "storm [save-left-dirt] after \"Update property profile\" settled, 94 key(s) still differ from the snapshot: property.name, property.addr_street, property.addr_city, property.addr_state, property.addr_zip, property.s8  (seed 2074983486)",
     "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “Circle Park Apartments (IL060054027)”, and the management address. A letterhead can be uploaded on the property page.",
-    "package dialog: Circle Park Apartments (IL060054027) · 3 of 6 ready · 3 not ready"
+    "package dialog: Circle Park Apartments (IL060054027) · 1 of 6 ready · 5 not ready"
    ],
    "errors": [],
    "docsExtracted": [
-    "checklist",
-    "rentSchedule",
     "analysisXlsx"
    ]
   },
   "rcs-first": {
-   "files": 5,
-   "tier": "ocr",
+   "files": 3,
+   "tier": "text:half",
    "weakerTest": false,
-   "ocrCalls": 6,
-   "via": "ocr",
+   "ocrCalls": 2,
+   "via": "text",
    "missing": null,
    "warnings": [
+    "only the front half of the rent schedule was read — Parts F and G (ownership entity, principals, signatory) did not come through",
     "after reopening, the study is recalled without its bytes (rcsRecall, app.js:1404) — the reading is persisted but the PDF is not, so document 04 cannot be included until the file is re-attached. The harness re-attached it (no OCR, no fill) so both orders produce comparable packages.",
-    "storm [save-left-dirt] after \"Update property profile\" settled, 2 key(s) still differ from the snapshot: property.addr_city, partb.equipment.1  (seed 192877470)",
+    "storm [save-left-dirt] after \"Update property profile\" settled, 94 key(s) still differ from the snapshot: property.name, property.addr_street, property.addr_city, property.addr_state, property.addr_zip, property.s8  (seed 2074983486)",
     "modal before generation: No letterhead uploaded — The tenant notice will print with a generated header — the Related logo, “Circle Park Apartments (IL060054027)”, and the management address. A letterhead can be uploaded on the property page.",
-    "package dialog: Circle Park Apartments (IL060054027) · 3 of 6 ready · 3 not ready"
+    "package dialog: Circle Park Apartments (IL060054027) · 1 of 6 ready · 5 not ready"
    ],
    "errors": [],
    "docsExtracted": [
-    "checklist",
-    "rentSchedule",
     "analysisXlsx"
    ]
   }
  },
  "rows": [
-  {
-   "doc": "checklist",
-   "key": "heading",
-   "ours": "Owner’s  Checklist for  RCS  Submission",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "checklist",
-   "key": "property.name",
-   "ours": "CircleParkApartments(IL060054027)",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "checklist",
-   "key": "check.0",
-   "ours": "1",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "checklist",
-   "key": "check.1",
-   "ours": "1",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "checklist",
-   "key": "check.2",
-   "ours": "0",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "checklist",
-   "key": "check.3",
-   "ours": "1",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "checklist",
-   "key": "check.4",
-   "ours": "1",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "checklist",
-   "key": "check.5",
-   "ours": "1",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "checklist",
-   "key": "check.6",
-   "ours": "1",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "checklist",
-   "key": "check.7",
-   "ours": "1",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "checklist",
-   "key": "check.8",
-   "ours": "1",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "checklist",
-   "key": "check.9",
-   "ours": "1",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "checklist",
-   "key": "check.10",
-   "ours": "1",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "checklist",
-   "key": "check.11",
-   "ours": "1",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "checklist",
-   "key": "check.12",
-   "ours": "1",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "checklist",
-   "key": "check.13",
-   "ours": "1",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "checklist",
-   "key": "check.14",
-   "ours": "0",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "checklist",
-   "key": "check.15",
-   "ours": "1",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "checklist",
-   "key": "check.16",
-   "ours": "1",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "checklist",
-   "key": "checklist.signature",
-   "ours": "DavidPearson,VPofGP",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "property.name",
-   "ours": "CircleParkApartments(IL060054027)",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "rent_schedule.date_eff",
-   "ours": "02/01/2026",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "rent_schedule.eff_month",
-   "ours": "02",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "rent_schedule.eff_day",
-   "ours": "01",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "rent_schedule.eff_year",
-   "ours": "2026",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "total.contract_rent",
-   "ours": "837050",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "total.annual",
-   "ours": "10044600",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "nonrev.total_rent",
-   "ours": "0",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "owner.entity_name",
-   "ours": "CircleParkPreservation,L.P.",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "sig.name_title",
-   "ours": "DavidPearson,VicePresidentofGeneralPartner",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "total.units",
-   "ours": "239",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "unit.0.type",
-   "ours": "1BR/1BAElderly",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "unit.0.units",
-   "ours": "120",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "unit.0.rent",
-   "ours": "2975",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "unit.0.extension",
-   "ours": "357000",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "unit.0.ua",
-   "ours": "74",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "unit.0.gross",
-   "ours": "3049",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "unit.0.row",
-   "ours": "0",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "unit.1.type",
-   "ours": "2BR/1.5BAFlat",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "unit.1.units",
-   "ours": "4",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "unit.1.rent",
-   "ours": "3200",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "unit.1.extension",
-   "ours": "12800",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "unit.1.ua",
-   "ours": "100",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "unit.1.gross",
-   "ours": "3300",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "unit.1.row",
-   "ours": "1",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "unit.2.type",
-   "ours": "2BR/1.5BATH",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "unit.2.units",
-   "ours": "55",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "unit.2.rent",
-   "ours": "3400",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "unit.2.extension",
-   "ours": "187000",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "unit.2.ua",
-   "ours": "128",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "unit.2.gross",
-   "ours": "3528",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "unit.2.row",
-   "ours": "2",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "unit.3.type",
-   "ours": "3BR/1.5BAFlat",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "unit.3.units",
-   "ours": "2",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "unit.3.rent",
-   "ours": "4550",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "unit.3.extension",
-   "ours": "9100",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "unit.3.ua",
-   "ours": "185",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "unit.3.gross",
-   "ours": "4735",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "unit.3.row",
-   "ours": "3",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "unit.4.type",
-   "ours": "3BR/1.5BATH",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "unit.4.units",
-   "ours": "58",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "unit.4.rent",
-   "ours": "4675",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "unit.4.extension",
-   "ours": "271150",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "unit.4.ua",
-   "ours": "182",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "unit.4.gross",
-   "ours": "4857",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "unit.4.row",
-   "ours": "4",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "owner.entity_type",
-   "ours": "LimitedPartnership",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "partb.equipment.0",
-   "ours": "1",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "partb.equipment.1",
-   "ours": "1",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "partb.equipment.2",
-   "ours": "1",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "partb.equipment.4",
-   "ours": "1",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "partb.fuel.0",
-   "ours": "E",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "partb.fuel.1",
-   "ours": "E",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "partb.fuel.2",
-   "ours": "E",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "partb.fuel.3",
-   "ours": "E",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "partb.fuel.4",
-   "ours": "E",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "partb.services.0",
-   "ours": "1",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "partb.writein.e1.on",
-   "ours": "1",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "partb.writein.e1",
-   "ours": "Blinds",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "principals.0.name",
-   "ours": "CircleParkPreservationGP,LLC",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "principals.0.title",
-   "ours": ".01%GeneralPartner",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "principals.1.name",
-   "ours": "WellsFargoAffordableHousingCommunityDevelopmentCorporation",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "key": "principals.1.title",
-   "ours": "99.99%InvestorLimitedPartner",
-   "theirs": null,
-   "status": "missing-theirs",
-   "cause": "undiagnosed",
-   "severity": "medium",
-   "property": "Circle Park"
-  },
   {
    "doc": "analysisXlsx",
    "key": "property.name",
@@ -1200,1024 +368,7 @@
   }
  ],
  "fillOrder": [],
- "drift": [
-  {
-   "doc": "checklist",
-   "side": "theirs",
-   "line": "sampleownerschecklist",
-   "normalized": "sampleownerschecklist",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "checklist",
-   "side": "theirs",
-   "line": "davidpearsonvicepresidentofgeneralpartner",
-   "normalized": "davidpearsonvicepresidentofgeneralpartner",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "usdepartmentofhousingombapprovalno",
-   "normalized": "usdepartmentofhousingombapprovalno",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "rentschedule",
-   "normalized": "rentschedule",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "andurbandevelopment",
-   "normalized": "andurbandevelopment",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "lowrenthousingofficeofhousing",
-   "normalized": "lowrenthousingofficeofhousing",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "federalhousingcommissioner",
-   "normalized": "federalhousingcommissioner",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "seepageforinstructionspublicburdenstatementandprivacyactrequirements",
-   "normalized": "seepageforinstructionspublicburdenstatementandprivacyactrequirements",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "projectnamefhaprojectnumberdaterentswillbeeffectivemmddyyyy",
-   "normalized": "projectnamefhaprojectnumberdaterentswillbeeffectivemmddyyyy",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "partaapartmentrents",
-   "normalized": "partaapartmentrents",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "showtheactualrentsyouintendtochargeevenifthetotaloftheserentsislessthanthemaximumallowablemonthlyrentpotential",
-   "normalized": "showtheactualrentsyouintendtochargeevenifthetotaloftheserentsislessthanthemaximumallowablemonthlyrentpotential",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "colcolmarketrents",
-   "normalized": "colcolmarketrents",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "contractrents",
-   "normalized": "contractrents",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "unittypeutilitysecprojectsonly",
-   "normalized": "unittypeutilitysecprojectsonly",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "colallowancescolcol",
-   "normalized": "colallowancescolcol",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "includenonrevenuecolmonthlygrossrentcolmonthly",
-   "normalized": "includenonrevenuecolmonthlygrossrentcolmonthly",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "producingunitsnumbercolcontractrenteffectivedatecolcolrentmarketrent",
-   "normalized": "producingunitsnumbercolcontractrenteffectivedatecolcolrentmarketrent",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "ofunitsrentperunitpotentialmmddyyyyperunitpotential",
-   "normalized": "ofunitsrentperunitpotentialmmddyyyyperunitpotential",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "colxcolcolxcol",
-   "normalized": "colxcolcolxcol",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "monthlycontractrentpotentialmonthlymarketrentpotential",
-   "normalized": "monthlycontractrentpotentialmonthlymarketrentpotential",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "addcoladdcol",
-   "normalized": "addcoladdcol",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "yearlycontractrentpotentialyearlymarketrentpotential",
-   "normalized": "yearlycontractrentpotentialyearlymarketrentpotential",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "colsumxcolsumx",
-   "normalized": "colsumxcolsumx",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "theseamountsmaynotexceedthemaximumallowablemonthlyrentpotentialapprovedonthelastrentcomputationworksheetorrequestedonthe",
-   "normalized": "theseamountsmaynotexceedthemaximumallowablemonthlyrentpotentialapprovedonthelastrentcomputationworksheetorrequestedonthe",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "worksheetyouarenowsubmittingmarketrentpotentialappliesonlytosectionprojects",
-   "normalized": "worksheetyouarenowsubmittingmarketrentpotentialappliesonlytosectionprojects",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "partbitemsincludedinrentpartdnonrevenueproducingspace",
-   "normalized": "partbitemsincludedinrentpartdnonrevenueproducingspace",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "equipmentfurnishingsinunitcheckthoseincludedinrent",
-   "normalized": "equipmentfurnishingsinunitcheckthoseincludedinrent",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "rangedishwasher",
-   "normalized": "rangedishwasher",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "useunittypecontractrent",
-   "normalized": "useunittypecontractrent",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "refrigeratorcarpet",
-   "normalized": "refrigeratorcarpet",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "airconditionerdrapes",
-   "normalized": "airconditionerdrapes",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "utilitiescheckthoseincludedinrentforeachitemeventhosenot",
-   "normalized": "utilitiescheckthoseincludedinrentforeachitemeventhosenot",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "includedinrententereforgonlinebesidethatitem",
-   "normalized": "includedinrententereforgonlinebesidethatitem",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "eelectricggasffueloilorcoal",
-   "normalized": "eelectricggasffueloilorcoal",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "totalrentlossduetononrevenueunits",
-   "normalized": "totalrentlossduetononrevenueunits",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "heatinghotwaterlightsetc",
-   "normalized": "heatinghotwaterlightsetc",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "partecommercialspaceretailofficesgaragesetc",
-   "normalized": "partecommercialspaceretailofficesgaragesetc",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "coolingcooking",
-   "normalized": "coolingcooking",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "colcolrentalrate",
-   "normalized": "colcolrentalrate",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "servicesfacilitiescheckthoseincludedinrent",
-   "normalized": "servicesfacilitiescheckthoseincludedinrent",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "colmonthlyrentsquarepersqft",
-   "normalized": "colmonthlyrentsquarepersqft",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "usepotentialfootagecoldividedby",
-   "normalized": "usepotentialfootagecoldividedby",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "parkingnursingcare",
-   "normalized": "parkingnursingcare",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "laundrylinenmaidservice",
-   "normalized": "laundrylinenmaidservice",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "swimmingpool",
-   "normalized": "swimmingpool",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "tenniscourts",
-   "normalized": "tenniscourts",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "partcchargesinadditiontorentegparkingcabletvmeals",
-   "normalized": "partcchargesinadditiontorentegparkingcabletvmeals",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "purposemonthlycharge",
-   "normalized": "purposemonthlycharge",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "totalcommercialrent",
-   "normalized": "totalcommercialrent",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "partfmaximumallowablerentpotential",
-   "normalized": "partfmaximumallowablerentpotential",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "entermaximumallowablemonthlyrent",
-   "normalized": "entermaximumallowablemonthlyrent",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "potentialfromrentcomputation",
-   "normalized": "potentialfromrentcomputation",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "worksheettobecompletedbyhudorlender",
-   "normalized": "worksheettobecompletedbyhudorlender",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "previouseditionsareobsolete",
-   "normalized": "previouseditionsareobsolete",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "previouseditionsareobsolete",
-   "normalized": "previouseditionsareobsolete",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "previouseditionsareobsolete",
-   "normalized": "previouseditionsareobsolete",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "partginformationonmortgagorentity",
-   "normalized": "partginformationonmortgagorentity",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "nameofentity",
-   "normalized": "nameofentity",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "typeofentity",
-   "normalized": "typeofentity",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "individualgeneralpartnershipjointtenancytenantsincommonotherspecify",
-   "normalized": "individualgeneralpartnershipjointtenancytenantsincommonotherspecify",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "corporationtrust",
-   "normalized": "corporationtrust",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "listallprincipalscomprisingmortgagorentity",
-   "normalized": "listallprincipalscomprisingmortgagorentity",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "nameandtitle",
-   "normalized": "nameandtitle",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "nameandtitle",
-   "normalized": "nameandtitle",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "nameandtitle",
-   "normalized": "nameandtitle",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "nameandtitle",
-   "normalized": "nameandtitle",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "nameandtitle",
-   "normalized": "nameandtitle",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "nameandtitle",
-   "normalized": "nameandtitle",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "nameandtitle",
-   "normalized": "nameandtitle",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "nameandtitle",
-   "normalized": "nameandtitle",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "nameandtitle",
-   "normalized": "nameandtitle",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "nameandtitle",
-   "normalized": "nameandtitle",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "nameandtitle",
-   "normalized": "nameandtitle",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "parthownercertification",
-   "normalized": "parthownercertification",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "nameandtitleauthorizedofficialssignature",
-   "normalized": "nameandtitleauthorizedofficialssignature",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "datemmddyyyy",
-   "normalized": "datemmddyyyy",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "partihudlenderapproval",
-   "normalized": "partihudlenderapproval",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "addendumnumberbranchchieflenderofficialsignature",
-   "normalized": "addendumnumberbranchchieflenderofficialsignature",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "hapcontractnumberdatemmddyyyy",
-   "normalized": "hapcontractnumberdatemmddyyyy",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "exhibitnumberdirectorhousingmanagementdivisionsignature",
-   "normalized": "exhibitnumberdirectorhousingmanagementdivisionsignature",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "loanservicersignaturedatemmddyyyydatemmddyyyy",
-   "normalized": "loanservicersignaturedatemmddyyyydatemmddyyyy",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "osecutionsitwillnotbe",
-   "normalized": "osecutionsitwillnotbe",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "instructions",
-   "normalized": "instructions",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "allprojectownersmustsubmittheformhudwhenrequestcolumnforunsubsidizedprojectsshowtherentyouintendto",
-   "normalized": "allprojectownersmustsubmittheformhudwhenrequestcolumnforunsubsidizedprojectsshowtherentyouintendto",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "inganadjustmenttoprojectrentshudestablishesandapproveschargeforeachunittypeforsubsidizedprojectsshowthecontract",
-   "normalized": "inganadjustmenttoprojectrentshudestablishesandapproveschargeforeachunittypeforsubsidizedprojectsshowthecontract",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "rentalchargesandutilityallowancesontheformtheownerisrentasdefinedinhudhandbookforeachunittype",
-   "normalized": "rentalchargesandutilityallowancesontheformtheownerisrentasdefinedinhudhandbookforeachunittype",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "responsiblefornotifyingtenantsoftheapprovedrents",
-   "normalized": "responsiblefornotifyingtenantsoftheapprovedrents",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "columnforeachlinemultiplythecontractrentincolumnbythe",
-   "normalized": "columnforeachlinemultiplythecontractrentincolumnbythe",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "generalforprojectswithfullyinsuredorhudheldmortgagesthenumberofunitsincolumnaddmonthlycontractrentpotentialsfor",
-   "normalized": "generalforprojectswithfullyinsuredorhudheldmortgagesthenumberofunitsincolumnaddmonthlycontractrentpotentialsfor",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "owneragentsubmitsthisformtothehudfieldofficeforprojectseachunitsizetocomputethetotalmonthlycontractrentpotential",
-   "normalized": "owneragentsubmitsthisformtothehudfieldofficeforprojectseachunitsizetocomputethetotalmonthlycontractrentpotential",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "withcoinsuredmortgagestheowneragentsubmitsthisformtothemultiplythemonthlytotalbytocomputetheannualcontractrent",
-   "normalized": "withcoinsuredmortgagestheowneragentsubmitsthisformtothemultiplythemonthlytotalbytocomputetheannualcontractrent",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "lenderpotential",
-   "normalized": "lenderpotential",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "partaifthemonthlyrentpotentialyouareproposingislessthanorcolumnsandcompletethecolumnsonlyiftheprojecthasa",
-   "normalized": "partaifthemonthlyrentpotentialyouareproposingislessthanorcolumnsandcompletethecolumnsonlyiftheprojecthasa",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "equaltothemaximumallowablemonthlyrentpotentialapprovedbysubsidycontractwithhudandsomeutilitiesarenotincludedinthe",
-   "normalized": "equaltothemaximumallowablemonthlyrentpotentialapprovedbysubsidycontractwithhudandsomeutilitiesarenotincludedinthe",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "hudlenderonyouroriginalrentformulaoronyourmostrecentrentincolumnshowtheutilityallowanceforeachunittype",
-   "normalized": "hudlenderonyouroriginalrentformulaoronyourmostrecentrentincolumnshowtheutilityallowanceforeachunittype",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "rentcomputationworksheetcompleteallofpartaaccordingtothecomputethegrossrentforeachunittypebyaddingthecontractrent",
-   "normalized": "rentcomputationworksheetcompleteallofpartaaccordingtothecomputethegrossrentforeachunittypebyaddingthecontractrent",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "instructionsbelowifthemonthlyrentpotentialyouarerequestingincolumnandtheutilityallowanceincolumnshowthisamount",
-   "normalized": "instructionsbelowifthemonthlyrentpotentialyouarerequestingincolumnandtheutilityallowanceincolumnshowthisamount",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "exceedsthemaximumallowablemonthlyrentpotentialapprovedincolumn",
-   "normalized": "exceedsthemaximumallowablemonthlyrentpotentialapprovedincolumn",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "byhudlenderonyouroriginalrentformulaoronyourmostrecent",
-   "normalized": "byhudlenderonyouroriginalrentformulaoronyourmostrecent",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "columnsandcompletethesecolumnsonlyiftheprojectis",
-   "normalized": "columnsandcompletethesecolumnsonlyiftheprojectis",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "rentcomputationworksheetcompleteonlycolumnsand",
-   "normalized": "rentcomputationworksheetcompleteonlycolumnsand",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "receivingsectioninterestreductionpaymentsincolumn",
-   "normalized": "receivingsectioninterestreductionpaymentsincolumn",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "accordingtotheinstructionsbelowshowyourproposedrentsand",
-   "normalized": "accordingtotheinstructionsbelowshowyourproposedrentsand",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "showthemarketrentforeachunittypeincolumnforeachline",
-   "normalized": "showthemarketrentforeachunittypeincolumnforeachline",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "monthlyrentpotentialinthecoverlettertransmittingyourrent",
-   "normalized": "monthlyrentpotentialinthecoverlettertransmittingyourrent",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "multiplythemarketrentincolumnbythenumberofunitsincolumn",
-   "normalized": "multiplythemarketrentincolumnbythenumberofunitsincolumn",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "increaserequest",
-   "normalized": "increaserequest",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "addthemonthlymarketrentpotentialsforeachunitsizeto",
-   "normalized": "addthemonthlymarketrentpotentialsforeachunitsizeto",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "columnshoweachtypeofunitforwhichrentswillvaryshowthecomputethetotalmonthlymarketrentpotentialmultiplythemonthly",
-   "normalized": "columnshoweachtypeofunitforwhichrentswillvaryshowthecomputethetotalmonthlymarketrentpotentialmultiplythemonthly",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "numberofbedroomsandbathroomsandotherfeaturesthatcausetotalbytocomputetheannualmarketrentpotential",
-   "normalized": "numberofbedroomsandbathroomsandotherfeaturesthatcausetotalbytocomputetheannualmarketrentpotential",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "rentstovaryegbdmbdakettevsbdmbdrk",
-   "normalized": "rentstovaryegbdmbdakettevsbdmbdrk",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "partsbcdandecompletethesepartsaccordingtothe",
-   "normalized": "partsbcdandecompletethesepartsaccordingtothe",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "usethefollowingsymbols",
-   "normalized": "usethefollowingsymbols",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "instructionsontherentschedule",
-   "normalized": "instructionsontherentschedule",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "bdmbedroomlrlivingroom",
-   "normalized": "bdmbedroomlrlivingroom",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "partfdonotcompletethispartthehudfieldofficelenderwill",
-   "normalized": "partfdonotcompletethispartthehudfieldofficelenderwill",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "bbathdrdiningroom",
-   "normalized": "bbathdrdiningroom",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "completethispart",
-   "normalized": "completethispart",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "completethispart",
-   "normalized": "completethispart",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "kkitchendadiningalcove",
-   "normalized": "kkitchendadiningalcove",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "kettekitchenette",
-   "normalized": "kettekitchenette",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "partsgandhcompletethesepartsaccordingtotheinstructions",
-   "normalized": "partsgandhcompletethesepartsaccordingtotheinstructions",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "ontherentschedule",
-   "normalized": "ontherentschedule",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "columnshowthenumberofunitsforeachunittypeincludenon",
-   "normalized": "columnshowthenumberofunitsforeachunittypeincludenon",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "revenueproducingunits",
-   "normalized": "revenueproducingunits",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "ours",
-   "line": "partidonotcompletethispartthehudfieldofficelenderwill",
-   "normalized": "partidonotcompletethispartthehudfieldofficelenderwill",
-   "severity": "low",
-   "property": "Circle Park"
-  },
-  {
-   "doc": "rentSchedule",
-   "side": "theirs",
-   "line": "nationalhousingcompliance",
-   "normalized": "nationalhousingcompliance",
-   "severity": "low",
-   "property": "Circle Park"
-  }
- ],
+ "drift": [],
  "notes": [
   "filed: filed side read from the combined package: 0. Circle Park RCS Submission - Signed.pdf",
   "filed: checklist read from 3. Circle Park - Owner RCS Checklist.pdf",
@@ -2225,31 +376,46 @@
   "filed: rentSchedule read from 2026-Rent Schedule-Circle Park Apts IL060054027 - EXECUTED.pdf",
   "filed: analysisXlsx read from Circle Park - Rent Analysis.xlsx"
  ],
- "verdict": "95 differences",
+ "verdict": "12 differences",
  "fuzz": {
-  "seed": 192877470,
+  "seed": 2074983486,
   "counts": {
-   "edits": 12,
+   "edits": 5,
    "escapes": 9,
-   "enters": 1,
-   "saves": 3,
-   "revertAlls": 1,
-   "drops": 0,
-   "clicks": 6,
+   "enters": 2,
+   "saves": 1,
+   "revertAlls": 0,
+   "drops": 3,
+   "clicks": 10,
    "boundaries": 0,
-   "colourScans": 8,
-   "episodes": 8
+   "colourScans": 4,
+   "episodes": 4,
+   "dialogs": 1
   },
   "violations": [
    {
     "kind": "save-left-dirt",
-    "msg": "after \"Update property profile\" settled, 2 key(s) still differ from the snapshot: property.addr_city, partb.equipment.1",
-    "seed": 192877470,
+    "msg": "after \"Update property profile\" settled, 94 key(s) still differ from the snapshot: property.name, property.addr_street, property.addr_city, property.addr_state, property.addr_zip, property.s8",
+    "seed": 2074983486,
     "evidence": {
-     "property.addr_city": {
+     "property.name": {
       "form": {
-       "value": "999999",
-       "source": "new",
+       "value": "Circle Park Apartments (IL060054027)",
+       "source": "overridden",
+       "db_value": "Circle Park Apartments",
+       "prior_value": "Circle Park Apartments"
+      },
+      "snap": {
+       "value": "Circle Park Apartments",
+       "source": "database",
+       "db_value": "Circle Park Apartments"
+      },
+      "onScreen": true
+     },
+     "property.addr_street": {
+      "form": {
+       "value": "1111 South Ashland Avenue",
+       "source": "this-cycle",
        "db_value": null,
        "prior_value": null
       },
@@ -2260,9 +426,9 @@
       },
       "onScreen": true
      },
-     "partb.equipment.1": {
+     "property.addr_city": {
       "form": {
-       "value": "1",
+       "value": "Chicago",
        "source": "this-cycle",
        "db_value": null,
        "prior_value": null
@@ -2272,68 +438,105 @@
        "source": "new",
        "db_value": null
       },
-      "onScreen": false
+      "onScreen": true
+     },
+     "property.addr_state": {
+      "form": {
+       "value": "IL",
+       "source": "this-cycle",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": true
+     },
+     "property.addr_zip": {
+      "form": {
+       "value": "60607",
+       "source": "this-cycle",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": true
+     },
+     "property.s8": {
+      "form": {
+       "value": "IL060054027",
+       "source": "this-cycle",
+       "db_value": null,
+       "prior_value": null
+      },
+      "snap": {
+       "value": "",
+       "source": "new",
+       "db_value": null
+      },
+      "onScreen": true
      }
     },
     "after": [
+     "escape (4 left)",
      "escape (2 left)",
-     "— episode 2/8 [revertAll] 150 controls on screen",
-     "type \"2,050\" into #viewForm input[data-srcedit][7]",
-     "type \"1850\" into #viewForm input[data-k][54]",
-     "type \"1.5\" into #viewForm input[data-k][49]",
-     "click #viewForm [data-cb][1]",
-     "click #viewForm [data-cb][13]",
-     "click Revert to saved",
-     "escape (5 left)",
-     "escape (3 left)",
-     "escape (2 left)",
-     "— episode 3/8 [save] 111 controls on screen",
-     "type \"999999\" into #viewForm input[data-k][3]",
-     "click Update property profile"
+     "escape (1 left)",
+     "— episode 4/4 [save] 147 controls on screen",
+     "click #viewForm [data-wibox][8]",
+     "enter (commit)",
+     "open dropdown 3",
+     "escape the open menu",
+     "type \"1.5\" into #viewForm input[data-k][39]",
+     "enter (commit)",
+     "click #viewForm [data-cb][11]",
+     "type \"  \" into #viewForm input[data-k][42]",
+     "click Update property profile",
+     "dialog \"Delete 1 unit type with no unit count?Saving will remove 1 r\" -> answered \"Save anyway\""
     ]
    }
   ],
   "actions": [
-   "— episode 1/8 [escape] 150 controls on screen",
-   "click #viewForm [data-cb][29]",
-   "escape (2 left)",
-   "— episode 2/8 [revertAll] 150 controls on screen",
-   "type \"2,050\" into #viewForm input[data-srcedit][7]",
-   "type \"1850\" into #viewForm input[data-k][54]",
-   "type \"1.5\" into #viewForm input[data-k][49]",
-   "click #viewForm [data-cb][1]",
-   "click #viewForm [data-cb][13]",
-   "click Revert to saved",
+   "— episode 1/4 [escape] 147 controls on screen",
+   "type \"$1,234\" into #viewForm input[data-k][15]",
+   "type \"abc\" into #viewForm input[data-k][42]",
+   "open dropdown 13",
+   "pick menu row 5 of 7",
+   "type \"2,050\" into #viewForm input[data-k][53]",
    "escape (5 left)",
    "escape (3 left)",
    "escape (2 left)",
-   "— episode 3/8 [save] 111 controls on screen",
-   "type \"999999\" into #viewForm input[data-k][3]",
-   "click Update property profile",
    "escape (1 left)",
-   "— episode 4/8 [save] 111 controls on screen",
-   "type \"129\" into #viewForm input[data-k][17]",
-   "enter (commit)",
-   "click Update property profile",
-   "— episode 5/8 [escape] 111 controls on screen",
-   "click #viewForm [data-cb][4]",
-   "type \"1234\" into #viewForm input[data-k][35]",
-   "type \"\" into #viewForm input[data-k][16]",
-   "escape (4 left)",
-   "escape (1 left)",
-   "— episode 6/8 [save] 111 controls on screen",
-   "type \"1.5\" into #viewForm input[data-k][28]",
-   "type \"  \" into #viewForm input[data-k][16]",
-   "type \"2,050\" into #viewForm input[data-k][43]",
-   "type \"1234\" into #viewForm input[data-k][3]",
-   "click #viewForm [data-cb][11]",
-   "click Update property profile",
-   "— episode 7/8 [escape] 111 controls on screen",
-   "click #viewForm [data-cb][0]",
+   "— episode 2/4 [escape] 147 controls on screen",
+   "click #viewForm [data-wibox][10]",
+   "open dropdown 11",
+   "pick menu row 2 of 6",
    "escape (2 left)",
-   "— episode 8/8 [escape] 111 controls on screen",
-   "type \"0\" into #viewForm input[data-k][47]",
-   "escape (1 left)"
+   "— episode 3/4 [escape] 147 controls on screen",
+   "click #viewForm [data-wibox][2]",
+   "click #viewForm [data-cb][1]",
+   "click #viewForm [data-cb][18]",
+   "click #viewForm [data-cb][16]",
+   "click #viewForm [data-wibox][11]",
+   "escape (4 left)",
+   "escape (2 left)",
+   "escape (1 left)",
+   "— episode 4/4 [save] 147 controls on screen",
+   "click #viewForm [data-wibox][8]",
+   "enter (commit)",
+   "open dropdown 3",
+   "escape the open menu",
+   "type \"1.5\" into #viewForm input[data-k][39]",
+   "enter (commit)",
+   "click #viewForm [data-cb][11]",
+   "type \"  \" into #viewForm input[data-k][42]",
+   "click Update property profile",
+   "dialog \"Delete 1 unit type with no unit count?Saving will remove 1 r\" -> answered \"Save anyway\""
   ]
  },
  "inputs": {
@@ -2347,15 +550,17 @@
   "coverLetter",
   "submittalLetter",
   "rcsStudy",
-  "tenantNotice"
+  "checklist",
+  "tenantNotice",
+  "rentSchedule"
  ],
  "notGeneratedWhy": null,
  "counts": {
-  "compared": 115,
+  "compared": 32,
   "matched": 20,
-  "differing": 95,
+  "differing": 12,
   "fillOrder": 0,
-  "drift": 127,
-  "notGenerated": 6
+  "drift": 0,
+  "notGenerated": 8
  }
 }
