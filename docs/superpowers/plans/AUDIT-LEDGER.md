@@ -624,3 +624,90 @@ save. **Recorded as `undiagnosed`, not counted as app defects.**
 
 Northcross 2024 ran the storm and produced **zero** violations — so the storm is
 discriminating, not merely reporting noise on every package.
+
+---
+
+## Findings — Clinton Manor (75830), 2026 - RCS
+
+SHOULD vs FILED; no sweep record yet, so no three-way. Belfry study 25-093 and the
+FY2025 executed schedule read as images before any output was opened.
+
+**Operative rent schedule:** `Final Copies - … eff. 01.01.26 (executed).pdf` — the only
+one of four carrying the CA's notification page (Lisa T. Wilkerson, SC Housing,
+6 Nov 2025), a completed Part I and a handwritten Part F.
+
+### 1 · The executed HUD-92458 was altered after the owner certified it — `team wrong`
+
+The most serious finding in the corpus so far.
+
+Part H bears David Pearson's DocuSign of **27 Oct 2025**, envelope
+`309FFC35-DF36-441E-8260-D73440E40CE1`. The copy he signed carries:
+
+| | 1BR | 2BR | 3BR | 4BR |
+|---|--:|--:|--:|--:|
+| Col.5 UA **as signed** (27 Oct) | 95 | 131 | 154 | 149 |
+| Col.5 UA **as executed** | **98** | 131 | **150** | **167** |
+| Col.6 gross **as signed** | 1,130 | 1,466 | 1,649 | 1,874 |
+| Col.6 gross **as executed** | **1,133** | 1,466 | **1,645** | **1,892** |
+
+The executed copy carries **the same envelope ID and the same 27 Oct signature date**.
+At 400 dpi the changed figures render in a different, smaller, non-monospace face,
+misaligned within their cells against the Courier of the original form fill — **an
+overlay applied on 28 Oct, not a re-fill**. The owner's certification therefore attests
+to figures that are not the figures on the executed form, and the CA countersigned the
+altered document on 6 Nov.
+
+### 2 · The executed allowances are supported by no workbook in the folder — `undetermined`
+
+`Clinton Manor UA Workbook 2026.xlsx` computes `=AVERAGE('1 Bedroom Analysis'!N2:N45)`
+etc. → 95.458 / 130.909 / 153.598 / 149.120, rounded to **95 / 131 / 154 / 149** — the
+superseded set, dated 24 Oct. Nothing in the folder recomputes to 98/131/150/167; the
+only support is the 28 Oct UA Summary Letter's assertion. A second consumption tranche
+(`Clinton Manor Electric Consumption Part 2.xlsx`) is present and is consistent with a
+late revision, but **the revised workbook itself is not in the corpus**.
+
+This is the **third** instance of M2 (filed allowance unsupported by its governing
+source), after Westwood Village and Lansing Manor — and the second where the unsupported
+figure cannot be derived from anything in the folder at all.
+
+### 3 · The study contradicts itself on the 2BR concluded rent — `undetermined`
+
+HUD-92273-S8 Two-Bed grid row 46 reads **$1,325** / $1.44 psf (p.32, and identically in
+the bound submission p.40 — so not a rendering artifact). The transmittal, the 2BR
+reconciliation and the Conclusion all read **$1,335** / $1.45 psf. The team filed
+$1,335 throughout. Left `undetermined` because the grid is the HUD form the CA reviews,
+while the narrative's own logic ("adjusted range $1,334–$1,760 … reconciled at the
+low-end") favours $1,335. Bounded: at $1,325 the gross would be $90,288, and the 150%
+test passes either way.
+
+**This is the second instance of M5** (Oceanport's 1BR-Small grid says $2,500 where every
+summary says $2,525). Two properties — M5 now clears the mechanism bar: *the
+HUD-92273-S8 grid disagrees with the study's own summary tables on one unit type.*
+
+### 4 · The 150% SAFMR test passes by $12
+
+$90,528 against $90,540 — a margin of 0.013% (`workbook J10 = 0.99986746`). Arithmetically
+correct and it does clear. Recorded because at that margin a single rounding difference
+in one bedroom type flips the result.
+
+### Refines M1 — the FHA/HAP mislabel is 6 of 6, the typos are 2 of 6
+
+Clinton Manor prints `SC160061005` as "FHA Project No." in six places (transmittal, all
+four grid headers, Appendix 9-1-4). Read at 400 dpi, **all six are character-for-character
+correct** — the mislabel is present, the digits are not wrong. And the team did **not**
+propagate it: both executed schedules print `N/A` in the FHA field and put the contract
+number in Part I. So M1 is better stated as *the appraiser's template mislabels the field
+in every study; only sometimes does it also mistype it, and the team generally catches it.*
+
+### Source-side, not the team's work
+
+Study p.11 places the property in "Clinton, Laurens County, **North Carolina**". The
+study disagrees with itself on bathrooms — transmittal/Conclusion/grids say 3BR/1.5BA and
+4BR/2.5BA, the Improvements table says one bathroom throughout and the contents heads
+both sections "One Bathroom Units".
+
+### Unresolved
+
+Which UA decrease notice was served (v1 27 Oct with 95/131/154/149, or v2 28 Oct with
+98/131/150/167) — **no certificate of service, posting photograph or dated log exists in
+the folder**. Given finding 1, which notice residents received is not a filing detail.
