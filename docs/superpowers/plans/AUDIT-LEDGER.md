@@ -1623,3 +1623,63 @@ producer, means even a confirmed period here would not carry to the filed 2024 d
 ### Ledger position
 
 M1: 11 of 11 (unchanged — no new alias evidence).
+
+---
+
+## H7 · Four properties are in the corpus twice, and the manifest counts both — harness finding
+
+**⚠ ACTION FOR THE MAC LANE, not for the container.** The sweep is driven off
+`corpus.json`. Four packages in it are duplicates. Left alone, the Mac will drive each of
+them **twice** — spending the scarce leg on work already done, and writing **two**
+`ZZ-CORPUS-*` properties into Matt's live account per duplicated package instead of one.
+Two of the four have already been swept once.
+
+### What is on disk
+
+46 top-level folders in `/root/corpus`: **34 coded** (`NNNNN - Name - Section 8`) and
+**12 uncoded** (`Name - Section 8`). Four of the twelve are twins of a coded folder:
+
+| uncoded folder | coded twin | size | tree diff | already swept as |
+|---|---|--:|---|---|
+| `Colonial Village - Section 8` | `75708 - …` | 22 MB / 22 MB | 1 file — an Excel `~$` lock | **coded**, `75708__2026__RCS_.json` |
+| `Riverwood - Section 8` | `4640013 - …` | 126 MB / 126 MB | **none** | **coded**, `4640013__2025_-_RCS.json` |
+| `Lansing Manor - Section 8` | `75500 - …` | 80 MB / 80 MB | 1 file — an Excel `~$` lock | not yet |
+| `Fairview Homes - Section 8` | `75920 - …` | 124 MB / 124 MB | **none** | not yet |
+
+The only differences are `~$…xlsx` files — Excel's *workbook-is-currently-open* markers.
+Content is the same: `./2017/FY 2017 -RS.pdf` under both Riverwood folders is **byte-identical
+by `cmp`**.
+
+**So the corpus holds 42 distinct properties, not 46.** Every count derived from the
+manifest — properties, cycles, auditable cycles — is inflated by these four.
+
+### What this does and does not affect
+
+- **Verdicts already reached are safe.** Colonial Village and Riverwood were swept from
+  the coded folder, and the twins are byte-identical, so nothing read from either copy
+  could differ. The three-way verdicts stand.
+- **Cost and exposure are real.** Two duplicated packages are still queued. Driving them
+  buys nothing and doubles the live-account cleanup surface for those properties.
+
+### Not established
+
+Whether Drive genuinely holds two folders, or holds one folder plus a **shortcut** that
+rclone materialised as a second copy. `rclone copy` will expand a shortcut into a real
+directory under default settings, which would produce exactly this: same bytes, same tree,
+independent mtimes (the four pairs copied ~5 min apart). **Settle it with
+`rclone lsd gd:` and a check for the shortcut mime type** before concluding the PM team
+keeps two live copies of four properties. Until then this is a *fetch-or-Drive* question
+with the same operational answer either way: dedupe before sweeping.
+
+**The fix is one line of manifest hygiene** — drop an uncoded folder when a coded folder of
+the same name exists. Not applied here: `corpus.json` is the file the Mac is iterating, and
+mutating it mid-sweep is the kind of change that belongs on the machine doing the driving.
+
+### The eight uncoded-only properties are NOT duplicates
+
+`Cherry Garden`, `Crossroads of East Ravenswood`, `Gates Manor`, `Golden Link Manor`,
+`Manhattan Plaza`, `Southport Mews`, `Village Court`, `Woodland Towers` have no coded twin.
+They are real properties whose folders were never given a code prefix, and **none has been
+read**. Crossroads is in the current reading wave. Their contract/FHA numbers, read out of
+the documents, are the only identifiers they have — which makes them the packages where the
+alias problem (M1) is most likely to be invisible from the folder name alone.
