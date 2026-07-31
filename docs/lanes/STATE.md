@@ -8,14 +8,17 @@ the other one needs fixing.
 
 Last updated: **2026-07-31**, by the cloud — the sweep is running from the container.
 
-## Merged with main (d5ee71d) — ALL suites green now
+## Merged with main (d5ee71d) — still 13/14 (the 5 layout checks are the redesign lane's)
 
 `origin/main` folded in again (through `dcd7282`): the loader paging fix (`1b58fa1`, same
 `selectAll` logic as our `52b7b96` — reconciled `db.supabase.js` with `--ours`), the
 source-badge change this audit measures, and the redesign lane's Start-button/layout work.
-That last set **fixed the 5 `shell.head.html` layout checks** that were red — `run_tests.sh`
-now exits 0 with every suite green. `index.html` rebuilt from the merged source (not the
-line-merge) and RA anchor gate passes.
+**Correction of an earlier claim here:** the merge did NOT fix the 5 `shell.head.html` layout
+checks — `test_browser` is still red on exactly them (horizontal overflow at 1200/1280px, a
+sticky element scrolled off, the page pinned left at 1680/2560px), so `run_tests.sh` exits
+non-zero. **13 of 14 suites green; those 5 are the redesign lane's, pre-existing** — the
+success bar for any change here is *no NEW failures beyond those 5*. `index.html` rebuilt from
+the merged source (not the line-merge); RA anchor gate passes.
 
 ## The audit is a FIX-THE-APP job, not a report (Matt's correction, 2026-07-31)
 
