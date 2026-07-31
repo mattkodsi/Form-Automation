@@ -1185,7 +1185,14 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
 .cyc-tag{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.06em;color:var(--ink-3);background:var(--band);border-radius:5px;padding:2px 6px}
 .cyc-n{display:block;font-size:13.5px;font-weight:700;color:#1e293b;margin-top:6px}
 .cyc-s{display:block;font-size:11px;color:var(--muted);line-height:1.35;margin-top:3px}
-.cypg:hover{border-color:#9fb2d4}
+.cypg:not(.set):not(.off):hover{border-color:#9fb2d4}
+/* Answered by the renewal schedule: the chosen card wears the same selected
+   state a click would give it, the other stands down, and neither is a control.
+   Nothing focusable inside either — see FORM-RULES 20. */
+.cypg.set{border-color:var(--navy);background:#f5f8ff;box-shadow:0 0 0 2px rgba(30,58,95,.13);cursor:default}
+.cypg.set .cyc-tag{background:var(--navy);color:var(--surface)}
+.cypg.off{opacity:.42;cursor:default}
+.cyc-lk{position:absolute;top:9px;right:9px;width:12px;height:12px;color:var(--muted)}
 .cypg:has(input:checked){border-color:var(--navy);background:#f5f8ff;box-shadow:0 0 0 2px rgba(30,58,95,.13)}
 .cypg:has(input:checked) .cyc-tag{background:var(--navy);color:var(--surface)}
 .cypg:has(input:focus-visible){box-shadow:0 0 0 3px rgba(30,58,95,.22)}
@@ -1527,7 +1534,9 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
 .dialog .cyc-n{color:var(--i1);font-weight:600;font-size:13.5px}
 .dialog .cyc-s{color:var(--i3);font-weight:400;font-size:11.5px;line-height:1.45}
 .dialog .cypg{border-radius:var(--r-ctl);border-color:var(--ln)}
-.dialog .cypg:has(input:checked){border-color:var(--i2);background:var(--sunk)}
+.dialog .cypg:has(input:checked),.dialog .cypg.set{border-color:var(--i2);background:var(--sunk)}
+.dialog .cypg.set .cyc-tag{background:#101d2b;color:#fff}
+.dialog .cyc-lk{color:var(--i4)}
 /* The UAF row is a <label> inside .dlg-field, and the base `.dlg-field label`
    rule makes every one of those display:block — so .cyopt's flex never applied
    and its 8px gap did nothing: the 3px between box and text was the whitespace
