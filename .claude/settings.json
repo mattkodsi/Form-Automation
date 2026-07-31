@@ -7,7 +7,17 @@
       "Bash(rclone lsjson:*)",
       "Bash(rclone size:*)",
       "Bash(rclone version)",
-      "Bash(chmod 600:*)"
+      "Bash(chmod 600:*)",
+
+      "Bash(node app/full-mp/corpus/drive.js:*)",
+      "Bash(node app/full-mp/corpus/sweep.js:*)",
+      "Bash(node app/full-mp/corpus/build-manifest.js:*)",
+      "Bash(node app/full-mp/corpus/look.js:*)",
+      "Bash(node app/full-mp/corpus/rdiff.js:*)",
+      "Bash(node app/full-mp/fuzz.js:*)",
+      "Bash(bash app/full-mp/run_tests.sh:*)",
+      "Bash(bash app/full-mp/deliver.sh:*)",
+      "Bash(bash app/full-mp/build.sh:*)"
     ]
   }
 }
