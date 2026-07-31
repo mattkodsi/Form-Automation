@@ -1,7 +1,8 @@
 # The tracker decides when; the app decides what
 
 2026-07-30. Settled with Matt in conversation, measured against the real export
-before it was agreed. Nothing here is built yet.
+before it was agreed. **Built the same night** — see "What shipped" at the end
+for what is done and what is still open.
 
 ## The rule
 
@@ -106,10 +107,69 @@ December package inherits the September contract's unit mix.
 - **New property.** Everything is assumed to arrive through the tracker, but the
   button stays in the header for testing.
 
-## Order of work
+## What shipped (2026-07-30, commit `96fdb66`)
 
-1. Store the tracker row on the package (identity before locking anything).
-2. The data-layer guard, in both layers, with the tests.
-3. The locked field and its tooltip.
-4. The UAF month/day exception.
-5. Contract-number export back to Kinley — separate, later.
+The lock turned out to need no tracker-code plumbing at all, because
+`window.RASource` — Kinley's database seam, already wired for the per-cell source
+rows — is the authority. One predicate carries the whole feature:
+
+```js
+isLocked(cell)   // true only when RASource answers for that cell
+```
+
+False for a property this app created, so those keep full functionality for free.
+Turning the feature off again is `return false`.
+
+Done:
+
+- **The property name and the effective date lock** when that seam answers. Full
+  contrast, flat surface, nothing focusable, a drawn padlock carrying the note.
+- **The effective date got a real source.** It was being stored as
+  `date_eff_source='custom'` — "the user typed this" — which is the dishonesty the
+  start-a-package dialog existed to apologise for. It now lands in `date_eff_ra`
+  and outranks the executed schedule and any typed date: in the form, in
+  `cySyncEff` on both data layers, and on the federal form.
+- **The refusal is on the write**, not the widget (FORM-RULES 17). Both parse
+  fills ask `raLockedKey` first, so the rent schedule cannot set either key.
+- **Rename becomes the tenant alias alone** when the name is locked.
+- **A locked cell writes through**, so the value reaches the record and the
+  documents rather than only the screen — now FORM-RULES 20, because the first
+  version did it on one of the two paths that open a form and not the other.
+
+- **The new-package dialog states the schedule's answer** instead of pre-filling
+  it. Started from a tracker card, the programme and the effective date are
+  locked lines; started from "+ Start a package" nothing is locked, because that
+  is the only door a property the schedule does not carry can come through. UAF
+  stays a live checkbox either way.
+
+Verified by probe, not currently pinned by a suite check: when the seam's name
+differs from the one the app already stored, the form takes the seam's, the save
+writes it to the record, and the gallery follows — `Gates Manor Apartments` →
+`Gates Manor Apartments II`. Pinning it means saving inside the browser suite's
+tail, which would leave that name behind for whatever runs after; the 19 checks
+around it cover the lock itself.
+
+### Seeing it on this build
+
+`window.RASource` is injected by Kinley's port and by nothing else, so on the
+Supabase build every locked cell renders exactly as it always did and the whole
+feature is invisible. Open the app with **`?ra=1`** to stand the seam up locally:
+
+```
+index.html?ra=1
+```
+
+It invents nothing — it answers with the values the property already holds, so
+the only thing that changes is that the two cells stop being editable. A demo
+that made up a name would be showing something the app will never do.
+
+Still open, deliberately:
+
+- **Storing the tracker row on the package.** Not needed once RASource answers
+  per property. It comes back if Luther Towers is ever split, or when standalone
+  UAF is built.
+- **The programme lock in the new-package dialog.** The dialog already pre-fills
+  from the tracker; making it fixed is dialog code and waits on the UAF question.
+- **The UAF month/day exception.**
+- **Contract-number export back to Kinley** — separate piece.
+- **Correction turnaround**, which is still the thing the whole rule rests on.
