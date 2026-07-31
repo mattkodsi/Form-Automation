@@ -711,3 +711,133 @@ both sections "One Bathroom Units".
 Which UA decrease notice was served (v1 27 Oct with 95/131/154/149, or v2 28 Oct with
 98/131/150/167) — **no certificate of service, posting photograph or dated log exists in
 the folder**. Given finding 1, which notice residents received is not a filing detail.
+
+---
+
+## M7 · The app has never produced a complete package — 4 of 4 driven packages
+
+Read off the sweep records' own warnings. Every driven package ends with a package
+dialog stating how many of the six documents were ready:
+
+| package | study firm | rs tier | files | docs extracted | **package dialog** |
+|---|---|---|--:|---|---|
+| Colonial Village 2026 | Belfry | `text` | 5 | checklist, rentSchedule, analysisXlsx | **3 of 6 ready · 3 not ready** |
+| Northcross 2024 | Belfry | `text:half` | 3 | analysisXlsx | **1 of 6 ready · 5 not ready** |
+| Riverwood 2025 | Gill Group | `text:half` | 3 | analysisXlsx | **1 of 6 ready · 5 not ready** |
+| Westwood Village 2020 | Federal Appraisal | `ocr` | 3 | analysisXlsx | **1 of 6 ready · 5 not ready** |
+
+**Best case across the whole corpus so far is 3 of 6.** This is the finding the lane
+exists to produce, and it is not visible from any single package.
+
+Three separable mechanisms, each with its own property count:
+
+### M7a · `rcsRecall` drops the study's bytes on reopen — 4 of 4, with a code location
+
+> *"after reopening, the study is recalled without its bytes (`rcsRecall, app.js:1404`)
+> — the reading is persisted but the PDF is not, so **document 04 cannot be included**
+> until the file is re-attached."*
+
+Present on **every** driven package including the one that otherwise does best. Document
+04 is the RCS study itself — one of the six. So the study can never be included in a
+package built after a reopen, regardless of firm, tier or anything else. The warning
+names the function and line, so this is diagnosed, not merely observed.
+
+### M7b · The study reader yields no unit types on non-Belfry studies — 2 of 4
+
+> *"the study yielded no unit types — no values can be applied from it"* and
+> *"study: `#rcsApply` never appeared — nothing was applied to the form"*
+
+Riverwood (**Gill Group**, file `R2999R2017`) and Westwood Village 2020 (**Federal
+Appraisal**). Absent on both Belfry packages. Two properties, two different non-Belfry
+firms — clears the bar.
+
+The consequence is visible in Riverwood's rows: the app emitted **no** `unit.N.proposed`
+and **no** `unit.N.safmr` for any of its four unit types, where the filed workbook has
+all eight. The study concluded $1,355 / $1,400 / $1,565 / $1,875 and the app carried none
+of them.
+
+### M7c · `text:half` reads only the front of the prior rent schedule — 2 of 4
+
+> *"only the front half of the rent schedule was read — Parts F and G (ownership entity,
+> principals, signatory) did not come through"*
+
+Northcross and Riverwood, both at tier `text:half`. Colonial Village (`text`) and
+Westwood 2020 (`ocr`) do not show it. **The tier of the prior-schedule read predicts how
+much of the package the app can build** — `text` → 3 of 6, `text:half` and `ocr` → 1 of 6.
+That is a testable prediction for the remaining 84 cycles.
+
+---
+
+## THREE-WAY — Riverwood (4640013), 2025 - RCS
+
+All three legs present. SHOULD from the Gill Group study `R2999R2017` (FINAL, signed) and
+the FY2024 executed schedule; OURS from the sweep; FILED read by eye.
+
+Only 26 values were comparable, **all of them in the analysis workbook**, because the app
+produced nothing else comparable (M7 above).
+
+| # | doc · key | SHOULD | OURS | FILED | verdict |
+|--:|---|---|---|---|---|
+| 1 | `unit.{0-3}.proposed` | 1,355 / 1,400 / 1,565 / 1,875 | **absent** | 1,355 / 1,400 / 1,565 / 1,875 | **app wrong** |
+| 2 | `unit.{0-3}.safmr` | 1,030 / 1,030 / 1,260 / 1,780 | **absent** | 1,030 / 1,030 / 1,260 / 1,780 | **app wrong** |
+| 3 | `unit.N.type` ×4 | e.g. `1 Bedroom, Family` | `1BRFamily` | `1-Bedroom,Family` | cosmetic |
+
+**Mechanism traced:** rows 1–2 are M7b — the Gill study yielded no unit types, so there
+was nothing to price. FILED is correct on every one of the eight values; SHOULD confirms
+it. The app is the leg that disagrees.
+
+Row 3 is label formatting only and is excluded as style, consistent with Colonial
+Village's `2BR/1BA` vs `2BR`.
+
+### What FILED got wrong here, independently of the app
+
+| document | field | SHOULD | FILED | verdict |
+|---|---|---|---|---|
+| Executed HUD-92458 p.2 | HUD approval date | a four-digit year | **`04/24/205`** | team wrong (CA-entered) |
+| Executed HUD-92458 | document assembly | one instrument | p.1 has no DocuSign header and reads `Page 1 of 2`; p.2 carries the envelope and reads `Page 2 of 3` — **a splice** | team wrong (CA) |
+| HUD-92458 Part B | Dishwasher | checked (study says so three times) | unchecked, and also unchecked on FY2024 | team wrong |
+| UA decrease notice (filed) | inspection address ZIP | 22443 | **30043** | team wrong |
+| RCS study p.48 | secondary-type derivation | a $/sf figure | prints **`#NUM!`** twice: "dollar per square foot of #NUM! (78 SF x #NUM! = $45.24)" | team wrong (appraiser) |
+| UA baseline worksheet | sample size | 20 per type per state policy | **19** and **17** — and those are exactly the two types whose allowance *decreased* | team wrong |
+| CA reviewer letter | date | after the 19 Nov 2024 study | **3 Apr 2024**, seven months before it | team wrong (CA vendor) |
+
+The `#NUM!` is notable: an unresolved Excel error survived into the FINAL study and into
+the bound submission.
+
+---
+
+## Findings — Holly House (75564), 2025 - RCS
+
+SHOULD vs FILED; no sweep record yet. **There is no September package** — every "9.24"
+filename carries the rent *effective* date. The operative package is the 66-page
+`…3.27.2025 (Executed).pdf`; the `Archive/` copies are its unsigned pre-signature
+rendering, created three minutes earlier from the identical assembly.
+
+| # | document | field | SHOULD | FILED | verdict |
+|--:|---|---|---|---|---|
+| 1 | UA workbook `… _ Submission` | "Current Utility Allowance" | 48 / 51 (FY2024 executed) | **46 / 49** — the **2023** figures, one cycle stale | team wrong |
+| 2 | UA workbook | Contract / Project Number | NJ39E000038 | labels present, **values blank** | team wrong |
+| 3 | Owner's checklist | "Scope of Work" | checked | unchecked | team wrong |
+| 4 | Tenant notice | date | one date | headed **30 April**, signed **29 April** | team wrong |
+| 5 | Tenant notice | column headed "RCS Increase" | an increase | holds the **new rent level** ($1,950/$2,375); the actual increase sits under "Proposed Increase" | team wrong |
+| 6 | RCS study | "Subject's FHA #" | project has **no** FHA number (HAP contract says `NA`) | `NJ39E000038` on both grids and Appendix 9-1-4 | team wrong |
+| 7 | RCS study | stories | one value | "three-story" vs grid `WU/2` and "2-story" | team wrong |
+| 8 | RCS study p.12 | who pays in-unit electric | tenant (a UA exists) | "the property owner incurs" — contradicts its own grid and Part B | team wrong |
+| 9 | Belfry impact workbook | "Gill Grids" block | — | a **2BR rent of $1,750 against 0 units** in a 42-unit property with no 2BR | team wrong |
+
+**Item 3 is the fourth instance of M4** (Colonial Village, Westwood Village, Oceanport,
+Holly House) — "Scope of Work" left unchecked though the study carries a Scope of
+Assignment. Four of eight packages read.
+
+**Item 6 refines M1 again:** mislabel present, digits clean, and the *team* handled it
+correctly — the executed schedule's FHA box renders blank and Exhibit A says `N/A`.
+
+**Not contamination** (item 9): "Gill Grids" and "Renzi" are appraiser/grid-set labels,
+not property names, and the block inherits Holly House's own cells by reference. It is
+incoherent residue, not another property's data — the same distinction that saved
+Lansing Manor from a false finding.
+
+**Unresolved:** why the approved UA is 40/51 where the workbook proposed 38/53. The only
+candidate record is an NJHMFA `.msg` in compressed RTF, unreadable here. Four different
+UA pairs circulate in this cycle (61/64, 38/53, 46/49, 40/51); the submitted package is
+internally consistent, and the change came after it.
