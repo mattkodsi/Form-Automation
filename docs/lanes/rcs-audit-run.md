@@ -83,6 +83,27 @@ against a record that already holds it is not a simulation of the workflow — i
 3. Commit `docs/superpowers/plans/sweep-out/` and push after every wave, not at the end.
 4. Re-drive after every repair and report what moved.
 
+## Step one of every loop iteration, both machines: merge `origin/main`
+
+Not a rule people remember — the FIRST thing each iteration does.
+
+Main drifted **19 commits** under this lane before anyone noticed on the morning of
+2026-07-31, and had drifted **4 more** by that evening, including `2f8b4b7 The source
+badge follows the value`, which changes `app.js` and `test_browser.js` in exactly the
+provenance area this audit measures. A sweep run against an unmerged branch produces
+records describing a superseded build, and the first question anyone asks of a provenance
+difference is whether it is a real defect or a change the branch had not taken yet. That
+is the "app frozen at one SHA" problem `sweep.js` exists to prevent, arriving through the
+back door.
+
+**The cloud merges**, because it owns the code and can run the suites and deliver. It
+merges, runs all fourteen suites, and pushes before anything else in the iteration.
+
+**The Mac does not merge** — two machines merging one branch is a conflict waiting for the
+worst moment. It pulls, and if `git log rcs-audit..origin/main` is non-empty it reports
+that and does not drive, because a spot-check against a stale branch answers a question
+nobody asked.
+
 ## Rails that have each cost a run
 
 - **The property count is 249 and must stay 249.** If it changes, something deleted or
