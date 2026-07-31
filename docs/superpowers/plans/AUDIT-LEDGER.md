@@ -1144,3 +1144,105 @@ grid, not a Chapter 9 RCS — but it is the second property (with Oceanport) whe
 firms were commissioned and the higher conclusion went forward.
 
 **M1 is 9 of 9.** No letter-O substitution here; all zeros verified as digits at 400 dpi.
+
+---
+
+## Findings — Sycamore Green (75453), 2025 - RCS
+
+**The governing study is not the filed study.** Four versions of Renzi job 24-406 exist
+(25 Sep, 30 Oct, 3 Dec, 17 Dec 2024). **v4 governs** — its allowances ($51/$64) are the
+ones on the executed schedule. **v1 is what is bound into all three submission copies**,
+carrying the *prior year's* allowances ($42/$50) and a total gross renewal rent of
+**$280,680** instead of $283,196. Nothing in the folder shows v2–v4 was ever re-transmitted
+to CGI. Concluded rents never changed across the four ($1,200 / $1,450).
+
+**This is the second instance of H5** (Northcross) — the version that governs and the
+version that was filed are different documents.
+
+| # | document | field | SHOULD | FILED | verdict |
+|--:|---|---|---|---|---|
+| 1 | Study transmittal p.3, **all four versions** | unit total | **194** | **88** | team wrong |
+| 2 | Study v4 | SAFMR 1BR / 2BR | one value | transmittal `$990`/`$1,230` vs narrative `$1,050`/`$1,300` — and the study's **own addendum** (Rochester HA 2024 standards) supports neither | team wrong |
+| 3 | `RCS Analysis.xlsx` `I4`/`I5` | SAFMR | 990 / 1,230 | **1050 / 1310 hardcoded**, driving a SAFMR gross of 243,740 vs 229,020 — modified the day the schedule was signed | team wrong |
+| 4 | Conclusion p.40, 2BR map p.32, Comp 1 profile p.41 | 2BR unit type | **2BR/1BA** (Unit Breakdown; grid line 12 = 1) | **2BR/2BA** | team wrong |
+| 5 | Study p.17 vs p.26 + grid | stories | 3-story (`WU/3`) | "**two-story**" | team wrong |
+| 6 | Appendix 9-1-4 | temporary licence | v1 answers **YES** and attaches the NY temp cert (expiring 10/25/24) | v4 answers **NO** with a permanent NY licence — **re-answering a certification question about work already performed** under the temporary one | team wrong |
+| 7 | Both grids | "Grid was prepared" | one box ticked | both render blank | team wrong |
+
+M1: 9 of 9, digits clean. M8: not present — commas at 300–500 dpi.
+
+---
+
+## Findings — New Horizons (75474), 2024 - RCS
+
+**JLL governs and Renzi never entered the filed package** — the inverse of Oceanport.
+Proved five ways, including that the string "Renzi" appears nowhere in the 94-page bound
+submission, and that Renzi's engagement letter commissions "as-is grids" only.
+
+### The finding that matters
+
+The team's own workbook runs both firms through the 150% threshold in parallel blocks:
+
+| firm | gross potential | threshold | cell |
+|---|--:|--:|---|
+| **Renzi** | $226,242 | $205,095 | `Q19 = NO` — **over by $21,147** |
+| **JLL** | $204,742 | $205,095 | `Q35 = YES` — **under by $353 (0.17%)** |
+
+Renzi's grids would have tripped the mandatory market-rent threshold and forced HUD to
+order its own appraisal. JLL's do not, by less than one 4BR unit's monthly gross rent.
+The firm whose grids passed is the one whose study was filed.
+
+An earlier workbook states JLL's proposed rents as **formulas**: `E26 = 2800+F26` with
+`F26 = 225`, and the same $225 addend on all four types, the bases being JLL's own
+1-26-24 conclusions. **Reported as cell contents; no conclusion about intent is drawn,
+and whether the uplift preceded or followed JLL's revision is not determinable.**
+
+**My brief pointed at the wrong prior schedule.** I designated `2023/Unexecuted RS.pdf`;
+the agent found the genuinely executed one and showed the designated file carries a **$1
+error** (4BR UA 140 vs 139, gross 5,425 vs 5,424) traced to a superseded UAF. Three of
+five 2023 copies carry 140 — including one that is **owner-signed**. Anchoring SHOULD on
+the file I named would have propagated that error into every downstream row.
+
+**M1 breaks here, in the opposite direction.** New Horizons is **non-insured**: HUD's own
+extension and the 2019 executed schedule both print "**Non-Insured**" in the FHA box. The
+2024 schedule, Exhibit A and the 30-day certification leave it **blank** — a regression.
+Worse, the filed JLL grids assert `Subject's FHA #: 01297260`, **a number that appears in
+no HUD document in the corpus**, and JLL themselves removed it in their April revision.
+
+Also: the operative schedule has **no text layer at all** (Print-To-PDF), so every value
+had to be read as an image. M9 "RCS Increase" — **fourth instance**.
+
+---
+
+## Findings — North Park (75478), 2025
+
+**Two study builds forty minutes apart differ on a fact about the subject.** v1: "does not
+offer a community room". v2: "offers a community room". Grid row 27 flips `N/N` → `Y/N` on
+all four grids, reversing the clubhouse adjustment on three or four comparables each and
+raising **all twenty adjusted rents by exactly $10**. The rounded conclusions absorbed it.
+
+| # | document | field | SHOULD | FILED | verdict |
+|--:|---|---|---|---|---|
+| 1 | Study transmittal p.3 | $ PSF 1BD / 3BD | **$7.22 / $8.38** (as its own Conclusion and grids print) | **$7.18 / $8.35** — and $8.35 is the stale value from the superseded 24-548 draft | team wrong |
+| 2 | Owner's checklist | temp-licence box | unchecked (appraiser certified **NO**; no licence copy in the package) | **checked** | team wrong |
+| 3 | Study p.59 vs pp.6, 68 | who inspected | Zabel only | "Zabel **and** Walsh have made personal inspections" | team wrong |
+| 4 | Owner's cover letter item 8 | appraiser e-mail | `aaron@` (who signed everything) | **`neil@`** | team wrong |
+| 5 | Renzi invoice | city | Manhattan | **Brooklyn**; invoice job `24-548` while the filed study is `24-625`, and no invoice for 24-625 exists | team wrong |
+| 6 | 2025 schedule Col.5 | UA 94/112/123/129 | supported | **no document in the 2025 folder establishes them** (+27% to +45%, which no UAF factor produces); corroborated only downstream by the FY2026 UAF | undetermined |
+
+**M1 gains a second proved case.** North Park **has** a real FHA number — `01297263`, on
+its own executed schedules for 2016, 2021 and 2022 — blank from 2023 onward. The study
+prints the *contract* number under FHA labels in four places. As with Peterson Plaza, the
+FHA number exists and a different number is printed in its place.
+
+### M8 needs a correction — printed glyph vs OCR noise
+
+`pdftotext` on North Park's **2021** executed schedule emits `85.024`, `2.727`, `25.780`.
+**That is OCR noise in a scan's own text layer, not a printed period.** Read as an image,
+the glyphs are commas.
+
+So M8 as stated was too broad. The mechanism is real where the *rendering* shows a period
+(Westwood 2019/2020, Colonial Village 2026) — but a period seen in a **text layer** may be
+an artefact of the scan, not the document. **Only the rendered glyph counts**, which is
+exactly why the method reads images. A comparator patched to strip periods would corrupt
+genuine decimals; the fix must be per-document detection, not a blanket rule.
