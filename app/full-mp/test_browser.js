@@ -35,7 +35,7 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=564;   // 2026-07-30: +19 a locked cell is not a control, +4 the two doors into a package   // 2026-07-30 merge: union of both branches, counted off a real run (was ours 435 / main 399)
+const MIN_CHECKS=573;   // 2026-07-31: +8 the project-name box carries two names   // 2026-07-30: +19 a locked cell is not a control, +4 the two doors into a package   // 2026-07-30 merge: union of both branches, counted off a real run (was ours 435 / main 399)
                         //;   // 2026-07-30 merge: the union of both branches, counted off a real run.
                         // ours: +81 for the section rail — the indicator's choice of section swept
                         //   across the whole document, the jump landing clear of a #ccbar that is now
@@ -3004,7 +3004,12 @@ const FULL=process.argv.includes('--full');
     eq('Tab finishes a section’s left column before it crosses to the right',crossedBack,[]);
     eq('and inside a column it only ever moves down the page',wentUp,[]);
 
-    const PROPERTY=['property.name','▾ property.name','tenant.property_alias',
+    /* 'tenant.property_alias' gained its own ▾ on 2026-07-31: HUD-92458 Part A
+       holds the tenant-facing name in the same box as the registry one, so the
+       cell has a source to declare and a stop to be tabbed to. A cell with a
+       source row the keyboard cannot reach would be the exact fault rule 7 is
+       about, so this list grows rather than the row being made unreachable. */
+    const PROPERTY=['property.name','▾ property.name','tenant.property_alias','▾ tenant.property_alias',
       'property.addr_street','property.addr_city','▾ property.addr_state','property.addr_zip',
       '▾ property.addr','owner.entity_name','▾ owner.entity_name','▾ owner.entity_type',
       'property.s8','▾ property.s8','property.fha','▾ property.fha'];
@@ -3626,6 +3631,59 @@ const FULL=process.argv.includes('--full');
     await c.eval('return window.__t.__renderBody()');
     T('removing the answer returns the ordinary input',
       await c.eval(`return !!document.querySelector('input[data-k="property.name"]')`));
+
+    /* ── ONE BOX ON THE FORM, TWO FACTS IN IT ──────────────────────────
+       HUD-92458 Part A has a single project-name box, and a property its
+       tenants know by another name is typed into it as
+       "Colonial Village/White Oak Townhomes". Splitting that was written into
+       the FILL and nowhere else, so pressing "Fill form from RS" put the halves
+       in the right two cells while the property name's own source row offered
+       the whole slashed string — and the alias had no source row at all, so the
+       only way to get the half the document plainly contains was to retype it.
+       One rule on one of the two paths that use it (rule 17). */
+    console.log('\n── the project-name box carries two names ─────────────');
+    await openForm();
+    await c.eval(`window.__t.__setRsParsed({scalars:{'property.name':'Colonial Village/White Oak Townhomes'},
+      units:[],nonrev:[],ns8:[],principals:[]});window.__t.__renderBody();return 1`);
+    await sleep(350);
+    const _sp=await c.eval(`const grab=k=>{const b=document.querySelector('[data-box="'+k+'"]');
+        if(!b)return ['(no cell)'];
+        return [...b.querySelectorAll('.uaopt.srcopt')].map(o=>
+          (o.classList.contains('srcdim')?'DIM':o.textContent.replace(/\\s+/g,' ').trim()));};
+      return {name:grab('property.name'),alias:grab('tenant.property_alias')};`);
+    eq('the name row offers the registry half alone',_sp.name[0],'Colonial VillageExecuted RS');
+    T('and the tenant name has a row of its own',_sp.alias.length>0);
+    eq('offering the other half',_sp.alias[0],'White Oak TownhomesExecuted RS');
+    /* Rule 1: declared whether or not this document carries a second name. Dim
+       reads as "the RS does not say"; offering nothing reads as "this cell has
+       no source", which is a different and untrue claim. */
+    eq('and the study is declared there too, dim',_sp.alias[1],'DIM');
+    eq('picking the name row lands the registry half',
+      await c.eval(`const o=document.querySelector('[data-box="property.name"] .uaopt.srcopt');if(o)o.click();
+        return (window.__t.__form()['property.name']||{}).value`),'Colonial Village');
+    eq('and picking the alias row lands the other',
+      await c.eval(`const o=document.querySelector('[data-box="tenant.property_alias"] .uaopt.srcopt');if(o)o.click();
+        return (window.__t.__form()['tenant.property_alias']||{}).value`),'White Oak Townhomes');
+    /* The fill and the rows must agree — that they did not is the whole defect. */
+    await openForm();
+    await c.eval(`window.__t.__setRsParsed({scalars:{'property.name':'Colonial Village/White Oak Townhomes'},
+      units:[],nonrev:[],ns8:[],principals:[]});return 1`);
+    await c.eval('return window.__t.__rsFill&&window.__t.__rsFill()');
+    const _fl=await c.eval(`const f=window.__t.__form();
+      return [(f['property.name']||{}).value,(f['tenant.property_alias']||{}).value]`);
+    eq('and Fill form from RS agrees with them',_fl,['Colonial Village','White Oak Townhomes']);
+    /* A name with no slash is one fact, and must not be halved. */
+    await openForm();
+    await c.eval(`window.__t.__setRsParsed({scalars:{'property.name':'Gates Manor Apartments'},
+      units:[],nonrev:[],ns8:[],principals:[]});window.__t.__renderBody();return 1`);
+    await sleep(300);
+    const _one=await c.eval(`const b=document.querySelector('[data-box="tenant.property_alias"] .uaopt.srcopt');
+      return {aliasDim:!!(b&&b.classList.contains('srcdim')),
+        name:(document.querySelector('[data-box="property.name"] .uaopt.srcopt')||{}).textContent||''};`);
+    T('an unslashed name offers the tenant cell nothing',_one.aliasDim);
+    T('and reaches the name cell whole',/Gates Manor Apartments/.test(_one.name));
+    await c.eval('window.__t.__setRsParsed(null);return 1');
+    await openForm();
 
     console.log('\n── the console stayed quiet ───────────────────────────');
     eq('no console errors and no uncaught exceptions',c.logs.slice(0,3),[]);
