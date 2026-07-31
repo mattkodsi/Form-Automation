@@ -523,9 +523,10 @@ function applyRaLocked(){
 function isLocked(cell){return raLockVal(cell)!=null;}
 /* Drawn, not typed: a padlock emoji renders in a different family on every
    platform, and rule 16's spirit is that nothing user-visible is left to chance. */
-const LOCKMK='<svg class="lockmk" viewBox="0 0 24 24" aria-hidden="true">'
+const lockGlyph=cls=>'<svg class="'+cls+'" viewBox="0 0 24 24" aria-hidden="true">'
   +'<path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>'
   +'<rect x="5" y="10" width="14" height="9.5" rx="2" fill="currentColor"/></svg>';
+const LOCKMK=lockGlyph('lockmk');
 /* Not greyed out. Grey reads as broken rather than governed, and the value still
    has to be legible on a document nobody can retype. Full contrast, no border
    the eye reads as an input, no hover, no caret — and the lock carries the why. */
@@ -5253,13 +5254,26 @@ function newCycleDialog(pre){
     +'<span class="cyc-tag">'+tag+'</span>'
     +'<span class="cyc-n">'+name+'</span>'
     +'<span class="cyc-s">'+sub+'</span></label>';
+  /* Locked, the question keeps the shape it has everywhere else: two cards, one
+     of them answered. A single sentence in place of the pair made the scheduled
+     properties look like a different product from the ones started by hand, and
+     hid the fact that there were ever two answers to choose between. */
+  const lockedCard=(prog,tag,name,sub)=>{const on=_fixProg===prog;
+    return '<div class="cypg '+(on?'set':'off')+'"'+(on?' title="'+esc(_WHY_PROG)+'"':'')+'>'
+      +'<span class="cyc-tag">'+tag+'</span>'
+      +'<span class="cyc-n">'+name+'</span>'
+      +'<span class="cyc-s">'+sub+'</span>'
+      +(on?lockGlyph('cyc-lk'):'')+'</div>';};
   modal('<div class="dlg-t">Start new package</div>'
     +'<div class="dlg-sub">'+esc((((mpdb.listProperties()||[]).find(p=>p.id===activePid))||{}).name||'')+(effPh?(' \u00b7 the next one after '+esc(String(effPh).slice(-4))):'')+'</div>'
     +((_fixed||!(pre&&pre.effective))?'':'<div class="lh-note" style="margin:-4px 0 12px">'+esc('The renewal schedule has this as an '+(pre.type||'')+' effective '+fmtDateLong(pre.effective)+'.')+'</div>')
     +'<div class="dlg-field"><label>How are the rents being set?</label>'
-    +(_fixed?lockedLine((_fixProg==='ocaf'?'OCAF \u2014 HUD\u2019s published factor sets the rents':'RCS \u2014 a rent comparability study sets the rents'),_WHY_PROG)
-      :('<div class="cypgs">'+card('cyRCS','RCS','Market reset','A rent comparability study sets the rents.')
-                            +card('cyOCAF','OCAF','Factor adjustment','HUD\u2019s published factor sets the rents.')+'</div>'))+'</div>'
+    +'<div class="cypgs">'
+    +(_fixed?(lockedCard('rcs','RCS','Market reset','A rent comparability study sets the rents.')
+             +lockedCard('ocaf','OCAF','Factor adjustment','HUD\u2019s published factor sets the rents.'))
+            :(card('cyRCS','RCS','Market reset','A rent comparability study sets the rents.')
+             +card('cyOCAF','OCAF','Factor adjustment','HUD\u2019s published factor sets the rents.')))
+    +'</div></div>'
     +'<div class="dlg-field"><label class="cyaddl">Also in this package</label>'
     +'<label class="cyopt cyadd"><input type="checkbox" id="cyUAF"> <span><b>UAF</b> \u2014 revise the utility allowances</span></label></div>'
     +'<div class="dlg-field"><label>Rents effective</label>'

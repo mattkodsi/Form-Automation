@@ -35,7 +35,7 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=580;   // 2026-07-31: +6 the source badge follows the value   // 2026-07-31: +8 the project-name box carries two names   // 2026-07-30: +19 a locked cell is not a control, +4 the two doors into a package   // 2026-07-30 merge: union of both branches, counted off a real run (was ours 435 / main 399)
+const MIN_CHECKS=584;   // 2026-07-31: +6 the source badge follows the value   // 2026-07-31: +8 the project-name box carries two names   // 2026-07-30: +19 a locked cell is not a control, +4 the two doors into a package   // 2026-07-30 merge: union of both branches, counted off a real run (was ours 435 / main 399)
                         //;   // 2026-07-30 merge: the union of both branches, counted off a real run.
                         // ours: +81 for the section rail — the indicator's choice of section swept
                         //   across the whole document, the jump landing clear of a #ccbar that is now
@@ -2291,11 +2291,17 @@ const FULL=process.argv.includes('--full');
 
       await c.eval('document.querySelector(\'[data-pact="ST001"]\').click();return 1');
       await sleep(500);
-      const dlg=await c.eval(`return {open:document.getElementById("scrim").classList.contains("open"),
+      const dlg=await c.eval(`const cards=[...document.querySelectorAll("#dialog .cypg")];
+        return {open:document.getElementById("scrim").classList.contains("open"),
         radios:!!document.getElementById("cyRCS")||!!document.getElementById("cyOCAF"),
         dateInput:!!document.getElementById("cyEff"),
         uafBox:!!document.getElementById("cyUAF"),
         uaf:!!(document.getElementById("cyUAF")||{}).checked,
+        cards:cards.length,
+        set:cards.filter(x=>x.classList.contains("set")).map(x=>x.querySelector(".cyc-tag").textContent),
+        off:cards.filter(x=>x.classList.contains("off")).map(x=>x.querySelector(".cyc-tag").textContent),
+        cardFocusables:cards.reduce((n,x)=>n+x.querySelectorAll("input,button,select,[tabindex]").length,0),
+        setTitle:(cards.find(x=>x.classList.contains("set"))||{getAttribute:()=>""}).getAttribute("title")||"",
         locked:[...document.querySelectorAll("#dialog .fbox.locked .lockv")].map(x=>x.textContent),
         titles:[...document.querySelectorAll("#dialog .fbox.locked")].map(x=>x.getAttribute("title")||"")};`);
       T('pressing Start opens the new-package dialog',dlg.open);
@@ -2305,13 +2311,20 @@ const FULL=process.argv.includes('--full');
          disagree. The dialog is still a confirming click, not a silent create —
          createCycle would otherwise record the date as date_eff_source='custom',
          which means "the user typed this" about a value nobody ever saw. */
-      eq('the programme is stated, not offered',dlg.locked[0],'OCAF — HUD’s published factor sets the rents');
-      eq('and so is the date',dlg.locked[1],'January 1, 2030');
+      /* BOTH cards still render. Replacing the pair with one sentence made a
+         scheduled property look like a different product from one started by
+         hand, and hid that there had ever been two answers to choose between.
+         Same question, same shape — the schedule has simply already answered. */
+      eq('both programmes are still on the page',dlg.cards,2);
+      eq('the scheduled one wears the chosen state',dlg.set,['OCAF']);
+      eq('and the other stands down',dlg.off,['RCS']);
       T('neither is a control any more',!dlg.radios&&!dlg.dateInput);
-      T('and each says where to change it',/renewal schedule/i.test(dlg.titles[0]||''));
+      eq('nothing inside either card can be reached by keyboard',dlg.cardFocusables,0);
+      T('and the chosen one says where to change it',/renewal schedule/i.test(dlg.setTitle));
+      eq('the date is stated too',dlg.locked[0],'January 1, 2030');
       /* The date the package is created with is the date it KEEPS. A schedule
          that moves afterwards does not drag a submission along behind it. */
-      T('the date says it is fixed from here on',/keeps this date/i.test(dlg.titles[1]||''));
+      T('the date says it is fixed from here on',/keeps this date/i.test(dlg.titles[0]||''));
       /* UAF stays a live choice: the tracker's Next UA Baseline column is empty
          on all 2853 rows, so it has no opinion about utility allowances and we
          neither invent one nor take the option away. */
@@ -2332,9 +2345,11 @@ const FULL=process.argv.includes('--full');
       await sleep(500);
       const man=await c.eval(`return {radios:!!document.getElementById("cyRCS")&&!!document.getElementById("cyOCAF"),
         dateInput:!!document.getElementById("cyEff"),
-        locked:document.querySelectorAll("#dialog .fbox.locked").length};`);
+        cards:document.querySelectorAll("#dialog .cypg").length,
+        locked:document.querySelectorAll("#dialog .fbox.locked,#dialog .cypg.set,#dialog .cypg.off").length};`);
       T('starting one by hand still offers both programmes',man.radios);
       T('and a date you can type',man.dateInput);
+      eq('the same two cards, either way',man.cards,2);
       eq('and locks nothing',man.locked,0);
       await c.eval('document.getElementById("dlgCancel").click();return 1');
       await sleep(300);
