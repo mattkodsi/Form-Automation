@@ -18,7 +18,9 @@
    ocr.js would move billing somewhere nothing is counting; that is the failure
    these guard now. */
 const fs=require('fs'),path=require('path'),cp=require('child_process');
-const MIN_CHECKS=14;   // 2026-07-30: check 5 became five real ones - the rail moved
+const MIN_CHECKS=21;   // 2026-07-31: six portfolio-safety rails added - cleanup deletes
+                       // CYCLES not properties, and the driver fails closed on create.
+                       // 2026-07-30: check 5 became five real ones - the rail moved
                        // out of this file and into sweep.js/drive.js, so it can be DRIVEN.
 let n=0,fails=0,skips=0;
 const T=(l,v)=>{n++;if(!v){fails++;console.log('  X '+l);}else console.log('  + '+l);};
@@ -148,6 +150,40 @@ const fakeBoth=(name,calls,delay)=>{
   try{await drive.driveOne(Object.assign({},oF,{order:'rcs-first'}));}catch(e){e2=e;}
   T('a failed property is not driven again for its second order',fn===1&&e1===e2&&!!e1);
   drive._resetMemo();
+
+  /* ---- the portfolio rails, 2026-07-31 -------------------------------
+     The account stopped being a scratch pad and became 249 real portfolio
+     properties. These six assert the two changes that keeps a sweep from
+     destroying it, and they READ THE SOURCE rather than restate the intent,
+     because the previous version of this rail was a comment. */
+  const dsrc=fs.readFileSync(path.join(MP,'corpus','drive.js'),'utf8');
+  const clean=dsrc.slice(dsrc.indexOf('async function cleanup('),
+                         dsrc.indexOf('/* \u2500\u2500 manifest helpers'));
+
+  /* Look at the URL of EVERY delete this function issues, rather than pattern-
+     matching one spelling of it. The first version of this check matched a
+     literal that the real call never produces, so it passed with a live
+     property DELETE sitting in the function - caught by breaking the rail on
+     purpose and finding the suite still green. */
+  const deleteTargets=(()=>{const out=[];const re=/method:\s*'DELETE'/g;let m;
+    while((m=re.exec(clean))){const pre=clean.slice(Math.max(0,m.index-260),m.index);
+      const u=/rest\/v1\/([a-z_]+)/g;let last=null,x;while((x=u.exec(pre)))last=x[1];out.push(last);}
+    return out;})();
+  T('cleanup() issues at least one DELETE, so the check below is not vacuous', deleteTargets.length>0);
+  T('every DELETE cleanup() issues targets /cycle, and none targets /property',
+    deleteTargets.length>0 && deleteTargets.every(t=>t==='cycle'));
+  T('cleanup() deletes cycles instead',
+    /rest\/v1\/cycle\?id=eq\.[\s\S]{0,80}method:\s*'DELETE'/.test(clean));
+  T('cleanup() counts properties before and after and throws if the count moved',
+    /countProperties\('before cleanup'\)/.test(clean) && /countProperties\('after cleanup'\)/.test(clean)
+    && /CLEANUP DELETED A PROPERTY/.test(clean));
+  T('recordCreatedCycle throws on a missing id - a cycle nothing recorded is a cycle nothing can clean up',
+    (()=>{try{drive.recordCreatedCycle(null,'p','l');return false;}catch(e){return /cannot be cleaned up/.test(e.message);}})());
+  T('the driver refuses to CREATE a property unless explicitly allowed',
+    /if \(!ALLOW_CREATE_PROPERTY\)/.test(dsrc) && /refusing to create a property/.test(dsrc));
+  T('and that permission is opt-in on the command line, never a default',
+    /const ALLOW_CREATE_PROPERTY = process\.argv\.includes\('--allow-create-property'\)/.test(dsrc));
+
   verdict();
 })();
 

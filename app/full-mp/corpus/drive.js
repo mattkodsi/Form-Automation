@@ -93,6 +93,8 @@ const SRC = path.join(__dirname, '..');            // app/full-mp
 const REPO = path.join(SRC, '..', '..');           // repo root
 const SESSION_DEFAULT = path.join(REPO, '_archive', 'corpus-cache', '.session.json');
 const NAME_PREFIX = 'ZZ-CORPUS-';
+/* Opt-in, never a default: see the rail at the #bNewProperty click. */
+const ALLOW_CREATE_PROPERTY = process.argv.includes('--allow-create-property');
 
 /* ── the created-property ledger ────────────────────────────────────────────
    THE PREFIX IS NOT A HANDLE. A scratch property is created as
@@ -128,6 +130,19 @@ function recordCreated(id, name) {
     fs.writeFileSync(CREATED_LOG, JSON.stringify(all, null, 1), { mode: 0o600 });
   } catch (e) { /* never let bookkeeping fail a run — the prefix net still applies */ }
 }
+/* A cycle carries no name of ours, so the ledger is the ONLY handle cleanup
+   has on it. That is why this one THROWS where recordCreated() swallows: a
+   silent bookkeeping failure here leaks a cycle into the live portfolio that
+   nothing can find again. Fail the run instead. */
+function recordCreatedCycle(cycleId, propertyId, label) {
+  if (!cycleId) throw new Error('refusing to continue: the app produced no cycle id to record, and an unrecorded cycle cannot be cleaned up');
+  const all = readCreated();
+  if (all.some(x => x.id === cycleId)) return;
+  all.push({ kind: 'cycle', id: cycleId, propertyId: propertyId || null, name: label || null, at: new Date().toISOString() });
+  fs.mkdirSync(path.dirname(CREATED_LOG), { recursive: true });
+  fs.writeFileSync(CREATED_LOG, JSON.stringify(all, null, 1), { mode: 0o600 });
+}
+
 function forgetCreated(ids) {
   try {
     const gone = new Set(ids);
@@ -936,6 +951,19 @@ async function driveBoth(opts) {
     /* createProperty() shows one of two dialogs depending on whether the RA
        master registry has rows (app.js:3492 vs 3494), and BOTH are #dlgIn +
        #dlgOk, so one path drives either. */
+    /* FAIL CLOSED. This driver still CREATES a property, and since 2026-07-31
+       the account holds the real portfolio (249 properties imported from the
+       HAP tracker). Creating scratch properties there pollutes the portfolio,
+       and cleanup() no longer deletes properties precisely so that a tidy-up
+       can never destroy one — which means anything created here would LEAK.
+       The change that retires this rail is: find the existing property by
+       ra_property_code and add a cycle to it (see docs/lanes/rcs-audit-run.md,
+       driver change #1). Until then a sweep must not run. */
+    if (!ALLOW_CREATE_PROPERTY)
+      throw new Error(
+        'refusing to create a property: this account holds the real portfolio, and this driver has not yet been\n'
+        + '  changed to find the existing property by ra_property_code. Creating one here would leak, because\n'
+        + '  cleanup() deletes only cycles now. Pass --allow-create-property ONLY against a scratch account.');
     await clickId(c, 'bNewProperty');
     await waitFor(c, `!!document.getElementById('dlgIn')`, { timeout: 10000, label: 'the New-property dialog' });
     await typeInto(c, 'dlgIn', runName);
@@ -962,6 +990,7 @@ async function driveBoth(opts) {
     /* Written down BEFORE anything can rename it. This is the only moment at
        which the id and the fact that WE made it are both known for certain. */
     recordCreated(ids.pid, runName);
+    recordCreatedCycle(ids.cid, ids.pid, runName);
     log('package : cycle ' + String(ids.cid).slice(0, 8) + '… on property ' + String(ids.pid).slice(0, 8) + '…');
 
     /* The form as the app opens it, before any document is read. This is what
@@ -1328,70 +1357,112 @@ async function driveOne(opts) {
   });
 }
 
-/* ── cleanup: remove the records these runs made ────────────────────────── */
-/* THIS DELETES REAL ROWS FROM A REAL ACCOUNT. Three guards, all deliberate:
-   the prefix must be passed in (there is no default here), every candidate is
-   re-checked in node with startsWith rather than trusted to a server-side LIKE
-   pattern, and every row is printed before anything is removed. The app's own
-   #pDelete button on the property page does the same single delete; this is
-   that, in a loop, without a browser.
+/* ── cleanup: remove the CYCLES these runs made ──────────────────────────── */
+/* THIS RUNS AGAINST A REAL ACCOUNT HOLDING A REAL PORTFOLIO.
 
-   ONE delete per property is the whole job: cycle, unit_type, ns8_unit and
-   nonrev_unit are all property-scoped with ON DELETE CASCADE (verified against
-   the live schema, 2026-07-29), and pm_contact is not property-scoped at all —
-   it is shared and must survive. deleteProperty in db.supabase.js relies on the
-   same cascade. If that ever changes, this leaves orphans silently. */
+   Until 2026-07-31 a run created a scratch PROPERTY and cleanup deleted
+   properties. On 2026-07-31 the account was emptied and rebuilt from the HAP
+   tracker: 249 real portfolio properties that must survive every sweep. A run
+   no longer creates properties — it finds one that already exists and adds a
+   CYCLE to it. So cleanup deletes CYCLES, and there is deliberately no code
+   path in this function that can issue a DELETE against /property. The old one
+   had exactly that path, and pointed at the portfolio it is not a tidy-up, it
+   is data loss.
+
+   Three guards, all deliberate:
+
+   1. Only ids this driver wrote down are eligible. For a property the name
+      prefix was a usable second net; for a cycle it is not, because a cycle
+      carries no name of ours. The ledger is therefore the ONLY handle, which
+      is why recordCreatedCycle() fails loudly instead of swallowing — a
+      bookkeeping failure there would leak a cycle nothing can find.
+   2. Every candidate is re-checked against the ledger in node before its
+      DELETE is issued, never trusted to a server-side filter.
+   3. The property count is read before and after and must be identical. If a
+      single property row disappears during a cleanup, something is wrong that
+      this function cannot see, and it throws rather than report success.
+
+   Deleting a cycle cascades to its own rows the same way the app's own
+   delete-package button does. pm_contact is not cycle-scoped and is untouched. */
 async function cleanup(sessionFile, opts) {
-  const prefix = opts && opts.prefix;
-  if (typeof prefix !== 'string' || prefix.length < 4)
-    throw new Error('cleanup() requires an explicit prefix of at least 4 characters — it will not guess what to delete');
   const dryRun = !!(opts && opts.dryRun);
   const log = (opts && opts.log) || console.log;
   const { sess } = await loadSession(sessionFile);
   const cfg = supaConfig();
   const H = { apikey: cfg.anon, Authorization: 'Bearer ' + sess.access_token, 'Content-Type': 'application/json' };
 
-  const r = await fetch(cfg.url + '/rest/v1/property?select=id,name', { headers: H });
-  if (!r.ok) throw new Error('could not list properties (' + r.status + '): ' + (await r.text()).slice(0, 200));
-  const rows = await r.json();
-  /* Two nets. The ledger catches records that renamed themselves out of the
-     prefix - the common case, because a readable schedule always renames them.
-     The prefix catches records whose id was never written down. A record is
-     ours if EITHER says so. */
+  async function countProperties(when) {
+    const r = await fetch(cfg.url + '/rest/v1/property?select=id', {
+      headers: Object.assign({}, H, { Prefer: 'count=exact', Range: '0-0' }) });
+    if (!r.ok) throw new Error('could not count properties ' + when + ' (' + r.status + '): ' + (await r.text()).slice(0, 200));
+    const cr = r.headers.get('content-range') || '';
+    const n = Number(String(cr).split('/')[1]);
+    if (!Number.isFinite(n)) throw new Error('could not read a property count from content-range ' + J(cr));
+    return n;
+  }
+
+  const before = await countProperties('before cleanup');
+  log('signed in as ' + (sess.email || '(unknown)') + ' — ' + before + ' properties in the account');
+
   const ledger = readCreated();
-  const ledgerIds = new Set(ledger.map(x => x.id));
-  const byName = rows.filter(p => String(p.name || '').startsWith(prefix));
-  const byId = rows.filter(p => ledgerIds.has(p.id) && !String(p.name || '').startsWith(prefix));
-  const hits = byName.concat(byId);
-  log('signed in as ' + (sess.email || '(unknown)') + ' — ' + rows.length + ' properties, '
-    + byName.length + ' whose name starts with ' + J(prefix)
-    + (byId.length ? ', and ' + byId.length + ' more this driver created that have since been RENAMED' : ''));
-  byId.forEach(p => log('    renamed: ' + J(p.name) + '  [' + p.id + ']  — created by us, no longer carries the prefix'));
-  /* A ledger entry with no matching row is already gone; forget it so the file
-     does not grow forever and so a stale id can never be reported as a leak. */
-  const present = new Set(rows.map(p => p.id));
-  const vanished = ledger.filter(x => !present.has(x.id)).map(x => x.id);
-  if (vanished.length && !dryRun) forgetCreated(vanished);
-  if (!hits.length) return { matched: 0, deleted: 0, failed: [], names: [] };
-  hits.forEach(p => log('  ' + (dryRun ? 'would delete' : 'DELETE     ') + '  ' + p.name + '   [' + p.id + ']'));
-  if (dryRun) return { matched: hits.length, deleted: 0, failed: [], names: hits.map(p => p.name), dryRun: true };
+  const cycles = ledger.filter(x => x.kind === 'cycle' && x.id);
+  const legacy = ledger.filter(x => x.kind !== 'cycle');
+
+  /* Entries from before this change name PROPERTIES. They are never deleted
+     here. They are reported so a human can see them, and forgotten once the
+     row is gone, so the file cannot grow forever. */
+  if (legacy.length) {
+    log(legacy.length + ' legacy property-scoped ledger entries — NOT eligible for deletion, listed only:');
+    legacy.forEach(x => log('    legacy property ' + J(x.name || '(unnamed)') + '  [' + x.id + ']'));
+  }
+
+  if (!cycles.length) {
+    log('no cycles recorded by this driver — nothing to delete');
+    const after0 = await countProperties('after cleanup');
+    if (after0 !== before) throw new Error('the property count moved from ' + before + ' to ' + after0 + ' during a cleanup that deleted nothing');
+    return { matched: 0, deleted: 0, failed: [], ids: [], propertiesBefore: before, propertiesAfter: after0 };
+  }
+
+  /* Which of them still exist. A ledger entry with no row is already gone. */
+  const ids = cycles.map(x => x.id);
+  const q = cfg.url + '/rest/v1/cycle?select=id,property_id,label&id=in.(' + ids.map(encodeURIComponent).join(',') + ')';
+  const r = await fetch(q, { headers: H });
+  if (!r.ok) throw new Error('could not list cycles (' + r.status + '): ' + (await r.text()).slice(0, 200));
+  const rows = await r.json();
+  const present = new Set(rows.map(c => c.id));
+  const vanished = ids.filter(id => !present.has(id));
+  if (vanished.length) {
+    log(vanished.length + ' recorded cycles are already gone');
+    if (!dryRun) forgetCreated(vanished);
+  }
+  if (!rows.length) {
+    const after0 = await countProperties('after cleanup');
+    if (after0 !== before) throw new Error('the property count moved from ' + before + ' to ' + after0 + ' during a cleanup that deleted nothing');
+    return { matched: 0, deleted: 0, failed: [], ids: [], propertiesBefore: before, propertiesAfter: after0 };
+  }
+
+  const ledgerIds = new Set(ids);
+  rows.forEach(c => log('  ' + (dryRun ? 'would delete' : 'DELETE     ') + '  cycle ' + c.id
+    + '  ' + J(c.label || '(no label)') + '  on property ' + c.property_id));
+  if (dryRun) return { matched: rows.length, deleted: 0, failed: [], ids: rows.map(c => c.id), dryRun: true, propertiesBefore: before, propertiesAfter: before };
 
   const failed = [];
   let deleted = 0;
-  for (const p of hits) {
-    /* The guard is now "did WE make it", not "is it still called what we
-       called it" - the whole point of the ledger. A row reaches here only via
-       the prefix or the ledger, so re-testing the prefix alone would refuse to
-       delete exactly the leaked records this fix exists to remove. */
-    if (!String(p.name || '').startsWith(prefix) && !ledgerIds.has(p.id)) {
-      failed.push({ id: p.id, why: 'neither the prefix nor the created-property ledger claims this row' }); continue; }
-    const d = await fetch(cfg.url + '/rest/v1/property?id=eq.' + encodeURIComponent(p.id), { method: 'DELETE', headers: H });
-    if (d.ok) deleted++; else failed.push({ id: p.id, name: p.name, why: d.status + ': ' + (await d.text()).slice(0, 160) });
+  for (const c of rows) {
+    if (!ledgerIds.has(c.id)) { failed.push({ id: c.id, why: 'the created-cycle ledger does not claim this row' }); continue; }
+    const d = await fetch(cfg.url + '/rest/v1/cycle?id=eq.' + encodeURIComponent(c.id), { method: 'DELETE', headers: H });
+    if (d.ok) deleted++; else failed.push({ id: c.id, why: d.status + ': ' + (await d.text()).slice(0, 160) });
   }
-  forgetCreated(hits.map(p => p.id));
-  log(deleted + ' deleted' + (failed.length ? ', ' + failed.length + ' FAILED' : ''));
-  failed.forEach(f => log('  X ' + (f.name || f.id) + ' — ' + f.why));
-  return { matched: hits.length, deleted, failed, names: hits.map(p => p.name) };
+  forgetCreated(rows.map(c => c.id));
+
+  const after = await countProperties('after cleanup');
+  log(deleted + ' cycles deleted' + (failed.length ? ', ' + failed.length + ' FAILED' : '')
+    + ' — properties ' + before + ' → ' + after);
+  failed.forEach(f => log('  X ' + f.id + ' — ' + f.why));
+  if (after !== before)
+    throw new Error('CLEANUP DELETED A PROPERTY. The count moved from ' + before + ' to ' + after
+      + '. This function never issues a DELETE against /property, so something else did — stop and investigate before driving again.');
+  return { matched: rows.length, deleted, failed, ids: rows.map(c => c.id), propertiesBefore: before, propertiesAfter: after };
 }
 
 /* ── manifest helpers, so the CLI and sweep.js pick the same inputs ─────── */
@@ -1416,7 +1487,7 @@ module.exports = {
   driveBoth, driveOne, cleanup, loadSession, supaConfig,
   _resetMemo: () => _memo.clear(),
   pickCycle, pickStudy, findProperty, unzipStored, tierOf, diffSnaps,
-  readCreated, recordCreated, forgetCreated, CREATED_LOG,
+  readCreated, recordCreated, recordCreatedCycle, forgetCreated, CREATED_LOG,
   NAME_PREFIX, ORDERS,
   currentBranch, refuseOnMain, assertNotMain,
 };
