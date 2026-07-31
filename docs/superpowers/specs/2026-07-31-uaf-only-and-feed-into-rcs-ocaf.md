@@ -58,7 +58,7 @@ The corpus audit's UA findings were chasing this gap. Specifically:
 
 ## Status
 
-Captured, not built. Next step is to scope pieces 1–3 as an implementation plan.
+Captured and scoped (see the concrete design, the traced current state, and the invariant below). Not built.
 
 ## Concrete design (Matt, 2026-07-31)
 
@@ -103,3 +103,43 @@ classes, no new styling). The **standalone UAF-only entry point** (a place in th
 submission on its own) is the one piece that may want the redesign lane. Build order: precedence +
 `ua_uaf` + dropdown option + feed (1–5) first, since they make the combined-package path correct; the
 standalone entry point second.
+
+## What already exists (traced 2026-07-31) — the scope is smaller than first written
+
+- **The standalone UAF form exists.** `visibleSections()` (app.js:279) has a UAF-only flow
+  `[1,2,12,3,4,6,7,11,9]`; `genOcafUafPackage` (app.js:5872) generates the non-RCS package; the pills
+  (`toggleCycleProg`, app.js:5497) already reach UAF-only (rules: RCS≠OCAF, ≥1 program).
+- **It is not "suppressed" in the form — it's under-promoted in creation.** The new-cycle modal makes
+  RCS/OCAF a **radio** ("market reset vs factor adjustment", app.js:5253/5274) with **UAF a rider
+  checkbox** (app.js:5278). So UAF-only is reachable only by creating RCS/OCAF then stripping it.
+- **The feed already exists — through `ua_custom`.** The "Apply UAF" action (app.js:2991) writes each
+  unit's new allowance (`uafRow(i).newSum`) into `units.i.ua_custom` and marks `ua_reviewed`; its
+  status says "as the custom UA source." So a combined RCS/OCAF+UAF already populates the UA cell —
+  just labeled *custom*, not *UAF*, and with no provenance trail that it came from a UAF.
+
+### So the real work
+
+1. **Relabel the feed to a first-class `ua_uaf` source** (not `ua_custom`): the "Apply UAF" write and
+   the combined-package auto-fill target `ua_uaf`; the UA dropdown shows "UAF submission"; precedence
+   `UAF → RS → RCS`. This also fixes the mislabeling (a UAF result reads as a hand-typed custom today).
+2. **Fix the no-UAF default** so `RS > RCS` (`defUaSrc` prefers `ua_exec` over `ua_rcs`) — the part
+   that matters when there is no UAF.
+3. **Persist a standalone UAF's result** so a later same-year RCS/OCAF reads it ("applied when the
+   RCS/OCAF is finally filled out"). Today "Apply UAF" writes only the open cycle's form.
+4. **Promote UAF-only** as a first-class choice in the creation modal.
+
+## INVARIANT (Matt, 2026-07-31): at most one UAF per property per year
+
+A property must never carry **both** a standalone UAF **and** a bundled RCS/OCAF+UAF for the **same
+year** — that double-adjusts the utility allowance and makes `ua_uaf` ambiguous (which UAF feeds the
+cell?). Enforce it consistently, without taking away the PM's choice:
+
+- **Where to check:** the two places a UAF is turned on — the creation modal's `cyUAF` (app.js:5292
+  `dlgOk`) and the pill toggle (`toggleCycleProg`, app.js:5497). Both must ask the data layer "does
+  this property already have `uaf` in another cycle for this year?"
+- **Needs a db helper:** `listCycles(propertyId)` filtered by the cycle's year label + `programs`
+  includes `uaf`. (One name/one year is the registry rule the lane already rests on.)
+- **Keep it easy, not a wall:** on conflict, don't hard-stop — offer to **move** the UAF. "This
+  property already has a UAF for 2026 in its RCS package — fold this one in there, or replace it?"
+  The PM redirects in one click instead of hitting a dead end. A standalone UAF and its year's
+  RCS/OCAF then share the one UAF: whichever cycle holds it, the other reads its `ua_uaf`.
