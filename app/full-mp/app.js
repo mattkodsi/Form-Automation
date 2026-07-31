@@ -55,7 +55,7 @@ const SEED={ // key manifest only — the VALUES are never read (ALL_KEYS below 
   'units.0.br':['',D],'units.0.ba':['',D],'units.0.label':['',D],'units.0.num_units':['',D],'units.0.current':['',T],'units.0.proposed':['',T],
   'units.0.ua_exec':['',T],'units.0.ua_rcs':['',T],'units.0.ua_source':['',T],'units.0.ua_reviewed':['',T],'units.0.ua_custom':['',T],
   'units.0.safmr_rcs':['',T],'units.0.safmr_hud':['',T],'units.0.safmr_source':['',T],'units.0.safmr_reviewed':['',T],
-  'rent_schedule.date_eff_rs':['',T],'rent_schedule.date_eff_source':['',T],'rent_schedule.date_eff_custom':['',T],'rent_schedule.date_rents_effective':['',T],
+  'rent_schedule.date_eff_rs':['',T],'rent_schedule.date_eff_ra':['',T],'rent_schedule.date_eff_source':['',T],'rent_schedule.date_eff_custom':['',T],'rent_schedule.date_rents_effective':['',T],
   'tenant.sender_name':['',D],'tenant.sender_title':['',D],'tenant.mgmt_source':['',D],'tenant.property_alias':['',D],
   'tenant.mgmt_street':['',D],'tenant.mgmt_city':['',D],'tenant.mgmt_state':['',D],'tenant.mgmt_zip':['',D],
   'ocaf.g':['',T],'ocaf.rate_type':['',D],'ocaf.ds_annual':['',D],'ocaf.ds_t12':['',T],'ocaf.ds_f12':['',T],
@@ -344,8 +344,15 @@ function csDrop(key,options,ph,cls,clearable,tint,claim,subs){const cur=get(key)
      mouse was the odd one out. One pattern: if it holds a value, it can be
      cleared where you are looking at it. */
   const clr=(has&&clearable!==false)?'<span class="csclear" data-csclear="'+key+'" title="Clear">✕</span>':'';return '<div class="uadrop cs '+(cls||'')+(has?' clearable':'')+'"><div class="uatrigger" tabindex="0" data-trigfor="'+key+'"'+(tint?' style="'+tint+'"':'')+'><span class="ualab">'+esc(lab)+'</span>'+(groupOf(key)?'':srcTags(key))+clr+'<span class="cvx">▾</span></div><div class="uamenu">'+menu+'</div></div>';}
-function dateEffResolved(){const src=get('rent_schedule.date_eff_source')||(get('rent_schedule.date_eff_rs')?'rs':'custom');return src==='custom'?(get('rent_schedule.date_eff_custom')||get('rent_schedule.date_rents_effective')):get('rent_schedule.date_eff_rs');}
-function dateEffCell(){const rs=get('rent_schedule.date_eff_rs');const src=get('rent_schedule.date_eff_source')||(rs?'rs':'custom');
+function dateEffResolved(){const ra=get('rent_schedule.date_eff_ra');if(ra)return ra;
+  const src=get('rent_schedule.date_eff_source')||(get('rent_schedule.date_eff_rs')?'rs':'custom');return src==='custom'?(get('rent_schedule.date_eff_custom')||get('rent_schedule.date_rents_effective')):get('rent_schedule.date_eff_rs');}
+function dateEffCell(){
+  /* Locked, so no menu: a dropdown offering "A year after the executed RS" and
+     "Custom…" beside a value that answers to neither would be a control that
+     does nothing. The lock replaces the cell rather than disabling its parts. */
+  if(isLocked('rent_schedule.date_eff'))
+    return lockedField('rent_schedule.date_eff','Date rents will be effective',raLockShow('rent_schedule.date_eff'));
+  const rs=get('rent_schedule.date_eff_rs');const src=get('rent_schedule.date_eff_source')||(rs?'rs':'custom');
   /* Whichever key answers, it reaches the box in the form the reader types into
      it. The legacy key is stored ISO, and raw ISO in a data-date box is not just
      ugly: the first keystroke reformats 2026-03-01 to 20/26/0301, and 0301 is
@@ -442,6 +449,83 @@ function dirCell(f){const k=f.k;const P=DIR_PICK[k];const list=dirList(P.kind);c
    uniformly. The form never writes back to the RA platform. */
 function raProps(){try{const p=window.RASource;const l=(p&&p.listProperties)?p.listProperties():[];return Array.isArray(l)?l:[];}catch(e){return [];}}
 function raVal(k){try{const p=window.RASource;const v=(p&&p.value)?p.value(k):null;return (v==null||v==='')?null:String(v);}catch(e){return null;}}
+
+/* ── RA-LOCKED CELLS ──────────────────────────────────────────────────────
+   The renewal calendar decides WHEN a package is due and what it is called;
+   this app decides WHAT goes in it. Two systems cannot both own one fact,
+   because a disagreement between them has no arbiter — so the handful of cells
+   Kinley's database answers for are not editable here.
+
+   The lock is conditional on RASource HAVING an answer. That is what keeps a
+   property created in this app, backed by no database row, fully editable:
+   raVal returns null and the cell renders exactly as it always did. No tracker
+   code to plumb, no per-property branch.
+
+   The whole feature is this predicate and the early returns that read it.
+   Turning it off again is `return false`.
+   Design: docs/superpowers/specs/2026-07-30-tracker-is-definitive-design.md */
+const RA_LOCKED={
+  'property.name':{ask:'property.name',write:'property.name'},
+  /* The cell is keyed 'rent_schedule.date_eff' — its own stable identity, which
+     is NOT one of the three keys it flips data-box between (rule 9). `ask` is
+     the ordinary flat key, so Kinley's aumValue maps a name that already means
+     something on his side; `write` is where the answer lands on our side. */
+  'rent_schedule.date_eff':{ask:'rent_schedule.date_rents_effective',write:'rent_schedule.date_eff_ra',
+    /* Kinley's database answers in whatever shape it holds. Everything below this
+       line assumes ISO, and a raw US date in a data-date box reformats itself on
+       the first keystroke — the fault this cell already carries a comment about. */
+    norm:v=>{const p=dateParts(v);return p?(String(p.y)+'-'+String(p.m).padStart(2,'0')+'-'+String(p.d).padStart(2,'0')):null;},
+    show:v=>fmtDateLong(v)},
+};
+const RA_LOCK_WHY={
+  'property.name':'The property name comes from Related Affordable. Change it there to revise it.',
+  'rent_schedule.date_eff':'Set from Related Affordable when this package was started, and fixed from then on. A later change there does not move a package already under way.',
+};
+function raLockVal(cell){const d=RA_LOCKED[cell];if(!d)return null;
+  const v=raVal(d.ask);if(v==null)return null;
+  return d.norm?d.norm(v):v;}          // a value we cannot read is no answer at all
+function raLockShow(cell){const d=RA_LOCKED[cell],v=raLockVal(cell);
+  return v==null?'':(d&&d.show?d.show(v):v);}
+/* Rule 17: the refusal belongs to the write, not to the widget that would have
+   made it. Removing the input stops a person typing; it does nothing about the
+   rent schedule, whose parser sets property.name and the effective date from a
+   document that is often a year older than the record. Both fills ask this, so
+   a third fill inherits the rule by calling the same function rather than by
+   somebody remembering it.
+
+   Deliberately NOT in db.js: the authority here is a browser seam
+   (window.RASource), and a pure data layer that reads a global to decide what
+   it will store is a data layer nobody can test in node. What the data layer
+   owns is name UNIQUENESS (assertNameFree); what this owns is name AUTHORITY. */
+function raLockedKey(k){
+  for(const cell in RA_LOCKED) if(RA_LOCKED[cell].write===k&&isLocked(cell))return true;
+  return false;}
+/* The locked value is not decoration. It names the package in the header and
+   prints on six documents, so it is written INTO the form rather than only
+   displayed. Before snapForm, deliberately: a value nobody can change must
+   never open the form dirty asking to be saved. "Update property profile"
+   carries it to the record from there, like any other pulled figure. */
+function applyRaLocked(){
+  Object.keys(RA_LOCKED).forEach(cell=>{
+    const v=raLockVal(cell);if(v==null)return;
+    const k=RA_LOCKED[cell].write;if(!k||!form[k])return;
+    if(String(form[k].value||'')===String(v))return;
+    form=store.editForm(form,k,String(v));markCycle(k);
+  });
+}
+function isLocked(cell){return raLockVal(cell)!=null;}
+/* Drawn, not typed: a padlock emoji renders in a different family on every
+   platform, and rule 16's spirit is that nothing user-visible is left to chance. */
+const LOCKMK='<svg class="lockmk" viewBox="0 0 24 24" aria-hidden="true">'
+  +'<path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>'
+  +'<rect x="5" y="10" width="14" height="9.5" rx="2" fill="currentColor"/></svg>';
+/* Not greyed out. Grey reads as broken rather than governed, and the value still
+   has to be legible on a document nobody can retype. Full contrast, no border
+   the eye reads as an input, no hover, no caret — and the lock carries the why. */
+function lockedField(cell,label,text){
+  return '<div class="field"><div class="flabel">'+label+'</div>'
+    +'<div class="fbox locked" data-box="'+esc(cell)+'" title="'+esc(RA_LOCK_WHY[cell]||'')+'">'
+    +'<span class="lockv">'+esc(text)+'</span>'+LOCKMK+'</div></div>';}
 /* Rule 16 belongs to the row builder, not to its callers — see rule 17. The UA
    and SAFMR menus formatted at their own call sites and so looked right, which
    is exactly how every other source row was missed: srcPick printed whatever
@@ -550,7 +634,7 @@ function sigTitleCell(f){const c=cellColors('sig.title');const pk='sig.principal
   let dd=csDrop(pk,_opts,'Select\u2026','',true,'',_pcl?_rp:null,sigPrincipalSubs());
   dd=dd.replace('<div class="uamenu">','<div class="uamenu">'+dim);
   return `<div class="fpair sigpair"><div class="field"><div class="flabel">${f.label}</div><div class="fbox" data-box="sig.title" style="background:${c[1]};border-left-color:${c[0]}"><input type="text" data-k="sig.title" value="${esc(get('sig.title'))}" autocomplete="off">${srcTags('sig.title')}${srcPick('sig.title',SRCPICK_ROWS['sig.title']())}</div>${ovNote('sig.title')}</div><div class="ofthe">of the</div><div class="field"><div class="flabel">Principal</div><div class="fbox seldrop" data-box="${pk}" style="background:${pc[1]};border-left-color:${pc[0]}">${dd}</div>${ovNote(pk)}</div></div>`;}
-function fieldCell(f){if(f.type==='sigtitle')return sigTitleCell(f);if(f.type==='pair')return '<div class="fpair">'+f.items.map(fieldCell).join('')+'</div>';if(f.type==='addr')return addrCell();if(f.type==='caaddr')return caAddrCell();if(f.type==='appraddr')return apprAddrCell();if(f.type==='mgmtaddr')return mgmtCell();if(f.type==='select')return selectCell(f);if(f.k==='poc.name')return pocCell();if(DIR_PICK[f.k])return dirCell(f);
+function fieldCell(f){if(isLocked(f.k))return lockedField(f.k,f.label,raLockShow(f.k));if(f.type==='sigtitle')return sigTitleCell(f);if(f.type==='pair')return '<div class="fpair">'+f.items.map(fieldCell).join('')+'</div>';if(f.type==='addr')return addrCell();if(f.type==='caaddr')return caAddrCell();if(f.type==='appraddr')return apprAddrCell();if(f.type==='mgmtaddr')return mgmtCell();if(f.type==='select')return selectCell(f);if(f.k==='poc.name')return pocCell();if(DIR_PICK[f.k])return dirCell(f);
   const s=form[f.k]||{value:'',source:'new'};
   const c=f.prefix?groupColors([f.prefix,f.k]):cellColors(f.k);
   const pre=f.prefix?csDrop(f.prefix,['Ms.','Mr.','Dr.','Mx.'],'—','csnarrow',true,partHot(f.prefix)?tintStyle(f.prefix):''):'';
@@ -1379,7 +1463,7 @@ function rcsFillFromParsed(){
   const _wrote=[];
   const mark=k=>{markCycle(k);if(form[k])form[k].fromParse=true;if(_wrote.indexOf(k)<0)_wrote.push(k);};
   const put=(k,v)=>{if(v!=null&&v!==''){form=store.editForm(form,k,String(v));mark(k);}};
-  const setk=(k,v)=>{if(rsOffers(k))return;put(k,v);};      // RS > RCS — see rsOffers
+  const setk=(k,v)=>{if(rsOffers(k)||raLockedKey(k))return;put(k,v);};   // RA > RS > RCS — see rsOffers, raLockedKey
 
   /* The study carries none of these, so none is ever sourced from it: the FHA
      effective date, the contract administrator.
@@ -2452,7 +2536,7 @@ async function parseRsPdf(bytes,onStep){
 function rsFillFromParsed(){const P=_rsUpload&&_rsUpload.parsed;if(!P)return;
   const _wrote=[];
   const mark=k=>{markCycle(k);if(form[k])form[k].fromParse=true;if(_wrote.indexOf(k)<0)_wrote.push(k);};   // came from the schedule, not typed — tags an override as "parsed", not just "changed", in its note text
-  const setk=(k,v)=>{if(v!=null&&v!==''){form=store.editForm(form,k,String(v));mark(k);}};
+  const setk=(k,v)=>{if(raLockedKey(k))return;if(v!=null&&v!==''){form=store.editForm(form,k,String(v));mark(k);}};
   { const pn=P.scalars['property.name'];
     if(pn&&pn.indexOf('/')>=0){const parts=pn.split('/').map(x=>x.trim()).filter(Boolean);
       if(parts.length===2){setk('property.name',parts[0]);setk('tenant.property_alias',parts[1]);}
@@ -5152,7 +5236,9 @@ async function openCycleForm(cid){
      nothing on it is retired. deriveUnits() first: every unit key a record names
      is read through UNITS. */
   if(!fillSurvived(_rsFill,rsTag))_rsFill=null;
-  if(!fillSurvived(_rcsFill,rcsTag))_rcsFill=null;snapForm();renderFormHeader();renderBody();
+  if(!fillSurvived(_rcsFill,rcsTag))_rcsFill=null;
+  applyRaLocked();
+  snapForm();renderFormHeader();renderBody();
   show('Form');window.scrollTo(0,0);
   if(cy&&cy.dominant&&cy.programs.indexOf('rcs')>=0)ensureHudSafmr({});   // auto-pull: dominant RCS cycles only
   if(cy&&cy.programs.indexOf('ocaf')>=0)pullOcafFactor({auto:true});      // year-verified; empty fields only
@@ -5185,7 +5271,7 @@ function renderLauncher(){
          line under the name and read as a rendering fault. */
       +(_meta?('<div class="lh-meta">'+_meta+'</div>'):'')
       +(p.entity?'<div class="lh-entity">'+esc(p.entity)+'</div>':'')+'</div>'
-      +'<div class="lh-right"><div class="lh-tools"><button class="txtbtn" id="pRename">Rename</button><span class="dotsep">&middot;</span><button class="txtbtn del" id="pDelete">Delete</button></div></div></div>'
+      +'<div class="lh-right"><div class="lh-tools"><button class="txtbtn" id="pRename">'+(isLocked('property.name')?'Tenant name':'Rename')+'</button><span class="dotsep">&middot;</span><button class="txtbtn del" id="pDelete">Delete</button></div></div></div>'
     +'<div class="lsec"><div class="lsec-t">Property letterhead</div>'+letter+'<div class="lh-note">The uploaded letterhead appears on the tenant notice. All other letterheads are built into the document templates.</div><input type="file" id="lhFile" accept="image/*,.pdf,application/pdf" style="display:none"></div>'
     +'<div class="lsec"><div class="lsec-t">Packages</div>'+_nu+cyclesHtml(_entry,_hap)
       +'<div class="cysoon">BBRA \u00b7 Budget-Based Rent Adjustment \u2014 not yet available</div></div>';
@@ -5194,11 +5280,19 @@ function renderLauncher(){
     // The tenant-facing name lives with the property, not the package, so it is
     // editable from here rather than only inside a form.
     let alias='';try{const fl=await mpdb.getFlat(activePid);alias=(fl&&fl['tenant.property_alias']&&fl['tenant.property_alias'].value)||'';}catch(e){}
+    const _hint='Optional \u2014 used on the tenant notice when residents know the property by another name.';
+    /* With the registry name locked there is one field left worth showing, so the
+       dialog becomes that field rather than a name box nobody may edit sitting
+       above it. Same write either way. */
+    if(isLocked('property.name'))
+      return dialogInput('Tenant-facing name','Also known to tenants as',alias,'Save',async (al)=>{
+        try{await mpdb.saveFlat(activePid,{'tenant.property_alias':{value:al,source:'database'}});
+          renderLauncher();}catch(e){saveFailedModal(e);}});
     dialogInput('Rename property','Property name',p.name,'Save',async (nm,al)=>{if(!nm)return;
       try{await mpdb.renameProperty(activePid,nm);
         if(al!==undefined&&al!==alias)await mpdb.saveFlat(activePid,{'tenant.property_alias':{value:al,source:'database'}});
         renderLauncher();}catch(e){saveFailedModal(e);}},
-      {label:'Also known to tenants as',value:alias,hint:'Optional \u2014 used on the tenant notice when residents know the property by another name.'});};
+      {label:'Also known to tenants as',value:alias,hint:_hint});};
   el('pDelete').onclick=()=>dialogConfirm('Delete property','This permanently removes <b>'+esc(p.name)+'</b> and its stored record.','Delete',true,async()=>{try{await mpdb.deleteProperty(activePid);openMenu();}catch(e){saveFailedModal(e);}});
   wireLetterhead();
 }
@@ -5285,7 +5379,7 @@ function requestSave(afterSave){
    literal 17, because a list that grows and a loop that does not is how the
    last item of a form goes quietly unset. */
 function applyChecklistDefaults(){if(Object.keys(DBSNAP).some(k=>/^check\.\d+$/.test(k)))return;for(let i=0;i<CHECKLIST_FLAT.length;i++)form=store.editForm(form,'check.'+i,checkSeed(i));}
-async function openForm(program){activeProgram=program||'RCS';_undoStack=[];_undoNR=[];_undoLI=[];_undoPR=[];_undoChain=[];_rcsUpload=null;_rsUpload=null;_rsArm=false;_rsFill=null;_rcsFill=null;await mpdb.setActive(activePid);await refreshSnap();form=await store.fillForm();fixSavedToggles();applyChecklistDefaults();deriveUnits();snapForm();renderFormHeader();renderBody();show('Form');window.scrollTo(0,0);ensureHudSafmr({});}
+async function openForm(program){activeProgram=program||'RCS';_undoStack=[];_undoNR=[];_undoLI=[];_undoPR=[];_undoChain=[];_rcsUpload=null;_rsUpload=null;_rsArm=false;_rsFill=null;_rcsFill=null;await mpdb.setActive(activePid);await refreshSnap();form=await store.fillForm();fixSavedToggles();applyChecklistDefaults();deriveUnits();applyRaLocked();snapForm();renderFormHeader();renderBody();show('Form');window.scrollTo(0,0);ensureHudSafmr({});}
 function renderFormHeader(){
   if(el('hdrProp'))el('hdrProp').textContent=(get('property.name')||'(unnamed property)');
   if(el('hdrProgram'))el('hdrProgram').textContent=activeProgram+' Package';
@@ -6128,7 +6222,8 @@ const __API={LABEL_HINTS,rsParseUnitType,rsNum,ocrMapPages:(p)=>ocrMapPages(p),o
   /* The selftest property carries no unit data, so the first-run migration
      rightly refuses to invent a package for it — and without a package there
      are no program pills to drive. Make one. */
-  __newCycle:(o)=>mpdb.createCycle(activePid,Object.assign({full:true,programs:['rcs'],label:'TEST'},o||{})),
+  __isLocked:(cell)=>isLocked(cell),__raLockedKey:(k)=>raLockedKey(k),
+ __newCycle:(o)=>mpdb.createCycle(activePid,Object.assign({full:true,programs:['rcs'],label:'TEST'},o||{})),
   __progsOf:(cid)=>{const c=(mpdb?mpdb.listCycles(activePid):[]).find(x=>x.id===cid);return c?c.programs.slice():[];},
 /* The handler at #upRcs sets _rcsUpload, clears the fill record and calls
      rcsRemember(); a door that skipped the last two left every suite testing a

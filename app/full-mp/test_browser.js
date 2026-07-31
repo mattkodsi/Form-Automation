@@ -35,7 +35,7 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=539;   // 2026-07-30 merge: union of both branches, counted off a real run (was ours 435 / main 399)
+const MIN_CHECKS=558;   // 2026-07-30: +19 a locked cell is not a control   // 2026-07-30 merge: union of both branches, counted off a real run (was ours 435 / main 399)
                         //;   // 2026-07-30 merge: the union of both branches, counted off a real run.
                         // ours: +81 for the section rail — the indicator's choice of section swept
                         //   across the whole document, the jump landing clear of a #ccbar that is now
@@ -2620,10 +2620,18 @@ const FULL=process.argv.includes('--full');
       /* ---- rule 2, three ways in ---- */
       const arrivals=[];
       for(const [name,fn] of [
+        /* Dispatched WITHOUT awaiting each round trip. Awaiting one puts a hole
+           of a whole CDP turnaround between wheel events — fine on an idle
+           machine, 150ms+ when deliver.sh is running twelve suites — and a hole
+           longer than ARM_QUIET (120ms) is, by design, the end of one gesture
+           and the start of another. So the assertion below was really asking
+           whether the host was busy. It failed exactly once, under deliver, and
+           passed four standalone runs; the fault is the harness's, not the
+           page's. Real momentum arrives every 8-16ms and never pauses. */
         ['a decaying fling',async()=>{let d=-320;
-          for(let i=0;i<40;i++){await wheel(Math.min(-1,Math.round(d)));d*=0.9;await sleep(16);}}],
-        ['a steady wheel',async()=>{for(let i=0;i<22;i++){await wheel(-120);await sleep(30);}}],
-        ['a fast wheel',async()=>{for(let i=0;i<30;i++){await wheel(-120);await sleep(12);}}]]){
+          for(let i=0;i<40;i++){wheel(Math.min(-1,Math.round(d))).catch(()=>{});d*=0.9;await sleep(16);}}],
+        ['a steady wheel',async()=>{for(let i=0;i<22;i++){wheel(-120).catch(()=>{});await sleep(30);}}],
+        ['a fast wheel',async()=>{for(let i=0;i<30;i++){wheel(-120).catch(()=>{});await sleep(12);}}]]){
         await shut(2400);
         const b=await bobbed(fn);
         const r=await read();
@@ -3521,6 +3529,73 @@ const FULL=process.argv.includes('--full');
     eq('and the rail did not leak into that either',views.l.stray,0);
     await c.send('Emulation.clearDeviceMetricsOverride');
     await openForm();
+
+    /* ── RA-LOCKED CELLS ───────────────────────────────────────────────
+       Two systems cannot both own the effective date and the property name, so
+       the cells Kinley's database answers for stop being controls. This is the
+       only suite that can prove it: the cell is decided by a render branch and
+       a global that does not exist in node, and the form paints provenance
+       twice (renderBody / paintCell), so a test calling a render function
+       directly can pass while the page is visibly wrong. */
+    console.log('\n── a locked cell is not a control ─────────────────────');
+    await openForm();
+    const _lkOff=await c.eval(`const b=document.querySelector('[data-box="property.name"]');
+      return {input:!!(b&&b.querySelector('input[data-k="property.name"]')),
+              locked:!!(b&&b.classList&&b.classList.contains('locked')),
+              dateBox:!!document.querySelector('[data-box="rent_schedule.date_eff_custom"],[data-box="rent_schedule.date_eff_source"]')};`);
+    T('with no Related Affordable answer the name is an ordinary input',_lkOff.input&&!_lkOff.locked);
+    T('and the effective date keeps the cell it has always had',_lkOff.dateBox);
+    eq('a form nobody has touched is not dirty',await c.eval('return window.__t.isDirty()'),false);
+
+    await c.eval(`window.RASource={listProperties:()=>[],value:k=>
+      k==='property.name'?'Rowan Court':
+      k==='rent_schedule.date_rents_effective'?'10/01/2026':null};return 1`);
+    /* Reopen rather than re-render: the answer is WRITTEN INTO the form when a
+       form opens, which is the only moment it can be, and Kinley's port sets the
+       seam at boot so every form open sees it. A re-render would paint the
+       locked value over a record that never received it — the two disagreeing is
+       exactly the state this reopen exists to rule out. */
+    await openForm();
+    const _lkOn=await c.eval(`const b=document.querySelector('[data-box="property.name"]'),
+        d=document.querySelector('[data-box="rent_schedule.date_eff"]');
+      const foc=el=>el?el.querySelectorAll('input,select,textarea,button,[tabindex]').length:-1;
+      return {locked:!!(b&&b.classList.contains('locked')),text:b?b.textContent.trim():'',
+              title:(b&&b.getAttribute('title'))||'',focusables:foc(b),
+              dateLocked:!!(d&&d.classList.contains('locked')),dateText:d?d.textContent.trim():'',
+              dateFocusables:foc(d),
+              oldDateBox:!!document.querySelector('[data-box="rent_schedule.date_eff_custom"],[data-box="rent_schedule.date_eff_source"]')};`);
+    T('with one, the name cell is locked',_lkOn.locked);
+    eq('and shows what that database says',_lkOn.text,'Rowan Court');
+    T('with a note saying where to change it',/Related Affordable/.test(_lkOn.title));
+    /* Rule 7 says every KIND OF CELL answers Enter and Escape. A locked cell
+       answers neither because it is not a cell in that sense — it holds nothing
+       focusable at all, which is the invariant worth pinning: a control you can
+       reach but cannot use is the state that rule exists to prevent. */
+    eq('and nothing inside it can be reached by keyboard',_lkOn.focusables,0);
+    T('the effective date is locked the same way',_lkOn.dateLocked);
+    eq('showing the date that database gave, in words',_lkOn.dateText,'October 1, 2026');
+    eq('with nothing focusable there either',_lkOn.dateFocusables,0);
+    /* Not merely disabled: the rs/custom dropdown is GONE. A menu offering two
+       answers beside a value that answers to neither is a control that lies. */
+    T('and the source dropdown it replaces is not left behind',!_lkOn.oldDateBox);
+    eq('a locked value does not open the form dirty',await c.eval('return window.__t.isDirty()'),false);
+    eq('the name reaches the record, not just the screen',
+      await c.eval("return (window.__t.__form()['property.name']||{}).value"),'Rowan Court');
+    eq('and the date is stored as ISO, whatever shape it arrived in',
+      await c.eval("return (window.__t.__form()['rent_schedule.date_eff_ra']||{}).value"),'2026-10-01');
+    /* The refusal is on the WRITE (rule 17). Removing the input stops a person;
+       the rent schedule's parser is the one that actually sets these keys. */
+    eq('the parse path is refused the name',await c.eval("return window.__t.__raLockedKey('property.name')"),true);
+    eq('and the date',await c.eval("return window.__t.__raLockedKey('rent_schedule.date_eff_ra')"),true);
+    eq('while the tenant alias stays ours to edit',
+      await c.eval("return window.__t.__raLockedKey('tenant.property_alias')"),false);
+    T('and its input is still on the page',
+      await c.eval(`return !!document.querySelector('input[data-k="tenant.property_alias"]')`));
+    /* Put the seam back the way the rest of the suite expects to find it. */
+    await c.eval('delete window.RASource;return 1');
+    await c.eval('return window.__t.__renderBody()');
+    T('removing the answer returns the ordinary input',
+      await c.eval(`return !!document.querySelector('input[data-k="property.name"]')`));
 
     console.log('\n── the console stayed quiet ───────────────────────────');
     eq('no console errors and no uncaught exceptions',c.logs.slice(0,3),[]);

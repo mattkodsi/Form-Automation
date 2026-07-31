@@ -58,7 +58,7 @@ function apText(form,id){
 const afMakeNumber=v=>{ const s=String(v==null?'':v).replace(/[^0-9.,\-]/g,'').replace(/,/g,'.');
   const n=parseFloat(s); return isNaN(n)?0:n; };
 
-const MIN_CHECKS=125;   // 2026-07-30 merge: union of both branches, counted off a real run (was ours 123 / main 34)
+const MIN_CHECKS=131;   // 2026-07-30 merge: union of both branches, counted off a real run (was ours 123 / main 34)
                         //;                // the count this file is known to run to the end
 let n=0,fails=0,verdict=null;
 const BAR='═'.repeat(68);
@@ -235,6 +235,31 @@ function record(extra){
     const by=await G.fillRentSchedule(rsBytes,r);
     const f=(await PDFDocument.load(by)).getForm();
     eq('and a signatory with no title prints no trailing one',f.getTextField('228').getText()||'','Jane Owner'); }
+
+  console.log('\n─ the date on the federal form is the one Related Affordable gave ─');
+  /* Field 3 is "Date Rents Will Be Effective", and 4/5/6 are the same date split
+     into the three boxes beside it. The date had two possible answers — a year
+     after the executed schedule, or one somebody typed — and Kinley's database
+     is now a third that outranks both. It is stored in its own key rather than
+     laundered through date_eff_custom, whose whole meaning is "the user typed
+     this"; a document is the last place that distinction may quietly collapse. */
+  { const r=record({'rent_schedule.date_eff_rs':'2026-05-01','rent_schedule.date_eff_source':'rs',
+      'rent_schedule.date_eff_ra':'2026-10-01'});
+    const by=await G.fillRentSchedule(rsBytes,r);
+    const f=(await PDFDocument.load(by)).getForm();
+    const V=id=>{try{return f.getTextField(String(id)).getText()||'';}catch(e){return '(no field '+id+')';}};
+    eq('the RA date reaches field 3, not the schedule\'s',V(3),'10/01/2026');
+    eq('and the month box agrees with it',V(4),'10');
+    eq('the day box too',V(5),'01');
+    eq('and the year box',V(6),'2026'); }
+  /* With no RA answer nothing about the old behaviour may have moved: this is
+     the same record minus one key, and it must print what it always printed. */
+  { const r=record({'rent_schedule.date_eff_rs':'2026-05-01','rent_schedule.date_eff_source':'rs'});
+    const by=await G.fillRentSchedule(rsBytes,r);
+    const f=(await PDFDocument.load(by)).getForm();
+    const V=id=>{try{return f.getTextField(String(id)).getText()||'';}catch(e){return '(no field '+id+')';}};
+    eq('without one, the schedule\'s date prints exactly as before',V(3),'05/01/2026');
+    eq('and its year box is unchanged',V(6),'2026'); }
 
   console.log('\n─ an unfactored utility is not a utility worth zero ─');
   /* $50 electric at 1.02 plus $30 gas with NO factor produced 80 -> 51. That
