@@ -3555,3 +3555,107 @@ the same example uses 50 units for the 1BR.
 
 Not a finding about the corpus. Recorded because anyone reconciling a study against HUD's
 example will hit it, and because it is the sort of thing this lane exists to catch.
+
+---
+
+# Adjudication wave — four parked packages closed
+
+Each of these was parked because its money rows sat inside the H9 row-offset and calling
+them would have been guessing which leg was displaced. A focused reader per package, sent
+at the specific rows rather than at the package, settles all four.
+
+## Peterson Plaza (75917) 2025 — **app wrong**, and all six rows are ONE defect
+
+The offset hypothesis was **wrong**, and testing it rather than confirming it is what found
+the real bug. The app is **missing a whole unit type**, and the gap makes every row below it
+read as an offset.
+
+True mix, agreed by workbook and executed schedule: **5 types / 189 units**, with a single
+2BR/1BA **"Senior"** unit (742 sf, $2,700) sitting **third** in both documents. Part D is
+empty and rent loss is $0 — it is revenue-producing, not a manager's unit.
+
+**Mechanism, with a line number.** `RCSParse.readLetter` assembles that row's numbers onto
+the *designation* baseline — `2BR /1BA` at y=241, its values at y=236 with `Senior` — so the
+roster row parses as type `"Senior"` with no bedroom count. Then **`app.js:1579`**:
+
+```js
+const _b = rcsBrOf(u); if (!_b) return;   // a shape the form cannot express
+```
+
+drops it. What survives is 100 / 30 / 42 / 16 — **OURS, key for key**.
+
+**Consequence: the app's record is 188 units and $429,050/mo against the filed 189 and
+$431,750 — $2,700/month, $32,400/year short.**
+
+| key | verdict |
+|---|---|
+| `unit.2.units` 42 vs 1 · `unit.2.proposed` 2650 vs 2700 · `unit.3.units` 16 vs 42 · `unit.3.proposed` 3250 vs 2650 · `unit.3.ua` 131 vs 111 · `unit.3.safmr` 2700 vs 2100 | **app wrong — one dropped row, six symptoms** |
+
+Every OURS figure is *correct for its own unit type*; only the ordinal is wrong.
+`unit.2.ua`/`unit.2.safmr` never surfaced because both 2BR rows share 111/2100.
+
+**This is a repair I own.** It is general by code reading — `app.js:1579` discards **any**
+unit whose designation carries no bedroom count — not by one property. Caveat the reader
+stated plainly: OURS was reconstructed from the app's code paths over the real inputs, not
+from a driven record. **Re-driving 75917 and dumping the unit rows would confirm it**, and
+the sweep log should be checked for which schedule was uploaded, since a widget-bearing copy
+reads all five rows and would mask the bug.
+
+## Sycamore Green (75453) 2025 — **app wrong** on source selection (H5), outcome-neutral
+
+Four revisions of one study, all naming "HUD **2025** SAFMR", all sharing one date of value
+(20 Sep 2024) and one grid signature — **neither ever moved**, unlike Market Square.
+
+| file | transmittal | SAFMR 1BR/2BR | UA |
+|---|---|---|---|
+| v1 | 25 Sep 2024 | **1,050 / 1,310** | 42 / 50 |
+| v2 | 30 Oct 2024 | **990 / 1,230** | 42 / 50 |
+| v3 | 3 Dec 2024 | **1,050 / 1,310** | 51 / 64 |
+| v4 | 17 Dec 2024 | **990 / 1,230** | 51 / 64 |
+
+**v3 = v1 + the UA fix with the SAFMR fix LOST.** A revision that regressed a correction it
+had already made. Only v4 carries both. **All three submission PDFs embed v1**, as does the
+owner's January workbook.
+
+**The app read v2 or v4 — a revision the team never filed.** Its extraction is faithful; the
+selection is wrong. Outcome-neutral: gross renewal rent $283,196 clears 150% under both sets
+($343,530 and $365,610).
+
+Two further defects in every revision: the narrative names 1BR $1,050 / 2BR **$1,300** while
+the table beside it prints $1,310, and the narrative was never updated when the table changed.
+
+## Lansing Manor (75500) 2026 — **team wrong**; the app matched the filed package
+
+Three real figures, three documents: **116** the old allowance, **85** the owner's proposed
+figure *and what the filed study says*, **99** what HUD/MMAM approved.
+
+The disagreeing leg is the owner's `Senior World - RCS Analysis.xlsx`, **still carrying 116
+after the team themselves revised the filed study to 85**. The app's 85 matches the submitted
+package. Aggregate passes at every figure (131,280 / 129,580 / 128,180 against 156,000).
+
+## Holly House (75564) 2025 — **both wrong**, and the app's leg is the faithful one
+
+61/64 and 38/53 are **not** a current/proposed pair. They are different methods and vintages:
+**61/64** is the UAF-factor route certified 25 Mar 2025 — what the appraiser used and what was
+actually submitted; **38/53** is the triennial baseline computed in May and **back-pasted into
+the impact workbook 13 minutes after the UA workbook was modified, after submission**. The
+real current/proposed pair is 48/51 → **40/51**.
+
+The app faithfully transcribed the filed study, so this is not a parsing defect. Aggregate
+passes on all three ($92,300 / $93,022 / $92,296 against $96,120).
+
+## M17 gains two more properties — 4 total
+
+Both packages above computed the threshold on an allowance superseded by one taking effect
+**with the renewal**, which HUD 9-14.B Step 1 forbids:
+
+| property | computed on | operative | effective |
+|---|---|---|---|
+| Morh Housing | $102 / $138 | $107 / $144 | 1 Apr 2026 |
+| Woodland Towers | $83 | $89 | 1 Jul 2026 |
+| **Lansing Manor** | 116 (workbook) / 85 (study) | **99** | **2 Feb 2026** |
+| **Holly House** | 61 / 64 | **40 / 51** | **24 Sep 2025** |
+
+**No outcome changes at any of the four.** The mechanism is real and the arithmetic is not
+the point — the point is that four packages ran the mandatory test on a number the guidebook
+says is the wrong one.
