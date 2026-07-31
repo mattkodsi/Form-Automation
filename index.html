@@ -5359,7 +5359,14 @@ function srcPick(k,rows){
 }
 /* Per-cell source rows in precedence order (spec \u00a73). val:null renders dim. */
 const SRCPICK_ROWS={
- 'property.name':()=>[{tag:'Executed RS',val:rsVal('property.name')},{tag:'Related Affordable',val:raVal('property.name')},{tag:'RCS report',val:rcsVal('property.name')}],
+ 'property.name':()=>[{tag:'Executed RS',val:splitProjectName(rsVal('property.name')).name},
+   {tag:'Related Affordable',val:splitProjectName(raVal('property.name')).name},
+   {tag:'RCS report',val:splitProjectName(rcsVal('property.name')).name}],
+ /* Rule 1: the row is declared whether or not this document carries a second
+    name — dim reads as "the RS does not say", which is the truth. Offering
+    nothing at all reads as "this cell has no source", which is not. */
+ 'tenant.property_alias':()=>[{tag:'Executed RS',val:splitProjectName(rsVal('property.name')).alias},
+   {tag:'RCS report',val:splitProjectName(rcsVal('property.name')).alias}],
  'property.fha':()=>[{tag:'Executed RS',val:rsVal('property.fha')},{tag:'Related Affordable',val:raVal('property.fha')}],
  'property.s8':()=>[{tag:'Executed RS',val:rsVal('property.s8')},{tag:'RCS report',val:rcsVal('property.s8')}],
  'owner.entity_type_other':()=>[{tag:'Executed RS',val:rsVal('owner.entity_type_other')}],
@@ -6019,6 +6026,23 @@ function rcsBrBa(k){const m=String(k||'').match(/^units\.(\d+)\.(br|ba)$/);
 function rcsCsRow(k){const v=rcsBrBa(k);
   return v?('<div class="uaopt srcopt'+((String(get(k)==null?'':get(k))===String(v))?' sel':'')+'" data-cskey="'+k+'" data-csopt="'+esc(v)+'">'+esc(v)+'<span class="uasub">RCS report</span></div>')
           :'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">RCS report \u00b7 not available</span></div>';}
+/* HUD-92458 Part A has ONE project-name box, and a property known to its tenants
+   by another name is typed into it as "Colonial Village/White Oak Townhomes".
+   Two facts in one field: the registry name, and the name on the tenant notice.
+
+   Splitting it was written into the FILL and nowhere else, so pressing "Fill form
+   from RS" put the halves in the right two cells while the property name's own
+   source row offered the whole slashed string — one rule, applied on one of the
+   two paths that use it (rule 17). The alias had no source row at all, so the
+   only way to get the half the document plainly contains was to retype it.
+
+   Only a single slash splits. Two would mean we cannot tell which half is which,
+   and a name that merely contains a slash is likelier than a third fact. */
+function splitProjectName(v){
+  const s=(v==null?'':String(v)).trim();
+  if(!s)return {name:null,alias:null};
+  const parts=s.split('/').map(x=>x.trim()).filter(Boolean);
+  return parts.length===2?{name:parts[0],alias:parts[1]}:{name:s,alias:null};}
 function rsVal(k){try{const p=_rsUpload&&_rsUpload.parsed;const v=p&&p.scalars?p.scalars[k]:null;return (v==null||v==='')?null:String(v);}catch(e){return null;}}
 /* The reading outlives the page that made it. _rsUpload was a plain variable
    set on upload and cleared on every form open, so every source row that reads
@@ -7344,11 +7368,9 @@ function rsFillFromParsed(){const P=_rsUpload&&_rsUpload.parsed;if(!P)return;
   const _wrote=[];
   const mark=k=>{markCycle(k);if(form[k])form[k].fromParse=true;if(_wrote.indexOf(k)<0)_wrote.push(k);};   // came from the schedule, not typed — tags an override as "parsed", not just "changed", in its note text
   const setk=(k,v)=>{if(raLockedKey(k))return;if(v!=null&&v!==''){form=store.editForm(form,k,String(v));mark(k);}};
-  { const pn=P.scalars['property.name'];
-    if(pn&&pn.indexOf('/')>=0){const parts=pn.split('/').map(x=>x.trim()).filter(Boolean);
-      if(parts.length===2){setk('property.name',parts[0]);setk('tenant.property_alias',parts[1]);}
-      else setk('property.name',pn);}
-    else setk('property.name',pn); }
+  { const pn=splitProjectName(P.scalars['property.name']);
+    setk('property.name',pn.name);
+    if(pn.alias)setk('tenant.property_alias',pn.alias); }
   setk('property.fha',P.scalars['property.fha']);
   setk('property.s8',P.scalars['property.s8']);
   setk('owner.entity_name',P.scalars['owner.entity_name']);
