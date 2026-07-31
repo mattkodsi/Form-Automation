@@ -98,6 +98,22 @@ const SESSION_DEFAULT = path.join(REPO, '_archive', 'corpus-cache', '.session.js
    app, and loudly either way: silence is what lets a thinning schedule read
    as a clean run. */
 class SkipRun extends Error { constructor(m) { super(m); this.name = 'SkipRun'; this.skipped = true; } }
+/* Chromium in the cloud container cannot open an outbound TLS connection —
+   measured repeatedly, most recently on the correct proxy port and against a
+   neutral host, with zero proxy-side failures logged, so the request never
+   leaves the browser. node CAN. This relays the app's Supabase traffic through
+   the loopback server that already serves the bundle: chromium reaches
+   loopback, node reaches Supabase.
+
+   It is a fetch SHIM, not a change to SUPABASE_URL, and that is deliberate —
+   supabase-js derives its localStorage key from the URL's hostname, so swapping
+   the URL would move the session to `sb-127-auth-token` and quietly change what
+   the app is. Only the transport moves; the app is identical.
+
+   No TLS bypass: node verifies the upstream certificate exactly as always, and
+   HTTPS_PROXY is untouched. Off unless asked for, so the Mac's path is the one
+   it has always been. */
+const RELAY_SUPABASE = process.argv.includes('--relay-supabase') || process.env.RCS_RELAY_SUPABASE === '1';
 const NAME_PREFIX = 'ZZ-CORPUS-';
 
 /* ── the created-property ledger ────────────────────────────────────────────
@@ -362,15 +378,27 @@ class CDP {
      original anchor click both still run, so the genuine download is still
      attempted. It only keeps a reference to the same Blob so the bytes stay
      reachable over CDP if chromium writes nothing to disk. */
-function prelude(storageKey, sess) {
+function prelude(storageKey, sess, relayFrom, relayTo) {
   const stored = JSON.stringify({
     access_token: sess.access_token, refresh_token: sess.refresh_token,
     expires_at: sess.expires_at,
     expires_in: Math.max(60, (sess.expires_at || 0) - Math.floor(Date.now() / 1000)),
     token_type: 'bearer',
   });
+  const shim = (relayFrom && relayTo) ? `
+  /* transport only: the app still believes it is talking to ${relayFrom} */
+  (function(){const FROM=${J(relayFrom)},TO=${J(relayTo)};
+    const swap=u=>{try{const s=String(u);return s.indexOf(FROM)===0?TO+s.slice(FROM.length):u;}catch(e){return u;}};
+    const _rf=window.fetch;
+    if(_rf)window.fetch=function(u,o){
+      if(u&&typeof u==='object'&&u.url!==undefined&&typeof Request!=='undefined'&&u instanceof Request){
+        const n=String(u.url).indexOf(FROM)===0?new Request(swap(u.url),u):u; return _rf.call(this,n,o);}
+      return _rf.call(this,swap(u),o);};
+    try{const _xo=XMLHttpRequest.prototype.open;
+      XMLHttpRequest.prototype.open=function(m,u){return _xo.apply(this,[m,swap(u)].concat([].slice.call(arguments,2)));};}catch(e){}
+  })();` : '';
   return `(function(){
-  try{localStorage.setItem(${J(storageKey)},${J(stored)});}catch(e){}
+  try{localStorage.setItem(${J(storageKey)},${J(stored)});}catch(e){}${shim}
   window.__net=[];window.__inflight=0;window.__errs=[];
   const local=u=>{try{const s=String(u);
     return /^(blob:|data:|about:)/.test(s)||/^https?:\\/\\/(127\\.0\\.0\\.1|localhost)(:|\\/|$)/.test(s)||s.charAt(0)==='/'||!/^[a-z]+:/i.test(s);
@@ -602,10 +630,34 @@ async function withApp(fn, { sessionFile, width = 1280, height = 1000, log = () 
     + ', ' + Math.round(secondsLeft / 60) + ' min left  [' + path.relative(REPO, file) + ']');
 
   buildBundle();
+  let relayCount = 0, relayFail = 0;
   const srv = await new Promise(res => {
-    const s = http.createServer((rq, rs) => fs.readFile(BUNDLE, (e, b) => {
-      if (e) { rs.writeHead(404); rs.end(); } else { rs.writeHead(200, { 'content-type': 'text/html' }); rs.end(b); }
-    }));
+    const HOPREQ = new Set(['host', 'connection', 'keep-alive', 'transfer-encoding', 'upgrade', 'proxy-authorization', 'content-length']);
+    /* node's fetch has ALREADY decompressed the body, so forwarding the upstream
+       content-encoding makes chromium try to gunzip plain bytes and drop the
+       connection — which surfaces as "Failed to fetch" with no status and is
+       indistinguishable from a network block. That cost an hour; it is why the
+       relay counts what it forwarded. */
+    const DROPRES = new Set(['content-encoding', 'content-length', 'transfer-encoding', 'connection']);
+    const s = http.createServer(async (rq, rs) => {
+      if (RELAY_SUPABASE && rq.url.indexOf('/__supabase/') === 0) {
+        const upstream = cfg.url + rq.url.slice('/__supabase'.length);
+        const h = {};
+        for (const [k, v] of Object.entries(rq.headers)) if (!HOPREQ.has(k.toLowerCase())) h[k] = v;
+        const chunks = []; for await (const ch of rq) chunks.push(ch);
+        try {
+          const r = await fetch(upstream, { method: rq.method, headers: h, body: chunks.length ? Buffer.concat(chunks) : undefined, redirect: 'manual' });
+          relayCount++;
+          const body = Buffer.from(await r.arrayBuffer());
+          const out = {}; r.headers.forEach((v, k) => { if (!DROPRES.has(k.toLowerCase())) out[k] = v; });
+          rs.writeHead(r.status, out); rs.end(body);
+        } catch (e) { relayFail++; rs.writeHead(502, { 'content-type': 'text/plain' }); rs.end('relay: ' + ((e && e.message) || e)); }
+        return;
+      }
+      fs.readFile(BUNDLE, (e, b) => {
+        if (e) { rs.writeHead(404); rs.end(); } else { rs.writeHead(200, { 'content-type': 'text/html' }); rs.end(b); }
+      });
+    });
     s.listen(0, '127.0.0.1', () => res(s));
   });
   const port = srv.address().port;
@@ -628,7 +680,9 @@ async function withApp(fn, { sessionFile, width = 1280, height = 1000, log = () 
   await new Promise((res, rej) => { ws.addEventListener('open', res); ws.addEventListener('error', rej); });
   const c = new CDP(ws);
   await c.send('Runtime.enable'); await c.send('Page.enable'); await c.send('DOM.enable');
-  await c.send('Page.addScriptToEvaluateOnNewDocument', { source: prelude(cfg.storageKey, sess) });
+  await c.send('Page.addScriptToEvaluateOnNewDocument', { source: prelude(cfg.storageKey, sess,
+    RELAY_SUPABASE ? cfg.url : null, RELAY_SUPABASE ? `http://127.0.0.1:${port}/__supabase` : null) });
+  if (RELAY_SUPABASE) log('relay   : app Supabase traffic -> loopback -> ' + cfg.url);
 
   c.url = `http://127.0.0.1:${port}/index.html`;
   c.downloadOk = false;
@@ -1027,8 +1081,25 @@ async function driveBoth(opts) {
     /* Opened WITH the tracker's prefill, which is what locks the date. Driving
        #bNewCycle bare would open the unprefilled dialog and take a default. */
     await c.eval(`newCycleDialog(${J({ program: pick.program || 'rcs', effective: pick.effective, type: pick.type, deadline: pick.deadline })}); return true;`);
-    await waitFor(c, `!!document.getElementById('cyRCS')`, { timeout: 10000, label: 'the Start-new-package dialog' });
-    await c.eval(`const r=document.getElementById('cyRCS');r.click();if(!r.checked)r.checked=true;return r.checked;`);
+    /* Wait for #dlgOk, NOT #cyRCS. When the tracker fixes the program the dialog
+       renders a LOCKED LINE where the radios would be (app.js:5228), so #cyRCS
+       does not exist — by design, and that design is the entire point of driving
+       from a tracker row. Waiting for it timed out after ten seconds on a dialog
+       that was open and correct, and the timeout was read as the home page being
+       too slow on a real portfolio. It was not: renderMenu() costs ~170ms with
+       249 properties and 4,273 tracker rows loaded. #dlgOk exists on both paths. */
+    await waitFor(c, `!!document.getElementById('dlgOk')`, { timeout: 10000, label: 'the Start-new-package dialog' });
+    const dlgShape = await c.eval(`return {rcs:!!document.getElementById('cyRCS'), eff:!!document.getElementById('cyEff')};`);
+    if (dlgShape.rcs) {
+      /* No tracker row fixed the program, so the radios are live and RCS has to
+         be chosen. This run should not reach here — a package with no tracker row
+         skipped above — so say it happened rather than quietly pick. */
+      warnings.push('the new-package dialog offered program radios, so the tracker did not fix the program for ' + propertyCode + ' ' + yr);
+      await c.eval(`const r=document.getElementById('cyRCS');r.click();if(!r.checked)r.checked=true;return r.checked;`);
+    } else {
+      log('        program and date are locked lines, as a tracker-dated package should be');
+    }
+    if (dlgShape.eff) warnings.push('the dialog offered a cyEff input, so the effective date was NOT locked by the schedule');
     /* The date is never typed. With a tracker row it is a locked line and there
        is no cyEff to type into; without one this run has already skipped. Typing
        would write rent_schedule.date_eff_source='custom' — an assertion about

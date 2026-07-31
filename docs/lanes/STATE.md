@@ -6,7 +6,7 @@ claims to be current; every other doc in the lane is either standing rules
 findings (`AUDIT-LEDGER.md`). If this file disagrees with them, this file is right and
 the other one needs fixing.
 
-Last updated: **2026-07-31**, by the cloud, after fixing the selector and proving the relay.
+Last updated: **2026-07-31**, by the cloud, after fixing the dialog wall and booting the real app through the relay.
 
 ## The selector blocker is FIXED — and it was not the selector
 
@@ -22,7 +22,17 @@ received them. `selectAll()` now pages every table, not just the one that broke.
 
 **But it is in source and NOT in `index.html`** — see the delivery blocker below.
 
-## Blocked on one thing: delivery
+## Delivery is NOT blocking the sweep — the rig drives source
+
+The Mac confirmed `corpus/drive.js:200` builds `build.sh` into a pid-scoped temp file and
+serves that, so **the rig drives SOURCE, not `index.html`**. Measured: `selectAll` appears
+10 times in `db.supabase.js` and 0 times in the shipped bundle. My earlier claim that a
+driving rig would still see 1,000 rows was wrong.
+
+`deliver.sh` still aborts, so the shipped `index.html` is stale and anything Matt opens by
+double-clicking is behind. That matters for Matt, not for the sweep.
+
+## The stale shipped bundle
 
 **`deliver.sh` aborts, so no repair can reach the shipped bundle.** `test_browser.js` is red
 on **five layout checks** in `shell.head.html` — horizontal overflow at 1200/1280px, a
@@ -30,7 +40,7 @@ sticky element scrolled off, the page pinned left at 1680/2560px. The lane's own
 assign `shell.head.html` styling to the **redesign lane**, so this lane cannot fix them.
 
 Owner: **redesign lane / Matt**. Consequence: the paging fix, and every repair after it,
-exists in source only. A rig driving the shipped `index.html` still sees the old behaviour.
+exists in source only — fine for the sweep, stale for anyone opening `index.html`.
 
 ## Chromium here CAN reach Supabase, through a loopback relay
 
@@ -38,9 +48,20 @@ Five probes green from inside chromium against the live account — auth health,
 authenticated REST, a property read, and `auth/v1/user`. Filed at
 `docs/lanes/inbox/2026-07-31-cloud-to-mac-relay-works.md`.
 
-**Not yet proved:** token refresh through the relay, websockets, the derived storage key
-changing to `sb-127-auth-token`, and that a whole drive survives it. Five probes is not a
-package. **The division below stands until a full drive is compared against the Mac's.**
+**Now proved:** the real bundle boots signed in as Matt through the relay — 14 Supabase
+requests all 200 (`auth/v1/user`, all nine tables, three paged `hap_schedule` calls), **249
+properties, 4,273 tracker rows, zero JS errors**, `renderMenu()` at 174 ms. Implemented as a
+fetch shim behind `--relay-supabase`, so `SUPABASE_URL` and the derived storage key are
+unchanged and only the transport moves.
+
+**Still not proved: the WRITE path.** No cycle has been created through the relay — the
+classifier here blocks a live-account write, which is a reasonable gate. Token refresh under
+write load and the `_pending` queue are untested.
+
+**The division of labour STANDS, and not merely for want of proof.** The Mac's argument is
+the right one: if the driving leg moves to the container, nothing independently checks the
+container. Two records disagreeing is a signal; one machine has none. The relay's value is
+diagnosis without a round-trip — the 75708 wall was found here in minutes, read-only.
 
 Chromium still cannot reach Supabase *directly* — reconfirmed on the correct proxy port
 (35069; an earlier probe hardcoded 34565, so that negative was worthless) and against a

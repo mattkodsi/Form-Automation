@@ -18,7 +18,7 @@
    ocr.js would move billing somewhere nothing is counting; that is the failure
    these guard now. */
 const fs=require('fs'),path=require('path'),cp=require('child_process');
-const MIN_CHECKS=30;   // 2026-07-31: six portfolio-safety rails added - cleanup deletes
+const MIN_CHECKS=32;   // 2026-07-31: six portfolio-safety rails added - cleanup deletes
                        // CYCLES not properties, and the driver fails closed on create.
                        // 2026-07-30: check 5 became five real ones - the rail moved
                        // out of this file and into sweep.js/drive.js, so it can be DRIVEN.
@@ -195,6 +195,17 @@ const fakeBoth=(name,calls,delay)=>{
     && /throw new SkipRun\(pick\.err\)/.test(dsrc));
   T('and the tracker row is chosen by the app\'s own selector, not a second implementation',
     /H\.targetFor\(rows, code, yr \+ '-01-01'\)/.test(dsrc));
+  /* The wall the Mac hit at 4af2336, and it was this driver's bug: a
+     tracker-dated package renders LOCKED LINES where the program radios would
+     be (app.js:5228), so #cyRCS does not exist and waiting for it times out on
+     a dialog that is open and correct. Named for Colonial Village 75708, which
+     is where it surfaced. */
+  T('the new-package dialog is awaited on #dlgOk, which exists on both paths - never #cyRCS',
+    /waitFor\(c, `!!document\.getElementById\('dlgOk'\)`[\s\S]{0,120}Start-new-package/.test(dsrc)
+    && !/waitFor\(c, `!!document\.getElementById\('cyRCS'\)`/.test(dsrc));
+  T('and a dialog that DOES offer radios is reported, not silently clicked past',
+    /the new-package dialog offered program radios/.test(dsrc));
+
   T('the effective date is never typed - a tracker row locks it',
     !/typeInto\(c,\s*'cyEff'/.test(dsrc));
   /* The run order's case for the two-pass drive is that no run has ever
