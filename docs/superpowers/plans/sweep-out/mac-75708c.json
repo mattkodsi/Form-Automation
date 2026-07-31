@@ -1,0 +1,38 @@
+{
+ "sha": "a85d696",
+ "label": "mac-75708c",
+ "records": [
+  {
+   "property": "Colonial Village",
+   "code": "75708",
+   "folder": "75708 - Colonial Village - Section 8",
+   "year": 2026,
+   "cycleLabel": "2026 (RCS)",
+   "sha": "a85d696",
+   "orders": {
+    "rs-first": {
+     "error": "after the reload there is no property card named ZZ-CORPUS-75708-20260731-1654 — the record never reached the database",
+     "files": 0
+    },
+    "rcs-first": {
+     "error": "after the reload there is no property card named ZZ-CORPUS-75708-20260731-1654 — the record never reached the database",
+     "files": 0
+    }
+   },
+   "rows": [],
+   "fillOrder": [],
+   "drift": [],
+   "notes": [
+    "rs-first: drive threw -- after the reload there is no property card named ZZ-CORPUS-75708-20260731-1654 — the record never reached the database",
+    "rcs-first: drive threw -- after the reload there is no property card named ZZ-CORPUS-75708-20260731-1654 — the record never reached the database"
+   ],
+   "verdict": "the app generated nothing comparable",
+   "fuzz": null,
+   "inputs": {
+    "study": "2026 (RCS)/RCS Package/04. Colonial Village - RCS.pdf",
+    "priorRs": "2025/White Oak Townhomes - Executed RS - FY2025.pdf",
+    "priorRsRule": "year-1 folder"
+   }
+  }
+ ]
+}
