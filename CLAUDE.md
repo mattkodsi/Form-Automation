@@ -155,7 +155,7 @@ a new suite needs registering (`deliver.sh` calls it).
 - **`app/full-mp/test_browser.js`** — **the only suite that presses keys.** Builds its own bundle,
   drives it in a real headless chromium through `?selftest=1`, and dispatches real trusted key
   events over CDP (zero dependencies — node's own WebSocket). It covers the hole the other suites
-  cannot see: they prove `save()` saves, this proves a keystroke *reaches* it. 573 checks — Enter and
+  cannot see: they prove `save()` saves, this proves a keystroke *reaches* it. 580 checks — Enter and
   Escape on every kind of cell, the source dropdowns, the conflict buttons, the session boundary,
   and tier 3 end to end on `fixture_rs_scan.json` — read pristine, and read nudged half a point.
   `--full` drives all ~110 controls instead of one per kind. Skips **loudly** (never as a pass) when
@@ -216,7 +216,7 @@ a new suite needs registering (`deliver.sh` calls it).
   computed, and both tools exit 3 with a banner where poppler is absent rather than exiting 0 having
   rendered nothing.
 
-**2497 checks across thirteen suites** (98 · 200 · 144 · 222 · 131 · 444 · 189 · 573 · 111 · 15 · 91 · 120 · 159) as of 2026-07-30, counted off a real run. These
+**2504 checks across thirteen suites** (98 · 200 · 144 · 222 · 131 · 444 · 189 · 580 · 111 · 15 · 91 · 120 · 159) as of 2026-07-30, counted off a real run. These
 numbers go stale the moment a suite grows — `MIN_CHECKS` in each file is the binding floor; this list
 is a map.
 ⚠️ **Don't pipe a suite through `| tail`.** A pipeline's exit status is the LAST command's, so node's

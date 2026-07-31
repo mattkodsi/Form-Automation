@@ -35,7 +35,7 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=573;   // 2026-07-31: +8 the project-name box carries two names   // 2026-07-30: +19 a locked cell is not a control, +4 the two doors into a package   // 2026-07-30 merge: union of both branches, counted off a real run (was ours 435 / main 399)
+const MIN_CHECKS=580;   // 2026-07-31: +6 the source badge follows the value   // 2026-07-31: +8 the project-name box carries two names   // 2026-07-30: +19 a locked cell is not a control, +4 the two doors into a package   // 2026-07-30 merge: union of both branches, counted off a real run (was ours 435 / main 399)
                         //;   // 2026-07-30 merge: the union of both branches, counted off a real run.
                         // ours: +81 for the section rail — the indicator's choice of section swept
                         //   across the whole document, the jump landing clear of a #ccbar that is now
@@ -3688,6 +3688,17 @@ const FULL=process.argv.includes('--full');
     const _fl=await c.eval(`const f=window.__t.__form();
       return [(f['property.name']||{}).value,(f['tenant.property_alias']||{}).value]`);
     eq('and Fill form from RS agrees with them',_fl,['Colonial Village','White Oak Townhomes']);
+    /* FORM-RULES: every document-fed cell says so. The badge asks whether the
+       cell holds what the document gave, and the document gave both halves in
+       one box — so the LOOKUP has to split before the comparison, not just the
+       source rows. Without it the tenant name carried a dropdown offering a
+       value and no badge saying it came from there, and the name cell holding
+       the registry half alone compared unequal to the whole slashed string and
+       would have quietly lost its badge too. */
+    const _tg=await c.eval(`const tag=k=>{const b=document.querySelector('[data-box="'+k+'"]');
+        const t=b&&b.querySelector('.srctag');return t?t.textContent.trim():'';};
+      return [tag('property.name'),tag('tenant.property_alias')];`);
+    eq('and both halves are badged as the schedule\'s',_tg,['RS','RS']);
     /* A name with no slash is one fact, and must not be halved. */
     await openForm();
     await c.eval(`window.__t.__setRsParsed({scalars:{'property.name':'Gates Manor Apartments'},
@@ -3698,6 +3709,44 @@ const FULL=process.argv.includes('--full');
         name:(document.querySelector('[data-box="property.name"] .uaopt.srcopt')||{}).textContent||''};`);
     T('an unslashed name offers the tenant cell nothing',_one.aliasDim);
     T('and reaches the name cell whole',/Gates Manor Apartments/.test(_one.name));
+    /* ── THE BADGE HAS TO MOVE WHEN THE ANSWER DOES ───────────────────
+       Two faults, one cell. Matt found both by clicking the source rows. */
+    console.log('\n── the source badge follows the value ─────────────────');
+    await openForm();
+    const _bt=async()=>c.eval(`const t=document.querySelector('[data-box="property.name"] .srctag');
+      return t?t.textContent.trim():'(none)'`);
+    const _type=async v=>{await c.eval(`const i=document.querySelector('input[data-k="property.name"]');
+      if(i){i.focus();i.value=${JSON.stringify(v)};i.dispatchEvent(new Event('input',{bubbles:true}));}return 1`);
+      await sleep(280);};
+    /* 1. Documents that DISAGREE: the badge names whichever one the value matches. */
+    await c.eval(`window.__t.__setRsParsed({scalars:{'property.name':'Colonial Village'},units:[],nonrev:[],ns8:[],principals:[]});
+      window.__t.__setRcsParsed({scalars:{'property.name':'Colonial Village Apartments'},units:[]});
+      window.__t.__renderBody();return 1`);
+    await sleep(300);
+    const _pick=async t=>{await c.eval(`const o=[...document.querySelectorAll('[data-box="property.name"] .uaopt.srcopt')]
+        .find(x=>/${t}/.test(x.textContent));if(o)o.click();return 1`);await sleep(300);};
+    await _pick('Executed RS'); eq('picking the schedule badges it RS',await _bt(),'RS');
+    await _pick('RCS report');  eq('picking the study moves the badge to RCS',await _bt(),'RCS');
+    /* 2. Documents that AGREE. It said "RS" whichever row you picked, and put the
+       whole truth in a title nobody hovers — so the control looked broken. The
+       badge is about what the value AGREES with (rule 3), and when both agree
+       the honest badge names both rather than one of them. */
+    await c.eval(`window.__t.__setRcsParsed({scalars:{'property.name':'Colonial Village'},units:[]});
+      window.__t.__renderBody();return 1`);
+    await sleep(300);
+    await _pick('Executed RS'); const _both=await _bt();
+    eq('a value both documents give is badged as both',_both,'RS \u00b7 RCS');
+    await _pick('RCS report');
+    eq('and picking the other one says the same thing, because it is',await _bt(),'RS \u00b7 RCS');
+    /* 3. FORM-RULES 13. Provenance is drawn twice and only renderBody drew the
+       BADGE, so typing over a parsed value left "RS" beside what you had just
+       replaced — the cell claiming the schedule gave a figure it never gave. */
+    await _type('Typed Over It');
+    eq('typing over it drops the badge at once, without a full re-render',await _bt(),'(none)');
+    await _type('Colonial Village');
+    eq('and typing back to what the documents hold restores it',await _bt(),'RS \u00b7 RCS');
+    await c.eval('window.__t.__setRcsParsed(null);return 1');
+
     await c.eval('window.__t.__setRsParsed(null);return 1');
     await openForm();
 

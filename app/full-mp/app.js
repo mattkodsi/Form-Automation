@@ -1096,6 +1096,9 @@ function rsOf(k){
   m=k.match(/^(nonrev|ns8)\.(\d+)\.(br|ba)$/);        if(m)return rsFamVal(m[1],+m[2],m[3]);
   m=k.match(/^principals\.(\d+)\.(name|title)$/);       if(m)return rsPrin(+m[1],m[2]);
   if(k.indexOf('partb.')===0){const P=_rsUpload&&_rsUpload.parsed&&_rsUpload.parsed.partb;const v=P?P[k]:null;return (v==null||v==='')?null:String(v);}
+  /* Part A's one project-name box holds two facts — see splitProjectName. */
+  if(k==='property.name')return splitProjectName(rsVal('property.name')).name;
+  if(k==='tenant.property_alias')return splitProjectName(rsVal('property.name')).alias;
   return rsVal(k);}
 function rsTag(k){
   const v=get(k); if(v===''||v==null)return '';
@@ -1107,7 +1110,15 @@ function rsTag(k){
    each of them on its own — and this decides which of the two is drawn. */
 function srcTags(k){
   const r=rsTag(k),c=rcsTag(k);
-  if(r&&c)return '<span class="srctag rstag" title="The rent schedule and the RCS study both give this value">RS</span>';
+  /* Both documents, named. It said "RS" and put the whole truth in a title
+     nobody hovers, so picking "RCS report" on a value the two agree about
+     looked like a control that did nothing — the badge did not move because
+     there was nothing to move it to, and it would not say so. The badge is
+     about what the value AGREES with, not which menu row was last clicked
+     (rule 3: a figure equal to a source we hold IS that source), and this is
+     the case where those two readings visibly differ. The 'long' class lets a
+     cramped unit row ellipsise it instead of shoving the figure out of its cell. */
+  if(r&&c)return '<span class="srctag rstag long" title="The rent schedule and the RCS study both give this value">RS \u00b7 RCS</span>';
   return r||c;}
 /* The whole fact, offered as one answer — the twin of srcGroupPick on an
    address. The sub-cells keep their own Executed RS rows so a type can still be
@@ -1464,6 +1475,8 @@ function rcsOf(k){
   m=k.match(/^units\.(\d+)\.br_rcs$/);        if(m){const q=rcsMatch(+m[1]);return q.u?(rcsBrOf(q.u)||null):null;}
   m=k.match(/^units\.(\d+)\.ba_rcs$/);        if(m){const q=rcsMatch(+m[1]);return q.u?(rcsBaOf(q.u)||null):null;}
   m=k.match(/^units\.(\d+)\.num_rcs$/);       if(m)return rcsUnitVal(+m[1],'count');
+  if(k==='property.name')return splitProjectName(rcsVal('property.name')).name;
+  if(k==='tenant.property_alias')return splitProjectName(rcsVal('property.name')).alias;
   return rcsVal(k);
 }
 /* FORM-RULES: every document-fed cell says so. This must cover every key
@@ -3525,6 +3538,25 @@ function paintCaName(){const keys=['ca.prefix','ca.name'];const c=groupColors(ke
   if(box){box.style.background=c[1];box.style.borderLeftColor=c[0];const inp=box.querySelector('input[data-k="ca.name"]');
     if(inp)applyTint(inp,'ca.name');}
   const ov=document.querySelector('.ovnote[data-ov="ca.prefix,ca.name"]');if(ov){const m=modeOf(keys);ov.setAttribute('data-mode',m);ov.style.display=m?'flex':'none';}}
+/* FORM-RULES 13, in the shape that matters most: provenance is drawn twice, by
+   renderBody and by paintCell, and only one of them drew the BADGE. So typing
+   over a parsed value left "RS" sitting beside what you had just replaced —
+   the cell claiming the rent schedule gave a figure it never gave — until
+   something unrelated forced a full render. A colour that lags is a blemish; a
+   source badge that lags is a false statement on a HUD filing. */
+function paintTag(k,box){
+  if(!box||!box.querySelector)return;
+  const want=srcTags(k);
+  const cur=box.querySelector(':scope > .srctag');
+  if(!want){if(cur&&cur.remove)cur.remove();return;}
+  let node=null;
+  try{const t=document.createElement('div');t.innerHTML=want;node=t.firstChild;}catch(e){return;}
+  if(!node)return;
+  if(cur&&cur.replaceWith){cur.replaceWith(node);return;}
+  /* Same place the full render puts it: after the input, before the dropdown. */
+  const drop=box.querySelector(':scope > .uadrop');
+  if(drop&&box.insertBefore)box.insertBefore(node,drop);
+  else if(box.appendChild)box.appendChild(node);}
 function paintCell(k){const gb=groupOf(k);if(gb)return paintGroup(gb);
   /* A utility-allowance or SAFMR cell is a family, exactly like an address group,
      so it is repainted by the computation that renders it rather than by this
@@ -3556,7 +3588,7 @@ function paintCell(k){const gb=groupOf(k);if(gb)return paintGroup(gb);
     :((k==='rent_schedule.date_rents_effective'&&s.source==='database')?'this-cycle':s.source);
   // The blue "on file" edge belongs to a cell saved empty and STILL empty. Without
   // the value test it painted blue over whatever was being typed into it.
-  const c=CLR[_sr]||CLR.new;const _bl=(_sr==='new'&&s.db_value===''&&String(s.value==null?'':s.value)==='')?CLR.database[0]:c[0];const box=document.querySelector('[data-box="'+k+'"]');if(box){box.style.background=c[1];box.style.borderLeftColor=_bl;}
+  const c=CLR[_sr]||CLR.new;const _bl=(_sr==='new'&&s.db_value===''&&String(s.value==null?'':s.value)==='')?CLR.database[0]:c[0];const box=document.querySelector('[data-box="'+k+'"]');if(box){box.style.background=c[1];box.style.borderLeftColor=_bl;paintTag(k,box);}
   // A write-in's color lives on its tick, which is keyed data-wibox rather than
   // data-box, so this repaint used to skip it entirely and the cell only changed
   // color on a full re-render.
