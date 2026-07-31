@@ -4,14 +4,14 @@
  "folder": "75708 - Colonial Village - Section 8",
  "year": 2026,
  "cycleLabel": "2026 (RCS)",
- "sha": "2d9773c",
+ "sha": "4af2336",
  "orders": {
   "rs-first": {
-   "error": "the tracker carries no startable row for 75708 in or after 2026",
+   "error": "timed out after 10s waiting for the Start-new-package dialog",
    "files": 0
   },
   "rcs-first": {
-   "error": "the tracker carries no startable row for 75708 in or after 2026",
+   "error": "timed out after 10s waiting for the Start-new-package dialog",
    "files": 0
   }
  },
@@ -19,8 +19,8 @@
  "fillOrder": [],
  "drift": [],
  "notes": [
-  "rs-first: drive threw -- the tracker carries no startable row for 75708 in or after 2026",
-  "rcs-first: drive threw -- the tracker carries no startable row for 75708 in or after 2026"
+  "rs-first: drive threw -- timed out after 10s waiting for the Start-new-package dialog",
+  "rcs-first: drive threw -- timed out after 10s waiting for the Start-new-package dialog"
  ],
  "verdict": "the app generated nothing comparable",
  "fuzz": null,
