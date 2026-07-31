@@ -4385,3 +4385,225 @@ allowance is a fallible **cross-check, never a source.** So:
 
 **Supersedes:** the "reverse defUaSrc," "prefer HUD for SAFMR," and "block the conflict" recommendations
 for UA. The SAFMR-revision issue (Sycamore read study v4, unfiled) stands as a separate, smaller item.
+
+---
+
+## META-FINDING — the corpus instrument is unreliable on BOTH legs, and the app is largely faithful
+
+The single most important conclusion of the sweep, arrived at by actually reading the documents
+behind every non-trivial "app wrong." **The three-way comparator cannot be trusted on either leg
+without a human/reader source read**, and where it is checked, the app is faithful far more often
+than the raw run implied.
+
+### The FILED leg (extract.js) — already documented
+
+Reads superseded draft workbooks (Westwood 11.30.24, Morningside internal grid, Morh original
+block), label cells (`"Potential(AddCol.4)*"`, `"YearlyContractRentPotential"`), OCR bleed
+(`"90/ndFloor"`), and row-shifted tables (Marine Terrace). Every value it labels FILED is suspect.
+
+### The OURS leg (drive `build-manifest` `chosenStudy`/`priorRs`) — new, and just as bad
+
+**22 of 68 driven records were fed a study from an `Archive/`, `Old/`, `Submission Archive/`, or
+`vN` path** — the manifest's study picker does not reliably choose the of-record filed study:
+
+Northcross (v2), Riverwood 2020 (V2) & 2025 (Submission Archive), Burt Farms (Archive), **Sycamore
+Green (v4)**, **New Horizons (archive/JLL)**, North Park (v2; 2015 _Archive), Lansing 2021 (Archive),
+**Noble Tower (Archive)**, Oceanport (Archive), Ebony Gardens (Archive), Market Square (Archive),
+Shiloh 2019 (v4), 333 Holly (Archive), The Pines (Archive), Friendship Court (v2), Peterson 2020
+(Old), Fairview (Archive), Walden (Archive), Oak Center 2021 (Archive), Morh 2021 (Archive). Plus
+three `priorRs` from suspicious paths: **New Horizons (`2023/Unexecuted RS.pdf`)**, Market Square
+2019 (Draft xls), 333 Holly (Archive).
+
+Confirmed superseded by source read:
+- **Noble Tower 2024 — NOT an app bug.** The manifest fed `Archive/…A20240802 Final.pdf`, a
+  **dual-conclusion draft** ("As Is" $3,100 / "As Proposed" $3,265); it is the ONLY file in the
+  folder containing $3,100. The of-record study (rev D) concludes only $3,265 = what the team filed.
+  So the app's $3,100 is a document-selection artifact (the drive handed it an archived draft; within
+  that draft the parser took the "As Is" row). **My earlier "app read the rejected HCVA bid, $32k/mo
+  wrong" headline was doubly wrong** — both studies are Van Hazinga, and it is not an error against
+  the filed study. (The first reader's "HCVA bid" was itself mistaken; the second read caught it.)
+- **New Horizons 2024 — NOT an app bug.** The manifest fed `2023/Unexecuted RS.pdf`; the app's UA
+  (132/138/151/140) is EXACTLY that unexecuted schedule's Col.5, read correctly. The executed
+  DocuSigned FY2024 schedule carries 149/156/171/158. Document-selection artifact, not a parser fault.
+- **Sycamore Green 2025** — the app read SAFMR from study **v4** (an unfiled revision with an
+  appraiser error), not the of-record v1. Same class: driver fed a superseded revision.
+
+Three confirmed by source read (Noble Tower, New Horizons, Sycamore); all three "app wrong" claims
+I most recently raised dissolved into harness document-selection on verification.
+
+### What this does to the audit's headline
+
+The tally of "app wrong on the money" collapses under verification. Across every case a reader has
+opened, the app **faithfully parsed the document it was handed**; the wrong values trace to the
+harness handing it (or reading, on the filed side) a superseded/archived/unexecuted/draft document.
+**The app is largely correct; the corpus INSTRUMENT is the thing that is wrong.** The genuine
+product findings that survive are: (1) the **UAF design gap** (the app is not the UAF system of
+record — being built), and (2) a small number of true parser items to still confirm (Oak Center's
+non-revenue unit; the Noble Tower dual-conclusion "As Is vs As Proposed" nuance, which only bites if
+the app is ever legitimately handed a dual-conclusion study).
+
+**Two harness repairs (corpus tooling, not the product), if the sweep is to be a trustworthy
+instrument:** `build-manifest` must pick `chosenStudy`/`priorRs` by of-record/executed/final — never
+an `Archive/`, `Old/`, or draft path; and `extract.js` must reject label/placeholder/draft workbooks
+on the filed side. Until then, no automated three-way verdict stands without a source read.
+# Confirmed app bugs (traced, reproducible) — to fold into the ledger after the UAF build lands
+
+Bugs below were confirmed by tracing the code (not corpus-comparison), each with a failure scenario.
+Hunter-subagent leads get VERIFIED before they're added here.
+
+## B1 — the 150% SAFMR test computes on the study's SAFMR but tells the user "using HUD" [SEV: high]
+
+`analysis()` (app.js:330,336) builds the ceiling `ceil += safmrResolvedOf(i) * n`. On a HUD-vs-RCS
+SAFMR conflict, `defSafmrSrc` (app.js:307) `= r>0?'rcs':(h>0?'hud':'custom')` defaults to **rcs**, so
+`safmrResolvedOf` (app.js:324) returns the **study** value `sr`. Meanwhile the command-center caption
+(app.js:3041) prints **"HUD vs RCS differ — using HUD."** `a.ceil` drives the PASS/OVER verdict, the
+affordability-proof card (app.js:3021–3026) and the command bar (app.js:3321).
+
+- **Failure scenario:** unit type with HUD SAFMR $2,010 and study SAFMR $2,300 (→ `safmrConflict`).
+  Ceiling is built at $2,300×n (study), but the status line says "using HUD." If proposed gross sits
+  between the two ceilings, the PASS/OVER shown is study-based while the label claims HUD-based.
+- **Two faces:** (a) reporting lie — label vs computation disagree; (b) correctness — the federal
+  150% threshold is a published SAFMR (HUD's), so computing it on the appraiser's transcription is
+  the same defect Sycamore Green exposed (`defSafmrSrc` should prefer HUD when present).
+- **Test:** set units.0.safmr_hud=2010, safmr_rcs=2300, num_units=100, no safmr_source → assert
+  `analysis().ceil` uses 2010 (HUD) once fixed; today it uses 2300. Guard the caption matches.
+
+## B2 — the same-year concurrency guard has a temporal hole; mis-binds a renewal to the wrong package [SEV: high]
+
+`hap.js:341`: `concurrent` is computed from **`future`** (rows still ahead of today), not from all of
+the property's same-year startable rows. So once the earlier of two same-year renewals passes,
+`concurrent` flips to false and the loose year+program fallback (hap.js:351) re-binds the *later*
+renewal to the *earlier* cycle.
+
+- **Failure scenario (verified):** Luther Towers (90111) — OCAF 2026-09-01 and OCAF 2026-12-06. With
+  `today=2026-10-01` and only the September cycle generated, `actionFor` for the December renewal
+  returns `effective:'2026-12-06'` but `kind:'view', cid:c2` (the **September** package) — the
+  December card points at, and marks "done", the September package. This is the exact property the
+  guard was written for; the guard just doesn't hold after the first date passes.
+- **Fix:** compute `concurrent` from `mine` (all the property's startable rows in that year), not `future`.
+- Confirmed by reading hap.js:341–352 (verify `future`'s exact definition when fixing).
+
+## B3 — Excel date serial rounded, not truncated → off-by-one day [SEV: med]
+
+`hap.js:49`: `Date.UTC(1899,11,30) + Math.round(n)*86400000`. The integer part of an Excel serial is
+the date; the fraction is time-of-day and must be TRUNCATED. `Math.round` rounds a serial with a
+fraction ≥ .5 up to the next calendar day.
+
+- **Failure scenario (verified):** `toISO('45658.6')` → `2025-01-02`; the intended date is
+  `2025-01-01` (`toISO('45658')`). Any date column exported as a datetime / timezone-shifted serial
+  shifts the effective or due date — and its renewal band/deadline — forward one day. The 1900-leap
+  epoch is correct; only the rounding is wrong. Uncaught because the suite tests only integer serials.
+- **Fix:** `Math.floor(n)`.
+
+## B4/B5 — hap.js diagnostics gaps [SEV: low]
+- B4 (`hap.js:125` + aliases `:95/:102`): the substring/2-char alias matcher is too tolerant — a stray
+  `"P"` column is claimed as `pm`, `"Vacancy Status"` as `ca`. Both land in `guessed{}` (surfaced for
+  review) and are non-critical fields, so it's a review-noise issue, not a data fault.
+- B5 (`hap.js:182`): the `ragged` (short-row) counter never increments for CSV input because
+  `parseCSV` pads every row to header width — so `diagnose()` never reports a short row in a CSV. Rows
+  are still read correctly; diagnostics-only under-report.
+
+(xlsx.js: hunter found clean — the `T=round(safmr150/1.5)` recovery is exact for all integer bases,
+formula-cache stripping sound.)
+
+## B6 — tenant notice labels rows by bedrooms only; two unit types collapse to one label [SEV: med]
+
+`gen.js:189` `ftype=br=>String(br).replace(/(\d+)\s*BR/i,'$1 BR')` uses ONLY `br`; used at gen.js:196
+for the tenant-notice rent table's Type column. Drops bathroom AND designation, unlike the shared
+`utype()` (gen.js:15–28) the rent schedule/workbook use.
+
+- **Failure scenario (verified):** `units.0={br:'1BR',ba:'1BA',label:'E',current:900,proposed:1000}`,
+  `units.1={br:'1BR',ba:'1BA',label:'S',current:1100,proposed:1200}` → the 24 CFR 245 tenant notice
+  prints two rows both labeled "1 BR" with different Current/Requested rents; a resident can't tell
+  which applies to their unit. This is the "two rows read identically" fault `utype` fixed everywhere
+  else, still live in the served notice.
+- **Fix:** use `utype()` (or its record-based equivalent) for the notice row label.
+
+## B7 — owner letter / comment cert print a literal placeholder entity name instead of refusing [SEV: low-med]
+
+`gen.js:142` (`ownerLetter`) and `gen.js:811` (`tenantCommentCert`) print `'[Ownership Entity
+Name]'.toUpperCase()` as the header when `owner.entity_name` is blank — on a perjury certification
+whose signing entity IS the header. The rent schedule/checklist refuse in comparable cases; this is
+inconsistent. Scenario: record missing `owner.entity_name` → the owner's RCS certification letter
+files with header "[OWNERSHIP ENTITY NAME]".
+
+## B8 — Part D unit type formatted differently from Part A on the SAME federal form [SEV: low]
+
+`gen.js:537` formats the Part D (non-revenue) type inline as `br+'/'+ba` ("3 BR/1BA", no spaces, `ba`
+un-normalized, designation dropped) instead of `utype()`, so the same unit reads "3 BR / 1 BA" in
+Part A (gen.js:456) and "3 BR/1BA" in Part D on one HUD-92458. Values correct; label inconsistent.
+
+(gen.js money/federal-form paths verified CLEAN by the hunter: Col.3–6, gross=rent+UA, Σ/×12 fields,
+0-vs-blank, effective-date resolution, `_toISO`, timezone, per-unit loops, signatory — no defect.
+Part B/G AcroForm field-ID mappings not verifiable without templates.js — no claim made there.)
+
+## B9 — a debounced async refresh writes an off-screen cell after a settled save/escape [SEV: high]
+
+`scheduleHudRefresh()` (app.js:979) is a 900ms debounced auto-pull fired by ZIP / effective-date /
+bedroom edits (app.js:2814, 3692–94, 3746, 3752, 3812). When it fires, `applyHudSafmr()` (app.js:1009)
+writes `units.i.safmr_hud` through `editForm` — OFF the undo run — and it can land AFTER a save or
+Escape has settled, re-dirtying an off-screen cell the user never touched. The interaction storm
+reproduced this shape 13 times across 7 properties (safmr_hud, safmr_source, date_eff_source,
+partb.*, checklist, ua_exec) with deterministic seeds (e.g. Westwood 3805780444, Clinton 2565671169).
+
+- **Failure scenario:** edit the effective date, then "Update property profile" within 900ms; the
+  timer fires afterward and `applyHudSafmr` marks `safmr_hud` overridden — the form reads dirty with
+  nothing on screen, and the provenance-source keys (`date_eff_source`) — which the RA tracker-lock
+  exists to protect — are among those corrupted.
+- **Fix:** a settle (save / revert / escape-to-rest) cancels the pending `_hudTimer`/`_factorTimer`
+  ("a save is a wall", FORM-RULES 12). Verify via the relay (the fixture storm can't reach the
+  supaClient-gated pull). Already documented in STATE.md + the ledger.
+
+---
+_Confirmed so far: B1 SAFMR-ceiling (high), B2 concurrency temporal hole (high), B9 phantom-dirty async
+(high), B3 date rounding (med), B6 tenant-notice label (med); B4/B5/B7/B8 low. Parser hunter + the
+storm/shots dynamic pass still to come._
+
+## B10 — a spelled-out / annotated grid flag drops the ENTIRE concluded-rent row [SEV: high · confirmed]
+
+`rcs.js:422` `ROW_MAIN` ends `…\$?([\d.]+)\s*(?:([YN])\b|$)` — the trailing group is REQUIRED and
+matches only a clean `Y`/`N` at a word boundary OR end-of-line. Any other trailing token voids the
+whole match, dropping the row's type/count/SF/rent/PSF.
+- **Failure scenario (confirmed by tracing the regex):** `"2BR/1BA 32 790 $1,850 $2.07 Yes"`,
+  `"…$2.07 No"`, `"…$2.07*"` (footnoted), `"…$2.07 155% Y"` → NO MATCH → that unit type's proposed
+  rent stays blank on the schedule. This is the incomplete half of the "$271,150/month lost" Circle
+  Park fix the comment at rcs.js:415–421 describes — they handled the ABSENT flag (`|$`) but not a
+  flag spelled "Yes"/"No" or a stray annotation.
+- **Fix:** make the flag optional and non-voiding — `…\$?([\d.]+)(?:\s*([YN])\b)?` (drop the `|$`;
+  trailing text is ignored since the pattern isn't end-anchored).
+
+## B11 — SAFMR-base fallback skipped when a sibling stem-matches → a unit type with no 150% ceiling [SEV: med · confirmed]
+
+`rcs.js:502–504`: the `if(!hit.length)` chain runs the bedroom-count fallback (504) ONLY if the stem
+match (503) found nothing. `typeStem` (rcs.js:444) strips the bath but keeps designations, so
+"3BR/1.5BA"→`3br` and "3BR/1.5BA TH"→`3brth`.
+- **Failure scenario (confirmed):** HUD SAFMR table lists "3BR"; roster has the flat and the TH. The
+  flat stem-matches (`3br`), so `hit.length=1`, so the bedroom fallback (which would catch the TH via
+  `u.br==='3BR'`) is skipped → the TH gets no `safmr_base` → **no 150% ceiling at all**. Contradicts
+  the function's own comment (rcs.js:498–499) claiming both share the ceiling.
+- **Fix:** accumulate across all three tiers (union), or don't short-circuit the bedroom fallback.
+
+## B12–B16 — parser leads (hunter-reported, concrete scenarios; verify at fix time)
+- **B12 [MED] rcs.js:211** — `readSender` phone alternation includes `fax`, and takes the first
+  label+number, so a block with "Fax: (708) 555-1234" before "Phone: …" yields `appr.phone` = the FAX
+  — the number the owner's cover letter tells HUD to call (item 8).
+- **B13 [MED-LOW] rcs.js:199–206** — `readSender` hardcodes street=firm+1, city/state/zip=firm+2; a
+  two-line street ("123 Main St" / "Suite 400" / "Chicago, IL 60601") makes `addr_city="Suite 400"`,
+  state/zip blank — wrong appraiser address on the certifications.
+- **B14 [LOW] rcs.js:278–285** — a genuine 5+-token single name ("Andrew J Van Hazinga Jr") fails
+  `NAME_LINE` and is split as two columns → `appr.name="Andrew J Van"` (surname/suffix dropped).
+- **B15 [LOW] rcs.js:637** — verdict uses `grossRenewal < grossSafmr150`, marking an exact tie as
+  'fail'; HUD's "may not EXCEED 150%" makes equality a pass. Boundary only.
+- **B16 [LOW, reasoned] ocr.js:165** — `ocrMap` assigns a word to a field box by VERTICAL distance
+  only (the mark path at :230 uses full `hypot`); two side-by-side boxes on one row tie and the winner
+  is insertion order, so a value near a column boundary can land in the wrong column. Not fixture-
+  verified (needs the template rects).
+
+(rcs.js corners the hunter verified CLEAN: `parseType` (all spellings, bare-B, capital-I, studio,
+half-baths), `splitCityStateZip`, `s8From`, `money`/`dec`, the upsert alias/stem merge, totals. The
+`isoDate` abbreviated-month miss (`"Sept. 1, 2026"`→"") has no downstream consumer — left off.)
+
+---
+_Total logged: 16 (B1–B16). HIGH: B1, B2, B9, B10. MED: B3, B6, B11, B12. Plus B13 med-low and the
+LOW/diagnostics set. Still to come: the interaction-storm + shots dynamic pass (the biggest vein),
+and reviewing the build subagent's UAF diff._
