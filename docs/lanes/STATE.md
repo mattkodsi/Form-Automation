@@ -6,18 +6,45 @@ claims to be current; every other doc in the lane is either standing rules
 findings (`AUDIT-LEDGER.md`). If this file disagrees with them, this file is right and
 the other one needs fixing.
 
-Last updated: **2026-07-31**, by the Mac, after verifying the tracker-aware driver.
+Last updated: **2026-07-31**, by the cloud, after fixing the selector and proving the relay.
 
-## Blocked on one thing
+## The selector blocker is FIXED — and it was not the selector
 
-**The renewal selector returns the wrong row, and nothing can sweep until it is fixed.**
-Owner: **cloud**. Filed at
-`docs/lanes/inbox/2026-07-31-mac-to-cloud-renewal-selector.md`.
+`52b7b96`. `inScope` / `targetFor` / `actionFor` were correct; they were handed a third of
+the tracker. `hap_schedule` holds 4,273 rows and `client.from('hap_schedule').select('*')`
+returned **1,000** — PostgREST answers an unbounded select with its own page size and says
+so only in a `206` and a `Content-Range` nobody read. Nothing threw.
 
-Two callers, one wrong answer: the driver refuses `75708` saying the tracker carries no
-startable row in or after 2026, and the Renewals page calls 87 of 88 properties
-unscheduled. Brewster Mews is the sharpest case — it found a row **eight years late**
-rather than none, so the walk steps over valid rows rather than failing to see them.
+Colonial Village proves it: 75708 has **20 rows** in that table and **3** inside the first
+1,000, so every 2026-and-later row sat past the cut. Brewster Mews' eight-years-late row is
+the same fault from the other end — not a walk stepping over rows, a walk that never
+received them. `selectAll()` now pages every table, not just the one that broke.
+
+**But it is in source and NOT in `index.html`** — see the delivery blocker below.
+
+## Blocked on one thing: delivery
+
+**`deliver.sh` aborts, so no repair can reach the shipped bundle.** `test_browser.js` is red
+on **five layout checks** in `shell.head.html` — horizontal overflow at 1200/1280px, a
+sticky element scrolled off, the page pinned left at 1680/2560px. The lane's own rails
+assign `shell.head.html` styling to the **redesign lane**, so this lane cannot fix them.
+
+Owner: **redesign lane / Matt**. Consequence: the paging fix, and every repair after it,
+exists in source only. A rig driving the shipped `index.html` still sees the old behaviour.
+
+## Chromium here CAN reach Supabase, through a loopback relay
+
+Five probes green from inside chromium against the live account — auth health, anon REST,
+authenticated REST, a property read, and `auth/v1/user`. Filed at
+`docs/lanes/inbox/2026-07-31-cloud-to-mac-relay-works.md`.
+
+**Not yet proved:** token refresh through the relay, websockets, the derived storage key
+changing to `sb-127-auth-token`, and that a whole drive survives it. Five probes is not a
+package. **The division below stands until a full drive is compared against the Mac's.**
+
+Chromium still cannot reach Supabase *directly* — reconfirmed on the correct proxy port
+(35069; an earlier probe hardcoded 34565, so that negative was worthless) and against a
+neutral host, with zero proxy-side failures logged.
 
 ## Where each leg stands
 
@@ -26,8 +53,23 @@ rather than none, so the walk steps over valid rows rather than failing to see t
 | SHOULD (sources read by eye) | 28 of 42 properties, cloud, ongoing |
 | OURS (app-generated packages) | 37 packages driven, **all provisional** — driven before the date lock, so anything year-derived in a prior-year record is untrustworthy |
 | FILED (what the team submitted) | read alongside SHOULD |
-| three-way verdicts closed | a handful; this is the deliverable and the number that counts |
-| repairs shipped | **none yet.** Findings are not fixes. |
+| three-way verdicts closed | **every package that has both a sweep record and a SHOULD.** 7 substantive, 3 BLOCKED, 6 closed on the H9 harness classes, 4 adjudicated by focused readers |
+| repairs shipped | **one: the paging fix (`52b7b96`), in source only.** Findings are not fixes, and source is not shipped. |
+
+Of the 304 rows where both legs carried a value and differed, **120 are unit-type label
+formatting and 18 are checklist whitespace** — 46% of the adjudicable set is normalisation
+noise, and only **76 rows are money**. Any headline built on the run's 2,156 differing
+values overstates it roughly fourfold.
+
+**39 of the 52 blocked packages are real filed packages the app produced nothing comparable
+for** — 8 cycles carry no filed documents at all, 1 has no manifest cycle, and 4 are a
+duplicate-folder collision (H10). That, with the 39 of 89 that generated nothing, makes M7
+the dominant finding of the sweep: the app does not build a package.
+
+**Repairs queued, blocked on delivery:** M18 — the app drops or duplicates a unit row
+depending on how a study roster row claims a form row (`app.js:1579`). Peterson Plaza comes
+out 188 units against a filed 189; Oaks on North Plaza 75 against 62. One seam, two
+properties, and it needs a re-drive to confirm.
 
 ## The environment, as of now
 
