@@ -94,6 +94,47 @@ const REPO = path.join(SRC, '..', '..');           // repo root
 const SESSION_DEFAULT = path.join(REPO, '_archive', 'corpus-cache', '.session.json');
 const NAME_PREFIX = 'ZZ-CORPUS-';
 
+/* ── the created-property ledger ────────────────────────────────────────────
+   THE PREFIX IS NOT A HANDLE. A scratch property is created as
+   ZZ-CORPUS-<code>-<stamp>, and then the app does exactly what it is supposed
+   to do: a readable rent schedule supplies the real property name, the form
+   saves it, and the prefix is GONE. `--cleanup --prefix ZZ-CORPUS-` then
+   reports zero with total honesty while the records sit in the live account
+   under names like "Oak Center 1" and "Peterson Plaza Apartments",
+   indistinguishable from the real portfolio.
+
+   Measured on 2026-07-31: an 89-package sweep left 18 such records behind, and
+   cleanup reported 0. They had to be found by creation date and deleted by
+   hand. The storm had flagged the rename hours earlier — property.name holding
+   the real name over a ZZ-CORPUS db_value — and it was dismissed as a harness
+   artifact.
+
+   So every property this driver creates is written down HERE, by id, the
+   moment it exists. An id cannot be renamed. The prefix sweep stays as a
+   second net for records whose id was never recorded (a crash between the
+   create and the write), but the ledger is the primary handle. */
+const CREATED_LOG = path.join(REPO, '_archive', 'corpus-cache', '.created-properties.json');
+function readCreated() {
+  try { const j = JSON.parse(fs.readFileSync(CREATED_LOG, 'utf8')); return Array.isArray(j) ? j : []; }
+  catch (e) { return []; }
+}
+function recordCreated(id, name) {
+  if (!id) return;
+  try {
+    const all = readCreated();
+    if (all.some(x => x.id === id)) return;
+    all.push({ id, name: name || null, at: new Date().toISOString() });
+    fs.mkdirSync(path.dirname(CREATED_LOG), { recursive: true });
+    fs.writeFileSync(CREATED_LOG, JSON.stringify(all, null, 1), { mode: 0o600 });
+  } catch (e) { /* never let bookkeeping fail a run — the prefix net still applies */ }
+}
+function forgetCreated(ids) {
+  try {
+    const gone = new Set(ids);
+    fs.writeFileSync(CREATED_LOG, JSON.stringify(readCreated().filter(x => !gone.has(x.id)), null, 1), { mode: 0o600 });
+  } catch (e) {}
+}
+
 /* ── the rail that used to live only in a test ───────────────────────────
    A sweep signs into Matt's LIVE account and writes ZZ-CORPUS-* properties
    into it, and on this repo a push to main is a deploy. So a sweep must not
@@ -918,6 +959,9 @@ async function driveBoth(opts) {
       .catch(async e => { const t = await dismissBlockingModal(c); throw new Error(e.message + (t ? '\n  a modal was open: ' + t : '')); });
     await awaitQuiet(c);
     const ids = await c.eval(EX_IDS);
+    /* Written down BEFORE anything can rename it. This is the only moment at
+       which the id and the fact that WE made it are both known for certain. */
+    recordCreated(ids.pid, runName);
     log('package : cycle ' + String(ids.cid).slice(0, 8) + '… on property ' + String(ids.pid).slice(0, 8) + '…');
 
     /* The form as the app opens it, before any document is read. This is what
@@ -1310,8 +1354,24 @@ async function cleanup(sessionFile, opts) {
   const r = await fetch(cfg.url + '/rest/v1/property?select=id,name', { headers: H });
   if (!r.ok) throw new Error('could not list properties (' + r.status + '): ' + (await r.text()).slice(0, 200));
   const rows = await r.json();
-  const hits = rows.filter(p => String(p.name || '').startsWith(prefix));
-  log('signed in as ' + (sess.email || '(unknown)') + ' — ' + rows.length + ' properties, ' + hits.length + ' whose name starts with ' + J(prefix));
+  /* Two nets. The ledger catches records that renamed themselves out of the
+     prefix - the common case, because a readable schedule always renames them.
+     The prefix catches records whose id was never written down. A record is
+     ours if EITHER says so. */
+  const ledger = readCreated();
+  const ledgerIds = new Set(ledger.map(x => x.id));
+  const byName = rows.filter(p => String(p.name || '').startsWith(prefix));
+  const byId = rows.filter(p => ledgerIds.has(p.id) && !String(p.name || '').startsWith(prefix));
+  const hits = byName.concat(byId);
+  log('signed in as ' + (sess.email || '(unknown)') + ' — ' + rows.length + ' properties, '
+    + byName.length + ' whose name starts with ' + J(prefix)
+    + (byId.length ? ', and ' + byId.length + ' more this driver created that have since been RENAMED' : ''));
+  byId.forEach(p => log('    renamed: ' + J(p.name) + '  [' + p.id + ']  — created by us, no longer carries the prefix'));
+  /* A ledger entry with no matching row is already gone; forget it so the file
+     does not grow forever and so a stale id can never be reported as a leak. */
+  const present = new Set(rows.map(p => p.id));
+  const vanished = ledger.filter(x => !present.has(x.id)).map(x => x.id);
+  if (vanished.length && !dryRun) forgetCreated(vanished);
   if (!hits.length) return { matched: 0, deleted: 0, failed: [], names: [] };
   hits.forEach(p => log('  ' + (dryRun ? 'would delete' : 'DELETE     ') + '  ' + p.name + '   [' + p.id + ']'));
   if (dryRun) return { matched: hits.length, deleted: 0, failed: [], names: hits.map(p => p.name), dryRun: true };
@@ -1319,10 +1379,16 @@ async function cleanup(sessionFile, opts) {
   const failed = [];
   let deleted = 0;
   for (const p of hits) {
-    if (!String(p.name || '').startsWith(prefix)) { failed.push({ id: p.id, why: 'name no longer matches the prefix' }); continue; }
+    /* The guard is now "did WE make it", not "is it still called what we
+       called it" - the whole point of the ledger. A row reaches here only via
+       the prefix or the ledger, so re-testing the prefix alone would refuse to
+       delete exactly the leaked records this fix exists to remove. */
+    if (!String(p.name || '').startsWith(prefix) && !ledgerIds.has(p.id)) {
+      failed.push({ id: p.id, why: 'neither the prefix nor the created-property ledger claims this row' }); continue; }
     const d = await fetch(cfg.url + '/rest/v1/property?id=eq.' + encodeURIComponent(p.id), { method: 'DELETE', headers: H });
     if (d.ok) deleted++; else failed.push({ id: p.id, name: p.name, why: d.status + ': ' + (await d.text()).slice(0, 160) });
   }
+  forgetCreated(hits.map(p => p.id));
   log(deleted + ' deleted' + (failed.length ? ', ' + failed.length + ' FAILED' : ''));
   failed.forEach(f => log('  X ' + (f.name || f.id) + ' — ' + f.why));
   return { matched: hits.length, deleted, failed, names: hits.map(p => p.name) };
@@ -1350,6 +1416,7 @@ module.exports = {
   driveBoth, driveOne, cleanup, loadSession, supaConfig,
   _resetMemo: () => _memo.clear(),
   pickCycle, pickStudy, findProperty, unzipStored, tierOf, diffSnaps,
+  readCreated, recordCreated, forgetCreated, CREATED_LOG,
   NAME_PREFIX, ORDERS,
   currentBranch, refuseOnMain, assertNotMain,
 };
