@@ -36,12 +36,17 @@ one family — **source selection** (the app doesn't pick the executed/of-record
   concluded rent on the federal form, ~$32k/month. **The headline money defect.** To fix.
 - **Oak Center 2026 — app took the non-revenue manager's unit ($1,728)** as a comparable (row
   shift). To fix (exclude non-revenue rows).
-- **UA (Holly House, New Horizons) — app prints the STUDY allowance, not the executed Col.5.**
-  But the corpus is **split**: `test_gen.js:455` pins three properties (Sycamore Green, Burt
-  Farms, Northcross) that filed the STUDY's UA. No static default is right — flipping `defUaSrc`
-  to exec would break those three. **Matt was asked and picked "default to executed," then the
-  test evidence showed that's a regression — the fix is per-property (block the unresolved
-  exec-vs-study conflict, M18 pattern, or ingest the UA workbook). AWAITING MATT'S REVISED CALL.**
+- **UA — SETTLED BY DESIGN (Matt, 2026-07-31), not an app-vs-study default.** The executed rent
+  schedule is the UA baseline of record; **the app is the system of record for UAFs** — a UAF is
+  done and saved in the app, then applied to the executed baseline when the RCS/OCAF is built. The
+  study allowance is a fallible **cross-check, never a source.** The app's current "prefer study"
+  default (`defUaSrc`) is wrong, but a naive flip is insufficient (bare `ua_exec` is the stale
+  pre-UAF figure). **Holly House is NOT an app bug** — it matched the filing by falling back to the
+  study, the symptom of the missing feature. **The fix is a small redesign**: a UAF-only workflow +
+  feed the saved UAF into RCS *and* OCAF + resolve UA as executed+savedUAF. Spec:
+  `docs/superpowers/specs/2026-07-31-uaf-only-and-feed-into-rcs-ocaf.md`. Supersedes the earlier
+  "reverse defUaSrc / prefer HUD / block the conflict" recommendations. M17 (stale-UA in the 150%
+  threshold — Morh, Woodland, Lansing, Holly House) is the team-side face of the same gap.
 
 Harness-not-app (app right, comparator read a superseded draft): Westwood 2025, Morningside
 2026, Morh 2026, New Horizons proposed rents, Oak Center proposed rents.

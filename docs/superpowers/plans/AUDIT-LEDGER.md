@@ -4362,3 +4362,26 @@ conflict *"HUD vs RCS differ — using HUD,"* but `defSafmrSrc`/`safmrResolvedOf
 to the **study** (`rcs`) by default. If the caption shows while the resolver uses the study, the app
 says "using HUD" while printing the study's number — a reporting lie of exactly the class the audit
 hunts. Needs the conflict-state condition traced before it is a finding.
+
+### CORRECTION — the UA question is settled by design, not by a default flip (Matt, 2026-07-31)
+
+My UA thread above (Holly House "app wrong," then "app right," then the "prefer HUD / block the
+conflict" recommendations) was chasing a symptom. Matt's ruling: **the executed rent schedule is the
+UA baseline of record, and the app is the system of record for UAFs** — a UAF is done and saved in the
+app, then applied on top of the executed baseline when the RCS/OCAF is built. The appraiser's study
+allowance is a fallible **cross-check, never a source.** So:
+
+- **The app's current "prefer study" default (`defUaSrc`) is wrong** — but a naive flip to `ua_exec`
+  is insufficient, because where a UAF happened outside the app, `ua_exec` alone is the stale pre-UAF
+  figure. The study "winning" in the corpus (Sycamore/Burt/Northcross; Holly House's 61/64) is exactly
+  the symptom of the missing capability — the UAF was never captured in the app.
+- **Holly House is NOT an app bug.** It matched the filing by falling back to the study; that is the
+  symptom, not correctness.
+- The fix is a **small redesign**, not a precedence tweak: a **UAF-only workflow** + feeding the saved
+  UAF into the RCS *and* OCAF build + resolving UA as executed+savedUAF with the study as a cross-check.
+  Spec: `docs/superpowers/specs/2026-07-31-uaf-only-and-feed-into-rcs-ocaf.md`.
+- The M17 stale-UA findings (Morh, Woodland, Lansing, Holly House) are the **team-side** face of the
+  same gap.
+
+**Supersedes:** the "reverse defUaSrc," "prefer HUD for SAFMR," and "block the conflict" recommendations
+for UA. The SAFMR-revision issue (Sycamore read study v4, unfiled) stands as a separate, smaller item.
