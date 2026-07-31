@@ -2385,3 +2385,54 @@ the study. Signed-copy-in-archive: **none**. CA reviewer letters: **none exist f
   blank) but renders correctly — read as raster. It is a re-save, not a correction.
 - **Could not determine:** whether CGI received the 5/27 corrections; whether CGI issued any
   decision; the disposition of the §610 request. No 2026 CA correspondence exists.
+
+---
+
+## H8 · The only HUD guidance in the corpus is the SUPERSEDED 2015 Chapter Nine — and it is misfiled under a submission-package name
+
+Market Square's SAFMR-vintage question is the largest open item in this audit, so I went
+looking for HUD's own rule. The corpus contains exactly one copy of the Chapter Nine
+material: `75543 - Noble Tower …/2024 - RCS/Archive/Noble Tower - Option 1 Submission
+Package.pdf` — 86 pages, Word 2010, dated on disk 14 Aug 2024, already noted at Noble Tower
+as "not a submission package."
+
+**It cannot settle the question, because it is the wrong vintage of the guidance.**
+
+| | |
+|---|---|
+| footer on **every page** | `Chapter Nine - _/_/2015` |
+| the test it specifies | **"HUD's Threshold: 140% of Median Gross Rent Estimate"** — Census/ACS median gross rent for the project's ZIP |
+| occurrences of "SAFMR" or "Small Area" | **zero** |
+
+This is the pre-March-2023 regime. The entire audit — every 150% computation in this ledger
+— rests on the *later* Chapter 9, which replaced the 140% median-gross-rent comparison with
+the 150% SAFMR threshold. **The corpus holds no copy of the current guidance.**
+
+### Consequences
+
+1. **Market Square's SAFMR-vintage question stays open, and cannot be closed from inside
+   this corpus.** Whether the report's *effective date* or its *transmittal date* fixes the
+   SAFMR vintage — the question worth $225/unit/month there — requires the current Chapter 9,
+   which is not here. Fetching it is outside this lane; flagging that it is needed is not.
+2. **A live hazard for the PM team, independent of anything the app does.** A HUD guide
+   specifying the *wrong test* sits in a property folder under a filename that reads like a
+   filed submission package. Anyone opening it for guidance is told to compare the project's
+   median rent to 140% of Census median gross rent. That test has not applied since March
+   2023. It is the same template-reuse-without-renaming mechanism as M12, applied to a
+   reference document rather than an exhibit.
+
+### One lead, recorded with its caveat
+
+The 2015 appendices' screening checklist auto-populates two questions this ledger has not
+been testing:
+
+> *"Is RCS submitted within 120 days of contract expiration?"*
+> *"Is RCS submitted within 90 days of preparation?"*
+
+The second bears directly on Market Square, where the report was re-dated from 24 Sep to
+21 Nov 2025 while the signed grid date stayed at 9/22/2025 — roughly 60 days between
+preparation and the re-dated transmittal.
+
+**This is a lead, not a rule.** It is read off superseded guidance and must not be applied
+to any package until the current Chapter 9 is in hand and the deadline is confirmed to have
+survived. Recorded so it is not re-derived, and so nobody mistakes it for settled.
