@@ -2201,7 +2201,7 @@ Plus two `/Title` traces of the source document (Crossroads' checklist is titled
 names). **The mechanism is template reuse without renaming**, and it has now been caught at
 every stage from "left in the folder" to "signed under penalty of perjury."
 
-### M13 · A unit type over 150% of its own SAFMR, absorbed by the aggregate test — 4 properties, 2 of them concealed
+### M13 · A unit type over 150% of its own SAFMR, absorbed by the aggregate test — 6 properties, 4 of them concealed
 
 | property | unit | RCS gross | 150% SAFMR | over by | disclosed? |
 |---|---|--:|--:|--:|---|
@@ -2209,6 +2209,8 @@ every stage from "left in the folder" to "signed under penalty of perjury."
 | Newberry Arms | 1BR | $1,175 | $1,170 | $5/unit/mo | **yes** |
 | **Marine Terrace** | **3BR** | **$7,028** | **$6,900** | **$128/unit/mo** | **no — masked** |
 | **Morh Housing** | **3BR** | **$4,777** | **$4,695** | **$82/unit/mo** ($55,104/yr) | **no — masked twice** |
+| **Fairview Homes** | **4BR** | **$3,959** | **$3,840** | **$119/unit/mo** ($28,560/yr) — **over on all three UA sets** | **no — masked** |
+| **Oak Center** | **2BR** | **$3,699** | **$3,675** | **$24–28/unit/mo** ($6,720/yr) | **no — masked**, and the *owner's transmittal* certifies the opposite |
 
 The first two **disclose** the overage and rest on the gross test, which is the binding one.
 For those this is not a defect but a **product requirement**: the app's 150% check computes
@@ -2229,12 +2231,27 @@ The per-unit comparison is not computed wrongly; **both correct figures sit one 
 and nothing subtracts them.** Marine Terrace's workbook makes the mirror-image basis error,
 overstating headroom by $66,618/mo.
 
-**Product consequence, now load-bearing:** the 150% check must report per unit type as well
-as aggregate, and must print the basis (gross, including UA) on both sides of the comparison.
-An aggregate-only verdict reproduces the exact failure two independent appraisal firms and
-two independent workbooks have already shipped.
+**⚠ THE SEVERITY OF THIS MECHANISM RESTS ON AN UNSETTLED REGULATORY QUESTION.**
 
-### M14 · The threshold statement — the one sentence that says whether the package passes — is malformed in every package that prints it: 5 properties
+Oak Center's reader put it correctly: *whether HUD applies the 150% cap per unit type or only
+in aggregate* is **not established**. Every overage above is arithmetically certain. Its
+regulatory consequence is not.
+
+If HUD's test is aggregate-only, then a per-unit-type overage is not a failure and these are
+disclosure defects, not compliance defects. If it is per type, then packages have been filed
+and approved over the cap. **This ledger cannot tell you which**, because the current Chapter
+9 is not in the corpus (H8) and HUD's own source could not be fetched — the API needs a key
+and `huduser.gov` returns HTTP 202 through the proxy.
+
+**Nothing in M13 should be reported to anyone as a compliance failure until that question is
+answered.** It is the single highest-value unknown in the audit, and it gates six properties.
+
+**Product consequence, which holds either way:** the 150% check must report per unit type as
+well as aggregate, and must print the basis (gross, including UA) on both sides. Under an
+aggregate-only rule that is still the right display, because the per-type figure is what four
+studies got wrong and three workbooks never computed. Under a per-type rule it is mandatory.
+
+### M14 · The threshold statement — the one sentence that says whether the package passes — is malformed in every Belfry package that prints it: 7 of 9
 
 | property | what it prints | what is wrong | arithmetic |
 |---|---|---|---|
@@ -2260,7 +2277,7 @@ owner's workbook reproduces it independently in the same direction.
 comparison whose two sides are on different bases is a **computational** one, and it looks
 identical on the page.
 
-### M15 · The owner's checklist certifies attachments that are not attached — 5 properties
+### M15 · The owner's checklist certifies attachments that are not attached — 9 properties
 
 Woodbury Oakwood (Scope of Work unchecked / licence copy checked against a certification of
 *no* temporary licence), Friendship Court ("Signed Owner's Checklist" ticked on an unsigned
@@ -2609,3 +2626,647 @@ case the same is true twice over.
 **For the app:** every document it generates carries figures that a human then signs. If the
 app can regenerate a document after certification without invalidating the signature block,
 it can manufacture this defect. That is a design constraint, not a bug report.
+
+---
+
+## CORRECTION · M14 is ONE firm, not three — and that changes what it means
+
+I recorded M14 as "two firms, three properties," then "three firms, four," then "three
+firms, five." **That was wrong each time, and I did not verify it before asserting it.**
+
+Every property carrying the malformed threshold statement is **Belfry Valuation**. Verified
+directly — `pdftotext` on the first three pages of each filed study, grepping the firm name:
+
+| property | job no. | firm |
+|---|---|---|
+| Friendship Court | 25-094 | Belfry Valuation |
+| Newberry Arms | 25-095 | Belfry Valuation |
+| Market Square | 25-123 | Belfry Valuation |
+| Mapleview Towers | 25-175 | Belfry Valuation |
+| Morh Housing | 25-184 | Belfry Valuation |
+| Marine Terrace | 26-052 | Belfry Valuation |
+| Woodland Towers | 26-069 | Belfry Valuation |
+
+The sequential job numbers should have prompted the check before the claim. They did not.
+
+**The same correction applies to the `/Title "April 14, 2008"` cross-link.** I wrote "two
+properties, two different appraisal firms, one 2008 Word template still in circulation."
+Both were Belfry, and Mapleview's reader found the identical `/Title` on **all** Belfry
+PDFs. It is one firm's report template, not a template shared between competitors.
+
+### What the corrected finding is
+
+Weaker as an industry claim, **stronger and far more actionable as a defect report**: a
+single appraisal firm's report template prints the mandatory 150% threshold statement
+incorrectly, and has done so in **six of the seven** of its studies read here (Mapleview is
+the exception — see below). It is one template, one fix, and it is currently in every RCS
+that firm files.
+
+**Crossroads of East Ravenswood is the control.** Its governing study is **Cornerstone's**,
+and it prints **no** malformed threshold statement. One non-Belfry study read, and the
+pattern is absent from it. That is a single data point, not a proof — but it is consistent
+with the defect being Belfry's template rather than the industry's.
+
+**What is still unknown:** whether other firms' templates carry it. Doyle, Novogradac, HCVA,
+Renzi and VanHazinga all appear in this corpus. **No claim about them is supported.**
+
+---
+
+## Findings — Mapleview Towers (75567), 2026 - RCS
+
+**SHOULD/FILED only — no sweep record.** Twelve candidate documents, the largest
+study-selection problem in the corpus — and it resolves cleanly, which is itself the result.
+
+### Study selection: every filename hazard in one package, and FILED = GOVERNS anyway
+
+Ordered by transmittal date read off the page:
+
+| # | file | transmittal | 1BR | kind |
+|--:|---|---|--:|---|
+| 1 | `Belfry/Engagement …` | 10/21/2025 | — | fee proposal ($4,500) |
+| 2 | `Archive/4 - 25-175 … CT **OLD**.pdf` | 11/26/2025 | $3,200 | study |
+| 3 | `25-175 … **CLEAR Narrative OLD**.pdf` | 12/08/2025 | $3,200 | study |
+| 4 | `Archive/4 - **5**-175 … v2.pdf` | 12/15/2025 | $3,200 | study — **dropped digit in the job number** |
+| 5 | `Archive/25-175 … CT.pdf` | 12/30/2025 | $3,200 | study |
+| 6 | `Appeal/Exhibits/A - 25-175 …` | 12/30/2025 | $3,200 | **md5-identical to #5** |
+| 7–9 | Gill Group reviews ×3 | 12/10/25, 12/19/25, 1/6/26 | — | CA reviews, all rejecting $3,200 |
+| 10 | `Archive/25-175**R** … 04.29.26.pdf` | 04/29/2026 | $3,095 | study |
+| 11 | `25-175 … **rev v3**.pdf` | **04/30/2026** | **$3,095** | **FILED and GOVERNS** |
+
+**Two different files carry "OLD." The un-suffixed file is the fourth, not the newest. "R"
+is the fifth, not the last. "rev v3" is the sixth.** Ordering by filename picks wrong four
+different ways in one package.
+
+**A duplicate-identifier trap worth carrying forward:** two *different* Gill Group letters
+share the identifier `D4517N2346` — a 12-page 19 Dec review and a 9-page 6 Jan rejection.
+Any tool keying documents on that identifier would collapse them.
+
+**FILED = GOVERNS.** Gill accepted $3,095 on 11 May 2026; the executed HUD-92458 (2 Jun) and
+Exhibit A carry $3,095. **The first package in this audit with no filed/governing
+divergence.**
+
+Money: the failed appeal for $3,200 cost **$105/unit/mo = $126,000/yr**. Against the prior
+$2,448 the approved increase is **+$647/unit/mo = +$776,400/yr (+26.4%)**.
+
+### The 150% test here is sound — and the first one that is
+
+SAFMR $2,330 (ZIP 06901), 150% = $3,495; study and workbook agree to the dollar.
+**Utility allowance is $0** — heat, hot water, lights and cooking are all in rent, so
+Col. 6 gross = Col. 3 = $3,095 and **net equals gross by construction.** There is no basis
+gap to make. One unit type, so no per-type failure is possible. Headroom **$400/unit/mo**,
+132.8% of SAFMR, $480,000/yr aggregate.
+
+**M13 and M14 are both ABSENT here** — the only Belfry package so far where they are. The
+mechanism that prevents them is structural (UA = $0), not editorial, so it does not indicate
+the template was fixed.
+
+### Defects
+
+| # | document | field | SHOULD | FILED | verdict |
+|--:|---|---|---|---|---|
+| 1 | **tenant notice bound as Exhibit E of the 4/30/26 package** | proposed rent | $3,095 | **$3,200** — the *rejected* rent; and the notice is dated 12/2/2025 with a comment period that **expired 1 Jan 2026** | team wrong |
+| 2 | same | comment address ZIP | 06901 | **06604** (Bridgeport) | team wrong |
+| 3 | same | signature | signed | typed name only | team wrong |
+| 4 | `HUD 92458 …` (DocuSigned 12/3/25) | rents effective | 04/01/2026 | **04/01/2025** | team wrong |
+| 5 | filed study grid | appraiser signature date | 4/29–4/30/2026, when the adjustments changed | **11/12/2025** | team wrong |
+| 6 | filed study p.29 | line-7 rule vs application | 1%/decade as stated | 3.5% and 4.5% applied ≈ 1.8–2.3%/decade | team wrong (direction is conservative) |
+| 7 | Exhibit A, submittal cover letter | addressee | Navigate, the CA | **self-addressed to Mapleview Towers Preservation, L.P.** — same defect in the December package | team wrong |
+| 8 | filed study cert | licence status | current | `RCG.0001843` **"Expires: 04/30/26"**, certified 4/30/2026, accepted 5/11/2026 | open |
+| 9 | filed study grid line 37 | "Other Electric" — subject Y, comps N | an adjustment (~$62, CT DOH 1BR) | **$0 on all five comps** — consistent omission, understates market rent | open |
+| 10 | effective-age addendum | 2021 rehab cost | actual completed cost | $4,780,000 taken from a document titled **"Proposed Scope/Budget"** dated 4/22/2020 | open |
+| 11 | `rev v3.pdf` | ModDate | ≤ 5/1/2026 | **7/6/2026** — after execution and CA acceptance; text identical to the bound copy | open |
+| 12 | Gill reviews | running headers / letter date | Dec 2025 / Jan 2026 | "August 31, 2020" and "June 11, 2024" | cosmetic (CA) |
+| 13 | studies #2, #3 | letterhead second-page date | 2025 | **"November 26, 2026" / "December 8, 2026"** | cosmetic (superseded) |
+| 14 | all Belfry PDFs | `/Title` | — | **"April 14, 2008"** | cosmetic |
+| 15 | `HUD Rent Schedule …eff. 04.01.26.pdf` | all fields | filled | **blank template, all zeros**, ModDate 2024 — a decoy file in the live folder | cosmetic |
+
+**#1 is the most consequential.** The tenant notice bound into the April submission states
+$3,200 — the rent Gill had rejected three times — and its comment period had closed four
+months before the package was filed. The tenants were noticed for a different, higher rent
+than the one requested, and had no open window to comment on the one that was.
+
+**#10 repeats New Horizons and Newberry Arms:** a document titled *Proposed Scope/Budget*
+cited as an actual cost.
+
+### Patterns explicitly ABSENT
+
+Glyph substitution: **none** — `CT26H037026` literally identical everywhere. Second firm's
+rent conclusion: **none**. Incomplete grids: **none**. **False checklist certification:
+none** — all 15 ticked App. 9-2-2 items verified present, and the two unticked ones
+correctly unticked. **This is the first package to pass M15 cleanly.** Year-built/renovated
+contradiction: **none**. Foreign *property* material: **none** — foreign content is confined
+to metadata and Gill's stale headers.
+
+**A CA approval is not evidence of cure (M11), fourth instance:** Gill's 11 May acceptance
+rests on adjustments whose stated derivation still contradicts the grid (#6) — the exact
+ground of Gill's own 6 January rejection.
+
+### Instrument notes
+
+- **Do not read identifiers from `Mapleview RCS.pdf`** — a Print-To-PDF whose text layer
+  drops bullets, apostrophes and whole clauses. Use `rev v3.pdf` (vector, text-identical to
+  the bound copy) for reading, the DocuSign-executed package for what was filed.
+- **90 dpi could not separate `/26` from `/28`** in the licence expiry; 400 dpi could. Recorded
+  because that call decides defect #8.
+- **Could not determine:** whether $2,330 is the published FY2026 SAFMR for 06901 — **both
+  sides agree, so a shared error is invisible**; whether the 7/6/2026 rewrite of `rev v3`
+  changed anything (text identical; an incremental-update/trailer scan would settle it).
+
+---
+
+## Findings — Woodland Towers (no folder code), 2026 - RCS
+
+**SHOULD/FILED only — no sweep record.** Dispatched to answer one question.
+
+### The cross-check: the swap was ONE-DIRECTIONAL
+
+**Woodland Towers' package contains no Crossroads material.** Grepped `Crossroads`,
+`Ravenswood`, `IL060048014`, `800005826` and `Bjerke` across all 18 PDFs' text layers, all 18
+`pdfinfo` metadata blocks, the OOXML `docProps` of three Office files, and OLE headers on
+two `.doc` transmittals. **Zero hits** for Crossroads, Ravenswood, `IL060048014`, `800005826`.
+
+`Bjerke` hits three times — all in **Cornerstone's own losing fee bid and rent grids for
+Woodland Towers**, correctly naming Woodland Towers throughout. Neither was filed.
+
+**So Crossroads received Woodland Towers' letter, and Woodland Towers received nothing of
+Crossroads'.** M12 is not a mutual mix-up; it is one-way contamination.
+
+**Woodland Towers' correct identifiers, for attributing that letter precisely:** contract
+`IL06H121046`; iREMS **800006502** (confirmed against the 2020 executed schedule — *not*
+800005826, which is Crossroads'); owner Woodland Towers Preservation, L.P.; 306 Pine Lake
+Road, Collinsville IL 62234; 104 units, all 1BR; appraiser Aaron M. Zabel, Belfry, job
+26-069. **The Crossroads letter's Woodland Towers content is genuine Woodland Towers data** —
+it was a real letter for a real property, filed under the wrong one.
+
+### But foreign material is present here too — from a third property
+
+The filed study's section headings at package pp.20 and 22 read **"Site – Park Glen"** and
+**"Improvements–Park Glen"**, with bodies that are Woodland Towers.
+
+And the owner's checklist `/Title` is **`Exhibit 2 - RCS Owners Checklist - New Horizons
+3.25.24.pdf`** — **byte-for-byte the same `/Title` Crossroads' checklist carries.** Two
+properties are filing the same New Horizons-derived checklist template.
+
+### The 150% test: basis gap present, does not flip the answer — but the UA is stale
+
+SAFMR $910 (1BR), 150% = $1,365; study and workbook agree. **The transmittal's headline
+table compares net $1,175 to gross $1,365** — the wrong basis, exactly as at Marine Terrace
+and Morh. Two tables down the study does it correctly, and the workbook is correct
+throughout. **Here the gap does not change the verdict.**
+
+**Both use a stale UA**, though: $83 (2025) where the 2026 UAF signed 30 Apr sets **$89**,
+which the rent schedule correctly carries.
+
+| basis | gross/unit | headroom/unit/mo |
+|---|--:|--:|
+| study headline (net vs gross) | $1,175 | $190 — overstated |
+| study/workbook gross @ UA $83 | $1,258 | $107 |
+| **correct, @ UA $89** | **$1,264** | **$101** — 92.6% of cap |
+
+One unit type, so no per-type failure is possible. **Passes on every basis.**
+
+### Study selection and the second appraiser
+
+The filed study is **26-069** (letter 20 Apr 2026), the only one transmitted; it governs.
+Belfry had already delivered grids `25-227` on 14 Jan concluding the same $1,175, and
+**Cornerstone concluded $1,120** on 18 Feb. Filing Belfry's rather than Cornerstone's is
+worth **$55/unit/mo = $68,640/yr**. The owner held both conclusions in one workbook before
+commissioning the full report from the higher one. **Third property with the
+appraiser-shopping shape** (Noble Tower, Morh Housing, Woodland Towers).
+
+### Defects
+
+| # | document | field | SHOULD | FILED | verdict |
+|--:|---|---|---|---|---|
+| 1 | study App. 9-1-4 p.41 | contract number | `IL06H121046` | **`IL06N121046`** — 400 dpi; the diagonal-only glyph matches the N of "Name:" on the same line while the H of "FHA" two characters earlier shows a clear crossbar | team wrong |
+| 2 | study transmittal p.2 | SAFMR table ZIP | 62234 | **62568** (Pana IL, Christian County) — once; the narrative has 62234 correctly | team wrong |
+| 3 | **filed study, pp.20 & 22** | section headings | Woodland Towers | **"Site – Park Glen" / "Improvements–Park Glen"** | team wrong |
+| 4 | study transmittal p.2 | threshold caption | "… < **150% OF** SAFMR GROSS RENT" | "… < SAFMR GROSS RENT · $130,832<$141,960" — **as captioned the claim is false**, SAFMR gross being $94,640 | cosmetic |
+| 5 | study transmittal p.2 | headline comparison basis | gross vs gross | **net $1,175 vs gross $1,365** | team wrong |
+| 6 | study Improvements p.22 | water | tenant pays electric hot water | "the property owner provides cold **and hot** water" — contradicts grid line 36, the adjustment narrative and Part B | team wrong |
+| 7 | study adjustment narrative | cooling | wall A/C present | "**the subject units do not offer cooling units**" — contradicts Improvements, grid line 15 and Part B | team wrong |
+| 8 | **study certification p.35** | prior services | disclose Belfry's own 14 Jan 2026 grid `25-227` on this subject | "**We have not provided any appraisal services involving the subject property in the three years preceding**" | team wrong |
+| 9 | study App. 9-1-4 ¶3 | prior-service list | list `25-227` | blank | team wrong |
+| 10 | study App. 9-1-4 ¶7/¶9 | inspectors / assistance | Zabel **and** Burgess inspected; Walsh and Burgess assisted | names Zabel alone; ¶9 blank — contradicts p.35 and the three-signature block | team wrong |
+| 11 | study grid | signature date | ≥ the analysis it certifies | signed **3/26/2026**, but the numerically identical grid was delivered **1/14/2026** | team wrong |
+| 12 | owner's checklist | licence copy "only if relying on a temporary licence" | unchecked — App. 9-1-4 answers **N**, permanent licence, no copy attached | **checked** | team wrong |
+| 13 | HUD-92458, all three versions | FHA Project Number | populated or expressly N/A | **blank**; NHC put the contract number in Part I's *HAP Contract Number* field, which is the CA's field, not this one | team wrong |
+| 14 | study + workbook | UA used in the threshold | $89 (2026 UAF, eff. 7/1/2026) | **$83** (2025) — never re-run at the operative UA | team wrong |
+| 15 | **tenant notice** | execution | an executed copy | **`.docx` only, unsigned, undated — no executed tenant notice exists for this cycle** | team wrong |
+| 16 | tenant notice | header identifier | 800006502 or none | stray **`914400000`** — matches nothing in ten years of this property's filings | open |
+| 17 | tenant notice | agency name | "Housing and Urban Development" | "Department of **Urban Housing and Development**" | cosmetic |
+| 18 | study narrative | Neighborhood | a complete sentence | "The subject property's location is considered to be **a.**" — in both package copies | cosmetic |
+| 19 | owner's checklist | "Scope of Work" | checked | unchecked | cosmetic |
+| 20 | owner's checklist | `/Title` | Woodland Towers | `…RCS Owners Checklist - **New Horizons** 3.25.24.pdf` | cosmetic |
+| 21 | study grid line 7 | year-built adjustments | 1%/decade per the stated rule | comps 1–4 are 6–36 years from the 2016 renovation, unadjusted; only comp 5 adjusted | open |
+| 22 | study line 31 | non-shelter services funding source | stated per §9-12 / App. 9-1-1 | +$30 to every comp, source never identified — worth $37,440/yr | open |
+| 23 | Belfry engagement | scope | an engagement covering report 26-069 | only a **"Market Rent Grids (as-is)"** engagement exists; no 26-069 engagement letter in the folder | open |
+
+**#8 and #9 are the serious pair.** The certification affirms no prior services on this
+subject within three years, and Belfry had delivered a rent grid on this subject **three
+months earlier** — a grid numerically identical to the one in the filed report. This is a
+false statement in the appraiser's own certification, not a clerical slip, and #11 is its
+companion: the grid carries a signature date two and a half months after the delivery of the
+identical grid.
+
+**#1 is `N` for `H` again** — the same substitution as Market Square's `CT26N037003`, same
+firm.
+
+**#17 is the third "Department of Urban Housing and Development"** after Crossroads. Same
+tenant-notice template.
+
+### Patterns explicitly ABSENT
+
+Crossroads material: **none, in any form** — the clean negative this reader was sent for.
+SAFMR divergence: **none**. Glyph substitution *on the grid*: **none** — at 700 dpi the
+zeros of `IL06H121046` match those of "2502-0587" on the same page and are narrower than the
+O of "OMB"; the H has a crossbar. The single corruption is #1. Incomplete grids: **none**.
+Unsigned-live/signed-in-archive inversion: **none**. **Post-certification alteration: none**
+— the only post-execution text is NHC's own Part F and Part I, the CA's fields. 24 CFR 245
+sequence: **compliant** (notice 4/30 → period ends 5/30 → certification 6/18 → schedule
+signed 7/16 → executed 7/17). CA refusal: **none for this cycle**. Year-built contradiction:
+**none**. Rent-schedule arithmetic: **clean**.
+
+### Instrument notes
+
+- **The HUD-92458 needed all three readers.** The unsigned copy has 232 widgets but pdf-lib
+  returns **empty `/V` on every one** — the values live only in the appearance streams, so
+  `pdftotext -layout` is the correct reader. The signed copy is DocuSign-flattened to one
+  widget. The executed copy is Print-To-PDF with zero widgets and 92 bytes of text; the
+  reader located its added text by `pdftotext -bbox-layout` coordinates on a 612×792 page to
+  prove which HUD field each entry occupies rather than inferring from reading order. **That
+  is the right method and should be the default for flattened schedules.**
+- **The grid and App. 9-1-4 are image-only scans at 169 and 99 ppi native.** Rendering above
+  ~180 dpi upsamples; the N/H call rests on **stroke topology against same-line reference
+  glyphs**, not on resolution. Worth stating plainly: 400 and 700 dpi crops of a 99 ppi scan
+  add no information, and the finding stands on the comparison, not the magnification.
+- The checklist's text layer is the known **offset-ASCII−29** font and unreadable as text;
+  checkbox states are visible only in the raster (170 dpi).
+- **`qpdf` is not installed in this container**, so a decompressed-stream sweep silently fell
+  back to `cat` and **is not evidence**. The cross-check negative rests on the text layers,
+  `pdfinfo` metadata and OOXML/OLE property reads, which were run directly. Recorded because
+  a silent fallback that still exits 0 is exactly the failure shape this project has shipped
+  before.
+- **Could not determine:** whether $910 is the published FY2026 SAFMR for 62234 (**both sides
+  agree, so a shared error is invisible**); whether 26-069 was a separate engagement or a
+  second phase of the grids engagement; the funding source behind the +$30 services
+  adjustment; the provenance of `914400000`.
+
+---
+
+## Findings — Fairview Homes (75920), 2025 - RCS
+
+**SHOULD/FILED only — no sweep record.** The second targeted cross-check.
+
+### Both cross-check answers: no reciprocity, and no harm to Fairview
+
+**(a) No Woodbury / Lakeside material in Fairview's package.** Grepped
+`woodbury|lakeside|75488|evergreen` case-insensitively across 16 PDFs' text layers, both
+`.docx` unzipped, the `.doc` via `strings`, all nine xlsx decompressed, and a raw-byte pass
+over every file; plus `pdfinfo` metadata on all 16 and `docProps` on both docx. **Zero hits.**
+
+**(b) Fairview is missing nothing.** The five strays in Woodbury's folder are **md5-identical
+to files still sitting in Fairview's own `Archive/Submission/Archive/`** — copies, not moves.
+Fairview's *executed* originals are bound into its 74-page executed submission (DocuSign
+`096AC106-…`): Exhibit 1 owner cover letter at pp.4–5 signed by David Pearson dated 4/4/2025,
+Exhibit 2 checklist signed at pp.6–7, Exhibit 3 the RCS, **Exhibit 4 the Berkadia loan
+991063295 at pp.72–74**. The Woodbury copies are the *unsigned* standalone twins.
+
+**So M12 is one-directional in both tested cases.** Crossroads received Woodland Towers'
+letter and gave nothing back; Woodbury received copies of Fairview's exhibits and Fairview
+lost nothing. The mechanism duplicates outward from a source package; it does not swap.
+
+### A third property carries the same checklist template
+
+`Exhibit 2 - RCS Owners Checklist - Fairview Homes - 05.07.25.pdf` has
+`/Title = "Exhibit 2 - RCS Owners Checklist - New Horizons 3.25.24.pdf"`, Author `mwyckoff`,
+created 2024-04-15 — **identical to the `/Title` on Crossroads' and Woodland Towers'
+checklists.**
+
+**This is a second, separate template lineage, and the distinction matters:**
+
+| lineage | trace | whose document | properties |
+|---|---|---|---|
+| appraiser's report template | `/Title = "April 14, 2008"` | **Belfry's** | Friendship Court, Morh Housing, Mapleview (all Belfry PDFs) |
+| owner's checklist template | `/Title = "…New Horizons 3.25.24.pdf"`, author `mwyckoff` | **the owner/PM side's** | Crossroads, Woodland Towers, Fairview Homes |
+
+The checklist is the owner's certification, not the appraiser's. Three properties filing from
+one 2024 New Horizons clone is a finding about how *Related's* packages are assembled, and
+it is independent of anything Belfry does.
+
+### The 4BR is over its own cap on every basis
+
+SAFMR (ZIP 07103): $1,790 / $2,250 / $2,560 — **identical** in study and workbook. Caps
+$2,685 / $3,375 / $3,840; aggregate 150% GPR $433,875/mo.
+
+The study's per-unit table (`25-007` p.3) prints `$2,450<$2,685`, `$3,275<$3,375`,
+`$3,825<$3,840` — **net RCS rent against the gross 150% figure**, the same basis error as
+Marine Terrace, Morh and Woodland Towers. Adding the UA — which the study's *own next table*
+does — flips the 4BR:
+
+| basis (UA source) | 2BR | 3BR | 4BR | aggregate |
+|---|--:|--:|--:|--:|
+| study, UA 76/91/131 | 2,526 (−159) | 3,366 (−9) | **3,956 (+116 OVER)** | +5,465 |
+| workbook 4/3/25, UA 76/122/122 | 2,526 (−159) | **3,397 (+22 OVER)** | **3,947 (+107 OVER)** | +3,475 |
+| **approved 5/7/25, UA 81/114/134** | 2,531 (−154) | **3,389 (+14 OVER)** | **3,959 (+119 OVER)** | +3,570 |
+
+**Aggregate passes on all three; the 4BR exceeds its own cap on all three** — $119 × 20 units
+= **$2,380/mo, $28,560/yr** at the approved UAs — and the 3BR on two of three.
+
+**And three different UA sets feed the same test** across study, workbook and executed
+schedule. That is a new sub-finding: the per-unit verdict here depends on which UA set you
+pick, and the package contains three.
+
+### Study selection — no divergence, but a $339,000/yr firm choice
+
+| file | transmittal | conclusions |
+|---|---|---|
+| `Archive/Submission/Archive/Exhibit 3 - 25-007 …` | **3 Apr 2025** | 2,450 / 3,275 / 3,825 |
+| `Archive/Belfry RCS/25-007R … (REVISED RCS).pdf` | **24 Apr 2025** | **unchanged** |
+
+**FILED and GOVERNS: 25-007** — NJHMFA approved 19 May 2025 "based on 100% of Owner's RCS."
+**Money moved by the divergence: $0.** 25-007R only adds a CoStar comparable-selection
+justification and nudges grid line-44 adjusted rents; the conclusions and the entire SAFMR
+table are byte-identical. No transmittal of 25-007R exists in the folder.
+
+Earlier churn: **Renzi's grids (4 Dec 2024) concluded 2,350/3,000/3,600 = $387,750/mo**
+against Belfry's $416,000/mo — **+$28,250/mo, +$339,000/yr** from filing Belfry.
+**Fourth appraiser-shopping property** (Noble Tower, Morh, Woodland Towers, Fairview).
+
+### Defects
+
+| # | document | field | SHOULD | FILED | verdict |
+|--:|---|---|---|---|---|
+| 1 | rent schedule eff. 5/7/25, HUD-9637 Exhibit A p.4 | 4BR gross rent | $3,959.00 — matches the approval letter and HUD-92458 p.2 | **$3,950.00** | team wrong |
+| 2 | RCS certification p.52 | Zabel's NJ licence | `TP018-25`, per the transmittal, App. 9-1-4 and the attached permit | **`TP10608`** | team wrong |
+| 3 | **App. 9-1-4** | "Did you prepare the RCS under a temporary license?" | **Yes** — a NJ Temporary Visiting Practice Permit `TP018-25` (26 Feb–26 Aug 2025) is attached directly below it | **blank** | team wrong |
+| 4 | App. 9-1-4 | "Permanent License No. / Issuing State" | Illinois Cert. Gen. `553.002682` | **`TP018-25` / New Jersey** — a temporary permit in the permanent field | team wrong |
+| 5 | transmittal to NJHMFA | governing instrument | the Basic Renewal Contract executed 27 Apr 2015 — the source of the §5b(2) text it quotes | "HAP contract … dated **03/25/2009**", which runs to 2029 with a March anniversary | team wrong |
+| 6 | RCS p.13 unit table | non-revenue unit type | **2BR** — HUD-92458 Parts A and D say "Superintendent Unit / 2 BR" in both FY2024 and FY2025 | 3BR; and NRA 121,128 sf vs 121,008 | team wrong |
+| 7 | owner's checklist | "Scope of Work" | checked — the study carries a Scope of Assignment at p.1 | unchecked | cosmetic |
+| 8 | tenant notice 4/30/25 | column header | "Proposed Rent" — the column holds the new rent | **"RCS Increase"** over $2,450/$3,275/$3,825 | team wrong |
+| 9 | tenant notice | 24 CFR 245 sequence | notice of *intention to submit*, served before submission | dated 4/30/25 and says "**on April 4th, 2025 we submitted**" | team wrong |
+| 10 | tenant notice | signature date | ≥ the notice date | signed **29 April**, notice dated 30 April | cosmetic |
+| 11 | NJHMFA transmittal p.1 | letter date | May 23, **2025** | "May 23, **2024**" | cosmetic (CA) |
+| 12 | NJHMFA transmittal p.1 | addressee | Robert **Delaney** | "Robert **Delancy**" | cosmetic (CA) |
+| 13 | transmittal | CA contact | Nagy **Srinivasulu** | "Nagy **Srinivaulu**" | cosmetic |
+| 14 | grids (exec pp.35/43/51) | signature date | ≥ the date of last data | signed **3/6/2025** while the Scope says data researched through **3 Apr 2025** | open |
+| 15 | 25-007R grids | signature date vs revised figures | re-dated on revision | still 3/6/2025 over line-44 figures changed 24 Apr | open (unfiled) |
+| 16 | rent effective date vs approvals | sequence | — | rents effective **5/7/25**; CA decision **5/19/25**; the 30-day comment window ran to ~5/30/25 | open |
+
+**#3 and #4 are the sharpest pair.** The appraiser worked under a **temporary** NJ practice
+permit — the permit is physically attached to the form — and the form's temporary-licence
+question is **blank** while the temporary number is typed into the *permanent* licence field.
+This connects the checklist licence-box findings at Woodbury, Crossroads and Woodland Towers,
+where the box was ticked against a **No** answer: here the answer should have been **Yes**,
+and was not given at all. **On this package the checklist box would have been correct.**
+
+**#9 and #16 are a 24 CFR 245 sequence problem**, not a clerical one: the tenant notice
+announces a submission already made, and the rents took effect before both the CA's decision
+and the close of the comment window.
+
+### Patterns explicitly ABSENT
+
+Woodbury/Lakeside material: **none** — the negative this reader was sent for. SAFMR
+divergence: **none**. Glyph substitution in `NJ390013022`: **none** — checked character by
+character at 400 dpi across the transmittal, Exhibit 1, both studies, the 92458 and Exhibit
+A. Year-built contradiction: **none** (1980 / renovated 2015 / age 45, consistent across
+narrative, Improvements and all three grids). Incomplete grids: **none** — all three signed,
+dated, "Using HUD's Excel form" ticked, Adjusted Rent and Estimated Market Rent present.
+CA refusal: **none in this folder**, so there is no cured/uncured objection to test.
+
+### Instrument notes
+
+- **A self-correction worth copying.** The temporary permit's address reads "Fairview Homes,
+  **298 18th Ave.**" — at 100 dpi the reader took it for "16th" and flagged a mismatch, then
+  re-rendered at 400 dpi and withdrew it. The site is bounded by 17th Ave north and 18th Ave
+  south. **The withdrawn finding is recorded here because a reader who had stopped at 100 dpi
+  would have shipped it.**
+- `Fairview Homes Rent Schedule eff. 5.7.25.pdf` is Print-To-PDF with pp.2–3 **rasterised —
+  zero widgets and zero text layer**; read at 150 dpi and cross-checked against the 19 May
+  approval packet.
+- The checklist text layer is the **offset-ASCII−29** font (`$SSHQGL[` = `Appendix`) and
+  carries **no checkbox state at all** — box states read from a 110 dpi raster.
+- **Could not determine:** whether 25-007R was ever transmitted or why it was produced;
+  whether tenant rent portions actually changed on 5/7/2025; **which of the three UA sets the
+  CA applied to its own 150% screen** — the approval letter states no SAFMR arithmetic.
+
+---
+
+## Findings — Oak Center (75926), 2026 - RCS
+
+**SHOULD/FILED only — no sweep record.** Belfry, job 25-183.
+
+### The tightest aggregate in the corpus, and a 2BR over its own cap
+
+Governing study (revised 21 Jan 2026): owner's gross renewal potential **$281,487/mo** vs
+150% of SAFMR gross **$291,420/mo** — headroom $9,933/mo, **$130.70/unit/mo, 3.41%**. The
+aggregate is computed **gross-to-gross and is correct in basis**. On the UAs the CA actually
+approved (FY2026 $39/$53/$57/$65/$70, not the FY2025 set the study used) it is $9,866/mo.
+**Passes either way.**
+
+**Per unit type it does not.** The page-two table compares net RCS rent to the gross 150%
+figure. On a consistent gross basis: 1BR −$21, **2BR $3,699 vs $3,675 → over by $24**,
+3BR/3BR-TH/4BR clear. On approved FY2026 UAs the 2BR overage is **$28/unit/mo, $6,720/yr**.
+
+**The arithmetic of the concealment is exact here:** the printed 2BR margin is $25 and the
+omitted UA is $49. **The basis gap is twice the margin** — it is precisely what makes the row
+read as compliant.
+
+**And the filed version printed the overage on its own page.** Filed v1's page two reads
+`2BR $4,050 > $3,675`, and its aggregate headroom was **$108/mo in total — $1.42/unit/mo**,
+the tightest aggregate margin in this corpus by an order of magnitude. It was filed anyway.
+
+### A third workbook with the two columns adjacent and never compared
+
+`Oak Center Rent Grid Analysis - 10.25.xlsx` uses the **correct gross basis** and computes
+**only the aggregate**. It holds `Q29 = $3,699` and `U29 = $3,675` **adjacent** and never
+subtracts them — the identical shape as Morh Housing's `Q`/`U`, and the third workbook in
+this pattern after Morh and Marine Terrace.
+
+It also counts **7** 3BR units (including the non-revenue manager's unit) on both sides,
+inflating headroom by $333/mo, and inflates "Current GPR" by $3,911/mo against the FY2025
+executed schedule's 6 Section 8 3BR units.
+
+### THE FIRST SAFMR DIVERGENCE IN THE CORPUS — three sets in one workbook
+
+Every package read until now had the study and the workbook agreeing on SAFMR. This one
+carries **three different sets**:
+
+| source | 1BR / 2BR / 3BR / 4BR |
+|---|---|
+| Belfry study | $2,010 / $2,450 / $3,130 / $3,710 |
+| Novogradac report | $1,920 / $2,340 / $3,010 / $3,560 |
+| the workbook's own "Novoco" sheet | **$2,201 / $2,682 / $3,432 / $4,077** — **+9.5%** over Belfry's |
+
+Which is HUD's published FY2026 figure is **open**, and it is not a small question: the
+spread between the lowest and highest set moves the cap by roughly 14%.
+
+### Study selection
+
+| file | transmittal | 1BR/2BR/3BR/3BR-TH/4BR |
+|---|---|---|
+| `Archive/25-062 …` | grids only, **undated** signature line | 3,000 / 3,525 / 4,100 / 4,275 / 4,935 |
+| `Grids/25-160 … (10.14)` | grids only, **undated** signature line | 2,950 / 4,050 / 4,475 / 4,675 / 4,900 |
+| `Grids/Oak Center (Novoco) Preliminary Grids` | 28 Oct 2025, **self-declared non-HUD-compliant** | 2,750 / 3,450 / 4,000 / 4,100 / 4,850 |
+| `Archive/25-183 … (v1)` ≡ `RCS Submission/Archive/…` (md5 `a1ec9edd`) | **4 Dec 2025** | 2,950 / 4,050 / 4,500 / 4,675 / 4,900 |
+| `25-183 … (revised 1.21)` | **21 Jan 2026** | 2,950 / 3,650 / 4,300 / 4,550 / 4,900 |
+
+**FILED:** v1, bound pp.9–86 of the signed submission (DocuSign `E4241B09`, 16 Dec 2025).
+**GOVERNS:** the 21 Jan revision — the executed FY2026 HUD-92458 carries its rents, Branch
+Chief signature 9 Apr 2026. **Money moved: −$9,825/mo = −$117,900/yr.**
+
+### Defects
+
+| # | document | field | SHOULD | FILED | verdict |
+|--:|---|---|---|---|---|
+| 1 | **owner's transmittal** | 150% assertion | qualified — the 2BR type exceeds | "**The Project's gross rent does not exceed 150% of the SAFMR**", unqualified | team wrong |
+| 2 | study v1 + revised, p.2 | per-type basis | gross vs gross | net vs gross | team wrong |
+| 3 | study v1 + revised, p.2 | threshold caption | "…150% OF SAFMR GROSS RENT" | "…SAFMR GROSS RENT" — as written asserts $281,487 < $194,280, false | team wrong |
+| 4 | both studies, Improvements | year built | 1971 (the 2021 RCS says "built in 1971/2016") | 1971 / age 54 in Improvements, **1992/2016** and **1992/2017** on grid line 7, and five narratives say "reportedly built in 1992" | team wrong |
+| 5 | both, unit breakdown | Section 8 total | 76 | **77** — the column sums to 76 | team wrong |
+| 6 | both, unit breakdown | caption | "excluding one **three**-bedroom unit" | "one **two**-bedroom unit" | team wrong |
+| 7 | **v1, all five grids** | "Grid was prepared:" | one box ticked | **both blank** (the revision ticks "Using HUD's Excel form") | team wrong |
+| 8 | revised, all five grids | appraiser signature date | ≥ 21 Jan 2026 | **11/17/2025** — on grids whose comps 3 and 5 were replaced and which carry **Jan-26** lease dates | team wrong |
+| 9 | revised, Scope | research window | past 4 Dec 2025 | "researched from October 30, 2025 through December 4, 2025" while the grids carry Jan-26 data | team wrong |
+| 10 | revised study | revision disclosure | state that it is a revision | **no occurrence of "revis-" anywhere**; effective date still 11/17/2025 | team wrong |
+| 11 | both, certification | prior services | disclose `25-062` (Jun 2025) and `25-160` (Oct 2025) | "We have not provided any appraisal services involving the subject property in the three years preceding" | **open** — a same-engagement reading is possible |
+| 12 | owner's cert. of compliance, both copies | project no. | `CA39L000090` | **`CA39L000060`** — 6 for 9 | team wrong |
+| 13 | owner's cert. (signed) | project name | Oak Center 1 | **N/A** | team wrong |
+| 14 | owner's cert. (signed) | signature date | ≤ envelope completion | typed **3.30.2026**; DocuSign ModDate and mtime **3/26/2026** | team wrong |
+| 15 | checklist | "Scope of Work" | ticked | unticked | cosmetic |
+| 16 | checklist | appraiser's licence | tick only if temporary | **ticked**; Zabel holds permanent CA Certified General #3014035 | cosmetic |
+| 17 | FY2026 executed RS p.1 | FHA project number | `CA39L000090` | blank | team wrong |
+| 18 | tenant notice, Dec 2025 | 3BR proposed rent | $4,500 (v1 study) | **$4,475** — from the `25-160` grids | team wrong (superseded) |
+| 19 | tenant notice, **both copies** | signature | signed | **unsigned** | team wrong |
+| 20 | `Archive/…Tenant Notice…December 2025.pdf` | identity | the December notice | **is the 2 Feb 2026 revised notice** | cosmetic |
+| 21 | workbook, both sheets | SAFMR | one ZIP, one FY, one table | **three different sets** — see above | open |
+| 22 | study `/Title`, `/Author` | metadata | Oak Center / Belfry | `/Title` "April 14, 2008", `/Author` "**Mark Burgess**" — named nowhere in this report | cosmetic |
+| 23 | cover page | county | Alameda | "ALMEDA COUNTY" — 1 of 47 occurrences | cosmetic |
+
+**#1 is the finding.** The *owner* certifies without qualification that the project's gross
+rent does not exceed 150% of SAFMR, while one unit type does. Every other instance of M13 is
+an appraiser's table; this one is the owner's own assertion to the CA.
+
+**#8 shares Morh Housing's exact signature date, 11/17/2025** — two different Belfry
+properties, both revised in January, both carrying grids signed 17 Nov 2025.
+
+**#23 repeats Morh Housing's "ALMEDA COUNTY".** Same firm, same typo, two Oakland properties.
+
+### Two readers disagreed, and the more cautious one is right
+
+Woodland Towers' reader called the identical prior-services certification **`team wrong`**;
+Oak Center's called it **`open`**, on the ground that a grid delivered under the same
+engagement may not be a separate "appraisal service."
+
+**`open` is the better call, and Woodland Towers' row is downgraded to match.** The
+distinction turns on what "appraisal services involving the subject property" means under
+USPAP's disclosure obligation when the prior product is a phase of the same assignment —
+which this ledger has not established. The underlying facts are solid at both properties and
+are unchanged; only the verdict moves.
+
+### Patterns explicitly ABSENT
+
+Foreign-property material: **none** — every page of the 100-page package and the 13-page debt
+exhibit is subject-only; the only foreign metadata is the stale `/Title` and `/Author`.
+Glyph substitution in `CA39L000090`: **none** across 14 instances — the one identifier defect
+is the digit error at #12. UA current-vs-proposed swap: **none**. Incomplete grids: **none**.
+Unsigned-live inversion: **none** for owner documents (the tenant notice is the exception,
+#19). Byte-identical duplicate masquerading as a revision: **none** — the only md5 collision
+is v1 stored in two archive folders. **No CA or HUD letter of any kind exists in the cycle** —
+nothing documents *why* the study was revised.
+
+### Instrument notes
+
+- The filed grid's embedded image is natively **107 ppi** (694×889) — 200 dpi upsamples it.
+  Every figure quoted was legible, but **a finer glyph call than `1992/2016` would not be
+  safe from that copy.** Fourth property where the filed copy is the least legible.
+- **A documented attempt to close H8's question, and why it failed:** HUD's API returns
+  `{"error":"Unauthenticated"}` without a key, and `huduser.gov` `.xlsx` downloads return
+  **HTTP 202 through the proxy**. The published FY2026 SAFMR for 94607 could not be fetched.
+  This is the concrete blocker on the SAFMR-vintage and SAFMR-value questions.
+- **Also open, and it constrains M13 (see below): whether HUD applies the 150% cap per unit
+  type or only in aggregate.** The overage is arithmetically certain; its regulatory
+  consequence is not.
+
+---
+
+## Mechanism roll-up after the second reading wave
+
+The counts in the M-headings above are updated; this block records what the second wave
+added and, where a claim moved, why.
+
+### M12 — restructured into two distinct lineages
+
+The original framing ("foreign material reaches filed or governing documents") conflated two
+things the second wave separated:
+
+**(a) Foreign content bound into a document — 5 properties**
+
+| property | what | where | filed? |
+|---|---|---|---|
+| Woodbury Oakwood | Fairview's cover letter + mortgage statement | live folder | **no** |
+| Noble Tower | "Hostmark of Village Cove, Poulsbo WA"; "Raymond J. Lord Manor" | filed study | yes |
+| Newberry Arms | Friendship Court's 80-unit budget **and a per-unit cost derived from it** | governing revision | governs |
+| Crossroads | Woodland Towers' **entire transmittal**, DocuSign-executed | governing study's sole transmittal | governs |
+| **Woodland Towers** | **"Site – Park Glen" / "Improvements–Park Glen"** section headings | **filed study** | yes |
+
+**(b) Template lineage in metadata — two separate templates, 6 properties**
+
+| template | trace | whose | properties |
+|---|---|---|---|
+| appraiser's report | `/Title "April 14, 2008"`, `/Author "Mark Burgess"` | **Belfry's** | Friendship Court, Morh, Mapleview, Oak Center (and all Belfry PDFs) |
+| **owner's checklist** | `/Title "…RCS Owners Checklist - New Horizons 3.25.24.pdf"`, author `mwyckoff` | **the owner/PM side's** | **Crossroads, Woodland Towers, Fairview Homes** |
+
+The second lineage is the more interesting one: it is the *owner's* certification document,
+cloned from a 2024 New Horizons file, filed under three different properties. That is a
+finding about how Related's packages are assembled and is independent of any appraiser.
+
+**Both tested cross-checks came back one-directional.** Woodland Towers holds nothing of
+Crossroads'; Fairview holds nothing of Woodbury's, and the Woodbury strays are md5-identical
+*copies* of files Fairview still has, whose executed originals are properly bound into
+Fairview's own submission. **The mechanism duplicates outward from a source package; it does
+not swap.**
+
+### M14 — one firm, and the denominator now matters
+
+Nine Belfry packages read. **Seven print the malformed threshold statement** (Friendship
+Court, Newberry Arms, Market Square, Marine Terrace, Morh, Woodland Towers, Oak Center).
+Two do not: **Mapleview**, where the utility allowance is $0 so net equals gross by
+construction and there is no basis to mismatch; and **Fairview**, whose per-unit table
+carries the basis error but whose caption was not separately reported.
+
+The exception proves the shape: Mapleview is clean **structurally, not editorially**. Nothing
+suggests the template was fixed.
+
+**Crossroads remains the only non-Belfry study read, and it is clean.** One data point.
+
+### M15 — 9 properties
+
+Woodbury Oakwood, Friendship Court, Newberry Arms, Market Square, Crossroads, Marine
+Terrace, Woodland Towers, Fairview Homes, Oak Center. **Mapleview is the only package to
+pass it cleanly** — all fifteen ticked items verified present, both unticked ones correctly
+unticked.
+
+Fairview inverts the usual shape and is worth separating: elsewhere the licence-copy box is
+**ticked against a "No" answer**; at Fairview the appraiser genuinely worked under a NJ
+**temporary** practice permit — physically attached to the form — the temporary-licence
+question is **blank**, and the temporary number is typed into the *permanent* licence field.
+**There the box would have been correct.**
+
+### A new observation: appraiser shopping is now 4 properties
+
+Noble Tower (4 quotes, $1,000/unit spread), Morh Housing (Belfry vs Novogradac), Woodland
+Towers (Belfry $1,175 vs Cornerstone $1,120 — **+$68,640/yr** from filing the higher), Oak
+Center (Belfry vs Novogradac), Fairview Homes (Belfry vs Renzi — **+$339,000/yr**). In each,
+two or more conclusions were held in one owner's workbook before the higher was commissioned
+as the full report. **No intent is claimed and none should be** — commissioning competing
+scopes is ordinary. It is recorded because the spread is large relative to the margins these
+packages clear the cap by.
+
+### What the second wave did NOT find
+
+No new glyph shape beyond `N`-for-`H` (Market Square, Woodland Towers — both Belfry) and a
+digit error (`CA39L000060` for `…090`). **No thousands-separator claim was made by any of the
+five readers**, which is M8 holding. No post-certification alteration beyond the two already
+recorded — Woodland Towers was checked and came back explicitly clean.
