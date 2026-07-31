@@ -898,3 +898,86 @@ filed Col.5 and therefore into every tenant's rent portion.** Not asserted as a 
 Separately, the baseline workbook counts one household twice: sheet `1A` row `B-02D` and
 sheet `1B` row `C-02D` carry the same twelve readings with months 1 and 2 transposed,
 both averaging 62.6725 — the same unit in two different unit-type samples.
+
+---
+
+## THREE-WAY — Northcross Townhomes (2640001), 2024 - RCS
+
+All three legs. 20 values comparable, **all in the workbook** (M7 again — the package
+dialog said 1 of 6 ready). 12 matched.
+
+### The verdict turns on which study is the source, and that is the finding
+
+| key | SHOULD | OURS | FILED | verdict |
+|---|--:|--:|--:|---|
+| `unit.1.ua` (3BR) | **222** *or* **221** — see below | **221** | **221** | **undetermined, not app wrong** |
+
+Three versions of the Renzi study exist, all with identical concluded rents, differing
+**only** in utility allowances:
+
+| version | date | 3BR UA | bound into the filed submission? |
+|---|---|--:|---|
+| v1 (Archive) | 17 May | 184 | no |
+| "(updated UAs)" | **4 June** | **222** | **yes** — this is the study in the package |
+| "v2 06.14.24" | 14 June | **221** | **no** — never filed |
+
+The property's own `Northcross 2024 UAF Calculation.xls` computes **222**. The study
+actually submitted to HUD prints **222**. The filed HUD-92458 prints **221**, and the CA
+executed at 221 without comment.
+
+**The app also produced 221** — because the manifest's `chosenStudy` for this cycle is
+`…RCS v2 06.14.24.pdf`, the June 14 revision, which is **not the study the team bound
+into its submission**.
+
+So OURS and FILED agree exactly, and both may disagree with the document that was
+actually filed. Calling this `app wrong` would be wrong: the app faithfully read the
+study it was given. Calling it `team wrong` would also overreach, since a later
+appraiser revision plausibly supersedes. **Recorded as `undetermined` on the value, and
+as a real finding about study selection.**
+
+### H5 · The manifest can select a study the team did not file — harness finding
+
+`build-manifest.js` picks `chosenStudy` by rank among candidates. For Northcross it
+picked the newest (14 June) when the submission demonstrably contains the 4 June version
+— provable from the bound transmittal date, the bound Appendix 9-1-4 signature date
+(`06/04/2024`), and the submission PDF's own creation date of 4 June, ten days before v2
+existed.
+
+**Consequence for the whole sweep:** wherever the manifest's chosen study differs from
+the bound one, OURS is being generated from a source the filed package never used, and
+every resulting difference is uninterpretable. The manifest already flags **17 properties**
+where "the top two studies are within one rank; the choice is a coin toss". This is what
+that flag costs. A cheap check — does the chosen study's certification date match the one
+bound into the combined package — would catch it.
+
+### The rest of the comparison
+
+- **5 × `missing-theirs`**: the app emitted `property.name`, `appr.firm` and all three
+  utility allowances where the filed workbook has **null**. The app produced *more* than
+  the team's spreadsheet, not less. Not a defect on either side.
+- **3 × `mismatch`, all unit-type labels**: `2BR/1BA` vs `2-Bedroom`, `3BR/1.5BA` vs
+  `3-Bedroom`, `4BR/1.5BA` vs `4-Bedroom`. **Third package showing this** (Colonial
+  Village, Riverwood, Northcross) — the app consistently uses the study's
+  bedroom/bathroom convention where filed documents use the schedule's plain form. It is
+  a systematic, predictable style difference, and it is excluded as style — but it will
+  generate three or four rows on every package for the rest of the corpus.
+
+### What FILED got wrong, independent of the app
+
+| document | field | SHOULD | FILED | verdict |
+|---|---|---|---|---|
+| HUD-92458 Part B | all five utility boxes | **unchecked** (tenant-paid; Col.5 is nonzero) | **all five checked** | team wrong |
+| Study Conclusion table p.48 | 4BR units / total | 14 / 99 | **10 / 95** — in **all three** study versions | team wrong |
+| Owner's Cover Letter | owner address | 30 **Hudson** Yards | **"30 Huson Yards"** | team wrong |
+| Workbook `I7`/`K7` | SAFMR totals | 178,020 / 267,030 | **144,000 / 216,000** — the formulas omit the 4BR term entirely | team wrong |
+| All three grids | "Grid was prepared" checkbox | one box ticked | both render blank | team wrong |
+
+The Part B finding is the notable one: checked means *included in rent*, yet Col.5
+carries nonzero allowances, the study says the tenant bears in-unit electric and cooking,
+and the grids record every utility as "not in rent". The 2023 executed schedule and the
+CA's own executed copy both have them **unchecked** — so the filed copy is the outlier.
+The agent checked whether it was a rendering artifact and found the checkmarks are baked
+page content, not widget appearances.
+
+The workbook formula error is a clean instance of M5's cousin: the property passed its
+own internal 150% check by luck, since the correct comparison lives in the study.
