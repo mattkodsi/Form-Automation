@@ -882,10 +882,10 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
 #viewMenu .mgrid.rows.live .pc-due{font-size:13px;font-weight:600;white-space:nowrap}
 #viewMenu .mgrid.rows.live .pc-eff,#viewMenu .mgrid.rows.live .pc-units{font-size:13px}
 #viewMenu .mgrid.rows.live .pc-act .btn{min-height:40px;padding:0 18px;font-size:13px;
-  font-weight:600;border-radius:var(--r-ctl);background:#101d2b;border-color:#101d2b;
-  letter-spacing:0;text-transform:none}
-#viewMenu .mgrid.rows.live .pc-act .btn:hover:not(:disabled){background:var(--ledger);border-color:var(--ledger)}
-#viewMenu .mgrid.rows.live .pc-act .btn:disabled{background:transparent;border-color:var(--ln);color:var(--i4)}
+  font-weight:600;border-radius:var(--r-ctl);background:var(--ledger);border-color:var(--ledger);color:#fff;
+  letter-spacing:0;text-transform:none;transition:background .12s,transform .08s,box-shadow .12s}
+#viewMenu .mgrid.rows.live .pc-act .btn:hover:not(:disabled){background:#173e5c;border-color:#173e5c;box-shadow:0 2px 6px rgba(16,29,43,.28);transform:translateY(-1px)}
+#viewMenu .mgrid.rows.live .pc-act .btn:disabled{background:transparent;border-color:var(--ln);color:var(--i4);box-shadow:none;transform:none}
 /* ---- the past-due drawer ----
    Flush under the masthead and edge to edge, so it reads as attached to the
    navy rather than as the first item of the list. It sits ABOVE the page's own
@@ -990,12 +990,13 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
 #viewMenu .mgrid.rows .pc-units{grid-column:5;grid-row:1;justify-self:end;
   white-space:nowrap}
 #viewMenu .mgrid.rows .pc-act{grid-column:6}
-#viewMenu .mgrid.rows .pc-act .btn{text-align:center;padding:5px 10px;width:100%;
-  background:none;border:1px solid transparent;border-radius:var(--r-ctl);color:var(--i3);
-  font-weight:600;font-size:12px;padding:0;width:auto}
-#viewMenu .mgrid.rows .pcard:hover .pc-act .btn{color:var(--ledger);
-  border-color:var(--ln);background:var(--card)}
-#viewMenu .mgrid.rows .pc-act .btn:hover{border-color:var(--ledger);color:var(--ledger)}
+#viewMenu .mgrid.rows .pc-act .btn{text-align:center;width:auto;
+  background:var(--ledger);border:1px solid var(--ledger);border-radius:var(--r-ctl);color:#fff;
+  font-weight:600;font-size:12px;padding:6px 14px;transition:background .12s,transform .08s,box-shadow .12s}
+#viewMenu .mgrid.rows .pc-act .btn:disabled{background:transparent;border-color:var(--ln);color:var(--i4);box-shadow:none;transform:none}
+#viewMenu .mgrid.rows .pcard:hover .pc-act .btn:not(:disabled){color:#fff;
+  border-color:#173e5c;background:#173e5c;box-shadow:0 2px 6px rgba(16,29,43,.28);transform:translateY(-1px)}
+#viewMenu .mgrid.rows .pc-act .btn:hover:not(:disabled){border-color:#173e5c;background:#173e5c;color:#fff;box-shadow:0 2px 6px rgba(16,29,43,.28);transform:translateY(-1px)}
 /* "make that an actual button" — Matt, of the ledger's hover-only affordance.
    The live panel that used to carry a solid slab is gone, so the emphasis moves
    onto the rows themselves: everything from today back to the start of the
