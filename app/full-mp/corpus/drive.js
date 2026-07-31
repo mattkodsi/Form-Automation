@@ -466,6 +466,24 @@ const EX_SNAP = `const o={};
   document.querySelectorAll('#sections input[data-cb]').forEach(n=>{o['cb:'+n.getAttribute('data-cb')]=n.checked?'1':'';});
   return o;`;
 
+/* What PROVENANCE the form actually reached, as a histogram over the store's
+   own source values. Read-only, and it exists to settle a claim rather than
+   decorate the record: the run order argues that no audit run has ever
+   exercised the states Matt's team works in, because a package created against
+   a blank property makes every cell read `new` — grey — and never `database`
+   (on file, blue) or `overridden` (orange). Nothing measured that. Now every
+   record says so in one field, which means the two-pass change can be shown to
+   have worked instead of assumed to have. */
+const EX_PROV = `const o={};
+  try{
+    if(typeof form==='undefined'||!form)return {err:'no form binding'};
+    for(const k in form){const c=form[k];
+      if(!c||typeof c!=='object')continue;
+      const s=String((c.source==null?'':c.source));
+      if(!s)continue; o[s]=(o[s]||0)+1;}
+  }catch(e){return {err:String((e&&e.message)||e)};}
+  return o;`;
+
 const EX_QUIET = `return {inflight:window.__inflight|0,net:(window.__net||[]).length};`;
 
 /* activePid / activeCid are the app's own top-level bindings (app.js:75). The
@@ -1101,6 +1119,8 @@ async function driveBoth(opts) {
     /* ---- 5. order A: RS then study ------------------------------------- */
     log('order A (rs-first) …');
     orders['rs-first'] = await runOrder('rs-first');
+    orders['rs-first'].provenance = await c.eval(EX_PROV).catch(e => ({ err: String((e && e.message) || e).slice(0, 120) }));
+    log('  provenance: ' + JSON.stringify(orders['rs-first'].provenance));
 
     /* ---- 6. reload, and prove the state the second order needs --------- */
     log('reloading the page …');

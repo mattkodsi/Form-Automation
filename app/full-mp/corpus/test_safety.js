@@ -18,7 +18,7 @@
    ocr.js would move billing somewhere nothing is counting; that is the failure
    these guard now. */
 const fs=require('fs'),path=require('path'),cp=require('child_process');
-const MIN_CHECKS=25;   // 2026-07-31: six portfolio-safety rails added - cleanup deletes
+const MIN_CHECKS=27;   // 2026-07-31: six portfolio-safety rails added - cleanup deletes
                        // CYCLES not properties, and the driver fails closed on create.
                        // 2026-07-30: check 5 became five real ones - the rail moved
                        // out of this file and into sweep.js/drive.js, so it can be DRIVEN.
@@ -197,6 +197,14 @@ const fakeBoth=(name,calls,delay)=>{
     /H\.targetFor\(rows, code, yr \+ '-01-01'\)/.test(dsrc));
   T('the effective date is never typed - a tracker row locks it',
     !/typeInto\(c,\s*'cyEff'/.test(dsrc));
+  /* The run order's case for the two-pass drive is that no run has ever
+     reached 'database' or 'overridden'. That was an argument; this makes it a
+     measurement, so the change can be shown to have worked. */
+  T('every run records the provenance histogram the form actually reached',
+    /const EX_PROV = /.test(dsrc)
+    && /\.provenance = await c\.eval\(EX_PROV\)/.test(dsrc));
+  T('and it reads the store rather than the painted colours, so a styling change cannot move it',
+    /for\(const k in form\)/.test(dsrc) && !/getComputedStyle/.test(dsrc.slice(dsrc.indexOf('const EX_PROV'), dsrc.indexOf('const EX_QUIET'))));
 
   verdict();
 })();
