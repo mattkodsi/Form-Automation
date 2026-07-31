@@ -216,15 +216,26 @@ async function loadSession(sessionFile) {
 
 /* ── chromium ───────────────────────────────────────────────────────────── */
 function findChrome() {
+  /* an explicit override wins over any search */
+  if (process.env.CHROME_PATH) {
+    try { fs.accessSync(process.env.CHROME_PATH, fs.constants.X_OK); return process.env.CHROME_PATH; } catch (e) {}
+  }
   const cands = [];
-  const pw = path.join(os.homedir(), 'Library/Caches/ms-playwright');
+  /* Same search as cdplib.js findChrome -- see the note there. The corpus
+     driver needs a browser too, so this copy has to know the same roots. */
+  const roots = [process.env.PLAYWRIGHT_BROWSERS_PATH,
+                 path.join(os.homedir(), 'Library/Caches/ms-playwright'),
+                 path.join(os.homedir(), '.cache/ms-playwright')].filter(Boolean);
+  for (const pw of roots) {
   const dirs = fs.existsSync(pw) ? fs.readdirSync(pw) : [];
   for (const d of dirs.filter(x => /headless_shell/.test(x)))
     cands.push(path.join(pw, d, 'chrome-headless-shell-mac-arm64/chrome-headless-shell'),
-               path.join(pw, d, 'chrome-headless-shell-linux64/chrome-headless-shell'));
+               path.join(pw, d, 'chrome-headless-shell-linux64/chrome-headless-shell'),
+               path.join(pw, d, 'chrome-linux/headless_shell'));
   for (const d of dirs.filter(x => /^chromium-/.test(x)))
     cands.push(path.join(pw, d, 'chrome-mac/Chromium.app/Contents/MacOS/Chromium'),
                path.join(pw, d, 'chrome-linux/chrome'));
+  }
   cands.push('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
              '/usr/bin/google-chrome', '/usr/bin/chromium', '/usr/bin/chromium-browser');
   return cands.find(p => { try { fs.accessSync(p, fs.constants.X_OK); return true; } catch (e) { return false; } }) || null;
@@ -523,8 +534,10 @@ async function withApp(fn, { sessionFile, width = 1280, height = 1000, log = () 
   const dp = await new Promise(r => { const t = net.createServer(); t.listen(0, '127.0.0.1', () => { const p = t.address().port; t.close(() => r(p)); }); });
   const ud = fs.mkdtempSync(path.join(os.tmpdir(), 'rcs-drive-cdp-'));
   const rmUd = () => { try { fs.rmSync(ud, { recursive: true, force: true }); } catch (e) {} };
+  /* see the note in cdplib.js -- root cannot keep the sandbox */
+  const rootFlags = (process.getuid && process.getuid() === 0) ? ['--no-sandbox', '--disable-dev-shm-usage'] : [];
   const proc = cp.spawn(bin, ['--headless=new', '--remote-debugging-port=' + dp, '--user-data-dir=' + ud,
-    '--no-first-run', '--no-default-browser-check', '--disable-gpu',
+    '--no-first-run', '--no-default-browser-check', '--disable-gpu', ...rootFlags,
     '--window-size=' + width + ',' + height, 'about:blank'], { stdio: ['ignore', 'ignore', 'pipe'] });
   let buf = ''; proc.stderr.on('data', d => { buf += d; });
   const getj = p => new Promise((res, rej) => {

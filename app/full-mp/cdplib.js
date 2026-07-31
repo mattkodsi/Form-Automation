@@ -43,15 +43,29 @@ function buildBundle(BUNDLE){
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
 function findChrome(){
+  /* an explicit override wins over any search */
+  if(process.env.CHROME_PATH){
+    try{fs.accessSync(process.env.CHROME_PATH,fs.constants.X_OK);return process.env.CHROME_PATH;}catch(e){}
+  }
   const cands=[];
-  const pw=path.join(os.homedir(),'Library/Caches/ms-playwright');
+  /* Playwright's browser root moves by platform and by container: the mac
+     cache, the linux cache, and PLAYWRIGHT_BROWSERS_PATH where an image
+     pre-installs one elsewhere. Look in all of them. Looking only in the mac
+     path left every browser-driven suite dark inside a linux container, and a
+     suite that cannot find a browser reports a SKIP -- so the hole was silent. */
+  const roots=[process.env.PLAYWRIGHT_BROWSERS_PATH,
+               path.join(os.homedir(),'Library/Caches/ms-playwright'),
+               path.join(os.homedir(),'.cache/ms-playwright')].filter(Boolean);
+  for(const pw of roots){
   const dirs=fs.existsSync(pw)?fs.readdirSync(pw):[];
   for(const d of dirs.filter(x=>/headless_shell/.test(x)))
     cands.push(path.join(pw,d,'chrome-headless-shell-mac-arm64/chrome-headless-shell'),
-               path.join(pw,d,'chrome-headless-shell-linux64/chrome-headless-shell'));
+               path.join(pw,d,'chrome-headless-shell-linux64/chrome-headless-shell'),
+               path.join(pw,d,'chrome-linux/headless_shell'));
   for(const d of dirs.filter(x=>/^chromium-/.test(x)))
     cands.push(path.join(pw,d,'chrome-mac/Chromium.app/Contents/MacOS/Chromium'),
                path.join(pw,d,'chrome-linux/chrome'));
+  }
   cands.push('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
              '/usr/bin/google-chrome','/usr/bin/chromium','/usr/bin/chromium-browser');
   return cands.find(p=>{try{fs.accessSync(p,fs.constants.X_OK);return true;}catch(e){return false;}})||null;
@@ -102,8 +116,12 @@ async function withApp(fn,{width=1280,height=900,tag='browser',quiet=false}={}){
      since the suite was written. Both exits below own it: the devtools-never-
      answered throw leaves the try/finally unentered. */
   const rmUd=()=>{try{fs.rmSync(ud,{recursive:true,force:true});}catch(e){}};
+  /* chromium will not start as root with its sandbox on, which is how CI
+     containers run. Only add the flag when we ARE root -- a dev machine keeps
+     the sandbox it already had. */
+  const rootFlags=(process.getuid&&process.getuid()===0)?['--no-sandbox','--disable-dev-shm-usage']:[];
   const proc=cp.spawn(bin,['--headless=new','--remote-debugging-port='+dp,'--user-data-dir='+ud,
-    '--no-first-run','--no-default-browser-check','--disable-gpu','--window-size='+width+','+height,'about:blank'],
+    '--no-first-run','--no-default-browser-check','--disable-gpu',...rootFlags,'--window-size='+width+','+height,'about:blank'],
     {stdio:['ignore','ignore','pipe']});
   let buf='';proc.stderr.on('data',d=>{buf+=d;});
   const getj=p=>new Promise((res,rej)=>{http.get({host:'127.0.0.1',port:dp,path:p},r=>{

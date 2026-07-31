@@ -63,21 +63,37 @@ function fail(msg,err){
   console.log(`✗ BROWSER SUITE FAILED (${n} checks ran, ${fails} failed)`);
 }
 function pass(){verdict='pass';console.log(`\n✓ ALL ${n} BROWSER CHECKS PASSED\n`);}
-function skip(why){
-  verdict='skip';
+/* Not a skip — a failure. This suite exists to prove a keystroke REACHES the
+   handler; with no browser it proves nothing, and for weeks it said so in words
+   while exiting 0, so run_tests.sh counted it green. A suite that verifies
+   nothing must tell the shell it verified nothing. test_shots.js already did
+   this; this is the same rule. */
+function cannotRun(why){
+  verdict='fail'; process.exitCode=1;
   console.log('\n'+BAR);
-  console.log('  ⚠  BROWSER SUITE SKIPPED — NOTHING WAS VERIFIED');
+  console.log('  ⚠  NO CHROMIUM — NOTHING WAS DRIVEN, SO NOTHING WAS VERIFIED');
   console.log('  '+why);
   console.log('  Install a chromium (npx playwright install chromium) to run it.');
   console.log(BAR);
-  console.log('⚠ BROWSER SUITE SKIPPED (0 checks ran — this is not a pass)');
+  console.log('✗ BROWSER SUITE COULD NOT RUN (0 checks — this is not a pass)');
 }
 function finish(){
   if(fails)return fail(`${fails} of ${n} checks failed — see the ✗ lines above`);
   if(n<MIN_CHECKS)return fail(`only ${n} of the expected ${MIN_CHECKS} checks ran — the suite died partway, or checks were deleted without lowering MIN_CHECKS on purpose`);
   pass();
 }
-process.on('exit',()=>{if(verdict===null)fail(`the run ended without a verdict after ${n} of ${MIN_CHECKS} checks — it died partway`);});
+/* The floor is asserted HERE as well as in finish(), because ANY path that
+   returns before finish() bypasses the floor entirely and the process exits 0
+   having verified nothing. The no-chromium skip was exactly that shape. This
+   backstop makes the whole class impossible, not just the one instance: an exit
+   reporting fewer than MIN_CHECKS checks is a failure however it got here. */
+process.on('exit',code=>{
+  if(verdict===null)fail(`the run ended without a verdict after ${n} of ${MIN_CHECKS} checks — it died partway`);
+  if(!code&&!process.exitCode&&n<MIN_CHECKS){
+    console.log(`✗ BROWSER SUITE FAILED (only ${n} of ${MIN_CHECKS} checks ran — a run that verifies nothing is not a pass)`);
+    process.exitCode=1;
+  }
+});
 process.on('unhandledRejection',e=>{fail('unhandled rejection — an async throw is a failure, never a pass',e);process.exit(1);});
 process.on('uncaughtException',e=>{fail('uncaught exception',e);process.exit(1);});
 
@@ -3557,6 +3573,6 @@ const FULL=process.argv.includes('--full');
     return {ok:true};
   });
 
-  if(r&&r.skipped)return skip(r.skipped);
+  if(r&&r.skipped)return cannotRun(r.skipped);
   finish();
 })().catch(e=>{fail('the suite threw before reaching a verdict',e);process.exit(1);});

@@ -367,8 +367,10 @@ async function withBundle(bundleFile,fn,{width=1280,height=900}={}){
   const dp=await new Promise(r=>{const t=net.createServer();t.listen(0,'127.0.0.1',()=>{const p=t.address().port;t.close(()=>r(p));});});
   const ud=fs.mkdtempSync(path.join(os.tmpdir(),'rcs-fuzz-'));
   const rmUd=()=>{try{fs.rmSync(ud,{recursive:true,force:true});}catch(e){}};
+  /* see the note in cdplib.js -- root cannot keep the sandbox */
+  const rootFlags=(process.getuid&&process.getuid()===0)?['--no-sandbox','--disable-dev-shm-usage']:[];
   const proc=cp.spawn(bin,['--headless=new','--remote-debugging-port='+dp,'--user-data-dir='+ud,
-    '--no-first-run','--no-default-browser-check','--disable-gpu','--window-size='+width+','+height,'about:blank'],
+    '--no-first-run','--no-default-browser-check','--disable-gpu',...rootFlags,'--window-size='+width+','+height,'about:blank'],
     {stdio:['ignore','ignore','pipe']});
   let buf='';proc.stderr.on('data',d=>{buf+=d;});
   const getj=p=>new Promise((res,rej)=>{http.get({host:'127.0.0.1',port:dp,path:p},r=>{
