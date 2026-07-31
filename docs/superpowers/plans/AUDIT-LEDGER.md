@@ -4607,3 +4607,31 @@ half-baths), `splitCityStateZip`, `s8From`, `money`/`dec`, the upsert alias/stem
 _Total logged: 16 (B1–B16). HIGH: B1, B2, B9, B10. MED: B3, B6, B11, B12. Plus B13 med-low and the
 LOW/diagnostics set. Still to come: the interaction-storm + shots dynamic pass (the biggest vein),
 and reviewing the build subagent's UAF diff._
+
+---
+
+## Cherry Garden RCS, run through the real parser (Matt's ask, 2026-07-31)
+
+Drove the app's actual RCS reader (`RCSParse.readLetter`, the same path `parseRcsPdf` takes) on
+Cherry Garden = Oak Park (75576).
+
+- **2026** — the only "study" in the folder is `26-088` in `Grids/`: the **Market Rent Grids**
+  (HUD-92273-S8), pages 2–4, one comparison grid per unit type. No transmittal letter, no
+  concluded-rents summary — the 2026 renewal is in progress (grids + engagement + analysis workbook
+  only). The parser correctly returns nothing (`"No appraiser's transmittal letter was found"`).
+  That is right behavior, not a bug — there is no letter to read.
+- **2018 full study (Doyle Real Estate Advisors, a firm not in the fixtures)** — the parser found the
+  letter and read the scalars, but **could not read the rent table → `units: []`**. Confirmed real
+  parser gaps (B17–B19 in the bug list):
+  - **B17 [high for Doyle properties]:** Doyle states concluded rents as a *multi-line columnar*
+    table ("Unit Type / Units / Rent / Rent/SF" headers, then stacked values `$1,125 / $2.50 / …`);
+    every rcs.js row pattern (`ROW_MAIN`/`ROW_CS6`/`ROW_5C`/`ROW_CMP`/`ROW_4C`, rcs.js:422–426)
+    expects one line per row, so **none match → a Doyle study yields an empty rent schedule.** And
+    `findLetter` mis-picked page 2 (a **photo** page) over the real letter on page 3.
+  - **B18 [med]:** `appr.email` read as `brian.sansom@related.com` — the **owner's (Related)** address,
+    not the appraiser's.
+  - **B19 [med]:** `property.addr_zip` read as `16026` for Roselle, NJ (should be 07203).
+
+**Net:** the app parses faithfully where it knows the firm's letter format, but a **Doyle study — a
+real Related property's appraiser — parses to zero units.** That is the highest-value parsing finding
+from this exercise, and it only surfaced by running the real reader on a real study.
