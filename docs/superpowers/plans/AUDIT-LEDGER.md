@@ -61,8 +61,38 @@ connections never reach the proxy's relay at all.
 `test_browser.js` and `test_shots.js` still pass because they serve the bundle from
 `127.0.0.1` and never leave the container.
 
-**To unblock:** either enable chromium egress in this environment, or run the sweep on
-a machine with direct network (Matt's Mac), where `drive.js` has worked before.
+### The proxy is NOT the cause — measured, negative result
+
+The run doc's hypothesis (chromium never gets `HTTPS_PROXY`, which node reads
+automatically) is sound in general and is **wrong here**. Recorded because a ruled-out
+cause is worth as much in the morning as a fix.
+
+| # | measurement | result | what it kills |
+|--:|---|---|---|
+| 1 | `env \| grep -i proxy` | `http://127.0.0.1:34565` — **no embedded credentials, `http` scheme** | Chrome-ignores-proxy-credentials, and the https-scheme-lost-in-the-flag theory |
+| 2 | `curl` to Supabase **with no proxy at all** | **200-class reply** (`UNAUTHORIZED_MISSING_API_KEY`, via cloudflare) | egress is **not** proxied — so a missing proxy flag cannot be the cause |
+| 3 | `--proxy-server` pointed at a dead port | error CHANGES to `ERR_PROXY_CONNECTION_FAILED` | "the flag was ignored" — it is honoured |
+| 4 | proxy CA imported into a fresh `~/.pki/nssdb` | no change | untrusted-CA (which would report `ERR_CERT_AUTHORITY_INVALID` anyway) |
+| 5 | `--ignore-certificate-errors` | no change | any TLS-trust cause |
+| 6 | `--ssl-version-max=tls1.2`; `--disable-features=PostQuantumKyber,ECH`; `--disable-quic --disable-http2` | no change on any | ClientHello / protocol incompatibility |
+| 7 | full `chromium-1194/chrome-linux/chrome` instead of `headless_shell` | no change | a stripped-build defect |
+| 8 | `--disable-features=NetworkServiceSandbox`; `--headless=old`; `--no-zygote --single-process` | no change on any | chromium's network-service sandbox |
+| 9 | `--host-resolver-rules=MAP example.com <curl's own IP>` | no change | DNS interception |
+| 10 | `example.com`, `api.github.com`, Supabase from chromium | **all** `ERR_CONNECTION_RESET` | anything host-specific or policy-specific |
+| 11 | same three hosts via curl | `200 / 200 / 401` | any claim that the container cannot reach the internet |
+| 12 | `$HTTPS_PROXY/__agentproxy/status` | `recentRelayFailures: []` | the proxy rejecting chromium — it never sees it |
+
+Chromium's own report is `net::ERR_CONNECTION_RESET` (net_error −101) with
+`handshake failed; SSL error code 1`, identically with and without proxy flags. The
+browser process is sound — it loads `data:` URLs, runs JavaScript and answers CDP evals
+throughout. **Only its outbound sockets die, and only chromium's.**
+
+Untested and the remaining plausible cause: an egress filter that distinguishes
+processes (cgroup/uid/binary) below the proxy, which no chromium flag can reach.
+
+**To unblock:** run the driving leg on a machine with working chromium egress (Matt's
+Mac, where `drive.js` has always worked). Nothing in this container's chromium
+configuration is going to fix it.
 
 ### Corpus and manifest are ready for it
 
