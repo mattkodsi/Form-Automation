@@ -981,3 +981,90 @@ page content, not widget appearances.
 
 The workbook formula error is a clean instance of M5's cousin: the property passed its
 own internal 150% check by luck, since the correct comparison lives in the study.
+
+---
+
+## THREE-WAY — Westwood Village (4640009), **2020** — the BLOCKED record, resolved
+
+Record verdict was *"the app generated no document the filed package also has."* **That is
+mostly the package's shape, not a generation failure — but not entirely.**
+
+### The 2020 filing is not a five-year RCS package at all
+
+The VHDA permanent financing matured 1 Aug 2020 and the HAP contract terminated with it.
+The owner filed a **HUD-9624 Option Two** election for a 10-year MAHRA renewal, rents set
+by **OCAF** and capped at the RCS comparable potential. **The RCS is Exhibit 3 of
+thirteen** — it exists only to supply that cap.
+
+What a modern cycle has and this one does not:
+
+| absent | why |
+|---|---|
+| tenant notice of the new rents | **correctly** absent — the Option Two OCAF checkbox carries no 24 CFR 245 notification clause; that appears only on the two budget-based boxes, both unchecked |
+| analysis workbook | the arithmetic lives in the HUD-9625 and the HUD-9624 comparison chart |
+| 150% SAFMR test | the 2020 rule was the Section 9-14 **140% median-gross-rent** comparison — and the study performed it |
+| combined single-PDF submission | the only bound submission is the **superseded Option Four** request |
+| owner letter as a distinct document | the cover letter is the only transmittal |
+
+So four of the six documents the app generates have **no counterpart that could exist**
+in a 2020 filing. Comparing them was never possible.
+
+### But the explanation is not complete
+
+**The executed rent schedule and the owner's checklist are both present**, and both are
+documents the app produces. They should have matched and did not. The record's own
+warnings say why: tier `ocr`, *"the study yielded no unit types"*, *"`#rcsApply` never
+appeared"* — **M7b**, the Federal Appraisal study reading as nothing. So this record is
+**both** a package-shape mismatch and a genuine M7b failure, and it should not be filed
+away as "old package, nothing to see".
+
+**Verdict: `undetermined` on the missing four (no counterpart exists); `app wrong` on the
+rent schedule and checklist, traced to M7b.**
+
+---
+
+## M8 · The HUD-92458 prints thousands separators as PERIODS — 2 properties
+
+A numeric reader that trusts the glyph reads **`43.355` as forty-three dollars**.
+
+| property | field | renders as | means |
+|---|---|---|---|
+| Westwood Village 2019 & 2020 | Col.4, all five rows | `43.355` · `2.022` · `26.004` · `2.343` · `7.758` | 43,355 · 2,022 · 26,004 · 2,343 · 7,758 |
+| Westwood Village 2019 | monthly total | `$80.027` | $80,027 |
+| Colonial Village 2026 | Col.3 2BR, Col.4 2BR | `1.850` · `59.200` | 1,850 · 59,200 |
+
+Two properties, four years apart, different firms — **clears the mechanism bar.** And it
+is inconsistent *within one document*: Westwood's 2020 Col.4 uses periods while its own
+totals use commas (`$81,482`, `$977,784`).
+
+This is directly app-relevant in both directions: the app must not mis-read a filed
+schedule this way, and `compare.js` strips `$` and `,` before comparing (`compare.js:68`)
+— **but a period is neither**, so `43.355` and `43,355` would compare as different
+strings while `1.850` might silently parse as a float. Worth a look on the Mac.
+
+### What FILED got wrong in 2020, independent of the app
+
+| document | field | SHOULD | FILED | verdict |
+|---|---|---|---|---|
+| Cover letter (in the live folder) | renewal option | **Option Two, 10-year** | requests **Option Four, 20-year** | team wrong |
+| Cover letter | rent change | rents rise ~1.8% by OCAF | *"requesting no change to the rents"* | team wrong |
+| Cover letter | exhibit citations | per its own index | **every citation from Ex.3 on is off by one** | team wrong |
+| Rent schedule + HAP Exhibit A | effective date | 08/01/2020 | typed **08/02/2020**, hand-corrected by two different CA staff (`CHR`, `LS`) | team wrong |
+| Rent schedule Part B | Hot Water | included (grid line 36 "Yes/Gas"; intake form circled Yes) | **unchecked** | team wrong |
+| Rent schedule Part B | Dishwasher | **not** included (grid line 17 "Yes/No"; kitchen photo shows none) | **checked** | team wrong |
+| Rent schedule Part I | HAP contract number | `VA36H027152` | **renders blank** | team wrong |
+| Study p.3 | Median Gross Rent Threshold table | three rows, cum 113 | **4-bedroom row missing**; cum stops at 104; Total still says 113 | team wrong |
+| Owner's Certification | checklist appendix cited | 9-2-1 | **9-2-2** | team wrong |
+| **2019** prior executed schedule | Part F max allowable | ≥ its own Col.4 sum of $80,027 | **$78,272** — the schedule exceeds its own stated maximum by $1,755 | team wrong (source doc) |
+
+### M1 gets worse here — it is not just a label
+
+The executed HAP contract p.4 settles the truth: Section 8 number `VA36H027152`, FHA
+Project Number `N/A`. Every owner-prepared 2020 document prints the HAP number in an
+FHA-labelled field **and renders it as `VA36-HO27-152` — with a letter O in place of the
+digit 0**, verified at 500–700 dpi against the digit 0 in adjacent date fields. Seven
+documents carry it. The RCS study is the only owner-side document with the characters
+right and the label wrong; the HUD-9624's FHA cell, left blank, is the only strictly
+correct treatment in the package.
+
+**Eight of eight packages read now carry the M1 mislabel.**
