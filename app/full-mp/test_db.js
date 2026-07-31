@@ -5,7 +5,7 @@
    shows it, and MIN_CHECKS catches a run that dies partway — a short count is
    a failure, not a pass. Adding checks? Raise MIN_CHECKS. */
 const { makeDb, memoryAdapter, isPerCycleKey, migrate, computeAnalysis, computeSalutation, CROSSWALK } = require('./db.js');
-const MIN_CHECKS = 205;   // 2026-07-30 merge: union of both branches, counted off a real run (was ours 169 / main 186)
+const MIN_CHECKS = 209;   // 2026-07-31: +4 ua_uaf per-cycle routing + no-carry; 2026-07-30 merge union was 205
                         //;   // 2026-07-30: +4 current rents and executed UA carry on no programme
                         //;   // 2026-07-30: +2 the appraiser carries, a non-revenue contract rent does not
                         //;   // 2026-07-30: +8 Related Affordable outranks the schedule for the effective date
@@ -71,6 +71,10 @@ function jsonAdapter() { let s = null; return { get: async () => (s ? JSON.parse
   ok('isPerCycleKey rent', isPerCycleKey('units.3.proposed'), true);
   ok('isPerCycleKey num_units durable', isPerCycleKey('units.3.num_units'), false);
   ok('isPerCycleKey the RA effective date', isPerCycleKey('rent_schedule.date_eff_ra'), true);
+  /* A UAF result changes each cycle, so it lives in the per-cycle bucket like the
+     executed and study allowances it sits beside (Matt, 2026-07-31). */
+  ok('isPerCycleKey the UAF submission allowance', isPerCycleKey('units.3.ua_uaf'), true);
+  ok('CROSSWALK maps ua_uaf to a home', !!CROSSWALK['units.{i}.ua_uaf'], true);
 
   console.log('\n─ 3 · GATES NUMBERS (executed-RS accurate, UA $31) ─');
   let form = db.loadForm(gates); let a = computeAnalysis(form);
@@ -159,7 +163,9 @@ function jsonAdapter() { let s = null; return { get: async () => (s ? JSON.parse
   console.log('\n─ 8b · WHAT CARRIES INTO A NEW CYCLE ─');
   await cdb.saveFlatCycle(cid, { 'nonrev.0.br': { value: '2BR', source: 'database' },
     'nonrev.0.num_units': { value: '1', source: 'database' },
-    'nonrev.0.rent': { value: '1450', source: 'database' } });
+    'nonrev.0.rent': { value: '1450', source: 'database' },
+    'units.0.ua_uaf': { value: '63', source: 'database' } });   // a UAF applied in this cycle
+  ok('the applied UAF is stored in the cycle', cdb.getFlatCycle(cid)['units.0.ua_uaf'].value, '63');
   const { cid: cid2 } = await cdb.createCycle(cpid, { programs: ['rcs'], effective_date: '2027-09-01' });
   const c2 = cdb.getFlatCycle(cid2);
   /* What took effect is whatever the CA returned after the owner submitted, and
@@ -171,6 +177,7 @@ function jsonAdapter() { let s = null; return { get: async () => (s ? JSON.parse
      factor against it. */
   ok('an RCS year does NOT inherit last year\'s current rents', c2['units.0.current'], undefined);
   ok('nor its utility allowances', c2['units.0.ua_exec'], undefined);
+  ok('nor a UAF applied in the prior cycle', c2['units.0.ua_uaf'], undefined);
   ok('nor what LAST year\'s study read', c2['units.0.br_rcs'], undefined);
   ok('nor the SAFMR ceilings HUD restates every year', c2['units.0.safmr_hud'], undefined);
   ok('nor a decision made about numbers that have changed', c2['units.0.safmr_reviewed'], undefined);

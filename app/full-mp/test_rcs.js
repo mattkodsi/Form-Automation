@@ -16,7 +16,7 @@ const els={};
 global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>null,querySelectorAll:()=>[],createElement:()=>mk(),addEventListener(){},body:{classList:{toggle(){},contains(){return false;}}}};
 const fs=require('fs'),path=require('path'),os=require('os');
 
-const MIN_CHECKS=444;   /* 2026-07-30: +24 - the floor every tier answers to (an empty read is not a read) */
+const MIN_CHECKS=451;   /* 2026-07-31: +7 UAF precedence + resolution parity; 2026-07-30 was 444 */
 let n=0,fails=0,verdict=null;
 const BAR='='.repeat(68);
 function fail(msg,err){
@@ -808,17 +808,25 @@ async function reader(file){
   console.log('\n─ score.js answers the same as app.js ─');
   {
     const S=global.window.RCSScore;
-    T('score.js exposes its mirrors',typeof S._defUaSrc==='function'&&typeof S._defSafmrSrc==='function');
+    T('score.js exposes its mirrors',typeof S._defUaSrc==='function'&&typeof S._uaResolvedOf==='function'&&typeof S._defSafmrSrc==='function');
     /* Drive both through the same record. app.js's read the live form, so the
        comparison is made value by value on the cases that distinguish them. */
+    /* The precedence is UAF -> executed RS -> study (Matt, 2026-07-31): the saved
+       UAF submission is the system of record, the executed schedule is the
+       baseline, and the appraiser's study allowance is a cross-check, never the
+       trusted value. So the executed schedule wins over the study by default, and
+       a saved UAF wins over both. */
     const cases=[
-      {name:'both allowances present — the study wins',rec:{'units.0.ua_rcs':'116','units.0.ua_exec':'107'},want:'rcs'},
+      {name:'a saved UAF beats both',                 rec:{'units.0.ua_uaf':'50','units.0.ua_rcs':'116','units.0.ua_exec':'107'},want:'uaf'},
+      {name:'only a UAF submission',                  rec:{'units.0.ua_uaf':'50'},                          want:'uaf'},
+      {name:'no UAF: the executed schedule wins over the study',rec:{'units.0.ua_rcs':'116','units.0.ua_exec':'107'},want:'exec'},
       {name:'only the prior schedule has one',        rec:{'units.0.ua_exec':'107'},                        want:'exec'},
       {name:'only the study has one',                 rec:{'units.0.ua_rcs':'116'},                         want:'rcs'},
       {name:'neither, so it is the PM\u2019s own figure',rec:{},                                             want:'custom'},
       /* A stated ZERO is a figure, not an absence - the lesson 83a1e14 was written
          for, and the reason uaHas tests for empty rather than for truth. */
-      {name:'a stated $0 allowance still counts',      rec:{'units.0.ua_exec':'0'},                          want:'exec'}];
+      {name:'a stated $0 allowance still counts',      rec:{'units.0.ua_exec':'0'},                          want:'exec'},
+      {name:'a stated $0 UAF still counts',            rec:{'units.0.ua_uaf':'0'},                           want:'uaf'}];
     cases.forEach(c=>{
       const read=k=>(k in c.rec)?c.rec[k]:'';
       /* score.js's resolver is driven directly. app.js's namesake reads the live
@@ -828,6 +836,17 @@ async function reader(file){
          edited too, and that is the point: the drift that went unnoticed for two
          commits now has to be acknowledged in writing to happen again. */
       eq('UA: '+c.name,S._defUaSrc(read,0),c.want); });
+    /* Resolution follows the same precedence, and an explicit source choice
+       overrides it. score.js's resolver is pinned here so it cannot drift from
+       app.js's uaResolvedOf, which prints the allowance on the federal form. */
+    const uaRes=[
+      {name:'a saved UAF resolves to the UAF figure',rec:{'units.0.ua_uaf':'50','units.0.ua_exec':'107','units.0.ua_rcs':'116'},want:50},
+      {name:'no UAF resolves to the executed figure',rec:{'units.0.ua_exec':'107','units.0.ua_rcs':'116'},want:107},
+      {name:'only the study resolves to the study',  rec:{'units.0.ua_rcs':'116'},                          want:116},
+      {name:'an explicit study choice is honoured',  rec:{'units.0.ua_source':'rcs','units.0.ua_exec':'107','units.0.ua_rcs':'116'},want:116}];
+    uaRes.forEach(c=>{
+      const read=k=>(k in c.rec)?c.rec[k]:'';
+      eq('UA resolve: '+c.name,S._uaResolvedOf(read,0),c.want); });
     const sc=[
       {name:'both present — the study\u2019s printed table wins',rec:{'units.0.safmr_rcs':'1420','units.0.safmr_hud':'1492'},want:'rcs'},
       {name:'only the HUD pull',                                rec:{'units.0.safmr_hud':'1492'},                            want:'hud'},

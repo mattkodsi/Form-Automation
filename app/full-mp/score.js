@@ -55,8 +55,12 @@ const dateEffResolved=read=>{const src=read('rent_schedule.date_eff_source')||(r
 const ocafFactorResolved=read=>{const src=read('ocaf.factor_src')||(read('ocaf.factor_pub')?'fr':'custom');
   return src==='custom'?numf(read('ocaf.factor_custom')):numf(read('ocaf.factor_pub'));};
 const uaHas=(read,k)=>{const v=read(k);return v!==''&&v!=null;};
-const defUaSrc=(read,i)=>uaHas(read,'units.'+i+'.ua_rcs')?'rcs':(uaHas(read,'units.'+i+'.ua_exec')?'exec':'custom');
+/* UAF -> executed RS -> study (Matt, 2026-07-31), mirroring app.js defUaSrc: the
+   saved UAF submission is the system of record, the executed schedule is the
+   baseline, and the study allowance is a cross-check, never trusted by default. */
+const defUaSrc=(read,i)=>uaHas(read,'units.'+i+'.ua_uaf')?'uaf':(uaHas(read,'units.'+i+'.ua_exec')?'exec':(uaHas(read,'units.'+i+'.ua_rcs')?'rcs':'custom'));
 const uaResolvedOf=(read,i)=>{const src=read('units.'+i+'.ua_source')||defUaSrc(read,i);
+  if(src==='uaf')return numf(read('units.'+i+'.ua_uaf'));
   if(src==='rcs')return numf(read('units.'+i+'.ua_rcs'));
   if(src==='custom')return numf(read('units.'+i+'.ua_custom'));
   return numf(read('units.'+i+'.ua_exec'));};
@@ -368,7 +372,7 @@ function scoreCaption(s){
   if(s.gate==='clean')return 'Every document has its source · '+s.caveats.length+' item'+(s.caveats.length===1?'':'s')+' left';
   return 'Ready to generate';}
 
-const API={_defUaSrc:defUaSrc,_defSafmrSrc:defSafmrSrc,
+const API={_defUaSrc:defUaSrc,_uaResolvedOf:uaResolvedOf,_defSafmrSrc:defSafmrSrc,
   packageScore:packageScore, packageDocs:packageDocs, scoreCaption:scoreCaption,
   docReqs:docReqs, docCaveatReqs:docCaveatReqs, docMissing:docMissing, docWarns:docWarns,
   gateScore:gateScore, hasReal:hasReal, uafFigures:uafFigures, DOC_REQS:DOC_REQS, NA_RE:NA_RE};

@@ -46,13 +46,13 @@ function makeSupabaseDb(client) {
   const UCOL = {
     br: 'bedrooms', ba: 'bathrooms', label: 'label', num_units: 'num_units',
     current: 'current_contract_rent', proposed: 'proposed_contract_rent',
-    ua_exec: 'ua_from_exec_rs', ua_rcs: 'ua_from_rcs', ua_source: 'ua_source', ua_reviewed: 'ua_reviewed', ua_custom: 'ua_custom',
+    ua_exec: 'ua_from_exec_rs', ua_rcs: 'ua_from_rcs', ua_uaf: 'ua_from_uaf', ua_source: 'ua_source', ua_reviewed: 'ua_reviewed', ua_custom: 'ua_custom',
     num_rcs: 'num_units_rcs', br_rcs: 'bedrooms_rcs', ba_rcs: 'bathrooms_rcs', num_source: 'num_units_source', num_reviewed: 'num_units_reviewed',
     type_source: 'type_source', type_reviewed: 'type_reviewed',
     safmr_rcs: 'safmr_from_rcs', safmr_hud: 'safmr_from_hud', safmr_source: 'safmr_source', safmr_reviewed: 'safmr_reviewed', safmr_custom: 'safmr_custom',
   };
   const UCOL_REV = {}; for (const k in UCOL) UCOL_REV[UCOL[k]] = k;
-  const UINT = new Set(['num_units', 'current', 'proposed', 'ua_exec', 'ua_rcs', 'ua_custom', 'num_rcs', 'safmr_rcs', 'safmr_hud', 'safmr_custom']);
+  const UINT = new Set(['num_units', 'current', 'proposed', 'ua_exec', 'ua_rcs', 'ua_uaf', 'ua_custom', 'num_rcs', 'safmr_rcs', 'safmr_hud', 'safmr_custom']);
 
   const NRCOL = { use: 'use', br: 'bedrooms', ba: 'bathrooms', num_units: 'num_units', rent: 'monthly_rent' };
   // app_contact directory (appraiser / ca / signatory) column set
@@ -418,7 +418,7 @@ function makeSupabaseDb(client) {
      Still pre-filled either way: unit mix, Part B, non-S8 and non-revenue
      rows, debt service, and everything about the property itself. */
   const cyNoCarry = (k) => /^units\.\d+\.proposed$/.test(k)
-    || /^units\.\d+\.(current|ua_exec|ua_source|ua_custom)$/.test(k)
+    || /^units\.\d+\.(current|ua_exec|ua_uaf|ua_source|ua_custom)$/.test(k)
     || /^units\.\d+\.(br_rcs|ba_rcs|num_rcs|ua_rcs)$/.test(k)
     || /^units\.\d+\.safmr_(hud|rcs|source|custom)$/.test(k)
     || /^units\.\d+\.(ua|safmr|num|type)_reviewed$/.test(k)

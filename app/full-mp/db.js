@@ -17,7 +17,7 @@
 
 /* ---- which flat keys are PER-CYCLE (everything else is durable) --------- */
 function isPerCycleKey(k) {
-  return /^units\.\d+\.(current|proposed|ua_exec|ua_rcs|ua_source|ua_reviewed|ua_custom|num_rcs|br_rcs|ba_rcs|num_source|num_reviewed|type_source|type_reviewed|safmr_rcs|safmr_hud|safmr_source|safmr_reviewed|safmr_custom|uac_[a-z]+)$/.test(k)
+  return /^units\.\d+\.(current|proposed|ua_exec|ua_rcs|ua_uaf|ua_source|ua_reviewed|ua_custom|num_rcs|br_rcs|ba_rcs|num_source|num_reviewed|type_source|type_reviewed|safmr_rcs|safmr_hud|safmr_source|safmr_reviewed|safmr_custom|uac_[a-z]+)$/.test(k)
     || /^appr\./.test(k)
     || /^check\.\d+$/.test(k)
     || /^cycle\./.test(k)
@@ -77,6 +77,7 @@ const CROSSWALK = {
   'units.{i}.proposed': ['units[].proposed_contract_rent', 'unit_cycle_value.proposed_contract_rent'],
   'units.{i}.ua_exec': ['units[].ua_from_exec_rs', 'unit_cycle_value.ua_from_exec_rs'],
   'units.{i}.ua_rcs': ['units[].ua_from_rcs', 'unit_cycle_value.ua_from_rcs'],
+  'units.{i}.ua_uaf': ['units[].ua_from_uaf', 'unit_cycle_value.ua_from_uaf'],   // the applied UAF submission — the system of record for the allowance
   'units.{i}.safmr_hud': ['units[].safmr_from_hud', 'unit_cycle_value.safmr_from_hud'],
   'units.{i}.safmr_rcs': ['units[].safmr_from_rcs', 'unit_cycle_value.safmr_from_rcs'],
   'check.{i}': ['checklist.items[17]', 'checklist_item.checked'],
@@ -116,9 +117,10 @@ function computeAnalysis(form) {
   let cg = 0, pg = 0, tot = 0, sc = 0, sp = 0, nd = 0, cgC = 0, pgC = 0, ceilC = 0, tTot = 0, tPr = 0, ceil = 0, safmrMissing = false, safmrOver = 0;
   units.forEach(i => {
     const n = num(val('units.' + i + '.num_units')), cur = num(val('units.' + i + '.current')), pro = num(val('units.' + i + '.proposed'));
-    const ue = num(val('units.' + i + '.ua_exec')), ur = num(val('units.' + i + '.ua_rcs'));
-    const usrc = val('units.' + i + '.ua_source') || (ue > 0 ? 'exec' : (ur > 0 ? 'rcs' : 'custom'));
-    const ua = usrc === 'rcs' ? num(val('units.' + i + '.ua_rcs')) : (usrc === 'custom' ? num(val('units.' + i + '.ua_custom')) : num(val('units.' + i + '.ua_exec')));
+    const ue = num(val('units.' + i + '.ua_exec')), ur = num(val('units.' + i + '.ua_rcs')), uf = num(val('units.' + i + '.ua_uaf'));
+    // UAF -> executed RS -> study, mirroring app.js defUaSrc (Matt, 2026-07-31).
+    const usrc = val('units.' + i + '.ua_source') || (uf > 0 ? 'uaf' : (ue > 0 ? 'exec' : (ur > 0 ? 'rcs' : 'custom')));
+    const ua = usrc === 'uaf' ? num(val('units.' + i + '.ua_uaf')) : (usrc === 'rcs' ? num(val('units.' + i + '.ua_rcs')) : (usrc === 'custom' ? num(val('units.' + i + '.ua_custom')) : num(val('units.' + i + '.ua_exec'))));
     const safmr = safmrResolvedFrom(val, i);
     cg += (cur + ua) * n; pg += (pro + ua) * n; tot += n;
     if (safmr > 0) { ceil += safmr * n; if (pro > 0 && pro >= safmr) safmrOver++; } else if (n > 0) safmrMissing = true; // safmr = the 150% SAFMR ceiling per unit, entered/parsed directly (future HUD API pull must x1.5 its base value); per-type over when net proposed >= it
@@ -384,7 +386,7 @@ async function makeDb(adapter, opts) {
      Still pre-filled either way: unit mix, Part B, non-S8 and non-revenue
      rows, debt service, and everything about the property itself. */
   const cyNoCarry = (k) => /^units\.\d+\.proposed$/.test(k)
-    || /^units\.\d+\.(current|ua_exec|ua_source|ua_custom)$/.test(k)
+    || /^units\.\d+\.(current|ua_exec|ua_uaf|ua_source|ua_custom)$/.test(k)
     || /^units\.\d+\.(br_rcs|ba_rcs|num_rcs|ua_rcs)$/.test(k)
     || /^units\.\d+\.safmr_(hud|rcs|source|custom)$/.test(k)
     || /^units\.\d+\.(ua|safmr|num|type)_reviewed$/.test(k)

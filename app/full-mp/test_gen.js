@@ -58,7 +58,7 @@ function apText(form,id){
 const afMakeNumber=v=>{ const s=String(v==null?'':v).replace(/[^0-9.,\-]/g,'').replace(/,/g,'.');
   const n=parseFloat(s); return isNaN(n)?0:n; };
 
-const MIN_CHECKS=131;   // 2026-07-30 merge: union of both branches, counted off a real run (was ours 123 / main 34)
+const MIN_CHECKS=133;   // 2026-07-31: +2 UAF-precedence checks (UAF>RS>RCS); 2026-07-30 merge union was 131
                         //;                // the count this file is known to run to the end
 let n=0,fails=0,verdict=null;
 const BAR='═'.repeat(68);
@@ -452,12 +452,14 @@ function record(extra){
     const V3=id=>{try{return f3.getTextField(String(id)).getText()||'';}catch(e){return null;}};
     eq('a type no unit row matches falls back to the stored rent',V3(161),'750'); }
 
-  console.log('\n─ column 5 is the allowance for the term being filed ─');
-  /* Sycamore Green printed 42/50 where its own study, its UA workbook, its
-     Exhibit A and the filed schedule all say 51/64. Burt Farms printed 52 where
-     the study and the signed UAF both say 54. Northcross printed 149/184/204
-     against 180/221/246. In each case the right figure was in a file the app had
-     been handed. The executed schedule states LAST term's allowance. */
+  console.log('\n─ column 5 resolves UAF → executed RS → study ─');
+  /* The executed rent schedule is the baseline of record and a saved UAF is
+     applied on top of it; the appraiser's study allowance is a cross-check, not
+     a source the app trusts (Matt, 2026-07-31). So with no UAF the executed
+     figure wins over the study, and a saved UAF beats both. The corpus cases
+     (Sycamore Green 51/64, Burt Farms 54, Northcross 180/221/246) reach the
+     study's number THROUGH a saved UAF applied to the executed baseline, not by
+     trusting the study. */
   { const r=record({'units.0.ua_exec':'42','units.0.ua_rcs':'51',
       'units.1.ua_exec':'50','units.1.ua_rcs':'64',
       'units.0.proposed':'1200','units.1.proposed':'1450'});
@@ -465,19 +467,28 @@ function record(extra){
     const by=await G.fillRentSchedule(rsBytes,r);
     const f=(await PDFDocument.load(by)).getForm();
     const V=id=>{try{return f.getTextField(String(id)).getText()||'';}catch(e){return null;}};
-    eq('the study\'s allowance, not the prior schedule\'s',V(7+4),'51');
-    eq('and on the second row too',V(7+8+4),'64');
-    eq('so gross rent follows the study',V(7+5),'1251');
-    eq('and on the second row',V(7+8+5),'1514');
-    eq('and gross rent draws its comma',apText(f,7+5),'1,251'); }
-  /* A source the PM HAS chosen still wins -- the default moved, the override
-     did not. */
-  { const r=record({'units.0.ua_exec':'42','units.0.ua_rcs':'51',
-      'units.0.ua_source':'exec','units.0.proposed':'1200'});
+    eq('the executed schedule\'s allowance, not the study\'s',V(7+4),'42');
+    eq('and on the second row too',V(7+8+4),'50');
+    eq('so gross rent follows the executed schedule',V(7+5),'1242');
+    eq('and on the second row',V(7+8+5),'1500');
+    eq('and gross rent draws its comma',apText(f,7+5),'1,242'); }
+  /* A saved UAF submission is the system of record and beats both. */
+  { const r=record({'units.0.ua_exec':'42','units.0.ua_rcs':'51','units.0.ua_uaf':'55',
+      'units.0.proposed':'1200'});
+    delete r['units.0.ua_source'];
     const by=await G.fillRentSchedule(rsBytes,r);
     const f=(await PDFDocument.load(by)).getForm();
     const V=id=>{try{return f.getTextField(String(id)).getText()||'';}catch(e){return null;}};
-    eq('an explicit choice of the prior schedule is honoured',V(7+4),'42'); }
+    eq('a saved UAF beats the executed schedule and the study',V(7+4),'55');
+    eq('and gross rent follows the UAF',V(7+5),'1255'); }
+  /* A source the PM HAS chosen still wins -- the default moved, the override did
+     not. The study is no longer the default, so choosing it is what proves it. */
+  { const r=record({'units.0.ua_exec':'42','units.0.ua_rcs':'51',
+      'units.0.ua_source':'rcs','units.0.proposed':'1200'});
+    const by=await G.fillRentSchedule(rsBytes,r);
+    const f=(await PDFDocument.load(by)).getForm();
+    const V=id=>{try{return f.getTextField(String(id)).getText()||'';}catch(e){return null;}};
+    eq('an explicit choice of the study is honoured',V(7+4),'51'); }
 
   /* ── the analysis workbook, which had no tests at all ──────────────────────
      Eight properties shipped a workbook whose "Below 150%?" cell read NO about a

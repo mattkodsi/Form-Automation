@@ -24,7 +24,7 @@ global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>
 const cp=require('child_process'),os=require('os'),path=require('path'),fs=require('fs');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=144;   // 2026-07-27: the unit designation became a free-text label. The
+const MIN_CHECKS=151;   // 2026-07-31: +7 UAF-submission source saves/reverts as one cell. 2026-07-27: the unit designation became a free-text label. The
                         // chip needed checks the text box does not (four enum values, and a
                         // saved blank that read "on file" where a text box reads new), so the
                         // honest count fell by two. Lowered on purpose; never to go green.                // the count this file is known to run to the end
@@ -214,7 +214,7 @@ const T=(label,v)=>eq(label,!!v,true);
   /* The figure keys are part of the cell too — a parsed allowance lives in
      ua_exec/ua_rcs, and a cell whose pair could not see them painted unsaved
      with no way to save it. */
-  eq('coupledKeys ua_custom', app.coupledKeys('units.0.ua_custom'), ['units.0.ua_custom','units.0.ua_source','units.0.ua_reviewed','units.0.ua_exec','units.0.ua_rcs']);
+  eq('coupledKeys ua_custom', app.coupledKeys('units.0.ua_custom'), ['units.0.ua_custom','units.0.ua_source','units.0.ua_reviewed','units.0.ua_exec','units.0.ua_rcs','units.0.ua_uaf']);
   eq('coupledKeys safmr_custom', app.coupledKeys('units.0.safmr_custom'), ['units.0.safmr_custom','units.0.safmr_source','units.0.safmr_reviewed','units.0.safmr_rcs','units.0.safmr_hud']);
   /* Widened deliberately, not silenced: the utility allowance and the 150%
      ceiling already couple to the figure their source writes, and the effective
@@ -238,6 +238,26 @@ const T=(label,v)=>eq(label,!!v,true);
   T('ua_source persisted as custom', app.getVal('units.0.ua_source')==='custom'&&app.srcOf('units.0.ua_source')==='database');
   app.__edit('units.0.ua_source','exec');
   T('switch UA→exec after saved-custom → overridden (no phantom/blue skip)', app.srcOf('units.0.ua_source')==='overridden');
+  /* ── the UAF submission source saves and reverts as ONE cell ──────────────
+     A UAF result is a first-class source (ua_uaf), not a hand-typed custom
+     figure. Picking "UAF submission" points ua_source at ua_uaf, and the whole
+     cell — figure, pointer, flag, and the two cross-check figures — saves and
+     reverts together through coupledKeys. Uses a fresh unit index so it cannot
+     disturb the run test below. */
+  console.log('\n─ the UAF submission source saves/reverts as one cell ─');
+  eq('the UAF figure joins the coupled cell',
+     app.coupledKeys('units.2.ua_source'),
+     ['units.2.ua_source','units.2.ua_custom','units.2.ua_reviewed','units.2.ua_exec','units.2.ua_rcs','units.2.ua_uaf']);
+  app.__edit('units.2.ua_uaf','63'); app.__edit('units.2.ua_source','uaf');
+  eq('the cell resolves to the UAF figure', app.uaResolvedOf(2), 63);
+  for(const k of app.coupledKeys('units.2.ua_source')) await app.__saveField(k);
+  T('ua_source persisted as uaf', app.getVal('units.2.ua_source')==='uaf'&&app.srcOf('units.2.ua_source')==='database');
+  T('and the UAF figure saved with it', app.getVal('units.2.ua_uaf')==='63'&&app.srcOf('units.2.ua_uaf')==='database');
+  app.__edit('units.2.ua_source','exec');
+  T('switching off a saved UAF reads as overridden', app.srcOf('units.2.ua_source')==='overridden');
+  for(const k of app.coupledKeys('units.2.ua_source')) app.__revert(k);
+  T('reverting brings the whole UAF cell back', app.getVal('units.2.ua_source')==='uaf'&&app.srcOf('units.2.ua_source')==='database');
+  eq('with its figure intact', app.getVal('units.2.ua_uaf'), '63');
   /* ── Escape walks back a RUN of edits ────────────────────────────────────
      One press, one CELL, newest first — and a save is a wall the walk cannot
      cross. __editCell is the text box's input handler in miniature (push the

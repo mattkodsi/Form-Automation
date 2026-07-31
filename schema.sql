@@ -149,7 +149,8 @@ create table public.unit_type (
   proposed_contract_rent  integer,
   ua_from_exec_rs         integer,
   ua_from_rcs             integer,
-  ua_source               text,      -- 'exec' | 'rcs' | 'custom'
+  ua_from_uaf             integer,   -- applied UAF submission (system of record for the allowance)
+  ua_source               text,      -- 'uaf' | 'exec' | 'rcs' | 'custom'
   ua_reviewed             text,      -- '1' | ''
   ua_custom               integer,
   num_units_rcs           integer,

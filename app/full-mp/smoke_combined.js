@@ -728,14 +728,14 @@ const T=(label,v)=>eq(label,!!v,true);
     const A=await drive('FourVariantsA','rcs-first');
     eq('study first: the schedule\'s four rows survive',        A.rows,4);
     eq('study first: each variant takes its own bedroom count\'s rent',A.proposed,['1000','1000','1500','1500']);
-    eq('study first: and its own allowance',                    A.ua,[50,50,75,75]);
+    eq('study first: the executed schedule\'s allowance wins by default',A.ua,[41,42,71,72]);
     eq('study first: the chooser offers the study figure on every row',A.rcsOffer,['50','50','75','75']);
     eq('study first: and the schedule\'s own figure beside it',  A.rsOffer,['41','42','71','72']);
 
     const B=await drive('FourVariantsB','rs-first');
     eq('schedule first: four rows',                             B.rows,4);
     eq('schedule first: the same rents',                        B.proposed,['1000','1000','1500','1500']);
-    eq('schedule first: the same allowances',                   B.ua,[50,50,75,75]);
+    eq('schedule first: the same executed allowances',          B.ua,[41,42,71,72]);
     eq('schedule first: the same offers',                       B.rcsOffer,['50','50','75','75']);
     eq('schedule first: and the same schedule figures',         B.rsOffer,['41','42','71','72']);
 

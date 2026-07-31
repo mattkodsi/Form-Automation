@@ -248,7 +248,7 @@ const addrLine=(street,city,state,zip)=>{
      to print. Testing the number kept blanking it, which on a HUD form reads as
      "not filled in" rather than "nothing is charged". Test whether a source
      HOLDS a value, exactly as the rest of this file does. */
-  function uaHasG(rec,i){return ['ua_exec','ua_rcs','ua_custom'].some(k=>{const v=rec['units.'+i+'.'+k];return v!==''&&v!=null;});}
+  function uaHasG(rec,i){return ['ua_exec','ua_rcs','ua_custom','ua_uaf'].some(k=>{const v=rec['units.'+i+'.'+k];return v!==''&&v!=null;});}
   async function fillRentSchedule(templateBytes, rec){
     const { PDFDocument, StandardFonts, PDFName, PDFString, rgb } = PL();
     const doc=await PDFDocument.load(templateBytes,{parseSpeed:Infinity}); const form=doc.getForm();
@@ -415,15 +415,15 @@ const addrLine=(street,city,state,zip)=>{
       if(row[0]==='blank') return;
       const i=row[1];
       if(row[0]==='s8'){ const br=g('units.'+i+'.br'),ba=g('units.'+i+'.ba'),n=nmv(g('units.'+i+'.num_units')),pro=nmv(g('units.'+i+'.proposed'));
-        // Mirror the form's own fallback (app.js defUaSrc): with no source chosen
-        // it shows the RCS figure, else the executed-RS one, else the custom one.
-        // The study states the allowance for the term being filed; the executed
-        // schedule states the last one. Three properties filed the study's.
-        // Defaulting flatly to 'exec' printed a BLANK allowance whenever the UA had
-        // come from the RCS report — and gross rent is what the 150% test turns on.
-        const _ue=nmv(g('units.'+i+'.ua_exec')),_ur=nmv(g('units.'+i+'.ua_rcs'));
-        const us=g('units.'+i+'.ua_source')||(_ur>0?'rcs':(_ue>0?'exec':'custom'));
-        const ua=us==='rcs'?_ur:(us==='custom'?nmv(g('units.'+i+'.ua_custom')):_ue);
+        // Mirror the form's own fallback (app.js defUaSrc): UAF -> executed RS ->
+        // study. The saved UAF submission is the system of record; with none the
+        // executed schedule is the baseline; the study is a cross-check, not the
+        // trusted value (Matt, 2026-07-31). Presence is "not empty", so a real $0
+        // allowance counts — and gross rent is what the 150% test turns on.
+        const _uaHas=k=>{const v=g('units.'+i+'.'+k);return v!==''&&v!=null;};
+        const _ue=nmv(g('units.'+i+'.ua_exec')),_ur=nmv(g('units.'+i+'.ua_rcs')),_uf=nmv(g('units.'+i+'.ua_uaf'));
+        const us=g('units.'+i+'.ua_source')||(_uaHas('ua_uaf')?'uaf':(_uaHas('ua_exec')?'exec':(_uaHas('ua_rcs')?'rcs':'custom')));
+        const ua=us==='uaf'?_uf:(us==='rcs'?_ur:(us==='custom'?nmv(g('units.'+i+'.ua_custom')):_ue));
         // A proposed rent nobody has set yet is blank, not 0 — on a HUD form a
         // printed 0 reads as a real figure. An entered 0 still prints.
         const praw=g('units.'+i+'.proposed'), hasP=praw!==''&&praw!=null;
