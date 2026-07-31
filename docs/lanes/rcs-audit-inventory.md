@@ -9,8 +9,31 @@ inventory below comes from `ls -R` (5,272 lines) plus a per-folder classificatio
 with every ambiguous folder opened and read. Any future pipeline step that shells out to
 `find` against the corpus sees an empty corpus and must not be used.
 
-**The manifest disagrees with the disk.** `app/full-mp/corpus/corpus.json` lists 44
-cycles. The disk holds **56 complete (property, year) packages**. Missing from the
+> ## ⚠ THIS DOCUMENT IS A FLOOR, NOT A COUNT — corrected 2026-07-30 from the cloud
+>
+> Everything below was measured through the Google Drive **mount on Matt's Mac**, and the
+> mount is incomplete. Read directly from Drive, the same corpus holds **4,447 files**
+> against the mount's 3,364 — **1,083 files, 24%, never reached this inventory** — and
+> **46 top-level folders** against 34.
+>
+> Of the 12 extra folders (all created 2026-07-27, the day before the coded bulk upload),
+> 4 duplicate a coded property by name — Colonial Village, Lansing Manor, Fairview Homes,
+> Riverwood — and **8 are properties named nowhere in this document or the manifest**:
+> Village Court, **Cherry Garden**, Southport Mews, Gates Manor, Manhattan Plaza,
+> Golden Link Manor, Crossroads of East Ravenswood, Woodland Towers.
+>
+> **Cherry Garden is the designated Gate 2 trial package, and the pipeline cannot
+> currently see it.** That is the first thing to fix, not a footnote: a corpus inventory
+> that misses the property under test is exactly the failure this lane exists to catch,
+> and it was caught by driving the corpus from somewhere other than the machine that
+> built the inventory.
+>
+> The counts below stand only as a lower bound until the manifest is rebuilt against
+> Drive itself.
+
+**The manifest disagreed with the disk.** `app/full-mp/corpus/corpus.json` listed 44
+cycles when this was written; it lists **68** since `c43c355`, of which **63** carry both
+a study and filed documents. Both numbers were still derived from the incomplete mount. The disk holds **56 complete (property, year) packages**. Missing from the
 manifest: Westwood Village 2020, Sycamore Green 2020, New Horizons 2019, Woodbury
 Oakwood 2021, Hampshire House 2019, Lansing Manor 2021, Ebony Gardens 2018, Mapleview
 Towers 2020, Shiloh Village 2019, Peterson Plaza 2020, Northgate Terrace 2020, Walden

@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rclone copy:*)",
+      "Bash(rclone lsd:*)",
+      "Bash(rclone ls:*)",
+      "Bash(rclone lsjson:*)",
+      "Bash(rclone size:*)",
+      "Bash(rclone version)",
+      "Bash(chmod 600:*)"
+    ]
+  }
+}

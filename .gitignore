@@ -7,6 +7,13 @@ navigator-mock-handoff.zip
 
 # local tooling — Claude Code settings + worktrees, never product code
 .claude/
+# ...except the SHARED project settings. A cloud runner has no way to be granted a
+# permission interactively, so the one rule it cannot start without - the read-only
+# rclone verbs that fetch the corpus - has to travel with the repo. Personal and
+# machine-local settings stay ignored.
+!.claude/
+.claude/*
+!.claude/settings.json
 .DS_Store
 _archive/Kinley/ra-port-2026-07-16/
 
