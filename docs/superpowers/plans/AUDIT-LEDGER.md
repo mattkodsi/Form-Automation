@@ -3718,3 +3718,86 @@ Mac's step 4.
 **A live trap recorded for the next reader:** the study's own "Subject Property Unit Mix"
 table (~p.15) lists 1BR as **16** units and **omits both ADA rows**. Any reader or parser
 that prefers that table over the roster gets a different, wrong mix.
+
+---
+
+## New Horizons (75474), 2024 — **both wrong**, and the two legs fail for opposite reasons
+
+Read against the executed federal form itself (both HUD-92458 copies are flattened — 0
+widgets, 0 `/V` — so the governing figures came off the raster and the CA's `Exhibit A`).
+
+### The rent leg: THEIRS is not a filed document at all
+
+| file | date | conclusions 1/2/3/4BR |
+|---|---|---|
+| `archive/Renzi/24-014 … GRIDS.pdf` | 23 Jan 2024 | **3,500 / 4,300 / 5,000 / 6,000** |
+| `archive/JLL/… 1-26-24.pdf` | 26 Jan | 2,800 / 3,800 / 4,100 / 5,300 |
+| `archive/JLL/… 3-12-24.pdf` | 11 Mar | 3,150 / 4,000 / 4,350 / 5,450 |
+| **`Submission/Exhibit 3 - JLL … 3-26-24.pdf` — FILED** | 25–26 Mar | **3,150 / 4,000 / 4,350 / 5,450** |
+| `Submission/(REVISED) … 4-12-24.pdf` | 12 Apr | same |
+
+**GOVERNS:** the executed HUD-92458 eff. 1 Jul 2024 and the CA's Exhibit A — 3,150 / 4,000 /
+4,350 / 5,450, monthly potential $197,200.
+
+**OURS is right. THEIRS matches the `Renzi & JLL` workbook's Renzi block, rows 10–13, cols E
+and O — all eight values exactly** — and Renzi's study was **rejected and never bound**; the
+executed submission cites only JLL's job number.
+
+**So this is H5 inverted: the never-filed study is on the COMPARATOR's side, not ours.**
+That is a harness finding and a sharp one — the FILED leg is supposed to be evidence, and
+here it read a *workbook block* rather than a filed document. Money if anyone acted on it:
+**+$21,500/mo, +$258,000/yr** (the workbook's own `L40` reads −258,000).
+
+**The Renzi set would have FAILED the threshold** — $226,242 against $205,095, over by
+$21,147. The filed JLL set passes with $353 of headroom.
+
+### The UA leg: the app used a superseded allowance
+
+OURS `132 / 138 / 151 / 140` is the **FY2023** UAF conclusion (signed 26 Apr 2023).
+`Exhibit 5 - New Horizons UAF.pdf`, signed 18 Jan 2024, applies the FY2024 factors
+**effective 1 Jul 2024 — the same date as the rent increase**, so 9-14.B Step 1 requires
+**149 / 156 / 171 / 158**.
+
+| set | aggregate gross | vs $205,095 |
+|---|--:|---|
+| app — correct rents, **stale UA** | $203,870 | passes, headroom **$1,225** |
+| governing | $204,742 | passes, headroom **$353** |
+| Renzi | $226,242 | **fails by $21,147** |
+
+**The outcome does not flip, but the app overstates its own headroom 3.5×** — $1,225 where
+the truth is $353. On a threshold that decides whether HUD commissions its own study, a
+margin misreported by that factor is the defect, not the pass/fail.
+
+### The adder is real here and irrelevant to this gap
+
+`E26 = 2800+F26`, `F26 = 225` (and `=3800+225`, `=4100+225`, `=5300+225`) — a flat $225
+what-if on the 26 Jan JLL draft, present only in the 27 Jan workbook and superseded by
+hard-typed figures in the 12 Mar copy. **Neither disputed set is pre- or post-adder**; the
+gap runs +350/+300/+650/+550 and is simply two different appraisers. **M10 stands as
+recorded and is not evidence here.**
+
+### M17 reaches 5 properties
+
+| property | computed on | operative | effective |
+|---|---|---|---|
+| Morh Housing | $102 / $138 | $107 / $144 | 1 Apr 2026 |
+| Woodland Towers | $83 | $89 | 1 Jul 2026 |
+| Lansing Manor | 116 / 85 | **99** | 2 Feb 2026 |
+| Holly House | 61 / 64 | **40 / 51** | 24 Sep 2025 |
+| **New Horizons** | **132/138/151/140** (FY2023) | **149/156/171/158** | **1 Jul 2024** |
+
+New Horizons is the first where the stale allowance **materially misstates the margin**
+rather than merely using the wrong input.
+
+### Open, and cheap to close
+
+The reader inferred THEIRS from an exact 8-of-8 match to the Renzi block. **Reading the
+manifest entry for this cycle would confirm which file it labelled "filed"** — that is one
+lookup and it converts an inference into a fact. Also open: whether the app's UA is a
+carried-over 2023 per-cycle value or a parse of the 12 Mar draft. The 4BR discriminates —
+the app has 140, which is the 2023 UAF; the draft used 139 — **pointing to carry-over**,
+which would make this a per-cycle-staleness bug rather than a parse bug.
+
+**One for the team's file, not ours:** the 2024 UAF's "Previous Year" 4BR electric reads
+$88.00 where the 2023 UAF concluded $89.00. Carrying $89 yields UA 159, not 158. The CA
+approved 158, so 158 governs; the $1 is theirs.
