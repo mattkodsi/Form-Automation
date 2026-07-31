@@ -92,9 +92,13 @@ const cp = require('child_process'), http = require('http'), fs = require('fs'),
 const SRC = path.join(__dirname, '..');            // app/full-mp
 const REPO = path.join(SRC, '..', '..');           // repo root
 const SESSION_DEFAULT = path.join(REPO, '_archive', 'corpus-cache', '.session.json');
+/* A property-year this rig cannot reproduce — the portfolio has no such
+   property, or the tracker cannot date that year. Distinct from Error so a
+   sweep can report it as skipped-and-counted rather than as a failure of the
+   app, and loudly either way: silence is what lets a thinning schedule read
+   as a clean run. */
+class SkipRun extends Error { constructor(m) { super(m); this.name = 'SkipRun'; this.skipped = true; } }
 const NAME_PREFIX = 'ZZ-CORPUS-';
-/* Opt-in, never a default: see the rail at the #bNewProperty click. */
-const ALLOW_CREATE_PROPERTY = process.argv.includes('--allow-create-property');
 
 /* ── the created-property ledger ────────────────────────────────────────────
    THE PREFIX IS NOT A HANDLE. A scratch property is created as
@@ -947,40 +951,70 @@ async function driveBoth(opts) {
     await c.load('first boot');
     log('booted  : the property gallery, signed in — not the sign-in screen');
 
-    /* ---- 2. a property, through #bNewProperty -------------------------- */
-    /* createProperty() shows one of two dialogs depending on whether the RA
-       master registry has rows (app.js:3492 vs 3494), and BOTH are #dlgIn +
-       #dlgOk, so one path drives either. */
-    /* FAIL CLOSED. This driver still CREATES a property, and since 2026-07-31
-       the account holds the real portfolio (249 properties imported from the
-       HAP tracker). Creating scratch properties there pollutes the portfolio,
-       and cleanup() no longer deletes properties precisely so that a tidy-up
-       can never destroy one — which means anything created here would LEAK.
-       The change that retires this rail is: find the existing property by
-       ra_property_code and add a cycle to it (see docs/lanes/rcs-audit-run.md,
-       driver change #1). Until then a sweep must not run. */
-    if (!ALLOW_CREATE_PROPERTY)
-      throw new Error(
-        'refusing to create a property: this account holds the real portfolio, and this driver has not yet been\n'
-        + '  changed to find the existing property by ra_property_code. Creating one here would leak, because\n'
-        + '  cleanup() deletes only cycles now. Pass --allow-create-property ONLY against a scratch account.');
-    await clickId(c, 'bNewProperty');
-    await waitFor(c, `!!document.getElementById('dlgIn')`, { timeout: 10000, label: 'the New-property dialog' });
-    await typeInto(c, 'dlgIn', runName);
-    await clickId(c, 'dlgOk');
+    /* ---- 2. the EXISTING portfolio property, found by ra_property_code ----
+       Until 2026-07-31 this created a scratch property. The account now holds
+       249 real portfolio records imported from the HAP tracker, so a run must
+       find the one it is auditing and add a package to it. Nothing here creates
+       a property, which is what lets cleanup() delete only cycles.
+
+       SkipRun, not Error: a property-year the portfolio or the tracker cannot
+       supply is not a failure of the app, it is a package this rig cannot
+       reproduce. It is reported and counted, never invented. */
+    if (!propertyCode) throw new SkipRun('this run carries no ra_property_code, so no portfolio property can be identified');
+    const openRes = await c.eval(`
+      const code = ${J(String(propertyCode))};
+      if (typeof mpdb === 'undefined' || !mpdb.propByRaCode) return { err: 'the data layer exposes no propByRaCode' };
+      const pid = mpdb.propByRaCode(code);
+      if (!pid) return { err: 'no portfolio property carries ra_property_code ' + code };
+      if (typeof openHapProperty === 'function') { await openHapProperty(code); }
+      else if (typeof openLauncher === 'function') { openLauncher(pid); }
+      else return { err: 'no way to open a property in this build' };
+      return { pid: pid };`);
+    if (openRes && openRes.err) throw new SkipRun(openRes.err);
     await waitFor(c, `(function(){const v=document.getElementById('viewLauncher');return !!(v&&v.style.display!=='none');})()`,
-      { timeout: 20000, label: 'the property page for ' + runName })
+      { timeout: 20000, label: 'the property page for ' + propertyCode })
       .catch(async e => { const t = await dismissBlockingModal(c); throw new Error(e.message + (t ? '\n  a modal was open: ' + t : '')); });
     await awaitQuiet(c);
-    log('created : ' + runName);
+    log('opened  : portfolio property ' + propertyCode + ' [' + String(openRes.pid).slice(0, 8) + '…]');
 
-    /* ---- 3. an RCS package, through #bNewCycle ------------------------- */
-    await clickId(c, 'bNewCycle');
+    /* ---- 3. the package for THIS year, off the tracker's own row ---------
+       Since main made the renewal schedule definitive, a package created from a
+       tracker row renders its program and effective date as LOCKED LINES — there
+       is no cyEff input to type into and the package takes the schedule's date.
+       So the row must be CHOSEN, because 16 property-years carry more than one.
+
+       targetFor() is the app's own selector: it returns the earliest startable
+       row on or after the date given. Asking it as at 1 January of the target
+       year therefore yields that year's row if one exists — and if what comes
+       back belongs to a different year, the tracker does not carry this one and
+       the run skips rather than invent a date. Reusing the app's selector is
+       deliberate; a second implementation here could disagree with the app and
+       we would be auditing the disagreement. */
+    const targetYear = cycleLabel ? String(cycleLabel).match(/\b(19|20)\d{2}\b/) : null;
+    if (!targetYear) throw new SkipRun('no four-digit year in the cycle label ' + J(String(cycleLabel)) + ', so no tracker row can be chosen');
+    const yr = targetYear[0];
+    const pick = await c.eval(`
+      const H = window.RCSHap, code = ${J(String(propertyCode))}, yr = ${J(yr)};
+      if (!H || !H.targetFor) return { err: 'the HAP tracker seam is not loaded in this build' };
+      const rows = (typeof hapAll === 'function') ? hapAll() : null;
+      if (!rows || !rows.length) return { err: 'the tracker carries no rows at all' };
+      const t = H.targetFor(rows, code, yr + '-01-01');
+      if (!t) return { err: 'the tracker carries no startable row for ' + code + ' in or after ' + yr };
+      const got = String(t.effective || '').slice(0, 4);
+      if (got !== yr) return { err: 'the tracker cannot date ' + code + ' ' + yr + ' — its nearest startable row is ' + t.effective };
+      return { effective: t.effective, program: (t.programs && t.programs[0]) || t.program || '', type: t.type || '', deadline: t.deadline || '' };`);
+    if (pick && pick.err) throw new SkipRun(pick.err);
+    log('tracker : ' + yr + ' row effective ' + pick.effective + (pick.program ? ' (' + pick.program + ')' : ''));
+
+    /* Opened WITH the tracker's prefill, which is what locks the date. Driving
+       #bNewCycle bare would open the unprefilled dialog and take a default. */
+    await c.eval(`newCycleDialog(${J({ program: pick.program || 'rcs', effective: pick.effective, type: pick.type, deadline: pick.deadline })}); return true;`);
     await waitFor(c, `!!document.getElementById('cyRCS')`, { timeout: 10000, label: 'the Start-new-package dialog' });
     await c.eval(`const r=document.getElementById('cyRCS');r.click();if(!r.checked)r.checked=true;return r.checked;`);
-    /* The effective date is left exactly as the dialog offers it. Typing one
-       writes rent_schedule.date_eff_source='custom', which means "the user
-       typed this" — an assertion about provenance nobody made. */
+    /* The date is never typed. With a tracker row it is a locked line and there
+       is no cyEff to type into; without one this run has already skipped. Typing
+       would write rent_schedule.date_eff_source='custom' — an assertion about
+       provenance nobody made. */
     await clickId(c, 'dlgOk');
     await waitFor(c, `(function(){const v=document.getElementById('viewForm');return !!(v&&v.style.display!=='none');})()`,
       { timeout: 30000, label: 'the package form' })
@@ -989,7 +1023,9 @@ async function driveBoth(opts) {
     const ids = await c.eval(EX_IDS);
     /* Written down BEFORE anything can rename it. This is the only moment at
        which the id and the fact that WE made it are both known for certain. */
-    recordCreated(ids.pid, runName);
+    /* Only the CYCLE. The property is a portfolio record this run did not
+       create and must never claim — putting its id in the created-ledger is
+       how a future cleanup would come to delete it. */
     recordCreatedCycle(ids.cid, ids.pid, runName);
     log('package : cycle ' + String(ids.cid).slice(0, 8) + '… on property ' + String(ids.pid).slice(0, 8) + '…');
 
@@ -1487,7 +1523,7 @@ module.exports = {
   driveBoth, driveOne, cleanup, loadSession, supaConfig,
   _resetMemo: () => _memo.clear(),
   pickCycle, pickStudy, findProperty, unzipStored, tierOf, diffSnaps,
-  readCreated, recordCreated, recordCreatedCycle, forgetCreated, CREATED_LOG,
+  readCreated, recordCreated, recordCreatedCycle, forgetCreated, CREATED_LOG, SkipRun,
   NAME_PREFIX, ORDERS,
   currentBranch, refuseOnMain, assertNotMain,
 };

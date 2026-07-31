@@ -18,7 +18,7 @@
    ocr.js would move billing somewhere nothing is counting; that is the failure
    these guard now. */
 const fs=require('fs'),path=require('path'),cp=require('child_process');
-const MIN_CHECKS=21;   // 2026-07-31: six portfolio-safety rails added - cleanup deletes
+const MIN_CHECKS=25;   // 2026-07-31: six portfolio-safety rails added - cleanup deletes
                        // CYCLES not properties, and the driver fails closed on create.
                        // 2026-07-30: check 5 became five real ones - the rail moved
                        // out of this file and into sweep.js/drive.js, so it can be DRIVEN.
@@ -179,10 +179,24 @@ const fakeBoth=(name,calls,delay)=>{
     && /CLEANUP DELETED A PROPERTY/.test(clean));
   T('recordCreatedCycle throws on a missing id - a cycle nothing recorded is a cycle nothing can clean up',
     (()=>{try{drive.recordCreatedCycle(null,'p','l');return false;}catch(e){return /cannot be cleaned up/.test(e.message);}})());
-  T('the driver refuses to CREATE a property unless explicitly allowed',
-    /if \(!ALLOW_CREATE_PROPERTY\)/.test(dsrc) && /refusing to create a property/.test(dsrc));
-  T('and that permission is opt-in on the command line, never a default',
-    /const ALLOW_CREATE_PROPERTY = process\.argv\.includes\('--allow-create-property'\)/.test(dsrc));
+  /* The fail-closed rail these two replace was an interim: it stopped the
+     driver creating a property. The driver now has no creation path at all,
+     which is the stronger guarantee, so the rail is gone and these assert the
+     thing it was standing in for. */
+  T('the driver never drives #bNewProperty - it has no property-creation path',
+    !/clickId\(c,\s*'bNewProperty'\)/.test(dsrc));
+  T('it finds the existing portfolio property by ra_property_code instead',
+    /mpdb\.propByRaCode\(code\)/.test(dsrc) && /no portfolio property carries ra_property_code/.test(dsrc));
+  T('the created-ledger records the CYCLE and never the portfolio property',
+    /recordCreatedCycle\(ids\.cid/.test(dsrc) && !/recordCreated\(ids\.pid/.test(dsrc));
+  T('a property-year the tracker cannot date is SKIPPED, not given an invented date',
+    /class SkipRun extends Error/.test(dsrc)
+    && /the tracker cannot date /.test(dsrc)
+    && /throw new SkipRun\(pick\.err\)/.test(dsrc));
+  T('and the tracker row is chosen by the app\'s own selector, not a second implementation',
+    /H\.targetFor\(rows, code, yr \+ '-01-01'\)/.test(dsrc));
+  T('the effective date is never typed - a tracker row locks it',
+    !/typeInto\(c,\s*'cyEff'/.test(dsrc));
 
   verdict();
 })();
