@@ -563,3 +563,64 @@ property folder does either. Whatever produced them is outside this corpus.
 This also distinguishes it from the Westwood and Lansing allowance cases, where the
 unexplained figure was a *utility allowance* and the governing worksheet was present.
 Here the governing document is present, is the source, and disagrees with itself.
+
+---
+
+## M6 · Off-screen Part B keys survive a completed save — 2 properties, MECHANISM
+
+Judged per **key**, not per violation. That distinction matters: three of the four
+violations name `property.name` *alongside* other keys, so discarding a violation because
+it mentions `property.name` would throw away the real keys travelling with it.
+
+**Classification of all 19 violation keys across the four driven packages:**
+
+| class | keys | judgement |
+|---|--:|---|
+| `property.name` vs a `ZZ-CORPUS` snapshot | 4 | **harness artifact** — confirmed |
+| **off-screen, still dirty after a settled save** | **6** | **real — phantom dirty** |
+| on-screen, still dirty after a settled save | 9 | needs diagnosis, see below |
+
+### The real one
+
+| property | key | form | snapshot | seed |
+|---|---|---|---|---|
+| Colonial Village | `partb.fuel.1` | `"E"` / `new` | `""` / **`database`** | `601113841` |
+| Colonial Village | `partb.fuel.4` | `"E"` / `new` | `""` / **`database`** | `601113841` |
+| Colonial Village | `partb.equipment.3` | `"1"` / `new` | `""` / `new` | `601113841` |
+| Colonial Village | `partb.equipment.4` | `"1"` / `new` | `""` / `new` | `601113841` |
+| Colonial Village | `partb.writein.s6.on` | `"1"` / `new` | `""` / `new` | `601113841` |
+| **Westwood Village 2020** | `partb.services.4` | `"1"` / `new` | `""` / `new` | `4248152120` |
+
+**Two properties, so this clears the two-property bar and is a mechanism, not a one-off.**
+Westwood Village 2020 is a different cycle, a different firm's study and a different
+seed, and it reproduces the same shape.
+
+**Every one of the six is a `partb.*` key** — equipment, fuel, services, write-in. Part B
+is the equipment/utilities/services block. Nothing outside Part B appears in the
+off-screen class. That is the mechanism's signature and the place to look.
+
+The two `partb.fuel` keys are the cleanest evidence: the snapshot's source is `database`,
+so the record genuinely holds `""`, while the form holds `"E"` as `new` after
+*"Update property profile"* has settled — and neither cell is on screen. This is the
+shape that makes the footer claim unsaved changes with nothing visible to save.
+
+**Undiagnosed.** Per the run order no repair is written against an undiagnosed row, and
+repairs are serialized on the Mac. Both seeds replay deterministically.
+
+### The nine on-screen keys — deliberately not called real yet
+
+All nine hold values the storm itself typed (`"$1,234"` into `appr.name`, `"1234"` into
+`property.addr_city`, `"129"` into `appr.addr_street` and `partb.writein.s6`). Dirt that
+is *visible* is a different and less pernicious thing than dirt that is not, and it may
+be legitimate — a field the save did not cover, or a control the storm left mid-edit.
+
+Five of them share a distinct sub-shape worth separating: Riverwood's `property.fha`,
+`property.s8`, `units.0.br` and `units.0.num_units` hold **`this-cycle`** values against a
+snapshot of `""` / `new`. A form holding real cycle data against an empty snapshot looks
+more like the snapshot being taken before the cycle finished loading than like a failed
+save. **Recorded as `undiagnosed`, not counted as app defects.**
+
+### Storm coverage note
+
+Northcross 2024 ran the storm and produced **zero** violations — so the storm is
+discriminating, not merely reporting noise on every package.
