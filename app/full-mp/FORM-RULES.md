@@ -19,12 +19,22 @@ data. **After one "Update property profile" every key in the form has been saved
 of them blank.** Assume that state when you reason about anything; it is the state
 that broke the address revert, the source pointers, and the Escape path.
 
-| Colour | rgb | Asserts |
-|---|---|---|
-| blue | `232,240,254` | on file — the record holds this |
-| green | `233,245,242` | pulled or parsed this package, not saved yet |
-| orange | `251,241,230` | overridden — differs from the record |
-| grey | `246,247,249` | new — nothing on file |
+**The state is a 3px rule down the cell's left edge, not a fill.** Every cell sits on
+the same inset surface (`--sunk`, `238,241,245`); what differs is the rule. Two states
+keep a wash as well, because those are the two that want your hands.
+
+| Rule | rgb | Wash | Asserts |
+|---|---|---|---|
+| blue | `37,99,235` | none — `--sunk` | on file — the record holds this |
+| teal | `15,118,110` | `233,245,242` | pulled or parsed this package, not saved yet |
+| amber | `180,83,9` | `251,241,230` | overridden — differs from the record |
+| grey | `100,116,139` | none — `--sunk` | new — nothing on file |
+
+The rule colours are the contract; `CLR` in `app.js` holds them, twinned with the
+`--prov-*-fill` tokens in the `#viewForm` block of `shell.head.html` — change one and
+you change both. `test_browser.js` reads `borderLeftColor` off `[data-box]`, so the rule
+is what is asserted, and it must survive focus: a focus ring that paints over the left
+edge takes away the one answer you are not allowed to remove while someone is typing.
 
 Colour answers *is this saved?*; the badge answers *where did it come from?* They are
 orthogonal and a HUD filing needs both. That is why a source-backed cell keeps a

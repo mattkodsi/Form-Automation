@@ -107,7 +107,14 @@ const store=makeStore(bridge,ALL_KEYS);
 let form=store.emptyForm(); let UNITS=[0]; let NONREV=[]; let NS8=[]; let PRINCIPALS=[0]; let _undoStack=[]; let _undoNR=[]; let _undoLI=[]; let _undoPR=[]; let _pending=null,_refocusSel=null,_pendingSnap=null; let _rcsUpload=null; let _rcsBusy=null; let _rsUpload=null; let _rsArm=false;let _rsBusy=null;   // while set, the upload row shows what is being read
 let _dlgEnter=null;                  // while a dialog is open, Enter presses its primary button
 
-const CLR={database:['#2563eb','#e8f0fe','On file'],'this-cycle':['#0f766e','#e9f5f2','API / this package'],overridden:['#b45309','#fbf1e6','Overridden'],'auto-calculated':['#2563eb','#e8f0fe','Auto-calc'],'new':['#64748b','#f6f7f9','New']};
+/* [hue, fill, label]. The HUES are a contract with tests behind them and do not
+   move. The FILLS did: on file and new now sit on the same inset surface every
+   cell sits on (--sunk), and only the two states that want your hands still
+   carry a wash. What answers "is this saved?" is the 3px rule down the cell's
+   left edge — the same marker the home page uses for urgency, at cell scale.
+   These values are twinned with the --prov-*-fill tokens in the #viewForm block
+   of shell.head.html. Change one, change both. */
+const CLR={database:['#2563eb','#eef1f5','On file'],'this-cycle':['#0f766e','#e9f5f2','API / this package'],overridden:['#b45309','#fbf1e6','Overridden'],'auto-calculated':['#2563eb','#eef1f5','Auto-calc'],'new':['#64748b','#eef1f5','New']};
 /* Dates are stamped in New York, not UTC. toISOString() rolls over at 7 or 8pm
    Eastern, so a package generated in the evening was dated tomorrow — and the
    tenant notice's date is what starts the 30-day comment clock. */
@@ -122,7 +129,7 @@ function sK(n){const a=Math.abs(n),sg=(n<0?'-$':'+$');return a>=1e6?sg+(a/1e6).t
 /* A fall is not good news dressed in green. Sign drives the color on every lift
    figure — teal for a rise, red for a fall, grey for exactly nothing — and the
    caption follows it, so a decrease is never captioned "increase". */
-const liftClr=n=>n>0?'#0f766e':(n<0?'#b91c1c':'#64748b');
+const liftClr=n=>n>0?'#2f6a45':(n<0?'#9c2b18':'#636c77');
 const liftWord=n=>n<0?'decrease':'increase';
 /* ---- display formatting -------------------------------------------------
    Every figure this product shows is formatted at the point of display; the
@@ -794,7 +801,7 @@ function capNote(){const c=rsCapacity();if(!c.msgs.length)return '';return '<div
 function refreshFlags(){document.querySelectorAll('[data-pill]').forEach(p=>{const n=+p.getAttribute('data-pill');const st=sectionStatus(n);p.className='pill '+(st==='warn'?'warn':'ok');p.textContent=st==='warn'?'review':'confirmed';});renderRail();renderAttention();}
 function unitCard(i,pos){const trash=UNITS.length>1?`<button class="trash" data-delunit="${i}" title="Delete this unit type">✕</button>`:'';
   const _c=numf(get('units.'+i+'.current')),_p=numf(get('units.'+i+'.proposed'));const _d=_p-_c,_pc=_c>0?Math.round(_d/_c*100):0;
-  const metric=(_c>0&&_p>0)?`<span class="ucmetric" data-metric="${i}" style="color:${_d>=0?'#166534':'#b91c1c'}">${sMoney(_d)} · ${sPct(_pc)}</span>`:`<span class="ucmetric" data-metric="${i}"></span>`;
+  const metric=(_c>0&&_p>0)?`<span class="ucmetric" data-metric="${i}" style="color:${_d>=0?'#2f6a45':'#9c2b18'}">${sMoney(_d)} · ${sPct(_pc)}</span>`:`<span class="ucmetric" data-metric="${i}"></span>`;
   /* The compact .ovic pair inside the cell squeezed the bed/bath dropdowns from
      96px to 70px the moment it appeared, so a row changed shape once edited and
      "2BR" collided with its own clear icon. Roomy cells put save/revert in the
@@ -2872,7 +2879,7 @@ function _renderCommand(){const a=analysis();const pCur=a.ceil>0?clamp(a.cg/a.ce
   const uaHave=UNITS.some(i=>numf(get('units.'+i+'.ua_exec'))>0||numf(get('units.'+i+'.ua_rcs'))>0||numf(get('units.'+i+'.ua_custom'))>0);
   const ua=!uaHave?['warn','not entered — '+secRef(6)]:(conf===0?['ok',(hasProg('rcs')&&UNITS.some(i=>numf(get('units.'+i+'.ua_exec'))>0&&numf(get('units.'+i+'.ua_rcs'))>0))?'exec & RCS agree':'as entered']:(unres===0?['ok','UA conflicts resolved per unit type']:['warn',unres+' of '+conf+' unit type'+(conf>1?'s':'')+' need'+(unres===1?'s':'')+' a UA source']));
   const uaStrip=()=>{const U=uafAnalysis();let dMo=0,types=0;UNITS.forEach(i=>{const r=uafRow(i);if(r.curSum>0&&r.newSum>0){types++;dMo+=numf(get('units.'+i+'.num_units'))*(r.newSum-r.curSum);}});
-    return `<div class="lift"><b>UTILITY ALLOWANCE CHANGE</b><div class="liftnums"><span><b class="teal">${types}</b><i>unit type${types===1?'':'s'}</i></span><span><b style="color:${liftClr(dMo)}">${sMoney(dMo)}</b><i>UA /mo across units</i></span><span><b style="color:${U.dec.length?'#b45309':'#166534'}">${U.dec.length}</b><i>decrease${U.dec.length===1?'':'s'}</i></span></div></div>`;};
+    return `<div class="lift"><b>UTILITY ALLOWANCE CHANGE</b><div class="liftnums"><span><b class="teal">${types}</b><i>unit type${types===1?'':'s'}</i></span><span><b style="color:${liftClr(dMo)}">${sMoney(dMo)}</b><i>UA /mo across units</i></span><span><b style="color:${U.dec.length?'#b45309':'#2f6a45'}">${U.dec.length}</b><i>decrease${U.dec.length===1?'':'s'}</i></span></div></div>`;};
   let card1;
   if(hasProg('rcs')){
     /* With no proposed rent on any type, a.pg is nothing but utility allowance, so
@@ -2890,9 +2897,9 @@ function _renderCommand(){const a=analysis();const pCur=a.ceil>0?clamp(a.cg/a.ce
     card1=`<div class="ccard afford"><div class="cck">AFFORDABILITY PROOF</div><div class="cctitle">${a.ceil>0?(priced?('Proposed rents '+(PASS?'clear':'exceed')+' the 150% SAFMR ceiling'+(partial?' for the '+a.tPr+' of '+a.tTot+' unit types priced so far':'')):'Enter the proposed rents to run the 150% test'):(a.countsMissing&&a.safmrHave?'Add the unit counts to run the 150% test':'Enter or pull a SAFMR to run the 150% test')}</div><div class="ccsub">Monthly gross rent potential (rent + UA)</div>
      <div class="afrow"><div class="afbar">
         <div class="gauge">${gaugeSegs(priced?gCur:pCur,priced?gPro:0)}<div class="oend"></div></div>
-        <div class="glabels"><div class="gl l"><b style="color:#2f7d57">${money(priced?CG:a.cg)}</b><i>current</i></div><div class="gl c"><b style="color:${priced?'#47a377':'#94a3b8'}">${priced?money(PG):'—'}</b><i>proposed</i></div><div class="gl r"><b>${(priced?CEIL:a.ceil)>0?money(priced?CEIL:a.ceil):'—'}</b><i>150% ceiling · HUD SAFMR</i>${partial?`<i class="amber">⚠ ${a.tTot-a.tPr} unit type${a.tTot-a.tPr===1?'':'s'} not priced yet</i>`:''}${a.safmrConflict?`<i class="amber">⚠ RCS differs on ≥1 type</i>`:(a.safmrMissing?`<i class="amber">⚠ SAFMR needed</i>`:(a.countsMissing&&a.safmrHave?`<i class="amber">⚠ unit counts needed</i>`:''))}</div></div>
+        <div class="glabels"><div class="gl l"><b style="color:#2f6a45">${money(priced?CG:a.cg)}</b><i>current</i></div><div class="gl c"><b style="color:${priced?'#5c9c78':'#636c77'}">${priced?money(PG):'—'}</b><i>proposed</i></div><div class="gl r"><b>${(priced?CEIL:a.ceil)>0?money(priced?CEIL:a.ceil):'—'}</b><i>150% ceiling · HUD SAFMR</i>${partial?`<i class="amber">⚠ ${a.tTot-a.tPr} unit type${a.tTot-a.tPr===1?'':'s'} not priced yet</i>`:''}${a.safmrConflict?`<i class="amber">⚠ RCS differs on ≥1 type</i>`:(a.safmrMissing?`<i class="amber">⚠ SAFMR needed</i>`:(a.countsMissing&&a.safmrHave?`<i class="amber">⚠ unit counts needed</i>`:''))}</div></div>
        </div>
-       ${(a.ceil>0&&priced)?`<div class="passbox" style="background:${PASS?'#dcfce7':'#fee2e2'};color:${PASS?'#166534':'#b91c1c'};border-color:${PASS?'#86efac':'#fca5a5'}">${PASS?'✓ PASS':'✗ OVER'}<small>${money(Math.abs(HEAD))} ${PASS?'headroom':'over'}${partial?' · so far':''}</small></div>`:`<div class="passbox" style="background:#f1f4f9;color:#64748b;border-color:#d7deea">${a.ceil>0?'Proposed rents needed':(a.countsMissing&&a.safmrHave?'Unit counts needed':'SAFMR needed')}<small>${a.ceil>0?('enter them in '+secRef(6)):(a.countsMissing&&a.safmrHave?('add the number of units in '+secRef(6)):(hudBlockerShort()||'enter or pull from HUD'))}</small></div>`}</div>
+       ${(a.ceil>0&&priced)?`<div class="passbox ${PASS?'pass':'over'}" style="background:${PASS?'#e7efea':'#f7ece8'};color:${PASS?'#2f6a45':'#9c2b18'};border-color:${PASS?'#a9c4b4':'#d9ab9e'}">${PASS?'✓ PASS':'✗ OVER'}<small>${money(Math.abs(HEAD))} ${PASS?'headroom':'over'}${partial?' · so far':''}</small></div>`:`<div class="passbox wait" style="background:#eef1f5;color:#556270;border-color:#c2cbd6">${a.ceil>0?'Proposed rents needed':(a.countsMissing&&a.safmrHave?'Unit counts needed':'SAFMR needed')}<small>${a.ceil>0?('enter them in '+secRef(6)):(a.countsMissing&&a.safmrHave?('add the number of units in '+secRef(6)):(hudBlockerShort()||'enter or pull from HUD'))}</small></div>`}</div>
      <div class="lift"><b>RCS increase over the current rent roll</b>${!priced?`<div class="liftnote">The lift appears once proposed rents are entered in ${secRef(6)}.</div>`:`<div class="liftnums"><span><b style="color:${liftClr(a.pct)}">${sPct(a.pct)}</b><i>${liftWord(a.pct)}</i></span><span><b style="color:${liftClr(a.perUnit)}">${sMoney(a.perUnit)}</b><i>per unit</i></span><span><b style="color:${liftClr(a.dMo)}">${sMoney(a.dMo)}</b><i>per month</i></span><span><b style="color:${liftClr(a.dYr)}">${sK(a.dYr)}</b><i>per year</i></span></div>`}</div>
    </div>`;
   } else {
@@ -3021,7 +3028,7 @@ function renderRail(){const vis=visibleSections();const st={};vis.forEach(n=>st[
   el('rail').innerHTML='<div class="railbar nofx" id="railbar" aria-hidden="true"></div>'+vis.map(n=>`<button type="button" class="railitem" data-rsec="${n}"><span class="ri ${st[n]==='warn'?'warn':'ok'}">${st[n]==='warn'?'!':'✓'}</span><span class="rname">${_secPos[n]||n}. ${SECTION_TITLES[n]}</span></button>`).join('');
   if(_afs){const _r=document.querySelector('#rail .railitem[data-rsec="'+_afs+'"]');if(_r&&_r.focus)_r.focus({preventScroll:true});}
   railApply();const _rb=el('railbar');if(_rb&&window.requestAnimationFrame)requestAnimationFrame(()=>{if(_rb.classList)_rb.classList.remove('nofx');});
-  el('railprog').innerHTML=`<b>${conf} of ${vis.length} confirmed</b>${need?`<div class="warnt">${need} section${need===1?"":"s"} still to confirm</div>`:''}<div class="track sm"><div style="width:${conf/vis.length*100}%;background:#166534"></div></div>`;
+  el('railprog').innerHTML=`<b>${conf} of ${vis.length} confirmed</b>${need?`<div class="warnt">${need} section${need===1?"":"s"} still to confirm</div>`:''}<div class="track sm"><div style="width:${conf/vis.length*100}%;background:#1f5480"></div></div>`;
   const fl=attnFlags();el('railattn').style.display=fl.length?'block':'none';el('railattn').innerHTML=fl.length?`⚠ <b>${fl.length} thing${fl.length===1?"":"s"} to look at</b>${fl.map(x=>`<div class="sub" style="margin-top:6px">${x}</div>`).join('')}`:'';}
 function renderAttention(){/* the section rail carries the attention list; the old top banner duplicated it */}
 
@@ -3170,7 +3177,7 @@ window.addEventListener('scroll',railSync,{passive:true});
 window.addEventListener('resize',()=>{railObserve();railSync();});
 
 function renderBar(){const a=analysis();const conf=UNITS.filter(uaConflict).length,unres=UNITS.filter(uaUnresolved).length;const uaOk=conf===0||unres===0;
- const bc=(st,l)=>{const ic=st==='warn'?'⚠':(st==='info'?'ⓘ':'✓');const c=st==='warn'?'#b45309':(st==='info'?'#2563eb':'#166534');return `<span class="bchip ${st}" title="${l}"><b style="color:${c}">${ic}</b> <span class="bcl">${l}</span></span>`;};
+ const bc=(st,l)=>{const ic=st==='warn'?'⚠':(st==='info'?'ⓘ':'✓');const c=st==='warn'?'#b45309':(st==='info'?'#2563eb':'#2f6a45');return `<span class="bchip ${st}" title="${l}"><b style="color:${c}">${ic}</b> <span class="bcl">${l}</span></span>`;};
  const chks=`${bc(hasReal('property.name')?'ok':'warn','Name')}${bc(hasReal('property.s8')?'ok':'warn','Section 8 #')}${bc(hasReal('sig.name')?'ok':'warn','Signatory')}${bc(uaOk?'ok':'warn','UA')}`;
  if(!hasProg('rcs')){
    const C=ocafCalc();let dMo=0;UNITS.forEach(i=>{const n=numf(get('units.'+i+'.num_units')),cur=numf(get('units.'+i+'.current'));if(n&&cur&&C.R>0)dMo+=n*(Math.round(cur*C.R)-cur);});
@@ -3179,7 +3186,7 @@ function renderBar(){const a=analysis();const conf=UNITS.filter(uaConflict).leng
      +(hasProg('uaf')?((hasProg('ocaf')?' · ':'')+'<b>'+sMoney(uaMo)+'</b> UA /mo'+(U.dec.length?' · <b style="color:#b45309">'+U.dec.length+' UA decrease'+(U.dec.length>1?'s':'')+'</b>':'')):'');
    const ready=hasProg('ocaf')?(C.R>0):(U.rows?U.rows.length>0:false);
    const readyTxt=hasProg('ocaf')?(C.R>0?'✓ worksheet ready':'worksheet incomplete'):((uafAnalysis().any)?'✓ UA computed':'UA components needed');
-   el('ccbar').innerHTML=`<div class="bl"><div class="mn">${left}</div></div><div class="bchks">${chks}</div><div class="bpass" style="color:${ready?'#166534':'#64748b'}">${readyTxt}</div>`;
+   el('ccbar').innerHTML=`<div class="bl"><div class="mn">${left}</div></div><div class="bchks">${chks}</div><div class="bpass" style="color:${ready?'#2f6a45':'#556270'}">${readyTxt}</div>`;
    return;
  }
  const pCur=a.ceil>0?clamp(a.cg/a.ceil*100):0,pPro=a.ceil>0?clamp(a.pg/a.ceil*100):0;
@@ -3187,7 +3194,7 @@ function renderBar(){const a=analysis();const conf=UNITS.filter(uaConflict).leng
  const CG=partial?a.cgC:a.cg,PG=partial?a.pgC:a.pg,CEIL=partial?a.ceilC:a.ceil;
  const PASS=CEIL>0&&PG<CEIL,HEAD=CEIL-PG;
  const gCur=CEIL>0?clamp(CG/CEIL*100):0,gPro=CEIL>0?clamp(PG/CEIL*100):0;
- el('ccbar').innerHTML=`<div class="bl"><div class="minigauge">${gaugeSegs(priced?gCur:pCur,priced?gPro:0)}<div class="oend"></div></div><div class="mn"><b style="color:#2f7d57">${money(priced?CG:a.cg)}</b> current · <b style="color:${priced?'#47a377':'#94a3b8'}">${priced?money(PG):'—'}</b> proposed · <b>${(priced?CEIL:a.ceil)>0?money(priced?CEIL:a.ceil):'—'}</b> ceiling${priced?' · <b style="color:'+liftClr(a.pct)+'">'+sPct(a.pct)+'</b> RCS '+(a.pct===0?'change':liftWord(a.pct)):''}${partial?' · <b style="color:#b45309">'+(a.tTot-a.tPr)+' type'+(a.tTot-a.tPr===1?'':'s')+' unpriced</b>':''}</div><div class="bpass" style="color:${(a.ceil>0&&priced)?(PASS?'#166534':'#b91c1c'):'#64748b'}">${(a.ceil>0&&priced)?((PASS?'✓ PASS':'✗ OVER')+' · '+money(Math.abs(HEAD))):(a.ceil>0?'proposed rents needed':'SAFMR needed')}</div></div><div class="bchks">${chks}${bc(a.safmrMissing||a.safmrOver?'warn':(a.safmrConflict?'info':'ok'),'SAFMR')}</div>`;}
+ el('ccbar').innerHTML=`<div class="bl"><div class="minigauge">${gaugeSegs(priced?gCur:pCur,priced?gPro:0)}<div class="oend"></div></div><div class="mn"><b style="color:#2f6a45">${money(priced?CG:a.cg)}</b> current · <b style="color:${priced?'#5c9c78':'#636c77'}">${priced?money(PG):'—'}</b> proposed · <b>${(priced?CEIL:a.ceil)>0?money(priced?CEIL:a.ceil):'—'}</b> ceiling${priced?' · <b style="color:'+liftClr(a.pct)+'">'+sPct(a.pct)+'</b> RCS '+(a.pct===0?'change':liftWord(a.pct)):''}${partial?' · <b style="color:#b45309">'+(a.tTot-a.tPr)+' type'+(a.tTot-a.tPr===1?'':'s')+' unpriced</b>':''}</div><div class="bpass" style="color:${(a.ceil>0&&priced)?(PASS?'#166534':'#b91c1c'):'#64748b'}">${(a.ceil>0&&priced)?((PASS?'✓ PASS':'✗ OVER')+' · '+money(Math.abs(HEAD))):(a.ceil>0?'proposed rents needed':'SAFMR needed')}</div></div><div class="bchks">${chks}${bc(a.safmrMissing||a.safmrOver?'warn':(a.safmrConflict?'info':'ok'),'SAFMR')}</div>`;}
 /* A "reviewed" flag exists only to silence a warning about a conflict. When the
    conflict itself goes away — a figure retyped, a source switched, a row cleared —
    the flag is meaningless, and it was the last thing on the form still differing

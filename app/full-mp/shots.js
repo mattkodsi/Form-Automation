@@ -215,19 +215,19 @@ async function sweep(c){
   await sleep(300);
   measured.prov_new=await paint();
   await shotEl(c,'20-prov-new','Provenance: NEW (typed, never saved)',
-    'CLR.new \u2014 grey #64748b bar on #f6f7f9. Typed into, never saved.',SEL,30);
+    'CLR.new \u2014 a grey #64748b rule on the inset surface every cell sits on. Typed into, never saved.',SEL,30);
 
   await c.eval(`await window.__t.__saveField('${K}');window.__t.__renderBody();return 1`);
   await sleep(300);
   measured.prov_database=await paint();
   await shotEl(c,'21-prov-database','Provenance: DATABASE (on file)',
-    'CLR.database \u2014 blue #2563eb bar on #e8f0fe. The same cell, after a real save.',SEL,30);
+    'CLR.database \u2014 a blue #2563eb rule, same surface. The same cell, after a real save: the RULE is the whole of what changed.',SEL,30);
 
   await c.eval(`window.__t.__editCell('${K}','Cushman & Wakefield');window.__t.__renderBody();return 1`);
   await sleep(300);
   measured.prov_overridden=await paint();
   await shotEl(c,'22-prov-overridden','Provenance: OVERRIDDEN',
-    'CLR.overridden \u2014 amber #b45309 on #fbf1e6. The saved value, typed over.',SEL,30);
+    'CLR.overridden \u2014 an amber #b45309 rule AND a wash (#fbf1e6). One of the two states that wants your hands.',SEL,30);
 
   /* this-cycle: fill the form from the captured Azure reading of White Oak's
      executed schedule \u2014 the same fixture test_browser.js drives \u2014 and take the
@@ -242,11 +242,11 @@ async function sweep(c){
     return {key:k,src:'this-cycle',bg:cs.backgroundColor,bar:cs.borderLeftColor,sel:'[data-box="'+k+'"]'};`);
   measured.prov_this_cycle=tc;
   if(tc)await shotEl(c,'23-prov-this-cycle','Provenance: THIS-CYCLE ('+tc.key+')',
-    'CLR["this-cycle"] \u2014 teal #0f766e on #e9f5f2. Filled from the uploaded rent schedule, unsaved.',tc.sel,30);
+    'CLR["this-cycle"] \u2014 a teal #0f766e rule AND a wash (#e9f5f2). Filled from the uploaded rent schedule, unsaved.',tc.sel,30);
   else console.log('  \u26a0 no this-cycle cell after the parse');
 
   await shotEl(c,'25-source-key-swatches','The SOURCE KEY legend, magnified',
-    'Four swatches for five states. Look for: whether any two are distinguishable, and what is missing.',
+    'Four rules for five states, drawn the way the cells now draw them. Look for: whether any two are distinguishable, and what is missing.',
     '#viewForm .rail .key',6);
 
   /* ═══ INTERACTIVE STATES ═══════════════════════════════════════════ */

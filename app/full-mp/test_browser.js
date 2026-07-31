@@ -3012,9 +3012,13 @@ const FULL=process.argv.includes('--full');
        tells you less than a suite that says which line is red. */
     const con=await c.eval('const r=window.__k.ring();const s=r&&r.owner&&r.owner.shadow;'
       +'const m=s&&s.match(/rgba?\\([^)]*\\)/);if(!m)return [];const col=m[0];'
-      +'return ["#e8f0fe","#e9f5f2","#fbf1e6","#f6f7f9","#ffffff"].map(h=>{const n=parseInt(h.slice(1),16);'
+      +'return ["#eef1f5","#e9f5f2","#fbf1e6","#ffffff","#d8dde4"].map(h=>{const n=parseInt(h.slice(1),16);'
       +'return window.__k.contrast(col,"rgb("+[(n>>16)&255,(n>>8)&255,n&255].join(",")+")");});');
-    T('and reads against all five provenance backgrounds'
+    /* The five surfaces a ring can land on since the provenance fill became a
+       rule: the inset cell (--sunk, which is now what "on file" and "new" both
+       sit on), the two washes that survive, the card behind them, and the paper
+       behind that. */
+    T('and reads against every surface a cell can sit on'
       +(con.length?' ('+con.join(', ')+':1)':' \u2014 but there is no ring to measure'),
       con.length===5&&Math.min.apply(null,con)>=3);
 
