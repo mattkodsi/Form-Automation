@@ -1,5 +1,5 @@
 {
-  "root": "/Users/matthewkodsi/Library/CloudStorage/GoogleDrive-mfkodsi@gmail.com/My Drive/RCS Package Samples",
+  "root": "/root/corpus",
   "properties": [
     {
       "code": "2640001",
@@ -6684,6 +6684,1916 @@
           "problems": [
             "top two studies are within one rank; the choice is a coin toss"
           ],
+          "notes": [],
+          "wave": 2
+        }
+      ]
+    },
+    {
+      "code": null,
+      "name": "Cherry Garden - Section 8",
+      "folder": "Cherry Garden - Section 8",
+      "fileCount": 115,
+      "cycles": [
+        {
+          "cycleLabel": "2018",
+          "year": 2018,
+          "studies": [
+            {
+              "file": "2018/1 - Oak Park Apartments Rent Study, 3-26-2018, John E. Doyle, MAI.pdf",
+              "bytes": 6064687,
+              "rank": -5.998477902322,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            },
+            {
+              "file": "2018/Oak Park Apartments Rent Study, 4-9-2018, John E. Doyle, MAI.pdf",
+              "bytes": 6066909,
+              "rank": -9.998476693355,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            }
+          ],
+          "docs": {
+            "coverLetter": [
+              {
+                "file": "2018/2 - RCS Owner Cover Letter - Oak Park.doc",
+                "bytes": 30208
+              },
+              {
+                "file": "2018/2 - RCS Owner Cover Letter - Oak Park.pdf",
+                "bytes": 53872
+              }
+            ],
+            "rentSchedule": [
+              {
+                "file": "2018/5 - Draft Rent Schedule.pdf",
+                "bytes": 1400800
+              },
+              {
+                "file": "2018/Oak Park 2018 Rent Schedule.pdf",
+                "bytes": 160822
+              }
+            ],
+            "combinedPackage": [
+              {
+                "file": "2018/Oak Park 5th Year Adjustment Request RCS submission 3-26-2018.pdf",
+                "bytes": 6447696
+              }
+            ]
+          },
+          "executedRs": [],
+          "priorRs": "2017/Oak Park Rent Schedule 2017.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 0,
+          "priorRsTried": [
+            "year-1 folder(2)",
+            "year-1 in the name(2)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2018/1 - Oak Park Apartments Rent Study, 3-26-2018, John E. Doyle, MAI.pdf",
+          "hasCombined": true,
+          "problems": [
+            "study on disk but the reader returns nothing from it -- the app will face the same wall, which is an audit observation, not a skip"
+          ],
+          "notes": [
+            "prior RS filename carries no signed/executed marker"
+          ],
+          "wave": 1
+        },
+        {
+          "cycleLabel": "(no cycle folder)",
+          "year": null,
+          "studies": [
+            {
+              "file": "Related Oak Park RCS Report 4-11-13.pdf",
+              "bytes": 4896546,
+              "rank": -9.998634297086,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            }
+          ],
+          "docs": {},
+          "executedRs": [],
+          "priorRs": null,
+          "priorRsRule": null,
+          "priorRsRank": null,
+          "priorRsTried": [
+            "year-1 folder(0)",
+            "year-1 in the name(0)",
+            "newest before year 0(0)"
+          ],
+          "chosenStudy": "Related Oak Park RCS Report 4-11-13.pdf",
+          "hasCombined": false,
+          "problems": [
+            "study on disk but the reader returns nothing from it -- the app will face the same wall, which is an audit observation, not a skip",
+            "no prior rent schedule found; tried year-1 folder(0), year-1 in the name(0), newest before year 0(0)",
+            "no filed coverLetter, submittalLetter, checklist, tenantNotice"
+          ],
+          "notes": [],
+          "wave": 2
+        }
+      ]
+    },
+    {
+      "code": null,
+      "name": "Colonial Village - Section 8",
+      "folder": "Colonial Village - Section 8",
+      "fileCount": 53,
+      "cycles": [
+        {
+          "cycleLabel": "2026 (RCS)",
+          "year": 2026,
+          "studies": [
+            {
+              "file": "2026 (RCS)/RCS Package/04. Colonial Village - RCS.pdf",
+              "bytes": 3970935,
+              "rank": 0.001782845091,
+              "firm": "belfry",
+              "s8": "OH10M000236",
+              "name": "Colonial Village",
+              "units": 2,
+              "pagesRead": 2,
+              "pageCount": 52
+            },
+            {
+              "file": "2026 (RCS)/RCS Package/RCS - 26-124 - Colonial Village, 3641 Irving Street, Cincinnati, OH.pdf",
+              "bytes": 3970935,
+              "rank": 0.001782845091,
+              "firm": "belfry",
+              "s8": "OH10M000236",
+              "name": "Colonial Village",
+              "units": 2,
+              "pagesRead": 2,
+              "pageCount": 52
+            }
+          ],
+          "docs": {
+            "coverLetter": [
+              {
+                "file": "2026 (RCS)/RCS Package/01. Colonial Village - Cover Letter (signed).pdf",
+                "bytes": 348805
+              },
+              {
+                "file": "2026 (RCS)/RCS Package/01. Colonial Village - Cover Letter.doc",
+                "bytes": 105984
+              },
+              {
+                "file": "2026 (RCS)/RCS Package/02. Colonial Village - RCS Owner Cover Letter (signed).pdf",
+                "bytes": 220522
+              },
+              {
+                "file": "2026 (RCS)/RCS Package/02. Colonial Village - RCS Owner Cover Letter.doc",
+                "bytes": 32768
+              }
+            ],
+            "checklist": [
+              {
+                "file": "2026 (RCS)/RCS Package/03. Colonial Village - RCS Owners Checklist.pdf",
+                "bytes": 469259
+              },
+              {
+                "file": "2026 (RCS)/RCS Package/Owners Checklist v2 (signed).pdf",
+                "bytes": 311653
+              },
+              {
+                "file": "2026 (RCS)/RCS Package/Owners Checklist v2 (unsigned).pdf",
+                "bytes": 437741
+              }
+            ],
+            "rentSchedule": [
+              {
+                "file": "2026 (RCS)/RCS Package/05 - Colonial Village - Draft Rent Schedule.pdf",
+                "bytes": 598765
+              }
+            ],
+            "analysisXlsx": [
+              {
+                "file": "2026 (RCS)/RCS Package/RCS Analysis - Colonial Village.xlsx",
+                "bytes": 17157
+              }
+            ],
+            "tenantNotice": [
+              {
+                "file": "2026 (RCS)/RCS Package/White Oak - RCS Tenant Notice.docx",
+                "bytes": 29276
+              },
+              {
+                "file": "2026 (RCS)/RCS Package/White Oak - RCS Tenant Notice.pdf",
+                "bytes": 177817
+              }
+            ]
+          },
+          "executedRs": [],
+          "priorRs": "2025/White Oak Townhomes - Executed RS - FY2025.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 6,
+          "priorRsTried": [
+            "year-1 folder(3)",
+            "year-1 in the name(3)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2026 (RCS)/RCS Package/04. Colonial Village - RCS.pdf",
+          "hasCombined": false,
+          "problems": [
+            "no filed submittalLetter",
+            "top two studies are within one rank; the choice is a coin toss"
+          ],
+          "notes": [],
+          "wave": 1
+        }
+      ]
+    },
+    {
+      "code": null,
+      "name": "Crossroads of East Ravenswood - Section 8",
+      "folder": "Crossroads of East Ravenswood - Section 8",
+      "fileCount": 112,
+      "cycles": [
+        {
+          "cycleLabel": "2026 (RCS)",
+          "year": 2026,
+          "studies": [
+            {
+              "file": "2026 (RCS)/Revised RCS - Crossroads of East Ravenswood, Chicago, IL.pdf",
+              "bytes": 8947740,
+              "rank": 2.001777930126,
+              "firm": "cornerstone",
+              "s8": "IL060048014",
+              "name": "Crossroads of East Ravenswood",
+              "units": 4,
+              "pagesRead": 4,
+              "pageCount": 115
+            },
+            {
+              "file": "2026 (RCS)/Crossroads_of_East_Ravenswood_-_RCS_Package.pdf",
+              "bytes": 9681585,
+              "rank": 0.001776450922,
+              "firm": "cornerstone",
+              "s8": "IL060048014",
+              "name": "Crossroads of East Ravenswood",
+              "units": 4,
+              "pagesRead": 6,
+              "pageCount": 119
+            },
+            {
+              "file": "2026 (RCS)/RCS/RCS - Crossroads of East Ravenswood, Chicago, IL.pdf",
+              "bytes": 8963603,
+              "rank": 0.001776106879,
+              "firm": "cornerstone",
+              "s8": "IL060048014",
+              "name": "Crossroads of East Ravenswood",
+              "units": 4,
+              "pagesRead": 4,
+              "pageCount": 115
+            },
+            {
+              "file": "2026 (RCS)/RCS Package/04. RCS - Crossroads of East Ravenswood, Chicago, IL.pdf",
+              "bytes": 8963603,
+              "rank": 0.001776106879,
+              "firm": "cornerstone",
+              "s8": "IL060048014",
+              "name": "Crossroads of East Ravenswood",
+              "units": 4,
+              "pagesRead": 4,
+              "pageCount": 115
+            },
+            {
+              "file": "2026 (RCS)/Grids/Cornerstone Rent Grids - Crossroads of East Ravenswood Chicago IL.pdf",
+              "bytes": 3494405,
+              "rank": 0.001771952128,
+              "firm": "cornerstone",
+              "s8": null,
+              "name": "Crossroads of East Ravenswood",
+              "units": 4,
+              "pagesRead": 8,
+              "pageCount": 11
+            }
+          ],
+          "docs": {
+            "coverLetter": [
+              {
+                "file": "2026 (RCS)/Crossroads of East Ravenswood - RCS Owner Cover Letter (Updated RCS).pdf",
+                "bytes": 231669
+              },
+              {
+                "file": "2026 (RCS)/RCS Package/01. Crossroads of East Ravenswood - Cover Letter.doc",
+                "bytes": 105472
+              },
+              {
+                "file": "2026 (RCS)/RCS Package/01. Crossroads of East Ravenswood - Cover Letter.pdf",
+                "bytes": 237126
+              },
+              {
+                "file": "2026 (RCS)/RCS Package/02. Crossroads of East Ravenswood - RCS Owner Cover Letter.doc",
+                "bytes": 36352
+              },
+              {
+                "file": "2026 (RCS)/RCS Package/02. Crossroads of East Ravenswood - RCS Owner Cover Letter.pdf",
+                "bytes": 147637
+              }
+            ],
+            "combinedPackage": [
+              {
+                "file": "2026 (RCS)/Crossroads of East Ravenswood - RCS Package.pdf",
+                "bytes": 9514227
+              }
+            ],
+            "tenantNotice": [
+              {
+                "file": "2026 (RCS)/Crossroads of East Ravenswood - RCS Tenant Notice.docx",
+                "bytes": 94038
+              }
+            ],
+            "rentSchedule": [
+              {
+                "file": "2026 (RCS)/EXECUTED 2026-Rent Schedule-North Ashland Rehab IL060048014.pdf",
+                "bytes": 1373665
+              },
+              {
+                "file": "2026 (RCS)/Rent Schedule - North Ashland (Crossroads of E Ravenswood) - 2026 (Signed).pdf",
+                "bytes": 319924
+              },
+              {
+                "file": "2026 (RCS)/Rent Schedule - North Ashland (Crossroads of E Ravenswood) - 2026.pdf",
+                "bytes": 449050
+              }
+            ],
+            "analysisXlsx": [
+              {
+                "file": "2026 (RCS)/RCS Analysis - Crossroads of E Ravenswood.xlsx",
+                "bytes": 20041
+              }
+            ],
+            "checklist": [
+              {
+                "file": "2026 (RCS)/RCS Package/03. RCS Owners Checklist - Crossroads of E Ravenswood.pdf",
+                "bytes": 356108
+              }
+            ]
+          },
+          "executedRs": [],
+          "priorRs": "2025/FULLY EXECUTED 2025 - Rent Schedule - North Ashland Rehab.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 6,
+          "priorRsTried": [
+            "year-1 folder(3)",
+            "year-1 in the name(3)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2026 (RCS)/Revised RCS - Crossroads of East Ravenswood, Chicago, IL.pdf",
+          "hasCombined": true,
+          "problems": [],
+          "notes": [],
+          "wave": 1
+        },
+        {
+          "cycleLabel": "2021",
+          "year": 2021,
+          "studies": [
+            {
+              "file": "2021/21.104RCS Crossroads of East Ravenswood.pdf",
+              "bytes": 6937551,
+              "rank": -9.998376045143,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            },
+            {
+              "file": "2021/IRR HUD RCS Reports.pdf",
+              "bytes": 2524113,
+              "rank": -9.998388915831,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            }
+          ],
+          "docs": {
+            "rentSchedule": [
+              {
+                "file": "2021/2021 - Rent Schedule - North Ashland Rehab executed.pdf",
+                "bytes": 155432
+              },
+              {
+                "file": "2021/Crossroads 2021 Owner Executed Rent Schedule.pdf",
+                "bytes": 291278
+              },
+              {
+                "file": "2021/Old/Crossroads 2021 Unexecuted Rent Schedule.pdf",
+                "bytes": 271006
+              }
+            ]
+          },
+          "executedRs": [],
+          "priorRs": "2020/2020 - East Ravenswood Rent Schedule executed.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 6,
+          "priorRsTried": [
+            "year-1 folder(5)",
+            "year-1 in the name(5)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2021/21.104RCS Crossroads of East Ravenswood.pdf",
+          "hasCombined": false,
+          "problems": [
+            "study on disk but the reader returns nothing from it -- the app will face the same wall, which is an audit observation, not a skip",
+            "no filed coverLetter, submittalLetter, checklist, tenantNotice",
+            "top two studies are within one rank; the choice is a coin toss"
+          ],
+          "notes": [],
+          "wave": 2
+        }
+      ]
+    },
+    {
+      "code": null,
+      "name": "Fairview Homes - Section 8",
+      "folder": "Fairview Homes - Section 8",
+      "fileCount": 140,
+      "cycles": [
+        {
+          "cycleLabel": "2025 - RCS",
+          "year": 2025,
+          "studies": [
+            {
+              "file": "2025 - RCS/Archive/Belfry RCS/25-007R - Fairview Homes, 86 17th Avenue, Newark, New Jersey (REVISED RCS).pdf",
+              "bytes": 4440763,
+              "rank": 1.001745773977,
+              "firm": "belfry",
+              "s8": "NJ390013022",
+              "name": "Fairview Homes",
+              "units": 3,
+              "pagesRead": 3,
+              "pageCount": 66
+            },
+            {
+              "file": "2025 - RCS/Archive/Submission/Archive/Exhibit 3 - 25-007 - Fairview Homes, 86 17th Avenue, Newark, New Jersey (RCS).pdf",
+              "bytes": 4390881,
+              "rank": -0.998256282408,
+              "firm": "belfry",
+              "s8": null,
+              "name": "Fairview Homes",
+              "units": 3,
+              "pagesRead": 3,
+              "pageCount": 63
+            }
+          ],
+          "docs": {
+            "analysisXlsx": [
+              {
+                "file": "2025 - RCS/Archive/Belfry RCS/Fairview Homes - Belfry RCS Impact Analysis 3.27.25.xlsx",
+                "bytes": 13992
+              },
+              {
+                "file": "2025 - RCS/Archive/Belfry RCS/Fairview Homes - Belfry RCS Impact Analysis 4.3.25.xlsx",
+                "bytes": 14472
+              }
+            ],
+            "coverLetter": [
+              {
+                "file": "2025 - RCS/Archive/Submission/Archive/Exhibit 1 - RCS Owner Cover Letter Fairview Homes 05.07.25.docx",
+                "bytes": 15326
+              },
+              {
+                "file": "2025 - RCS/Archive/Submission/Archive/Exhibit 1 - RCS Owner Cover Letter Fairview Homes 05.07.25.pdf",
+                "bytes": 162144
+              },
+              {
+                "file": "2025 - RCS/Archive/Submission/Archive/Fairview Homes - 5th Year Adjustment Request RCS Submission COVER LETTER 05.07.2025.doc",
+                "bytes": 135168
+              }
+            ],
+            "checklist": [
+              {
+                "file": "2025 - RCS/Archive/Submission/Archive/Exhibit 2 - RCS Owners Checklist - Fairview Homes - 05.07.25.pdf",
+                "bytes": 494413
+              }
+            ],
+            "combinedPackage": [
+              {
+                "file": "2025 - RCS/Archive/Submission/Archive/Fairview Homes - 5 Year RCS Submission 4.4.25.pdf",
+                "bytes": 6203561
+              },
+              {
+                "file": "2025 - RCS/Archive/Submission/Archive/Fairview Homes - 5th Year Adjustment Request RCS Submission - 05.07.2025 (NEEDS SIGNING).pdf",
+                "bytes": 6296328
+              },
+              {
+                "file": "2025 - RCS/Archive/Submission/Fairview Homes 5 Year RCS Submission 4.4.25 (Executed).pdf",
+                "bytes": 6427364
+              }
+            ],
+            "tenantNotice": [
+              {
+                "file": "2025 - RCS/Archive/Tenant Notice of Increase/Fairview Homes RCS Tenant Notice 4.30.25 (Signed).pdf",
+                "bytes": 52403
+              },
+              {
+                "file": "2025 - RCS/Archive/Tenant Notice of Increase/Fairview Homes RCS Tenant Notice 4.30.25.docx",
+                "bytes": 69665
+              },
+              {
+                "file": "2025 - RCS/Archive/Tenant Notice of Increase/Fairview Homes RCS Tenant Notice 4.30.25.pdf",
+                "bytes": 222419
+              },
+              {
+                "file": "2025 - RCS/Archive/Tenant Notice of Increase/Fairview Homes Rent Increase Chart for Tenant Notice.xlsx",
+                "bytes": 10182
+              }
+            ],
+            "rentSchedule": [
+              {
+                "file": "2025 - RCS/Fairview Homes Rent Schedule eff. 5.7.25.pdf",
+                "bytes": 1218566
+              }
+            ]
+          },
+          "executedRs": [],
+          "priorRs": "2024/Fairview Homes Rent Schedule eff. 5.7.24.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 0,
+          "priorRsTried": [
+            "year-1 folder(1)",
+            "year-1 in the name(1)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2025 - RCS/Archive/Belfry RCS/25-007R - Fairview Homes, 86 17th Avenue, Newark, New Jersey (REVISED RCS).pdf",
+          "hasCombined": true,
+          "problems": [],
+          "notes": [
+            "prior RS filename carries no signed/executed marker"
+          ],
+          "wave": 1
+        },
+        {
+          "cycleLabel": "2020",
+          "year": 2020,
+          "studies": [
+            {
+              "file": "2020/Fairview Homes FINAL RCS (Gill).pdf",
+              "bytes": 4541036,
+              "rank": 6.001581530665,
+              "firm": "gill",
+              "s8": null,
+              "name": "Fairview Apartments",
+              "units": 0,
+              "pagesRead": 4,
+              "pageCount": 86
+            },
+            {
+              "file": "2020/Fairview Homes FINAL RCS (Starmark).pdf",
+              "bytes": 5926025,
+              "rank": -3.9984149969929996,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            },
+            {
+              "file": "2020/Fairview Homes FINAL RCS (Starmark) old.pdf",
+              "bytes": 5448262,
+              "rank": -3.9984183099950004,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            },
+            {
+              "file": "2020/Fairview Homes RCS v4 (Starmark).pdf",
+              "bytes": 5002587,
+              "rank": -7.998413627434,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            },
+            {
+              "file": "2020/Fairview Homes RCS v3 (Starmark).pdf",
+              "bytes": 5046868,
+              "rank": -7.998413731284,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            },
+            {
+              "file": "2020/Fairview Homes DRAFT RCS (Gill).pdf",
+              "bytes": 4541036,
+              "rank": -7.998420791152,
+              "firm": "gill",
+              "s8": null,
+              "name": "Fairview Apartments",
+              "units": 0,
+              "pagesRead": 4,
+              "pageCount": 86
+            },
+            {
+              "file": "2020/Starmark RCS Corrections 04072020.pdf",
+              "bytes": 250310,
+              "rank": -9.998413731383,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            }
+          ],
+          "docs": {
+            "analysisXlsx": [
+              {
+                "file": "2020/Fairview Apartments Rent Analysis.xlsx",
+                "bytes": 15858
+              }
+            ],
+            "rentSchedule": [
+              {
+                "file": "2020/Fairview Homes 2020 Signed RS.pdf",
+                "bytes": 290435
+              },
+              {
+                "file": "2020/Fairview Homes Proposed 2020 Rent Schedule.pdf",
+                "bytes": 509586
+              },
+              {
+                "file": "2020/Fiarview Homes 2020 Executed Rent Schedule.pdf",
+                "bytes": 345211
+              }
+            ],
+            "coverLetter": [
+              {
+                "file": "2020/Fairview Homes 5th Year Adjustment Request Cover Letter.doc",
+                "bytes": 40448
+              }
+            ],
+            "checklist": [
+              {
+                "file": "2020/Fairview Homes Cover Letter, Owners Cert, and Owners Checklist SIGNED.pdf",
+                "bytes": 78334
+              },
+              {
+                "file": "2020/Fairview Homes rcs-owners-checklist.pdf",
+                "bytes": 221131
+              }
+            ]
+          },
+          "executedRs": [],
+          "priorRs": "2019/Fairview Homes Executed 2019 Rent Schedule.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 6,
+          "priorRsTried": [
+            "year-1 folder(3)",
+            "year-1 in the name(3)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2020/Fairview Homes FINAL RCS (Gill).pdf",
+          "hasCombined": false,
+          "problems": [
+            "no filed submittalLetter, tenantNotice"
+          ],
+          "notes": [],
+          "wave": 2
+        },
+        {
+          "cycleLabel": "(no cycle folder)",
+          "year": null,
+          "studies": [
+            {
+              "file": "RCS/R1542R2017.pdf",
+              "bytes": 4541036,
+              "rank": 0.001578674404,
+              "firm": "gill",
+              "s8": null,
+              "name": "Fairview Apartments",
+              "units": 0,
+              "pagesRead": 4,
+              "pageCount": 86
+            }
+          ],
+          "docs": {},
+          "executedRs": [],
+          "priorRs": null,
+          "priorRsRule": null,
+          "priorRsRank": null,
+          "priorRsTried": [
+            "year-1 folder(0)",
+            "year-1 in the name(0)",
+            "newest before year 0(0)"
+          ],
+          "chosenStudy": "RCS/R1542R2017.pdf",
+          "hasCombined": false,
+          "problems": [
+            "no prior rent schedule found; tried year-1 folder(0), year-1 in the name(0), newest before year 0(0)",
+            "no filed coverLetter, submittalLetter, checklist, tenantNotice"
+          ],
+          "notes": [],
+          "wave": 2
+        }
+      ]
+    },
+    {
+      "code": null,
+      "name": "Gates Manor - Section 8",
+      "folder": "Gates Manor - Section 8",
+      "fileCount": 102,
+      "cycles": [
+        {
+          "cycleLabel": "2026 - RCS",
+          "year": 2026,
+          "studies": [
+            {
+              "file": "2026 - RCS/RCS/RCS - 26-121 - Gates Manor Apt, 1135 Wilmette Avenue, Wilmette, IL.pdf",
+              "bytes": 4787910,
+              "rank": 4.001781618056,
+              "firm": "belfry",
+              "s8": "IL06H121063",
+              "name": "Gate Manor Apartments",
+              "units": 1,
+              "pagesRead": 2,
+              "pageCount": 48
+            },
+            {
+              "file": "2026 - RCS/RCS Package/04. Gates Manor - RCS.pdf",
+              "bytes": 4787910,
+              "rank": 4.001781618056,
+              "firm": "belfry",
+              "s8": "IL06H121063",
+              "name": "Gate Manor Apartments",
+              "units": 1,
+              "pagesRead": 2,
+              "pageCount": 48
+            }
+          ],
+          "docs": {
+            "combinedPackage": [
+              {
+                "file": "2026 - RCS/Gates Manor - RCS Submission Package (signed).pdf",
+                "bytes": 5616581
+              },
+              {
+                "file": "2026 - RCS/Gates Manor - RCS Submission Package.pdf",
+                "bytes": 5469689
+              }
+            ],
+            "analysisXlsx": [
+              {
+                "file": "2026 - RCS/RCS Analysis - Gates Manor.xlsx",
+                "bytes": 19069
+              }
+            ],
+            "coverLetter": [
+              {
+                "file": "2026 - RCS/RCS Package/01. Gates Manor - Cover Letter.doc",
+                "bytes": 105472
+              },
+              {
+                "file": "2026 - RCS/RCS Package/01. Gates Manor - Cover Letter.pdf",
+                "bytes": 334755
+              },
+              {
+                "file": "2026 - RCS/RCS Package/02. Gates Manor - RCS Owner Cover Letter.doc",
+                "bytes": 32256
+              },
+              {
+                "file": "2026 - RCS/RCS Package/02. Gates Manor - RCS Owner Cover Letter.pdf",
+                "bytes": 245551
+              }
+            ],
+            "checklist": [
+              {
+                "file": "2026 - RCS/RCS Package/03. Gates Manor - RCS Owners Checklist.docx",
+                "bytes": 10407
+              },
+              {
+                "file": "2026 - RCS/RCS Package/03. Gates Manor - RCS Owners Checklist.pdf",
+                "bytes": 518878
+              }
+            ],
+            "tenantNotice": [
+              {
+                "file": "2026 - RCS/RCS Tenant Notice - Gates Manor.docx",
+                "bytes": 93705
+              }
+            ]
+          },
+          "executedRs": [],
+          "priorRs": "2025/FULLY EXECUTED - 2025-Rent Schedule-Gates Manor IL06H121063.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 6,
+          "priorRsTried": [
+            "year-1 folder(3)",
+            "year-1 in the name(3)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2026 - RCS/RCS/RCS - 26-121 - Gates Manor Apt, 1135 Wilmette Avenue, Wilmette, IL.pdf",
+          "hasCombined": true,
+          "problems": [
+            "top two studies are within one rank; the choice is a coin toss"
+          ],
+          "notes": [],
+          "wave": 1
+        }
+      ]
+    },
+    {
+      "code": null,
+      "name": "Golden Link Manor - Section 8",
+      "folder": "Golden Link Manor - Section 8",
+      "fileCount": 37,
+      "cycles": [
+        {
+          "cycleLabel": "2025 - Termination_EXECUTED",
+          "year": 2025,
+          "studies": [
+            {
+              "file": "2025 - Termination_EXECUTED/RCS - Golden Link Manor, Ogden, UT.pdf",
+              "bytes": 11719877,
+              "rank": 4.001731982208,
+              "firm": "cornerstone",
+              "s8": "UT99T855002",
+              "name": "Golden Link Manor",
+              "units": 1,
+              "pagesRead": 3,
+              "pageCount": 57
+            }
+          ],
+          "docs": {
+            "rentSchedule": [
+              {
+                "file": "2025 - Termination_EXECUTED/Golden Link Manor - 25 Rent Schedule.pdf",
+                "bytes": 377725
+              }
+            ]
+          },
+          "executedRs": [],
+          "priorRs": "2024/20240801-Rent Schedule.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 0,
+          "priorRsTried": [
+            "year-1 folder(1)",
+            "year-1 in the name(1)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2025 - Termination_EXECUTED/RCS - Golden Link Manor, Ogden, UT.pdf",
+          "hasCombined": false,
+          "problems": [
+            "no filed coverLetter, submittalLetter, checklist, tenantNotice"
+          ],
+          "notes": [
+            "prior RS filename carries no signed/executed marker"
+          ],
+          "wave": 1
+        },
+        {
+          "cycleLabel": "2021",
+          "year": 2021,
+          "studies": [
+            {
+              "file": "2021/Golden Links RCS, Gill Final.pdf",
+              "bytes": 5335948,
+              "rank": 6.001635966259,
+              "firm": null,
+              "s8": "105EH036",
+              "name": "Golden Link Manor",
+              "units": 0,
+              "pagesRead": 3,
+              "pageCount": 71
+            }
+          ],
+          "docs": {},
+          "executedRs": [],
+          "priorRs": null,
+          "priorRsRule": null,
+          "priorRsRank": null,
+          "priorRsTried": [
+            "year-1 folder(0)",
+            "year-1 in the name(0)",
+            "newest before year 0(0)"
+          ],
+          "chosenStudy": "2021/Golden Links RCS, Gill Final.pdf",
+          "hasCombined": false,
+          "problems": [
+            "no prior rent schedule found; tried year-1 folder(0), year-1 in the name(0), newest before year 0(0)",
+            "no filed coverLetter, submittalLetter, checklist, tenantNotice"
+          ],
+          "notes": [],
+          "wave": 2
+        }
+      ]
+    },
+    {
+      "code": null,
+      "name": "Lansing Manor - Section 8",
+      "folder": "Lansing Manor - Section 8",
+      "fileCount": 117,
+      "cycles": [
+        {
+          "cycleLabel": "2026 - RCS",
+          "year": 2026,
+          "studies": [
+            {
+              "file": "2026 - RCS/25-119 - Lansing Manor, 5600 Mall Drive West, Lansing MI (updated).pdf",
+              "bytes": 3196485,
+              "rank": 6.00176072088,
+              "firm": "belfry",
+              "s8": "MI330005001",
+              "name": "Lansing Manor / Senior World",
+              "units": 2,
+              "pagesRead": 3,
+              "pageCount": 49
+            },
+            {
+              "file": "2026 - RCS/4 - 25-119 - Lansing Manor, 5600 Mall Drive West, Lansing MI.pdf",
+              "bytes": 3194313,
+              "rank": 4.00175986456,
+              "firm": "belfry",
+              "s8": "MI330005001",
+              "name": "Lansing Manor / Senior World",
+              "units": 2,
+              "pagesRead": 3,
+              "pageCount": 49
+            },
+            {
+              "file": "2026 - RCS/Archive/4 - 25-119 - Lansing Manor, 5600 Mall Drive West, Lansing MI.pdf",
+              "bytes": 3190583,
+              "rank": -0.99824263432,
+              "firm": "belfry",
+              "s8": "MI330005001",
+              "name": "Lansing Manor / Senior World",
+              "units": 2,
+              "pagesRead": 3,
+              "pageCount": 49
+            },
+            {
+              "file": "2026 - RCS/Belfry/Archive/25-119 - Lansing Manor, 5600 Mall Drive West, Lansing MI.pdf",
+              "bytes": 3186304,
+              "rank": -0.99824264716,
+              "firm": "belfry",
+              "s8": "MI330005001",
+              "name": "Lansing Manor / Senior World",
+              "units": 2,
+              "pagesRead": 2,
+              "pageCount": 48
+            }
+          ],
+          "docs": {
+            "coverLetter": [
+              {
+                "file": "2026 - RCS/1 - Lansing Manor - Cover Letter.pdf",
+                "bytes": 4659718
+              }
+            ],
+            "submittalLetter": [
+              {
+                "file": "2026 - RCS/2 - Lansing Manor - Submittal Cover Letter.pdf",
+                "bytes": 616568
+              },
+              {
+                "file": "2026 - RCS/Lansing Manor - Submittal Cover Letter (updated).pdf",
+                "bytes": 169108
+              }
+            ],
+            "checklist": [
+              {
+                "file": "2026 - RCS/3 - Lansing Manor - Owner RCS Checklist.pdf",
+                "bytes": 182161
+              }
+            ],
+            "tenantNotice": [
+              {
+                "file": "2026 - RCS/30-Day Notice (final) - Lansing Manor.docx",
+                "bytes": 16289
+              },
+              {
+                "file": "2026 - RCS/5 - Lansing Manor - Tenant Notice.pdf",
+                "bytes": 373342
+              },
+              {
+                "file": "2026 - RCS/UA Baseline/UA Decrease Tenant Notice.pdf",
+                "bytes": 95287
+              }
+            ],
+            "rentSchedule": [
+              {
+                "file": "2026 - RCS/800010652 - Approved Rent Schedule - 12-29-25 - Lansing Manor (Village Green III) Fully Executed.pdf",
+                "bytes": 456570
+              },
+              {
+                "file": "2026 - RCS/Lansing Manor - Approved RS - 2026 (signed).pdf",
+                "bytes": 436812
+              },
+              {
+                "file": "2026 - RCS/Lansing Manor - Approved RS - 2026 (unsigned).pdf",
+                "bytes": 1566995
+              }
+            ],
+            "analysisXlsx": [
+              {
+                "file": "2026 - RCS/Belfry/Senior World - SAFMR Analysis.xlsx",
+                "bytes": 13430
+              },
+              {
+                "file": "2026 - RCS/Senior World - RCS Analysis.xlsx",
+                "bytes": 13486
+              }
+            ],
+            "combinedPackage": [
+              {
+                "file": "2026 - RCS/Submission/Lansing Manor (MI330005001) - 5-Year RCS Submission (unsigned).pdf",
+                "bytes": 3820496
+              },
+              {
+                "file": "2026 - RCS/Submission/Lansing Manor (MI330005001) - 5-Year RCS Submission PDF.pdf",
+                "bytes": 5045504
+              },
+              {
+                "file": "2026 - RCS/Submission/Lansing Manor (MI330005001) - 5-Year RCS Submission.pdf",
+                "bytes": 3945621
+              }
+            ]
+          },
+          "executedRs": [],
+          "priorRs": "2025/800010652 - Approved Rent Schedule - 10-8-24 - Lansing Manor.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 6,
+          "priorRsTried": [
+            "year-1 folder(4)",
+            "year-1 in the name(5)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2026 - RCS/25-119 - Lansing Manor, 5600 Mall Drive West, Lansing MI (updated).pdf",
+          "hasCombined": true,
+          "problems": [],
+          "notes": [],
+          "wave": 1
+        },
+        {
+          "cycleLabel": "2021",
+          "year": 2021,
+          "studies": [
+            {
+              "file": "2021/RCS/Archive/Lansing Manor - 5600 W Mall Drive, Lansing, MI 48917 (Final).pdf",
+              "bytes": 4498103,
+              "rank": -8.998400335024,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            },
+            {
+              "file": "2021/RCS/Lansing Manor - 5600 W Mall Drive, Lansing, MI 48917 (Final2).pdf",
+              "bytes": 4499279,
+              "rank": -9.99839973496,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            }
+          ],
+          "docs": {
+            "rentSchedule": [
+              {
+                "file": "2021/800010652 - Approved Rent Schedule - 12-17-2020 -Lansing Manor (Village Green III).pdf",
+                "bytes": 1931646
+              },
+              {
+                "file": "2021/Lansing Manor - NEW RS - 2021 (signed).pdf",
+                "bytes": 67599
+              },
+              {
+                "file": "2021/Lansing Manor - NEW RS - 2021 v2 (signed).pdf",
+                "bytes": 115420
+              },
+              {
+                "file": "2021/Lansing Manor - NEW RS - 2021 v2.pdf",
+                "bytes": 367321
+              },
+              {
+                "file": "2021/Lansing Manor - NEW RS - 2021.pdf",
+                "bytes": 177065
+              },
+              {
+                "file": "2021/RCS/Lansing Manor - Notice to Residents rent increase rent schedule 2021.docx",
+                "bytes": 41997
+              },
+              {
+                "file": "2021/RCS/Lansing Manor - Notice to Residents rent increase rent schedule 2021.pdf",
+                "bytes": 112980
+              }
+            ],
+            "combinedPackage": [
+              {
+                "file": "2021/RCS/2020 RCS Submission - Lansing Manor.pdf",
+                "bytes": 4728382
+              },
+              {
+                "file": "2021/RCS/Lansing Manor -  5th Year Adjustment Request RCS submission.pdf",
+                "bytes": 40166
+              }
+            ],
+            "checklist": [
+              {
+                "file": "2021/RCS/Owner's RCS Checklist (Signed).pdf",
+                "bytes": 47571
+              },
+              {
+                "file": "2021/RCS/Owner's RCS Checklist.pdf",
+                "bytes": 208148
+              }
+            ],
+            "coverLetter": [
+              {
+                "file": "2021/RCS/RCS Owner Cover Letter.doc",
+                "bytes": 31232
+              },
+              {
+                "file": "2021/RCS/RCS Owner Cover Letter.pdf",
+                "bytes": 71717
+              }
+            ]
+          },
+          "executedRs": [],
+          "priorRs": "2020/800010652 - Approved Rent Schedule - 10-23-19 - Lansing Manor (Village Green III).pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 6,
+          "priorRsTried": [
+            "year-1 folder(1)",
+            "year-1 in the name(2)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2021/RCS/Archive/Lansing Manor - 5600 W Mall Drive, Lansing, MI 48917 (Final).pdf",
+          "hasCombined": true,
+          "problems": [
+            "study on disk but the reader returns nothing from it -- the app will face the same wall, which is an audit observation, not a skip",
+            "top two studies are within one rank; the choice is a coin toss"
+          ],
+          "notes": [],
+          "wave": 2
+        }
+      ]
+    },
+    {
+      "code": null,
+      "name": "Manhattan Plaza - Section 8",
+      "folder": "Manhattan Plaza - Section 8",
+      "fileCount": 57,
+      "cycles": [
+        {
+          "cycleLabel": "2022",
+          "year": 2022,
+          "studies": [
+            {
+              "file": "2022/Manhattan Plaza RCS (draft) - 2.2022.pdf",
+              "bytes": 4706659,
+              "rank": -17.998355734172,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            }
+          ],
+          "docs": {
+            "tenantNotice": [
+              {
+                "file": "2022/30 day Notice - Manhattan Plaza MUTM rent increase 021122.pdf",
+                "bytes": 193495
+              }
+            ],
+            "rentSchedule": [
+              {
+                "file": "2022/MP_Fully Executed RS 2022.pdf",
+                "bytes": 783068
+              },
+              {
+                "file": "2022/Unexecuted RS (003).pdf",
+                "bytes": 257828
+              }
+            ],
+            "checklist": [
+              {
+                "file": "2022/Owners-RCS-Checklist.pdf",
+                "bytes": 91195
+              }
+            ],
+            "coverLetter": [
+              {
+                "file": "2022/RCS Owner Cover Letter - M Plaza.doc",
+                "bytes": 32256
+              }
+            ]
+          },
+          "executedRs": [],
+          "priorRs": "2021/Executed RS 2021.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 6,
+          "priorRsTried": [
+            "year-1 folder(3)",
+            "year-1 in the name(3)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2022/Manhattan Plaza RCS (draft) - 2.2022.pdf",
+          "hasCombined": false,
+          "problems": [
+            "study on disk but the reader returns nothing from it -- the app will face the same wall, which is an audit observation, not a skip",
+            "no filed submittalLetter"
+          ],
+          "notes": [],
+          "wave": 1
+        }
+      ]
+    },
+    {
+      "code": null,
+      "name": "Riverwood - Section 8",
+      "folder": "Riverwood - Section 8",
+      "fileCount": 123,
+      "cycles": [
+        {
+          "cycleLabel": "2025 - RCS",
+          "year": 2025,
+          "studies": [
+            {
+              "file": "2025 - RCS/Submission Archive/4 - R2999R2017 - Riverwood Apartments - RCS (FINAL).pdf",
+              "bytes": 9667347,
+              "rank": 10.001735572329,
+              "firm": "gill",
+              "s8": null,
+              "name": "Riverwood Apartments",
+              "units": 0,
+              "pagesRead": 4,
+              "pageCount": 96
+            },
+            {
+              "file": "2025 - RCS/Gill Group/Riverwood RCS V2.pdf",
+              "bytes": 6313270,
+              "rank": 6.001729719925,
+              "firm": "gill",
+              "s8": null,
+              "name": "Riverwood Apartments",
+              "units": 3,
+              "pagesRead": 4,
+              "pageCount": 103
+            },
+            {
+              "file": "2025 - RCS/Submission Archive/R2999R2017 - Riverwood Apartments - RCS (DRAFT).pdf",
+              "bytes": 9671538,
+              "rank": -3.998267945857,
+              "firm": "gill",
+              "s8": null,
+              "name": "Riverwood Apartments",
+              "units": 0,
+              "pagesRead": 4,
+              "pageCount": 96
+            },
+            {
+              "file": "2025 - RCS/Gill Group/Related Affordable (M McKee) Riverwood Apts Colonial Beach, VA RCS 10-23-24.pdf",
+              "bytes": 302831,
+              "rank": -5.99827028679,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            }
+          ],
+          "docs": {
+            "rentSchedule": [
+              {
+                "file": "2025 - RCS/Executed - FY2025 RS.pdf",
+                "bytes": 451253
+              },
+              {
+                "file": "2025 - RCS/Gill Group/FY2024 RS - Riverwood (executed).pdf",
+                "bytes": 254401
+              },
+              {
+                "file": "2025 - RCS/Submission Archive/HUD 92458 - Rent Schedule - Riverwood eff. 04.01.25 (unsigned).pdf",
+                "bytes": 451035
+              },
+              {
+                "file": "2025 - RCS/Submission Archive/HUD 92458 - Rent Schedule - Riverwood eff. 04.01.25.pdf",
+                "bytes": 386053
+              }
+            ],
+            "analysisXlsx": [
+              {
+                "file": "2025 - RCS/Riverwood - RCS Analysis.xlsx",
+                "bytes": 13807
+              },
+              {
+                "file": "2025 - RCS/UA Baseline/Riverwood 2025 Baseline Utility Analysis Worksheet.xlsx",
+                "bytes": 80181
+              }
+            ],
+            "coverLetter": [
+              {
+                "file": "2025 - RCS/Submission Archive/1 - Riverwood - Cover Letter.pdf",
+                "bytes": 294791
+              },
+              {
+                "file": "2025 - RCS/Submission Archive/Riverwood Apts Cover Letter.pdf",
+                "bytes": 122490
+              }
+            ],
+            "submittalLetter": [
+              {
+                "file": "2025 - RCS/Submission Archive/2 - Riverwood - Submittal Cover Letter.pdf",
+                "bytes": 362575
+              }
+            ],
+            "checklist": [
+              {
+                "file": "2025 - RCS/Submission Archive/3 - Riverwood - Owner RCS Checklist.pdf",
+                "bytes": 86734
+              }
+            ],
+            "tenantNotice": [
+              {
+                "file": "2025 - RCS/Submission Archive/5 - 30-Day Notice to Tenants (rent increase) - Riverwood.pdf",
+                "bytes": 367889
+              }
+            ],
+            "combinedPackage": [
+              {
+                "file": "2025 - RCS/Submission Archive/Riverwood (VA36R000009) - 5-Year RCS Submission (cover signed).pdf",
+                "bytes": 10608939
+              },
+              {
+                "file": "2025 - RCS/Submission Archive/Riverwood (VA36R000009) - 5-Year RCS Submission (signed).pdf",
+                "bytes": 16677604
+              },
+              {
+                "file": "2025 - RCS/Submission Archive/Riverwood (VA36R000009) - 5-Year RCS Submission (unsigned).pdf",
+                "bytes": 10203200
+              }
+            ]
+          },
+          "executedRs": [],
+          "priorRs": "2024/FY2024 RS - Riverwood (executed).pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 6,
+          "priorRsTried": [
+            "year-1 folder(3)",
+            "year-1 in the name(4)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2025 - RCS/Submission Archive/4 - R2999R2017 - Riverwood Apartments - RCS (FINAL).pdf",
+          "hasCombined": true,
+          "problems": [],
+          "notes": [],
+          "wave": 1
+        },
+        {
+          "cycleLabel": "2020",
+          "year": 2020,
+          "studies": [
+            {
+              "file": "2020/Riverwood RCS V2.pdf",
+              "bytes": 6313270,
+              "rank": 2.001576620672,
+              "firm": "gill",
+              "s8": null,
+              "name": "Riverwood Apartments",
+              "units": 3,
+              "pagesRead": 4,
+              "pageCount": 103
+            },
+            {
+              "file": "2020/Old/Riverwood RCS.pdf",
+              "bytes": 6079196,
+              "rank": -4.998425290433,
+              "firm": "gill",
+              "s8": null,
+              "name": "Riverwood Apartments",
+              "units": 3,
+              "pagesRead": 4,
+              "pageCount": 92
+            },
+            {
+              "file": "2020/Riverwood RCS R1508R2017 Draft.pdf",
+              "bytes": 6610370,
+              "rank": -7.998426840524,
+              "firm": "gill",
+              "s8": null,
+              "name": "Riverwood Apartments",
+              "units": 3,
+              "pagesRead": 4,
+              "pageCount": 93
+            },
+            {
+              "file": "2020/Related Affordable (B Samson) Riverwood Apts Colonial Beach, VA RCS 10-7-19.pdf",
+              "bytes": 216077,
+              "rank": -9.998429447245,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            }
+          ],
+          "docs": {
+            "checklist": [
+              {
+                "file": "2020/Amend Rent Comparable Checklist.xlsm",
+                "bytes": 47924
+              },
+              {
+                "file": "2020/RCS Owner Checklist - Signed.pdf",
+                "bytes": 43390
+              },
+              {
+                "file": "2020/RCS Owner Checklist.pdf",
+                "bytes": 166418
+              }
+            ],
+            "rentSchedule": [
+              {
+                "file": "2020/Draft Rent Schedule - Riverwood.pdf",
+                "bytes": 477756
+              }
+            ],
+            "coverLetter": [
+              {
+                "file": "2020/RCS Owner Cover Letter - Riverwood.doc",
+                "bytes": 30720
+              },
+              {
+                "file": "2020/RCS Owner Cover Letter - Riverwood.pdf",
+                "bytes": 79187
+              }
+            ],
+            "combinedPackage": [
+              {
+                "file": "2020/Riverwood 5th Year Adjustment Request RCS submission.pdf",
+                "bytes": 6544920
+              }
+            ]
+          },
+          "executedRs": [],
+          "priorRs": "2019/FY2019 Rent Schedule.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 0,
+          "priorRsTried": [
+            "year-1 folder(1)",
+            "year-1 in the name(1)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2020/Riverwood RCS V2.pdf",
+          "hasCombined": true,
+          "problems": [],
+          "notes": [
+            "prior RS filename carries no signed/executed marker"
+          ],
+          "wave": 2
+        }
+      ]
+    },
+    {
+      "code": null,
+      "name": "Southport Mews - Section 8",
+      "folder": "Southport Mews - Section 8",
+      "fileCount": 112,
+      "cycles": [
+        {
+          "cycleLabel": "2025",
+          "year": 2025,
+          "studies": [
+            {
+              "file": "2025/RCS Submission/24-490 - South Mew Apt, 50 South Main Street, Port Chester, NY v2.pdf",
+              "bytes": 4318413,
+              "rank": 2.001728932555,
+              "firm": "renzi",
+              "s8": "NY360017014",
+              "name": "The South Mews Apartments",
+              "units": 4,
+              "pagesRead": 3,
+              "pageCount": 70
+            },
+            {
+              "file": "2025/RCS Submission/24-490 - South Mew Apartments, 50 South Main Street, Port Chester, NY.pdf",
+              "bytes": 3891427,
+              "rank": 0.001730818365,
+              "firm": "renzi",
+              "s8": "NY360017014",
+              "name": "The South Mews Apartments",
+              "units": 4,
+              "pagesRead": 3,
+              "pageCount": 70
+            },
+            {
+              "file": "2025/Executed RS_RCS-Southport Mews.12302024 (1).pdf",
+              "bytes": 807691,
+              "rank": -9.998263134659,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            }
+          ],
+          "docs": {
+            "combinedPackage": [
+              {
+                "file": "2025/RCS Submission/5th Year Adjustment Request RCS submission.doc.pdf",
+                "bytes": 295660
+              },
+              {
+                "file": "2025/RCS Submission/_Southport Mews - 5 Year RCS Submission Package.pdf",
+                "bytes": 5077728
+              }
+            ],
+            "checklist": [
+              {
+                "file": "2025/RCS Submission/Owners Checklist v2.pdf",
+                "bytes": 359746
+              },
+              {
+                "file": "2025/RCS Submission/Owners Checklist v2_unsigned.pdf",
+                "bytes": 437741
+              }
+            ],
+            "coverLetter": [
+              {
+                "file": "2025/RCS Submission/RCS Owner Cover Letter v2.doc",
+                "bytes": 34304
+              },
+              {
+                "file": "2025/RCS Submission/RCS Owner Cover Letter v2.doc.pdf",
+                "bytes": 459805
+              },
+              {
+                "file": "2025/RCS Submission/RCS Owner Cover Letter v3.doc",
+                "bytes": 35328
+              },
+              {
+                "file": "2025/RCS Submission/RCS Owner Cover Letter.doc",
+                "bytes": 34816
+              },
+              {
+                "file": "2025/RCS Submission/RCS Owner Cover Letter.doc.pdf",
+                "bytes": 449376
+              }
+            ],
+            "tenantNotice": [
+              {
+                "file": "2025/RCS Submission/Southport Mews Tenant Notice.pdf",
+                "bytes": 186022
+              }
+            ],
+            "rentSchedule": [
+              {
+                "file": "2025/Rent Schedule_Southport Mews Apts (signed).pdf",
+                "bytes": 422593
+              },
+              {
+                "file": "2025/Unexecuted Rent Schedule_Southport Mews Apts.pdf",
+                "bytes": 265404
+              }
+            ]
+          },
+          "executedRs": [],
+          "priorRs": "2023/Executed RS.pdf",
+          "priorRsRule": "newest before year 0",
+          "priorRsRank": 6,
+          "priorRsTried": [
+            "year-1 folder(0)",
+            "year-1 in the name(0)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2025/RCS Submission/24-490 - South Mew Apt, 50 South Main Street, Port Chester, NY v2.pdf",
+          "hasCombined": true,
+          "problems": [
+            "prior RS found by fallback: newest before year 0"
+          ],
+          "notes": [],
+          "wave": 1
+        },
+        {
+          "cycleLabel": "2020",
+          "year": 2020,
+          "studies": [
+            {
+              "file": "2020/Southport Mews - 9.17.2019 RCS.pdf",
+              "bytes": 2740378,
+              "rank": -9.998431239557,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            },
+            {
+              "file": "2020/Old/Southport Mews - 2019 RCS.pdf",
+              "bytes": 2747268,
+              "rank": -14.998433167063,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            }
+          ],
+          "docs": {
+            "rentSchedule": [
+              {
+                "file": "2020/Executed RS.pdf",
+                "bytes": 331373
+              },
+              {
+                "file": "2020/RS - Matt Signed.pdf",
+                "bytes": 195601
+              },
+              {
+                "file": "2020/Unexecuted RS - Ready for Matt.pdf",
+                "bytes": 211840
+              }
+            ],
+            "coverLetter": [
+              {
+                "file": "2020/RCS Owner Cover Letter - Southport Mews.doc",
+                "bytes": 31232
+              },
+              {
+                "file": "2020/RCS Owner Cover Letter - Southport Mews.pdf",
+                "bytes": 65987
+              }
+            ]
+          },
+          "executedRs": [],
+          "priorRs": "2019/Southport Mews 2019 Rent Schedule.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 0,
+          "priorRsTried": [
+            "year-1 folder(2)",
+            "year-1 in the name(2)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2020/Southport Mews - 9.17.2019 RCS.pdf",
+          "hasCombined": false,
+          "problems": [
+            "study on disk but the reader returns nothing from it -- the app will face the same wall, which is an audit observation, not a skip",
+            "no filed submittalLetter, checklist, tenantNotice"
+          ],
+          "notes": [
+            "prior RS filename carries no signed/executed marker"
+          ],
+          "wave": 2
+        }
+      ]
+    },
+    {
+      "code": null,
+      "name": "Village Court - Section 8",
+      "folder": "Village Court - Section 8",
+      "fileCount": 8,
+      "cycles": []
+    },
+    {
+      "code": null,
+      "name": "Woodland Towers - Section 8",
+      "folder": "Woodland Towers - Section 8",
+      "fileCount": 105,
+      "cycles": [
+        {
+          "cycleLabel": "2026 - RCS",
+          "year": 2026,
+          "studies": [
+            {
+              "file": "2026 - RCS/Submission/4. 26-069 - Woodland Towers 306 Pine Lake Road Collinsville IL.pdf",
+              "bytes": 6111292,
+              "rank": 4.001777500566,
+              "firm": "belfry",
+              "s8": "IL06H121046",
+              "name": "Woodland Towers Apartments",
+              "units": 1,
+              "pagesRead": 2,
+              "pageCount": 46
+            },
+            {
+              "file": "2026 - RCS/Grids/Cornerstone Rent Grids - Woodland Towers, Collinsville, IL.pdf",
+              "bytes": 2225455,
+              "rank": 4.001771445886,
+              "firm": "cornerstone",
+              "s8": null,
+              "name": "Woodland Towers",
+              "units": 1,
+              "pagesRead": 8,
+              "pageCount": 9
+            }
+          ],
+          "docs": {
+            "rentSchedule": [
+              {
+                "file": "2026 - RCS/EXECUTED 2026-Rent Schedule-Woodland Towers IL06H121046.pdf",
+                "bytes": 1918231
+              },
+              {
+                "file": "2026 - RCS/Woodland Towers Rent Schedule 2026 - signed.pdf",
+                "bytes": 320825
+              },
+              {
+                "file": "2026 - RCS/Woodland Towers Rent Schedule 2026 - unsigned.pdf",
+                "bytes": 498316
+              }
+            ],
+            "analysisXlsx": [
+              {
+                "file": "2026 - RCS/RCS Analysis - Woodland Towers.xlsx",
+                "bytes": 18381
+              }
+            ],
+            "coverLetter": [
+              {
+                "file": "2026 - RCS/Submission/01. Woodland Towers - Cover Letter.doc",
+                "bytes": 105472
+              },
+              {
+                "file": "2026 - RCS/Submission/01. Woodland Towers - Cover Letter.pdf",
+                "bytes": 152242
+              },
+              {
+                "file": "2026 - RCS/Submission/02. Woodland Towers - RCS Owner Cover Letter.doc",
+                "bytes": 36352
+              },
+              {
+                "file": "2026 - RCS/Submission/02. Woodland Towers - RCS Owner Cover Letter.pdf",
+                "bytes": 147692
+              }
+            ],
+            "checklist": [
+              {
+                "file": "2026 - RCS/Submission/03. RCS Owners Checklist - Woodland Towers.pdf",
+                "bytes": 355144
+              }
+            ],
+            "combinedPackage": [
+              {
+                "file": "2026 - RCS/Submission/Woodland Towers RCS Submission Package.pdf",
+                "bytes": 6681108
+              },
+              {
+                "file": "2026 - RCS/Woodland Towers RCS Submission Package - Signed.pdf",
+                "bytes": 6826164
+              }
+            ],
+            "tenantNotice": [
+              {
+                "file": "2026 - RCS/Woodland Towers - RCS Tenant Notice.docx",
+                "bytes": 93405
+              }
+            ]
+          },
+          "executedRs": [],
+          "priorRs": "2025/2025 - Rent Schedule - Woodland Towers - FULLY EXECUTED.pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 6,
+          "priorRsTried": [
+            "year-1 folder(3)",
+            "year-1 in the name(3)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2026 - RCS/Submission/4. 26-069 - Woodland Towers 306 Pine Lake Road Collinsville IL.pdf",
+          "hasCombined": true,
+          "problems": [
+            "top two studies are within one rank; the choice is a coin toss"
+          ],
+          "notes": [],
+          "wave": 1
+        },
+        {
+          "cycleLabel": "2021",
+          "year": 2021,
+          "studies": [
+            {
+              "file": "2021/RCS/Collinsville, IL- Woodland Towers- RCS (2020) - final 2.pdf",
+              "bytes": 11515250,
+              "rank": 6.001612808567,
+              "firm": null,
+              "s8": null,
+              "name": "Collinsville, Madison County, IL 62234",
+              "units": 1,
+              "pagesRead": 4,
+              "pageCount": 86
+            },
+            {
+              "file": "2021/RCS/Collinsville, IL- Woodland Towers- RCS (2020) - Revised 3.22.2021.pdf",
+              "bytes": 11291035,
+              "rank": 2.001616504651,
+              "firm": null,
+              "s8": null,
+              "name": "Collinsville, Madison County , IL 62234",
+              "units": 1,
+              "pagesRead": 4,
+              "pageCount": 86
+            },
+            {
+              "file": "2021/RCS/Woodland Towers_RCS Update_2021 (signed).pdf",
+              "bytes": 276411,
+              "rank": -9.99838994116,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            },
+            {
+              "file": "2021/RCS/Woodland Towers_RCS Update_2021.pdf",
+              "bytes": 212527,
+              "rank": -9.998389967575,
+              "unread": true,
+              "firm": null,
+              "s8": null,
+              "name": null,
+              "units": 0
+            }
+          ],
+          "docs": {
+            "rentSchedule": [
+              {
+                "file": "2021/2021 - Rent Schedule - Woodland Towers executed.pdf",
+                "bytes": 381424
+              },
+              {
+                "file": "2021/Woodland Towers Rent Schedule 04152021 (DRAFT).pdf",
+                "bytes": 230856
+              }
+            ],
+            "checklist": [
+              {
+                "file": "2021/RCS/Owner's RCS Checklist (signed).pdf",
+                "bytes": 47840
+              },
+              {
+                "file": "2021/RCS/Owner's RCS Checklist.pdf",
+                "bytes": 208148
+              }
+            ],
+            "coverLetter": [
+              {
+                "file": "2021/RCS/RCS Owner Cover Letter (signed).pdf",
+                "bytes": 68489
+              },
+              {
+                "file": "2021/RCS/RCS Owner Cover Letter v2 (signed).pdf",
+                "bytes": 68485
+              },
+              {
+                "file": "2021/RCS/RCS Owner Cover Letter v2.doc",
+                "bytes": 31232
+              },
+              {
+                "file": "2021/RCS/RCS Owner Cover Letter.doc",
+                "bytes": 31232
+              }
+            ],
+            "combinedPackage": [
+              {
+                "file": "2021/RCS/Woodland Towers -  5th Year Adjustment Request RCS submission (signed).pdf",
+                "bytes": 40382
+              },
+              {
+                "file": "2021/RCS/_Woodland Towers - 5th Year RCS Package Submission.pdf",
+                "bytes": 8033616
+              }
+            ],
+            "tenantNotice": [
+              {
+                "file": "2021/RCS/Woodland Towers.Tenant Notice to Change Rent.2021.Signed.pdf",
+                "bytes": 560939
+              }
+            ]
+          },
+          "executedRs": [],
+          "priorRs": "2020/Woodland Towers Rent Schedule OCAF effective 07.01.2020 HUD Approved 03.18.2020[48547].pdf",
+          "priorRsRule": "year-1 folder",
+          "priorRsRank": 6,
+          "priorRsTried": [
+            "year-1 folder(2)",
+            "year-1 in the name(2)",
+            "newest before year 0(1)"
+          ],
+          "chosenStudy": "2021/RCS/Collinsville, IL- Woodland Towers- RCS (2020) - final 2.pdf",
+          "hasCombined": true,
+          "problems": [],
           "notes": [],
           "wave": 2
         }
