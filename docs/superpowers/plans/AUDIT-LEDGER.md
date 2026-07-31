@@ -2201,29 +2201,51 @@ Plus two `/Title` traces of the source document (Crossroads' checklist is titled
 names). **The mechanism is template reuse without renaming**, and it has now been caught at
 every stage from "left in the folder" to "signed under penalty of perjury."
 
-### M13 · A unit type over 150% of its own SAFMR, absorbed by the aggregate test — 2 properties
+### M13 · A unit type over 150% of its own SAFMR, absorbed by the aggregate test — 3 properties
 
-- **Friendship Court**: 1BR $1,375 vs 150% SAFMR $1,260 — over by **$115/unit/mo**, 163.7%.
-- **Newberry Arms**: 1BR $1,175 vs $1,170 — over by **$5/unit/mo**.
+| property | unit | concluded | 150% SAFMR | over by | disclosed? |
+|---|---|--:|--:|--:|---|
+| Friendship Court | 1BR | $1,375 | $1,260 | $115/unit/mo (163.7%) | **yes**, on the study's own summary |
+| Newberry Arms | 1BR | $1,175 | $1,170 | $5/unit/mo | **yes** |
+| **Marine Terrace** | **3BR** | **$7,028** | **$6,900** | **$128/unit/mo** | **no — actively masked**, see M14 |
 
-Both studies **disclose** the overage on their own summary and rely on the gross test, which
-is the binding one. So this is not a defect — it is a **product requirement**. The app's
-150% check computes an aggregate; these two packages show a per-unit-type result the aggregate
-hides, and a reviewer reading only the app's verdict would not see it.
+The first two **disclose** the overage and rest on the gross test, which is the binding one.
+For those, this is not a defect but a **product requirement**: the app's 150% check computes
+an aggregate, and a reviewer reading only the app's verdict would not see a unit type over
+its own cap.
 
-### M14 · The threshold statement — the one sentence that says whether the package passes — is malformed in every package that prints it: 3 properties
+**Marine Terrace changes the stakes.** There the overage is not disclosed — the study's
+transmittal table compares *net* RCS rent to the *gross* 150% figure, and the difference
+between the two bases is precisely the difference between "under" and "over." The owner's
+workbook makes the mirror-image basis error, overstating headroom by $66,618/mo. So the
+app's aggregate does not merely hide a disclosed detail; on a package like this one it would
+**agree with a filed conclusion that a correct per-unit computation contradicts.**
 
-| property | what it prints | what is wrong |
-|---|---|---|
-| Friendship Court | `$133,744 > $138,060` under a caption reading "<" | **the operator is inverted** — the result is stated backwards |
-| Newberry Arms | "RCS GROSS RENT < SAFMR GROSS RENT $95,814 <$96,120" | $96,120 is **150% of** SAFMR gross, not SAFMR gross |
-| Market Square | same caption, `$174,375<$180,000` — and the concluded rent printed under a **"SAFMR RENTS"** column head | SAFMR gross is $120,000; the caption omits "150% of" twice over |
+**Product consequence:** the 150% check must report per unit type as well as aggregate, and
+must state the basis (gross, including UA) on both sides of the comparison.
 
-Two firms, three properties, one malformed template. The arithmetic behind it is right in
-all three cases; **only the sentence describing it is wrong** — which is the version most
-likely to survive review, because a reviewer checking the numbers finds them correct.
+### M14 · The threshold statement — the one sentence that says whether the package passes — is malformed in every package that prints it: 4 properties
 
-### M15 · The owner's checklist certifies attachments that are not attached — 4 properties
+| property | what it prints | what is wrong | arithmetic |
+|---|---|---|---|
+| Friendship Court | `$133,744 > $138,060` under a caption reading "<" | **the operator is inverted** — the result is stated backwards | right |
+| Newberry Arms | "RCS GROSS RENT < SAFMR GROSS RENT $95,814 <$96,120" | $96,120 is **150% of** SAFMR gross, not SAFMR gross | right |
+| Market Square | same caption, `$174,375<$180,000`; concluded rent printed under a **"SAFMR RENTS"** column head | SAFMR gross is $120,000 — the caption omits "150% of" twice over | right |
+| **Marine Terrace** | same caption — but compares **net** RCS rent to the **gross** 150% figure | **the bases do not match, and the mismatch is what makes a 3BR overage read as compliant** | **wrong** |
+
+Three firms, four properties, one malformed template.
+
+In the first three the arithmetic behind the sentence is correct and **only the sentence is
+wrong** — which is the version most likely to survive review, because a reviewer who checks
+the numbers finds them right. Marine Terrace is the case where the malformed statement stops
+being cosmetic: there the mismatch is *in the computation*, it changes the answer, and the
+owner's workbook reproduces it independently in the same direction.
+
+**The distinction to carry forward:** a caption omitting "150% of" is a labelling defect. A
+comparison whose two sides are on different bases is a **computational** one, and it looks
+identical on the page.
+
+### M15 · The owner's checklist certifies attachments that are not attached — 5 properties
 
 Woodbury Oakwood (Scope of Work unchecked / licence copy checked against a certification of
 *no* temporary licence), Friendship Court ("Signed Owner's Checklist" ticked on an unsigned
@@ -2231,6 +2253,135 @@ sheet), Newberry Arms (**both** "Signed Cover Letter" and "Signed Owner's Checkl
 on an unsigned, undated sheet), Crossroads (Scope of Work unchecked though it is at RCS p.1
 and in the TOC; licence-copy box checked against a *No* answer on the same page).
 
+**Marine Terrace** is the fifth, and carries it furthest: the checklist is Docusign-signed
+but **undated**, and the submittal cover letter bound at pp.4–5 of the filed package —
+Appendix 9-2-1, made under penalty of perjury — is **unsigned and undated** while the
+checklist beside it certifies the package complete. Market Square's checklist is likewise
+signed without a date.
+
 The checklist is Appendix 9-2-2 — the document whose entire function is to assert what the
-package contains. **In four of the seven packages read closely enough to check, it asserts
+package contains. **In five of the eight packages read closely enough to check, it asserts
 something the package contradicts.**
+
+---
+
+## Findings — Marine Terrace (75922), 2026 - RCS
+
+**SHOULD/FILED only — no sweep record.** The fifth package of the wave, and the one that
+turns M13 from a product requirement into a defect class.
+
+### A unit type is over the cap, and the study's own table conceals it
+
+SAFMR is not in dispute: filed study (Belfry 26-052), owner's workbook and the unfiled Doyle
+Phase-1 study all use **FY2026 SAFMRs for ZIP 11105 eff. 1 Oct 2025 — 1BR $3,350 / 2BR
+$3,670 / 3BR $4,600** (150% = $5,025 / $5,505 / $6,900). Doyle states the vintage explicitly.
+**No mismatch.**
+
+The aggregate passes: gross potential **$2,325,168/mo vs $2,431,620/mo** — 95.6% of the
+threshold, headroom **$106,452/mo = $241.39/unit/mo (4.38%)**. Per unit type, on the same
+gross basis:
+
+| | gross | 150% SAFMR | |
+|---|--:|--:|---|
+| 1BR | $3,716 | $5,025 | 74% |
+| 2BR | $5,302 | $5,505 | 96.3% — $203/unit/mo |
+| **3BR** | **$7,028** | **$6,900** | **OVER by $128/unit/mo** |
+
+**The study's transmittal table hides it by changing basis mid-comparison** — putting *net*
+RCS rent ($6,850) against the *gross* 150% figure. Net-vs-gross is exactly the difference
+between $6,850 and $7,028, and it is the difference between "under" and "over."
+
+**The owner's workbook makes the mirror-image error in the owner's favour**, comparing net
+$2,258,550 against gross $2,431,620 and so **overstating headroom by $66,618/mo**.
+
+Friendship Court and Newberry Arms *disclosed* their per-unit overage and rested on the
+gross test. This package does not disclose it — the comparison that would show it was taken
+on mismatched bases, in two independent documents, both times in the direction that flatters
+the result. **That is the escalation, and it is why M13 and M14 are now the same finding.**
+
+### Study selection
+
+| file | transmittal / value date | conclusion 1/2/3BR | signed |
+|---|---|---|---|
+| `Rent Grids/Doyle …Phase 1, Grids Only, 2-12-2026` | report 2/12/26, eff. 2/11/26 | 2,500 / 3,400 / 3,750 (1BR row 46 reads $2,475) | letter signed, grids unsigned |
+| `Rent Grids/Belfry …26-025` | 2/23/26, "date of value February 2026" | 3,550 / 5,115 / 6,800 | **unsigned, undated** |
+| `4 - 26-052 - …` | transmittal 4/30/26, value 3/10/26, grids signed 4/10/26 | **3,600 / 5,150 / 6,850** | signed |
+
+A two-phase Belfry engagement (grids $2,000 on 1/29; full RCS $3,000 on 2/27) explains the
+two Belfry files. **26-052 was FILED** (Exhibit C, pp.9–69). Conclusions rose $50/$35/$50
+between the 2/23 grids and the 4/30 report. **No CA decision or refusal letter exists for
+the 2026 cycle** — the only evidence of what governs is the executed schedule (Docusign
+7/16/26, executed 7/20/26), which adopts 3,600/5,150/6,850 unchanged.
+
+### Defects
+
+| # | document | field | SHOULD | FILED | verdict |
+|--:|---|---|---|---|---|
+| 1 | cover letter (bound p.1), **both submission filenames, and the Docusign envelope subject** | Section 8 number | `NY36H110071` | **`NY360011071`** | team wrong |
+| 2 | submittal cover letter (App. 9-2-1), bound pp.4–5 | owner signature | signed under penalty of perjury | typed name only — **unsigned, undated** | team wrong |
+| 3 | owner's checklist, bound p.7 | "Owner's Signature & Date" | signed and dated | Docusign-signed 5/18, **no date** | team wrong |
+| 4 | rent schedule Part A | Total Units | 444 — the form says "include non-revenue-producing units" | **441**; the non-revenue 2BR/3-unit row omitted | team wrong |
+| 5 | rent schedule Part D row 3 | unit description | "Manager's Unit" | "Supers Unit" — three identical rows | team wrong |
+| 6 | **study transmittal p.3 threshold table** | comparison basis | gross vs gross | **net RCS rent vs gross 150% SAFMR — masks 3BR $7,028 > $6,900** | team wrong |
+| 7 | same, last row label | caption | "… < **150% OF** SAFMR GROSS RENT" | "RCS GROSS RENT < SAFMR GROSS RENT" | cosmetic |
+| 8 | study, Improvements p.11 | year built / renovated | **1982 / 2018** — narrative ×3 and all three grids row 7 | "1949 (Renovated 1985/2017)" | team wrong |
+| 9 | study certification p.50 | date | signed and dated | signed, **undated** | team wrong |
+| 10 | study signature block p.3 | job no. | 26-052, matching the report | "Job No. **25**-052" | cosmetic |
+| 11 | study grids | subject address | one of the HAP addresses | "20-31 Shore Boulevard" merges two; the transmittal omits three more | cosmetic |
+| 12 | workbook cols I/M rows 5–6 | $ increase | 2,177 / 52 / 3,418 / 66 | 2,862 / 737 / 4,562 / 1,210 — an `$E$4` anchor error | team wrong |
+| 13 | **workbook row 7** | headroom basis | gross, including UA | **net contract rent — overstates headroom $66,618/mo** | team wrong |
+| 14 | tenant notice, bound p.77 | where to send comments | the CA address (CGI Federal, Latham NY, Attn B. Brown — supplied in the 5/27 reissue) | "to us at the Office" only | team wrong |
+| 15 | package assembly | corrected documents | a re-bound package | the 5/27 checklist, submittal letter and tenant notice exist only as loose PDFs; `Archive/Marine Terrace v2.pdf` is **page-identical to the 5/18 filing** | open |
+| 16 | rent schedule Part C | charges in addition to rent | parking $60 surface / $165 garage, per study and grids | blank | open |
+| 17 | rent schedule Part B | in-unit W/D | study says "in-unit washers and dryers" | no laundry item ticked | open |
+| 18 | cover letter / tenant notice | "5th Year Adjustment" | expiry of the **second** 5-year period (HAP 6/30/2016, 20-yr term) | "5th Year" | cosmetic |
+| 19 | cover & submittal letters | legal-rent constraint | Art. XI Schedule C legal rents $2,335/$3,025/$3,498 sit far below the proposed rents; a §610 amendment was requested of HPD 17 Apr 2026 and is unresolved | not mentioned | open |
+
+**#1 is the fifth glyph property and the widest blast radius yet** — the wrong contract
+number is on the letter, on *both* submission filenames, and in the Docusign envelope
+subject. Everywhere else in the record (UAF, all three grids, study body, HAP, CGI emails)
+reads `NY36H110071` correctly.
+
+**#8 is the second year-built contradiction** after Woodbury Oakwood, and it runs the same
+way: the narrative and the grids agree with each other, and the Improvements section alone
+disagrees.
+
+### A negative result that corrects an earlier finding
+
+The rent schedule's **empty FHA box is correct here** — verified at 600 dpi against the
+executed HAP contract p.2, where the FHA number is genuinely blank. The reader went to the
+contract instead of inferring from a prior schedule.
+
+**This obliges a correction to Crossroads of East Ravenswood, defect #8**, recorded above as
+`team wrong` for a blank FHA box. That row rested on the 2021 schedule having carried a
+value — but the same reader also reported that **three different FHA values sit in the
+Crossroads record and none is corroborated.** Those two statements cannot both stand.
+
+> **Crossroads #8 is downgraded from `team wrong` to `open`.** Settle it the way Marine
+> Terrace did: read the executed HAP contract and see whether an FHA number exists at all.
+
+### Patterns explicitly ABSENT
+
+Foreign contamination: **none** — the "20-24 21st Street" in the Belfry filenames traces to
+Related's own engagement request and a real Marine Terrace address, not another property.
+Glyph substitution beyond #1: **none**. Incomplete grids: **none** — all three carry rows
+5/44/46, signed 4/10/26, "Using HUD's Excel form" ticked. UA swap: **none** — UAF inputs
+reconcile exactly to the 2025 executed schedule and the outputs match the 2026 schedule and
+the study. Signed-copy-in-archive: **none**. CA reviewer letters: **none exist for 2026.**
+
+### Instrument notes
+
+- All money figures read from **vector text layers**, not OCR. **No separator claim is
+  made** — every separator seen was a comma, none load-bearing, nothing re-rendered.
+  Consistent with M8's closure.
+- **The filed study's grids are 201-ppi raster images** — rendering above ~200 dpi adds
+  nothing. The same grids in the unfiled `26-025` are vector text and are the better source
+  for grid identifiers. Worth generalising: the *filed* copy is not always the most legible.
+- dpi: 1200 for `NY360011071`, 900 for "Job No. 25-052", 600 for the HAP contract, 110–200
+  for checkbox states.
+- HUD-92458s: doc 5 has live widgets (`/V`); the 7/16 signed and 7/20 executed copies are
+  flattened. `pdftotext` returns nothing on any of them.
+- `Submission/Archive/Marine Terrace v2.pdf` has a **damaged text layer** (fields extract
+  blank) but renders correctly — read as raster. It is a re-save, not a correction.
+- **Could not determine:** whether CGI received the 5/27 corrections; whether CGI issued any
+  decision; the disposition of the §610 request. No 2026 CA correspondence exists.
