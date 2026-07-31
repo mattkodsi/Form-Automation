@@ -1246,3 +1246,84 @@ So M8 as stated was too broad. The mechanism is real where the *rendering* shows
 an artefact of the scan, not the document. **Only the rendered glyph counts**, which is
 exactly why the method reads images. A comparator patched to strip periods would corrupt
 genuine decimals; the fix must be per-document detection, not a blanket rule.
+
+---
+
+## Findings — Oaks on North Plaza (75544), 2025 (RCS)
+
+### H6 · The manifest reported four documents absent that are present — and the cause is mechanical
+
+The manifest flags *"no filed coverLetter, submittalLetter, checklist, tenantNotice"*.
+**Three of the four exist**, bound inside
+`2025 (RCS)/Submission Package/…5 year option renewal of HAP contract_Signed.pdf` —
+p.1 submittal letter, p.4 Appendix 9-2-1 cover letter, p.6 Appendix 9-2-2 checklist, all
+signed by Ron Kowal.
+
+**Why the walker missed them:** pages 1–7 of both signed files carry **no text layer at
+all** (`pdftotext` returns empty). A text-based detector sees a 92-page PDF whose first
+readable page is an RCS cover, and classifies the whole thing as a study. **Only
+rendering finds the letters.**
+
+This is a `build-manifest.js` defect with a named cause, and it is not property-specific:
+any scanned submission will be mis-classified the same way. It also means **"no filed X"
+in the manifest is not evidence of absence** — every such flag in the other 87 cycles is
+suspect. The tenant notice here *is* genuinely absent, proved by scanning all 44 files.
+
+### H5, third instance — and the largest gap yet
+
+The two "coin toss" studies are **not** byte-identical (md5 `cc778ef9…` vs `bbdc28c7…`;
+77 of 85 pages differ at pixel level). They are two **editions**: August 30 analyses four
+unit types (16 × 1 BR); September 16 breaks the two ADA units into six rows.
+
+Rendering all 85 bound pages against both: **85/85 identical to the August edition.**
+
+| | supports monthly | annual |
+|---|--:|--:|
+| study **bound into the filed submission** (Aug 30) | $119,920 | $1,439,040 |
+| **executed HUD-92458** | **$121,105** | **$1,453,260** |
+| study *not* bound (Sep 16) | $121,105 ✓ | $1,453,260 ✓ |
+
+**A $1,185/month, $14,220/year gap between the filed study and the executed schedule** —
+exactly the two ADA units repriced from 1 BR to 2 BR and 3 BR. The September revision
+supports the executed figure to the dollar, is dated five days after the owner signed,
+and **nothing in the folder shows it was transmitted.**
+
+**A heuristic inversion worth carrying:** here the **`Archive/` copy is the one that was
+filed**. "Cycle root = operative, Archive = superseded" is backwards for this property and
+would pick the wrong document.
+
+### Other findings
+
+| # | document | field | SHOULD | FILED | verdict |
+|--:|---|---|---|---|---|
+| 1 | Owner's checklist | "Owner's Signature **& Date**" | a date | signed, **date renders blank** (the facing cover letter got 09/11/2024) | team wrong |
+| 2 | Study, **both editions** | 3 BR unit size | **1,044** (grid header, grid line 13, every size adjustment, and the owner's own `OONP Breakdown.xlsx`) | **1,054** in the summary and unit-mix tables — propagating to NRA 6,324 vs 6,264, total NRA 50,450 vs 50,390, average 814 vs 813, and $/SF $2.21 vs the grid's $2.23 | team wrong |
+| 3 | `Rent Grid Analysis.xlsx` | SAFMR ZIP label | 78753 (Austin) | **80209 — Denver** | team wrong |
+| 4 | same | firm labels | Cornerstone | `Starmark Rents` (P30), `Gill Rents` (P29) on the Cornerstone block | team wrong |
+| 5 | same, `Questions` sheet | subject | Oaks on North Plaza | **Ash, Pine, The Detroit Apartments, 50 Corona, 66 Pearl, Carlisle on the Park** | team wrong |
+| 6 | same `O27`/`O28` | 150% test basis | gross vs gross | **net** annual contract rent vs **gross** SAFMR — understating the subject side by the entire utility allowance | team wrong |
+| 7 | Non-Shelter Service Summary | Property Name / HAP no. | Oaks on North Plaza / TX590022011 | both render blank | team wrong |
+
+**Items 3–5 are genuine contamination, and the source is still in the folder:**
+`TEMPLATE - Non-Shelter Service Summary.xlsx` carries Property Name "**The Trees**" with
+Denver vendors — which is where 80209 comes from. **Second confirmed instance** after
+Colonial Village, so contamination-in-a-filed-workbook clears the mechanism bar.
+
+The same package shows why the alias rule matters: `fka North Plaza Apartments` on the
+rent schedule is a **genuine alias**, and `Gill` on the left block is a **correct firm
+label** (the 2019 appraiser). Neither must be normalised away.
+
+### Two instrument notes
+
+- **The agent caught its own false positive.** The threshold-conclusion sentence appeared
+  absent from the September edition's text layer; on render it had simply moved to the
+  next page. Reported as a near-miss rather than filed as a finding.
+- **M8 confirmed as a text-layer artefact here.** The RCS appendix reproduces the 2024
+  schedule as a scan whose OCR emits `1, 198`, `11, 190023`, `TX5900220 11`. None of it
+  is in the rendering. This is the third property supporting the corrected M8: **only the
+  rendered glyph counts.**
+
+M1: `TX590022011` sits in the box labelled "FHA Project Number" on every schedule
+2021–2026, and the project has **no** FHA number — Exhibit A, the appraiser's
+certification and the 2026 Appendix 2 all say `N/A`, and the grids' FHA box renders blank.
+Digits verified at 400 dpi.
