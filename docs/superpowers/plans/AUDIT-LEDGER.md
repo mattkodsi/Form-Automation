@@ -1327,3 +1327,111 @@ M1: `TX590022011` sits in the box labelled "FHA Project Number" on every schedul
 2021–2026, and the project has **no** FHA number — Exhibit A, the appraiser's
 certification and the 2026 Appendix 2 all say `N/A`, and the grids' FHA box renders blank.
 Digits verified at 400 dpi.
+
+---
+
+## M8 RETRACTED — the period separator is probably a rendering artefact
+
+**I asserted a mechanism that the evidence no longer supports. Recording the retraction
+where the claim was made.**
+
+M8 said the HUD-92458 prints thousands separators as periods, on the strength of Westwood
+Village (`43.355`) and Colonial Village (`1.850`, `59.200`). Three later packages tested
+it and **all three explain it away**:
+
+| package | what was found |
+|---|---|
+| North Park | `85.024`, `2.727` appear in `pdftotext` of a **scan** — OCR noise in that scan's text layer. Rendered: commas |
+| Oaks on North Plaza | `1, 198`, `11, 190023`, `TX5900220 11` from a scanned appendix — same artefact class |
+| **Hampshire House** | at **150 dpi** the figures render as `164.995`, `180.000`, `2.073`; at **400 dpi** they resolve to commas; at **1200 dpi** the `1,368` glyph shows an **unmistakable descending comma tail** |
+
+The Hampshire House result is the decisive one, because it is not an OCR artefact — **it
+is the rendering itself**. Low-DPI rasterisation thins a comma's tail until it reads as a
+period. The agent also noted the scanned 2019/2021 schedules show the same thinning, and
+that those documents' own arithmetic only works on a comma reading.
+
+**Consequence:** the two instances M8 rested on were never re-checked at high DPI, so
+**M8 is withdrawn pending re-verification of Westwood Village and Colonial Village at
+1200 dpi.** It should not be treated as a mechanism, and no comparator change should be
+made for it.
+
+The methodological lesson is worth more than the retracted finding: **a glyph read at
+150–200 dpi is not evidence.** Several findings in this ledger were confirmed at 300–400
+dpi, which Hampshire House shows can still be too low for comma-versus-period. Digit
+identity (letter O vs zero) held up at 400 dpi; separator identity apparently needs more.
+
+---
+
+## Findings — Hampshire House (75495), 2024 - RCS
+
+### The substantive defect: a unit disappeared from the executed federal form
+
+| # | document | field | SHOULD | FILED | verdict |
+|--:|---|---|---|---|---|
+| 1 | HUD-92458 eff. 10.1.24 | Col.1 rows | a `Non-Revenue 2 BR` row, 1 unit | **row absent** | team wrong |
+| 2 | same | Total Units | **116** | **115** | team wrong |
+
+All four prior executed schedules (2019, 2021, 2022, 2023) carry the Non-Revenue row and
+`Total Units 116`, several distinguishing "Section 8 Units 115" separately. Col.1's own
+printed instruction reads *"(Include Non-revenue Producing Units)"*. The 116th unit has
+not gone away — the 2023 OCAF worksheet still states 116 total / 115 Section 8 — but on
+the 2024 form it is recorded **nowhere**, Part D being empty with `$0` rent loss. **The
+error is inherited by 2025 and 2026.**
+
+Defensible reading: 115 is the *contract* unit count, Exhibit A correctly says 115, and
+the CA countersigned. But the 92458's Total Units cell and Exhibit A's contract count are
+different quantities, and 2019–2023 kept them distinct. Recorded as a value discrepancy.
+
+### The prior-schedule trap, located precisely
+
+An executed 2023 schedule **does** exist. The designated file shares its DocuSign envelope
+and owner-signature date but has a blank Part I — it is the owner-executed,
+not-yet-countersigned copy. The difference is **Part F: `$154,030` designated vs
+`$164,995` executed**, hand-entered and initialled `NM` by the CA coordinator.
+
+`$154,030` is **the 2021 Monthly Contract Rent Potential** — a value stale by two cycles.
+Anchoring SHOULD on the designated file would have set the prior-year maximum $10,965/month
+low. (I checked the utility allowances specifically for the New Horizons $1-class error at
+1200 dpi: there is none. Part F and Part I are the *only* differences.)
+
+### Post-certification alteration — present here, and LEGITIMATE
+
+The 2023 executed schedule shares the signed copy's envelope and date yet its Part F
+differs. **Part F is captioned "(to be completed by HUD or lender)"** — the CA filling it
+in after owner certification is proper, not tampering.
+
+**This sharpens the Clinton Manor finding rather than weakening it.** There the altered
+fields were **Col.5 and Col.6**, which the owner certifies — not Part F, which HUD owns.
+A comparison that flags any same-envelope difference would call this legitimate case a
+defect; the discriminator is *which field* moved.
+
+### Two firms — and here both passed
+
+Unlike New Horizons. Verbatim result cells: **Renzi `Q19 = 'YES'`** (248,465 vs 270,375)
+and **Gill `Q35 = 'YES'`** (182,715 vs 270,375). Both clear.
+
+The workbook states the gap itself: `L37 Renzi 2,880,000`, `L38 Gill 2,091,000`,
+`L40 Delta ($) −789,000` — **$789,000 a year, $65,750 a month**, and the higher was
+retained. Reported as fact; no conclusion about intent. Gill's grids were **never
+finalised**: the signature block renders an `IN PROGRESS` stamp and the FHA field renders
+the template placeholder `Insert Text`. Only Renzi produced a signed, complete RCS.
+
+### Other findings
+
+| # | document | field | SHOULD | FILED | verdict |
+|--:|---|---|---|---|---|
+| 3 | Loose `Exhibit 5 - UAF Letter 2024.pdf` | contract number | `NJ390030010` | **`NJ90030010`** — a digit dropped — and unsigned | team wrong |
+| 4 | UAF letter, **both** copies | printed calculations | `68 × 1.033 = 70.244`; `83 × 1.033 = 85.739` | **`= 70.21`; `= 85.70`** — the products of 1.0325, not the stated 1.033 | team wrong |
+| 5 | Both grids, both study versions | "Subject's FHA #" | no FHA number exists | `NJ390030010` | team wrong |
+| 6 | RCS gross renewal potential | reconciliation to the executed schedule | $248,795 | **$248,450** — the CA applied a **gas** UAF of 1.312 that the owner's letter, treating the whole allowance as electric, did not | undetermined |
+
+**Loose vs bound ran three times here and would have produced three false findings** —
+loose Exhibits 1, 2 and 5 all render unsigned; all three are properly signed in the bound
+copy. The package is clean; the drafts left beside it are not.
+
+**Study selection:** `24-076` (5 June) is bound and governs; `24-259R` (6 Aug) is a
+post-submission refresh. **Conclusions are identical** — every comparable was re-surveyed
+and four rents moved, but both reach $2,000 / $2,400. Which study the CA held at approval
+is undetermined; its letter cites no job number.
+
+M1: 10 of 10.
