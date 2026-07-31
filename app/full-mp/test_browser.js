@@ -35,7 +35,7 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=558;   // 2026-07-30: +19 a locked cell is not a control   // 2026-07-30 merge: union of both branches, counted off a real run (was ours 435 / main 399)
+const MIN_CHECKS=564;   // 2026-07-30: +19 a locked cell is not a control, +4 the two doors into a package   // 2026-07-30 merge: union of both branches, counted off a real run (was ours 435 / main 399)
                         //;   // 2026-07-30 merge: the union of both branches, counted off a real run.
                         // ours: +81 for the section rail — the indicator's choice of section swept
                         //   across the whole document, the jump landing clear of a #ccbar that is now
@@ -2291,27 +2291,53 @@ const FULL=process.argv.includes('--full');
 
       await c.eval('document.querySelector(\'[data-pact="ST001"]\').click();return 1');
       await sleep(500);
-      const dlg=await c.eval('return {open:document.getElementById("scrim").classList.contains("open"),'
-        +'ocaf:!!(document.getElementById("cyOCAF")||{}).checked,'
-        +'rcs:!!(document.getElementById("cyRCS")||{}).checked,'
-        +'uaf:!!(document.getElementById("cyUAF")||{}).checked,'
-        +'eff:(document.getElementById("cyEff")||{}).value||"",'
-        +'note:(document.querySelector("#dialog .lh-note")||{}).textContent||""};');
+      const dlg=await c.eval(`return {open:document.getElementById("scrim").classList.contains("open"),
+        radios:!!document.getElementById("cyRCS")||!!document.getElementById("cyOCAF"),
+        dateInput:!!document.getElementById("cyEff"),
+        uafBox:!!document.getElementById("cyUAF"),
+        uaf:!!(document.getElementById("cyUAF")||{}).checked,
+        locked:[...document.querySelectorAll("#dialog .fbox.locked .lockv")].map(x=>x.textContent),
+        titles:[...document.querySelectorAll("#dialog .fbox.locked")].map(x=>x.getAttribute("title")||"")};`);
       T('pressing Start opens the new-package dialog',dlg.open);
-      /* Pre-filled, not silent. createCycle records an effective date as
-         date_eff_source='custom' — "the user typed this" — so starting silently
-         would have the app assert a hand-entered date nobody ever saw. */
-      T('with the tracker\'s program pre-selected',dlg.ocaf&&!dlg.rcs);
-      eq('and its date pre-filled and visible',dlg.eff,'01/01/2030');
-      T('and the schedule named as where that came from',/renewal schedule/i.test(dlg.note));
-      /* The tracker's Next UA Baseline column is empty on all 2853 rows, so it
-         has no opinion about utility allowances and we do not invent one. */
-      T('UAF is not pre-ticked — the tracker says nothing about it',!dlg.uaf);
+      /* It used to PRE-FILL both answers and let you overrule them. It states
+         them now: the schedule decides when a renewal is due and what it is,
+         and two systems that both own one fact have no arbiter when they
+         disagree. The dialog is still a confirming click, not a silent create —
+         createCycle would otherwise record the date as date_eff_source='custom',
+         which means "the user typed this" about a value nobody ever saw. */
+      eq('the programme is stated, not offered',dlg.locked[0],'OCAF — HUD’s published factor sets the rents');
+      eq('and so is the date',dlg.locked[1],'January 1, 2030');
+      T('neither is a control any more',!dlg.radios&&!dlg.dateInput);
+      T('and each says where to change it',/renewal schedule/i.test(dlg.titles[0]||''));
+      /* The date the package is created with is the date it KEEPS. A schedule
+         that moves afterwards does not drag a submission along behind it. */
+      T('the date says it is fixed from here on',/keeps this date/i.test(dlg.titles[1]||''));
+      /* UAF stays a live choice: the tracker's Next UA Baseline column is empty
+         on all 2853 rows, so it has no opinion about utility allowances and we
+         neither invent one nor take the option away. */
+      T('UAF is still a choice',dlg.uafBox);
+      T('and is not pre-ticked — the tracker says nothing about it',!dlg.uaf);
 
       await c.eval('document.getElementById("dlgOk").click();return 1');
       await sleep(700);
       const cy=await c.eval('return (window.__t.__cycles()||[]).map(c=>({e:c.effective_date,p:c.programs}))');
       eq('confirming creates the package the tracker described',cy,[{e:'2030-01-01',p:['ocaf']}]);
+
+      /* THE OTHER DOOR. "+ Start a package" answers to no schedule row, and it
+         is how a property the tracker does not carry — and a standalone utility
+         allowance revision, whose date is a judgement — get made at all. It must
+         stay fully editable, or locking the tracker's answer quietly removes the
+         only way to file anything the tracker did not predict. */
+      await c.eval('document.getElementById("bNewCycle").click();return 1');
+      await sleep(500);
+      const man=await c.eval(`return {radios:!!document.getElementById("cyRCS")&&!!document.getElementById("cyOCAF"),
+        dateInput:!!document.getElementById("cyEff"),
+        locked:document.querySelectorAll("#dialog .fbox.locked").length};`);
+      T('starting one by hand still offers both programmes',man.radios);
+      T('and a date you can type',man.dateInput);
+      eq('and locks nothing',man.locked,0);
+      await c.eval('document.getElementById("dlgCancel").click();return 1');
+      await sleep(300);
 
       /* Starting a package is not a deadline, so it moves nothing. The rail
          lifted the property out of "Needs you" the moment a draft existed,
