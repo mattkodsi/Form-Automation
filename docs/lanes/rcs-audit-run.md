@@ -87,3 +87,58 @@ needs no ground truth, so its violations are findable tonight even where a compa
 not. Every violation carries the seed that replays it.
 
 Do not wait for approval between packages. Matt is asleep.
+
+---
+
+## Fan out. Do not read the corpus in your own context.
+
+Added after the run started, because the file above did not say it and it decides
+whether the night finishes.
+
+**The mechanical leg is already parallel** — `sweep.js --jobs 3` drives three browsers
+at once. That is not what this section is about.
+
+**The reading leg is the one that will kill you.** The method says every page of every
+document is rendered and read BY EYE. That is images, dozens per package, across ~68
+packages. Done in one context it exhausts the window somewhere around package three,
+and everything after that is a summary of a summary — which is exactly the failure this
+lane was created to stop.
+
+So: **one subagent per package.** It reads the pages, and it returns rows — never the
+pages, never long quotations of what it saw. Your context holds the ledger, the
+mechanism traces and the repairs; theirs holds the documents.
+
+Run **4–6 at a time**. Beyond that the drives contend and the account fills with
+scratch records faster than cleanup runs.
+
+### The brief each one gets
+
+> Audit ONE package end to end: `<property>`, cycle `<label>`. Observation only — do not
+> edit code, do not fix anything, do not run `deliver.sh`, do not push.
+>
+> 1. Read the SOURCES first and write down what the package must contain, BEFORE opening
+>    any output: the RCS study's concluded-rent table and the prior executed rent
+>    schedule. Read them as IMAGES (the Read tool's `pages:` parameter). Do NOT use a
+>    text parser — the parser is the thing under test and has produced confident
+>    nonsense before.
+> 2. Read what the app generated, in both fill orders, under the sweep's `_out` tree.
+>    Same rule: look at the pages.
+> 3. Read what the PM team filed, in the property's cycle folder.
+> 4. Return ledger rows ONLY:
+>    `property · year · document · field · SHOULD · OURS · FILED · verdict · where you
+>    read each value (file + page)`. Verdict is one of `app wrong`, `team wrong`,
+>    `both wrong`, `cosmetic`.
+> 5. EXACT values. If you cannot read something, say so — never infer a number, and
+>    never fill a gap with what the other two legs say.
+> 6. Do not propose fixes. The mechanism trace and the repair belong to the coordinator.
+
+### What you do with what comes back
+
+Append rows to `docs/superpowers/plans/AUDIT-LEDGER.md` and **push after every wave**,
+not at the end. A row whose mechanism is not traced stays `undiagnosed`, and no repair
+is written against an undiagnosed row.
+
+Fix by MECHANISM, never by property, and never from a single property: either two
+properties show it or a code reading shows it is general. Repairs are serialized — one
+at a time, by you, never by a subagent — because one mechanism usually spans many
+properties and two agents editing `app.js` collide.
