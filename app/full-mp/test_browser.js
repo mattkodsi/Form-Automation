@@ -35,7 +35,7 @@
 const cp=require('child_process'),http=require('http'),fs=require('fs'),os=require('os'),path=require('path'),net=require('net');
 
 /* ── the verdict machinery ──────────────────────────────────────────────── */
-const MIN_CHECKS=584;   // 2026-07-31: +6 the source badge follows the value   // 2026-07-31: +8 the project-name box carries two names   // 2026-07-30: +19 a locked cell is not a control, +4 the two doors into a package   // 2026-07-30 merge: union of both branches, counted off a real run (was ours 435 / main 399)
+const MIN_CHECKS=588;   // 2026-07-31: +4 UAF-only is a first-class creation card (Piece 4)   // 2026-07-31: +6 the source badge follows the value   // 2026-07-31: +8 the project-name box carries two names   // 2026-07-30: +19 a locked cell is not a control, +4 the two doors into a package   // 2026-07-30 merge: union of both branches, counted off a real run (was ours 435 / main 399)
                         //;   // 2026-07-30 merge: the union of both branches, counted off a real run.
                         // ours: +81 for the section rail — the indicator's choice of section swept
                         //   across the whole document, the jump landing clear of a #ccbar that is now
@@ -2362,12 +2362,30 @@ const FULL=process.argv.includes('--full');
       const man=await c.eval(`return {radios:!!document.getElementById("cyRCS")&&!!document.getElementById("cyOCAF"),
         dateInput:!!document.getElementById("cyEff"),
         cards:document.querySelectorAll("#dialog .cypg").length,
+        uafo:!!document.getElementById("cyUAFo"),
+        rider:!!document.getElementById("cyUAF"),
         locked:document.querySelectorAll("#dialog .fbox.locked,#dialog .cypg.set,#dialog .cypg.off").length};`);
       T('starting one by hand still offers both programmes',man.radios);
       T('and a date you can type',man.dateInput);
-      eq('the same two cards, either way',man.cards,2);
+      /* Piece 4: UAF-only is a first-class rent-setting choice now, not a rider
+         reachable only by making an RCS/OCAF and stripping it -- three cards, the
+         third its own "utility allowance only". */
+      eq('starting one by hand now offers three programme choices',man.cards,3);
+      T('and UAF-only is one of them, a card of its own',man.uafo);
+      T('the also-add-UAF rider is still there for a combined package',man.rider);
       eq('and locks nothing',man.locked,0);
-      await c.eval('document.getElementById("dlgCancel").click();return 1');
+      /* Choosing UAF-only stands the now-redundant rider down. */
+      await c.eval('document.getElementById("cyUAFo").click();return 1');await sleep(80);
+      const rider=await c.eval('const r=document.getElementById("cyUAF");return {disabled:!!r.disabled,checked:!!r.checked}');
+      T('choosing UAF-only unticks and disables the also-add-UAF rider',rider.disabled&&!rider.checked);
+      /* And it creates a UAF-only package directly -- no RCS/OCAF made first. */
+      await c.eval('const e=document.getElementById("cyEff");if(e)e.value="06/01/2033";return 1');
+      await c.eval('document.getElementById("dlgOk").click();return 1');await sleep(800);
+      const madeUaf=await c.eval('const cs=window.__t.__cycles()||[];const c=cs.find(x=>String(x.effective_date).indexOf("2033")===0);window.__uafProbeCid=c?c.id:null;return c?c.programs:null');
+      eq('confirming creates a UAF-only package, no rent method attached',madeUaf,['uaf']);
+      /* Undo the probe so the scheduled OCAF stays this property's dominant
+         package for the checks below. */
+      await c.eval('if(window.__uafProbeCid)await mpdb.deleteCycle(window.__uafProbeCid);window.__t.openMenu();return 1');
       await sleep(300);
 
       /* Starting a package is not a deadline, so it moves nothing. The rail

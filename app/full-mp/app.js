@@ -5254,7 +5254,7 @@ function newCycleDialog(pre){
   const _fixed=!!(_fixProg&&_fixEff);
   const _WHY_PROG='The renewal schedule says this is '+(_fixProg==='ocaf'?'an OCAF':'an RCS')+' year. Change it in the schedule to revise it.';
   const _WHY_EFF='The date the renewal schedule carries. Once this package is created it keeps this date, whatever the schedule says later.';
-  const card=(id,tag,name,sub)=>'<label class="cypg" for="'+id+'">'
+  const card=(id,tag,name,sub,style)=>'<label class="cypg" for="'+id+'"'+(style?' style="'+style+'"':'')+'>'
     +'<input type="radio" name="cyprog" id="'+id+'">'
     +'<span class="cyc-tag">'+tag+'</span>'
     +'<span class="cyc-n">'+name+'</span>'
@@ -5277,18 +5277,27 @@ function newCycleDialog(pre){
     +(_fixed?(lockedCard('rcs','RCS','Market reset','A rent comparability study sets the rents.')
              +lockedCard('ocaf','OCAF','Factor adjustment','HUD\u2019s published factor sets the rents.'))
             :(card('cyRCS','RCS','Market reset','A rent comparability study sets the rents.')
-             +card('cyOCAF','OCAF','Factor adjustment','HUD\u2019s published factor sets the rents.')))
+             +card('cyOCAF','OCAF','Factor adjustment','HUD\u2019s published factor sets the rents.')
+             +card('cyUAFo','UAF','Utility allowance only','No rent change \u2014 revise the utility allowances.','grid-column:1/-1')))
     +'</div></div>'
-    +'<div class="dlg-field"><label class="cyaddl">Also in this package</label>'
+    +'<div class="dlg-field" id="cyRiderField"><label class="cyaddl">Also in this package</label>'
     +'<label class="cyopt cyadd"><input type="checkbox" id="cyUAF"> <span><b>UAF</b> \u2014 revise the utility allowances</span></label></div>'
     +'<div class="dlg-field"><label>Rents effective</label>'
     +(_fixed?lockedLine(fmtDateLong(_fixEff),_WHY_EFF)
       :('<input id="cyEff" autocomplete="off" value="'+esc((pre&&pre.effective)?fmtDate(pre.effective):effPh)+'" placeholder="'+esc(effPh||'mm/dd/yyyy')+'">'))+'</div>'
     +'<div class="autherr" id="cyErr"></div>'
     +'<div class="dlg-row"><button class="btn" id="dlgCancel">Cancel</button><span class="dlg-sp"></span><button class="btn p" id="dlgOk">Create</button></div>');
-  const rcs=el('cyRCS'),ocaf=el('cyOCAF'),uaf=el('cyUAF'),err=el('cyErr');
+  const rcs=el('cyRCS'),ocaf=el('cyOCAF'),uafo=el('cyUAFo'),uaf=el('cyUAF'),err=el('cyErr');
   if(pre&&pre.program==='ocaf'&&ocaf)ocaf.checked=true;
   else if(pre&&pre.program==='rcs'&&rcs)rcs.checked=true;
+  /* UAF-only is a first-class rent-setting choice, not a rider you can only reach
+     by making an RCS/OCAF and stripping it. When it is picked the "Also in this
+     package" UAF rider is redundant, so it is unticked and dimmed. */
+  const _cySyncRider=()=>{const only=!!(uafo&&uafo.checked);
+    if(uaf){if(only){uaf.checked=false;uaf.disabled=true;}else uaf.disabled=false;}
+    const rf=el('cyRiderField');if(rf&&rf.style)rf.style.opacity=only?'.4':'';};
+  [rcs,ocaf,uafo].forEach(r=>{if(r&&r.addEventListener)r.addEventListener('change',_cySyncRider);});
+  _cySyncRider();
   const ce=el('cyEff');if(ce&&ce.addEventListener)ce.addEventListener('input',()=>{ce.value=fmtDateInput(ce.value);});
   _dlgEnter=()=>{const ok=el('dlgOk');if(ok)ok.click();};
   /* One radio group. The exclusion is the control's own, not a pair of
@@ -5297,9 +5306,9 @@ function newCycleDialog(pre){
   el('dlgOk').onclick=async()=>{
     const programs=[];
     if(_fixed)programs.push(_fixProg);
-    else{if(rcs.checked)programs.push('rcs');if(ocaf.checked)programs.push('ocaf');}
-    if(uaf.checked)programs.push('uaf');
-    if(!programs.length){err.textContent='Choose how the rents are being set \u2014 a market reset or a factor adjustment.';return;}
+    else{if(rcs.checked)programs.push('rcs');else if(ocaf.checked)programs.push('ocaf');else if(uafo&&uafo.checked)programs.push('uaf');}
+    if(uaf&&uaf.checked&&programs.indexOf('uaf')<0)programs.push('uaf');
+    if(!programs.length){err.textContent='Choose how the rents are being set \u2014 a market reset, a factor adjustment, or a utility-allowance revision.';return;}
     /* No cyEff input exists when the schedule fixed the date, so read the fact,
        not the control that would have held it. */
     const eff=_fixed?_fixEff:(fmtDateInput((el('cyEff').value||'').trim())||effPh);   // left blank, the package takes the date shown in gray: a year on from the last one
