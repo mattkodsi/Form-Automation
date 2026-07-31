@@ -74,17 +74,53 @@ function makeSupabaseDb(client) {
     if (isPerCycleKey(key)) p.percycle[key] = cell; else p.durable[key] = cell;
   };
 
+  /* PostgREST answers an unbounded select with its OWN page size, not the whole
+     table, and says so only in a 206 and a Content-Range nobody was reading. On
+     2026-07-31 hap_schedule held 4,273 rows and this loader received exactly
+     1,000 of them.
+
+     Nothing threw. The app simply believed the tracker ended a third of the way
+     through, and the damage surfaced two callers away: the Renewals page showed
+     87 of 88 properties "Awaiting the next schedule", and the corpus driver
+     refused Colonial Village 2026 for want of a startable row the table
+     certainly holds. Brewster Mews was the tell — it found a row eight years
+     late rather than none at all, which is what a truncated table looks like
+     and a broken date comparison does not.
+
+     It was invisible until today only because the previous export began at each
+     property's NEXT renewal, so the first 1,000 rows happened to be the ones
+     that mattered. New data did not break this; it stopped concealing it.
+
+     Paged for EVERY table, not just the one that broke. property is at 249 and
+     unit_type/ns8_unit grow with every package, so each of these is the same
+     bug waiting for its own row count. A short page ends the walk; a full one
+     means there may be more. */
+  const PAGE = 1000;
+  async function selectAll(table) {
+    const out = [];
+    for (let from = 0; ; from += PAGE) {
+      const r = await client.from(table).select('*').range(from, from + PAGE - 1);
+      if (r && r.error) return { data: out, error: r.error };
+      const got = (r && r.data) || [];
+      out.push(...got);
+      if (got.length < PAGE) return { data: out, error: null };
+      /* A table that keeps answering full pages forever is a paging bug, not a
+         big table. Refuse to spin. */
+      if (out.length > 500000) return { data: out, error: new Error('refusing to page past 500,000 rows of ' + table) };
+    }
+  }
+
   async function load() {
     const [pr, ur, nr, li, ct, dr, cy, hp, au] = await Promise.all([
-      client.from('property').select('*'),
-      client.from('unit_type').select('*'),
-      client.from('nonrev_unit').select('*'),
-      client.from('ns8_unit').select('*'),
-      client.from('pm_contact').select('*'),
-      client.from('app_contact').select('*'),
-      client.from('cycle').select('*'),
-      client.from('hap_schedule').select('*'),
-      client.from('app_user').select('*'),
+      selectAll('property'),
+      selectAll('unit_type'),
+      selectAll('nonrev_unit'),
+      selectAll('ns8_unit'),
+      selectAll('pm_contact'),
+      selectAll('app_contact'),
+      selectAll('cycle'),
+      selectAll('hap_schedule'),
+      selectAll('app_user'),
     ]);
     for (const q of [pr, ur, nr, li, ct, dr, cy]) if (q && q.error) throw q.error;
     D = { props: {}, contacts: [], dir: [], activePid: null, cycles: {}, hap: [], hapError: '', pmName: '' };

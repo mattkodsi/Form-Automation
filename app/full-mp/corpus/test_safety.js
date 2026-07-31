@@ -18,7 +18,7 @@
    ocr.js would move billing somewhere nothing is counting; that is the failure
    these guard now. */
 const fs=require('fs'),path=require('path'),cp=require('child_process');
-const MIN_CHECKS=27;   // 2026-07-31: six portfolio-safety rails added - cleanup deletes
+const MIN_CHECKS=30;   // 2026-07-31: six portfolio-safety rails added - cleanup deletes
                        // CYCLES not properties, and the driver fails closed on create.
                        // 2026-07-30: check 5 became five real ones - the rail moved
                        // out of this file and into sweep.js/drive.js, so it can be DRIVEN.
@@ -203,6 +203,30 @@ const fakeBoth=(name,calls,delay)=>{
   T('every run records the provenance histogram the form actually reached',
     /const EX_PROV = /.test(dsrc)
     && /\.provenance = await c\.eval\(EX_PROV\)/.test(dsrc));
+  /* ---- the 1000-row cap, 2026-07-31 ----------------------------------
+     PostgREST answered an unbounded select with its own page size and said so
+     only in a 206. hap_schedule held 4,273 rows; the app received 1,000.
+     Colonial Village 75708 has 20 rows in that table and only 3 inside the cut,
+     so the driver refused its 2026 package for want of a row the table holds;
+     Brewster Mews found one eight years late; North Park and Oxford House read
+     as "Awaiting the next schedule" against five and six future rows.
+
+     This is a SOURCE guard, and weaker than a behavioural one: db.supabase.js
+     depends on bundle globals and will not load standalone, so a stub-client
+     test would have to build the whole bundle. The behaviour was verified
+     against the live table instead - 4,273 rows retrieved where 1,000 came back
+     before - and that evidence is in AUDIT-LEDGER.md, not here. What this
+     catches is the regression: someone putting an unbounded select back. */
+  const dbs=fs.readFileSync(path.join(MP,'db.supabase.js'),'utf8');
+  const loadFn=dbs.slice(dbs.indexOf('async function load()'), dbs.indexOf('async function load()')+1200);
+  T('the loader pages every table through .range() - no unbounded select survives in load()',
+    !/\.select\('\*'\)\s*,/.test(loadFn) && /selectAll\('hap_schedule'\)/.test(loadFn));
+  T('selectAll walks with .range() and stops on a short page',
+    /\.range\(from, from \+ PAGE - 1\)/.test(dbs) && /got\.length < PAGE/.test(dbs));
+  T('every table is paged, not only the one that broke - property hits this past 1000 too',
+    ['property','unit_type','nonrev_unit','ns8_unit','pm_contact','app_contact','cycle','hap_schedule','app_user']
+      .every(t=>loadFn.indexOf("selectAll('"+t+"')")>=0));
+
   T('and it reads the store rather than the painted colours, so a styling change cannot move it',
     /for\(const k in form\)/.test(dsrc) && !/getComputedStyle/.test(dsrc.slice(dsrc.indexOf('const EX_PROV'), dsrc.indexOf('const EX_QUIET'))));
 
