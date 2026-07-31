@@ -1661,15 +1661,35 @@ manifest — properties, cycles, auditable cycles — is inflated by these four.
 - **Cost and exposure are real.** Two duplicated packages are still queued. Driving them
   buys nothing and doubles the live-account cleanup surface for those properties.
 
-### Not established
+### Settled — Drive really holds two folders. Not an rclone artifact, not a shortcut.
 
-Whether Drive genuinely holds two folders, or holds one folder plus a **shortcut** that
-rclone materialised as a second copy. `rclone copy` will expand a shortcut into a real
-directory under default settings, which would produce exactly this: same bytes, same tree,
-independent mtimes (the four pairs copied ~5 min apart). **Settle it with
-`rclone lsd gd:` and a check for the shortcut mime type** before concluding the PM team
-keeps two live copies of four properties. Until then this is a *fetch-or-Drive* question
-with the same operational answer either way: dedupe before sweeping.
+The obvious innocent explanation was a Drive **shortcut** that `rclone copy` expanded into
+a second real directory. It is not that:
+
+```
+rclone lsd gd:                        -> 46 directories
+rclone lsd gd: --drive-skip-shortcuts -> 46 directories   (all 8 twin folders survive)
+```
+
+A shortcut would vanish from the second listing. None did. **The PM team's Drive holds two
+independent, byte-identical directories for each of these four properties.**
+
+The Drive mtimes say when it happened, and they fall into two clean populations:
+
+| population | count | mtime |
+|---|--:|---|
+| **all 34 coded folders** | 34 | `2026-07-28 23:54:24`–`:26` — a **3-second batch** |
+| **all 12 uncoded folders** | 12 | individually spaced, `07-27 22:30` → `07-28 02:47` |
+
+Thirty-four folders acquiring a code prefix within three seconds is a bulk **rename**
+(Drive stamps a folder's mtime on rename without touching ~4 GB of contents). The twelve
+uncoded ones were touched one at a time over the preceding ~4½ hours. So the corpus was
+caught **mid-migration**: someone is adding `NNNNN - ` prefixes, and for four properties
+the coded folder now exists *alongside* the uncoded original rather than replacing it.
+
+**What the mtimes cannot settle** is why those four survived the rename — copied before it,
+skipped by it, or restored after. That is a question for whoever ran the migration, and it
+does not change the operational answer: dedupe before sweeping.
 
 **The fix is one line of manifest hygiene** — drop an uncoded folder when a coded folder of
 the same name exists. Not applied here: `corpus.json` is the file the Mac is iterating, and
