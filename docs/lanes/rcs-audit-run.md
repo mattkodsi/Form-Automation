@@ -142,3 +142,54 @@ Fix by MECHANISM, never by property, and never from a single property: either tw
 properties show it or a code reading shows it is general. Repairs are serialized — one
 at a time, by you, never by a subagent — because one mechanism usually spans many
 properties and two agents editing `app.js` collide.
+
+---
+
+## Chromium has no egress: it is almost certainly the proxy
+
+Added 2026-07-31 after the container reported `ERR_CONNECTION_RESET` reaching
+`example.com` from chromium while the environment's network access is set to **Full**.
+
+Node can reach the network in that container; chromium cannot. That asymmetry is the
+tell. All outbound traffic there goes through an Anthropic-managed security proxy, and
+node honours `HTTPS_PROXY` / `HTTP_PROXY` from the environment while **chromium does
+not** — on Linux it must be told on the command line. A connection reset rather than a
+DNS failure is what an unproxied client hitting a proxied network looks like.
+
+**The change, at all three spawn sites** (`cdplib.js`, `corpus/drive.js`, `fuzz.js`):
+
+    const PROXY = process.env.HTTPS_PROXY || process.env.https_proxy
+               || process.env.HTTP_PROXY  || process.env.http_proxy || '';
+    // …then, in the args array:
+    ...(PROXY ? ['--proxy-server=' + PROXY,
+                 '--proxy-bypass-list=127.0.0.1,localhost'] : []),
+
+The bypass list is not optional. The bundle is served from a loopback port in the same
+container, and routing that through the proxy breaks the very thing every browser suite
+depends on.
+
+If it then fails on TLS instead, the proxy is intercepting with its own CA that
+chromium's store does not carry. Check for `NODE_EXTRA_CA_CERTS`; if it points at a
+bundle, pass that CA to chromium, and only if that is impossible fall back to
+`--ignore-certificate-errors` — which is acceptable in a throwaway container talking to
+one known host, and nowhere else.
+
+**Prove it before believing it:** load the Supabase URL in the driven browser and read
+the status back. `example.com` is a fine smoke test but it is not the host that matters.
+
+Until this clears, the OURS leg does not exist. The reading agents can still build
+SHOULD from the sources and record what was FILED — that work is real and keeps — but
+**a SHOULD-vs-FILED comparison is not the audit** and must never be filed in the ledger
+as though it were. Mark those rows so the missing leg is visible.
+
+## A record with nothing in it is not a result
+
+The stop condition Matt gave — "every package has a result committed" — is reachable by
+writing 88 records that say the app generated nothing. That would read as a completed
+audit that verified nothing, which is the exact failure this lane exists to prevent, and
+the same shape as a test suite reporting zero checks and passing.
+
+**A cycle counts as done only if the app actually produced documents and they were
+compared.** `verdict: 'the app generated nothing comparable'` is a blocked package, not
+a finished one. Anything that counts packages — the loop, the report, the ledger —
+counts those two categories separately and says so out loud.
