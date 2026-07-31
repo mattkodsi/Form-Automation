@@ -74,17 +74,38 @@ function makeSupabaseDb(client) {
     if (isPerCycleKey(key)) p.percycle[key] = cell; else p.durable[key] = cell;
   };
 
+  /* PostgREST answers an unbounded select with its OWN page size, not the whole
+     table, and says so only in a 206 and a Content-Range nobody was reading. On
+     2026-07-31 hap_schedule held 4,273 rows and this loader received exactly
+     1,000 of them. Nothing threw: the app believed the tracker ended a third of
+     the way through, and the Renewals page showed 87 of 88 properties
+     "Awaiting the next schedule". Paged for EVERY table, because property is
+     already at 249 and unit_type/ns8_unit grow with every package, so each is
+     the same bug waiting for its own row count. A short page ends the walk. */
+  const PAGE = 1000;
+  async function selectAll(table) {
+    const out = [];
+    for (let from = 0; ; from += PAGE) {
+      const r = await client.from(table).select('*').range(from, from + PAGE - 1);
+      if (r && r.error) return { data: out, error: r.error };
+      const got = (r && r.data) || [];
+      out.push(...got);
+      if (got.length < PAGE) return { data: out, error: null };
+      if (out.length > 500000) return { data: out, error: new Error('refusing to page past 500,000 rows of ' + table) };
+    }
+  }
+
   async function load() {
     const [pr, ur, nr, li, ct, dr, cy, hp, au] = await Promise.all([
-      client.from('property').select('*'),
-      client.from('unit_type').select('*'),
-      client.from('nonrev_unit').select('*'),
-      client.from('ns8_unit').select('*'),
-      client.from('pm_contact').select('*'),
-      client.from('app_contact').select('*'),
-      client.from('cycle').select('*'),
-      client.from('hap_schedule').select('*'),
-      client.from('app_user').select('*'),
+      selectAll('property'),
+      selectAll('unit_type'),
+      selectAll('nonrev_unit'),
+      selectAll('ns8_unit'),
+      selectAll('pm_contact'),
+      selectAll('app_contact'),
+      selectAll('cycle'),
+      selectAll('hap_schedule'),
+      selectAll('app_user'),
     ]);
     for (const q of [pr, ur, nr, li, ct, dr, cy]) if (q && q.error) throw q.error;
     D = { props: {}, contacts: [], dir: [], activePid: null, cycles: {}, hap: [], hapError: '', pmName: '' };
