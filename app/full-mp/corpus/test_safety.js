@@ -206,16 +206,19 @@ const fakeBoth=(name,calls,delay)=>{
   T('and a dialog that DOES offer radios is reported, not silently clicked past',
     /the new-package dialog offered program radios/.test(dsrc));
 
-  /* The reload re-find, same regression class as #cyRCS one step later: it
-     hunted the scratch property name the driver no longer creates. It is now
-     matched on the property ID, which also survives the app overwriting
-     property.name from a parsed schedule (app.js:1844) — a trap this lane has
-     already been bitten by once. Named for Colonial Village 75708. */
-  T('the reload re-find matches the property by data-open ID, never by name',
-    /find\(x=>x\.getAttribute\('data-open'\)===want\)/.test(dsrc)
-    && !/\.pc-name[\s\S]{0,80}indexOf\(q\)===0/.test(dsrc));
-  T('and the failure message names the id it could not find, not a scratch name',
-    /no property card carries id/.test(dsrc));
+  /* The reload re-find. Two regressions cost a run here: it first hunted the
+     scratch property name the driver no longer creates, then it clicked a
+     gallery card that the menu's lens filter (inView, app.js:4765) can hide
+     even under a search query — that broke Peterson Plaza. It now reopens by
+     property ID through the app's own openLauncher, which no lens can hide and
+     no parsed schedule can rename. Named for Colonial Village 75708 and
+     Peterson Plaza 75917. */
+  T('the reload re-find reopens by property ID via openLauncher, not a card click or name search',
+    /openLauncher\(pid\)/.test(dsrc)
+    && !/find\(x=>x\.getAttribute\('data-open'\)===want\)/.test(dsrc)
+    && !/typeInto\(c, 'menuSearch'/.test(dsrc));
+  T('and it fails loudly if the property is absent from the reloaded record set (persistence)',
+    /not in the reloaded record set/.test(dsrc));
 
   T('the effective date is never typed - a tracker row locks it',
     !/typeInto\(c,\s*'cyEff'/.test(dsrc));

@@ -1202,27 +1202,30 @@ async function driveBoth(opts) {
        rather than an assumption. A property with no tracker row is an orphan
        and always shows, and any search query forces the All view
        (renderMenu, app.js:3384), so no lens can hide it. */
-    /* Found by ID, never by name. Two reasons, and both have cost this lane a
-       run: the driver no longer creates a scratch property, so `runName` names
-       nothing that exists; and the app OVERWRITES `property.name` from a
-       readable rent schedule (app.js:1844), so even the correct name is a
-       moving target between the click and the reload. The id is what the run
-       already holds and the one thing a parsed document cannot change.
+    /* Reopen by ID through the app's OWN navigation, not by clicking a gallery
+       card. The card route was fragile for two independent reasons, and both
+       cost a run: the app overwrites `property.name` from a readable schedule
+       (app.js:1844) so a name search is a moving target, AND — the one that
+       actually broke Peterson Plaza — renderMenu applies the lens filter
+       (`inView`, app.js:4765) BEFORE the text query, so a non-empty search does
+       NOT force every card to show; the card can be hidden by whatever lens the
+       reload defaulted to. Hunting a card that a lens may be hiding is not a
+       persistence test, it is a menu-filter test.
 
-       The search box still gets typed into — a query forces the All view
-       (renderMenu, app.js:3384) so no lens can hide the card — but what it is
-       given is the property's own name for display, and what is MATCHED is
-       `data-open`. */
-    const findName = await c.eval(`try{const p=(mpdb.listProperties()||[]).find(x=>x.id===${J(ids.pid)});
-      return p?String(p.name||''):'';}catch(e){return '';}`).catch(() => '');
-    await typeInto(c, 'menuSearch', findName || String(propertyCode));
-    await sleep(500);
-    const cardPid = await c.eval(`const want=${J(ids.pid)};
-      const b=[].slice.call(document.querySelectorAll('#menuGrid [data-open]'))
-        .find(x=>x.getAttribute('data-open')===want);
-      if(!b)return null; b.click(); return b.getAttribute('data-open');`);
-    if (!cardPid) throw new Error('after the reload no property card carries id ' + ids.pid
-      + ' (searched ' + J(findName || String(propertyCode)) + ') — the record never reached the database');
+       So: confirm the property is in the freshly reloaded record set (that IS
+       the persistence check — the DB mirror is rebuilt on load), then navigate
+       with openLauncher(pid). The id cannot be renamed and the lens cannot hide
+       a direct open. Whether the gallery card is ALSO reachable is a separate
+       UX question, noted but not gating a drive. */
+    const reopened = await c.eval(`const pid=${J(ids.pid)};
+      try{
+        const p=(mpdb.listProperties()||[]).find(x=>x.id===pid);
+        if(!p) return {err:'property '+pid+' is not in the reloaded record set — the record did not persist'};
+        if(typeof openLauncher!=='function') return {err:'this build has no openLauncher'};
+        openLauncher(pid);
+        return {ok:true, name:String(p.name||'')};
+      }catch(e){return {err:String(e&&e.message||e)};}`);
+    if (!reopened || reopened.err) throw new Error('after the reload: ' + ((reopened && reopened.err) || 'reopen failed') + ' (property ' + ids.pid + ')');
     await waitFor(c, `(function(){const v=document.getElementById('viewLauncher');return !!(v&&v.style.display!=='none');})()`,
       { timeout: 20000, label: 'the property page after the reload' });
     const cyc = await c.eval(`const xs=[].slice.call(document.querySelectorAll('[data-cyopen]'));
