@@ -5,7 +5,7 @@
    shows it, and MIN_CHECKS catches a run that dies partway — a short count is
    a failure, not a pass. Adding checks? Raise MIN_CHECKS. */
 const { makeDb, memoryAdapter, isPerCycleKey, migrate, computeAnalysis, computeSalutation, CROSSWALK } = require('./db.js');
-const MIN_CHECKS = 220;   // 2026-07-31: +11 uafHolderForYear one-UAF-per-year (Piece 3); +4 ua_uaf per-cycle routing + no-carry; 2026-07-30 merge union was 205
+const MIN_CHECKS = 229;   // 2026-07-31: +9 sibling reads the standalone UAF (Piece 2); +11 uafHolderForYear one-UAF-per-year (Piece 3); +4 ua_uaf per-cycle routing + no-carry; 2026-07-30 merge union was 205
                         //;   // 2026-07-30: +4 current rents and executed UA carry on no programme
                         //;   // 2026-07-30: +2 the appraiser carries, a non-revenue contract rent does not
                         //;   // 2026-07-30: +8 Related Affordable outranks the schedule for the effective date
@@ -288,6 +288,37 @@ function jsonAdapter() { let s = null; return { get: async () => (s ? JSON.parse
     const sup = _fs.readFileSync(_p.join(__dirname, 'db.supabase.js'), 'utf8');
     ok('db.supabase.js carries uafHolderForYear too, at parity', /uafHolderForYear\(pid, year, skipCid\)/.test(sup), true);
   }
+
+  /* ---- a same-year RCS/OCAF reads the standalone UAF's result (Piece 2) ----
+     Exactly one cycle per property-year holds the applied ua_uaf. A sibling that
+     does not carry the UAF borrows it — live — so the allowance it prints and
+     tests against reflects the factor. The borrow never overwrites a value the
+     package froze on a save; and it is scoped to the SAME year. */
+  console.log('\n─ 8c1d · A SIBLING RCS/OCAF READS THE STANDALONE UAF ─');
+  const su = cdb.createProperty('Sibling UAF Read').pid;
+  const { cid: sUaf } = await cdb.createCycle(su, { programs: ['uaf'], effective_date: '2026-04-01' });
+  await cdb.saveFlatCycle(sUaf, { 'units.0.num_units': { value: '10' }, 'units.0.ua_uaf': { value: '77' } });
+  ok('the UAF-only package stores its applied allowance', cdb.getFlatCycle(sUaf)['units.0.ua_uaf'].value, '77');
+  const { cid: sRcs } = await cdb.createCycle(su, { programs: ['rcs'], effective_date: '2026-09-01' });
+  const rf = cdb.getFlatCycle(sRcs);
+  ok('a same-year sibling reads the standalone UAF\'s allowance', rf['units.0.ua_uaf'].value, '77');
+  ok('and it reads as on-file, not hand-entered', rf['units.0.ua_uaf'].source, 'database');
+  const { cid: sOcaf27 } = await cdb.createCycle(su, { programs: ['ocaf'], effective_date: '2027-09-01' });
+  ok('a different-year sibling borrows nothing — the read is year-scoped', cdb.getFlatCycle(sOcaf27)['units.0.ua_uaf'], undefined);
+  await cdb.saveFlatCycle(sRcs, { 'units.0.ua_uaf': { value: '80' } });   // the RCS package froze its own figure on a save
+  ok('a package that saved its own allowance keeps it, not the sibling\'s', cdb.getFlatCycle(sRcs)['units.0.ua_uaf'].value, '80');
+  await cdb.saveFlatCycle(sUaf, { 'units.0.ua_uaf': { value: '90' } });   // later revise the standalone UAF
+  ok('revising the standalone UAF leaves the frozen package untouched', cdb.getFlatCycle(sRcs)['units.0.ua_uaf'].value, '80');
+  ok('while the standalone UAF itself moved', cdb.getFlatCycle(sUaf)['units.0.ua_uaf'].value, '90');
+  const { cid: sBoth } = await cdb.createCycle(su, { programs: ['rcs', 'uaf'], effective_date: '2028-09-01' });
+  ok('a package that OWNS its UAF answers for itself, borrowing nothing', cdb.getFlatCycle(sBoth)['units.0.ua_uaf'], undefined);
+  // the 150% analysis of the RCS sibling turns on the borrowed allowance
+  const su2 = cdb.createProperty('Sibling UAF Analysis').pid;
+  const { cid: aUaf } = await cdb.createCycle(su2, { programs: ['uaf'], effective_date: '2026-04-01' });
+  await cdb.saveFlatCycle(aUaf, { 'units.0.num_units': { value: '10' }, 'units.0.ua_uaf': { value: '50' } });
+  const { cid: aRcs } = await cdb.createCycle(su2, { programs: ['rcs'], effective_date: '2026-09-01' });
+  await cdb.saveFlatCycle(aRcs, { 'units.0.num_units': { value: '10' }, 'units.0.current': { value: '1000' }, 'units.0.proposed': { value: '1200' } });
+  ok('the sibling\'s 150% gross rent includes the borrowed allowance', Math.round(cdb.cycleAnalysis(aRcs).current_gpr), (1000 + 50) * 10);
 
   console.log('\n─ 8c2 · THE PARSED RENT SCHEDULE ─');
   /* The reading of the executed schedule used to live in a page-load variable,

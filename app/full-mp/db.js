@@ -449,6 +449,37 @@ async function makeDb(adapter, opts) {
       throw e;
     }
   };
+  /* ---- feed the standalone UAF into a same-year RCS/OCAF (Piece 2) ----
+     The one cycle that carries `uaf` for a property-year holds the applied
+     ua_uaf. A sibling RCS/OCAF for the SAME year keeps its own contract rents
+     but must read that cycle's ua_uaf, so the allowance it prints reflects the
+     factor (Matt, 2026-07-31: "whichever cycle holds it, the other reads its
+     ua_uaf"). uafHolderCidOf finds the holder; uafOverlayInto borrows its
+     ua_uaf into a producer's flat map where the sibling has none of its own —
+     it never overwrites, so a value frozen into the package on a save wins, as
+     every saved figure does. The read is live until then. API PARITY with
+     db.supabase.js. */
+  const uafHolderCidOf = (pid, year, skipCid) => {
+    const y = String(year == null ? '' : year).slice(0, 4); if (!y) return null;
+    for (const cid in D.cycles) {
+      if (cid === skipCid) continue; const c = D.cycles[cid];
+      if (!c || c.property_id !== pid || PROGS_OF(c).indexOf('uaf') < 0) continue;
+      const cy = String(c.effective_date || '').slice(0, 4) || String(c.label || '').slice(0, 4);
+      if (cy === y) return cid;
+    }
+    return null;
+  };
+  const uafOverlayInto = (cid, out, mk) => {
+    const c = D.cycles[cid]; if (!c || PROGS_OF(c).indexOf('uaf') >= 0) return out;   // a cycle that owns its UAF answers for itself
+    const y = String(c.effective_date || '').slice(0, 4) || String(c.label || '').slice(0, 4);
+    const hid = uafHolderCidOf(c.property_id, y, cid); if (!hid) return out;
+    const hc = D.cycles[hid].cells;
+    for (const k in hc) { if (!/^units\.\d+\.ua_uaf$/.test(k)) continue;
+      const v = hc[k].value; if (v == null || v === '') continue;
+      const cur = out[k]; if (cur && cur.value != null && cur.value !== '') continue;
+      out[k] = mk(String(v), hc[k].saved_at || ''); }
+    return out;
+  };
   function cySyncEff(c) {
     // the form's date-rents-effective drives the cycle's date + year label
     const src = (c.cells['rent_schedule.date_eff_source'] || {}).value;
@@ -467,6 +498,7 @@ async function makeDb(adapter, opts) {
       for (const k in f) { const m = k.match(/^units\.(\d+)\.current$/); if (!m) continue;
         const pk = 'units.' + m[1] + '.proposed'; if (!(f[pk] && parseFloat(f[pk].value) > 0)) f[pk] = { value: f[k].value }; }
     }
+    uafOverlayInto(cid, f, (v) => ({ value: v }));   // a same-year sibling's UAF feeds the allowance the 150% test turns on
     return computeAnalysis(f);
   }
   /* The menu card reads the CURRENT cycle, not the template — same rule as the
@@ -609,7 +641,7 @@ async function makeDb(adapter, opts) {
     getFlatCycle(cid) {
       const c = D.cycles[cid]; if (!c) return {};
       const out = {}; for (const k in c.cells) { const v = c.cells[k].value == null ? '' : String(c.cells[k].value); out[k] = { value: v, source: v === '' ? 'new' : 'database', saved_at: c.cells[k].saved_at || '' }; }
-      return out;
+      return uafOverlayInto(cid, out, (v, sa) => ({ value: v, source: 'database', saved_at: sa }));
     },
     saveFlatCycle(cid, map) {
       const c = D.cycles[cid]; if (!c) throw new Error('no cycle ' + cid);
@@ -647,17 +679,9 @@ async function makeDb(adapter, opts) {
        sibling RCS/OCAF that one UAF's result (getFlatCycle overlay). Year is the
        effective date's year, falling back to the label. API PARITY with
        db.supabase.js. */
-    uafHolderForYear(pid, year, skipCid) {
-      const y = String(year == null ? '' : year).slice(0, 4); if (!y) return null;
-      for (const cid in D.cycles) {
-        if (cid === skipCid) continue;
-        const c = D.cycles[cid];
-        if (!c || c.property_id !== pid || PROGS_OF(c).indexOf('uaf') < 0) continue;
-        const cy = String(c.effective_date || '').slice(0, 4) || String(c.label || '').slice(0, 4);
-        if (cy === y) return { id: cid, programs: PROGS_OF(c), label: c.label, effective_date: c.effective_date };
-      }
-      return null;
-    },
+    uafHolderForYear(pid, year, skipCid) { const id = uafHolderCidOf(pid, year, skipCid);
+      if (!id) return null; const c = D.cycles[id];
+      return { id, programs: PROGS_OF(c), label: c.label, effective_date: c.effective_date }; },
     /* API parity with db.supabase.js's rs_doc surface — see CLAUDE.md: a
        stand-in that answers differently from the real backend makes every test
        that uses it a fiction. */

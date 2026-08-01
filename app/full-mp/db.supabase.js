@@ -320,6 +320,33 @@ function makeSupabaseDb(client) {
       throw e;
     }
   };
+  /* ---- feed the standalone UAF into a same-year RCS/OCAF (Piece 2) ----
+     The cycle that carries `uaf` for a property-year holds the applied ua_uaf; a
+     same-year sibling RCS/OCAF keeps its own contract rents but borrows that
+     cycle's ua_uaf so the allowance it prints reflects the factor. Never
+     overwrites, so a value frozen into the package on a save wins; live until
+     then. API PARITY with db.js. */
+  const uafHolderCidOf = (pid, year, skipCid) => {
+    const y = String(year == null ? '' : year).slice(0, 4); if (!y) return null;
+    for (const cid in D.cycles) {
+      if (cid === skipCid) continue; const c = D.cycles[cid];
+      if (!c || c.property_id !== pid || PROGS_OF(c).indexOf('uaf') < 0) continue;
+      const cy = String(c.effective_date || '').slice(0, 4) || String(c.label || '').slice(0, 4);
+      if (cy === y) return cid;
+    }
+    return null;
+  };
+  const uafOverlayInto = (cid, out, mk) => {
+    const c = D.cycles[cid]; if (!c || PROGS_OF(c).indexOf('uaf') >= 0) return out;
+    const y = String(c.effective_date || '').slice(0, 4) || String(c.label || '').slice(0, 4);
+    const hid = uafHolderCidOf(c.property_id, y, cid); if (!hid) return out;
+    const hc = D.cycles[hid].cells;
+    for (const k in hc) { if (!/^units\.\d+\.ua_uaf$/.test(k)) continue;
+      const v = hc[k].value; if (v == null || v === '') continue;
+      const cur = out[k]; if (cur && cur.value != null && cur.value !== '') continue;
+      out[k] = mk(String(v), hc[k].saved_at || ''); }
+    return out;
+  };
   /* The ring is the DOMINANT PACKAGE's score — see score.js. It used to be ten
      durable keys, counted, which is why a property could read 100% with the
      draft rent schedule and the tenant notice unbuildable: those ten were never
@@ -637,6 +664,7 @@ function makeSupabaseDb(client) {
           for (const k in f) { const m = k.match(/^units\.(\d+)\.current$/); if (!m) continue;
             const pk = 'units.' + m[1] + '.proposed'; if (!(f[pk] && parseFloat(f[pk].value) > 0)) f[pk] = { value: f[k].value }; }
         }
+        uafOverlayInto(cid, f, (v) => ({ value: v }));
         return computeAnalysis(f);
       },
       createCycle(pid, opts) {
@@ -666,7 +694,7 @@ function makeSupabaseDb(client) {
       getFlatCycle(cid) {
         const c = D.cycles[cid]; if (!c) return {};
         const out = {}; for (const k in c.cells) { const v = c.cells[k].value == null ? '' : String(c.cells[k].value); out[k] = { value: v, source: v === '' ? 'new' : 'database', saved_at: c.cells[k].saved_at || '' }; }
-        return out;
+        return uafOverlayInto(cid, out, (v, sa) => ({ value: v, source: 'database', saved_at: sa }));
       },
       saveFlatCycle(cid, map) {
         const c = D.cycles[cid]; if (!c) throw new Error('no cycle ' + cid);
@@ -702,17 +730,9 @@ function makeSupabaseDb(client) {
          the OTHER cycle already holding this year's UAF, or null -- used to
          block a second UAF and to feed a sibling RCS/OCAF that one UAF's result.
          API PARITY with db.js. */
-      uafHolderForYear(pid, year, skipCid) {
-        const y = String(year == null ? '' : year).slice(0, 4); if (!y) return null;
-        for (const cid in D.cycles) {
-          if (cid === skipCid) continue;
-          const c = D.cycles[cid];
-          if (!c || c.property_id !== pid || PROGS_OF(c).indexOf('uaf') < 0) continue;
-          const cy = String(c.effective_date || '').slice(0, 4) || String(c.label || '').slice(0, 4);
-          if (cy === y) return { id: cid, programs: PROGS_OF(c), label: c.label, effective_date: c.effective_date };
-        }
-        return null;
-      },
+      uafHolderForYear(pid, year, skipCid) { const id = uafHolderCidOf(pid, year, skipCid);
+        if (!id) return null; const c = D.cycles[id];
+        return { id, programs: PROGS_OF(c), label: c.label, effective_date: c.effective_date }; },
       /* The parsed executed rent schedule, kept with its package. Stores the
          reading, never the PDF bytes: nothing downstream reads _rsUpload.bytes,
          and a schedule is a megabyte the record does not need. Without this the
