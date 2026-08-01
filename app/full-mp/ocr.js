@@ -312,6 +312,36 @@ function ocrPlace(got,pg0,pg1,tpl,rects){
   if(!B)outp.halfB=true;
   return outp;}   // rsPartB is told not to claim definite reads for a positional tier
 
+/* Every page OCR'd, raw. The completion pass tiers 1 and 2 lean on. It differs
+   from ocrParseRs in three ways that make it a COMPLETION rather than a fallback:
+   it never stops early (every page is scanned, because you cannot know a page
+   holds no non-text value without reading it); it places each half onto the
+   template INDEPENDENTLY, so a copy whose Part A cannot be registered still yields
+   Part G; and it returns the field map UNGATED. The single totals gate is applied
+   once, later, over the merge of text and this — never over OCR alone, so an OCR
+   misread of one row can never discard the ticks and figures the same scan read
+   right. Returns {F, s8, reached}. */
+async function ocrAllPagesF(bytes,onStep){
+  OCR_WHY='';
+  if(!window.PDFLib){OCR_WHY='The PDF engine did not load, so this document could not be opened for scanning.';return {F:{},s8:'',reached:false};}
+  if(!supaClient){OCR_WHY='The figures on this copy can only be confirmed by the scanning service, and this session is not connected to it.';return {F:{},s8:'',reached:false};}
+  const tpl=await ocrTemplate();if(!tpl){OCR_WHY='The blank HUD-92458 template could not be opened, so there was nothing to line the scan up against.';return {F:{},s8:'',reached:false};}
+  const rects=await rsFieldRects();if(!Object.keys(rects).length){OCR_WHY='The blank form’s field positions could not be read, so a scan cannot be placed onto it.';return {F:{},s8:'',reached:false};}
+  let pages;try{pages=await ocrSplitPages(bytes,OCR_MAXPAGES);}catch(e){OCR_WHY='The document’s pages could not be separated for scanning.';return {F:{},s8:'',reached:false};}
+  const got=[],txt=[];
+  for(let i=0;i<pages.length;i++){   // ALL pages, never stop early
+    if(onStep)onStep(i+1,pages.length);
+    let pg=null;try{pg=await ocrAnalyze(pages[i]);}catch(e){OCR_WHY=(e&&e.message)||OCR_WHY;continue;}
+    if(!pg||!pg.words||!pg.words.length)continue;
+    got.push(pg);txt.push(pg.words.map(w=>w.s).join(' '));}
+  const c=rsClassifyPages(txt);
+  const F={};let s8='';
+  if(c.pg0>=0){const A=ocrPageMap(got[c.pg0],0,tpl,rects);if(A){Object.assign(F,A.F);if(A.s8&&!s8)s8=A.s8;}}
+  if(c.pg1>=0){const B=ocrPageMap(got[c.pg1],1,tpl,rects);if(B){Object.keys(B.F).forEach(k=>{if(!(k in F))F[k]=B.F[k];});if(B.s8&&!s8)s8=B.s8;}}
+  const reached=Object.keys(F).length>0;
+  if(!reached&&!OCR_WHY)OCR_WHY='The scan read '+got.length+' page'+(got.length===1?'':'s')+', but none of them could be squared with form HUD-92458.';
+  return {F:F,s8:s8,reached:reached};}
+
 /* The test seam: canned Azure pages in, the same record out. */
 async function ocrMapPages(pgs){
   OCR_WHY='';
