@@ -51,7 +51,139 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const L = require('./look.js');
+const zlib = require('zlib');
+const { execFileSync, spawnSync } = require('child_process');
+
+/* ------------------------------------------------------------------ *
+ * 0. Rasteriser — folded in from the former look.js so this tool is    *
+ *    self-contained (poppler pdftoppm/pdfinfo in; zlib PNG out, no npm).*
+ * ------------------------------------------------------------------ */
+let _have = null;
+function haveRasterizer() {
+  if (_have) return _have;
+  const r = spawnSync('pdftoppm', ['-v'], { encoding: 'utf8' });
+  if (r.error || r.status === null) {
+    _have = { ok: false, why: 'pdftoppm not found on PATH (install poppler: brew install poppler)', version: null };
+  } else {
+    const banner = String(r.stderr || '') + String(r.stdout || '');
+    const m = /pdftoppm version ([\d.]+)/.exec(banner);
+    _have = { ok: true, why: null, version: m ? m[1] : 'unknown' };
+  }
+  return _have;
+}
+/** Print the skip banner and exit non-zero. Never returns. */
+function bailNoRasterizer() {
+  const h = haveRasterizer();
+  process.stderr.write(
+    '\n' + '='.repeat(68) + '\n' +
+    '  !!! SKIPPED - NO PDF RASTERIZER  !!!\n' +
+    '  ' + h.why + '\n' +
+    '  Nothing was rendered. This is NOT a pass.\n' +
+    '='.repeat(68) + '\n');
+  process.exit(3);
+}
+/** Page count and page sizes in points, via pdfinfo. */
+function pageInfo(pdf) {
+  if (!fs.existsSync(pdf)) throw new Error('no such file: ' + pdf);
+  let txt;
+  try {
+    txt = execFileSync('pdfinfo', ['-l', '9999', pdf], { encoding: 'utf8', maxBuffer: 1 << 24 });
+  } catch (e) {
+    throw new Error('pdfinfo failed on ' + pdf + ': ' + (e.message || e));
+  }
+  const pages = Number((/^Pages:\s+(\d+)/m.exec(txt) || [])[1] || 0);
+  const sizes = [];
+  const per = /^Page\s+(\d+)\s+size:\s+([\d.]+)\s+x\s+([\d.]+)\s+pts/gm;
+  let m;
+  while ((m = per.exec(txt))) sizes[Number(m[1]) - 1] = { w: +m[2], h: +m[3] };
+  if (!sizes.length) {
+    const one = /^Page size:\s+([\d.]+)\s+x\s+([\d.]+)\s+pts/m.exec(txt);
+    if (one) for (let i = 0; i < pages; i++) sizes[i] = { w: +one[1], h: +one[2] };
+  }
+  return { pages, sizes, raw: txt };
+}
+function cropArgs(crop) {
+  return crop ? ['-x', String(crop.x), '-y', String(crop.y), '-W', String(crop.w), '-H', String(crop.h)] : [];
+}
+/** Parse a binary PGM (P5) or PPM (P6). Returns {w,h,chan,data}. */
+function readPNM(buf) {
+  if (buf.length < 2 || buf[0] !== 0x50) throw new Error('not a PNM (no P magic)');
+  const kind = buf[1];
+  if (kind !== 0x35 && kind !== 0x36) throw new Error('unsupported PNM type P' + (kind - 0x30) + ' (want P5 or P6)');
+  const chan = kind === 0x35 ? 1 : 3;
+  let i = 2, fields = [];
+  const isWS = c => c === 0x20 || c === 0x09 || c === 0x0a || c === 0x0d;
+  while (fields.length < 3) {
+    while (i < buf.length && isWS(buf[i])) i++;
+    if (buf[i] === 0x23) { while (i < buf.length && buf[i] !== 0x0a) i++; continue; } // comment
+    let s = i;
+    while (i < buf.length && !isWS(buf[i])) i++;
+    if (i === s) throw new Error('truncated PNM header');
+    fields.push(Number(buf.slice(s, i).toString('ascii')));
+  }
+  i++; // exactly one whitespace byte after maxval
+  const [w, h, maxval] = fields;
+  if (maxval !== 255) throw new Error('PNM maxval ' + maxval + ' unsupported (want 255)');
+  const need = w * h * chan;
+  if (buf.length - i < need) throw new Error('PNM truncated: want ' + need + ' bytes, have ' + (buf.length - i));
+  return { w, h, chan, data: new Uint8Array(buf.buffer, buf.byteOffset + i, need) };
+}
+/** Render one page to 8-bit grayscale pixels. No temp PNG, no decode. */
+function renderGray(pdf, page, dpi, crop) {
+  const h = haveRasterizer();
+  if (!h.ok) throw new Error('SKIP: ' + h.why);
+  const r = spawnSync('pdftoppm', [
+    '-gray', '-r', String(dpi), '-f', String(page), '-l', String(page),
+    ...cropArgs(crop || null), path.resolve(pdf),
+  ], { maxBuffer: 1 << 28 });
+  if (r.status !== 0) throw new Error('pdftoppm failed on page ' + page + ': ' + String(r.stderr || '').trim());
+  if (!r.stdout || !r.stdout.length)
+    throw new Error('pdftoppm exited 0 but wrote no pixels for page ' + page + ' of ' + pdf);
+  return readPNM(r.stdout);
+}
+/* A minimal PNG writer (zlib only — no npm). */
+const CRC_TABLE = (() => {
+  const t = new Int32Array(256);
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = (c & 1) ? (0xedb88320 ^ (c >>> 1)) : (c >>> 1);
+    t[n] = c;
+  }
+  return t;
+})();
+function crc32(buf) {
+  let c = 0xffffffff;
+  for (let i = 0; i < buf.length; i++) c = CRC_TABLE[(c ^ buf[i]) & 0xff] ^ (c >>> 8);
+  return (c ^ 0xffffffff) >>> 0;
+}
+function chunk(type, data) {
+  const len = Buffer.alloc(4); len.writeUInt32BE(data.length, 0);
+  const td = Buffer.concat([Buffer.from(type, 'ascii'), data]);
+  const crc = Buffer.alloc(4); crc.writeUInt32BE(crc32(td), 0);
+  return Buffer.concat([len, td, crc]);
+}
+/** img = {w, h, rgb: Uint8Array(w*h*3)} */
+function writePNG(file, img) {
+  const { w, h, rgb } = img;
+  if (rgb.length !== w * h * 3) throw new Error('writePNG: rgb is ' + rgb.length + ' bytes, want ' + (w * h * 3));
+  const raw = Buffer.alloc(h * (1 + w * 3));
+  for (let y = 0; y < h; y++) {
+    raw[y * (1 + w * 3)] = 0;                                   // filter: none
+    Buffer.from(rgb.buffer, rgb.byteOffset + y * w * 3, w * 3)
+      .copy(raw, y * (1 + w * 3) + 1);
+  }
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(w, 0); ihdr.writeUInt32BE(h, 4);
+  ihdr[8] = 8; ihdr[9] = 2; ihdr[10] = 0; ihdr[11] = 0; ihdr[12] = 0;  // 8-bit RGB
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, Buffer.concat([
+    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    chunk('IHDR', ihdr),
+    chunk('IDAT', zlib.deflateSync(raw, { level: 6 })),
+    chunk('IEND', Buffer.alloc(0)),
+  ]));
+  return path.resolve(file);
+}
 
 /* ------------------------------------------------------------------ *
  * 1. Pixel maths                                                      *
@@ -207,7 +339,7 @@ function renderDiff(pdfA, pdfB, opts) {
   opts = opts || {};
   const dpi = opts.dpi || 110;
   const out = path.resolve(opts.out || path.join(os.tmpdir(), 'rcs-rdiff', 'run-' + process.pid));
-  const A = L.pageInfo(pdfA), B = L.pageInfo(pdfB);
+  const A = pageInfo(pdfA), B = pageInfo(pdfB);
   const rep = {
     a: path.resolve(pdfA), b: path.resolve(pdfB), dpi, out,
     pagesA: A.pages, pagesB: B.pages, comparable: true, notes: [], pages: [],
@@ -233,7 +365,7 @@ function renderDiff(pdfA, pdfB, opts) {
       });
       continue;
     }
-    const ra = L.renderGray(pdfA, p, dpi), rb = L.renderGray(pdfB, p, dpi);
+    const ra = renderGray(pdfA, p, dpi), rb = renderGray(pdfB, p, dpi);
     if (ra.w !== rb.w || ra.h !== rb.h) {
       rep.identical = false;
       rep.pages.push({
@@ -247,7 +379,7 @@ function renderDiff(pdfA, pdfB, opts) {
     if (d.diffPixels) rep.identical = false;
     let img = null;
     if (d.diffPixels || opts.alwaysWriteImage) {
-      img = L.writePNG(path.join(out, 'diff-p' + String(p).padStart(3, '0') + '-' + dpi + 'dpi.png'), composite(ra, rb, d));
+      img = writePNG(path.join(out, 'diff-p' + String(p).padStart(3, '0') + '-' + dpi + 'dpi.png'), composite(ra, rb, d));
     }
     rep.pages.push({
       page: p, comparable: true, width: d.w, height: d.h,
@@ -319,7 +451,7 @@ function main(argv) {
   let o;
   try { o = parseArgv(argv); } catch (e) { process.stderr.write(String(e.message) + '\n'); return 2; }
   if (o.help) { process.stdout.write(USAGE); return 0; }
-  if (!L.haveRasterizer().ok) L.bailNoRasterizer();
+  if (!haveRasterizer().ok) bailNoRasterizer();
   let rep;
   try { rep = renderDiff(o.files[0], o.files[1], o); }
   catch (e) { process.stderr.write('rdiff: ' + (e.message || e) + '\n'); return 1; }
