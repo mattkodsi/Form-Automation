@@ -16,7 +16,7 @@ const els={};
 global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>null,querySelectorAll:()=>[],createElement:()=>mk(),addEventListener(){},body:{classList:{toggle(){},contains(){return false;}}}};
 const fs=require('fs'),path=require('path'),os=require('os');
 
-const MIN_CHECKS=451;   /* 2026-07-31: +7 UAF precedence + resolution parity; 2026-07-30 was 444 */
+const MIN_CHECKS=461;   /* 2026-08-01: +10 welded br/ba grid row (Gill) — ROW_GRID; 2026-07-31: +7 UAF precedence + resolution parity; 2026-07-30 was 444 */
 let n=0,fails=0,verdict=null;
 const BAR='='.repeat(68);
 function fail(msg,err){
@@ -1089,6 +1089,23 @@ async function reader(file){
        rent would overwrite a real rent with a ceiling. */
     T('a SAFMR row is still not a concluded-rent row',!'1BR/1BA 90 $1,500 $135,000'.match(M));
     T('nor is a gross-renewal row',!'2BR/1BA 25 $2,400 $86 $62,150'.match(M)); }
+
+  /* Gill prints its concluded rents as a br/ba GRID, not a letter row, and lines()
+     joins runs with no space so "1/1" and the count "23" arrive welded as "1/123".
+     ROW_MAIN split that as type "1/" + count "123" — the bath digit in the count,
+     the type stripped of it. Riverwood came out 123/132/124 units instead of 23/32/24
+     and its two 1/1 types (515sf, 593sf) collapsed to one. ROW_GRID reads it right. */
+  console.log('\n─ the welded br/ba grid row (Gill), which ROW_MAIN mis-split ─');
+  { const G=R._ROW_GRID;
+    const g1='1/123 593 $1,025 $1.73 Y'.match(G);
+    T('a welded br/ba grid row reads',!!g1);
+    eq('br',g1&&g1[1],'1'); eq('ba',g1&&g1[2],'1');
+    eq('the count is the count, NOT the count with the bath digit',g1&&g1[3],'23');
+    eq('sf',g1&&g1[4],'593'); eq('rent',g1&&g1[5],'1,025');
+    eq('the 2-bed count too (2/132 -> 32)',('2/132 793 $1,150 $1.45 Y'.match(G)||[])[3],'32');
+    eq('and a single-digit count (1/14 -> 4)',('1/14 515 $1,000 $1.94 Y'.match(G)||[])[3],'4');
+    T('a letter-format row is NOT a grid row (goes to ROW_MAIN)',!'1BR/1BA 90 640 SF $2,000 $3.13 Y'.trim().match(G));
+    T('nor is a belfry $-row',!'1/1 $1,025 $85 $1,110'.match(G)); }
 
   /* Walden's conclusion table says "1BR/1BA (B)"; its comparison and gross-renewal
      tables say "1BR/1BA (B) Senior". Same thirty apartments, and the designation

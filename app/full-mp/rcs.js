@@ -424,6 +424,15 @@ const ROW_CS6 =/^(.+?)\s*(\d+)\s+\$([\d,]+)\s+\$([\d,]+)\s+\$([\d,]+)\s+\$([\d,]
 const ROW_5C  =/^(.+?)\s*(\d+)\s+\$([\d,]+)\s+\$([\d,]+)\s+\$([\d,]+)\s*$/;          // belfry: type count rent ua gross
 const ROW_CMP =/^(.+?)\s*(\d+)\s+\$([\d,]+)\s+\$([\d,]+)\s+\$[\d,]+\s*[<>]\s*\$[\d,]+/; // belfry: type count rent 150%safmr verdict
 const ROW_4C  =/^(.+?)\s*(\d+)\s+\$([\d,]+)\s+\$([\d,]+)\s*$/;                       // both: type count safmrbase gross
+/* The appraiser's comparability GRID, not the letter's prose row. Its unit type is
+   "br/ba" and lines() joins runs with no space (it must, to reassemble words split
+   mid-run), so "1/1" and the count "23" arrive welded as "1/123". ROW_MAIN then
+   splits that as type "1/" + count "123" — the bath digit lands in the count and the
+   type loses it. This reads the grid on its own terms: br "/" ba (one digit, maybe
+   .5) then the count, then sf, $rent, psf, Y/N. It is tried BEFORE ROW_MAIN and can
+   only match a line that STARTS with digit-slash-digit, which a letter row
+   ("1 Bedroom 23 ...") never does, so the letter path is untouched. */
+const ROW_GRID=/^(\d)\s*\/\s*(\d(?:\.\d)?)\s*(\d+)\s+([\d,]+)(?:\s*(?:sf|sq\.?\s*ft\.?))?\s+\$([\d,]+)\s+\$?([\d.]+)\s*(?:([YN])\b|$)/i; // br/ba count sf rent psf grid
 
 /* The type with its bath count removed. Two rows that agree on everything but
    the bathroom are one unit type described twice; two rows that differ by a
@@ -452,9 +461,16 @@ function typeStem(t){return typeKey(String(t||'').replace(/\d+(?:\.\d+)?\s*(?:ba
    $3,275, one unit type written two ways. Matched on the stem plus an
    identical unit count, that merges; "with patio" vs "without patio" does not,
    because the stems differ. */
-function upsert(units,type,page,count){
+function upsert(units,type,page,count,sf){
   const k=typeKey(type);
-  for(let i=0;i<units.length;i++)if(typeKey(units[i].type)===k)return units[i];
+  for(let i=0;i<units.length;i++)if(typeKey(units[i].type)===k){
+    /* Two rows sharing br/ba are the SAME unit across tables (the letter firms'
+       grid/gross/safmr tables) and must merge — UNLESS both state a size and the
+       sizes differ, which is two distinct subject types in one grid (Gill prints a
+       515sf and a 593sf 1/1, each with its own unit count). Only the grid path
+       passes sf, so every letter caller is unaffected. */
+    if(sf!=null&&sf!==''&&units[i].sf!=null&&units[i].sf!==''&&Number(units[i].sf)!==Number(sf))continue;
+    return units[i];}
   /* A later table appends a designation the roster's own table did not carry.
      Walden's conclusion prints "1BR/1BA (B)" and its comparison and gross-renewal
      tables print "1BR/1BA (B) Senior" -- the same thirty apartments -- so a ghost
@@ -521,6 +537,13 @@ function readTables(txt,pi,units,totals,seen){
     if((m=t.match(/^total\s*\$([\d,]+)/i))){if(totals.grossRenewal==null)totals.grossRenewal=money(m[1]);return;}
     if((m=t.match(/subject.{0,3}s\s+concluded\s+gross\s+rent[^$]*\$([\d,]+)/i))){totals.grossRenewal=money(m[1]);return;}
 
+    if((m=t.match(ROW_GRID))){                       // welded br/ba grid (Gill etc.) — read BEFORE ROW_MAIN
+      const u=upsert(units,m[1]+'/'+m[2],pi,money(m[5]),money(m[4]));
+      u.count=money(m[3]);u.sf=money(m[4]);u.psf=dec(m[6]);u.grid=/^y$/i.test(m[7]);
+      seen.push({type:norm(u.type),rent:money(m[5])});
+      if(u.proposed==='')u.proposed=money(m[5]);
+      return;
+    }
     if((m=t.match(ROW_MAIN))){
       const u=upsert(units,m[1],pi,money(m[2]));
       u.count=money(m[2]);u.sf=money(m[3]);u.psf=dec(m[5]);u.grid=/^y$/i.test(m[6]);
@@ -651,5 +674,5 @@ window.RCSParse={norm:norm,lines:lines,money:money,dec:dec,pageKey:pageKey,
      pin them against the exact lines three real studies print. Trimming a fixture
      out of a 90-page report to assert one regex is more moving parts than the
      assertion is worth. */
-  _ROW_MAIN:ROW_MAIN,_typeKey:typeKey,_upsert:upsert};
+  _ROW_MAIN:ROW_MAIN,_ROW_GRID:ROW_GRID,_typeKey:typeKey,_upsert:upsert};
 })();
