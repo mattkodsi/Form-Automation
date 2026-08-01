@@ -2463,7 +2463,12 @@ function rsDropTplLabels(runs,tplRuns){
       if(Math.abs(r.y-L.y)>4||Math.abs(r.x-L.x)>4)continue;
       if(String(L.s).trim()===t)return false;}
     return true;});}
-async function rsReadTextTier(pages,bytes,onStep){ // flattened copy -> same parsed shape as tier 1, or null
+/* The text tier, as its field-builder. It places the document's own glyphs onto
+   the form's boxes for whichever half prints where the form prints — the accurate
+   reading. It carries NO OCR of its own any more: OCR runs once, centrally, over
+   every page in parseRsPdf, so a copy is never scanned twice and every tier fills
+   its blanks from that one pass. Returns {F, s8, gotB} or null. */
+async function rsTextFields(pages){
   if(!pages||!pages.length)return null;
   const rects=await rsFieldRects();if(!Object.keys(rects).length)return null;
   const {pg0,pg1}=rsClassifyPages(pages.map(rs=>rs.map(r=>r.s).join(' ')));
@@ -2471,117 +2476,113 @@ async function rsReadTextTier(pages,bytes,onStep){ // flattened copy -> same par
   const tplr=await rsTplRuns();
   /* Decline rather than misplace. A page that does not print the form where the
      form prints it cannot be read out of the form's own boxes, and asking anyway
-     is how $91,922 became $1,642,642. Returning null sends it down to tier 3,
-     which registers a page onto the template before reading it and so is the tier
-     that can take an arbitrary geometry.
-     This comes BEFORE the checkbox assist below on purpose: a page we have
-     already decided we cannot place must not be sent out to be scanned for ticks
-     we could not have located anyway. */
+     is how $91,922 became $1,642,642. The central OCR pass registers an arbitrary
+     geometry onto the template before reading it, so it is the one that can take
+     such a page. */
   const clean=(rs,tp)=>rsDropTplLabels(rs,tplr&&tplr[tp]);
   const okA=rsTplPremiseHolds(rsTplAlign(pages[pg0],tplr&&tplr[0]));
-  /* The premise is asked of EACH half, because each half is read through our
-     own rectangles. Market Square and Mapleview are the case that requires it
-     from the other side: their page 1 is a printing we cannot place, while
-     their page 2 is ours exactly (43 of 43 labels), so the halves have to be
-     judged apart or the certification page is lost with the rent roll. On
-     every copy in the corpus whose front half passes, the back half passes
-     too, so this costs nothing that reads today. */
+  /* The premise is asked of EACH half, because each half is read through our own
+     rectangles. Market Square and Mapleview require it from the other side: their
+     page 1 is a printing we cannot place while their page 2 is ours exactly, so
+     the halves are judged apart or the certification page is lost with the rent
+     roll. */
   const okB=pg1>=0&&rsTplPremiseHolds(rsTplAlign(pages[pg1],tplr&&tplr[1]));
-  let F=null,viaTable=false;
+  let F=null;
   if(okA)F=rsMapRects(clean(pages[pg0],0),rects,0);
-  else{
-    /* Not our printing. Read Part A out of the form's own table instead of
-       declining the document outright -- and if that cannot be done either,
-       decline exactly as before. */
-    F=rsTableA(pages[pg0]);if(!F)return null;viaTable=true;}
+  else{ // not our printing — read Part A out of the form's own table, or decline
+    F=rsTableA(pages[pg0]);if(!F)return null;}
   if(okB)Object.assign(F,rsMapRects(clean(pages[pg1],1),rects,1));
-  let s8=rsS8FromPages(pages);
-  // Ticks are often drawings rather than glyphs — this copy's Part B boxes hold no
-  // text whatsoever — so a page that reads perfectly well can still be blind to
-  // every checkbox on it. When not one is found, ask Azure for that page's
-  // selection marks and take ONLY the boxes from it; the values stay with the
-  // text layer, which reads them better than OCR does.
-  /* Never on a page the table reader had to read: registration is what ocrHalf
-     does first, and it fails on these printings by the same measurement that
-     sent us to the table. Asking anyway spends Azure calls to place values by a
-     fit we have already shown does not hold. */
-  if(!viaTable&&bytes&&typeof ocrHalf==='function'&&typeof OCR_CHECKBOX!=='undefined'
-     &&!OCR_CHECKBOX.some(id=>rects[String(id)]&&rects[String(id)].pg===0&&F[String(id)])){
-    let ticks=null;try{ticks=await ocrHalf(bytes,0,[],(i,n)=>onStep&&onStep(i,n,'ticks'));}catch(e){}
-    if(ticks){
-      OCR_CHECKBOX.forEach(id=>{const k=String(id);
-        if(rects[k]&&rects[k].pg===0&&ticks.F[k])F[k]=ticks.F[k];});
-      // The page has been read anyway, so take anything else it found that the
-      // text layer left blank — on a copy whose values are drawn rather than
-      // typed, that is the difference between a filled box and an empty one.
-      // It only ever FILLS: where the text layer has a value that value stands,
-      // because it is the document's own characters, while OCR is a reading of
-      // them and can turn 1027 into 1O27. A recognized guess must not be allowed
-      // to overwrite the thing it was guessing at.
-      Object.keys(ticks.F).forEach(k=>{if(rects[k]&&rects[k].pg===0&&!F[k])F[k]=ticks.F[k];});}}
-  // A copy can be text on one page and pictures on the next — a rent roll that
-  // reads fine over a certification page rendered as dozens of little images.
-  // Rather than drop the entity, principals, signatory and HAP number, send just
-  // that half to be OCR'd; the pages already read as text are not sent again.
-  /* Was the half FOUND, or was anything READ off it? A flattened copy's page 2
-     still carries the blank form's own printing — "Part G", "Name of Entity",
-     "General Partnership" — so it classifies perfectly and yields no values at
-     all. Judged by classification alone it looked read, and the entity, the
-     principals and the signatory came back empty from a page that shows them. */
+  const s8=rsS8FromPages(pages);
+  /* Was anything READ off the second half? A flattened copy's page 2 still
+     carries the blank form's own printing — "Part G", "Name of Entity" — so it
+     classifies perfectly and yields no values: read by classification alone,
+     empty in fact. */
   const bIds=Object.keys(rects).filter(k=>rects[k]&&rects[k].pg===1);
-  let gotB=pg1>=0&&bIds.some(k=>String(F[k]||'').trim()!=='');
-  if(!gotB&&bytes&&typeof ocrHalf==='function'){
-    /* Every page already read AS TEXT is skipped — except the one we are here
-       for. When the second half was classified and came back empty, it is
-       precisely the page that has to be sent. */
-    const skip=[];pages.forEach((rs,i)=>{if(i!==pg1&&rs.length>=15)skip.push(i);});
-    let add=null;try{add=await ocrHalf(bytes,1,skip,(i,n)=>onStep&&onStep(i,n,'fill'));}catch(e){}
-    /* Fill, never overwrite — the same rule the tick merge above states: where
-       the text layer has a value that value stands, because it is the
-       document's own characters, and OCR is a reading of them. */
-    if(add){Object.keys(add.F).forEach(k=>{if(!String(F[k]||'').trim())F[k]=add.F[k];});
-      if(!s8&&add.s8)s8=add.s8;gotB=true;}}
-  const outp=rsAssembleFields(n=>String(F[String(n)]||'').trim());
-  if(outp&&s8)outp.scalars['property.s8']=s8;
-  if(outp&&!gotB)outp.halfB=true;
+  const gotB=pg1>=0&&bIds.some(k=>String(F[k]||'').trim()!=='');
+  return {F:F,s8:s8,gotB:gotB};}
+/* Kept for its callers and the suites: the text tier as an assembled record. The
+   central OCR pass in parseRsPdf is what completes it now, so this no longer
+   scans. bytes/onStep are accepted for signature compatibility and unused. */
+async function rsReadTextTier(pages,bytes,onStep){ // flattened copy -> parsed shape, or null
+  const t=await rsTextFields(pages);if(!t)return null;
+  const outp=rsAssembleFields(n=>String(t.F[String(n)]||'').trim());
+  if(outp&&t.s8)outp.scalars['property.s8']=t.s8;
+  if(outp&&!t.gotB)outp.halfB=true;
   return outp;}
 /* A refusal that says nothing is still a refusal the reader cannot act on. Two
    sentences may be true at once here — why the fields were no use, and why the
    scan was no use — and both are kept, in that order. */
 function rsWhy(){return Array.prototype.slice.call(arguments).filter(Boolean).join(' ');}
+/* The AcroForm as a field map -- the same {id:value} shape the text and OCR tiers
+   produce, so tier 1 merges with them cell by cell instead of standing apart. A
+   drawn tick keeps no text, so a checked box is recorded as 'X' (its presence IS
+   the value rsAssembleFields reads); an unchecked box is left absent. */
+function rsFieldsF(pf){
+  const F={};
+  (pf.getFields()||[]).forEach(fl=>{let nm='';try{nm=fl.getName();}catch(e){return;}
+    let t=null;try{t=fl.getText&&fl.getText();}catch(e){}
+    if(t!=null&&String(t).trim()){F[nm]=String(t).trim();return;}
+    try{if(fl.isChecked&&fl.isChecked())F[nm]='X';}catch(e){}});
+  return F;}
+/* Part G's field ids -- the ownership entity, its type, the principals and the
+   signatory, all on the schedule's second half. Used only to tell "the back half
+   never came through" (halfB) from a back half that came through with values. */
+const RS_PARTG_IDS=[197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225,226,227,228];
+/* Read an executed rent schedule. THE MODEL: a form field and a text glyph are
+   equally the document's OWN characters, so each wins the cell it fills; OCR is a
+   reading OF those characters and may only COMPLETE what they left blank. So all
+   three are merged into one field map and assembled once -- the totals gate is
+   answered over the whole of what was read, never over OCR alone.
+   And OCR always runs, on every page: you cannot know a schedule carries no
+   non-text value -- a drawn tick, a stamped or handwritten figure, a
+   signature-flattened number -- without scanning it. */
 async function parseRsPdf(bytes,onStep){
   const doc=await window.PDFLib.PDFDocument.load(bytes,{ignoreEncryption:true,parseSpeed:Infinity});
   let n=0,pf=null;try{pf=doc.getForm();n=pf.getFields().length;}catch(e){}
-  let whyFields='';
-  if(n>10){const pf1=rsReadFields(pf);
-    // Part I has no field on any revision of this form, so even a fully-fielded
-    // copy only carries its HAP contract number as printed text.
-    if(!pf1.scalars['property.s8']){try{const tp=await rsTextPages(doc);const v=rsS8FromPages(tp)||rsS8FromFields(pf);if(v)pf1.scalars['property.s8']=v;}catch(e){}}
-    if(rsRecordHolds(pf1,rsFieldText(pf,95)))return {kind:'fields',parsed:pf1};
-    /* Fields present and nothing in them. Do not return the empty record and do
-       not stop here either: a copy flattened at signing often keeps the AcroForm
-       skeleton while the values move into the page, and that copy is readable by
-       the printed page. So carry the reason and go on down the tiers — and if
-       none of them reads it either, the reason is what the reader gets told
-       instead of a blank refusal. */
-    whyFields='This copy still carries the blank form\u2019s own fields, but they hold no apartment rents \u2014 every rent row is empty or zero, so there was nothing in them to read.';}
+
+  const F={};let s8='',fielded=false,tier1V=null,whyFields='';
+  // -- tier 1: the AcroForm's own fields --
+  if(n>10){
+    const f1=rsFieldsF(pf);
+    Object.keys(f1).forEach(k=>{if(!String(F[k]||'').trim())F[k]=f1[k];});
+    tier1V=x=>String(f1[String(x)]||'').trim();
+    // A fielded copy that HOLDS a rent roll is the only one that may claim a
+    // definite Part B -- a real field literally says checked or unchecked. A
+    // skeleton kept past signing with empty rents is not that copy.
+    fielded=!!rsAssembleFields(tier1V);
+    if(!fielded)whyFields='This copy still carries the blank form’s own fields, but they hold no apartment rents — every rent row is empty or zero, so there was nothing in them to read.';
+    // Part I has no field on any revision of the form; even a fully-fielded copy
+    // carries its HAP contract number only as printed text.
+    if(!s8){try{const tp=await rsTextPages(doc);s8=rsS8FromPages(tp)||rsS8FromFields(pf)||'';}catch(e){}}
+  }
+  // -- tier 2: positioned text, for figures flattened out of the fields --
   let pages=null;try{pages=await rsTextPages(doc);}catch(e){}
   const runs=pages?pages.reduce((a,p)=>a+p.length,0):0;
-  const scan=async()=>{let oc=null;try{oc=await ocrParseRs(bytes,(i,n)=>onStep&&onStep(i,n,'scan'));}catch(e){}return oc;};
-  if(runs<15){ // nothing to read on the page itself: tier 3 sends it out to be OCR'd
-    const oc=await scan();
-    return oc?{kind:'fields',parsed:oc,via:'ocr'}:{kind:'scan',parsed:null,why:rsWhy(whyFields,ocrWhy())};}
-  let tp=null;try{tp=await rsReadTextTier(pages,bytes,onStep);}catch(e){}
-  if(tp)return {kind:'fields',parsed:tp,via:'text'};
-  /* Text on the page and none of it the values — so OCR, which the runs<15 gate
-     alone would never have reached. An e-signed copy is that gate's worst case:
-     signing flattens every entered figure into artwork the extractor cannot
-     recover, while leaving the blank form's own printing behind. Colonial
-     Village's schedule carries 287 text runs and not one of them is a value, so
-     the page reads as maximally readable and yields nothing. "Is there text on
-     it" was never the question. "Did we manage to read any of it" is. */
-  const oc=await scan();
-  return oc?{kind:'fields',parsed:oc,via:'ocr'}:{kind:'text',parsed:null,why:rsWhy(whyFields,ocrWhy())};}
+  if(runs>=15){
+    let tx=null;try{tx=await rsTextFields(pages);}catch(e){}
+    if(tx){Object.keys(tx.F).forEach(k=>{if(!String(F[k]||'').trim())F[k]=tx.F[k];});if(!s8&&tx.s8)s8=tx.s8;}
+  }
+  // -- tier 3: OCR, always, every page -- fills only the cells still blank --
+  let ocrAdded=false;
+  try{
+    const oc=await ocrAllPagesF(bytes,(i,m)=>onStep&&onStep(i,m,'scan'));
+    if(oc&&oc.reached){
+      Object.keys(oc.F).forEach(k=>{if(!String(F[k]||'').trim()){F[k]=oc.F[k];ocrAdded=true;}});
+      if(!s8&&oc.s8)s8=oc.s8;}
+  }catch(e){}
+
+  // -- one assembly, one totals gate, over the merged map --
+  const outp=rsAssembleFields(x=>String(F[String(x)]||'').trim());
+  if(outp){
+    if(s8)outp.scalars['property.s8']=s8;
+    // a fielded copy KNOWS every checkbox state; keep tier 1's definite Part B
+    // (OCR only ADDS a tick, and a real field already carries them all).
+    if(fielded&&tier1V)outp.partb=rsPartB(tier1V,true);
+    if(!RS_PARTG_IDS.some(k=>String(F[k]||'').trim()!==''))outp.halfB=true;
+    let via;if(ocrAdded)via='ocr';else if(!fielded)via='text';
+    return {kind:'fields',parsed:outp,via:via};
+  }
+  return {kind:(runs<15?'scan':'text'),parsed:null,why:rsWhy(whyFields,ocrWhy())};}
 function rsFillFromParsed(){const P=_rsUpload&&_rsUpload.parsed;if(!P)return;
   const _wrote=[];
   const mark=k=>{markCycle(k);if(form[k])form[k].fromParse=true;if(_wrote.indexOf(k)<0)_wrote.push(k);};   // came from the schedule, not typed — tags an override as "parsed", not just "changed", in its note text

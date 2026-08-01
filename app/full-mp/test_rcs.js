@@ -58,10 +58,11 @@ fs.writeFileSync(_b,'function ocrHalf(b,p,skip){(globalThis.__HALF=globalThis.__
      suite has to supply both halves of that seam. ocrParseRs answers whatever
      the test set and never a network call; ocrWhy answers the reason a real
      Azure run would have left behind, so the composed message can be asserted. */
+  +'function ocrAllPagesF(b){(globalThis.__OCRALL=globalThis.__OCRALL||[]).push(1);return Promise.resolve(globalThis.__OCRRES||{F:{},s8:"",reached:false});}\n'
   +'function ocrParseRs(){return Promise.resolve(globalThis.__OCR||null);}\n'
   +'function ocrWhy(){return globalThis.__OCRWHY||"";}\n'
   +['templates.js','core.js','score.js','db.js','app.js','rcs.js'].map(x=>fs.readFileSync(path.join(_d,x),'utf8')).join('\n')
-  +'\nif(typeof module!=="undefined")Object.assign(module.exports,{__rsTextPageAt:rsTextPageAt,__rsTextPages:rsTextPages,__rsReadTextTier:rsReadTextTier,__rsTplAlign:rsTplAlign,__rsTplPremiseHolds:rsTplPremiseHolds,__rsFieldRects:rsFieldRects,__rsMapRects:rsMapRects,__rsTableA:rsTableA,__rsColHeads:rsColHeads,__rsTblCells:rsTblCells,__rsAssembleFields:rsAssembleFields,__rsLines:rsLines,__rsBoxText:rsBoxText,__rsDropTplLabels:rsDropTplLabels,__rsTplRuns:rsTplRuns,__rsDropFormLines:rsDropFormLines,__rsFormLines:rsFormLines,__parseRsPdf:parseRsPdf,__defUaSrc:defUaSrc,__defSafmrSrc:defSafmrSrc,__checkSeed:checkSeed,__CHECK_CONDITIONAL:CHECK_CONDITIONAL,__CHECKLIST_FLAT:CHECKLIST_FLAT});\n');
+  +'\nif(typeof module!=="undefined")Object.assign(module.exports,{__rsTextPageAt:rsTextPageAt,__rsTextPages:rsTextPages,__rsReadTextTier:rsReadTextTier,__rsTextFields:rsTextFields,__rsTplAlign:rsTplAlign,__rsTplPremiseHolds:rsTplPremiseHolds,__rsFieldRects:rsFieldRects,__rsMapRects:rsMapRects,__rsTableA:rsTableA,__rsColHeads:rsColHeads,__rsTblCells:rsTblCells,__rsAssembleFields:rsAssembleFields,__rsLines:rsLines,__rsBoxText:rsBoxText,__rsDropTplLabels:rsDropTplLabels,__rsTplRuns:rsTplRuns,__rsDropFormLines:rsDropFormLines,__rsFormLines:rsFormLines,__parseRsPdf:parseRsPdf,__defUaSrc:defUaSrc,__defSafmrSrc:defSafmrSrc,__checkSeed:checkSeed,__CHECK_CONDITIONAL:CHECK_CONDITIONAL,__CHECKLIST_FLAT:CHECKLIST_FLAT});\n');
 const app=require(_b);
 const R=global.window.RCSParse;
 const D_=_d+'/';
@@ -591,15 +592,15 @@ async function reader(file){
     const tdoc=await P.PDFDocument.load(new Uint8Array(tplB),{ignoreEncryption:true,throwOnInvalidObject:false});
     const tpages=await app.__rsTextPages(tdoc);
     T('the blank form has text on its second page',tpages.length>=2&&tpages[1].length>0);
-    globalThis.__HALF=[];
-    await app.__rsReadTextTier(tpages,new Uint8Array(tplB),null);
-    T('a second half with printing but no values is sent to be scanned',globalThis.__HALF.length>0);
-    if(globalThis.__HALF.length){
-      eq('and it is the SECOND half that is asked for',globalThis.__HALF[0].p,1);
-      /* The page we are here for must not be in the skip list, or the request
-         goes out asking for everything except the thing it needs. */
-      T('and the page it needs is not skipped',globalThis.__HALF[0].skip.indexOf(1)<0);
-    }
+    /* OCR is no longer a fallback rsReadTextTier reaches for one empty half: it
+       runs once, centrally, over EVERY page of EVERY executed schedule. So the
+       proof shifts from "the empty half was sent" to the stronger fact that the
+       whole document is scanned even when the text tier read only labels off it. */
+    globalThis.__OCRALL=[];globalThis.__OCRRES={F:{},s8:'',reached:false};
+    const rHalf=await app.__parseRsPdf(new Uint8Array(tplB));
+    T('every executed schedule is sent to be scanned, even one that reads only labels',globalThis.__OCRALL.length>0);
+    eq('and a copy the scan cannot complete is still refused, not read',!!(rHalf.kind==='fields'&&rHalf.parsed),false);
+    globalThis.__OCRALL=null;globalThis.__OCRRES=null;
   }
 
   /* ── a box holds its own printed row, and reads left to right ─────────────
@@ -1006,10 +1007,11 @@ async function reader(file){
 
     /* The control, and the reason this block cannot be passed by a gate set so
        tight that nothing is ever read: the aligned page must still go through.
-       Reaching the second-half scan request is proof it got past the premise. */
-    globalThis.__HALF=[];
-    await app.__rsReadTextTier(tpages,new Uint8Array(tplB),null);
-    T('while an aligned page is still processed',globalThis.__HALF.length>0);
+       The premise passing is proof of that — rsTextFields returns a field map for
+       our own template's page, where the misaligned real page above returned
+       null. */
+    const aligned=await app.__rsTextFields(tpages);
+    T('while an aligned page is still processed',aligned!==null);
   }
 
   /* Two ways to read nothing, and the reader has to tell them apart, because
@@ -1265,13 +1267,19 @@ async function reader(file){
       set(15,'1BR/1BA'); set(16,'5');  set(17,'700');
       set(95,'12,500');
       const real=new Uint8Array(await d.save({updateFieldAppearances:false}));
+      globalThis.__OCRALL=[];globalThis.__OCRRES={F:{},s8:'',reached:false};
       const r=await app.__parseRsPdf(real);
       eq('a fielded schedule that holds a rent roll still reads through tier 1',r.kind,'fields');
       eq('and it still comes back with both of its unit rows',r.parsed?r.parsed.units.length:null,2);
       eq('and with the rents the fields carry',
         r.parsed?r.parsed.units.map(u=>u.count*u.rent).reduce((a,b)=>a+b,0):null,12500);
       eq('and with the name the fields carry',r.parsed?r.parsed.scalars['property.name']:null,'Gates Manor Apartments');
-      T('and with no refusal attached to it',!r.why); }
+      T('and with no refusal attached to it',!r.why);
+      /* The point of the whole change: a copy that reads cleanly from its own
+         fields is STILL scanned in full, because a non-text value can hide on any
+         page and only OCR can find it. It just did not overwrite anything here. */
+      T('and it was still sent to be OCR’d in full, fields notwithstanding',globalThis.__OCRALL.length>0);
+      globalThis.__OCRALL=null;globalThis.__OCRRES=null; }
 
     /* THE FLOOR ITSELF, through the door tiers 2 and 3 come in by. It is the same
        predicate tier 1 now answers to, so this is the other half of the same
