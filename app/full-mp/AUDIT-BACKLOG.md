@@ -84,6 +84,28 @@ were fixed for. **Needs measurement.**
   path is untested. **Still out of reach** — the stub database cannot fake an
   authenticated edge function, so this needs Matt or a real session.
 
+## F. Page-frame geometry at non-1920 widths — three `test_browser` checks (2026-08-01)
+
+Measured driving the real bundle at several viewport widths. One was a clear bug and
+is **fixed** (2026-08-01, `18df2db`); three remain and each is a design question, not
+an obvious defect.
+
+- **FIXED — the form scrolled sideways at 1200 and 1280px.** Every section is a `.cols`
+  grid (`calc(50% - 23px) 1fr`); the `1fr` track's `auto` min-content (the
+  point-of-contact email box, ~490px) exceeded its fr share and grew the grid 62px past
+  its column. `minmax(0,1fr)` lets the track shrink to its share — the email input takes
+  the slack. Measured clean at 1200/1280/1920px, nothing clipped.
+- **The page is pinned left, not centred, at 1680 and 2560px.** On a wide display the
+  form sits against the left edge with all the whitespace on the right. This may be
+  intended (a left-aligned max-width layout is a legitimate choice) or an oversight
+  (a missing `margin:0 auto`). **Needs Matt** — do not "fix" it to match the test until
+  the intent is known; the test asserts centring, which is a preference, not a rule.
+- **After a jump-to, the target heading sits under the sticky command bar rather than
+  clearing it at one width.** `test_browser` wants the pinned heading's top within 2px
+  of the screen top; it measured off-screen. Could be a real scroll-offset-vs-bar-height
+  gap, or specific to the test's viewport. **Needs a per-width measurement** before it is
+  called a bug — the sticky-chrome shots (`36`–`38`, `46`–`48`) are the right lens.
+
 ---
 
 ## How to verify anything here
