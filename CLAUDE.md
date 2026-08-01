@@ -9,16 +9,12 @@ renewal package as review-ready drafts. See `RCS Renewal Automation - Project Pl
 British spellings already in this repo are legacy, so fix them only on lines you are
 already editing.
 
-> **Latest handoff:** `SESSION-HANDOFF-2026-07-29-AUDIT.md` — the corpus audit: the three-way
-> method (read the SOURCES yourself, then compare app vs filed), the audit-wave / repair-break
-> loop, what is fixed, what is open, and the standing rule that every run writes `ZZ-CORPUS-*`
-> properties into Matt's LIVE account and must delete them afterwards. Older: `SESSION-HANDOFF-2026-07-28.md` — three parallel audits (generation/parsing,
-> the UI source against FORM-RULES, and a real browser), 33 defects found and 29 fixed, plus the
-> queue. 852 checks. Older: `SESSION-HANDOFF-2026-07-27.md` — the `?selftest=1` hatch (drive the
-> real form in a browser, no sign-in), what shipped, and the interaction audit that is
-> the next task. Older: `SESSION-HANDOFF-2026-07-14.md` — the Supabase backend migration
-> (data layer moved off localStorage), what's live, and a resume-here block. NOTE: the
-> storage/offline/deliver sections below predate that migration and need refreshing.
+> **Operating doc:** `app/full-mp/AUDIT-PROCEDURE.md` — the audit procedure: the
+> three-way method (read the SOURCES yourself, then compare OURS vs FILED), the four
+> inspection methods (visual / textual / executional / interactive), the fuzz protocol,
+> subagent orchestration, and the standing rule that every drive may write `ZZ-CORPUS-*`
+> rows into Matt's LIVE account and must delete them afterwards. Read `FORM-RULES.md`
+> alongside it for the form invariants.
 
 ## The product is the single-file app — built from source
 
@@ -202,7 +198,6 @@ a new suite needs registering (`deliver.sh` calls it).
   accounting parentheses, leading zeros). `test_extract.js` (120) reads filed documents and guards the
   four traps: HUD-92458 values live in widget `/V` and not the text layer, `copyPages` drops the
   AcroForm, the filed checklist font is offset ASCII−29, and our own output has no word spacing.
-  See `docs/superpowers/plans/MORNING-REPORT.md` for what the first full sweep found.
 - **`app/full-mp/corpus/look.js` + `rdiff.js`** — **the only tooling that looks at a rendering.**
   Everything above compares *values*, and both sides have had `$` and `,` stripped from them before
   they meet (`extract.js:96`, `compare.js:68`) — so a dropped dollar sign, a missing zero or a figure
@@ -231,10 +226,11 @@ The property name and the effective date stop being editable when
 `window.RASource` — Kinley's database seam — answers for them. Nothing injects it
 on this build, so the feature is invisible here. **Open `index.html?ra=1`** to
 stand the seam up against the property's own stored values: nothing changes value,
-the two cells simply lock. See `docs/superpowers/specs/2026-07-30-tracker-is-definitive-design.md`
-and FORM-RULES 20.
+the two cells simply lock. See FORM-RULES 20 and `app/full-mp/AUDIT-PROCEDURE.md`.
 
 ## Resume point
 
-`SESSION-HANDOFF-2026-07-13.md` holds the working state: what's done and QA-accepted, the hard-won
-lessons, and the next task (**package generation** in `gen.js`).
+`app/full-mp/AUDIT-PROCEDURE.md` is the operating doc — the audit procedure, the four
+inspection methods, the fuzz protocol, and the standing guardrails. `FORM-RULES.md`
+holds the form invariants. (The corpus/test descriptions below predate the 2026-08-01
+paring of the sweep rig to `ocr-cache.js` / `rdiff.js` / `drive.js` and need refreshing.)
