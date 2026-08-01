@@ -16,7 +16,7 @@ const els={};
 global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>null,querySelectorAll:()=>[],createElement:()=>mk(),addEventListener(){},body:{classList:{toggle(){},contains(){return false;}}}};
 const fs=require('fs'),path=require('path'),os=require('os');
 
-const MIN_CHECKS=461;   /* 2026-08-01: +10 welded br/ba grid row (Gill) — ROW_GRID; 2026-07-31: +7 UAF precedence + resolution parity; 2026-07-30 was 444 */
+const MIN_CHECKS=473;   /* 2026-08-01: +ROW_GRID2 fully-welded grid (Newberry/Fairview); +10 ROW_GRID (Gill); +7 UAF; base 444 */
 let n=0,fails=0,verdict=null;
 const BAR='='.repeat(68);
 function fail(msg,err){
@@ -1106,6 +1106,24 @@ async function reader(file){
     eq('and a single-digit count (1/14 -> 4)',('1/14 515 $1,000 $1.94 Y'.match(G)||[])[3],'4');
     T('a letter-format row is NOT a grid row (goes to ROW_MAIN)',!'1BR/1BA 90 640 SF $2,000 $3.13 Y'.trim().match(G));
     T('nor is a belfry $-row',!'1/1 $1,025 $85 $1,110'.match(G)); }
+
+  /* Gill's "Final RCS" template welds the whole row — no space anywhere — so it
+     arrives as "1/112600$525$0.88Y": br/ba, count, sf, $rent, $psf, Y. Newberry,
+     Fairview and Friendship printed 0 units because ROW_GRID needs the spaces.
+     ROW_GRID2 splits it: a 3-digit-or-"N,NNN" sf and the '$' anchor the count. */
+  console.log('\n─ the FULLY-welded grid row (Gill "Final RCS")─');
+  { const G2=R._ROW_GRID2;
+    const a='1/112600$525$0.88Y'.match(G2);
+    T('a fully-welded row reads',!!a);
+    eq('br',a&&a[1],'1'); eq('ba',a&&a[2],'1');
+    eq('count split off the welded sf (12, not 126 or 1)',a&&a[3],'12');
+    eq('sf',a&&a[4],'600'); eq('rent',a&&a[5],'525');
+    const b='4/2.561,286$925$0.72Y'.match(G2);
+    eq('fractional bath + comma sf: ba',b&&b[2],'2.5');
+    eq('and its count (6)',b&&b[3],'6'); eq('and comma sf',b&&b[4],'1,286');
+    const c='3/1.5181,098$800$0.73Y'.match(G2);
+    eq('a 2-digit count before a comma sf (18 / 1,098)',c&&c[3],'18'); eq('sf',c&&c[4],'1,098');
+    T('a spaced row is NOT this pattern (goes to ROW_GRID)',!'1/14 515 $1,000 $1.94 Y'.match(G2)); }
 
   /* Walden's conclusion table says "1BR/1BA (B)"; its comparison and gross-renewal
      tables say "1BR/1BA (B) Senior". Same thirty apartments, and the designation
