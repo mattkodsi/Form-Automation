@@ -59,7 +59,7 @@ function pageKey(runs){return lines(runs).map(function(l){return norm(l.text);})
    Comparability Study". Either opens a letter. */
 const LETTER_HEAD=/marketrentalanalysis|rerentcomparabilitystudy/;
 /* The tables, which may sit on the letter's first page or its second. */
-const LETTER_TABLE=/estimatesofmarketrent|grossrenewalpotentialcalculation|grossrentpotentialcalculation|totalgrossrenewalrent|150ofsafmrgrossrent|safmrgrossrent/;
+const LETTER_TABLE=/estimatesofmarketrent|grossrenewalpotentialcalculation|grossrentpotentialcalculation|totalgrossrenewalrent|150ofsafmrgrossrent|safmrgrossrent|unittypeunitssizerent/;
 /* A contents page prints every section heading in the document, the letter's
    included. It is never itself a letter page. */
 const TOC=/tableofcontents/;
@@ -530,8 +530,33 @@ function applySafmrBase(units,type,base){
   return hit.length;
 }
 
+/* Renzi's size-class studies (Oceanport Gardens) print each unit across THREE
+   lines: the type alone ("1BR/1BA"), the numbers next ("60 552 SF $2,525 $4.57
+   Y"), and the size qualifier below ("SMALL"). No single-line row grammar can
+   see that, and read on its own the number line parses to a phantom type "6".
+   Weld the three back into one — type, qualifier, then the numbers — so the
+   ordinary grammars read it, and the three size classes stay three rows rather
+   than collapsing to one. Self-gating: only a bare "NBR/NBA" line sitting
+   immediately above a purely numeric row welds, which the single-line firms
+   never present, so their studies pass through untouched. */
+const SPLIT_TYPE=/^\s*\d\s*(?:br|bd|bedrooms?)\s*\/\s*\d(?:\.\d)?\s*(?:ba|bath)?\s*$/i;
+const SPLIT_QUAL=/^\s*(?:small|medium|large|sm|med|lg|x-?large|extra\s*large|studio)\s*$/i;
+function bareRow(s){s=String(s||'');return /^\s*\d/.test(s)&&s.replace(/sf/ig,'').replace(/[yn]/ig,'').replace(/[^a-z]/ig,'').length===0;}
+function weldSplitTypeRows(txt){
+  const out=[];
+  for(let i=0;i<txt.length;i++){
+    if(SPLIT_TYPE.test(txt[i])&&i+1<txt.length&&bareRow(txt[i+1])){
+      const type=txt[i].trim();
+      if(i+2<txt.length&&SPLIT_QUAL.test(txt[i+2])){out.push(type+' '+txt[i+2].trim()+' '+txt[i+1].trim());i+=2;}
+      else{out.push(type+' '+txt[i+1].trim());i+=1;}
+    }else out.push(txt[i]);
+  }
+  return out;
+}
+
 function readTables(txt,pi,units,totals,seen){
   let section='';
+  txt=weldSplitTypeRows(txt);
   txt.forEach(function(t){
     const n=norm(t);
     if(n.indexOf('ownersgrossrenewalpotentialcalculation')>=0){section='owner';return;}
@@ -689,5 +714,6 @@ window.RCSParse={norm:norm,lines:lines,money:money,dec:dec,pageKey:pageKey,
      pin them against the exact lines three real studies print. Trimming a fixture
      out of a 90-page report to assert one regex is more moving parts than the
      assertion is worth. */
-  _ROW_MAIN:ROW_MAIN,_ROW_GRID:ROW_GRID,_ROW_GRID2:ROW_GRID2,_typeKey:typeKey,_upsert:upsert};
+  _ROW_MAIN:ROW_MAIN,_ROW_GRID:ROW_GRID,_ROW_GRID2:ROW_GRID2,_typeKey:typeKey,_upsert:upsert,
+  _weldSplitTypeRows:weldSplitTypeRows,_readTables:readTables};
 })();

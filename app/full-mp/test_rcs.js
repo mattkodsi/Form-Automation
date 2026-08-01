@@ -16,7 +16,7 @@ const els={};
 global.document={getElementById:id=>els[id]||(els[id]=mk(id)),querySelector:()=>null,querySelectorAll:()=>[],createElement:()=>mk(),addEventListener(){},body:{classList:{toggle(){},contains(){return false;}}}};
 const fs=require('fs'),path=require('path'),os=require('os');
 
-const MIN_CHECKS=473;   /* 2026-08-01: +ROW_GRID2 fully-welded grid (Newberry/Fairview); +10 ROW_GRID (Gill); +7 UAF; base 444 */
+const MIN_CHECKS=485;   /* 2026-08-01: +12 renzi size-class split rows (Oceanport); +ROW_GRID2 fully-welded grid (Newberry/Fairview); +10 ROW_GRID (Gill); +7 UAF; base 444 */
 let n=0,fails=0,verdict=null;
 const BAR='='.repeat(68);
 function fail(msg,err){
@@ -1124,6 +1124,44 @@ async function reader(file){
     const c='3/1.5181,098$800$0.73Y'.match(G2);
     eq('a 2-digit count before a comma sf (18 / 1,098)',c&&c[3],'18'); eq('sf',c&&c[4],'1,098');
     T('a spaced row is NOT this pattern (goes to ROW_GRID)',!'1/14 515 $1,000 $1.94 Y'.match(G2)); }
+
+  /* Renzi's size-class studies (Oceanport Gardens) print each unit across three
+     lines — the type "1BR/1BA", the numbers "60 552 SF $2,525 $4.57 Y", and the
+     size class "SMALL" — so no row grammar sees it and the number line alone
+     parses to a phantom type "6". The table page also never reached readTables:
+     its header "UNIT TYPE # UNITS SIZE RENT $ PSF (Y/N)" was not in LETTER_TABLE,
+     so the letter-finder's tail broke before it. weldSplitTypeRows welds the
+     three back into one, keeping the three size classes as three rows. */
+  console.log('\n─ renzi size-class rows split across three lines (Oceanport) ─');
+  { const W=R._weldSplitTypeRows;
+    const w=W(['1BR/1BA','60 552 SF $2,525 $4.57 Y','SMALL',
+               '1BR/1BA','20 576 SF $2,535 $4.40 Y*','MEDIUM']);
+    eq('the type, its numbers and its size class weld to one line',w.length,2);
+    eq('type and size class lead, then the numbers',w[0],'1BR/1BA SMALL 60 552 SF $2,525 $4.57 Y');
+    eq('and the second class stays its own line',w[1],'1BR/1BA MEDIUM 20 576 SF $2,535 $4.40 Y*');
+    /* self-gating: a single-line row (type WITH its numbers) is left untouched */
+    const u=W(['1BR/1BA 90 640 SF $2,000 $3.13 Y','2BR/1BA 40 850 SF $2,400 $2.82 Y']);
+    eq('a single-line study is passed through unwelded',u.length,2);
+    eq('and unchanged',u[0],'1BR/1BA 90 640 SF $2,000 $3.13 Y');
+    /* a bare type with no numeric row under it does not swallow the next line */
+    const n=W(['1BR/1BA','SCOPE OF ASSIGNMENT']);
+    eq('a bare type over prose is not welded',n.length,2);
+    /* end to end through readTables: the six Oceanport rows read distinct */
+    const units=[],totals={},seen=[];
+    R._readTables(['UNIT TYPE # UNITS SIZE RENT $ PSF (Y/N)',
+      '1BR/1BA','60 552 SF $2,525 $4.57 Y','SMALL',
+      '1BR/1BA','20 576 SF $2,535 $4.40 Y*','MEDIUM',
+      '1BR/1BA','10 600 SF $2,550 $4.25 Y*','LARGE',
+      '2BR/1BA','1 874 SF $3,200 $3.66 Y','SMALL',
+      '2BR/1BA','7 888 SF $3,210 $3.61 Y*','MEDIUM',
+      '2BR/1BA','2 900 SF $3,215 $3.57 Y*','LARGE'],2,units,totals,seen);
+    eq('all six size classes read as six rows, not one',units.length,6);
+    eq('the small 1BR keeps its own count',units[0].count,60);
+    eq('and its own rent',units[0].proposed,2525);
+    eq('the large 2BR is not merged into the small',units[5].count,2);
+    eq('and carries its own rent',units[5].proposed,3215);
+    const total=units.reduce((s,u)=>s+(+u.count||0),0);
+    eq('the counts sum to the study\'s 100 units',total,100); }
 
   /* Walden's conclusion table says "1BR/1BA (B)"; its comparison and gross-renewal
      tables say "1BR/1BA (B) Senior". Same thirty apartments, and the designation
