@@ -394,7 +394,7 @@ button.gdoc{justify-content:space-between}
    The row count comes in as an inline grid-template-rows, because it is a
    property of the section, not of the stylesheet. */
 .cols{display:grid;grid-template-columns:calc(50% - 23px) 1fr;grid-auto-flow:column;gap:13px 12px}
-.field{margin-bottom:6px} .fpair{display:flex;gap:10px} .fpair>.field{flex:1 1 0;min-width:0} .etpair>.field:first-child{flex:0 1 38%} .sigpair>.field{flex:1 1 0} .sigpair .ofthe{flex:0 0 auto;align-self:flex-start;padding:28px 1px 0;font-size:12px;font-weight:600;color:var(--ink-3)} .prinrow{display:flex;gap:12px;align-items:flex-start;margin-bottom:6px} .prinrow .field{flex:1 1 0;min-width:0;margin-bottom:0} .prinrow .urx{flex:0 0 22px;padding-top:8px} .prinhead{display:flex;gap:12px;font-size:11px;color:var(--ink-3);font-weight:600;margin:8px 0 4px} .prinhead span{flex:1 1 0} .prinhead span:last-child{flex:0 0 22px} .flabel{font-size:11px;color:var(--ink-3);margin-bottom:4px;font-weight:600}
+.field{margin-bottom:6px} .fpair{display:flex;gap:10px} .fpair>.field{flex:1 1 0;min-width:0} .etpair>.field:first-child{flex:0 1 38%} .sigpair>.field{flex:1 1 0} .sigpair .ofthe{flex:0 0 auto;align-self:flex-start;padding:28px 1px 0;font-size:12px;font-weight:600;color:var(--ink-3)} .prinrow{display:flex;gap:10px;align-items:flex-start;margin-bottom:6px} .prinrow .field{flex:1 1 0;min-width:0;margin-bottom:0} .prinrow .urx{flex:0 0 22px;padding-top:8px} .prinhead{display:flex;gap:10px;font-size:11px;color:var(--ink-3);font-weight:600;margin:8px 0 4px} .prinhead span{flex:1 1 0} .prinhead span:last-child{flex:0 0 22px} .flabel{font-size:11px;color:var(--ink-3);margin-bottom:4px;font-weight:600}
 .fbox{display:flex;align-items:center;border:1px solid var(--line);border-left:4px solid var(--prov-new);border-radius:8px;background:var(--prov-new-fill);overflow:visible;min-height:38px}
 .fbox input{flex:1;border:none;background:transparent;font:inherit;font-size:14px;padding:9px 11px;outline:none;color:var(--ink);min-width:0}
 .fbox .pfx{border:none;background:rgba(0,0,0,.03);font:inherit;color:var(--ink-2);padding:9px 6px;border-right:1px solid var(--line-2);outline:none}
@@ -1848,11 +1848,20 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
 @media(min-width:1051px){#viewForm .layout{grid-template-columns:228px minmax(0,1fr)}}
 #viewForm .layout{gap:24px}
 #viewForm .rail{background:var(--card);border:1px solid var(--rule);
-  border-radius:var(--r-card);padding:16px 14px;top:18px}
-body.scrolled #viewForm .rail{top:60px}
+  border-radius:var(--r-card);padding:16px 14px;top:18px;
+  /* Bound the height to the room actually below the sticky top, so a short
+     display scrolls the rail internally instead of dropping the SOURCE KEY off
+     the bottom. The base .rail's calc(100vh - 28px) assumes top:14px; this view
+     sits at top:18px (60px once the page has scrolled), so its own top offset
+     has to come out of the height or the tail overflows the viewport. When the
+     content fits — the tall monitor PMs use — max-height never bites, so the
+     rail is pixel-identical and shows no scrollbar. overflow:auto is inherited
+     from the base .rail. */
+  max-height:calc(100vh - 36px)}
+body.scrolled #viewForm .rail{top:60px;max-height:calc(100vh - 78px)}
 #viewForm .rail .kick{font-size:10px;font-weight:600;letter-spacing:.12em;
   color:var(--ink-3);margin:0 0 10px 6px}
-#viewForm .rail .railprog+.kick{margin:18px 0 10px 6px;padding-top:16px;
+#viewForm .rail .railprog+.kick{margin:18px 0 10px 6px;padding-top:12px;
   border-top:1px solid var(--rule)}
 #viewForm .railbar{background:var(--ledger);width:2px;border-radius:1px}
 #viewForm .railitem{font-size:13px;color:var(--ink-2);padding:7px 10px;
@@ -1866,10 +1875,10 @@ body.scrolled #viewForm .rail{top:60px}
 #viewForm .ri.warn{background:none;color:var(--prov-over)}
 #viewForm .railattn{background:var(--prov-over-fill);border:0;border-radius:var(--r-ctl);
   box-shadow:inset 3px 0 0 var(--prov-over);color:var(--prov-over);padding:11px 12px;
-  margin:16px 0 0;font-size:12px;font-weight:600}
+  margin:12px 0 0;font-size:12px;font-weight:600}
 #viewForm .railattn .sub{color:var(--ink-2);font-size:12px;font-weight:400;
   margin-top:6px;line-height:1.45}
-#viewForm .railprog{margin:16px 0 0;padding-top:16px;border-top:1px solid var(--rule);
+#viewForm .railprog{margin:16px 0 0;padding-top:12px;border-top:1px solid var(--rule);
   font-size:13px;font-weight:600;color:var(--ink)}
 #viewForm .railprog .warnt{display:block;font-size:12.5px;font-weight:400;
   color:var(--ink-3);margin-top:2px}
@@ -1886,6 +1895,13 @@ body.scrolled #viewForm .rail{top:60px}
 #viewForm .card{background:var(--card);border:1px solid var(--rule);
   border-radius:var(--r-card);margin-bottom:14px;overflow:visible}
 #viewForm .chead{padding:14px 20px;border-bottom:1px solid var(--rule-soft);gap:12px}
+/* When a section is collapsed the header IS the whole card, so its divider has
+   nothing to divide: the base rule (.card.collapsed .chead) drops it, but this
+   view's #viewForm .chead above wins on specificity and would keep it. Left in,
+   that straight underline ignores the card's border-radius and pokes past the
+   rounded bottom corners onto the desk — a light seam nub on every collapsed
+   card, doubled against the card's own border. Restore the intended behavior. */
+#viewForm .card.collapsed .chead{border-bottom:none}
 #viewForm .cnum{width:22px;height:22px;font-size:11px;font-weight:600;
   background:var(--sunk);color:var(--ink-3)}
 #viewForm .card:has(.pill.ok) .cnum{background:var(--filed);color:#fff}
@@ -2174,7 +2190,7 @@ body.scrolled #viewForm .rail{top:60px}
      <div class="layout">
        <div class="rail"><div class="kick">SECTIONS</div><div id="rail"></div><div class="railattn" id="railattn"></div><div class="railprog" id="railprog"></div>
          <div class="kick">SOURCE KEY</div>
-         <div class="key"><span><i class="sw" style="background:var(--prov-db)"></i>On file (database)</span><span><i class="sw" style="background:var(--prov-cycle)"></i>Filled from a source (this package) — not yet saved</span><span><i class="sw" style="background:var(--prov-over)"></i>Overridden</span><span><i class="sw" style="background:var(--prov-new)"></i>New &mdash; not yet saved</span></div>
+         <div class="key"><span><i class="sw" style="background:var(--prov-db)"></i>Saved</span><span><i class="sw" style="background:var(--prov-cycle)"></i>Auto-filled — not saved</span><span><i class="sw" style="background:var(--prov-over)"></i>Changed — not saved</span><span><i class="sw" style="background:var(--prov-new)"></i>Not saved</span></div>
        </div>
        <div class="main"><div id="sections"></div><div class="footer"><span class="unsaved" id="unsavedTag">● Unsaved changes</span><span class="fsp"></span><button class="btn" id="bFillFooter">&#8635; Revert to saved</button><button class="btn p" id="bSave">Update property profile</button><button class="btn p" id="bGenerate">Generate package</button></div></div>
      </div>
