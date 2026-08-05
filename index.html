@@ -6369,12 +6369,20 @@ function rcsFillKeys(){
      computes, it never asserts). */
   return ks.filter(function(k){if(rsOffers(k))return false;const r=rcsOf(k);return r!=null&&r!=='';});
 }
-function rcsFillFromParsed(){
+function rcsFillFromParsed(opts){
   const P=_rcsUpload&&_rcsUpload.parsed;if(!P)return;
+  const _force=!!(opts&&opts.force);
   deriveUnits();          // a row added since the last render is still a row to fill
-  const _wrote=[];
+  const _wrote=[],_skip=[];
   const mark=k=>{markCycle(k);if(form[k]){form[k].fromParse=true;form[k].origin='rcs';form[k].pinned=false;}if(_wrote.indexOf(k)<0)_wrote.push(k);};   // came from the study — origin 'rcs', and a bulk fill pins nothing
-  const put=(k,v)=>{if(v!=null&&v!==''){form=store.editForm(form,k,String(v));mark(k);}};
+  /* A deliberate entry is pinned; a re-read of the study LEAVES it and reports it
+     rather than stomping it. Identical value = no conflict, left silently. Apply-
+     over passes force. Same rule as the schedule fill — see rsFillFromParsed. */
+  const put=(k,v)=>{if(v==null||v==='')return;
+    const cur=form[k];
+    // Only a non-empty deliberate entry is protected — see rsFillFromParsed.
+    if(cur&&cur.pinned&&cur.value!==''&&cur.value!=null&&!_force){if(String(cur.value)!==String(v)&&_skip.indexOf(k)<0)_skip.push(k);return;}
+    form=store.editForm(form,k,String(v));mark(k);};
   const setk=(k,v)=>{if(rsOffers(k)||raLockedKey(k))return;put(k,v);};   // RA > RS > RCS — see rsOffers, raLockedKey
 
   /* The study carries none of these, so none is ever sourced from it: the FHA
@@ -6497,7 +6505,7 @@ function rcsFillFromParsed(){
 
   deriveUnits();renderBody();scheduleHudRefresh();
   const n=rcsFillKeys().length;
-  _rcsFill=fillRecord(_rcsUpload,_wrote);rcsRemember();
+  _rcsFill=fillRecord(_rcsUpload,_wrote,_skip);rcsRemember();
   setStatus('Form filled from the RCS study — '+n+' value'+(n===1?'':'s')+' marked “RCS report”.'
     +(added.length?' Added '+added.length+' unit row'+(added.length===1?'':'s')+' the study prices and the form did not have ('+added.join(', ')+') — check the count and type against the executed schedule.':'')
     +(ambiguous?' '+ambiguous+' unit row'+(ambiguous===1?'':'s')+' matched more than one line in the study and '+(ambiguous===1?'was':'were')+' left for you — the study prices them separately and the form cannot tell which is which.':'')
@@ -7446,10 +7454,21 @@ async function parseRsPdf(bytes,onStep){
     return {kind:'fields',parsed:outp,via:via};
   }
   return {kind:(runs<15?'scan':'text'),parsed:null,why:rsWhy(whyFields,ocrWhy())};}
-function rsFillFromParsed(){const P=_rsUpload&&_rsUpload.parsed;if(!P)return;
-  const _wrote=[];
+function rsFillFromParsed(opts){const P=_rsUpload&&_rsUpload.parsed;if(!P)return;
+  const _force=!!(opts&&opts.force);
+  const _wrote=[],_skip=[];
   const mark=k=>{markCycle(k);if(form[k]){form[k].fromParse=true;form[k].origin='rs';form[k].pinned=false;}if(_wrote.indexOf(k)<0)_wrote.push(k);};   // came from the schedule, not typed — origin 'rs', and a bulk fill pins nothing (editForm's typed/pinned default is overridden here). Tags an override as "parsed", not just "changed", in its note text
-  const setk=(k,v)=>{if(raLockedKey(k))return;if(v!=null&&v!==''){form=store.editForm(form,k,String(v));mark(k);}};
+  /* A deliberate entry — a value the person typed or a source they picked — is
+     pinned. A re-fill LEAVES it and reports it rather than stomping a figure that
+     already went to HUD; an identical value is no conflict, so it is left silently.
+     "Apply over my entries" re-runs with force and overwrites. See fillNote. */
+  const setk=(k,v)=>{if(raLockedKey(k))return;if(v==null||v==='')return;
+    const cur=form[k];
+    // Protect only a deliberate, NON-EMPTY entry. A cleared cell is pinned too
+    // (editForm pins every write), but an empty cell is not a value worth keeping
+    // from a document — let the fill populate it.
+    if(cur&&cur.pinned&&cur.value!==''&&cur.value!=null&&!_force){if(String(cur.value)!==String(v)&&_skip.indexOf(k)<0)_skip.push(k);return;}
+    form=store.editForm(form,k,String(v));mark(k);};
   { const pn=splitProjectName(P.scalars['property.name']);
     setk('property.name',pn.name);
     if(pn.alias)setk('tenant.property_alias',pn.alias); }
@@ -7494,7 +7513,7 @@ function rsFillFromParsed(){const P=_rsUpload&&_rsUpload.parsed;if(!P)return;
          paints as this-cycle and its pair can save it; unmarked it wore the grey
          of an untouched cell and could not be saved at all. */
       if(get('nonrev.'+ix+'.num_units')===''){form=store.editForm(form,'nonrev.'+ix+'.num_units','1');mark('nonrev.'+ix+'.num_units');}});}
-  _rsFill=fillRecord(_rsUpload,_wrote);rsRemember();
+  _rsFill=fillRecord(_rsUpload,_wrote,_skip);rsRemember();
   deriveUnits();
   /* THE SCHEDULE OWNS THE ROSTER, SO THE STUDY MUST BE RE-READ AGAINST IT.
      rcsMatch looks a row up by its bedrooms and baths, which means one study
@@ -7525,7 +7544,7 @@ function rsFillFromParsed(){const P=_rsUpload&&_rsUpload.parsed;if(!P)return;
      document could re-apply another. Same rule, one place: a fill record is
      about the file it names. */
   if(_rcsFill&&_rcsUpload&&_rcsUpload.parsed&&_rcsFill.name===(_rcsUpload.name||'')){
-    rcsFillFromParsed();   // renders, and reports its own count
+    rcsFillFromParsed(opts);   // renders, and reports its own count (force propagates)
     setStatus('Form filled from the executed rent schedule, and the RCS study re-read against its unit types \u2014 review the highlighted values, then \u201cUpdate property profile\u201d.');
     return;}
   renderBody();scheduleHudRefresh();scheduleFactorRefresh();
@@ -7533,7 +7552,7 @@ function rsFillFromParsed(){const P=_rsUpload&&_rsUpload.parsed;if(!P)return;
 /* A fill is remembered against the FILE it came from, so replacing the
    document — or opening another property — leaves nothing behind claiming a
    fill that did not happen here. */
-function fillRecord(up,keys){return up?{name:up.name||'',n:keys.length,keys:keys.slice()}:null;}
+function fillRecord(up,keys,skipped){return up?{name:up.name||'',n:keys.length,keys:keys.slice(),skipped:(skipped||[]).slice()}:null;}
 /* …AND IT IS ONLY TRUE WHILE THE FORM STILL SHOWS THE FILL. Making the record
    durable (M60) fixed the reload but introduced its own wrong: a fill applied
    and never saved does not survive the reload, yet the record did, so the study
@@ -7561,7 +7580,17 @@ function fillNote(rec,up){
   if(!rec||!up||rec.name!==(up.name||''))return null;
   const left=rec.keys.filter(k=>form[k]&&form[k].source!=='database').length;
   const n=rec.n+' value'+(rec.n===1?'':'s');
-  return left?('Filled '+n+' \u2014 '+left+' still to save.'):('Filled '+n+', all saved.');}
+  const base=left?('Filled '+n+' \u2014 '+left+' still to save.'):('Filled '+n+', all saved.');
+  /* What the fill LEFT ALONE is part of the reading: a re-fill skips the values a
+     person deliberately entered, and says so, so a protected figure never looks
+     like it was quietly overwritten. The Apply-over button (below) reverses it. */
+  const sk=(rec.skipped||[]).filter(k=>form[k]&&form[k].pinned).length;
+  return sk?(base+' Left '+sk+' you\u2019d entered.'):base;}
+/* Offered only when a re-fill actually skipped something the user still has
+   pinned \u2014 one click re-runs the fill with force and overwrites those cells. */
+function applyOverBtn(rec,up,id){
+  const sk=(rec&&up&&rec.name===(up.name||'')&&rec.skipped)?rec.skipped.filter(k=>form[k]&&form[k].pinned).length:0;
+  return sk?('<button class="btn sm" id="'+id+'" title="Overwrite the '+sk+' value'+(sk===1?'':'s')+' you entered with this document\u2019s">Apply over my '+sk+' entr'+(sk===1?'y':'ies')+'</button>'):'';}
 /* One tile per document, the same shape whichever state it is in, so the two
    sit level and the section does not reflow as a file is read. */
 function srcTile(o){
@@ -7591,7 +7620,7 @@ function renderSources(){
               sub:_rn?(fillNote(_rcsFill,up)||'The values are ready to apply.')
                     :((up.parsed&&up.parsed.textless)?'This copy is a scan, so no values could be read. Enter them by hand below.'
                                                      :'No appraiser\u2019s letter was found in this file. Check that it is the complete study.'),
-              acts:(_rn?'<button class="btn sm teal" id="rcsApply">Fill form from study</button>':'')
+              acts:(_rn?'<button class="btn sm teal" id="rcsApply">Fill form from study</button>'+applyOverBtn(_rcsFill,up,'rcsApplyOver'):'')
                    +'<button class="btn sm" id="upRcs">Replace</button>'})
     :srcTile({icon:MUT,dim:!sl.need,name:sl.title,state:sl.need?'not uploaded':'optional',
               stateCls:sl.need?'missing':'parsed',sub:esc(sl.sub),
@@ -7612,7 +7641,7 @@ function renderSources(){
       stateCls:_half?'missing':'parsed',
       sub:(_half?'Part A came through; Parts F and G \u2014 the ownership entity, the principals and the signatory \u2014 did not. Replace with a clearer copy, or enter those by hand. ':(ru.via==='ocr'?'Scanned \u2014 check the values against the document. ':''))
           +(fillNote(_rsFill,ru)||'No values have been applied to the form yet.'),
-      acts:'<button class="btn sm teal" id="rsApply">Fill form from RS</button><button class="btn sm" id="upRs">Replace</button>'});}
+      acts:'<button class="btn sm teal" id="rsApply">Fill form from RS</button>'+applyOverBtn(_rsFill,ru,'rsApplyOver')+'<button class="btn sm" id="upRs">Replace</button>'});}
   else rs=srcTile({icon:WARN,name:ru.name,state:'could not be read',stateCls:'missing',
       /* A tile that says only “Enter the values below” tells a property manager
          nothing about what to do differently, and “could not be read” is the
@@ -8742,6 +8771,7 @@ function wireBody(){
           :'The study was uploaded, but no appraiser\u2019s letter was found in it. It still goes in as document 04.'));
     });};
   const rap=el('rcsApply');if(rap)rap.onclick=()=>rcsFillFromParsed();
+  const rapo=el('rcsApplyOver');if(rapo)rapo.onclick=()=>{rcsFillFromParsed({force:true});setStatus('Applied the study over your entries.');};
   const upS=el('upRs');if(upS)upS.onclick=()=>{const f=el('rsFile');if(f)f.click();};
   const sf=el('rsFile');if(sf)sf.onchange=()=>{const f=sf.files&&sf.files[0];if(!f)return;
     if(_rsBusy){setStatus('Still reading the last rent schedule \u2014 one moment.');sf.value='';return;} // OCR takes seconds; a second upload mid-flight would race the first
@@ -8774,6 +8804,7 @@ function wireBody(){
         ?((r.via==='ocr'?'Rent schedule scanned — check the values against the document. ':'Rent schedule read. ')+'Press Enter to fill the form, or use “Fill form from RS” in '+secRef(1)+'.')
         :((r.why?r.why+' ':'')+'The values in this copy could not be read — enter them by hand below.'));});};
   const ra=el('rsApply');if(ra)ra.onclick=()=>rsFillFromParsed();
+  const rao=el('rsApplyOver');if(rao)rao.onclick=()=>{rsFillFromParsed({force:true});setStatus('Applied the schedule over your entries.');};
   const uu=el('undoUnit');if(uu)uu.onclick=()=>{if(!_undoStack.length)return;const e=_undoStack.pop();Object.keys(e.snap).forEach(k=>{form[k]=e.snap[k];});if(UNITS.indexOf(e.i)<0)UNITS.push(e.i);UNITS.sort((a,b)=>a-b);renderBody();setStatus('Unit type restored.');};
   const uc=el('undoCommit');if(uc)uc.onclick=()=>{_undoStack=[];renderBody();setStatus('Deletions kept.');};
   const up=el('undoPrin');if(up)up.onclick=()=>{if(!_undoPR.length)return;const e=_undoPR.pop();Object.keys(e.snap).forEach(k=>{form[k]=e.snap[k];});if(PRINCIPALS.indexOf(e.i)<0)PRINCIPALS.push(e.i);PRINCIPALS.sort((a,b)=>a-b);renderBody();setStatus('Principal restored.');};
@@ -11207,7 +11238,7 @@ const __API={LABEL_HINTS,rsParseUnitType,rsNum,ocrMapPages:(p)=>ocrMapPages(p),o
      state the app never actually holds — and in particular left no suite able to
      see a reload, because nothing had been stored for the reload to recall. */
   __setRcsParsed:(rec)=>{_rcsUpload={name:'study.pdf',bytes:null,parsed:rec,at:''};_rcsFill=null;rcsRemember();},
-__rcsFill:()=>rcsFillFromParsed(),/* The same door for the rent schedule. Filling FROM a parse is the state where
+__rcsFill:(opts)=>rcsFillFromParsed(opts),/* The same door for the rent schedule. Filling FROM a parse is the state where
      the save affordances have to be right — every cell it touches is unsaved by
      definition — and it was the one state no suite could set up. Passing null
      clears the reading, which is how a test says "no schedule was ever read".
@@ -11216,7 +11247,7 @@ __rcsFill:()=>rcsFillFromParsed(),/* The same door for the rent schedule. Fillin
   /* The whole ladder, on real bytes: which tier answered, and with what. The
      only way to ask that question of a document without a Supabase session. */
   __parseRsPdf:(by,onStep)=>parseRsPdf(by,onStep),
-  __rsFill:()=>rsFillFromParsed(),__UNITS:()=>UNITS.slice(),__moneySrcRows:(k)=>moneySrcRows(k),__rcsChecks:()=>rcsChecks(),__rcsTag:(k)=>rcsTag(k),__rsTag:(k)=>rsTag(k),__srcTags:(k)=>srcTags(k),__rcsFillKeys:()=>rcsFillKeys(),__fillRecords:()=>({rs:_rsFill,rcs:_rcsFill}),
+  __rsFill:(opts)=>rsFillFromParsed(opts),__UNITS:()=>UNITS.slice(),__moneySrcRows:(k)=>moneySrcRows(k),__rcsChecks:()=>rcsChecks(),__rcsTag:(k)=>rcsTag(k),__rsTag:(k)=>rsTag(k),__srcTags:(k)=>srcTags(k),__rcsFillKeys:()=>rcsFillKeys(),__fillRecords:()=>({rs:_rsFill,rcs:_rcsFill}),
   /* The repaint, as its own door. Provenance is painted TWICE — once by the
      full render and once by paintCell on a keystroke — and every colour defect
      in this register so far has been the two disagreeing. A suite cannot compare
