@@ -114,7 +114,10 @@ let _dlgEnter=null;                  // while a dialog is open, Enter presses it
    left edge — the same marker the home page uses for urgency, at cell scale.
    These values are twinned with the --prov-*-fill tokens in the #viewForm block
    of shell.head.html. Change one, change both. */
-const CLR={database:['#2563eb','#eef1f5','On file'],'this-cycle':['#0f766e','#e9f5f2','API / this package'],overridden:['#b45309','#fbf1e6','Overridden'],'auto-calculated':['#2563eb','#eef1f5','Auto-calc'],'new':['#64748b','#eef1f5','New']};
+/* The COLOR names the SAVE/FILL STATE; the in-cell tag names the SOURCE (Matt,
+   2026-08-05). Labels rewritten to match: Saved / Auto-filled / Changed / Not
+   saved — dropping "database", "(this package)", and "overridden". */
+const CLR={database:['#2563eb','#eef1f5','Saved'],'this-cycle':['#0f766e','#e9f5f2','Auto-filled — not saved'],overridden:['#b45309','#fbf1e6','Changed — not saved'],'auto-calculated':['#2563eb','#eef1f5','Auto-calc'],'new':['#64748b','#eef1f5','Not saved']};
 /* Dates are stamped in New York, not UTC. toISOString() rolls over at 7 or 8pm
    Eastern, so a package generated in the evening was dated tomorrow — and the
    tenant notice's date is what starts the 30-day comment clock. */
@@ -378,7 +381,7 @@ function dateEffCell(){
   return `<div class="field"><div class="flabel">Date rents will be effective</div>${_bad?'<div class="ucnote warn" style="margin:0 0 4px">\u26a0 That is not a date \u2014 enter it as mm/dd/yyyy.</div>':''}<div class="fbox uacell" data-box="${boxKey}" style="background:${c[1]};border-left-color:${c[0]}"><div class="uadrop" style="flex:1;min-width:0"><div class="uatrigger" tabindex="0">${lab}<span class="cvx">▾</span></div>${menu}</div>${ovIcons(['rent_schedule.date_eff_custom','rent_schedule.date_eff_source','rent_schedule.date_eff_rs'])}</div></div>`;}
 const POC_PICK_KEYS=['poc.name','poc.email','poc.phone'];
 function pocSelectContact(ct){form=store.editForm(form,'poc.name',ct.name||'');form=store.editForm(form,'poc.email',ct.email||'');form=store.editForm(form,'poc.phone',fmtPhoneInput(ct.phone||''));
-  POC_PICK_KEYS.forEach(k=>{if(form[k])form[k].fromPick=true;});}
+  POC_PICK_KEYS.forEach(k=>{if(form[k]){form[k].fromPick=true;form[k].origin='contact';form[k].pinned=true;}});}
 // The name cell's save/revert buttons bundle the whole contact group ONLY while
 // the pick is still intact (the name key itself still carries fromPick — a plain
 // edit through store.editForm drops it by default, see core.js). Once the user
@@ -413,15 +416,17 @@ const DIR_PICK={
   apply:ct=>dirFill([['appr.name',ct.name],['appr.firm',ct.firm],['appr.email',ct.email],['appr.phone',fmtPhoneInput(ct.phone||'')],['appr.addr_street',ct.addr_street],['appr.addr_city',ct.addr_city],['appr.addr_state',ct.addr_state],['appr.addr_zip',ct.addr_zip]]),
   sub:ct=>[ct.firm,dirAddrLine(ct)].filter(Boolean).join(' \u00b7 ')||ct.email||''},
  'ca.name':caDir(['ca.prefix','ca.name'],ct=>[ct.title,ct.org,dirAddrLine(ct)].filter(Boolean).join(' \u00b7 ')),
- /* The same entry, reached from the cell you happen to be looking at. Each
-    row's subtitle leads with what THIS cell will take from it. */
+ /* CA has ONE contact card, on the name (Matt, 2026-08-05): picking it fills the
+    whole section — prefix, position, org, and the address. ca.position and ca.org
+    are plain cells now, filled by that card, matching the appraiser section. */
  'sig.name':{kind:'signatory',one:'signatory',keys:['sig.name','sig.title'],modeKeys:['sig.name'],
   apply:ct=>dirFill([['sig.name',ct.name],['sig.title',ct.title]]),
   sub:ct=>[ct.title,ct.org].filter(Boolean).join(' \u00b7 ')},
- 'ca.position':caDir(['ca.position'],ct=>[ct.title,ct.org].filter(Boolean).join(' · ')),
- 'ca.org':caDir(['ca.org'],ct=>[ct.org,ct.title].filter(Boolean).join(' \u00b7 ')),
 };
-function dirFill(pairs){pairs.forEach(p=>{form=store.editForm(form,p[0],p[1]||'');if(form[p[0]])form[p[0]].fromPick=true;});}
+// Picking a saved contact is a deliberate, section-level choice: origin 'contact'
+// and pinned (protected from a document sweep; a cell-level type/source-pick or a
+// re-pick still overrides it). editForm stamps 'typed'/pinned first; re-stamp here.
+function dirFill(pairs){pairs.forEach(p=>{form=store.editForm(form,p[0],p[1]||'');if(form[p[0]]){form[p[0]].fromPick=true;form[p[0]].origin='contact';form[p[0]].pinned=true;}});}
 function dirList(kind){return (mpdb&&mpdb.listDir)?mpdb.listDir(kind):[];}
 function dirSaveKeys(fk){const P=DIR_PICK[fk];return (form[fk]&&form[fk].fromPick)?P.keys.filter(k=>form[k]&&form[k].fromPick):fieldKeys(fk);}
 function dirNote(fk){const P=DIR_PICK[fk];const m=modeOf(P.modeKeys);const j=dirSaveKeys(fk).join(',');return `<div class="ovnote" data-ov="${P.modeKeys.join(',')}" data-mode="${m}" style="display:${m?'flex':'none'}"><span class="om-over">${overText(P.modeKeys)}</span><span class="om-new">new \u2014 not saved yet</span><span class="om-cycle">parsed \u2014 not saved yet</span><button class="revert" data-rev="${j}">\u21ba revert</button><button class="save1" data-save1="${j}">\u2713 save this field</button></div>`;}
