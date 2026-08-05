@@ -390,11 +390,11 @@ async function makeDb(adapter, opts) {
     || /^units\.\d+\.(ua|safmr|num|type)_reviewed$/.test(k)
     || /^units\.\d+\.uac_[a-z]+$/.test(k)
     || /^check\.\d+$/.test(k)
-    /* The appraiser carries. The same firm usually comes back, and retyping five
-       fields a year is the kind of work this tool exists to remove; a new one is
-       a five-field correction. It is a rent, not a name, that we refuse to guess
-       — a stale name is visible on the transmittal letter, a stale rent is not.
-       (Matt, 2026-07-30.) */
+    /* The appraiser no longer carries (Matt, 2026-08-05, reversing 2026-07-30).
+       It is re-read from the study each cycle. A stale appraiser name on the
+       transmittal letter is exactly the silent wrong a fresh study corrects; the
+       firm coming back is a five-field re-entry, not a licence to guess. */
+    || /^appr\./.test(k)
     || /^nonrev\.\d+\.rent$/.test(k)   /* a contract rent is a contract rent, whoever lives there */
     || /^ocaf\.(factor_|ds_t12$|ds_f12$)/.test(k)
     || /^uaf\./.test(k)
@@ -587,12 +587,13 @@ async function makeDb(adapter, opts) {
       const p = D.props[pid]; if (!p) throw new Error('no property ' + pid);
       const o = opts || {}; const cid = nid('cy'); const cells = {};
       assertProgramsFree(pid, o.effective_date, o.programs || ['rcs']);
-      if (o.full) { const m = bucketsOf(pid); for (const k in m) { if (k === 'assets.letterhead_data') continue; cells[k] = { value: m[k].value, saved_at: m[k].saved_at || today() }; } }
+      if (o.full) { const m = bucketsOf(pid); for (const k in m) { if (k === 'assets.letterhead_data') continue; cells[k] = { value: m[k].value, saved_at: m[k].saved_at || today(), origin: (m[k].origin || 'database'), pinned: !!m[k].pinned }; } }
       else {
         const domId = dominantCycleId(pid);
         const src = domId ? D.cycles[domId].cells : bucketsOf(pid);
-          for (const k in src) { if (cyNoCarry(k)) continue; const v = src[k].value; if (v == null || v === '') continue; cells[k] = { value: String(v), saved_at: today() }; }
-        for (const k in p.durable) { if (!isTemplateKey(k)) continue; cells[k] = { value: p.durable[k].value, saved_at: today() }; } // property record stays authoritative for identity
+          // A carried value is nobody's deliberate choice this cycle: origin 'carried', unpinned.
+          for (const k in src) { if (cyNoCarry(k)) continue; const v = src[k].value; if (v == null || v === '') continue; cells[k] = { value: String(v), saved_at: today(), origin: 'carried', pinned: false }; }
+        for (const k in p.durable) { if (!isTemplateKey(k)) continue; cells[k] = { value: p.durable[k].value, saved_at: today(), origin: 'database', pinned: false }; } // property record stays authoritative for identity
       }
       // The date picked when the package is created is a statement about this
       // package, so it lands in the form and outranks any date inherited from
@@ -606,12 +607,12 @@ async function makeDb(adapter, opts) {
     deleteCycle(cid) { delete D.cycles[cid]; return persist(); },
     getFlatCycle(cid) {
       const c = D.cycles[cid]; if (!c) return {};
-      const out = {}; for (const k in c.cells) { const v = c.cells[k].value == null ? '' : String(c.cells[k].value); out[k] = { value: v, source: v === '' ? 'new' : 'database', saved_at: c.cells[k].saved_at || '' }; }
+      const out = {}; for (const k in c.cells) { const v = c.cells[k].value == null ? '' : String(c.cells[k].value); out[k] = { value: v, source: v === '' ? 'new' : 'database', saved_at: c.cells[k].saved_at || '', origin: (c.cells[k].origin != null ? c.cells[k].origin : (v === '' ? null : 'database')), pinned: !!c.cells[k].pinned }; }
       return out;
     },
     saveFlatCycle(cid, map) {
       const c = D.cycles[cid]; if (!c) throw new Error('no cycle ' + cid);
-      for (const k in map) c.cells[k] = { value: (map[k] && map[k].value != null) ? String(map[k].value) : '', saved_at: (map[k] && map[k].saved_at) ? map[k].saved_at : today() };
+      for (const k in map) c.cells[k] = { value: (map[k] && map[k].value != null) ? String(map[k].value) : '', saved_at: (map[k] && map[k].saved_at) ? map[k].saved_at : today(), origin: (map[k] && map[k].origin != null) ? map[k].origin : null, pinned: !!(map[k] && map[k].pinned) };
       cySyncEff(c);
       c.updated_at = now();
       const jobs = [persist()];
