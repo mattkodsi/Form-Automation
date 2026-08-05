@@ -8704,11 +8704,11 @@ function wireBody(){
     if(nt.checked&&!NONREV.length){_undoNR=[];NONREV=[0];}
     renderBody();setStatus('');};
   const lt=el('ns8Toggle');if(lt)lt.onchange=()=>{
-    if(!lt.checked&&NS8.some(i=>numf(get('ns8.'+i+'.num_units'))>0)){lt.checked=true;setStatus('Delete the non-Section 8 rows first to turn this section off.');return;}
-    if(!lt.checked&&NS8.some(ns8HasData)){
+    if(!lt.checked&&NS8.some(i=>ns8HasData(i)||numf(get('ns8.'+i+'.num_units'))>0)){
       lt.checked=true;
       dialogConfirm('Turn off non-Section 8 units?','The section still holds '+NS8.length+' row'+(NS8.length>1?'s':'')+' with values. Turned off, the rows are left out of every generated document, and your next \u201cUpdate property profile\u201d removes them for good \u2014 re-check the box before saving to bring them back.','Turn off',true,()=>{form=store.editForm(form,'ns8.enabled','0');renderBody();setStatus('Non-Section 8 units off \u2014 the hidden rows are removed on your next Update property profile.');});
       return;}
+    if(!lt.checked){NS8.forEach(i=>Object.keys(form).forEach(k=>{if(k.indexOf('ns8.'+i+'.')===0)delete form[k];}));NS8=[];}
     form=store.editForm(form,'ns8.enabled',lt.checked?'1':'');
     if(lt.checked&&!NS8.length){_undoLI=[];form=store.editForm(form,'ns8.0.br','');NS8=[0];}
     renderBody();setStatus(lt.checked?'Non-Section 8 units on — they print on the rent schedule between Section 8 revenue and non-revenue units.':'');};
