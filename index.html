@@ -2136,14 +2136,8 @@ body.scrolled #viewForm .rail{top:60px;max-height:calc(100vh - 78px)}
    wider than the proportional ones this form used to set, and a four-digit
    ceiling in a 1200px window is exactly where that lands. The figure wins. */
 @media(max-width:1340px){
-  #viewForm .ucells .rbox.uacell .uatrigger,#viewForm .pdrow .rbox.uacell .uatrigger{padding:0 4px}
-  #viewForm .ucells .rbox .cvx,#viewForm .pdrow .rbox .cvx{margin-left:2px}
-  /* The source padlock is a control in the same tight allowance/SAFMR cells the
-     money figures already fight for; trim the tag and lock margins here so the
-     figure still wins (FR-11). */
-  #viewForm .ucells .rbox.uacell .srctag,#viewForm .pdrow .rbox.uacell .srctag{margin-left:1px}
-  #viewForm .ucells .rbox.uacell .srclock,#viewForm .pdrow .rbox.uacell .srclock{margin-left:1px}
-  #viewForm .ucells .rbox.uacell .uac-in,#viewForm .pdrow .rbox.uacell .uac-in{padding:0 1px}
+  #viewForm .ucells .rbox.uacell .uatrigger,#viewForm .pdrow .rbox.uacell .uatrigger{padding:0 6px}
+  #viewForm .ucells .rbox .cvx,#viewForm .pdrow .rbox .cvx{margin-left:3px}
 }
 
 @media(max-width:1050px){#viewForm .cc{grid-template-columns:1fr}
@@ -5242,7 +5236,7 @@ function dateEffCell(){
      been entered on purpose. Everything downstream now ignores it, so the cell
      is the only place left that can say why nothing happened. */
   const _bad=(src==='custom')&&String(custom||'').trim()!==''&&!dateParts(custom);
-  return `<div class="field"><div class="flabel">Date rents will be effective</div>${_bad?'<div class="ucnote warn" style="margin:0 0 4px">\u26a0 That is not a date \u2014 enter it as mm/dd/yyyy.</div>':''}<div class="fbox uacell" data-box="${boxKey}" style="background:${c[1]};border-left-color:${c[0]}"><div class="uadrop" style="flex:1;min-width:0"><div class="uatrigger" tabindex="0">${lab}${srcLock('rent_schedule.date_eff_custom')}<span class="cvx">▾</span></div>${menu}</div>${ovIcons(['rent_schedule.date_eff_custom','rent_schedule.date_eff_source','rent_schedule.date_eff_rs'])}</div></div>`;}
+  return `<div class="field"><div class="flabel">Date rents will be effective</div>${_bad?'<div class="ucnote warn" style="margin:0 0 4px">\u26a0 That is not a date \u2014 enter it as mm/dd/yyyy.</div>':''}<div class="fbox uacell" data-box="${boxKey}" style="background:${c[1]};border-left-color:${c[0]}"><div class="uadrop" style="flex:1;min-width:0"><div class="uatrigger" tabindex="0">${lab}<span class="cvx">▾</span></div>${menu}</div>${ovIcons(['rent_schedule.date_eff_custom','rent_schedule.date_eff_source','rent_schedule.date_eff_rs'])}</div></div>`;}
 const POC_PICK_KEYS=['poc.name','poc.email','poc.phone'];
 function pocSelectContact(ct){form=store.editForm(form,'poc.name',ct.name||'');form=store.editForm(form,'poc.email',ct.email||'');form=store.editForm(form,'poc.phone',fmtPhoneInput(ct.phone||''));
   POC_PICK_KEYS.forEach(k=>{if(form[k]){form[k].fromPick=true;form[k].origin='contact';form[k].pinned=true;}});}
@@ -5674,7 +5668,7 @@ function uaBox(i){const src=get('units.'+i+'.ua_source')||defUaSrc(i),exec=get('
    both: coupledKeys already saves and reverts them together. */
   const c=uaCellColors(i);const boxKeyUA=src==='custom'?('units.'+i+'.ua_custom'):('units.'+i+'.ua_source');
   const menu='<div class="uamenu">'+srcOptRow('data-uaopt="exec" data-uai="'+i+'"',(exec!==''&&exec!=null)?('$'+fmtMoney(exec)):'','Executed RS',src==='exec')+srcOptRow('data-uaopt="rcs" data-uai="'+i+'"',(rcs!==''&&rcs!=null)?('$'+fmtMoney(rcs)):'','RCS report',src==='rcs')+'<div class="uaopt'+(src==='custom'?' sel':'')+'" data-uaopt="custom" data-uai="'+i+'">Custom…</div></div>';
-  return '<div class="rbox uacell" data-box="'+boxKeyUA+'" style="background:'+c[1]+';border-left-color:'+c[0]+'"><div class="uadrop"><div class="uatrigger" tabindex="0"><span class="ualab">'+lab+'</span>'+srcLock('units.'+i+'.ua_custom')+'<span class="cvx">▾</span></div>'+menu+'</div></div>';}
+  return '<div class="rbox uacell" data-box="'+boxKeyUA+'" style="background:'+c[1]+';border-left-color:'+c[0]+'"><div class="uadrop"><div class="uatrigger" tabindex="0"><span class="ualab">'+lab+'</span><span class="cvx">▾</span></div>'+menu+'</div></div>';}
 function uaNoteCell(i){const conf=uaConflict(i),overSrc=srcOf('units.'+i+'.ua_source')==='overridden';if(!conf&&!overSrc)return '';const ex=get('units.'+i+'.ua_exec'),rc=get('units.'+i+'.ua_rcs');
   if(conf&&uaUnresolved(i))return '<div class="ucnote warn">⚠ exec '+money(numf(ex))+' · RCS '+money(numf(rc))+' <span class="pick"><button class="urev sv" data-uaok="'+i+'">approve '+money(uaResolvedOf(i))+'</button></span></div>';
   const src=get('units.'+i+'.ua_source')||defUaSrc(i);const chosen=src==='rcs'?'the study':(src==='custom'?'your own figure':'the executed schedule');
@@ -5717,7 +5711,7 @@ function safmrBox(i){const src=get('units.'+i+'.safmr_source')||defSafmrSrc(i),h
   const lab=src==='rcs'?('$<input class="uac-in srcedit" data-srcedit="safmr" data-si="'+i+'" data-money="1" value="'+esc(fmtMoney(rcs))+'"><span class="srctag">· RCS</span>'):(src==='custom'?('$<input class="uac-in" data-money="1" data-k="units.'+i+'.safmr_custom" value="'+esc(fmtMoney(custom))+'" placeholder="0">'):('$<input class="uac-in srcedit" data-srcedit="safmr" data-si="'+i+'" data-money="1" value="'+esc(fmtMoney(hud))+'"><span class="srctag">· HUD</span>'));
   const c=safmrCellColors(i);const boxKeySA=src==='custom'?('units.'+i+'.safmr_custom'):('units.'+i+'.safmr_source');
   const menu='<div class="uamenu">'+srcOptRow('data-safmropt="hud" data-safmri="'+i+'"',(hud!==''&&hud!=null)?('$'+fmtMoney(hud)):'','HUD API',src==='hud')+srcOptRow('data-safmropt="rcs" data-safmri="'+i+'"',(rcs!==''&&rcs!=null)?('$'+fmtMoney(rcs)):'','RCS report',src==='rcs')+'<div class="uaopt'+(src==='custom'?' sel':'')+'" data-safmropt="custom" data-safmri="'+i+'">Custom…</div></div>';
-  return '<div class="rbox uacell" data-box="'+boxKeySA+'" style="background:'+c[1]+';border-left-color:'+c[0]+'"><div class="uadrop"><div class="uatrigger" tabindex="0"><span class="ualab">'+lab+'</span>'+srcLock('units.'+i+'.safmr_custom')+'<span class="cvx">▾</span></div>'+menu+'</div></div>';}
+  return '<div class="rbox uacell" data-box="'+boxKeySA+'" style="background:'+c[1]+';border-left-color:'+c[0]+'"><div class="uadrop"><div class="uatrigger" tabindex="0"><span class="ualab">'+lab+'</span><span class="cvx">▾</span></div>'+menu+'</div></div>';}
 function safmrNote(i){const res=safmrResolvedOf(i),hud=numf(get('units.'+i+'.safmr_hud')),rcs=numf(get('units.'+i+'.safmr_rcs'));
   if(safmrUnresolved(i))return '<div class="ucnote warn">⚠ HUD '+money(hud)+' · RCS '+money(rcs)+' <span class="pick"><button class="urev sv" data-safmrok="'+i+'">approve '+money(res)+'</button></span></div>';
   if(res>0){const pro=numf(get('units.'+i+'.proposed'));const gr=grossOf(i);const ok=gr<res;
@@ -7717,7 +7711,7 @@ function ocafFactorCell(){const pub=get('ocaf.factor_pub'),fy=get('ocaf.factor_f
      that ALWAYS has something to save — a factor just pulled from the Federal
      Register — was the state with no button. ovIcons hides itself when there is
      nothing to save, so the guard bought nothing. */
-  return '<div class="rbox uacell" data-box="'+boxKey+'" style="background:'+c[1]+';border-left-color:'+c[0]+';max-width:330px;flex:0 1 auto"><div class="uadrop" style="flex:1;min-width:0"><div class="uatrigger" tabindex="0">'+lab+srcLock('ocaf.factor_custom')+'<span class="cvx">▾</span></div>'+menu+'</div>'+ovIcons(coupledKeys('ocaf.factor_custom'))+'</div>';}
+  return '<div class="rbox uacell" data-box="'+boxKey+'" style="background:'+c[1]+';border-left-color:'+c[0]+';max-width:330px;flex:0 1 auto"><div class="uadrop" style="flex:1;min-width:0"><div class="uatrigger" tabindex="0">'+lab+'<span class="cvx">▾</span></div>'+menu+'</div>'+ovIcons(coupledKeys('ocaf.factor_custom'))+'</div>';}
 function renderOcaf(){const C=ocafCalc();
   const rt=get('ocaf.rate_type')||'Fixed rate';const fl=/floating/i.test(rt);
   const fy=get('ocaf.factor_fy'),pd=get('ocaf.factor_pubdate');const st=get('property.addr_state');
@@ -8502,20 +8496,6 @@ function srcSpec(k){
     fallback:(get('ocaf.factor_pub')?'fr':'custom'),resolve:ss=>ss==='fr'?String(get('ocaf.factor_pub')||''):''};
   return null;
 }
-/* The source padlock (provenance overhaul, Phase 1). A multi-source cell —
-   utility allowance, 150% SAFMR, rents-effective date, OCAF factor — pulls its
-   value from whichever source the hierarchy names (defUaSrc/defSafmrSrc/the RS
-   year/the Federal Register pull) UNTIL a person deliberately picks one, which
-   PINS the source key. The padlock makes that pin visible and reversible: a
-   closed lock = you chose this source, fills keep it; an open, greyed lock =
-   unlocked, the source follows the best available and a fill may move it.
-   Reads `pinned` on the source key — the one invariant pullOcafFactor and the
-   RS/RCS fills were made to stamp truthfully (auto = unpinned, a pick = pinned).
-   Every path that can change that state runs a full renderBody, so the lock is
-   only drawn here and never goes stale (FR-13). */
-function srcLock(cusKey){const sp=srcSpec(cusKey);if(!sp)return '';
-  const locked=!!(form[sp.srcKey]&&form[sp.srcKey].pinned);
-  return '<span class="srclock'+(locked?' on':'')+'" data-lock="'+esc(cusKey)+'" role="button" tabindex="0" aria-pressed="'+(locked?'true':'false')+'" title="'+(locked?'Locked — you chose this source; fills keep it. Click to unlock.':'Unlocked — source follows the best available. Click to lock your choice.')+'" style="cursor:pointer;margin:0 0 0 1px;font-size:10.5px;line-height:1;flex:0 0 auto;opacity:'+(locked?'1':'.4')+'">'+(locked?'🔒':'🔓')+'</span>';}
 /* Writes a source-backed cell. Returns false if k isn't one, so callers fall
    through to a plain edit. Matching what is on file restores the on-file source
    rather than staying pinned to custom. */
@@ -8700,21 +8680,6 @@ function wireBody(){
   document.querySelectorAll('[data-dirid]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();const fk=o.getAttribute('data-dirfor');const P=DIR_PICK[fk];const ct=dirList(P.kind).find(x=>x.id===o.getAttribute('data-dirid'));_pendingSnap=snapPend(P.keys);if(ct)P.apply(ct);_pending=P.keys.slice();_refocusSel='[data-box="'+fk+'"] .pocname-in';renderBody();}));
   document.querySelectorAll('[data-deffopt]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();_pendingSnap=snapPend(['rent_schedule.date_eff_custom','rent_schedule.date_eff_source']);srcSetSource('rent_schedule.date_eff_custom',o.getAttribute('data-deffopt'));_pending=['rent_schedule.date_eff_source'];_refocusSel='[data-box="rent_schedule.date_eff_source"] .uatrigger';renderBody();scheduleHudRefresh();scheduleFactorRefresh();}));
   document.querySelectorAll('[data-ocfopt]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();_pendingSnap=snapPend(['ocaf.factor_custom','ocaf.factor_src']);srcSetSource('ocaf.factor_custom',o.getAttribute('data-ocfopt'));_pending=['ocaf.factor_src'];_refocusSel='[data-box="ocaf.factor_src"] .uatrigger';renderBody();}));
-  /* The source padlock: lock pins the currently-shown source (same as picking it
-     from the dropdown); unlock clears the explicit pick and unpins, so the cell
-     follows the hierarchy again and a fill may move it. stopPropagation keeps the
-     click off the trigger that would open the menu. Same _pending/undo contract
-     as the dropdown picks above (FR-17). */
-  document.querySelectorAll('[data-lock]').forEach(o=>{const toggle=e=>{e.stopPropagation();e.preventDefault();
-    const cusKey=o.getAttribute('data-lock');const sp=srcSpec(cusKey);if(!sp)return;
-    const locked=!!(form[sp.srcKey]&&form[sp.srcKey].pinned);
-    _pendingSnap=snapPend([sp.srcKey,sp.cusKey]);
-    if(locked){form=store.editForm(form,sp.srcKey,'');if(form[sp.srcKey]){form[sp.srcKey].pinned=false;form[sp.srcKey].origin=null;}}
-    else{srcSetSource(sp.cusKey,get(sp.srcKey)||sp.fallback);}
-    _pending=[sp.srcKey];_refocusSel='[data-lock="'+cusKey+'"]';
-    renderBody();setStatus(locked?'Source unlocked — a fill may move it to the best available source.':'Source locked — fills will keep your choice.');};
-    o.addEventListener('click',toggle);
-    o.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')toggle(e);});});
   const _rsw=el('rateSwitch');
   if(_rsw)_rsw.querySelectorAll('.rs-opt').forEach(b=>b.onclick=()=>{
     const v=b.getAttribute('data-rt');if(v===(get('ocaf.rate_type')||'Fixed rate'))return;
