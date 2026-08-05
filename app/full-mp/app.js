@@ -2908,7 +2908,12 @@ async function pullOcafFactor(opts){opts=opts||{};const auto=!!opts.auto;
     if(v==null&&d.national!=null){v=d.national;usedNat=true;}
     if(v==null)throw new Error('No factor for state '+(stt||'(none)')+' in the FY'+d.fy+' notice.');
     if(auto&&String(d.fy)!==String(effYear())){setStatus('The FY'+effYear()+' OCAF isn’t published yet — latest is FY'+d.fy+'. Pull it manually, or enter a custom factor.');return;}
-    form=store.editForm(form,'ocaf.factor_pub',String(v));form=store.editForm(form,'ocaf.factor_fy',String(d.fy||''));form=store.editForm(form,'ocaf.factor_pubdate',String(d.publication_date||''));form=store.editForm(form,'ocaf.factor_state',usedNat?'US':stt);srcSetSource('ocaf.factor_custom','fr');['ocaf.factor_pub','ocaf.factor_fy','ocaf.factor_pubdate','ocaf.factor_state','ocaf.factor_src'].forEach(markCycle);
+    form=store.editForm(form,'ocaf.factor_pub',String(v));form=store.editForm(form,'ocaf.factor_fy',String(d.fy||''));form=store.editForm(form,'ocaf.factor_pubdate',String(d.publication_date||''));form=store.editForm(form,'ocaf.factor_state',usedNat?'US':stt);srcSetSource('ocaf.factor_custom','fr');
+    /* srcSetSource ran editForm, which PINS — but a Federal Register pull is the
+       hierarchy's default source, not a deliberate user lock, so stamp these keys
+       the way the RS/RCS fills stamp theirs: origin 'fr', pinned false. Otherwise
+       an auto-pulled factor reads as locked and the source padlock would lie. */
+    ['ocaf.factor_pub','ocaf.factor_fy','ocaf.factor_pubdate','ocaf.factor_state','ocaf.factor_src'].forEach(k=>{markCycle(k);if(form[k]){form[k].origin='fr';form[k].pinned=false;}});
     renderBody();
     setStatus('FY'+d.fy+' OCAF '+(usedNat?'(national average — set the property state in '+secRef(2)+' for the state factor)':('for '+stt))+': '+v+'% — published '+fmtDateLong(d.publication_date)+'. Review, then “Update property profile”.');
   }catch(e){if(!auto)setStatus('OCAF pull failed: '+(e&&e.message?e.message:e));}
