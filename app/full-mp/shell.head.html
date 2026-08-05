@@ -2136,8 +2136,14 @@ body.scrolled #viewForm .rail{top:60px;max-height:calc(100vh - 78px)}
    wider than the proportional ones this form used to set, and a four-digit
    ceiling in a 1200px window is exactly where that lands. The figure wins. */
 @media(max-width:1340px){
-  #viewForm .ucells .rbox.uacell .uatrigger,#viewForm .pdrow .rbox.uacell .uatrigger{padding:0 6px}
-  #viewForm .ucells .rbox .cvx,#viewForm .pdrow .rbox .cvx{margin-left:3px}
+  #viewForm .ucells .rbox.uacell .uatrigger,#viewForm .pdrow .rbox.uacell .uatrigger{padding:0 4px}
+  #viewForm .ucells .rbox .cvx,#viewForm .pdrow .rbox .cvx{margin-left:2px}
+  /* The source padlock is a control in the same tight allowance/SAFMR cells the
+     money figures already fight for; trim the tag and lock margins here so the
+     figure still wins (FR-11). */
+  #viewForm .ucells .rbox.uacell .srctag,#viewForm .pdrow .rbox.uacell .srctag{margin-left:1px}
+  #viewForm .ucells .rbox.uacell .srclock,#viewForm .pdrow .rbox.uacell .srclock{margin-left:1px}
+  #viewForm .ucells .rbox.uacell .uac-in,#viewForm .pdrow .rbox.uacell .uac-in{padding:0 1px}
 }
 
 @media(max-width:1050px){#viewForm .cc{grid-template-columns:1fr}
