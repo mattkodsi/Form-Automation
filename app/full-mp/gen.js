@@ -176,7 +176,9 @@ const addrLine=(street,city,state,zip)=>{
     let _cbMissed=0;
     for(let i=0;i<17;i++){ try{ const cb=form.getCheckBox('Check Box'+(i+1)); if(String(rec['check.'+i]||'')==='1')cb.check(); else cb.uncheck(); }catch(e){ _cbMissed++; } }
     if(_cbMissed>8) throw new Error('Checklist template mismatch: '+_cbMissed+' of 17 boxes could not be set — do not file the result.');
-    try{ const pg=doc.getPages()[0]; const {rgb}=PL(); pg.drawRectangle({x:107,y:123,width:156,height:22,color:rgb(1,1,1)}); const sline=[t.sig_name,t.sig_title].filter(Boolean).join(', '); if(sline)pg.drawText(sline,{x:109,y:129,size:11,font:times,color:rgb(0.11,0.13,0.17)}); }catch(e){}
+    /* The signatory line is now a real form field (Text6) on the template — the
+       hard-coded "Alex Morgan" name and the white cover box it needed are gone. */
+    try{ const sig=form.getTextField('Text6'); const sline=[t.sig_name,t.sig_title].filter(Boolean).join(', '); sig.setText(sline); sig.setFontSize(11); sig.updateAppearances(times); }catch(e){}
     return await doc.save({objectsPerTick:Infinity});
   }
 
