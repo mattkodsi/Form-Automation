@@ -6352,7 +6352,7 @@ function rcsFillFromParsed(){
   const P=_rcsUpload&&_rcsUpload.parsed;if(!P)return;
   deriveUnits();          // a row added since the last render is still a row to fill
   const _wrote=[];
-  const mark=k=>{markCycle(k);if(form[k])form[k].fromParse=true;if(_wrote.indexOf(k)<0)_wrote.push(k);};
+  const mark=k=>{markCycle(k);if(form[k]){form[k].fromParse=true;form[k].origin='rcs';form[k].pinned=false;}if(_wrote.indexOf(k)<0)_wrote.push(k);};   // came from the study — origin 'rcs', and a bulk fill pins nothing
   const put=(k,v)=>{if(v!=null&&v!==''){form=store.editForm(form,k,String(v));mark(k);}};
   const setk=(k,v)=>{if(rsOffers(k)||raLockedKey(k))return;put(k,v);};   // RA > RS > RCS — see rsOffers, raLockedKey
 
@@ -7427,7 +7427,7 @@ async function parseRsPdf(bytes,onStep){
   return {kind:(runs<15?'scan':'text'),parsed:null,why:rsWhy(whyFields,ocrWhy())};}
 function rsFillFromParsed(){const P=_rsUpload&&_rsUpload.parsed;if(!P)return;
   const _wrote=[];
-  const mark=k=>{markCycle(k);if(form[k])form[k].fromParse=true;if(_wrote.indexOf(k)<0)_wrote.push(k);};   // came from the schedule, not typed — tags an override as "parsed", not just "changed", in its note text
+  const mark=k=>{markCycle(k);if(form[k]){form[k].fromParse=true;form[k].origin='rs';form[k].pinned=false;}if(_wrote.indexOf(k)<0)_wrote.push(k);};   // came from the schedule, not typed — origin 'rs', and a bulk fill pins nothing (editForm's typed/pinned default is overridden here). Tags an override as "parsed", not just "changed", in its note text
   const setk=(k,v)=>{if(raLockedKey(k))return;if(v!=null&&v!==''){form=store.editForm(form,k,String(v));mark(k);}};
   { const pn=splitProjectName(P.scalars['property.name']);
     setk('property.name',pn.name);
