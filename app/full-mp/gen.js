@@ -178,7 +178,11 @@ const addrLine=(street,city,state,zip)=>{
     if(_cbMissed>8) throw new Error('Checklist template mismatch: '+_cbMissed+' of 17 boxes could not be set — do not file the result.');
     /* The signatory line is now a real form field (Text6) on the template — the
        hard-coded "Alex Morgan" name and the white cover box it needed are gone. */
-    try{ const sig=form.getTextField('Text6'); const sline=[t.sig_name,t.sig_title].filter(Boolean).join(', '); sig.setText(sline); sig.setFontSize(11); sig.updateAppearances(times); }catch(e){}
+    /* Match the Date field's rendered value exactly — both are TimesRoman, pure
+       black; the Date value is drawn at 12 (a few lines up), so the signatory is
+       drawn at 12 too. The old size-11 override rendered a point smaller than the
+       Date value and, at that stroke weight, read as grey beside it. */
+    try{ const sig=form.getTextField('Text6'); const sline=[t.sig_name,t.sig_title].filter(Boolean).join(', '); sig.setText(sline); sig.setFontSize(12); sig.updateAppearances(times); }catch(e){}
     return await doc.save({objectsPerTick:Infinity});
   }
 
