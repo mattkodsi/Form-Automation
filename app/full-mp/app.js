@@ -3839,25 +3839,21 @@ function wireBody(){
   const nt=el('nonrevToggle');if(nt)nt.onchange=()=>{
     if(!nt.checked&&NONREV.some(i=>nonrevHasData(i)||numf(get('nonrev.'+i+'.num_units'))>0)){
       nt.checked=true;
-      dialogConfirm('Turn off non-revenue units?','The section still holds '+NONREV.length+' row'+(NONREV.length>1?'s':'')+' with values. Turned off, the rows are left out of every generated document, and your next \u201cUpdate property profile\u201d removes them for good \u2014 re-check the box before saving to bring them back.','Turn off',true,()=>{const kept=turnOffSection('nonrev');renderBody();setStatus(kept?'Non-revenue units off \u2014 the hidden rows are removed on your next Update property profile.':'Non-revenue units off.');});
+      dialogConfirm('Turn off non-revenue units?','The section still holds '+NONREV.length+' row'+(NONREV.length>1?'s':'')+' with values. Turned off, the rows are left out of every generated document, and your next \u201cUpdate property profile\u201d removes them for good \u2014 re-check the box before saving to bring them back.','Turn off',true,()=>{form=store.editForm(form,'nonrev.enabled','0');renderBody();setStatus('Non-revenue units off \u2014 the hidden rows are removed on your next Update property profile.');});
       return;}
-    if(!nt.checked){turnOffSection('nonrev');renderBody();setStatus('');return;}
-    form=store.editForm(form,'nonrev.enabled','1');
-    if(!NONREV.length){_undoNR=[];NONREV=[0];}
+    if(!nt.checked){NONREV.forEach(i=>Object.keys(form).forEach(k=>{if(k.indexOf('nonrev.'+i+'.')===0)delete form[k];}));NONREV=[];}
+    form=store.editForm(form,'nonrev.enabled',nt.checked?'1':'');
+    if(nt.checked&&!NONREV.length){_undoNR=[];NONREV=[0];}
     renderBody();setStatus('');};
   const lt=el('ns8Toggle');if(lt)lt.onchange=()=>{
-    /* No short-circuit "delete the rows first" guard here: a unit count present
-       is just data, and it takes the same confirm dialog the non-revenue section
-       does (mirrored above). The old guard blocked the dialog outright, so the box
-       could never be turned off while a row still carried a count. */
-    if(!lt.checked&&NS8.some(i=>ns8HasData(i)||numf(get('ns8.'+i+'.num_units'))>0)){
+    if(!lt.checked&&NS8.some(i=>numf(get('ns8.'+i+'.num_units'))>0)){lt.checked=true;setStatus('Delete the non-Section 8 rows first to turn this section off.');return;}
+    if(!lt.checked&&NS8.some(ns8HasData)){
       lt.checked=true;
-      dialogConfirm('Turn off non-Section 8 units?','The section still holds '+NS8.length+' row'+(NS8.length>1?'s':'')+' with values. Turned off, the rows are left out of every generated document, and your next \u201cUpdate property profile\u201d removes them for good \u2014 re-check the box before saving to bring them back.','Turn off',true,()=>{const kept=turnOffSection('ns8');renderBody();setStatus(kept?'Non-Section 8 units off \u2014 the hidden rows are removed on your next Update property profile.':'Non-Section 8 units off.');});
+      dialogConfirm('Turn off non-Section 8 units?','The section still holds '+NS8.length+' row'+(NS8.length>1?'s':'')+' with values. Turned off, the rows are left out of every generated document, and your next \u201cUpdate property profile\u201d removes them for good \u2014 re-check the box before saving to bring them back.','Turn off',true,()=>{form=store.editForm(form,'ns8.enabled','0');renderBody();setStatus('Non-Section 8 units off \u2014 the hidden rows are removed on your next Update property profile.');});
       return;}
-    if(!lt.checked){turnOffSection('ns8');renderBody();setStatus('');return;}
-    form=store.editForm(form,'ns8.enabled','1');
-    if(!NS8.length){_undoLI=[];form=store.editForm(form,'ns8.0.br','');NS8=[0];}
-    renderBody();setStatus('Non-Section 8 units on — they print on the rent schedule between Section 8 revenue and non-revenue units.');};
+    form=store.editForm(form,'ns8.enabled',lt.checked?'1':'');
+    if(lt.checked&&!NS8.length){_undoLI=[];form=store.editForm(form,'ns8.0.br','');NS8=[0];}
+    renderBody();setStatus(lt.checked?'Non-Section 8 units on — they print on the rent schedule between Section 8 revenue and non-revenue units.':'');};
   const addl=el('addNs8');if(addl)addl.onclick=()=>{_undoLI=[];const nx=(NS8.length?Math.max.apply(null,NS8):-1)+1;form=store.editForm(form,'ns8.'+nx+'.br','');NS8.push(nx);renderBody();setStatus('');};
   const phs=el('pullSafmr');if(phs)phs.onclick=()=>{ensureHudSafmr({manual:true});};
   const upR=el('upRcs');if(upR)upR.onclick=()=>{const f=el('rcsFile');if(f)f.click();};
@@ -5432,36 +5428,6 @@ function makeRender(dataUrl,cb){try{const img=new Image();img.onload=()=>{
 /* ---- FORM: open the RCS form for the active property ----------------- */
 function nonrevHasData(i){return ['use','br','ba','rent'].some(s=>{const v=get('nonrev.'+i+'.'+s);return v!==''&&v!=null;});}
 function ns8HasData(i){return ['br','ba','avg_rent'].some(s=>{const v=get('ns8.'+i+'.'+s);return v!==''&&v!=null;});}
-/* Was the section on — or holding data — in the snapshot isDirty() measures
-   against? Turning off a section that was ON at open (its rows are on file) is a
-   real decision worth saving on its own; turning off one that was turned on in
-   this same session is not. FORMSNAP is exactly the baseline the footer compares
-   to, so reading the answer off it guarantees the "same session" case comes back
-   clean. */
-function sectionSavedOn(fam){
-  if(!FORMSNAP)return false;
-  const en=FORMSNAP[fam+'.enabled'];
-  if(en&&String(en.value==null?'':en.value)==='1')return true;
-  const rx=new RegExp('^'+fam+'\\.\\d+\\.');
-  return Object.keys(FORMSNAP).some(k=>rx.test(k)&&FORMSNAP[k]&&FORMSNAP[k].value!=null&&String(FORMSNAP[k].value)!=='');
-}
-/* Turn a section off. A section that HELD saved data keeps its rows (a re-check
-   brings them back) and records the decision as '0', a genuine change the next
-   save acts on — this is the case test_browser's "a section turned off says so"
-   pins. A section turned on and back off in ONE session (nothing on file) instead
-   returns to its snapshot state: rows dropped, flag restored to whatever the
-   record holds. Without that, a pure on-then-off stranded the form "unsaved" over
-   a '0' flag and lingering rows the eye could not see. Mirrors the delete-row
-   handler, which has always discarded. Returns true when the rows were kept. */
-function turnOffSection(fam){
-  if(sectionSavedOn(fam)){form=store.editForm(form,fam+'.enabled','0');return true;}
-  const arr=fam==='nonrev'?NONREV:NS8;
-  arr.forEach(i=>Object.keys(form).forEach(k=>{if(k.indexOf(fam+'.'+i+'.')===0)delete form[k];}));
-  if(fam==='nonrev')NONREV=[];else NS8=[];
-  const en=FORMSNAP&&FORMSNAP[fam+'.enabled'];
-  form=store.editForm(form,fam+'.enabled',en&&en.value!=null?String(en.value):'');
-  return false;
-}
 function handleZeroUnitCommit(keys){const zk=keys.find(k=>/^(units|nonrev|ns8)\.\d+\.num_units$/.test(k));
   if(!zk||numf(get(zk))>0)return false;
   const m=zk.match(/^(units|nonrev|ns8)\.(\d+)\./);const fam=m[1],i=+m[2];
