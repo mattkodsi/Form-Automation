@@ -4272,6 +4272,13 @@ async function makeDb(adapter, opts) {
       for (const id in D.props) if (String(D.props[id].ra_property_code || '') === c) return id;
       return null;
     },
+    /* The other direction, which the RA seam needs on every render. Its
+       partner above scans every property; listProperties() would answer too,
+       but it scores the whole portfolio to do it. */
+    raCodeOfPid(pid) {
+      const p = D.props[pid];
+      return p ? (String(p.ra_property_code || '') || null) : null;
+    },
     computeAnalysis, computeSalutation,
   };
 }
@@ -5057,6 +5064,13 @@ function makeSupabaseDb(client) {
         if (!c) return null;
         for (const id in D.props) if (String(D.props[id].ra_property_code || '') === c) return id;
         return null;
+      },
+      /* The other direction, which the RA seam needs on every render. Its
+         partner above scans every property; listProperties() would answer too,
+         but it scores the whole portfolio to do it. */
+      raCodeOfPid(pid) {
+        const p = D.props[pid];
+        return p ? (String(p.ra_property_code || '') || null) : null;
       },
       computeAnalysis, computeSalutation,
     };
@@ -9595,6 +9609,78 @@ function hapProperties(){
    them ends up wrong and only the second is ever seen (FORM-RULES 13). */
 function hapForPid(pid){return hapProperties().find(x=>x.id===pid)||null;}
 
+/* ── Related Affordable, arriving down the tracker's pipe ─────────────────
+   The renewal-calendar CSV was exported FROM Related Affordable's database. It
+   is not a stand-in for that source; it is that source's data arriving by a
+   different route. So the name and date locks do not have to wait on the RA integrator's
+   provider — this is what makes them fire on the properties RA actually
+   carries. His provider is injected before boot and wins outright, and so does
+   ?ra=1, because both set window.RASource before boot installs this one.
+
+   Cached, and not as an optimisation. raVal() runs on every render of every
+   source-backed cell and isLocked() runs on every field; reading the tracker
+   means a targetFor across the whole schedule. The key carries the tracker's
+   own generation so a re-seeded CSV invalidates it. */
+let _raSnap=null;
+function raSnapshot(){
+  const key=String(activePid||'')+'|'+String(activeCid||'')+'|'+(_hapCache?_hapCache.src:'-');
+  if(_raSnap&&_raSnap.key===key)return _raSnap;
+  const s={key:key,name:null,eff:null};
+  try{
+    const H=window.RCSHap,rows=hapAll();
+    const code=(H&&rows&&mpdb&&mpdb.raCodeOfPid&&activePid)?mpdb.raCodeOfPid(activePid):null;
+    const mine=code?rows.filter(r=>r.code===code):[];
+    if(mine.length){
+      s.name=mine[0].name||null;
+      /* THE TRAP, and the reason this is not simply targetFor(). A package
+         takes its effective date when it is started and keeps it — which is
+         precisely what RA_LOCK_WHY promises the reader. Answering with the
+         tracker's CURRENT target would padlock next year's date onto a package
+         filed in 2018 the moment somebody reopened it, and the app would be
+         breaking a promise its own tooltip makes. So the package's own date
+         wins; the target answers only where there is no package yet. */
+      const c=activeCid?((mpdb.listCycles(activePid)||[]).find(x=>x.id===activeCid)||null):null;
+      if(c)s.eff=c.effective_date||null;
+      else{
+        const t=H.targetFor(rows,code,mpdb.today?mpdb.today():new Date().toISOString().slice(0,10));
+        s.eff=(t&&t.effective)||null;
+      }
+    }
+  }catch(e){}
+  _raSnap=s;return s;
+}
+/* listProperties is the portfolio the New-property picker offers. `id` is the
+   tracker CODE deliberately: it lands in createProperty's raMasterId and
+   becomes ra_property_code, which is the only thing that binds a record to the
+   schedule. A picker that returned a display id would create properties the
+   tracker could never find again. */
+/* Named, and called from boot rather than written there, because a headless
+   suite has no boot to run: an installer that only exists inside boot() is one
+   the render suites cannot reach, so the adapter would go untested exactly
+   where it is cheapest to test it. Guarded, so a provider injected before boot
+   — the RA integrator's, or ?ra=1's — is the one that answers. */
+function installRaSource(){
+  if(typeof window==='undefined')return null;
+  if(!window.RASource)window.RASource=raTrackerSource();
+  return window.RASource;
+}
+function raTrackerSource(){return{
+  listProperties:()=>{
+    try{
+      const H=window.RCSHap,rows=hapAll();if(!H||!rows)return [];
+      const scope=H.inScope(rows),seen={},out=[];
+      rows.forEach(r=>{if(scope[r.code]&&!seen[r.code]){seen[r.code]=1;out.push({id:r.code,name:r.name||r.code});}});
+      return out.sort((a,b)=>String(a.name).localeCompare(String(b.name)));
+    }catch(e){return [];}
+  },
+  value:(k)=>{
+    const s=raSnapshot();
+    if(k==='property.name')return s.name;
+    if(k==='rent_schedule.date_rents_effective')return s.eff;
+    return null;   // every other RA-sourced cell stays "not available": the tracker does not carry it
+  },
+};}
+
 /* The words for it. Copy lives here, not in hap.js: a data module that owns
    prose is a data module nobody can restyle. */
 function actionLabel(a){
@@ -11488,6 +11574,7 @@ function showAuthScreen(){show('Auth');const btn=el('authSignIn'),em=el('authEma
 async function boot(){
   if(!mpdb)mpdb=await makeSupabaseDb(supaClient);   // selftest hands us a local one
   if(!window.HAPSource)window.HAPSource={rows:()=>{try{return (mpdb&&mpdb.hapRows)?mpdb.hapRows():[];}catch(e){return [];}}};
+  installRaSource();
   try{pmName=(mpdb&&mpdb.getPmName)?mpdb.getPmName():'';}catch(e){pmName='';}
   const ms=el('menuSearch');if(ms)ms.addEventListener('input',renderMenu);
   const bn=el('bNewProperty');if(bn)bn.onclick=createProperty;
@@ -11720,11 +11807,12 @@ __rcsFill:(opts)=>rcsFillFromParsed(opts),/* The same door for the rent schedule
      table is read once at boot) and silently wrong in any suite that seeds
      twice. */
   __db:()=>mpdb,__launcher:(pid)=>{activePid=pid;return openLauncher(pid);},
-  __seedHap:async(rows)=>{_hapCache=null;await mpdb._setHapRows(rows);},
+  __seedHap:async(rows)=>{_hapCache=null;_raSnap=null;await mpdb._setHapRows(rows);},
   __menuView:()=>menuView,
   __setMenuView:(v)=>{menuView=v;renderMenu();},
   __menuCounts:()=>Object.assign({},_menuCounts),
   __hapProps:()=>hapProperties(),
+  __installRA:()=>installRaSource(),
   /* The rail's doors. railBar reads the LIVE box, so it is mid-flight during the
      travel animation — read it after the transition, not during. */
   railRows:()=>[].slice.call(document.querySelectorAll('#rail .railitem')).map(r=>({sec:+r.getAttribute('data-rsec'),label:(r.textContent||'').trim(),active:r.classList.contains('on'),tabIndex:r.tabIndex,ariaCurrent:r.getAttribute('aria-current'),top:r.offsetTop,height:r.offsetHeight})),

@@ -766,6 +766,13 @@ function makeSupabaseDb(client) {
         for (const id in D.props) if (String(D.props[id].ra_property_code || '') === c) return id;
         return null;
       },
+      /* The other direction, which the RA seam needs on every render. Its
+         partner above scans every property; listProperties() would answer too,
+         but it scores the whole portfolio to do it. */
+      raCodeOfPid(pid) {
+        const p = D.props[pid];
+        return p ? (String(p.ra_property_code || '') || null) : null;
+      },
       computeAnalysis, computeSalutation,
     };
   })();
