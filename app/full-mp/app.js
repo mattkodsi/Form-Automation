@@ -370,12 +370,12 @@ function dateEffCell(){
      then the year the SAFMR and factor pulls ask HUD about. */
   const _c0=get('rent_schedule.date_eff_custom')||get('rent_schedule.date_rents_effective');
   const custom=/^\d{4}-\d{2}-\d{2}$/.test(String(_c0||''))?fmtDate(_c0):_c0;
-  const rsLab=rs?(fmtDate(rs)+' · a year after the RS'):'— · no RS date parsed';
-  const lab=(src==='custom')?('<input class="uac-in dateeff-in" data-date="1" data-k="rent_schedule.date_eff_custom" value="'+esc(custom)+'" placeholder="mm/dd/yyyy" autocomplete="off">'):(rs?('<input class="uac-in srcedit" data-srcedit="dateeff" data-date="1" value="'+esc(fmtDate(rs))+'"><span class="srctag long">· a year after the RS</span>'):('<span class="ualab">'+esc(rsLab)+'</span>'));
+  const rsLab=rs?(fmtDate(rs)+' · Executed RS + 1 yr'):'— · no RS date parsed';
+  const lab=(src==='custom')?('<input class="uac-in dateeff-in" data-date="1" data-k="rent_schedule.date_eff_custom" value="'+esc(custom)+'" placeholder="mm/dd/yyyy" autocomplete="off">'):(rs?('<input class="uac-in srcedit" data-srcedit="dateeff" data-date="1" value="'+esc(fmtDate(rs))+'"><span class="srctag long">\u00b7 Executed RS + 1 yr</span>'):('<span class="ualab">'+esc(rsLab)+'</span>'));
   let state,c;if(src==='custom'){c=modeOf(['rent_schedule.date_eff_custom','rent_schedule.date_eff_source'])==='over'?provColors('overridden','rent_schedule.date_eff_source'):cellColors('rent_schedule.date_eff_custom');}else{state=rs?srcOf('rent_schedule.date_eff_rs'):'new';c=provColors(state,'rent_schedule.date_eff_source');}
   const boxKey=(src==='custom')?'rent_schedule.date_eff_custom':'rent_schedule.date_eff_source';
   const _lkDE=optLock('rent_schedule.date_eff_custom');
-  const menu='<div class="uamenu">'+srcOptRow('data-deffopt="rs"',rs?esc(fmtDate(rs)):'','A year after the executed RS',src==='rs',src==='rs'?_lkDE:'')+'<div class="uaopt'+(src==='custom'?' sel':'')+'" data-deffopt="custom">Custom…'+(src==='custom'?_lkDE:'')+'</div></div>';
+  const menu='<div class="uamenu">'+srcOptRow('data-deffopt="rs"',rs?esc(fmtDate(rs)):'','Executed RS + 1 yr',src==='rs',src==='rs'?_lkDE:'')+'<div class="uaopt'+(src==='custom'?' sel':'')+'" data-deffopt="custom">Custom…'+(src==='custom'?_lkDE:'')+'</div></div>';
   /* Silence would let 20/26/0301 sit in the box looking like a date that had
      been entered on purpose. Everything downstream now ignores it, so the cell
      is the only place left that can say why nothing happened. */
@@ -801,7 +801,7 @@ function cellColor(key){return provColors(cellState(key),key);}
    [] => no dropdown (kind E). Keyed on the srcSpec CUSTOM key, like srcCellState/
    optLock. Families are folded in here as each is wired; today the four Engine-A
    source-pointer cells (UA/SAFMR/effective-date/OCAF factor). Pure + unwired. */
-const SRC_TAG={exec:'Executed RS',rcs:'RCS report',hud:'HUD API',fr:'Federal Register',rs:'A year after the executed RS'};
+const SRC_TAG={exec:'Executed RS',rcs:'RCS report',hud:'HUD API',fr:'Federal Register',rs:'Executed RS + 1 yr'};
 function sourcesFor(key){
   const sp=(typeof srcSpec==='function')?srcSpec(key):null;
   if(sp){
