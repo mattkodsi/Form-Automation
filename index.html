@@ -5611,7 +5611,7 @@ function sigTitleCell(f){const c=cellColors('sig.title');const pk='sig.principal
      without this it repeats the box and tells the reader nothing. */
   let dd=csDrop(pk,_opts,'Select\u2026','',true,'',_pcl?_rp:null,sigPrincipalSubs());
   dd=dd.replace('<div class="uamenu">','<div class="uamenu">'+dim);
-  return `<div class="fpair sigpair"><div class="field"><div class="flabel">${f.label}</div><div class="fbox" data-box="sig.title" style="background:${c[1]};border-left-color:${c[0]}"><input type="text" data-k="sig.title" value="${esc(get('sig.title'))}" autocomplete="off">${srcTags('sig.title')}${srcPick('sig.title',SRCPICK_ROWS['sig.title']())}</div>${ovNote('sig.title')}</div><div class="ofthe">of the</div><div class="field"><div class="flabel">Principal</div><div class="fbox seldrop" data-box="${pk}" style="background:${pc[1]};border-left-color:${pc[0]}">${dd}</div>${ovNote(pk)}</div></div>`;}
+  return `<div class="fpair sigpair"><div class="field"><div class="flabel">${f.label}</div><div class="fbox" data-box="sig.title" style="background:${c[1]};border-left-color:${c[0]}"><input type="text" data-k="sig.title" value="${esc(get('sig.title'))}" autocomplete="off">${srcTags('sig.title')}${sourceMenu('sig.title')}</div>${ovNote('sig.title')}</div><div class="ofthe">of the</div><div class="field"><div class="flabel">Principal</div><div class="fbox seldrop" data-box="${pk}" style="background:${pc[1]};border-left-color:${pc[0]}">${dd}</div>${ovNote(pk)}</div></div>`;}
 function fieldCell(f){if(isLocked(f.k))return lockedField(f.k,f.label,raLockShow(f.k));if(f.type==='sigtitle')return sigTitleCell(f);if(f.type==='pair')return '<div class="fpair">'+f.items.map(fieldCell).join('')+'</div>';if(f.type==='addr')return addrCell();if(f.type==='caaddr')return caAddrCell();if(f.type==='appraddr')return apprAddrCell();if(f.type==='mgmtaddr')return mgmtCell();if(f.type==='select')return selectCell(f);if(f.k==='poc.name')return pocCell();if(DIR_PICK[f.k])return dirCell(f);
   const s=form[f.k]||{value:'',source:'new'};
   const c=f.prefix?groupColors([f.prefix,f.k]):cellColors(f.k);
@@ -5631,7 +5631,7 @@ function selectCell(f){const c=cellColors(f.k);const _et=f.k==='owner.entity_typ
     dd=dd.replace('<div class="uamenu">','<div class="uamenu">'+navRows);}
   const sel=`<div class="field"><div class="flabel">${f.label}</div><div class="fbox seldrop" data-box="${f.k}" style="background:${c[1]};border-left-color:${c[0]}">${dd}</div>${ovNote(f.k)}</div>`;
   if(f.k==='owner.entity_type'&&get(f.k)==='Other (specify)'){const ok='owner.entity_type_other';const oc=cellColors(ok);
-    const other=`<div class="field"><div class="flabel">Specify entity type</div><div class="fbox" data-box="${ok}" style="background:${oc[1]};border-left-color:${oc[0]}"><input type="text" data-k="${ok}" value="${esc(get(ok))}" placeholder="e.g. Limited Liability Company" autocomplete="off">${srcPick(ok,SRCPICK_ROWS[ok]())}</div>${ovNote(ok)}</div>`;
+    const other=`<div class="field"><div class="flabel">Specify entity type</div><div class="fbox" data-box="${ok}" style="background:${oc[1]};border-left-color:${oc[0]}"><input type="text" data-k="${ok}" value="${esc(get(ok))}" placeholder="e.g. Limited Liability Company" autocomplete="off">${sourceMenu(ok)}</div>${ovNote(ok)}</div>`;
     return '<div class="fpair etpair">'+sel+other+'</div>';}
   return sel;}
 /* One badge for one cell. The address is four keys but a single box with a
@@ -5686,7 +5686,7 @@ function renderFieldSection(sec){const cols=[[],[]];sec.fields.forEach(f=>cols[f
 function principalHasData(i){return ['name','title'].some(s=>{const v=get('principals.'+i+'.'+s);return v!==''&&v!=null;});}
 function renderPrincipals(){
   const rows=PRINCIPALS.map(i=>{const nk='principals.'+i+'.name',tk='principals.'+i+'.title';const nc=cellColors(nk),tc=cellColors(tk);
-    return `<div class="prinrow"><div class="field"><div class="fbox" data-box="${nk}" style="background:${nc[1]};border-left-color:${nc[0]}"><input type="text" data-k="${nk}" value="${esc(get(nk))}" autocomplete="off">${rsTag(nk)}${srcPick(nk,[{tag:'Executed RS',val:rsPrin(i,'name')}])}</div>${ovNote(nk)}</div><div class="field"><div class="fbox" data-box="${tk}" style="background:${tc[1]};border-left-color:${tc[0]}"><input type="text" data-k="${tk}" value="${esc(get(tk))}" autocomplete="off">${rsTag(tk)}${srcPick(tk,[{tag:'Executed RS',val:rsPrin(i,'title')}])}</div>${ovNote(tk)}</div><div class="urx">${PRINCIPALS.length>1?`<button class="trash" data-delprin="${i}" title="Delete">\u2715</button>`:''}</div></div>`;}).join('');
+    return `<div class="prinrow"><div class="field"><div class="fbox" data-box="${nk}" style="background:${nc[1]};border-left-color:${nc[0]}"><input type="text" data-k="${nk}" value="${esc(get(nk))}" autocomplete="off">${rsTag(nk)}${sourceMenu(nk,[{tag:'Executed RS',val:rsPrin(i,'name')}])}</div>${ovNote(nk)}</div><div class="field"><div class="fbox" data-box="${tk}" style="background:${tc[1]};border-left-color:${tc[0]}"><input type="text" data-k="${tk}" value="${esc(get(tk))}" autocomplete="off">${rsTag(tk)}${sourceMenu(tk,[{tag:'Executed RS',val:rsPrin(i,'title')}])}</div>${ovNote(tk)}</div><div class="urx">${PRINCIPALS.length>1?`<button class="trash" data-delprin="${i}" title="Delete">\u2715</button>`:''}</div></div>`;}).join('');
   return card(12,sectionPill(12),`<div class="pbnote">The principals comprising the ownership entity, as they appear in Part G of the rent schedule. The signatory title in ${secRef(3)} selects its principal from this list.</div><div class="prinhead"><span>Principal name</span><span>Title</span><span></span></div>${rows}<div class="addrow" id="prinAdd">+ Add principal</div>${_undoPR.length?(' <span class="addrow ghostlink" id="undoPrin">\u21a9 Undo delete'+(_undoPR.length>1?(' ('+_undoPR.length+')'):'')+'</span><button class="undocommit" id="undoPrinC" title="Keep deletions \u2014 dismiss undo">\u2713</button>'):''}`);}
 
 /* Provenance has two axes and one implementation. The EDGE reports the record:
@@ -5760,13 +5760,7 @@ function sourcesFor(key){
   let brows=[];
   if(typeof SRCPICK_ROWS!=='undefined'&&SRCPICK_ROWS[key])brows=SRCPICK_ROWS[key]();
   else if(typeof moneySrcRows==='function'){const mr=moneySrcRows(key);if(mr&&mr.length)brows=mr;}
-  if(brows.length){
-    const cur=form[key];const org=cur&&cur.origin;
-    const rows=brows.map(r=>{const oc=TAG_ORIGIN[r.tag];
-      return {kind:'doc',src:oc||r.tag,tag:r.tag,val:(r.val==null||r.val==='')?null:r.val,sel:!!oc&&org===oc};});
-    rows.push({kind:'free',src:'custom',tag:'Custom',val:cur?cur.value:'',sel:org==='typed'});
-    return rows;
-  }
+  if(brows.length)return srcLines(key,brows);
   return [];   // kind E — no dropdown; or a family not yet folded in
 }
 /* sourceMenu(key): THE ONE dropdown — the ideal (UA/SAFMR) menu rendered from
@@ -5774,15 +5768,21 @@ function sourcesFor(key){
    for open cells, a padlock on the selected line when the cell is pinned. Every
    option is keyed data-srcpick=cell / data-srcopt=source so ONE handler serves
    all line-kinds. Pure + unwired — the wiring replaces srcPick / the *opt menus. */
-function sourceMenu(key){
-  const lines=sourcesFor(key); if(!lines.length)return '';
+/* srcLines(key,rows): map explicit [{tag,val}] rows to typed lines (origin-based
+   selection + a trailing Custom) — shared by sourcesFor's Engine-B branch and by
+   sourceMenu callers that pass their own inline rows (principals, count cells). */
+function srcLines(key,rows){const cur=form[key];const org=cur&&cur.origin;
+  const ls=rows.map(r=>{const oc=TAG_ORIGIN[r.tag];return {kind:'doc',src:oc||r.tag,tag:r.tag,val:(r.val==null||r.val==='')?null:r.val,sel:!!oc&&org===oc};});
+  ls.push({kind:'free',src:'custom',tag:'Custom',val:cur?cur.value:'',sel:org==='typed'});return ls;}
+function sourceMenu(key,rows){
+  const lines=rows?srcLines(key,rows):sourcesFor(key); if(!lines.length)return '';
   const pinned=!!(form[key]&&form[key].pinned);
   const lock=(sel)=>(sel&&pinned)?('<span class="srclock" data-lock="'+esc(key)+'" role="button" tabindex="0" aria-label="Release lock" title="Locked to your choice. Click to release so a fill or pull can update this cell.">'+LOCK_SVG+'</span>'):'';
   const opts=lines.map(l=>{
     const attrs='data-srcpick="'+esc(key)+'" data-srcopt="'+esc(l.src)+'"';
     if(l.kind==='free')return '<div class="uaopt'+(l.sel?' sel':'')+'" '+attrs+'>Custom\u2026'+lock(l.sel)+'</div>';
     return l.val!=null
-      ?'<div class="uaopt srcopt'+(l.sel?' sel':'')+'" '+attrs+'>'+esc(srcDisp(key,l.val))+'<span class="uasub">'+esc(l.tag)+'</span>'+lock(l.sel)+'</div>'
+      ?'<div class="uaopt srcopt'+(l.sel?' sel':'')+'" '+attrs+' data-srcv="'+esc(l.val)+'">'+esc(srcDisp(key,l.val))+'<span class="uasub">'+esc(l.tag)+'</span>'+lock(l.sel)+'</div>'
       :'<div class="uaopt srcopt srcdim" '+attrs+'>\u2014<span class="uasub">'+esc(l.tag)+' \u00b7 not available</span></div>';
   }).join('');
   return '<div class="uadrop pocpick"><div class="uatrigger" tabindex="0" title="Pull from a source"><span class="cvx">&#9662;</span></div><div class="uamenu">'+opts+'</div></div>';
@@ -5802,7 +5802,7 @@ function numBox(k,ph,noIcons){const c=boxColor(k);
      oversight, and "not available" is a shorter answer than wondering. */
   const _mn=k.match(/^nonrev\.(\d+)\.num_units$/);
   const _rsCell=!!(_mc||_mu||_mn);   // non-Section-8 counts and Part D uses come off the schedule too
-  return `<div class="rbox" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><input type="text"${_cnt?' data-money="1"':''} data-k="${k}" value="${esc(_cnt?fmtMoney(get(k)):get(k))}" placeholder="${esc(ph||'')}">${rsTag(k)}${_rv!=null?srcPick(k,[{tag:'Executed RS',val:_rv}]):(_rsCell?dimPick('Executed RS'):'')}${noIcons?'':ovIcons(k)}</div>`;}
+  return `<div class="rbox" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><input type="text"${_cnt?' data-money="1"':''} data-k="${k}" value="${esc(_cnt?fmtMoney(get(k)):get(k))}" placeholder="${esc(ph||'')}">${rsTag(k)}${_rsCell?sourceMenu(k,[{tag:'Executed RS',val:_rv}]):''}${noIcons?'':ovIcons(k)}</div>`;}
 function brbaBox(brK,baK){const c=groupColors([brK,baK]);
   const withRs=(k,opts,ph)=>{const d=csDrop(k,opts,ph,'',true,partHot(k)?tintStyle(k):'',rsBrBa(k));
     const row=rsCsRow(k)||'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>';
@@ -5878,7 +5878,7 @@ function unitCountCell(i){const k='units.'+i+'.num_units';const c=cellColors(k);
   // not one is loaded right now — dimmed when there is nothing to pull, exactly as
   // the rent beside it does. Rendering nothing left the column looking as though
   // it had no source at all the moment the upload went out of session.
-  return `<div class="rbox" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><input type="text" data-money="1" data-k="${k}" value="${esc(fmtMoney(get(k)))}">${srcTags(k)}${(rv!=null||cv!=null)?srcPick(k,[{tag:'Executed RS',val:rv},{tag:'RCS report',val:cv}]):dimPick('Executed RS')}</div>`;}
+  return `<div class="rbox" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><input type="text" data-money="1" data-k="${k}" value="${esc(fmtMoney(get(k)))}">${srcTags(k)}${sourceMenu(k,[{tag:'Executed RS',val:rv},{tag:'RCS report',val:cv}])}</div>`;}
 /* The study's reading lives in the cell's dropdown now; a difference is not a
    thing to be resolved before the row can be saved. */
 function typeNote(i){return '';}
@@ -8877,10 +8877,10 @@ function wireBody(){
     if(sp){                                               // Engine A: a resolver pointer
       _pendingSnap=snapPend(coupledKeys(sp.cusKey));srcSetSource(sp.cusKey,src);if(form[sp.srcKey])form[sp.srcKey].pinned=true;
       _pending=[sp.srcKey];_refocusSel='[data-box="'+sp.srcKey+'"] .uatrigger';renderBody();return;}
-    _pendingSnap=snapPend([key]);                         // Engine B: write the value + record its origin
-    const line=sourcesFor(key).find(l=>l.src===src);
-    if(line&&line.val!=null){form=store.editForm(form,key,String(line.val));if(form[key]){form[key].origin=src;form[key].pinned=true;}}
-    _pending=[key];_refocusSel='[data-box="'+key+'"] .uatrigger';renderBody();setStatus('Pulled from '+(line?line.tag:'source')+'.');}));
+    _pendingSnap=snapPend([key]);                         // Engine B: write the value (carried on the option) + record its origin
+    const _v=o.getAttribute('data-srcv');
+    if(_v!=null){form=store.editForm(form,key,String(_v));if(form[key]){form[key].origin=src;form[key].pinned=true;}}
+    _pending=[key];_refocusSel='[data-box="'+key+'"] .uatrigger';renderBody();setStatus('Pulled from '+((o.querySelector('.uasub')||{}).textContent||'the source')+'.');}));
   document.querySelectorAll('[data-srck]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();const k=o.getAttribute('data-srck'),_tg=o.getAttribute('data-srctag')||'source';_pendingSnap=snapPend([k]);form=store.editForm(form,k,o.getAttribute('data-srcv'));
     /* A pulled figure is not typed-in data. Into an empty cell it reads as this
        package's own — green, "not saved yet" — rather than plain new; over an
