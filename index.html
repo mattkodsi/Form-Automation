@@ -5648,7 +5648,7 @@ const SRC_MONEY=/^(units\.\d+\.(current|proposed|ua_exec|ua_rcs|ua_custom|safmr_
 const SRC_COUNT=/^(units|ns8|nonrev)\.\d+\.num_units$/;
 function srcDisp(k,v){
   if(v==null||v==='')return v;
-  if(SRC_MONEY.test(k)){const f=fmtMoney(v);return f?('$'+f):String(v);}   // a value we cannot read as a number prints as it came
+  if(SRC_MONEY.test(k)||/\.(ua_source|safmr_source)$/.test(k)){const f=fmtMoney(v);return f?('$'+f):String(v);}   // money (incl. the UA/SAFMR source keys)
   if(SRC_COUNT.test(k)){const f=fmtMoney(v);return f||String(v);}          // separators, no currency
   if(/\.phone$/.test(k))return fmtPhone(v)||String(v);
   if(/\.email$/.test(k))return fmtEmail(v);
@@ -5925,17 +5925,22 @@ function sourcesFor(key){
 function srcLines(key,rows){const cur=form[key];const org=cur&&cur.origin;
   const ls=rows.map(r=>{const oc=TAG_ORIGIN[r.tag];return {kind:'doc',src:oc||r.tag,tag:r.tag,val:(r.val==null||r.val==='')?null:r.val,sel:!!oc&&org===oc};});
   ls.push({kind:'free',src:'custom',tag:'Custom',val:cur?cur.value:'',sel:org==='typed'});return ls;}
-function sourceMenu(key,rows){
-  const lines=rows?srcLines(key,rows):sourcesFor(key); if(!lines.length)return '';
+function sourceOpts(key,lines){
   const pinned=!!(form[key]&&form[key].pinned);
   const lock=(sel)=>(sel&&pinned)?('<span class="srclock" data-lock="'+esc(key)+'" role="button" tabindex="0" aria-label="Release lock" title="Locked to your choice. Click to release so a fill or pull can update this cell.">'+LOCK_SVG+'</span>'):'';
-  const opts=lines.map(l=>{
+  return lines.map(l=>{
     const attrs='data-srcpick="'+esc(key)+'" data-srcopt="'+esc(l.src)+'"';
     if(l.kind==='free')return '<div class="uaopt'+(l.sel?' sel':'')+'" '+attrs+'>Custom\u2026'+lock(l.sel)+'</div>';
     return l.val!=null
       ?'<div class="uaopt srcopt'+(l.sel?' sel':'')+'" '+attrs+' data-srcv="'+esc(l.val)+'">'+esc(srcDisp(key,l.val))+'<span class="uasub">'+esc(l.tag)+'</span>'+lock(l.sel)+'</div>'
       :'<div class="uaopt srcopt srcdim" '+attrs+'>\u2014<span class="uasub">'+esc(l.tag)+' \u00b7 not available</span></div>';
   }).join('');
+}
+function sourceMenu(key,rows){
+  const lines=rows?srcLines(key,rows):sourcesFor(key); if(!lines.length)return '';
+  const pinned=!!(form[key]&&form[key].pinned);
+  const lock=(sel)=>(sel&&pinned)?('<span class="srclock" data-lock="'+esc(key)+'" role="button" tabindex="0" aria-label="Release lock" title="Locked to your choice. Click to release so a fill or pull can update this cell.">'+LOCK_SVG+'</span>'):'';
+  const opts=sourceOpts(key,lines);
   return '<div class="uadrop pocpick"><div class="uatrigger" tabindex="0" title="Pull from a source"><span class="cvx">&#9662;</span></div><div class="uamenu">'+opts+'</div></div>';
 }
 function moneyBox(k,noIcons){const c=boxColor(k);const pick=sourceMenu(k);   // the one dropdown component (was srcPick over moneySrcRows)
@@ -6000,8 +6005,7 @@ function uaBox(i){const src=get('units.'+i+'.ua_source')||defUaSrc(i),exec=get('
    key is the one that knows an on-file value was displaced, so the badge carries
    both: coupledKeys already saves and reverts them together. */
   const c=cellColor('units.'+i+'.ua_source');const boxKeyUA=src==='custom'?('units.'+i+'.ua_custom'):('units.'+i+'.ua_source');   // one colour rule (was uaCellColors)
-  const _lkUA=optLock('units.'+i+'.ua_custom');
-  const menu='<div class="uamenu">'+srcOptRow('data-uaopt="exec" data-uai="'+i+'"',(exec!==''&&exec!=null)?('$'+fmtMoney(exec)):'','Executed RS',src==='exec',src==='exec'?_lkUA:'')+srcOptRow('data-uaopt="rcs" data-uai="'+i+'"',(rcs!==''&&rcs!=null)?('$'+fmtMoney(rcs)):'','RCS report',src==='rcs',src==='rcs'?_lkUA:'')+'<div class="uaopt'+(src==='custom'?' sel':'')+'" data-uaopt="custom" data-uai="'+i+'">Custom…'+(src==='custom'?_lkUA:'')+'</div></div>';
+  const menu='<div class="uamenu">'+sourceOpts('units.'+i+'.ua_source',sourcesFor('units.'+i+'.ua_source'))+'</div>';
   return '<div class="rbox uacell" data-box="'+boxKeyUA+'" style="background:'+c[1]+';border-left-color:'+c[0]+'"><div class="uadrop"><div class="uatrigger" tabindex="0"><span class="ualab">'+lab+'</span><span class="cvx">▾</span></div>'+menu+'</div></div>';}
 function uaNoteCell(i){const conf=uaConflict(i),overSrc=srcOf('units.'+i+'.ua_source')==='overridden';if(!conf&&!overSrc)return '';const ex=get('units.'+i+'.ua_exec'),rc=get('units.'+i+'.ua_rcs');
   if(conf&&uaUnresolved(i))return '<div class="ucnote warn">⚠ exec '+money(numf(ex))+' · RCS '+money(numf(rc))+' <span class="pick"><button class="urev sv" data-uaok="'+i+'">approve '+money(uaResolvedOf(i))+'</button></span></div>';
@@ -6038,8 +6042,7 @@ function safmrBox(i){const src=get('units.'+i+'.safmr_source')||defSafmrSrc(i),h
   const hasAny=numf(hud)>0||numf(rcs)>0||numf(custom)>0;
   const lab=src==='rcs'?('$<input class="uac-in srcedit" data-srcedit="safmr" data-si="'+i+'" data-money="1" value="'+esc(fmtMoney(rcs))+'"><span class="srctag">· RCS</span>'):(src==='custom'?('$<input class="uac-in" data-money="1" data-k="units.'+i+'.safmr_custom" value="'+esc(fmtMoney(custom))+'" placeholder="0">'):('$<input class="uac-in srcedit" data-srcedit="safmr" data-si="'+i+'" data-money="1" value="'+esc(fmtMoney(hud))+'"><span class="srctag">· HUD</span>'));
   const c=cellColor('units.'+i+'.safmr_source');const boxKeySA=src==='custom'?('units.'+i+'.safmr_custom'):('units.'+i+'.safmr_source');   // one colour rule (was safmrCellColors)
-  const _lkSA=optLock('units.'+i+'.safmr_custom');
-  const menu='<div class="uamenu">'+srcOptRow('data-safmropt="hud" data-safmri="'+i+'"',(hud!==''&&hud!=null)?('$'+fmtMoney(hud)):'','HUD API',src==='hud',src==='hud'?_lkSA:'')+srcOptRow('data-safmropt="rcs" data-safmri="'+i+'"',(rcs!==''&&rcs!=null)?('$'+fmtMoney(rcs)):'','RCS report',src==='rcs',src==='rcs'?_lkSA:'')+'<div class="uaopt'+(src==='custom'?' sel':'')+'" data-safmropt="custom" data-safmri="'+i+'">Custom…'+(src==='custom'?_lkSA:'')+'</div></div>';
+  const menu='<div class="uamenu">'+sourceOpts('units.'+i+'.safmr_source',sourcesFor('units.'+i+'.safmr_source'))+'</div>';
   return '<div class="rbox uacell" data-box="'+boxKeySA+'" style="background:'+c[1]+';border-left-color:'+c[0]+'"><div class="uadrop"><div class="uatrigger" tabindex="0"><span class="ualab">'+lab+'</span><span class="cvx">▾</span></div>'+menu+'</div></div>';}
 function safmrNote(i){const res=safmrResolvedOf(i),hud=numf(get('units.'+i+'.safmr_hud')),rcs=numf(get('units.'+i+'.safmr_rcs'));
   if(safmrUnresolved(i))return '<div class="ucnote warn">⚠ HUD '+money(hud)+' · RCS '+money(rcs)+' <span class="pick"><button class="urev sv" data-safmrok="'+i+'">approve '+money(res)+'</button></span></div>';
@@ -9051,6 +9054,7 @@ function wireBody(){
       renderBody();return;}
     if(sp){                                               // Engine A: a resolver pointer
       _pendingSnap=snapPend(coupledKeys(sp.cusKey));srcSetSource(sp.cusKey,src);if(form[sp.srcKey])form[sp.srcKey].pinned=true;
+      const _rev=sp.cusKey.replace(/_custom$/,'_reviewed');if(_rev!==sp.cusKey&&form[_rev]!==undefined)form=store.editForm(form,_rev,'1');
       _pending=[sp.srcKey];_refocusSel='[data-box="'+sp.srcKey+'"] .uatrigger';renderBody();return;}
     _pendingSnap=snapPend([key]);                         // Engine B: write the value (carried on the option) + record its origin
     const _v=o.getAttribute('data-srcv');
