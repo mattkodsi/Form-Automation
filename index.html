@@ -5708,8 +5708,7 @@ function cellState(key){
   const c=form[key]; if(!c)return 'new';
   const v=String(c.value==null?'':c.value);
   const db=c.db_value;
-  if(db!=null&&String(db)!=='')return v===String(db)?'database':'overridden';
-  if(db!=null&&String(db)===''&&v==='')return 'database';   // saved empty stays blue (FR cell-model)
+  if(db!=null)return v===String(db)?'database':'overridden';   // saved, incl. saved-empty: blue if unchanged, amber once an entry differs (FR cell-model)
   return (v!==''&&c.origin&&AUTO_ORIGINS[c.origin])?'this-cycle':'new';
 }
 function cellColor(key){return provColors(cellState(key),key);}
