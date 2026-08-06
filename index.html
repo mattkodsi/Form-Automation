@@ -445,6 +445,11 @@ button.gdoc{justify-content:space-between}
 .utsrc{align-self:center;margin-left:2px}
 .uaopt.srcopt:has(+.uaopt:not(.srcopt)){position:relative;margin-bottom:9px}
 .uaopt.srcopt:has(+.uaopt:not(.srcopt))::after{content:'';position:absolute;left:0;right:0;bottom:-5px;border-bottom:1px solid #ccd4e2}
+/* The source lock rides the selected option inside the roomy dropdown menu. */
+.uaopt:has(.srclock){position:relative;padding-right:34px}
+.uaopt .srclock{position:absolute;right:9px;top:50%;transform:translateY(-50%);display:inline-flex;align-items:center;color:var(--muted-2);cursor:pointer;padding:3px;border-radius:5px}
+.uaopt .srclock:hover{background:rgba(20,40,80,.08);color:var(--navy)}
+.uaopt .srclock:focus-visible{outline:none;box-shadow:inset 0 0 0 2px var(--navy)}
 .uacustom{border:none;border-bottom:1px dashed var(--kraft-line);background:transparent;padding:6px 2px;font:inherit;outline:none} .urev{border:1px solid var(--kraft-line);background:var(--prov-over-fill);color:var(--prov-over);border-radius:5px;cursor:pointer;font-size:11px;padding:3px 6px;flex:0 0 auto}
 .uanote{font-size:11.5px;align-self:center;line-height:1.5} .uanote.warn{color:var(--prov-over)} .uanote.ok{color:var(--ok)}
 .lastcell{display:flex;align-items:center;gap:8px;justify-content:space-between} .trash{border:none;background:transparent;cursor:pointer;font-size:12px;font-weight:800;color:var(--danger);opacity:.6;flex:0 0 auto;line-height:1;padding:2px 4px} .trash:hover{opacity:1}
@@ -5231,7 +5236,8 @@ function dateEffCell(){
   const lab=(src==='custom')?('<input class="uac-in dateeff-in" data-date="1" data-k="rent_schedule.date_eff_custom" value="'+esc(custom)+'" placeholder="mm/dd/yyyy" autocomplete="off">'):(rs?('<input class="uac-in srcedit" data-srcedit="dateeff" data-date="1" value="'+esc(fmtDate(rs))+'"><span class="srctag long">· a year after the RS</span>'):('<span class="ualab">'+esc(rsLab)+'</span>'));
   let state,c;if(src==='custom'){c=modeOf(['rent_schedule.date_eff_custom','rent_schedule.date_eff_source'])==='over'?provColors('overridden','rent_schedule.date_eff_source'):cellColors('rent_schedule.date_eff_custom');}else{state=rs?srcOf('rent_schedule.date_eff_rs'):'new';c=provColors(state,'rent_schedule.date_eff_source');}
   const boxKey=(src==='custom')?'rent_schedule.date_eff_custom':'rent_schedule.date_eff_source';
-  const menu='<div class="uamenu">'+srcOptRow('data-deffopt="rs"',rs?esc(fmtDate(rs)):'','A year after the executed RS',src==='rs')+'<div class="uaopt'+(src==='custom'?' sel':'')+'" data-deffopt="custom">Custom…</div></div>';
+  const _lkDE=optLock('rent_schedule.date_eff_custom');
+  const menu='<div class="uamenu">'+srcOptRow('data-deffopt="rs"',rs?esc(fmtDate(rs)):'','A year after the executed RS',src==='rs',src==='rs'?_lkDE:'')+'<div class="uaopt'+(src==='custom'?' sel':'')+'" data-deffopt="custom">Custom…'+(src==='custom'?_lkDE:'')+'</div></div>';
   /* Silence would let 20/26/0301 sit in the box looking like a date that had
      been entered on purpose. Everything downstream now ignores it, so the cell
      is the only place left that can say why nothing happened. */
@@ -5418,7 +5424,19 @@ function srcDisp(k,v){
   if(/\.phone$/.test(k))return fmtPhone(v)||String(v);
   if(/\.email$/.test(k))return fmtEmail(v);
   return v;}
-function srcOptRow(attrs,val,tag,sel){const _c='uaopt srcopt'+(sel?' sel':'');return val?('<div class="'+_c+'" '+attrs+'>'+val+'<span class="uasub">'+esc(tag)+'</span></div>'):('<div class="'+_c+' srcdim">\u2014<span class="uasub">'+esc(tag)+' \u00b7 not available</span></div>');}
+function srcOptRow(attrs,val,tag,sel,extra){const _c='uaopt srcopt'+(sel?' sel':'');return val?('<div class="'+_c+'" '+attrs+'>'+val+'<span class="uasub">'+esc(tag)+'</span>'+(extra||'')+'</div>'):('<div class="'+_c+' srcdim">\u2014<span class="uasub">'+esc(tag)+' \u00b7 not available</span></div>');}
+/* The source lock (provenance overhaul, increment 2). A themed padlock \u2014 NOT an
+   emoji \u2014 that rides the SELECTED option INSIDE the open dropdown (the menu is
+   roomy; the cells are cramped), and ONLY when the cell is pinned: a person who
+   picked a source or typed a custom value. Clicking it RELEASES \u2014 clears the
+   explicit source so the hierarchy governs again and unpins, so a later fill or
+   API pull can update the cell. This is what keeps a cell from being stuck on
+   Custom, permanently un-overridable. Release is METADATA and is saved
+   IMMEDIATELY, never through the pending/save-revert flow (see the handler). */
+const LOCK_SVG='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>';
+function optLock(cusKey){const sp=srcSpec(cusKey);if(!sp)return '';
+  if(!(form[sp.srcKey]&&form[sp.srcKey].pinned))return '';
+  return '<span class="srclock" data-lock="'+esc(cusKey)+'" role="button" tabindex="0" aria-label="Release lock" title="Locked to your choice. Click to release so a fill or pull can update this cell.">'+LOCK_SVG+'</span>';}
 function srcPick(k,rows){
   const menu='<div class="uamenu">'+rows.map(r=> r.val!=null
     ?'<div class="uaopt srcopt" data-srck="'+k+'" data-srcv="'+esc(r.val)+'" data-srctag="'+esc(r.tag)+'">'+esc(srcDisp(k,r.val))+'<span class="uasub">'+esc(r.tag)+'</span></div>'
@@ -5667,7 +5685,8 @@ function uaBox(i){const src=get('units.'+i+'.ua_source')||defUaSrc(i),exec=get('
    key is the one that knows an on-file value was displaced, so the badge carries
    both: coupledKeys already saves and reverts them together. */
   const c=uaCellColors(i);const boxKeyUA=src==='custom'?('units.'+i+'.ua_custom'):('units.'+i+'.ua_source');
-  const menu='<div class="uamenu">'+srcOptRow('data-uaopt="exec" data-uai="'+i+'"',(exec!==''&&exec!=null)?('$'+fmtMoney(exec)):'','Executed RS',src==='exec')+srcOptRow('data-uaopt="rcs" data-uai="'+i+'"',(rcs!==''&&rcs!=null)?('$'+fmtMoney(rcs)):'','RCS report',src==='rcs')+'<div class="uaopt'+(src==='custom'?' sel':'')+'" data-uaopt="custom" data-uai="'+i+'">Custom…</div></div>';
+  const _lkUA=optLock('units.'+i+'.ua_custom');
+  const menu='<div class="uamenu">'+srcOptRow('data-uaopt="exec" data-uai="'+i+'"',(exec!==''&&exec!=null)?('$'+fmtMoney(exec)):'','Executed RS',src==='exec',src==='exec'?_lkUA:'')+srcOptRow('data-uaopt="rcs" data-uai="'+i+'"',(rcs!==''&&rcs!=null)?('$'+fmtMoney(rcs)):'','RCS report',src==='rcs',src==='rcs'?_lkUA:'')+'<div class="uaopt'+(src==='custom'?' sel':'')+'" data-uaopt="custom" data-uai="'+i+'">Custom…'+(src==='custom'?_lkUA:'')+'</div></div>';
   return '<div class="rbox uacell" data-box="'+boxKeyUA+'" style="background:'+c[1]+';border-left-color:'+c[0]+'"><div class="uadrop"><div class="uatrigger" tabindex="0"><span class="ualab">'+lab+'</span><span class="cvx">▾</span></div>'+menu+'</div></div>';}
 function uaNoteCell(i){const conf=uaConflict(i),overSrc=srcOf('units.'+i+'.ua_source')==='overridden';if(!conf&&!overSrc)return '';const ex=get('units.'+i+'.ua_exec'),rc=get('units.'+i+'.ua_rcs');
   if(conf&&uaUnresolved(i))return '<div class="ucnote warn">⚠ exec '+money(numf(ex))+' · RCS '+money(numf(rc))+' <span class="pick"><button class="urev sv" data-uaok="'+i+'">approve '+money(uaResolvedOf(i))+'</button></span></div>';
@@ -5710,7 +5729,8 @@ function safmrBox(i){const src=get('units.'+i+'.safmr_source')||defSafmrSrc(i),h
   const hasAny=numf(hud)>0||numf(rcs)>0||numf(custom)>0;
   const lab=src==='rcs'?('$<input class="uac-in srcedit" data-srcedit="safmr" data-si="'+i+'" data-money="1" value="'+esc(fmtMoney(rcs))+'"><span class="srctag">· RCS</span>'):(src==='custom'?('$<input class="uac-in" data-money="1" data-k="units.'+i+'.safmr_custom" value="'+esc(fmtMoney(custom))+'" placeholder="0">'):('$<input class="uac-in srcedit" data-srcedit="safmr" data-si="'+i+'" data-money="1" value="'+esc(fmtMoney(hud))+'"><span class="srctag">· HUD</span>'));
   const c=safmrCellColors(i);const boxKeySA=src==='custom'?('units.'+i+'.safmr_custom'):('units.'+i+'.safmr_source');
-  const menu='<div class="uamenu">'+srcOptRow('data-safmropt="hud" data-safmri="'+i+'"',(hud!==''&&hud!=null)?('$'+fmtMoney(hud)):'','HUD API',src==='hud')+srcOptRow('data-safmropt="rcs" data-safmri="'+i+'"',(rcs!==''&&rcs!=null)?('$'+fmtMoney(rcs)):'','RCS report',src==='rcs')+'<div class="uaopt'+(src==='custom'?' sel':'')+'" data-safmropt="custom" data-safmri="'+i+'">Custom…</div></div>';
+  const _lkSA=optLock('units.'+i+'.safmr_custom');
+  const menu='<div class="uamenu">'+srcOptRow('data-safmropt="hud" data-safmri="'+i+'"',(hud!==''&&hud!=null)?('$'+fmtMoney(hud)):'','HUD API',src==='hud',src==='hud'?_lkSA:'')+srcOptRow('data-safmropt="rcs" data-safmri="'+i+'"',(rcs!==''&&rcs!=null)?('$'+fmtMoney(rcs)):'','RCS report',src==='rcs',src==='rcs'?_lkSA:'')+'<div class="uaopt'+(src==='custom'?' sel':'')+'" data-safmropt="custom" data-safmri="'+i+'">Custom…'+(src==='custom'?_lkSA:'')+'</div></div>';
   return '<div class="rbox uacell" data-box="'+boxKeySA+'" style="background:'+c[1]+';border-left-color:'+c[0]+'"><div class="uadrop"><div class="uatrigger" tabindex="0"><span class="ualab">'+lab+'</span><span class="cvx">▾</span></div>'+menu+'</div></div>';}
 function safmrNote(i){const res=safmrResolvedOf(i),hud=numf(get('units.'+i+'.safmr_hud')),rcs=numf(get('units.'+i+'.safmr_rcs'));
   if(safmrUnresolved(i))return '<div class="ucnote warn">⚠ HUD '+money(hud)+' · RCS '+money(rcs)+' <span class="pick"><button class="urev sv" data-safmrok="'+i+'">approve '+money(res)+'</button></span></div>';
@@ -7734,7 +7754,8 @@ function ocafFactorCell(){const pub=get('ocaf.factor_pub'),fy=get('ocaf.factor_f
     :(pub?('<span class="ualab">'+esc(pub)+'%<span class="srctag long" style="margin-left:6px">· FY'+esc(fy)+' Federal Register</span></span>'):('<span class="ualab" style="color:#8791a5">— pull or enter the factor</span>'));
   let state,c;if(src==='custom'){const _st=srcCellState('ocaf.factor_custom');c=provColors(_st==='overridden'?'overridden':(_st==='database'?'database':'new'),'ocaf.factor_src');}else{state=pub?srcOf('ocaf.factor_pub'):'new';const _cs=srcCellState('ocaf.factor_custom');if(_cs==='overridden')state='overridden';else if(_cs==='database'&&state==='new')state='database';c=provColors(state,'ocaf.factor_src');}
   const boxKey=(src==='custom')?'ocaf.factor_custom':'ocaf.factor_src';
-  const menu='<div class="uamenu">'+srcOptRow('data-ocfopt="fr"',pub?esc(pub+'% · FY'+fy):'','Federal Register',src==='fr')+'<div class="uaopt'+(src==='custom'?' sel':'')+'" data-ocfopt="custom">Custom…</div></div>';
+  const _lkOC=optLock('ocaf.factor_custom');
+  const menu='<div class="uamenu">'+srcOptRow('data-ocfopt="fr"',pub?esc(pub+'% · FY'+fy):'','Federal Register',src==='fr',src==='fr'?_lkOC:'')+'<div class="uaopt'+(src==='custom'?' sel':'')+'" data-ocfopt="custom">Custom…'+(src==='custom'?_lkOC:'')+'</div></div>';
   /* Not gated on src==='custom'. That guard is the one the effective date
      carried: it showed the pair only for a value typed by hand, so the state
      that ALWAYS has something to save — a factor just pulled from the Federal
@@ -8709,6 +8730,22 @@ function wireBody(){
   document.querySelectorAll('[data-dirid]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();const fk=o.getAttribute('data-dirfor');const P=DIR_PICK[fk];const ct=dirList(P.kind).find(x=>x.id===o.getAttribute('data-dirid'));_pendingSnap=snapPend(P.keys);if(ct)P.apply(ct);_pending=P.keys.slice();_refocusSel='[data-box="'+fk+'"] .pocname-in';renderBody();}));
   document.querySelectorAll('[data-deffopt]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();_pendingSnap=snapPend(['rent_schedule.date_eff_custom','rent_schedule.date_eff_source']);srcSetSource('rent_schedule.date_eff_custom',o.getAttribute('data-deffopt'));_pending=['rent_schedule.date_eff_source'];_refocusSel='[data-box="rent_schedule.date_eff_source"] .uatrigger';renderBody();scheduleHudRefresh();scheduleFactorRefresh();}));
   document.querySelectorAll('[data-ocfopt]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();_pendingSnap=snapPend(['ocaf.factor_custom','ocaf.factor_src']);srcSetSource('ocaf.factor_custom',o.getAttribute('data-ocfopt'));_pending=['ocaf.factor_src'];_refocusSel='[data-box="ocaf.factor_src"] .uatrigger';renderBody();}));
+  /* The source lock's RELEASE (increment 2). Clears the explicit source so the
+     hierarchy governs again and unpins — this is what un-sticks a cell locked to
+     Custom. Saved IMMEDIATELY and OUTSIDE the pending/save-revert flow (Matt's
+     rule): no snapPend, no _pending; the change is persisted here and the
+     snapshot re-taken, so the footer never shows it as an unsaved change and a
+     second click can never be a no-op. stopPropagation keeps the option under it
+     from re-selecting. */
+  document.querySelectorAll('[data-lock]').forEach(o=>{const rel=async e=>{e.stopPropagation();e.preventDefault();
+    const cusKey=o.getAttribute('data-lock');const sp=srcSpec(cusKey);if(!sp)return;
+    form=store.editForm(form,sp.srcKey,'');if(form[sp.srcKey]){form[sp.srcKey].pinned=false;form[sp.srcKey].origin=null;}
+    const ks=coupledKeys(sp.cusKey);
+    try{form=await store.saveFields(form,ks);}catch(err){saveFailed(err);return;}
+    await refreshSnap();snapForm(ks);clearUndoChain();_pending=null;_pendingSnap=null;
+    renderBody();setStatus('Released — a fill or pull can update this cell again.');};
+    o.addEventListener('click',rel);
+    o.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')rel(e);});});
   const _rsw=el('rateSwitch');
   if(_rsw)_rsw.querySelectorAll('.rs-opt').forEach(b=>b.onclick=()=>{
     const v=b.getAttribute('data-rt');if(v===(get('ocaf.rate_type')||'Fixed rate'))return;

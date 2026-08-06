@@ -445,6 +445,11 @@ button.gdoc{justify-content:space-between}
 .utsrc{align-self:center;margin-left:2px}
 .uaopt.srcopt:has(+.uaopt:not(.srcopt)){position:relative;margin-bottom:9px}
 .uaopt.srcopt:has(+.uaopt:not(.srcopt))::after{content:'';position:absolute;left:0;right:0;bottom:-5px;border-bottom:1px solid #ccd4e2}
+/* The source lock rides the selected option inside the roomy dropdown menu. */
+.uaopt:has(.srclock){position:relative;padding-right:34px}
+.uaopt .srclock{position:absolute;right:9px;top:50%;transform:translateY(-50%);display:inline-flex;align-items:center;color:var(--muted-2);cursor:pointer;padding:3px;border-radius:5px}
+.uaopt .srclock:hover{background:rgba(20,40,80,.08);color:var(--navy)}
+.uaopt .srclock:focus-visible{outline:none;box-shadow:inset 0 0 0 2px var(--navy)}
 .uacustom{border:none;border-bottom:1px dashed var(--kraft-line);background:transparent;padding:6px 2px;font:inherit;outline:none} .urev{border:1px solid var(--kraft-line);background:var(--prov-over-fill);color:var(--prov-over);border-radius:5px;cursor:pointer;font-size:11px;padding:3px 6px;flex:0 0 auto}
 .uanote{font-size:11.5px;align-self:center;line-height:1.5} .uanote.warn{color:var(--prov-over)} .uanote.ok{color:var(--ok)}
 .lastcell{display:flex;align-items:center;gap:8px;justify-content:space-between} .trash{border:none;background:transparent;cursor:pointer;font-size:12px;font-weight:800;color:var(--danger);opacity:.6;flex:0 0 auto;line-height:1;padding:2px 4px} .trash:hover{opacity:1}
