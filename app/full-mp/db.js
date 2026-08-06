@@ -446,22 +446,6 @@ async function makeDb(adapter, opts) {
      instead of reporting a failure. */
   const PROGS_OF = c => String((c && c.programs) || '')
     .split(',').map(x => x.trim().toLowerCase()).filter(Boolean);
-  /* A package can be sent in more than one pass: the utility-allowance documents
-     in March, the rent documents in June, out of the one record that holds both
-     (assertPackageFree). One stamp for the whole package meant the June run
-     erased the fact that March ever happened.
-
-     Each document keeps its own stamp. `docs` stays the full list of everything
-     generated so far and `at` the most recent run, so anything still reading the
-     old shape reads something true rather than something stale.
-     API PARITY with db.supabase.js. */
-  const mergeGenerated = (prev, docs, at) => {
-    const list = (docs || []).map(String);
-    const stamps = Object.assign({}, (prev && prev.stamps) || {});
-    const all = (((prev && prev.docs) || []).map(String)).slice();
-    list.forEach(d => { stamps[d] = at; if (all.indexOf(d) < 0) all.push(d); });
-    return { at: at, docs: all, stamps: stamps };
-  };
   const assertPackageFree = (pid, effIn, progs, skipCid) => {
     const want = (progs || []).map(x => String(x).trim().toLowerCase()).filter(Boolean);
     if (want.indexOf('rcs') >= 0 && want.indexOf('ocaf') >= 0) {
@@ -694,7 +678,7 @@ async function makeDb(adapter, opts) {
     setCycleRs(cid, doc) { const c = D.cycles[cid]; if (!c) return Promise.resolve(); c.rs_doc = doc || {}; c.updated_at = now(); return persist(); },
     getCycleRcs(cid) { const c = D.cycles[cid]; return (c && c.rcs_doc) || {}; },
     setCycleRcs(cid, doc) { const c = D.cycles[cid]; if (!c) return Promise.resolve(); c.rcs_doc = doc || {}; c.updated_at = now(); return persist(); },
-    setCycleGenerated(cid, docs) { const c = D.cycles[cid]; if (!c) return Promise.resolve(); const at = now(); c.generated = mergeGenerated(c.generated, docs, at); c.updated_at = at; return persist(); },
+    setCycleGenerated(cid, docs) { const c = D.cycles[cid]; if (!c) return Promise.resolve(); c.generated = { at: now(), docs: docs || [] }; c.updated_at = now(); return persist(); },
     clearAll() { D = freshDb(); seedGates(); return persist(); },
     /* ---- the HAP tracker + who is using the app (parity with db.supabase.js) */
     hapRows: () => (D.meta.hap || []).slice(),
