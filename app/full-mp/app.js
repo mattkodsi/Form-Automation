@@ -3970,16 +3970,16 @@ function wireBody(){
      from re-selecting. */
   document.querySelectorAll('[data-lock]').forEach(o=>{const rel=async e=>{e.stopPropagation();e.preventDefault();
     const cusKey=o.getAttribute('data-lock');const sp=srcSpec(cusKey);
-    if(sp){                                       // Engine A: releasing clears the explicit source pointer
-      form=store.editForm(form,sp.srcKey,'');if(form[sp.srcKey]){form[sp.srcKey].pinned=false;form[sp.srcKey].origin=null;}
-      const ks=coupledKeys(sp.cusKey);
-      try{form=await store.saveFields(form,ks);}catch(err){saveFailed(err);return;}
-      await refreshSnap();snapForm(ks);clearUndoChain();_pending=null;_pendingSnap=null;
-    }else{                                        // Engine B: unpin ONLY. The lock is metadata — persist the
-      if(form[cusKey])form[cusKey].pinned=false;  // pin bit, NEVER commit the value or move the cell's save-state.
-      try{form=await store.savePin(form,cusKey,false);}catch(err){saveFailed(err);return;}
-    }
-    renderBody();setStatus('Released — a fill or pull can update this cell again.');};
+    /* Releasing ONLY unpins — it NEVER changes the cell's source or value. The old
+       source-pointer release CLEARED the pointer, which snapped the cell back to the
+       hierarchy default (Executed RS) on the click; unlock now leaves everything as
+       it is, and the cell rejoins the hierarchy the NEXT time a fill/pull runs. The
+       pin bit persists alone via savePin — the value's save-state is untouched (lock
+       persistence and value save-state are two separate measures). */
+    const pinKey=sp?sp.srcKey:cusKey;   // a source-pointer cell pins its pointer; a plain cell pins its own key
+    if(form[pinKey])form[pinKey].pinned=false;
+    try{form=await store.savePin(form,pinKey,false);}catch(err){saveFailed(err);return;}
+    renderBody();setStatus('Released — the cell keeps its value; a fill or pull can update it again.');};
     o.addEventListener('click',rel);
     o.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')rel(e);});});
   const _rsw=el('rateSwitch');
