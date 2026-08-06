@@ -1,0 +1,41 @@
+name: Deploy to GitHub Pages
+
+# Replaces GitHub's auto-generated (legacy) pages-build-deployment workflow, whose
+# deploy step began hanging (10-min timeout) once GitHub force-migrated runner
+# actions from Node 20 to Node 24 (2026-08-06). This pins current, Node-24-native
+# action versions so the publish step runs to completion. The custom domain is
+# carried by the repo-root CNAME file (uploaded with the artifact), so no domain
+# reconfiguration is needed.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+      - name: Upload the site (repo root — index.html is the app)
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: "."
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
