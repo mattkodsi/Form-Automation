@@ -534,7 +534,7 @@ function lockedLine(text,why){
 function lockedField(cell,label,text){
   return '<div class="field"><div class="flabel">'+label+'</div>'
     +'<div class="fbox locked" data-box="'+esc(cell)+'" title="'+esc(RA_LOCK_WHY[cell]||'')+'">'
-    +'<span class="lockv">'+esc(text)+'</span>'+LOCKMK+'</div></div>';}
+    +'<span class="lockv">'+esc(text)+'</span><span class="lockmkw" title="'+esc(RA_LOCK_WHY[cell]||'Set from the renewal tracker; not editable here.')+'">'+LOCKMK+'</span></div></div>';}
 /* Rule 16 belongs to the row builder, not to its callers — see rule 17. The UA
    and SAFMR menus formatted at their own call sites and so looked right, which
    is exactly how every other source row was missed: srcPick printed whatever
@@ -606,10 +606,18 @@ const SRCGROUP={
  'appr.addr':()=>{const s=rcsVal('appr.addr_street'),c=rcsVal('appr.addr_city'),t=rcsVal('appr.addr_state'),z=rcsVal('appr.addr_zip');
    return [{tag:'RCS report',apply:(s||c||t||z)?{'appr.addr_street':s||'','appr.addr_city':c||'','appr.addr_state':t||'','appr.addr_zip':z||''}:null}];},
 };
-function srcGroupPick(box){const rows=SRCGROUP[box]().map((r,ix)=> r.apply
-  ?'<div class="uaopt srcopt" data-srcgrp="'+box+'" data-srcgix="'+ix+'">'+esc(r.apply[Object.keys(r.apply)[0]])+'\u2026<span class="uasub">'+esc(r.tag)+'</span></div>'
-  :'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">'+esc(r.tag)+' \u00b7 not available</span></div>').join('');
-  return '<div class="uadrop pocpick"><div class="uatrigger" tabindex="0" title="Pull from a source"><span class="cvx">&#9662;</span></div><div class="uamenu">'+rows+'</div></div>';}
+const GROUP_KEYS={'property.addr':['property.addr_street','property.addr_city','property.addr_state','property.addr_zip'],'appr.addr':['appr.addr_street','appr.addr_city','appr.addr_state','appr.addr_zip']};
+function srcGroupPick(box){
+  const keys=GROUP_KEYS[box]||[];const rep=keys[0];const repc=rep?form[rep]:null;
+  const org=repc&&repc.origin;const pinned=!!(repc&&repc.pinned);
+  const lock=(sel)=>(sel&&pinned)?('<span class="srclock" data-lock="'+esc(box)+'" role="button" tabindex="0" aria-label="Release lock" title="Locked to your choice. Click to release so a fill or pull can update this address.">'+LOCK_SVG+'</span>'):'';
+  const rows=SRCGROUP[box]().map((r,ix)=>{const oc=TAG_ORIGIN[r.tag];const sel=!!oc&&org===oc;
+    return r.apply
+    ?'<div class="uaopt srcopt'+(sel?' sel':'')+'" data-srcpick="'+esc(box)+'" data-srcopt="grp:'+ix+'">'+esc(r.apply[Object.keys(r.apply)[0]])+'\u2026<span class="uasub">'+esc(r.tag)+'</span>'+lock(sel)+'</div>'
+    :'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">'+esc(r.tag)+' \u00b7 not available</span></div>';}).join('');
+  const custom='<div class="uaopt'+((org==='typed')?' sel':'')+'" data-srcpick="'+esc(box)+'" data-srcopt="custom">Custom\u2026'+lock(org==='typed')+'</div>';
+  return '<div class="uadrop pocpick"><div class="uatrigger" tabindex="0" title="Pull from a source"><span class="cvx">&#9662;</span></div><div class="uamenu">'+rows+custom+'</div></div>';
+}
 /* Dim source rows atop the existing contact-picker menus (spec \u00a73 notes). */
 /* tag names the source; val fetches it. It was a bare tag string, rendered
    unconditionally as "not available" — so the signatory's name sat dim while
@@ -4027,10 +4035,13 @@ function wireBody(){
         renderBody();return;}
       const dr=DIR_SRCROW[key];const v=dr?dr.val():null;if(v!=null&&v!==''){_pendingSnap=snapPend([key]);form=store.editForm(form,key,String(v));if(form[key]){form[key].origin=TAG_ORIGIN[dr.tag]||'typed';form[key].pinned=true;}}
       _pending=[key];_refocusSel='[data-box="'+key+'"] .pocname-in';renderBody();return;}
+    if(typeof GROUP_KEYS!=='undefined'&&GROUP_KEYS[key]){const gk=GROUP_KEYS[key];
+      if(src==='custom'){_pendingSnap=snapPend(gk);gk.forEach(k=>{if(form[k]){form[k].origin='typed';form[k].pinned=true;}});_pending=gk.slice();_refocusSel='[data-box="'+key+'"] input';renderBody();return;}
+      const gr=SRCGROUP[key]()[+src.slice(4)];if(gr&&gr.apply){const ak=Object.keys(gr.apply);_pendingSnap=snapPend(gk);ak.forEach(k=>{form=store.editForm(form,k,gr.apply[k]);if(form[k]){form[k].origin=TAG_ORIGIN[gr.tag]||'typed';form[k].pinned=true;}});_pending=ak.slice();_refocusSel='[data-box="'+key+'"] input';renderBody();setStatus('Address pulled from '+gr.tag+'.');}return;}
     const sp=(typeof srcSpecAny==='function')?srcSpecAny(key):null;
-    if(src==='custom'){                                   // reveal the field to type your own
-      if(sp){_pendingSnap=snapPend(coupledKeys(sp.cusKey));srcSetSource(sp.cusKey,'custom');_pending=[sp.srcKey];_refocusSel='[data-k="'+sp.cusKey+'"]';}
-      else{_refocusSel='[data-k="'+key+'"]';}
+    if(src==='custom'){                                   // reveal the field to type your own — and pin it now, even when empty
+      if(sp){_pendingSnap=snapPend(coupledKeys(sp.cusKey));srcSetSource(sp.cusKey,'custom');if(form[sp.srcKey])form[sp.srcKey].pinned=true;_pending=[sp.srcKey];_refocusSel='[data-k="'+sp.cusKey+'"]';}
+      else{_pendingSnap=snapPend([key]);if(form[key]){form[key].origin='typed';form[key].pinned=true;}_pending=[key];_refocusSel='[data-k="'+key+'"]';}
       renderBody();return;}
     if(sp){                                               // Engine A: a resolver pointer
       _pendingSnap=snapPend(coupledKeys(sp.cusKey));srcSetSource(sp.cusKey,src);if(form[sp.srcKey])form[sp.srcKey].pinned=true;
@@ -4076,10 +4087,14 @@ function wireBody(){
        it is, and the cell rejoins the hierarchy the NEXT time a fill/pull runs. The
        pin bit persists alone via savePin — the value's save-state is untouched (lock
        persistence and value save-state are two separate measures). */
+    const _reopen=(bk)=>{if(!bk)return;const _nb=document.querySelector('[data-box="'+bk+'"]');const _dd=_nb&&(_nb.querySelector('.uadrop:not(.cs)')||_nb.querySelector('.uadrop'));if(_dd){_dd.classList.add('open');const _tr=_dd.querySelector('.uatrigger');if(_tr)_tr.focus({preventScroll:true});}};
+    if(typeof GROUP_KEYS!=='undefined'&&GROUP_KEYS[cusKey]){for(const k of GROUP_KEYS[cusKey]){if(form[k])form[k].pinned=false;try{form=await store.savePin(form,k,false);}catch(err){saveFailed(err);return;}}
+      renderBody();_reopen(cusKey);setStatus('Released — the address keeps its value; a fill or pull can update it again.');return;}
+    const _boxEl=o.closest('[data-box]');const _bk=_boxEl?_boxEl.getAttribute('data-box'):null;
     const pinKey=sp?sp.srcKey:cusKey;   // a source-pointer cell pins its pointer; a plain cell pins its own key
     if(form[pinKey])form[pinKey].pinned=false;
     try{form=await store.savePin(form,pinKey,false);}catch(err){saveFailed(err);return;}
-    renderBody();setStatus('Released — the cell keeps its value; a fill or pull can update it again.');};
+    renderBody();_reopen(_bk);setStatus('Released — the cell keeps its value; a fill or pull can update it again.');};
     o.addEventListener('click',rel);
     o.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')rel(e);});});
   const _rsw=el('rateSwitch');
