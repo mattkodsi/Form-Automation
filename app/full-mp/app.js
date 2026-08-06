@@ -759,6 +759,41 @@ function provColors(state,key){const c=CLR[state]||CLR.new;
   return c;}
 function cellColors(k){return (srcOf(k)!=='overridden'&&offFile(k))?provColors('overridden',k):provColors(srcOf(k),k);}
 function boxColor(k){return cellColors(k);}
+/* ── THE ONE COLOR RULE (provenance unification, 2026-08-05) ──────────────────
+   ONE deterministic answer to "is this saved?" for every cell, replacing the
+   tangle of cellColors / uaCellColors / safmrCellColors / groupColors + the
+   source/markCycle/fromParse stack. `cellState` returns a CLR state name:
+     blue  (database)   value equals what is on file (a saved-empty cell too)
+     amber (overridden) on file holds something and this differs from it
+     teal  (this-cycle) unsaved, and a document/API/contact put it here
+     grey  (new)        unsaved, and it was typed or is blank
+   "Auto-filled" is read from `origin` (which source produced the value), NOT the
+   markCycle flag the four engines set inconsistently — THAT is the fix for the
+   same-click-greens-one-cell-greys-another bug. A source-family cell (srcSpec)
+   judges saved/changed by its RESOLVED figure via `srcCellState` (FR-4), then
+   falls to its chosen source for teal/grey: a non-Custom source with a value is
+   auto-filled, Custom is typed. Nothing calls this yet — it is wired in family
+   by family, each behind the full green gate (the two-painter sweep, the exact
+   rgb assertions, the coupledKeys arrays are the tripwires). */
+const AUTO_ORIGINS={rs:1,rcs:1,hud:1,fr:1,ra:1,contact:1,carried:1};
+function cellState(key){
+  const sp=(typeof srcSpec==='function')?srcSpec(key):null;
+  if(sp){
+    const st=srcCellState(key);                 // '', 'new', 'database', 'overridden'
+    if(st==='overridden')return 'overridden';
+    if(st==='database')return 'database';
+    const src=get(sp.srcKey)||sp.fallback;
+    const val=String(sp.resolve(src)||(src==='custom'?get(sp.cusKey):'')||'');
+    return (src!=='custom'&&val!=='')?'this-cycle':'new';   // a document source that isn't on file yet
+  }
+  const c=form[key]; if(!c)return 'new';
+  const v=String(c.value==null?'':c.value);
+  const db=c.db_value;
+  if(db!=null&&String(db)!=='')return v===String(db)?'database':'overridden';
+  if(db!=null&&String(db)===''&&v==='')return 'database';   // saved empty stays blue (FR cell-model)
+  return (v!==''&&c.origin&&AUTO_ORIGINS[c.origin])?'this-cycle':'new';
+}
+function cellColor(key){return provColors(cellState(key),key);}
 function moneyBox(k,noIcons){const c=boxColor(k);const _rows=moneySrcRows(k);
   const pick=_rows.length?srcPick(k,_rows):'';
   return `<div class="rbox money" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><span class="cur">$</span><input type="text" data-money="1" data-k="${k}" value="${esc(fmtMoney(get(k)))}">${srcTags(k)}${pick}${noIcons?'':ovIcons(k)}</div>`;}
@@ -6415,7 +6450,7 @@ function contactDialog(c){c=c||{};
    ReferenceError at load and took three suites down with zero checks run. An
    arrow defers the lookup to the call, which only ever happens in the browser
    suite, which has the whole bundle. */
-const __API={LABEL_HINTS,rsParseUnitType,rsNum,ocrMapPages:(p)=>ocrMapPages(p),ocrWhy:()=>ocrWhy(),fmtPhone,fmtPhoneInput,fmtDate,sMoney,sPct,sK,analysis,uaResolvedOf,safmrResolvedOf,uaConflict,uaUnresolved,renderMenu,renderLauncher,openMenu,openForm,openLauncher,ringSvg,niceDate,isDirty,overrideCount,isStateKey,attnFlags,pbUtil,clearUncheckedWriteins,srcOf:(k)=>srcOf(k),__openForm:(pid)=>{activePid=pid;return openForm('RCS');},__openCycleForm:(pid,cid)=>{activePid=pid;return openCycleForm(cid);},__renderBody:()=>renderBody(),__docMissing:(id)=>docMissing(id).map(x=>x.label),__docWarns:(id)=>docWarns(id).map(x=>x.label),__edit:(k,v)=>{form=store.editForm(form,k,v);},getVal:(k)=>get(k),modeOf:(kk)=>modeOf(kk),fieldKeys:(k)=>fieldKeys(k),keysCanSave:(ks)=>keysCanSave(ks),keysCanRevert:(ks)=>keysCanRevert(ks),keysNewDirty:(ks)=>keysNewDirty(ks),__revert:(k)=>store.revertForm(form,k),coupledKeys:(k)=>coupledKeys(k),__firstPid:()=>{const ps=mpdb?mpdb.listProperties():[];return ps.length?ps[0].id:null;},__listProps:()=>(mpdb?mpdb.listProperties():[]),__cycles:()=>(mpdb?mpdb.listCycles(activePid):[]),packageScore:()=>packageScore(),packageDocs:()=>packageDocs(),scoreCtx:()=>scoreCtx(),__pkgCard:()=>pkgCard(),__boxes:(i)=>({ua:uaBox(i),safmr:safmrBox(i)}),__saveField:async(k)=>{form=await store.saveField(form,k);},__set:(f,u)=>{form=f;UNITS=u;},__cell:(k)=>form[k],
+const __API={LABEL_HINTS,rsParseUnitType,rsNum,ocrMapPages:(p)=>ocrMapPages(p),ocrWhy:()=>ocrWhy(),fmtPhone,fmtPhoneInput,fmtDate,sMoney,sPct,sK,analysis,uaResolvedOf,safmrResolvedOf,uaConflict,uaUnresolved,renderMenu,renderLauncher,openMenu,openForm,openLauncher,ringSvg,niceDate,isDirty,overrideCount,isStateKey,attnFlags,pbUtil,clearUncheckedWriteins,srcOf:(k)=>srcOf(k),__openForm:(pid)=>{activePid=pid;return openForm('RCS');},__openCycleForm:(pid,cid)=>{activePid=pid;return openCycleForm(cid);},__renderBody:()=>renderBody(),__docMissing:(id)=>docMissing(id).map(x=>x.label),__docWarns:(id)=>docWarns(id).map(x=>x.label),__edit:(k,v)=>{form=store.editForm(form,k,v);},getVal:(k)=>get(k),modeOf:(kk)=>modeOf(kk),fieldKeys:(k)=>fieldKeys(k),keysCanSave:(ks)=>keysCanSave(ks),keysCanRevert:(ks)=>keysCanRevert(ks),keysNewDirty:(ks)=>keysNewDirty(ks),__revert:(k)=>store.revertForm(form,k),coupledKeys:(k)=>coupledKeys(k),__firstPid:()=>{const ps=mpdb?mpdb.listProperties():[];return ps.length?ps[0].id:null;},__listProps:()=>(mpdb?mpdb.listProperties():[]),__cycles:()=>(mpdb?mpdb.listCycles(activePid):[]),packageScore:()=>packageScore(),packageDocs:()=>packageDocs(),scoreCtx:()=>scoreCtx(),__pkgCard:()=>pkgCard(),__boxes:(i)=>({ua:uaBox(i),safmr:safmrBox(i)}),__saveField:async(k)=>{form=await store.saveField(form,k);},__set:(f,u)=>{form=f;UNITS=u;},__cell:(k)=>form[k],__cellState:(k)=>cellState(k),__cellColor:(k)=>cellColor(k),
   /* The whole record, and the snapshot isDirty() measures against. The round-trip
      sweep needs a key-by-key diff (FORM-RULES "Before you deliver" 6): isDirty()
      compares VALUES ONLY, so a hidden side-effect key strands the form dirty with
