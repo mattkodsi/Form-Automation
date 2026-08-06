@@ -10151,12 +10151,22 @@ function cyclesHtml(hasAction,hap){
   const start='<button class="'+(hasAction?'addrow':'btn p')+'" id="bNewCycle">'
     +(hasAction?'+ ':'')+(cs.length?'Start another package':'Start a package')+'</button>';
   if(!cs.length)return '<div class="lh-note" style="margin-top:0;margin-bottom:12px">No packages yet.</div>'+start;
-  /* Current is the dominant package's effective DATE, not the dominant package
-     alone. An RCS and a UA effective the same day are one renewal done in two
-     packages, and filing the UA under "Earlier" would date it a year wrong. */
-  const dom=cs.find(c=>c.dominant)||cs[0];
-  const eff=c=>String((c&&c.effective_date)||'');
-  const cur=eff(dom)?cs.filter(c=>eff(c)===eff(dom)):[dom];
+  /* Current is the package the SCHEDULE points at — not the newest one that
+     happens to exist. A property that filed 2025 and has not started 2026 showed
+     its 2025 package as Current, complete and full-ringed, while its own home
+     card correctly said "Start 2026 OCAF, 0%": one property, two screens, two
+     answers to one question. Both now read the tracker's target.
+
+     A date holds one package (assertPackageFree), so gathering every package
+     sharing the current date is no longer a thing that can return two.
+
+     When the target has no package yet, NOTHING here is current — the NEXT
+     RENEWAL strip that nextUpHtml puts above this list is what says what to
+     start, and it renders exactly when the target is unstarted. Off-tracker
+     properties have no target at all, so they keep the newest package. */
+  const _tracked=!!(hap&&hap.action&&hap.action.kind!=='none');
+  const _tgt=_due?cs.find(c=>c.id===_due):null;
+  const cur=_tgt?[_tgt]:(_tracked?[]:[cs.find(c=>c.dominant)||cs[0]]);
   const past=cs.filter(c=>cur.indexOf(c)<0);
   /* Draft/Generated says only whether a button has been pressed. What a reader
      wants is how far along the package is and what is holding it — which score.js
@@ -10171,7 +10181,7 @@ function cyclesHtml(hasAction,hap){
   const card=c=>'<div class="cycard'+(c.dominant?' dom':'')+'" data-cyopen="'+c.id+'">'
     +'<div class="cy-h">'+progChips(c.programs)
     +'<b class="cy-t">'+esc(c.effective_date?('Effective '+fmtDateLong(c.effective_date)):(c.label||'No date'))+'</b>'
-    +(c.dominant?'<span class="cy-dom">Current</span>':'')
+    +'<span class="cy-dom">Current</span>'
     +stChip(c,scOf(c))+'</div>'
     +((_due&&c.id===_due&&hap)?dueLine(hap):'')
     +capOf(scOf(c))
