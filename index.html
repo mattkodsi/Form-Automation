@@ -5709,14 +5709,17 @@ function boxColor(k){return cellColors(k);}
    rgb assertions, the coupledKeys arrays are the tripwires). */
 const AUTO_ORIGINS={rs:1,rcs:1,hud:1,fr:1,ra:1,contact:1,carried:1};
 function cellState(key){
-  const sp=(typeof srcSpec==='function')?srcSpec(key):null;
-  if(sp){
-    const st=srcCellState(key);                 // '', 'new', 'database', 'overridden'
-    if(st==='overridden')return 'overridden';
-    if(st==='database')return 'database';
+  const sp=(typeof srcSpecAny==='function')?srcSpecAny(key):null;
+  if(sp){                                     // a source-family cell: reproduce the family painter (FR-4)
     const src=get(sp.srcKey)||sp.fallback;
-    const val=String(sp.resolve(src)||(src==='custom'?get(sp.cusKey):'')||'');
-    return (src!=='custom'&&val!=='')?'this-cycle':'new';   // a document source that isn't on file yet
+    const _cs=srcCellState(sp.cusKey);         // judged on the RESOLVED figure vs on file
+    if(src==='custom')return _cs==='overridden'?'overridden':(_cs==='database'?'database':'new');
+    const fk=sp.figKey||(()=>null);
+    const anyVal=(sp.names||[]).some(n=>numf(get(fk(n)))>0)||numf(get(sp.cusKey))>0;
+    let state=anyVal?srcOf(fk(src)):'new';     // the chosen figure's own saved-state
+    if(_cs==='overridden')state='overridden';else if(_cs==='database'&&state==='new')state='database';
+    if((sp.unresolved&&sp.unresolved())||srcOf(sp.srcKey)==='overridden')state='overridden';   // conflict-amber + switched-source
+    return state;
   }
   const c=form[key]; if(!c)return 'new';
   const v=String(c.value==null?'':c.value);
@@ -8661,16 +8664,22 @@ function wireArrowNav(){document.querySelectorAll('.fbox:not(.uacell),.rbox:not(
 function srcSpec(k){
   let m=k.match(/^units\.(\d+)\.ua_custom$/);
   if(m)return{srcKey:'units.'+m[1]+'.ua_source',cusKey:k,fallback:defUaSrc(m[1]),names:['exec','rcs'],
-    resolve:ss=>cleanNum(get('units.'+m[1]+'.ua_'+(ss==='rcs'?'rcs':'exec')))};
+    resolve:ss=>cleanNum(get('units.'+m[1]+'.ua_'+(ss==='rcs'?'rcs':'exec'))),figKey:ss=>'units.'+m[1]+'.ua_'+(ss==='rcs'?'rcs':'exec'),unresolved:()=>uaUnresolved(+m[1])};
   m=k.match(/^units\.(\d+)\.safmr_custom$/);
   if(m)return{srcKey:'units.'+m[1]+'.safmr_source',cusKey:k,fallback:defSafmrSrc(m[1]),names:['hud','rcs'],
-    resolve:ss=>cleanNum(get('units.'+m[1]+'.safmr_'+(ss==='rcs'?'rcs':'hud')))};
+    resolve:ss=>cleanNum(get('units.'+m[1]+'.safmr_'+(ss==='rcs'?'rcs':'hud'))),figKey:ss=>'units.'+m[1]+'.safmr_'+(ss==='rcs'?'rcs':'hud'),unresolved:()=>safmrUnresolved(+m[1])};
   if(k==='rent_schedule.date_eff_custom')return{srcKey:'rent_schedule.date_eff_source',cusKey:k,
-    fallback:'rs',names:['rs'],resolve:()=>fmtDate(get('rent_schedule.date_eff_rs'))};
+    fallback:'rs',names:['rs'],resolve:()=>fmtDate(get('rent_schedule.date_eff_rs')),figKey:()=>'rent_schedule.date_eff_rs'};
   if(k==='ocaf.factor_custom')return{srcKey:'ocaf.factor_src',cusKey:k,names:['fr'],
-    fallback:(get('ocaf.factor_pub')?'fr':'custom'),resolve:ss=>ss==='fr'?String(get('ocaf.factor_pub')||''):''};
+    fallback:(get('ocaf.factor_pub')?'fr':'custom'),resolve:ss=>ss==='fr'?String(get('ocaf.factor_pub')||''):'',figKey:()=>'ocaf.factor_pub'};
   return null;
 }
+/* srcSpecAny: srcSpec keys on the *_custom key; the renderer/painter key a source
+   cell on its *_source data-box (FR-9). Accept either — map a source key back to
+   its custom partner — so cellColor(sourceKey) can reach the family logic. */
+function srcSpecAny(k){let sp=srcSpec(k);if(sp)return sp;
+  const cus=k.replace(/\.ua_source$/,'.ua_custom').replace(/\.safmr_source$/,'.safmr_custom').replace(/\.date_eff_source$/,'.date_eff_custom').replace(/\.factor_src$/,'.factor_custom');
+  return cus!==k?srcSpec(cus):null;}
 /* Writes a source-backed cell. Returns false if k isn't one, so callers fall
    through to a plain edit. Matching what is on file restores the on-file source
    rather than staying pinned to custom. */
@@ -11454,7 +11463,7 @@ function contactDialog(c){c=c||{};
    ReferenceError at load and took three suites down with zero checks run. An
    arrow defers the lookup to the call, which only ever happens in the browser
    suite, which has the whole bundle. */
-const __API={LABEL_HINTS,rsParseUnitType,rsNum,ocrMapPages:(p)=>ocrMapPages(p),ocrWhy:()=>ocrWhy(),fmtPhone,fmtPhoneInput,fmtDate,sMoney,sPct,sK,analysis,uaResolvedOf,safmrResolvedOf,uaConflict,uaUnresolved,renderMenu,renderLauncher,openMenu,openForm,openLauncher,ringSvg,niceDate,isDirty,overrideCount,isStateKey,attnFlags,pbUtil,clearUncheckedWriteins,srcOf:(k)=>srcOf(k),__openForm:(pid)=>{activePid=pid;return openForm('RCS');},__openCycleForm:(pid,cid)=>{activePid=pid;return openCycleForm(cid);},__renderBody:()=>renderBody(),__docMissing:(id)=>docMissing(id).map(x=>x.label),__docWarns:(id)=>docWarns(id).map(x=>x.label),__edit:(k,v)=>{form=store.editForm(form,k,v);},getVal:(k)=>get(k),modeOf:(kk)=>modeOf(kk),fieldKeys:(k)=>fieldKeys(k),keysCanSave:(ks)=>keysCanSave(ks),keysCanRevert:(ks)=>keysCanRevert(ks),keysNewDirty:(ks)=>keysNewDirty(ks),__revert:(k)=>store.revertForm(form,k),coupledKeys:(k)=>coupledKeys(k),__firstPid:()=>{const ps=mpdb?mpdb.listProperties():[];return ps.length?ps[0].id:null;},__listProps:()=>(mpdb?mpdb.listProperties():[]),__cycles:()=>(mpdb?mpdb.listCycles(activePid):[]),__toggleProg:(p)=>toggleCycleProg(p),packageScore:()=>packageScore(),packageDocs:()=>packageDocs(),scoreCtx:()=>scoreCtx(),__pkgCard:()=>pkgCard(),__boxes:(i)=>({ua:uaBox(i),safmr:safmrBox(i)}),__saveField:async(k)=>{form=await store.saveField(form,k);},__set:(f,u)=>{form=f;UNITS=u;},__cell:(k)=>form[k],__cellState:(k)=>cellState(k),__cellColor:(k)=>cellColor(k),__sourcesFor:(k)=>sourcesFor(k),
+const __API={LABEL_HINTS,rsParseUnitType,rsNum,ocrMapPages:(p)=>ocrMapPages(p),ocrWhy:()=>ocrWhy(),fmtPhone,fmtPhoneInput,fmtDate,sMoney,sPct,sK,analysis,uaResolvedOf,safmrResolvedOf,uaConflict,uaUnresolved,renderMenu,renderLauncher,openMenu,openForm,openLauncher,ringSvg,niceDate,isDirty,overrideCount,isStateKey,attnFlags,pbUtil,clearUncheckedWriteins,srcOf:(k)=>srcOf(k),__openForm:(pid)=>{activePid=pid;return openForm('RCS');},__openCycleForm:(pid,cid)=>{activePid=pid;return openCycleForm(cid);},__renderBody:()=>renderBody(),__docMissing:(id)=>docMissing(id).map(x=>x.label),__docWarns:(id)=>docWarns(id).map(x=>x.label),__edit:(k,v)=>{form=store.editForm(form,k,v);},getVal:(k)=>get(k),modeOf:(kk)=>modeOf(kk),fieldKeys:(k)=>fieldKeys(k),keysCanSave:(ks)=>keysCanSave(ks),keysCanRevert:(ks)=>keysCanRevert(ks),keysNewDirty:(ks)=>keysNewDirty(ks),__revert:(k)=>store.revertForm(form,k),coupledKeys:(k)=>coupledKeys(k),__firstPid:()=>{const ps=mpdb?mpdb.listProperties():[];return ps.length?ps[0].id:null;},__listProps:()=>(mpdb?mpdb.listProperties():[]),__cycles:()=>(mpdb?mpdb.listCycles(activePid):[]),__toggleProg:(p)=>toggleCycleProg(p),packageScore:()=>packageScore(),packageDocs:()=>packageDocs(),scoreCtx:()=>scoreCtx(),__pkgCard:()=>pkgCard(),__boxes:(i)=>({ua:uaBox(i),safmr:safmrBox(i)}),__saveField:async(k)=>{form=await store.saveField(form,k);},__set:(f,u)=>{form=f;UNITS=u;},__cell:(k)=>form[k],__cellState:(k)=>cellState(k),__cellColor:(k)=>cellColor(k),__sourcesFor:(k)=>sourcesFor(k),__uaCellColors:(i)=>uaCellColors(i),__safmrCellColors:(i)=>safmrCellColors(i),
   /* The whole record, and the snapshot isDirty() measures against. The round-trip
      sweep needs a key-by-key diff (FORM-RULES "Before you deliver" 6): isDirty()
      compares VALUES ONLY, so a hidden side-effect key strands the form dirty with
