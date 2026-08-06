@@ -757,7 +757,7 @@ function renderPrincipals(){
 function provColors(state,key){const c=CLR[state]||CLR.new;
   if(state==='new'&&key&&form[key]&&form[key].value===''&&form[key].db_value==='')return [CLR.database[0],c[1],c[2]]; // saved, and STILL saved empty
   return c;}
-function cellColors(k){return (srcOf(k)!=='overridden'&&offFile(k))?provColors('overridden',k):provColors(srcOf(k),k);}
+function cellColors(k){return cellColor(k);}   // one colour rule — every plain-cell caller now routes through cellColor
 function boxColor(k){return cellColors(k);}
 /* ── THE ONE COLOR RULE (provenance unification, 2026-08-05) ──────────────────
    ONE deterministic answer to "is this saved?" for every cell, replacing the
@@ -776,6 +776,7 @@ function boxColor(k){return cellColors(k);}
    by family, each behind the full green gate (the two-painter sweep, the exact
    rgb assertions, the coupledKeys arrays are the tripwires). */
 const AUTO_ORIGINS={rs:1,rcs:1,hud:1,fr:1,ra:1,contact:1,carried:1};
+const TAG_ORIGIN={'Executed RS':'rs','RCS report':'rcs','Related Affordable':'ra','HUD API':'hud','Federal Register':'fr'};   // a per-cell pull's source tag -> the origin cellColor reads
 function cellState(key){
   const sp=(typeof srcSpecAny==='function')?srcSpecAny(key):null;
   if(sp){                                     // a source-family cell: reproduce the family painter (FR-4)
@@ -3689,22 +3690,7 @@ function paintCell(k){const gb=groupOf(k);if(gb)return paintGroup(gb);
      override gray — disagreeing with the badge sitting in the same cell, which has
      always read the pair. That is why the first keystroke came out orange (a full
      re-render, through uaBox) and the second gray (a repaint, through here). */
-  const _ck=coupledKeys(k);
-  // modeOf, not srcOf: a source key saved BLANK reads as "new" even once it has
-  // been changed, so testing for 'overridden' left an emptied override gray while
-  // the badge beside it correctly said otherwise.
-  /* And for a source-backed cell ask srcCellState, the same question the full
-     render asks. Without this the repaint still judged the cell by this key's own
-     history: typing your way back to the figure on file left the cell grey until
-     something else forced a full re-render. */
-  const _cs=srcCellState(k);
-  const _sr=_cs?(_cs==='overridden'?'overridden':(_cs==='database'?'database':'new'))
-    :(_ck.length>1&&modeOf(_ck)==='over')?'overridden'
-    :(offFile(k)&&s.source!=='overridden')?'overridden'
-    :((k==='rent_schedule.date_rents_effective'&&s.source==='database')?'this-cycle':s.source);
-  // The blue "on file" edge belongs to a cell saved empty and STILL empty. Without
-  // the value test it painted blue over whatever was being typed into it.
-  const c=CLR[_sr]||CLR.new;const _bl=(_sr==='new'&&s.db_value===''&&String(s.value==null?'':s.value)==='')?CLR.database[0]:c[0];const box=document.querySelector('[data-box="'+k+'"]');if(box){box.style.background=c[1];box.style.borderLeftColor=_bl;paintTag(k,box);}
+  const c=cellColor(k);const box=document.querySelector('[data-box="'+k+'"]');if(box){box.style.background=c[1];box.style.borderLeftColor=c[0];paintTag(k,box);}   // one colour rule, both painters (was the inline _sr computation)
   // A write-in's color lives on its tick, which is keyed data-wibox rather than
   // data-box, so this repaint used to skip it entirely and the cell only changed
   // color on a full re-render.
@@ -3917,7 +3903,7 @@ function wireBody(){
        on-file one it stays an override, but the note says PARSED changed rather
        than just changed. Without this the green state was unreachable from any
        per-cell pull, and the wording blamed the user for the schedule's figure. */
-    markCycle(k);if(/\bRS\b|RCS/.test(_tg)&&form[k])form[k].fromParse=true;
+    markCycle(k);if(/\bRS\b|RCS/.test(_tg)&&form[k])form[k].fromParse=true;if(form[k]&&TAG_ORIGIN[_tg])form[k].origin=TAG_ORIGIN[_tg];
     _pending=[k];_refocusSel='[data-k="'+k+'"]';renderBody();setStatus('Pulled from '+_tg+'.');}));
   document.querySelectorAll('[data-srcgrp]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();const box=o.getAttribute('data-srcgrp');const r=SRCGROUP[box]()[+o.getAttribute('data-srcgix')];if(!r||!r.apply)return;const keys=Object.keys(r.apply);_pendingSnap=snapPend(keys);keys.forEach(k=>{form=store.editForm(form,k,r.apply[k]);});_pending=keys.slice();_refocusSel='[data-box="'+box+'"] input';renderBody();setStatus('Address pulled from '+r.tag+'.');}));
   document.querySelectorAll('[data-pocra]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();const nm=raVal('poc.name');if(!nm)return;const saved=(mpdb?mpdb.listContacts():[]).find(x=>((x.name||'').trim().toLowerCase()===nm.trim().toLowerCase()));const c={name:nm,email:raVal('poc.email')||(saved&&saved.email)||'',phone:raVal('poc.phone')||(saved&&saved.phone)||''};_pendingSnap=snapPend(['poc.name','poc.email','poc.phone']);pocSelectContact(c);_pending=['poc.name','poc.email','poc.phone'];_refocusSel='[data-box="poc.name"] .pocname-in';renderBody();setStatus('POC pulled from Related Affordable.');}));
