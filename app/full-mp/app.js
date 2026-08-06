@@ -375,7 +375,14 @@ function dateEffCell(){
   const c=cellColor('rent_schedule.date_eff_source');   // one colour rule (unifies the effective-date cell with UA/SAFMR)
   const boxKey=(src==='custom')?'rent_schedule.date_eff_custom':'rent_schedule.date_eff_source';
   const _lkDE=optLock('rent_schedule.date_eff_custom');
-  const menu='<div class="uamenu">'+srcOptRow('data-deffopt="rs"',rs?esc(fmtDate(rs)):'','Executed RS + 1 yr',src==='rs',src==='rs'?_lkDE:'')+'<div class="uaopt'+(src==='custom'?' sel':'')+'" data-deffopt="custom">Custom…'+(src==='custom'?_lkDE:'')+'</div></div>';
+  /* Rule 1: Related Affordable is a source for this cell — it is the one that
+     LOCKS it — so the row is declared even though it can only ever render dim
+     here. Where RA has an answer the cell is not a dropdown at all (rule 20:
+     the menu it replaces must be gone, not disabled), so the reachable states
+     are "RA has nothing to say about this property", which is what the dim row
+     says, and "RA decided", which has no menu. Omitting it would leave the two
+     cells RA governs declaring their authority in only one of the two places. */
+  const menu='<div class="uamenu">'+srcOptRow('','','Related Affordable',false,'')+srcOptRow('data-deffopt="rs"',rs?esc(fmtDate(rs)):'','Executed RS + 1 yr',src==='rs',src==='rs'?_lkDE:'')+'<div class="uaopt'+(src==='custom'?' sel':'')+'" data-deffopt="custom">Custom…'+(src==='custom'?_lkDE:'')+'</div></div>';
   /* Silence would let 20/26/0301 sit in the box looking like a date that had
      been entered on purpose. Everything downstream now ignores it, so the cell
      is the only place left that can say why nothing happened. */
@@ -5836,14 +5843,27 @@ async function toggleCycleProg(p){
   if(has&&p===scheduledProg()){
     setStatus('The renewal schedule has this as '+(p==='ocaf'?'an OCAF':'an RCS')
       +' year, so it stays in the package. Change it in the schedule.');return;}
-  if(!has&&p==='rcs'&&cy.programs.indexOf('ocaf')>=0){setStatus('RCS and OCAF never share a package \u2014 remove the OCAF first.');return;}
-  if(!has&&p==='ocaf'&&cy.programs.indexOf('rcs')>=0){setStatus('RCS and OCAF never share a package \u2014 remove the RCS first.');return;}
-  const programs=has?cy.programs.filter(x=>x!==p):cy.programs.concat([p]);
+  /* Clicking the rent action this package is NOT set to swaps to it, in one
+     write. Two of them can never share a package, so "remove the other first"
+     was a rule with no single press that obeyed it: getting from OCAF to RCS
+     took a detour through UAF and four clicks, because emptying a package is
+     refused too. Where the renewal schedule has named the year the padlock
+     stands and the swap is refused — that fact is not this app's to overrule.
+     One write, never remove-then-add: assertPackageFree rejects the pair, so
+     the intermediate state has no moment to exist in. */
+  const _other=p==='rcs'?'ocaf':(p==='ocaf'?'rcs':'');
+  const _swap=!has&&_other&&cy.programs.indexOf(_other)>=0;
+  if(_swap&&scheduledProg()){
+    setStatus('The renewal schedule has this as '+(_other==='ocaf'?'an OCAF':'an RCS')
+      +' year, so it stays in the package. Change it in the schedule.');return;}
+  const programs=_swap?cy.programs.filter(x=>x!==_other).concat([p])
+    :(has?cy.programs.filter(x=>x!==p):cy.programs.concat([p]));
   if(!programs.length){setStatus('A package needs at least one program.');return;}
   try{await mpdb.setCyclePrograms(activeCid,programs);}catch(e){saveFailedModal(e);return;}
   activeProgram=programs.map(x=>PROG_NAMES[x]||x).join(' + ');
   renderFormHeader();renderBody();
-  setStatus((has?PROG_NAMES[p]+' removed from this package.':PROG_NAMES[p]+' added to this package.'));
+  setStatus(_swap?(PROG_NAMES[_other]+' swapped for '+PROG_NAMES[p]+' \u2014 this package is now '+PROG_NAMES[p]+'.')
+    :(has?PROG_NAMES[p]+' removed from this package.':PROG_NAMES[p]+' added to this package.'));
   if(!has&&p==='ocaf')pullOcafFactor({auto:true});
   if(!has&&p==='uaf')pullUafFactors({auto:true});
   if(!has&&p==='rcs')ensureHudSafmr({});
@@ -6734,6 +6754,7 @@ __rcsFill:(opts)=>rcsFillFromParsed(opts),/* The same door for the rent schedule
   __menuCounts:()=>Object.assign({},_menuCounts),
   __hapProps:()=>hapProperties(),
   __installRA:()=>installRaSource(),
+  __scheduledProg:()=>scheduledProg(),
   /* The rail's doors. railBar reads the LIVE box, so it is mid-flight during the
      travel animation — read it after the transition, not during. */
   railRows:()=>[].slice.call(document.querySelectorAll('#rail .railitem')).map(r=>({sec:+r.getAttribute('data-rsec'),label:(r.textContent||'').trim(),active:r.classList.contains('on'),tabIndex:r.tabIndex,ariaCurrent:r.getAttribute('aria-current'),top:r.offsetTop,height:r.offsetHeight})),

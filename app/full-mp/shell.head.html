@@ -1175,7 +1175,12 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
 
 .mtopright{color:var(--navy-pale)}.mtopright:hover{color:var(--surface)}
 .subtle{color:var(--muted-4);font-weight:400;font-size:10px;text-transform:none;letter-spacing:0}
-.reseff{max-width:240px;margin-bottom:16px}
+.reseff{max-width:312px;margin-bottom:16px}   /* 240 clipped the source tag to
+   "· Executed RS + ..." by 4px, and every assertion here passed over it: the string
+   was right and only the pixels were wrong. The cell sits alone on a row with the
+   rest of the card empty beside it, so the width was never scarce — it was capped.
+   312, not 264, because the binding case is the cell holding its save/revert pair:
+   .ovic takes 42px out of the same box, and 264 fits only the pristine state. */
 .cycard{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:9px;text-align:left;cursor:pointer}
 .cycard:hover{border-color:var(--line-4);box-shadow:0 2px 8px rgba(20,40,80,.08)}
 .cycard.dom{border-color:var(--prov-db);box-shadow:0 1px 6px rgba(37,99,235,.12)}
