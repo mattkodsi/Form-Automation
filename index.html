@@ -5809,13 +5809,7 @@ function unitCountCell(i){const k='units.'+i+'.num_units';const c=cellColors(k);
 /* The study's reading lives in the cell's dropdown now; a difference is not a
    thing to be resolved before the row can be saved. */
 function typeNote(i){return '';}
-function _typeNoteUnused(i){if(!typeConflict(i))return '';const br=get('units.'+i+'.br'),ba=get('units.'+i+'.ba'),brR=get('units.'+i+'.br_rcs')||br,baR=get('units.'+i+'.ba_rcs')||ba;
-  if(typeUnresolved(i))return '<div class="ucnote warn">⚠ RS '+br+'/'+ba+' · RCS '+brR+'/'+baR+' <span class="pick"><button class="urev" data-typ="rs" data-ci="'+i+'">keep RS</button><button class="urev sv" data-typ="rcs" data-ci="'+i+'">use RCS</button></span></div>';
-  return '<div class="ucnote ok">✓ RS · '+br+'/'+ba+'</div>';}
 function numNote(i){return '';}
-function _numNoteUnused(i){if(!numConflict(i))return '';const n=get('units.'+i+'.num_units'),nR=get('units.'+i+'.num_rcs');
-  if(numUnresolved(i))return '<div class="ucnote warn">⚠ RS '+n+' · RCS '+nR+' <span class="pick"><button class="urev" data-num="rs" data-ci="'+i+'">keep RS</button><button class="urev sv" data-num="rcs" data-ci="'+i+'">use RCS</button></span></div>';
-  return '<div class="ucnote ok">✓ RS · '+n+'</div>';}
 function safmrBox(i){const src=get('units.'+i+'.safmr_source')||defSafmrSrc(i),hud=get('units.'+i+'.safmr_hud'),rcs=get('units.'+i+'.safmr_rcs'),custom=get('units.'+i+'.safmr_custom');
   const hasAny=numf(hud)>0||numf(rcs)>0||numf(custom)>0;
   const lab=src==='rcs'?('$<input class="uac-in srcedit" data-srcedit="safmr" data-si="'+i+'" data-money="1" value="'+esc(fmtMoney(rcs))+'"><span class="srctag">· RCS</span>'):(src==='custom'?('$<input class="uac-in" data-money="1" data-k="units.'+i+'.safmr_custom" value="'+esc(fmtMoney(custom))+'" placeholder="0">'):('$<input class="uac-in srcedit" data-srcedit="safmr" data-si="'+i+'" data-money="1" value="'+esc(fmtMoney(hud))+'"><span class="srctag">· HUD</span>'));
@@ -6098,19 +6092,6 @@ function srcTags(k){
 /* The whole fact, offered as one answer — the twin of srcGroupPick on an
    address. The sub-cells keep their own Executed RS rows so a type can still be
    mixed: the schedule right about the bathroom, wrong about the bedroom. */
-function utGroupPick(i){
-  const t=rsUnit(i,'type');const on=typeFromRs(i);
-  const row=t!=null
-    ?'<div class="uaopt srcopt'+(on?' sel':'')+'" data-utgrp="'+i+'">'+esc(t)+'<span class="uasub">Executed RS</span></div>'
-    :'<div class="uaopt srcopt srcdim">—<span class="uasub">Executed RS · not available</span></div>';
-  return '<div class="uadrop pocpick utgrp">'+(on?'<span class="srctag rstag">RS</span>':'')
-    +'<div class="uatrigger" tabindex="0" title="Pull the whole unit type from a source"><span class="cvx">&#9662;</span></div>'
-    +'<div class="uamenu">'+row+'</div></div>';}
-function typeFromRs(i){
-  const same=k=>{const v=get(k),r=rsBrBa(k);const hv=v!==''&&v!=null,hr=r!=null&&r!=='';
-    return hv===hr&&(!hv||String(v)===String(r));};
-  if(rsUnit(i,'type')==null)return false;                       // no schedule row to claim it
-  return ['br','ba','label'].every(p=>same('units.'+i+'.'+p));}
 function fuelChip(k,three){const v=get(k);const has=v!==''&&v!=null;const c=cellColors(k);const cls=three?'fuel3':'fuel';return '<span tabindex="0" class="'+cls+(has?'':' empty')+'" data-fuel'+(three?'3':'')+'="'+k+'" style="color:'+c[0]+';border-color:'+c[0]+';background:'+c[1]+'">'+(has?esc(v):'-')+'</span>';}
 function cbx(k,label){const on=get(k)==='1';return `<label class="cb"><input type="checkbox" data-cb="${k}" ${on?'checked':''}><span class="box" style="${boxStyle(k)}">${on?'✓':''}</span><span class="cbt">${esc(label)}</span>${ovIcons(k)}</label>`;}
 function pbUtil(i,label){const on=get('partb.utilities.'+i)==='1';return `<div class="cb utrow"><label class="cbmain"><input type="checkbox" data-cb="partb.utilities.${i}" ${on?'checked':''}><span class="box" style="${boxStyle('partb.utilities.'+i)}">${on?'✓':''}</span><span class="cbt ut">${label}</span></label>${fuelChip('partb.fuel.'+i,false)}${ovIcons(['partb.utilities.'+i,'partb.fuel.'+i])}</div>`;}
@@ -6195,8 +6176,6 @@ function rsSigInto(outp,partH){
   outp.scalars['sig.name']=sig.name;outp.scalars['sig.title']=sig.title;outp.scalars['sig.principal']=sig.principal;}
 function rsPrin(i,f){try{const p=_rsUpload&&_rsUpload.parsed&&_rsUpload.parsed.principals;const r=p&&p[i];const v=r&&r[f];return (v==null||v==='')?null:String(v);}catch(e){return null;}}
 function rsUnit(i,f){try{const u=_rsUpload&&_rsUpload.parsed&&_rsUpload.parsed.units;const r=u&&u[i];const v=r&&r[f];return (v==null||v===''||v===0)?null:String(v);}catch(e){return null;}}
-function rsUnitBr(i){const t=rsUnit(i,'type');if(t==null)return null;const bb=rsParseUnitType(t);return bb.br||null;}
-function rsUnitLabel(i){const t=rsUnit(i,'type');if(t==null)return null;return rsParseUnitType(t).label||null;}
 function rsFamRow(fam,i){try{const arr=_rsUpload&&_rsUpload.parsed&&_rsUpload.parsed[fam];return arr&&arr[i]||null;}catch(e){return null;}}
 function rsFamVal(fam,i,f){const r=rsFamRow(fam,i);const v=r&&r[f];return (v==null||v===''||v===0)?null:String(v);}
 function rsBrBa(k){let m=String(k||'').match(/^units\.(\d+)\.(br|ba|label)$/);
@@ -7308,8 +7287,6 @@ function rsRecordHolds(outp,totalRaw){
   return outp.units.length>0&&(tot===''||Math.abs(sum-tot)<=Math.max(2,all.length));}
 /* One field's text, by the same accessor rsReadFields uses — so parseRsPdf can
    ask the schedule for its own printed total without reading it a second way. */
-function rsFieldText(pdfForm,n){
-  try{const v=pdfForm.getTextField(String(n)).getText();return v==null?'':String(v).trim();}catch(e){return '';}}
 /* Part I's HAP contract number IS the property's Section 8 number, and the
    template carries NO field for it — the contract administrator writes it on the
    line under the printed label. So it is found by that label instead of by a box:
@@ -9576,8 +9553,6 @@ function bandOf(p){
   return {view:(d<0?'past':(d<=MENU_WINDOW?'now':'later')),rank:0,
           key:'m'+iso[0]+iso[1],label:MONTHS[(+iso[1])-1]+' '+iso[0],behind:d<0};
 }
-function _menuToday(){try{return (mpdb&&mpdb.today)?mpdb.today():new Date().toISOString().slice(0,10);}
-  catch(e){return new Date().toISOString().slice(0,10);}}
 /* Each figure is a button. The number you press is the number of rows you get
    — the invariant the whole strip rests on, and the one the suite asserts. */
 function figuresHtml(counts,view){
