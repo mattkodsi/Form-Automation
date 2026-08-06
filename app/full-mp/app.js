@@ -2926,7 +2926,21 @@ function renderSources(){
 function sectionKeys(n){if(n===10)return ['ocaf.g','ocaf.rate_type','ocaf.ds_annual','ocaf.ds_t12','ocaf.ds_f12','ocaf.factor_pub','ocaf.factor_custom','ocaf.factor_src'];
   if(n===11)return ['uaf.f_oil','uaf.f_gas','uaf.f_electric','uaf.f_water'].concat(UNITS.flatMap(i=>UAF_UTILS.map(u=>'units.'+i+'.uac_'+u[0])));
   if(n===12)return PRINCIPALS.flatMap(i=>['principals.'+i+'.name','principals.'+i+'.title']);
-  if(n===6)return UNITS.flatMap(i=>['units.'+i+'.br','units.'+i+'.ba','units.'+i+'.num_units','units.'+i+'.current','units.'+i+'.proposed','units.'+i+'.ua_source','units.'+i+'.safmr_source']);const fs=FIELD_SECTIONS.find(s=>s.n===n);return fs?fs.fields.flatMap(f=>f.type==='sigtitle'?['sig.title','sig.principal']:f.type==='pair'?f.items.map(x=>x.k):f.type==='addr'?ADDR:(f.type==='caaddr'?CA_ADDR:(f.type==='appraddr'?APPR_ADDR:(f.type==='mgmtaddr'?MGMT_ADDR:(f.prefix?[f.prefix,f.k]:[f.k]))))):[];}
+  /* Part B and the checklist are built from CHECKBOXES, so neither appears in
+     FIELD_SECTIONS and sectionKeys used to return [] for both — whereupon
+     sectionEmpty's `if(!ks.length)return false` declared them NOT empty, and
+     they read "confirmed" on a package where nothing had been touched. That is
+     the last of the green ticks over an empty form: two sections that were
+     never confirmed, only unexaminable. Write-in text and its own tick are both
+     content; the fuel keys are not, because they carry a default nobody chose. */
+  if(n===7)return Object.entries(PARTB).flatMap(([g,items])=>items.map((it,i)=>'partb.'+g+'.'+i))
+    .concat(['e1','e2','e3','e4','e5','u1','s1','s2','s3','s4','s5','s6']
+      .flatMap(id=>['partb.writein.'+id,'partb.writein.'+id+'.on']));
+  if(n===8)return CHECKLIST_FLAT.map((it,i)=>'check.'+i);
+  /* `label` belongs here. It is the unit type's own name — plainly content in
+     this section — and leaving it out meant a reader who had typed one could
+     still be told the section was not started. */
+  if(n===6)return UNITS.flatMap(i=>['units.'+i+'.br','units.'+i+'.ba','units.'+i+'.label','units.'+i+'.num_units','units.'+i+'.current','units.'+i+'.proposed','units.'+i+'.ua_source','units.'+i+'.safmr_source']);const fs=FIELD_SECTIONS.find(s=>s.n===n);return fs?fs.fields.flatMap(f=>f.type==='sigtitle'?['sig.title','sig.principal']:f.type==='pair'?f.items.map(x=>x.k):f.type==='addr'?ADDR:(f.type==='caaddr'?CA_ADDR:(f.type==='appraddr'?APPR_ADDR:(f.type==='mgmtaddr'?MGMT_ADDR:(f.prefix?[f.prefix,f.k]:[f.k]))))):[];}
 /* A section nobody has filled in is not "confirmed". The status only ever asked
    whether something was overridden or in conflict, so a brand-new property showed
    ten green "confirmed" chips over an entirely empty form — on a compliance tool
@@ -2971,15 +2985,25 @@ function sectionStatus(n,_si){
      a branch somebody forgot — which is how sections 10 and 11 drifted. */
   const _ok=()=>((_si.cav[n]||[]).length?'cav':'ok');
   if(n===1)return _rcsUpload?_ok():((hasProg('rcs')||hasProg('ocaf'))?'warn':_ok());
-  /* Asked BEFORE emptiness, which is the whole point. The blockers sit in a
-     section whether or not anybody has typed in it; sectionEmpty only decided
-     whether the rail was allowed to look at them. So one character turned the
-     ring amber and undoing it turned the ring back, while the section's actual
-     state never moved — the mark tracked whether you had touched it. Section 1
-     has always worked this way (it is excluded from the empty check below and
-     says "required and absent" from the start); every section does now. */
-  if((_si.miss[n]||[]).length)return 'warn';
+  /* NOT STARTED first, and it means exactly one thing: this section holds
+     nothing. Matt, 2026-08-06 — "NOT STARTED when genuinely every cell
+     untouched ... then NEEDS REVIEW all the way until all requirements are
+     met." Asking the score first painted a brand-new package amber the whole
+     way down its rail, which tells a reader they have eight problems when the
+     truth is that they have not begun.
+
+     Still a pure function of the section's CONTENT, not of whether anybody
+     typed: delete what you entered and the section goes back. That is the
+     distinction the earlier ordering was reaching for and overshot.
+
+     And the 9-of-10 bug does not return. THAT one came from a final
+     `return 'ok'` with no scoring in it at all, so a section carrying data
+     inherited from last year's package read confirmed while not one document
+     could be built. Inherited data makes a section non-empty, so it falls
+     straight through to the score below — which is the whole point of a
+     second-year cycle never reading "not started". */
   if(sectionEmpty(n))return 'empty';
+  if((_si.miss[n]||[]).length)return 'warn';
   if(n===10){if(sectionKeys(10).some(k=>srcOf(k)==='overridden'))return'warn';const C=ocafCalc();return(C.F>0&&C.R>0)?_ok():'warn';}
   if(n===11){if(sectionKeys(11).some(k=>srcOf(k)==='overridden'))return'warn';const A=uafAnalysis();if(A.mismatch.length)return'warn';const hasF=UAF_UTILS.some(u=>numf(get('uaf.f_'+u[0]))>0);return(hasF&&A.any)?_ok():'warn';}const over=sectionKeys(n).some(k=>srcOf(k)==='overridden');if(n===6&&(UNITS.some(uaUnresolved)||UNITS.some(i=>srcOf('units.'+i+'.ua_source')==='overridden')||(hasProg('rcs')&&(UNITS.some(safmrUnresolved)||UNITS.some(i=>srcOf('units.'+i+'.safmr_source')==='overridden')||UNITS.some(overCeiling)))||rsCapacity().msgs.length>0))return'warn';return over?'warn':_ok();}
 /* ONE place decides how a section's mark looks, because two decided before and
@@ -3373,7 +3397,12 @@ function attnFlags(){const f=[];const u=UNITS.filter(uaUnresolved).length;if(u)f
    counts only sections that really are; an untouched one gets a hollow ring and
    counts as neither confirmed nor a problem. */
 function renderRail(_si){_si=_si||sectionIssues();
-  const vis=visibleSections();const st={};vis.forEach(n=>st[n]=(n===7?'ok':sectionStatus(n,_si)));
+  /* No exception for Part B. It used to be pinned to 'ok' here because
+     sectionKeys(7) returned nothing and it could never read anything else — so
+     the pin was invisible. Now that Part B has real keys the pin would draw a
+     tick beside a card whose own header says "not started", which is the pill /
+     rail disagreement this file has already been burned by twice. */
+  const vis=visibleSections();const st={};vis.forEach(n=>st[n]=sectionStatus(n,_si));
   /* A dimmed section still counts as confirmed. It IS confirmed — every
      document it feeds can be written; what is left changes what one of them
      says. Counting it short would make the ring and this line disagree about a
@@ -6079,7 +6108,7 @@ async function combinePdfs(list,skipped){const {PDFDocument}=window.PDFLib;const
    are all that is left here: they bind the score to THIS form's reader. */
 function scoreCtx(){
   let lh=null;try{lh=mpdb&&mpdb.getLetterhead?mpdb.getLetterhead(activePid):null;}catch(e){}
-  return {programs:cycleProgs(),units:UNITS,checklistLen:CHECKLIST_FLAT.length,
+  return {programs:cycleProgs(),units:UNITS,principals:PRINCIPALS,checklistLen:CHECKLIST_FLAT.length,
     hasLetterhead:!!(lh&&lh.name),hasStudy:!!_rcsUpload,hasCaPkg:!!_rcsUpload,
     rateType:get('ocaf.rate_type'),uafDec:uafAnalysis().dec.length};}
 function docMissing(id){return window.RCSScore.docMissing(get,scoreCtx(),id);}

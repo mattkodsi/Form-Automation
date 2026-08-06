@@ -145,7 +145,13 @@ function docReqs(read,ctx,id){
   /* Resolved values and row conditions: not a plain lookup, so not a plain key. */
   if(id==='schedule'){
     add('units','at least one unit type with a count',6,counted);
-    add('rent_schedule.date_eff_custom','date the rents take effect',6,!!String(dateEffResolved(read)||'').trim());}
+    add('rent_schedule.date_eff_custom','date the rents take effect',6,!!String(dateEffResolved(read)||'').trim());
+    /* Part G of the HUD-92458 does not ask, it instructs: "List all Principals
+       Comprising Mortgagor Entity: provide name and title of each principal."
+       A schedule filed with that block empty is an incomplete federal form, so
+       this is a blocker and not a caveat. Matt, 2026-08-06. */
+    add('principals.0.name','at least one principal (Part G)',12,
+      (ctx.principals||[0]).some(i=>hasReal(read,'principals.'+i+'.name')));}
   if(id==='ocafws'||id==='exhibita'||id==='dsevid'){
     add('units','at least one unit type with a count',6,counted);
     if(counted)add('units.0.current','current contract rents',6,units.some(i=>numf(read('units.'+i+'.current'))>0));
@@ -185,6 +191,12 @@ function docCaveatReqs(read,ctx,id){
      know the number" but "has somebody said what goes in the box" — and N/A is
      an answer to that. */
   if(id==='schedule')add('property.fha','FHA number',2,String(read('property.fha')||'').trim()!=='');
+  /* The other half of that instruction — "name AND title of each principal".
+     A caveat rather than a blocker because the form still prints: the roster's
+     right-hand column simply comes out blank beside a name. */
+  if(id==='schedule')add('principals.0.title','a title for every principal named',12,
+    (ctx.principals||[0]).filter(i=>hasReal(read,'principals.'+i+'.name'))
+      .every(i=>hasReal(read,'principals.'+i+'.title')));
   if(id==='cover'||id==='owner'){dim('ca.position','CA contact position',4);dim('ca.addr_street','CA street address',4);}
   if(id==='cover')add('poc.phone','a phone or email for the point of contact',3,hasReal(read,'poc.phone')||hasReal(read,'poc.email'));
   /* Certification 8 promises the appraiser's contact details "below", then

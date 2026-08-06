@@ -384,13 +384,19 @@ function makeSupabaseDb(client) {
   function scoreOfCycle(pid, cid) {
     const p = D.props[pid]; if (!p || !SCORE) return { pct: 0, gate: 'profile', docsReady: 0, docsTotal: 0 };
     const domId = cid; const cy = domId ? D.cycles[domId] : null;
-    const u = new Set(); const scan = o => { for (const k in o) { const m = k.match(/^units\.(\d+)\./); if (m) u.add(+m[1]); } };
+    const u = new Set(), pr = new Set();
+    /* Principals ride along with the unit scan: Part G of the HUD-92458 requires
+       them, so the score has to see them from the menu and the launcher too, not
+       only with a form open. */
+    const scan = o => { for (const k in o) { let m = k.match(/^units\.(\d+)\./); if (m) u.add(+m[1]);
+      m = k.match(/^principals\.(\d+)\./); if (m) pr.add(+m[1]); } };
     scan(bucketsOf(pid)); if (cy) scan(cy.cells);
     const progs = cy ? (Array.isArray(cy.programs) ? cy.programs : String(cy.programs || '').split(',').filter(Boolean)) : [];
     const held = !!(cy && cy.rcs_doc && Object.keys(cy.rcs_doc).length);
     const read = scoreRead(pid, domId);
     return SCORE.packageScore(read, {
-      programs: progs.length ? progs : ['rcs'], units: [...u].sort((a, b) => a - b), checklistLen: 17,
+      programs: progs.length ? progs : ['rcs'], units: [...u].sort((a, b) => a - b),
+      principals: [...pr].sort((a, b) => a - b), checklistLen: 17,
       hasLetterhead: dv(p, 'assets.letterhead_name') !== '', hasStudy: held, hasCaPkg: held,
       rateType: read('ocaf.rate_type'),
     });
