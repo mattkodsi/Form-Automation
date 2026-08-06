@@ -877,7 +877,7 @@ function uaBox(i){const src=get('units.'+i+'.ua_source')||defUaSrc(i),exec=get('
    "clears" it, leaving a custom source with no value and a blank cell. The source
    key is the one that knows an on-file value was displaced, so the badge carries
    both: coupledKeys already saves and reverts them together. */
-  const c=uaCellColors(i);const boxKeyUA=src==='custom'?('units.'+i+'.ua_custom'):('units.'+i+'.ua_source');
+  const c=cellColor('units.'+i+'.ua_source');const boxKeyUA=src==='custom'?('units.'+i+'.ua_custom'):('units.'+i+'.ua_source');   // one colour rule (was uaCellColors)
   const _lkUA=optLock('units.'+i+'.ua_custom');
   const menu='<div class="uamenu">'+srcOptRow('data-uaopt="exec" data-uai="'+i+'"',(exec!==''&&exec!=null)?('$'+fmtMoney(exec)):'','Executed RS',src==='exec',src==='exec'?_lkUA:'')+srcOptRow('data-uaopt="rcs" data-uai="'+i+'"',(rcs!==''&&rcs!=null)?('$'+fmtMoney(rcs)):'','RCS report',src==='rcs',src==='rcs'?_lkUA:'')+'<div class="uaopt'+(src==='custom'?' sel':'')+'" data-uaopt="custom" data-uai="'+i+'">Custom…'+(src==='custom'?_lkUA:'')+'</div></div>';
   return '<div class="rbox uacell" data-box="'+boxKeyUA+'" style="background:'+c[1]+';border-left-color:'+c[0]+'"><div class="uadrop"><div class="uatrigger" tabindex="0"><span class="ualab">'+lab+'</span><span class="cvx">▾</span></div>'+menu+'</div></div>';}
@@ -915,7 +915,7 @@ function numNote(i){return '';}
 function safmrBox(i){const src=get('units.'+i+'.safmr_source')||defSafmrSrc(i),hud=get('units.'+i+'.safmr_hud'),rcs=get('units.'+i+'.safmr_rcs'),custom=get('units.'+i+'.safmr_custom');
   const hasAny=numf(hud)>0||numf(rcs)>0||numf(custom)>0;
   const lab=src==='rcs'?('$<input class="uac-in srcedit" data-srcedit="safmr" data-si="'+i+'" data-money="1" value="'+esc(fmtMoney(rcs))+'"><span class="srctag">· RCS</span>'):(src==='custom'?('$<input class="uac-in" data-money="1" data-k="units.'+i+'.safmr_custom" value="'+esc(fmtMoney(custom))+'" placeholder="0">'):('$<input class="uac-in srcedit" data-srcedit="safmr" data-si="'+i+'" data-money="1" value="'+esc(fmtMoney(hud))+'"><span class="srctag">· HUD</span>'));
-  const c=safmrCellColors(i);const boxKeySA=src==='custom'?('units.'+i+'.safmr_custom'):('units.'+i+'.safmr_source');
+  const c=cellColor('units.'+i+'.safmr_source');const boxKeySA=src==='custom'?('units.'+i+'.safmr_custom'):('units.'+i+'.safmr_source');   // one colour rule (was safmrCellColors)
   const _lkSA=optLock('units.'+i+'.safmr_custom');
   const menu='<div class="uamenu">'+srcOptRow('data-safmropt="hud" data-safmri="'+i+'"',(hud!==''&&hud!=null)?('$'+fmtMoney(hud)):'','HUD API',src==='hud',src==='hud'?_lkSA:'')+srcOptRow('data-safmropt="rcs" data-safmri="'+i+'"',(rcs!==''&&rcs!=null)?('$'+fmtMoney(rcs)):'','RCS report',src==='rcs',src==='rcs'?_lkSA:'')+'<div class="uaopt'+(src==='custom'?' sel':'')+'" data-safmropt="custom" data-safmri="'+i+'">Custom…'+(src==='custom'?_lkSA:'')+'</div></div>';
   return '<div class="rbox uacell" data-box="'+boxKeySA+'" style="background:'+c[1]+';border-left-color:'+c[0]+'"><div class="uadrop"><div class="uatrigger" tabindex="0"><span class="ualab">'+lab+'</span><span class="cvx">▾</span></div>'+menu+'</div></div>';}
@@ -3680,7 +3680,7 @@ function paintCell(k){const gb=groupOf(k);if(gb)return paintGroup(gb);
      the generic path also declined the rows whose source key the record does not
      hold yet (`if(!s)return` below), leaving them unrepaintable. */
   const _fam=/^units\.(\d+)\.(ua|safmr)_(source|custom)$/.exec(k);
-  if(_fam){const fc=_fam[2]==='ua'?uaCellColors(+_fam[1]):safmrCellColors(+_fam[1]);
+  if(_fam){const fc=cellColor('units.'+_fam[1]+'.'+_fam[2]+'_source');   // one colour rule, both painters (was ua/safmrCellColors)
     const fb=document.querySelector('[data-box="'+k+'"]');
     if(fb){fb.style.background=fc[1];fb.style.borderLeftColor=fc[0];}return;}
   if(k==='ca.name'||k==='ca.prefix')return paintCaName();const s=form[k];if(!s)return;
