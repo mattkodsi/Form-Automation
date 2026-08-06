@@ -351,7 +351,7 @@ async function makeDb(adapter, opts) {
   /* ---- cycles: one row = a complete frozen snapshot -----------------------
      Ported from db.supabase.js so this stand-in answers the same questions the
      real backend does. Kept deliberately line-for-line with that file: the
-     programs list is stored comma-JOINED here too, so cyRank/cyCompare read it
+     programs list is stored comma-JOINED here too, so cyCompare reads it
      identically and a cycle cannot rank differently depending on which layer
      the app happened to boot on.
 
@@ -402,13 +402,15 @@ async function makeDb(adapter, opts) {
     || /^cycle\./.test(k)
     || k === 'checklist.sign_date' || k === 'tenant.date_of_notice'
     || k === 'assets.letterhead_data';
-  /* cycle hierarchy: year first, then program completeness
-     (RCS+UAF > RCS > OCAF+UAF > OCAF > UAF), then full date, then newest */
-  const CY_RANK = { 'rcs,uaf': 5, 'rcs': 4, 'ocaf,uaf': 3, 'ocaf': 2, 'uaf': 1 };
-  const cyRank = c => CY_RANK[(c.programs || '').split(',').filter(Boolean).sort().join(',')] || 0;
+  /* cycle hierarchy: year first, then full date, then newest.
+     Programme completeness used to break the tie between the two — RCS+UAF over
+     RCS over OCAF+UAF and so on. That ranking existed to choose between two
+     packages sharing one effective date, and one date now holds exactly one
+     package (assertPackageFree), so the tie it settled cannot occur. Across two
+     DATES it was actively wrong: it let a September OCAF+UAF outrank a December
+     OCAF, which is the older package winning on the strength of its contents. */
   const cyYear = c => { const y = String(c.effective_date || '').slice(0, 4); return /^\d{4}$/.test(y) ? y : ((String(c.label || '').match(/\d{4}/) || [''])[0]); };
   const cyCompare = (a, b) => cyYear(b).localeCompare(cyYear(a))
-    || (cyRank(b) - cyRank(a))
     || String(b.effective_date || '').localeCompare(String(a.effective_date || ''))
     || String(b.created_at || '').localeCompare(String(a.created_at || ''));
   const cyclesOf = pid => Object.values(D.cycles || {}).filter(c => c.property_id === pid);
@@ -418,33 +420,63 @@ async function makeDb(adapter, opts) {
     return cs[0].id;
   }
   const cyISO = v => { v = String(v || '').trim(); if (/^\d{4}-\d{2}-\d{2}/.test(v)) return v.slice(0, 10); const m = v.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/); return m ? (m[3] + '-' + ('0' + m[1]).slice(-2) + '-' + ('0' + m[2]).slice(-2)) : ''; };
-  /* ---- one package per programme per effective date ----
-     API PARITY with db.supabase.js — same rule, same error code, same fields. The
-     rule is NOT "one package per year": Sample Property (90111) carries two startable
-     rows in one calendar year (OCAF 2026-09-01 and OCAF 2026-12-06), and the utility
-     allowance may be done alongside the rent action or on its own, so one date may
-     legitimately hold {rcs, uaf} as one package or {rcs} and {uaf} as two. Keying on
-     the PROGRAMME within the date allows both and rejects a programme twice.
+  /* ---- one package per effective date ----
+     API PARITY with db.supabase.js — same rule, same error codes, same fields.
 
-     Undated packages are not guarded: there is no key to be unique against. The
-     error carries the cid already holding the programme so the caller can open that
-     one instead of reporting a failure. */
+     A property files ONE package per effective date. RCS, OCAF and UAF are that
+     package's CONTENTS, not three kinds of package. The utility allowance rides
+     on the rent action's own date (CYCLES-OCAF-UAF-DESIGN.md:128 — a factor UAF
+     is deterministic, so it runs concurrently), which means doing the UA "first"
+     is a statement about when it is SENT, not about when it takes effect.
+     Generation records that per document; the record itself stays one.
+
+     This replaced one-package-per-PROGRAMME-per-date, under which a date could
+     hold {ocaf} and {uaf} as two rows — and the programme pill, which writes
+     through setCyclePrograms, could then put uaf on BOTH of them, because that
+     write was never guarded at all. The collision is gone because the second row
+     is.
+
+     Sample Property (90111) is untouched: its two 2026 OCAFs are two DATES
+     (09-01 and 12-06). The rule is per date, never per year.
+
+     Undated packages are not guarded — there is no key to be unique against.
+     Same-date pairs created before this rule are TOLERATED, not migrated: they
+     stay readable and openable, and only new writes are constrained. Every error
+     carries the cid already holding the date, so the caller opens that one
+     instead of reporting a failure. */
   const PROGS_OF = c => String((c && c.programs) || '')
     .split(',').map(x => x.trim().toLowerCase()).filter(Boolean);
-  const assertProgramsFree = (pid, effIn, progs, skipCid) => {
-    const eff = cyISO(effIn); if (!eff) return;
+  const assertPackageFree = (pid, effIn, progs, skipCid) => {
     const want = (progs || []).map(x => String(x).trim().toLowerCase()).filter(Boolean);
-    if (!want.length) return;
+    if (want.indexOf('rcs') >= 0 && want.indexOf('ocaf') >= 0) {
+      const e = new Error('A package sets its rents by a market study or by the published factor, never both.');
+      e.code = 'PROGRAM_CONFLICT'; throw e;
+    }
+    const eff = cyISO(effIn); if (!eff || !want.length) return;
     for (const cid in D.cycles) {
       if (cid === skipCid) continue;
       const c = D.cycles[cid];
       if (!c || c.property_id !== pid || cyISO(c.effective_date) !== eff) continue;
-      const clash = want.filter(x => PROGS_OF(c).indexOf(x) >= 0);
-      if (!clash.length) continue;
-      const e = new Error('A ' + clash.join(' + ').toUpperCase()
-        + ' package effective ' + eff + ' already exists for this property.');
-      e.code = 'DUP_PACKAGE_PROGRAM'; e.cid = cid; e.programs = clash; e.effective = eff;
-      throw e;
+      /* Creating: the date is taken, whatever that package happens to hold. */
+      if (skipCid === undefined) {
+        const e = new Error('This property already has a package effective ' + eff + '.');
+        e.code = 'DUP_PACKAGE_DATE'; e.cid = cid; e.effective = eff; throw e;
+      }
+      /* Changing an existing package's contents: the only way to reach here is a
+         legacy same-date twin. Refuse to hand it a programme the twin holds. */
+      const held = PROGS_OF(c);
+      const clash = want.filter(x => held.indexOf(x) >= 0);
+      if (clash.length) {
+        const e = new Error('A ' + clash.join(' + ').toUpperCase()
+          + ' package effective ' + eff + ' already exists for this property.');
+        e.code = 'DUP_PACKAGE_PROGRAM'; e.cid = cid; e.programs = clash; e.effective = eff;
+        throw e;
+      }
+      if ((want.indexOf('rcs') >= 0 && held.indexOf('ocaf') >= 0)
+        || (want.indexOf('ocaf') >= 0 && held.indexOf('rcs') >= 0)) {
+        const e = new Error('A package effective ' + eff + ' already sets this property’s rents the other way.');
+        e.code = 'PROGRAM_CONFLICT'; e.cid = cid; e.effective = eff; throw e;
+      }
     }
   };
   function cySyncEff(c) {
@@ -586,7 +618,7 @@ async function makeDb(adapter, opts) {
     createCycle(pid, opts) {
       const p = D.props[pid]; if (!p) throw new Error('no property ' + pid);
       const o = opts || {}; const cid = nid('cy'); const cells = {};
-      assertProgramsFree(pid, o.effective_date, o.programs || ['rcs']);
+      assertPackageFree(pid, o.effective_date, o.programs || ['rcs']);
       if (o.full) { const m = bucketsOf(pid); for (const k in m) { if (k === 'assets.letterhead_data') continue; cells[k] = { value: m[k].value, saved_at: m[k].saved_at || today(), origin: (m[k].origin || 'database'), pinned: !!m[k].pinned }; } }
       else {
         const domId = dominantCycleId(pid);
@@ -638,7 +670,7 @@ async function makeDb(adapter, opts) {
       c.updated_at = now();
       return persist();
     },
-    setCyclePrograms(cid, programs) { const c = D.cycles[cid]; if (!c) return Promise.resolve(); c.programs = (programs || []).join(','); c.updated_at = now(); return persist(); },
+    setCyclePrograms(cid, programs) { const c = D.cycles[cid]; if (!c) return Promise.resolve(); assertPackageFree(c.property_id, c.effective_date, programs, cid); c.programs = (programs || []).join(','); c.updated_at = now(); return persist(); },
     /* API parity with db.supabase.js's rs_doc surface — see CLAUDE.md: a
        stand-in that answers differently from the real backend makes every test
        that uses it a fiction. */

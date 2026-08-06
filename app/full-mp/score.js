@@ -225,15 +225,19 @@ function packageDocs(ctx){
        six. Scoring it as a caveat would let the ring promise a complete package
        with no study in it. */
     doc('rcs','RCS report','upload');
-    doc('schedule','Draft rent schedule','generate');
-    doc('notice','Tenant notice','generate');
-    return D;}
+    /* One schedule, not two. The early return that used to sit here existed to
+       stop the shared line below adding a second 'schedule' — but it took the
+       UAF branch with it, so an RCS + UAF package emitted only these six and the
+       score never counted the certification missing. Emit the schedule once,
+       here, and let the shared line below skip itself for RCS. */
+    doc('schedule','Draft rent schedule'+(has('uaf')?' (merged RCS + UAF)':''),'generate');
+    doc('notice','Tenant notice','generate');}
   if(has('ocaf')){
     doc('ocafws','OCAF worksheet (per HUD-9625)','generate');
     doc('exhibita','Revised Exhibit A','generate');
     if(/floating/i.test(ctx.rateType||''))doc('dsevid','Debt-service determination (T-12 / F-12)','generate');}
   if(has('uaf'))doc('uafcert','UAF certification / breakdown','generate');
-  doc('schedule','Revised rent schedule'+(has('ocaf')&&has('uaf')?' (merged OCAF + UAF)':''),'generate');
+  if(!has('rcs'))doc('schedule','Revised rent schedule'+(has('ocaf')&&has('uaf')?' (merged OCAF + UAF)':''),'generate');
   /* Offered only where there IS a decrease: with none there is nothing to serve.
      Listing them anyway would put a document in the package that the generate
      run correctly refuses to write, and hold the score under 70 forever. */

@@ -5378,10 +5378,10 @@ function newCycleDialog(pre){
     catch(e){
       /* A clash is not a failure. The rule is one package per programme per
          effective date, and the data layer hands back the cid of the one already
-         holding it — so the answer to "start an OCAF effective Oct 1" when that
+         holding that date — so the answer to "start an OCAF effective Oct 1" when that
          package exists is to OPEN it, the same courtesy a duplicate property name
          already gets. Reporting "save failed" would be a lie about what happened. */
-      if(e&&e.code==='DUP_PACKAGE_PROGRAM'&&e.cid){
+      if(e&&(e.code==='DUP_PACKAGE_PROGRAM'||e.code==='DUP_PACKAGE_DATE')&&e.cid){
         closeModal();renderLauncher();await openCycleForm(e.cid);
         setStatus('That package already exists \u2014 opened it.');
         return;
