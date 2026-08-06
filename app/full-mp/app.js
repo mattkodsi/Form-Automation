@@ -846,8 +846,7 @@ function sourceMenu(key){
   }).join('');
   return '<div class="uadrop pocpick"><div class="uatrigger" tabindex="0" title="Pull from a source"><span class="cvx">&#9662;</span></div><div class="uamenu">'+opts+'</div></div>';
 }
-function moneyBox(k,noIcons){const c=boxColor(k);const _rows=moneySrcRows(k);
-  const pick=_rows.length?srcPick(k,_rows):'';
+function moneyBox(k,noIcons){const c=boxColor(k);const pick=sourceMenu(k);   // the one dropdown component (was srcPick over moneySrcRows)
   return `<div class="rbox money" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><span class="cur">$</span><input type="text" data-money="1" data-k="${k}" value="${esc(fmtMoney(get(k)))}">${srcTags(k)}${pick}${noIcons?'':ovIcons(k)}</div>`;}
 function numBox(k,ph,noIcons){const c=boxColor(k);
   /* Counts are numbers and get separators like every other number (rule 16).
