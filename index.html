@@ -58,6 +58,10 @@ html{scrollbar-gutter:stable} body{margin:0;background:#e4e8f1;color:var(--ink);
 .hdr{background:var(--navy);color:var(--surface);padding:13px 26px;display:flex;justify-content:space-between;align-items:center}
 .hdr h1{margin:0;font-size:17px} .hdr .sub{font-size:11px;color:var(--muted-5);letter-spacing:.6px;text-transform:uppercase;margin-top:2px}
 .progs{display:flex;gap:7px} .prog{font-size:12px;font-weight:700;padding:5px 13px;border-radius:20px} .prog.on{background:var(--surface);color:var(--navy)} .prog.off{background:rgba(255,255,255,.12);color:var(--muted-5);cursor:default} .progs .prog[data-progpill]{cursor:pointer} .progs .prog.off[data-progpill]:hover{background:rgba(255,255,255,.22);color:#dbe5f2} .progs .prog.dis{opacity:.45;cursor:default}
+/* A programme that is IN the package and cannot be taken out is not dimmed: it
+   is the current state, not an unavailable option. It simply stops being a
+   button. The OFF pills beside it are the affordances. */
+.progs .prog.on.dis{opacity:1;cursor:default}
 #ccbar{position:fixed;top:0;left:0;right:0;z-index:50;background:var(--surface);border-bottom:1px solid #e0e6f0;box-shadow:0 2px 8px rgba(20,40,80,.06);padding:7px 26px;display:flex;align-items:center;gap:22px;transform:translateY(-102%);opacity:0;transition:transform .22s ease,opacity .18s ease}
 body.scrolled #ccbar{transform:translateY(0);opacity:1}
 #ccbar .bl{display:flex;align-items:center;gap:12px;flex:0 0 auto} #ccbar .minigauge{position:relative;width:150px;height:9px;background:var(--band-3);border-radius:3px} #ccbar .seg{position:absolute;top:0;height:100%} #ccbar .seg.dark{background:#2f7d57;border-radius:3px 0 0 3px} #ccbar .seg.light{background:#8fd2ab} #ccbar .oend{position:absolute;right:-1px;top:-2px;width:2px;height:13px;background:#f59e0b}
@@ -1720,6 +1724,12 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
 #viewForm .progs .prog.off[data-progpill]:hover{background:rgba(255,255,255,.14);
   color:#fff;opacity:1}
 #viewForm .progs .prog.dis{opacity:.35}
+/* ...unless it is IN the package. A programme the schedule fixed there cannot be
+   taken out, so the pill stops being a button — but it is the current state, not
+   an unavailable option, and dimming it said the opposite. */
+#viewForm .progs .prog.on.dis{opacity:1;cursor:default}
+#viewForm .progs .prog.lk{display:inline-flex;align-items:center;gap:6px;cursor:help}
+#viewForm .progs .prog.lk .lockmk{width:10px;height:10px;flex:0 0 auto;opacity:.55}
 
 /* ---- the command bar. Still ONE line and still 32px at every width:
    the rail's jump offset is a scroll-margin sized to it. Only its
@@ -10537,19 +10547,51 @@ function renderFormHeader(){
   if(wrap&&cy){
     const on=p=>cy.programs.indexOf(p)>=0;
     const EXCL='RCS and OCAF never share a package \u2014 remove the other first';
-    const pill=(p,dis,title)=>'<span class="prog '+(on(p)?'on':'off')+(dis?' dis':'')+'"'+(dis?'':' data-progpill="'+p+'"')+' title="'+title+'">'+PROG_NAMES[p]+'</span>';
-    const rcsDis=!on('rcs')&&on('ocaf'), ocafDis=!on('ocaf')&&on('rcs');
-    wrap.innerHTML=pill('rcs',rcsDis,rcsDis?EXCL:(on('rcs')?'Remove the RCS from this package':'Add an RCS to this package'))
-      +pill('ocaf',ocafDis,ocafDis?EXCL:(on('ocaf')?'Remove the OCAF from this package':'Add an OCAF to this package'))
+    /* A locked-IN programme wears the padlock, the same mark the dialog puts on
+       the rent action the schedule fixed. Without it a pill that cannot be
+       clicked looked exactly like the one beside it that can, and clicking it
+       did nothing at all — not even the explanation, since a locked pill carries
+       no handler. The mark is what makes the silence honest. */
+    const pill=(p,dis,title,lk)=>'<span class="prog '+(on(p)?'on':'off')+(dis?' dis':'')+(lk?' lk':'')+'"'+(dis?'':' data-progpill="'+p+'"')+' title="'+title+'">'+PROG_NAMES[p]+(lk?LOCKMK:'')+'</span>';
+    /* The scheduled rent action cannot come out, so it is not offered as
+       something to take out: a control that refuses is worse than a control that
+       was never there. Unticking it used to leave a {uaf} package under a button
+       still reading "Continue 2027 OCAF". */
+    const sched=scheduledProg();
+    const SCHED='The renewal schedule has this as '+(sched==='ocaf'?'an OCAF':'an RCS')+' year \u2014 change it in the schedule';
+    const rcsDis=(!on('rcs')&&on('ocaf'))||(sched==='rcs'&&on('rcs'));
+    const ocafDis=(!on('ocaf')&&on('rcs'))||(sched==='ocaf'&&on('ocaf'));
+    wrap.innerHTML=pill('rcs',rcsDis,(sched==='rcs'&&on('rcs'))?SCHED:(rcsDis?EXCL:(on('rcs')?'Remove the RCS from this package':'Add an RCS to this package')),sched==='rcs'&&on('rcs'))
+      +pill('ocaf',ocafDis,(sched==='ocaf'&&on('ocaf'))?SCHED:(ocafDis?EXCL:(on('ocaf')?'Remove the OCAF from this package':'Add an OCAF to this package')),sched==='ocaf'&&on('ocaf'))
       +pill('uaf',false,on('uaf')?'Remove the UAF from this package':'Add a UAF to this package')
       +'<span class="prog off dis" title="Coming soon">BBRA</span>';
     wrap.querySelectorAll('[data-progpill]').forEach(x=>x.onclick=()=>toggleCycleProg(x.getAttribute('data-progpill')));
   }
 }
+/* The rent action the SCHEDULE gave this package, if this package is the one the
+   schedule points at. The tracker owns which programme a year is
+   (2026-07-30-tracker-is-definitive-design.md), so that programme is not the
+   form's to take out: unticking it left a {uaf} package sitting under a button
+   still reading "Continue 2027 OCAF" — the app naming a programme the record no
+   longer contained. Returns '' for an off-schedule package or an off-tracker
+   property, where there is no such claim to honour. */
+function scheduledProg(){
+  if(!activeCid)return '';
+  const a=(hapForPid(activePid)||{}).action;
+  if(!a||a.cid!==activeCid)return '';
+  const pr=(a.programs&&a.programs[0])||'';
+  return (pr==='rcs'||pr==='ocaf')?pr:'';
+}
 async function toggleCycleProg(p){
   if(!activeCid)return;
   const cy=mpdb.listCycles(activePid).find(c=>c.id===activeCid);if(!cy)return;
   const has=cy.programs.indexOf(p)>=0;
+  /* Defensive: the pill for the scheduled rent action is not clickable (see
+     renderFormHeader), so this is the second lock on the same door rather than
+     the only one. */
+  if(has&&p===scheduledProg()){
+    setStatus('The renewal schedule has this as '+(p==='ocaf'?'an OCAF':'an RCS')
+      +' year, so it stays in the package. Change it in the schedule.');return;}
   if(!has&&p==='rcs'&&cy.programs.indexOf('ocaf')>=0){setStatus('RCS and OCAF never share a package \u2014 remove the OCAF first.');return;}
   if(!has&&p==='ocaf'&&cy.programs.indexOf('rcs')>=0){setStatus('RCS and OCAF never share a package \u2014 remove the RCS first.');return;}
   const programs=has?cy.programs.filter(x=>x!==p):cy.programs.concat([p]);
@@ -11369,7 +11411,7 @@ function contactDialog(c){c=c||{};
    ReferenceError at load and took three suites down with zero checks run. An
    arrow defers the lookup to the call, which only ever happens in the browser
    suite, which has the whole bundle. */
-const __API={LABEL_HINTS,rsParseUnitType,rsNum,ocrMapPages:(p)=>ocrMapPages(p),ocrWhy:()=>ocrWhy(),fmtPhone,fmtPhoneInput,fmtDate,sMoney,sPct,sK,analysis,uaResolvedOf,safmrResolvedOf,uaConflict,uaUnresolved,renderMenu,renderLauncher,openMenu,openForm,openLauncher,ringSvg,niceDate,isDirty,overrideCount,isStateKey,attnFlags,pbUtil,clearUncheckedWriteins,srcOf:(k)=>srcOf(k),__openForm:(pid)=>{activePid=pid;return openForm('RCS');},__openCycleForm:(pid,cid)=>{activePid=pid;return openCycleForm(cid);},__renderBody:()=>renderBody(),__docMissing:(id)=>docMissing(id).map(x=>x.label),__docWarns:(id)=>docWarns(id).map(x=>x.label),__edit:(k,v)=>{form=store.editForm(form,k,v);},getVal:(k)=>get(k),modeOf:(kk)=>modeOf(kk),fieldKeys:(k)=>fieldKeys(k),keysCanSave:(ks)=>keysCanSave(ks),keysCanRevert:(ks)=>keysCanRevert(ks),keysNewDirty:(ks)=>keysNewDirty(ks),__revert:(k)=>store.revertForm(form,k),coupledKeys:(k)=>coupledKeys(k),__firstPid:()=>{const ps=mpdb?mpdb.listProperties():[];return ps.length?ps[0].id:null;},__listProps:()=>(mpdb?mpdb.listProperties():[]),__cycles:()=>(mpdb?mpdb.listCycles(activePid):[]),packageScore:()=>packageScore(),packageDocs:()=>packageDocs(),scoreCtx:()=>scoreCtx(),__pkgCard:()=>pkgCard(),__boxes:(i)=>({ua:uaBox(i),safmr:safmrBox(i)}),__saveField:async(k)=>{form=await store.saveField(form,k);},__set:(f,u)=>{form=f;UNITS=u;},__cell:(k)=>form[k],__cellState:(k)=>cellState(k),__cellColor:(k)=>cellColor(k),
+const __API={LABEL_HINTS,rsParseUnitType,rsNum,ocrMapPages:(p)=>ocrMapPages(p),ocrWhy:()=>ocrWhy(),fmtPhone,fmtPhoneInput,fmtDate,sMoney,sPct,sK,analysis,uaResolvedOf,safmrResolvedOf,uaConflict,uaUnresolved,renderMenu,renderLauncher,openMenu,openForm,openLauncher,ringSvg,niceDate,isDirty,overrideCount,isStateKey,attnFlags,pbUtil,clearUncheckedWriteins,srcOf:(k)=>srcOf(k),__openForm:(pid)=>{activePid=pid;return openForm('RCS');},__openCycleForm:(pid,cid)=>{activePid=pid;return openCycleForm(cid);},__renderBody:()=>renderBody(),__docMissing:(id)=>docMissing(id).map(x=>x.label),__docWarns:(id)=>docWarns(id).map(x=>x.label),__edit:(k,v)=>{form=store.editForm(form,k,v);},getVal:(k)=>get(k),modeOf:(kk)=>modeOf(kk),fieldKeys:(k)=>fieldKeys(k),keysCanSave:(ks)=>keysCanSave(ks),keysCanRevert:(ks)=>keysCanRevert(ks),keysNewDirty:(ks)=>keysNewDirty(ks),__revert:(k)=>store.revertForm(form,k),coupledKeys:(k)=>coupledKeys(k),__firstPid:()=>{const ps=mpdb?mpdb.listProperties():[];return ps.length?ps[0].id:null;},__listProps:()=>(mpdb?mpdb.listProperties():[]),__cycles:()=>(mpdb?mpdb.listCycles(activePid):[]),__toggleProg:(p)=>toggleCycleProg(p),packageScore:()=>packageScore(),packageDocs:()=>packageDocs(),scoreCtx:()=>scoreCtx(),__pkgCard:()=>pkgCard(),__boxes:(i)=>({ua:uaBox(i),safmr:safmrBox(i)}),__saveField:async(k)=>{form=await store.saveField(form,k);},__set:(f,u)=>{form=f;UNITS=u;},__cell:(k)=>form[k],__cellState:(k)=>cellState(k),__cellColor:(k)=>cellColor(k),
   /* The whole record, and the snapshot isDirty() measures against. The round-trip
      sweep needs a key-by-key diff (FORM-RULES "Before you deliver" 6): isDirty()
      compares VALUES ONLY, so a hidden side-effect key strands the form dirty with

@@ -5618,19 +5618,51 @@ function renderFormHeader(){
   if(wrap&&cy){
     const on=p=>cy.programs.indexOf(p)>=0;
     const EXCL='RCS and OCAF never share a package \u2014 remove the other first';
-    const pill=(p,dis,title)=>'<span class="prog '+(on(p)?'on':'off')+(dis?' dis':'')+'"'+(dis?'':' data-progpill="'+p+'"')+' title="'+title+'">'+PROG_NAMES[p]+'</span>';
-    const rcsDis=!on('rcs')&&on('ocaf'), ocafDis=!on('ocaf')&&on('rcs');
-    wrap.innerHTML=pill('rcs',rcsDis,rcsDis?EXCL:(on('rcs')?'Remove the RCS from this package':'Add an RCS to this package'))
-      +pill('ocaf',ocafDis,ocafDis?EXCL:(on('ocaf')?'Remove the OCAF from this package':'Add an OCAF to this package'))
+    /* A locked-IN programme wears the padlock, the same mark the dialog puts on
+       the rent action the schedule fixed. Without it a pill that cannot be
+       clicked looked exactly like the one beside it that can, and clicking it
+       did nothing at all — not even the explanation, since a locked pill carries
+       no handler. The mark is what makes the silence honest. */
+    const pill=(p,dis,title,lk)=>'<span class="prog '+(on(p)?'on':'off')+(dis?' dis':'')+(lk?' lk':'')+'"'+(dis?'':' data-progpill="'+p+'"')+' title="'+title+'">'+PROG_NAMES[p]+(lk?LOCKMK:'')+'</span>';
+    /* The scheduled rent action cannot come out, so it is not offered as
+       something to take out: a control that refuses is worse than a control that
+       was never there. Unticking it used to leave a {uaf} package under a button
+       still reading "Continue 2027 OCAF". */
+    const sched=scheduledProg();
+    const SCHED='The renewal schedule has this as '+(sched==='ocaf'?'an OCAF':'an RCS')+' year \u2014 change it in the schedule';
+    const rcsDis=(!on('rcs')&&on('ocaf'))||(sched==='rcs'&&on('rcs'));
+    const ocafDis=(!on('ocaf')&&on('rcs'))||(sched==='ocaf'&&on('ocaf'));
+    wrap.innerHTML=pill('rcs',rcsDis,(sched==='rcs'&&on('rcs'))?SCHED:(rcsDis?EXCL:(on('rcs')?'Remove the RCS from this package':'Add an RCS to this package')),sched==='rcs'&&on('rcs'))
+      +pill('ocaf',ocafDis,(sched==='ocaf'&&on('ocaf'))?SCHED:(ocafDis?EXCL:(on('ocaf')?'Remove the OCAF from this package':'Add an OCAF to this package')),sched==='ocaf'&&on('ocaf'))
       +pill('uaf',false,on('uaf')?'Remove the UAF from this package':'Add a UAF to this package')
       +'<span class="prog off dis" title="Coming soon">BBRA</span>';
     wrap.querySelectorAll('[data-progpill]').forEach(x=>x.onclick=()=>toggleCycleProg(x.getAttribute('data-progpill')));
   }
 }
+/* The rent action the SCHEDULE gave this package, if this package is the one the
+   schedule points at. The tracker owns which programme a year is
+   (2026-07-30-tracker-is-definitive-design.md), so that programme is not the
+   form's to take out: unticking it left a {uaf} package sitting under a button
+   still reading "Continue 2027 OCAF" — the app naming a programme the record no
+   longer contained. Returns '' for an off-schedule package or an off-tracker
+   property, where there is no such claim to honour. */
+function scheduledProg(){
+  if(!activeCid)return '';
+  const a=(hapForPid(activePid)||{}).action;
+  if(!a||a.cid!==activeCid)return '';
+  const pr=(a.programs&&a.programs[0])||'';
+  return (pr==='rcs'||pr==='ocaf')?pr:'';
+}
 async function toggleCycleProg(p){
   if(!activeCid)return;
   const cy=mpdb.listCycles(activePid).find(c=>c.id===activeCid);if(!cy)return;
   const has=cy.programs.indexOf(p)>=0;
+  /* Defensive: the pill for the scheduled rent action is not clickable (see
+     renderFormHeader), so this is the second lock on the same door rather than
+     the only one. */
+  if(has&&p===scheduledProg()){
+    setStatus('The renewal schedule has this as '+(p==='ocaf'?'an OCAF':'an RCS')
+      +' year, so it stays in the package. Change it in the schedule.');return;}
   if(!has&&p==='rcs'&&cy.programs.indexOf('ocaf')>=0){setStatus('RCS and OCAF never share a package \u2014 remove the OCAF first.');return;}
   if(!has&&p==='ocaf'&&cy.programs.indexOf('rcs')>=0){setStatus('RCS and OCAF never share a package \u2014 remove the RCS first.');return;}
   const programs=has?cy.programs.filter(x=>x!==p):cy.programs.concat([p]);
@@ -6450,7 +6482,7 @@ function contactDialog(c){c=c||{};
    ReferenceError at load and took three suites down with zero checks run. An
    arrow defers the lookup to the call, which only ever happens in the browser
    suite, which has the whole bundle. */
-const __API={LABEL_HINTS,rsParseUnitType,rsNum,ocrMapPages:(p)=>ocrMapPages(p),ocrWhy:()=>ocrWhy(),fmtPhone,fmtPhoneInput,fmtDate,sMoney,sPct,sK,analysis,uaResolvedOf,safmrResolvedOf,uaConflict,uaUnresolved,renderMenu,renderLauncher,openMenu,openForm,openLauncher,ringSvg,niceDate,isDirty,overrideCount,isStateKey,attnFlags,pbUtil,clearUncheckedWriteins,srcOf:(k)=>srcOf(k),__openForm:(pid)=>{activePid=pid;return openForm('RCS');},__openCycleForm:(pid,cid)=>{activePid=pid;return openCycleForm(cid);},__renderBody:()=>renderBody(),__docMissing:(id)=>docMissing(id).map(x=>x.label),__docWarns:(id)=>docWarns(id).map(x=>x.label),__edit:(k,v)=>{form=store.editForm(form,k,v);},getVal:(k)=>get(k),modeOf:(kk)=>modeOf(kk),fieldKeys:(k)=>fieldKeys(k),keysCanSave:(ks)=>keysCanSave(ks),keysCanRevert:(ks)=>keysCanRevert(ks),keysNewDirty:(ks)=>keysNewDirty(ks),__revert:(k)=>store.revertForm(form,k),coupledKeys:(k)=>coupledKeys(k),__firstPid:()=>{const ps=mpdb?mpdb.listProperties():[];return ps.length?ps[0].id:null;},__listProps:()=>(mpdb?mpdb.listProperties():[]),__cycles:()=>(mpdb?mpdb.listCycles(activePid):[]),packageScore:()=>packageScore(),packageDocs:()=>packageDocs(),scoreCtx:()=>scoreCtx(),__pkgCard:()=>pkgCard(),__boxes:(i)=>({ua:uaBox(i),safmr:safmrBox(i)}),__saveField:async(k)=>{form=await store.saveField(form,k);},__set:(f,u)=>{form=f;UNITS=u;},__cell:(k)=>form[k],__cellState:(k)=>cellState(k),__cellColor:(k)=>cellColor(k),
+const __API={LABEL_HINTS,rsParseUnitType,rsNum,ocrMapPages:(p)=>ocrMapPages(p),ocrWhy:()=>ocrWhy(),fmtPhone,fmtPhoneInput,fmtDate,sMoney,sPct,sK,analysis,uaResolvedOf,safmrResolvedOf,uaConflict,uaUnresolved,renderMenu,renderLauncher,openMenu,openForm,openLauncher,ringSvg,niceDate,isDirty,overrideCount,isStateKey,attnFlags,pbUtil,clearUncheckedWriteins,srcOf:(k)=>srcOf(k),__openForm:(pid)=>{activePid=pid;return openForm('RCS');},__openCycleForm:(pid,cid)=>{activePid=pid;return openCycleForm(cid);},__renderBody:()=>renderBody(),__docMissing:(id)=>docMissing(id).map(x=>x.label),__docWarns:(id)=>docWarns(id).map(x=>x.label),__edit:(k,v)=>{form=store.editForm(form,k,v);},getVal:(k)=>get(k),modeOf:(kk)=>modeOf(kk),fieldKeys:(k)=>fieldKeys(k),keysCanSave:(ks)=>keysCanSave(ks),keysCanRevert:(ks)=>keysCanRevert(ks),keysNewDirty:(ks)=>keysNewDirty(ks),__revert:(k)=>store.revertForm(form,k),coupledKeys:(k)=>coupledKeys(k),__firstPid:()=>{const ps=mpdb?mpdb.listProperties():[];return ps.length?ps[0].id:null;},__listProps:()=>(mpdb?mpdb.listProperties():[]),__cycles:()=>(mpdb?mpdb.listCycles(activePid):[]),__toggleProg:(p)=>toggleCycleProg(p),packageScore:()=>packageScore(),packageDocs:()=>packageDocs(),scoreCtx:()=>scoreCtx(),__pkgCard:()=>pkgCard(),__boxes:(i)=>({ua:uaBox(i),safmr:safmrBox(i)}),__saveField:async(k)=>{form=await store.saveField(form,k);},__set:(f,u)=>{form=f;UNITS=u;},__cell:(k)=>form[k],__cellState:(k)=>cellState(k),__cellColor:(k)=>cellColor(k),
   /* The whole record, and the snapshot isDirty() measures against. The round-trip
      sweep needs a key-by-key diff (FORM-RULES "Before you deliver" 6): isDirty()
      compares VALUES ONLY, so a hidden side-effect key strands the form dirty with
