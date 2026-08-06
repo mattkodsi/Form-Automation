@@ -3116,6 +3116,15 @@ function makeStore(adapter, FIELDS) {
       await adapter.saveDb(db);
       for(const key of keys) form[key]={value:db[key].value,source:db[key].value===''?'new':'database',saved_at:db[key].saved_at,prior_value:null,prior_source:null,db_value:db[key].value,origin:db[key].origin,pinned:db[key].pinned};
       return form; },
+    /* Lock persistence is a DIFFERENT measure from the value's save-state: pinning
+       or releasing a source choice must NOT commit the value or move the cell's
+       provenance colour. savePin flips ONLY `pinned` on the stored cell, leaving
+       value / db_value / source / saved_at exactly as they were. If the value was
+       never saved (no db entry) it just sets the working flag, and the pin rides
+       along the next time the value itself is saved. */
+    async savePin(form,key,pinned){ const db=await adapter.getDb();
+      if(db[key]){ db[key].pinned=!!pinned; await adapter.saveDb(db); }
+      if(form[key]) form[key].pinned=!!pinned; return form; },
     async saveToDb(form){ const db=await adapter.getDb();
       for(const key of Object.keys(form)){ const fc=form[key]||blank(); const v=fc.value; db[key]={value:(v==null?'':v),source:'database',saved_at:today(),origin:fc.origin||null,pinned:!!fc.pinned}; }
       await adapter.saveDb(db);
@@ -5303,7 +5312,7 @@ function dateEffCell(){
   const custom=/^\d{4}-\d{2}-\d{2}$/.test(String(_c0||''))?fmtDate(_c0):_c0;
   const rsLab=rs?(fmtDate(rs)+' · a year after the RS'):'— · no RS date parsed';
   const lab=(src==='custom')?('<input class="uac-in dateeff-in" data-date="1" data-k="rent_schedule.date_eff_custom" value="'+esc(custom)+'" placeholder="mm/dd/yyyy" autocomplete="off">'):(rs?('<input class="uac-in srcedit" data-srcedit="dateeff" data-date="1" value="'+esc(fmtDate(rs))+'"><span class="srctag long">· a year after the RS</span>'):('<span class="ualab">'+esc(rsLab)+'</span>'));
-  let state,c;if(src==='custom'){c=modeOf(['rent_schedule.date_eff_custom','rent_schedule.date_eff_source'])==='over'?provColors('overridden','rent_schedule.date_eff_source'):cellColors('rent_schedule.date_eff_custom');}else{state=rs?srcOf('rent_schedule.date_eff_rs'):'new';c=provColors(state,'rent_schedule.date_eff_source');}
+  const c=cellColor('rent_schedule.date_eff_source');   // one colour rule (unifies the effective-date cell with UA/SAFMR)
   const boxKey=(src==='custom')?'rent_schedule.date_eff_custom':'rent_schedule.date_eff_source';
   const _lkDE=optLock('rent_schedule.date_eff_custom');
   const menu='<div class="uamenu">'+srcOptRow('data-deffopt="rs"',rs?esc(fmtDate(rs)):'','A year after the executed RS',src==='rs',src==='rs'?_lkDE:'')+'<div class="uaopt'+(src==='custom'?' sel':'')+'" data-deffopt="custom">Custom…'+(src==='custom'?_lkDE:'')+'</div></div>';
@@ -5602,12 +5611,12 @@ function sigTitleCell(f){const c=cellColors('sig.title');const pk='sig.principal
      without this it repeats the box and tells the reader nothing. */
   let dd=csDrop(pk,_opts,'Select\u2026','',true,'',_pcl?_rp:null,sigPrincipalSubs());
   dd=dd.replace('<div class="uamenu">','<div class="uamenu">'+dim);
-  return `<div class="fpair sigpair"><div class="field"><div class="flabel">${f.label}</div><div class="fbox" data-box="sig.title" style="background:${c[1]};border-left-color:${c[0]}"><input type="text" data-k="sig.title" value="${esc(get('sig.title'))}" autocomplete="off">${srcTags('sig.title')}${srcPick('sig.title',SRCPICK_ROWS['sig.title']())}</div>${ovNote('sig.title')}</div><div class="ofthe">of the</div><div class="field"><div class="flabel">Principal</div><div class="fbox seldrop" data-box="${pk}" style="background:${pc[1]};border-left-color:${pc[0]}">${dd}</div>${ovNote(pk)}</div></div>`;}
+  return `<div class="fpair sigpair"><div class="field"><div class="flabel">${f.label}</div><div class="fbox" data-box="sig.title" style="background:${c[1]};border-left-color:${c[0]}"><input type="text" data-k="sig.title" value="${esc(get('sig.title'))}" autocomplete="off">${srcTags('sig.title')}${sourceMenu('sig.title')}</div>${ovNote('sig.title')}</div><div class="ofthe">of the</div><div class="field"><div class="flabel">Principal</div><div class="fbox seldrop" data-box="${pk}" style="background:${pc[1]};border-left-color:${pc[0]}">${dd}</div>${ovNote(pk)}</div></div>`;}
 function fieldCell(f){if(isLocked(f.k))return lockedField(f.k,f.label,raLockShow(f.k));if(f.type==='sigtitle')return sigTitleCell(f);if(f.type==='pair')return '<div class="fpair">'+f.items.map(fieldCell).join('')+'</div>';if(f.type==='addr')return addrCell();if(f.type==='caaddr')return caAddrCell();if(f.type==='appraddr')return apprAddrCell();if(f.type==='mgmtaddr')return mgmtCell();if(f.type==='select')return selectCell(f);if(f.k==='poc.name')return pocCell();if(DIR_PICK[f.k])return dirCell(f);
   const s=form[f.k]||{value:'',source:'new'};
   const c=f.prefix?groupColors([f.prefix,f.k]):cellColors(f.k);
   const pre=f.prefix?csDrop(f.prefix,['Ms.','Mr.','Dr.','Mx.'],'—','csnarrow',true,partHot(f.prefix)?tintStyle(f.prefix):''):'';
-  return `<div class="field"><div class="flabel">${f.label}</div><div class="fbox" data-box="${f.k}" style="background:${c[1]};border-left-color:${c[0]}">${pre}<input type="text" data-k="${f.k}" style="${f.prefix&&partHot(f.k)?tintStyle(f.k):''}"${f.type==='phone'?' data-phone="1" inputmode="tel" maxlength="14"':''} value="${esc(f.type==='phone'?fmtPhoneInput(s.value):s.value)}" autocomplete="off">${srcTags(f.k)}${SRCPICK_ROWS[f.k]?srcPick(f.k,SRCPICK_ROWS[f.k]()):''}</div>${ovNote(f.prefix?[f.prefix,f.k]:f.k)}</div>`;}
+  return `<div class="field"><div class="flabel">${f.label}</div><div class="fbox" data-box="${f.k}" style="background:${c[1]};border-left-color:${c[0]}">${pre}<input type="text" data-k="${f.k}" style="${f.prefix&&partHot(f.k)?tintStyle(f.k):''}"${f.type==='phone'?' data-phone="1" inputmode="tel" maxlength="14"':''} value="${esc(f.type==='phone'?fmtPhoneInput(s.value):s.value)}" autocomplete="off">${srcTags(f.k)}${sourceMenu(f.k)}</div>${ovNote(f.prefix?[f.prefix,f.k]:f.k)}</div>`;}
 function addrCell(){return compAddrCell(ADDR,'property.addr','Address');}
 function caAddrCell(){return compAddrCell(CA_ADDR,'ca.addr','CA address');}
 function apprAddrCell(){return compAddrCell(APPR_ADDR,'appr.addr','Appraiser address');}
@@ -5622,7 +5631,7 @@ function selectCell(f){const c=cellColors(f.k);const _et=f.k==='owner.entity_typ
     dd=dd.replace('<div class="uamenu">','<div class="uamenu">'+navRows);}
   const sel=`<div class="field"><div class="flabel">${f.label}</div><div class="fbox seldrop" data-box="${f.k}" style="background:${c[1]};border-left-color:${c[0]}">${dd}</div>${ovNote(f.k)}</div>`;
   if(f.k==='owner.entity_type'&&get(f.k)==='Other (specify)'){const ok='owner.entity_type_other';const oc=cellColors(ok);
-    const other=`<div class="field"><div class="flabel">Specify entity type</div><div class="fbox" data-box="${ok}" style="background:${oc[1]};border-left-color:${oc[0]}"><input type="text" data-k="${ok}" value="${esc(get(ok))}" placeholder="e.g. Limited Liability Company" autocomplete="off">${srcPick(ok,SRCPICK_ROWS[ok]())}</div>${ovNote(ok)}</div>`;
+    const other=`<div class="field"><div class="flabel">Specify entity type</div><div class="fbox" data-box="${ok}" style="background:${oc[1]};border-left-color:${oc[0]}"><input type="text" data-k="${ok}" value="${esc(get(ok))}" placeholder="e.g. Limited Liability Company" autocomplete="off">${sourceMenu(ok)}</div>${ovNote(ok)}</div>`;
     return '<div class="fpair etpair">'+sel+other+'</div>';}
   return sel;}
 /* One badge for one cell. The address is four keys but a single box with a
@@ -5677,7 +5686,7 @@ function renderFieldSection(sec){const cols=[[],[]];sec.fields.forEach(f=>cols[f
 function principalHasData(i){return ['name','title'].some(s=>{const v=get('principals.'+i+'.'+s);return v!==''&&v!=null;});}
 function renderPrincipals(){
   const rows=PRINCIPALS.map(i=>{const nk='principals.'+i+'.name',tk='principals.'+i+'.title';const nc=cellColors(nk),tc=cellColors(tk);
-    return `<div class="prinrow"><div class="field"><div class="fbox" data-box="${nk}" style="background:${nc[1]};border-left-color:${nc[0]}"><input type="text" data-k="${nk}" value="${esc(get(nk))}" autocomplete="off">${rsTag(nk)}${srcPick(nk,[{tag:'Executed RS',val:rsPrin(i,'name')}])}</div>${ovNote(nk)}</div><div class="field"><div class="fbox" data-box="${tk}" style="background:${tc[1]};border-left-color:${tc[0]}"><input type="text" data-k="${tk}" value="${esc(get(tk))}" autocomplete="off">${rsTag(tk)}${srcPick(tk,[{tag:'Executed RS',val:rsPrin(i,'title')}])}</div>${ovNote(tk)}</div><div class="urx">${PRINCIPALS.length>1?`<button class="trash" data-delprin="${i}" title="Delete">\u2715</button>`:''}</div></div>`;}).join('');
+    return `<div class="prinrow"><div class="field"><div class="fbox" data-box="${nk}" style="background:${nc[1]};border-left-color:${nc[0]}"><input type="text" data-k="${nk}" value="${esc(get(nk))}" autocomplete="off">${rsTag(nk)}${sourceMenu(nk,[{tag:'Executed RS',val:rsPrin(i,'name')}])}</div>${ovNote(nk)}</div><div class="field"><div class="fbox" data-box="${tk}" style="background:${tc[1]};border-left-color:${tc[0]}"><input type="text" data-k="${tk}" value="${esc(get(tk))}" autocomplete="off">${rsTag(tk)}${sourceMenu(tk,[{tag:'Executed RS',val:rsPrin(i,'title')}])}</div>${ovNote(tk)}</div><div class="urx">${PRINCIPALS.length>1?`<button class="trash" data-delprin="${i}" title="Delete">\u2715</button>`:''}</div></div>`;}).join('');
   return card(12,sectionPill(12),`<div class="pbnote">The principals comprising the ownership entity, as they appear in Part G of the rent schedule. The signatory title in ${secRef(3)} selects its principal from this list.</div><div class="prinhead"><span>Principal name</span><span>Title</span><span></span></div>${rows}<div class="addrow" id="prinAdd">+ Add principal</div>${_undoPR.length?(' <span class="addrow ghostlink" id="undoPrin">\u21a9 Undo delete'+(_undoPR.length>1?(' ('+_undoPR.length+')'):'')+'</span><button class="undocommit" id="undoPrinC" title="Keep deletions \u2014 dismiss undo">\u2713</button>'):''}`);}
 
 /* Provenance has two axes and one implementation. The EDGE reports the record:
@@ -5689,7 +5698,7 @@ function renderPrincipals(){
 function provColors(state,key){const c=CLR[state]||CLR.new;
   if(state==='new'&&key&&form[key]&&form[key].value===''&&form[key].db_value==='')return [CLR.database[0],c[1],c[2]]; // saved, and STILL saved empty
   return c;}
-function cellColors(k){return (srcOf(k)!=='overridden'&&offFile(k))?provColors('overridden',k):provColors(srcOf(k),k);}
+function cellColors(k){return cellColor(k);}   // one colour rule — every plain-cell caller now routes through cellColor
 function boxColor(k){return cellColors(k);}
 /* ── THE ONE COLOR RULE (provenance unification, 2026-08-05) ──────────────────
    ONE deterministic answer to "is this saved?" for every cell, replacing the
@@ -5708,15 +5717,19 @@ function boxColor(k){return cellColors(k);}
    by family, each behind the full green gate (the two-painter sweep, the exact
    rgb assertions, the coupledKeys arrays are the tripwires). */
 const AUTO_ORIGINS={rs:1,rcs:1,hud:1,fr:1,ra:1,contact:1,carried:1};
+const TAG_ORIGIN={'Executed RS':'rs','RCS report':'rcs','Related Affordable':'ra','HUD API':'hud','Federal Register':'fr'};   // a per-cell pull's source tag -> the origin cellColor reads
 function cellState(key){
-  const sp=(typeof srcSpec==='function')?srcSpec(key):null;
-  if(sp){
-    const st=srcCellState(key);                 // '', 'new', 'database', 'overridden'
-    if(st==='overridden')return 'overridden';
-    if(st==='database')return 'database';
+  const sp=(typeof srcSpecAny==='function')?srcSpecAny(key):null;
+  if(sp){                                     // a source-family cell: reproduce the family painter (FR-4)
     const src=get(sp.srcKey)||sp.fallback;
-    const val=String(sp.resolve(src)||(src==='custom'?get(sp.cusKey):'')||'');
-    return (src!=='custom'&&val!=='')?'this-cycle':'new';   // a document source that isn't on file yet
+    const _cs=srcCellState(sp.cusKey);         // judged on the RESOLVED figure vs on file
+    if(src==='custom')return _cs==='overridden'?'overridden':(_cs==='database'?'database':'new');
+    const fk=sp.figKey||(()=>null);
+    const anyVal=(sp.names||[]).some(n=>numf(get(fk(n)))>0)||numf(get(sp.cusKey))>0;
+    let state=anyVal?srcOf(fk(src)):'new';     // the chosen figure's own saved-state
+    if(_cs==='overridden')state='overridden';else if(_cs==='database'&&state==='new')state='database';
+    if((sp.unresolved&&sp.unresolved())||srcOf(sp.srcKey)==='overridden')state='overridden';   // conflict-amber + switched-source
+    return state;
   }
   const c=form[key]; if(!c)return 'new';
   const v=String(c.value==null?'':c.value);
@@ -5734,18 +5747,47 @@ function cellColor(key){return provColors(cellState(key),key);}
    source-pointer cells (UA/SAFMR/effective-date/OCAF factor). Pure + unwired. */
 const SRC_TAG={exec:'Executed RS',rcs:'RCS report',hud:'HUD API',fr:'Federal Register',rs:'A year after the executed RS'};
 function sourcesFor(key){
-  const sp=(typeof srcSpec==='function')?srcSpec(key):null;
-  if(sp){
+  const sp=(typeof srcSpecAny==='function')?srcSpecAny(key):null;
+  if(sp){                                     // Engine A: resolver + shadow figures (UA/SAFMR/date/OCAF)
     const cur=get(sp.srcKey)||sp.fallback;
     const rows=(sp.names||[]).map(n=>{const v=sp.resolve(n);
       return {kind:'doc',src:n,tag:SRC_TAG[n]||n,val:(v==null||v==='')?null:v,sel:cur===n};});
     rows.push({kind:'free',src:'custom',tag:'Custom',val:get(sp.cusKey),sel:cur==='custom'});
     return rows;
   }
-  return [];   // other families folded in as each is wired
+  // Engine B: table-driven pull cells — text via SRCPICK_ROWS, money via moneySrcRows.
+  // Selection is the cell's own origin (no resolver key); Custom is a typed value.
+  let brows=[];
+  if(typeof SRCPICK_ROWS!=='undefined'&&SRCPICK_ROWS[key])brows=SRCPICK_ROWS[key]();
+  else if(typeof moneySrcRows==='function'){const mr=moneySrcRows(key);if(mr&&mr.length)brows=mr;}
+  if(brows.length)return srcLines(key,brows);
+  return [];   // kind E — no dropdown; or a family not yet folded in
 }
-function moneyBox(k,noIcons){const c=boxColor(k);const _rows=moneySrcRows(k);
-  const pick=_rows.length?srcPick(k,_rows):'';
+/* sourceMenu(key): THE ONE dropdown — the ideal (UA/SAFMR) menu rendered from
+   sourcesFor for any cell. Sources (dim when empty, FR-1), always a Custom line
+   for open cells, a padlock on the selected line when the cell is pinned. Every
+   option is keyed data-srcpick=cell / data-srcopt=source so ONE handler serves
+   all line-kinds. Pure + unwired — the wiring replaces srcPick / the *opt menus. */
+/* srcLines(key,rows): map explicit [{tag,val}] rows to typed lines (origin-based
+   selection + a trailing Custom) — shared by sourcesFor's Engine-B branch and by
+   sourceMenu callers that pass their own inline rows (principals, count cells). */
+function srcLines(key,rows){const cur=form[key];const org=cur&&cur.origin;
+  const ls=rows.map(r=>{const oc=TAG_ORIGIN[r.tag];return {kind:'doc',src:oc||r.tag,tag:r.tag,val:(r.val==null||r.val==='')?null:r.val,sel:!!oc&&org===oc};});
+  ls.push({kind:'free',src:'custom',tag:'Custom',val:cur?cur.value:'',sel:org==='typed'});return ls;}
+function sourceMenu(key,rows){
+  const lines=rows?srcLines(key,rows):sourcesFor(key); if(!lines.length)return '';
+  const pinned=!!(form[key]&&form[key].pinned);
+  const lock=(sel)=>(sel&&pinned)?('<span class="srclock" data-lock="'+esc(key)+'" role="button" tabindex="0" aria-label="Release lock" title="Locked to your choice. Click to release so a fill or pull can update this cell.">'+LOCK_SVG+'</span>'):'';
+  const opts=lines.map(l=>{
+    const attrs='data-srcpick="'+esc(key)+'" data-srcopt="'+esc(l.src)+'"';
+    if(l.kind==='free')return '<div class="uaopt'+(l.sel?' sel':'')+'" '+attrs+'>Custom\u2026'+lock(l.sel)+'</div>';
+    return l.val!=null
+      ?'<div class="uaopt srcopt'+(l.sel?' sel':'')+'" '+attrs+' data-srcv="'+esc(l.val)+'">'+esc(srcDisp(key,l.val))+'<span class="uasub">'+esc(l.tag)+'</span>'+lock(l.sel)+'</div>'
+      :'<div class="uaopt srcopt srcdim" '+attrs+'>\u2014<span class="uasub">'+esc(l.tag)+' \u00b7 not available</span></div>';
+  }).join('');
+  return '<div class="uadrop pocpick"><div class="uatrigger" tabindex="0" title="Pull from a source"><span class="cvx">&#9662;</span></div><div class="uamenu">'+opts+'</div></div>';
+}
+function moneyBox(k,noIcons){const c=boxColor(k);const pick=sourceMenu(k);   // the one dropdown component (was srcPick over moneySrcRows)
   return `<div class="rbox money" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><span class="cur">$</span><input type="text" data-money="1" data-k="${k}" value="${esc(fmtMoney(get(k)))}">${srcTags(k)}${pick}${noIcons?'':ovIcons(k)}</div>`;}
 function numBox(k,ph,noIcons){const c=boxColor(k);
   /* Counts are numbers and get separators like every other number (rule 16).
@@ -5760,7 +5802,7 @@ function numBox(k,ph,noIcons){const c=boxColor(k);
      oversight, and "not available" is a shorter answer than wondering. */
   const _mn=k.match(/^nonrev\.(\d+)\.num_units$/);
   const _rsCell=!!(_mc||_mu||_mn);   // non-Section-8 counts and Part D uses come off the schedule too
-  return `<div class="rbox" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><input type="text"${_cnt?' data-money="1"':''} data-k="${k}" value="${esc(_cnt?fmtMoney(get(k)):get(k))}" placeholder="${esc(ph||'')}">${rsTag(k)}${_rv!=null?srcPick(k,[{tag:'Executed RS',val:_rv}]):(_rsCell?dimPick('Executed RS'):'')}${noIcons?'':ovIcons(k)}</div>`;}
+  return `<div class="rbox" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><input type="text"${_cnt?' data-money="1"':''} data-k="${k}" value="${esc(_cnt?fmtMoney(get(k)):get(k))}" placeholder="${esc(ph||'')}">${rsTag(k)}${_rsCell?sourceMenu(k,[{tag:'Executed RS',val:_rv}]):''}${noIcons?'':ovIcons(k)}</div>`;}
 function brbaBox(brK,baK){const c=groupColors([brK,baK]);
   const withRs=(k,opts,ph)=>{const d=csDrop(k,opts,ph,'',true,partHot(k)?tintStyle(k):'',rsBrBa(k));
     const row=rsCsRow(k)||'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>';
@@ -5806,7 +5848,7 @@ function uaBox(i){const src=get('units.'+i+'.ua_source')||defUaSrc(i),exec=get('
    "clears" it, leaving a custom source with no value and a blank cell. The source
    key is the one that knows an on-file value was displaced, so the badge carries
    both: coupledKeys already saves and reverts them together. */
-  const c=uaCellColors(i);const boxKeyUA=src==='custom'?('units.'+i+'.ua_custom'):('units.'+i+'.ua_source');
+  const c=cellColor('units.'+i+'.ua_source');const boxKeyUA=src==='custom'?('units.'+i+'.ua_custom'):('units.'+i+'.ua_source');   // one colour rule (was uaCellColors)
   const _lkUA=optLock('units.'+i+'.ua_custom');
   const menu='<div class="uamenu">'+srcOptRow('data-uaopt="exec" data-uai="'+i+'"',(exec!==''&&exec!=null)?('$'+fmtMoney(exec)):'','Executed RS',src==='exec',src==='exec'?_lkUA:'')+srcOptRow('data-uaopt="rcs" data-uai="'+i+'"',(rcs!==''&&rcs!=null)?('$'+fmtMoney(rcs)):'','RCS report',src==='rcs',src==='rcs'?_lkUA:'')+'<div class="uaopt'+(src==='custom'?' sel':'')+'" data-uaopt="custom" data-uai="'+i+'">Custom…'+(src==='custom'?_lkUA:'')+'</div></div>';
   return '<div class="rbox uacell" data-box="'+boxKeyUA+'" style="background:'+c[1]+';border-left-color:'+c[0]+'"><div class="uadrop"><div class="uatrigger" tabindex="0"><span class="ualab">'+lab+'</span><span class="cvx">▾</span></div>'+menu+'</div></div>';}
@@ -5836,7 +5878,7 @@ function unitCountCell(i){const k='units.'+i+'.num_units';const c=cellColors(k);
   // not one is loaded right now — dimmed when there is nothing to pull, exactly as
   // the rent beside it does. Rendering nothing left the column looking as though
   // it had no source at all the moment the upload went out of session.
-  return `<div class="rbox" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><input type="text" data-money="1" data-k="${k}" value="${esc(fmtMoney(get(k)))}">${srcTags(k)}${(rv!=null||cv!=null)?srcPick(k,[{tag:'Executed RS',val:rv},{tag:'RCS report',val:cv}]):dimPick('Executed RS')}</div>`;}
+  return `<div class="rbox" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><input type="text" data-money="1" data-k="${k}" value="${esc(fmtMoney(get(k)))}">${srcTags(k)}${sourceMenu(k,[{tag:'Executed RS',val:rv},{tag:'RCS report',val:cv}])}</div>`;}
 /* The study's reading lives in the cell's dropdown now; a difference is not a
    thing to be resolved before the row can be saved. */
 function typeNote(i){return '';}
@@ -5844,7 +5886,7 @@ function numNote(i){return '';}
 function safmrBox(i){const src=get('units.'+i+'.safmr_source')||defSafmrSrc(i),hud=get('units.'+i+'.safmr_hud'),rcs=get('units.'+i+'.safmr_rcs'),custom=get('units.'+i+'.safmr_custom');
   const hasAny=numf(hud)>0||numf(rcs)>0||numf(custom)>0;
   const lab=src==='rcs'?('$<input class="uac-in srcedit" data-srcedit="safmr" data-si="'+i+'" data-money="1" value="'+esc(fmtMoney(rcs))+'"><span class="srctag">· RCS</span>'):(src==='custom'?('$<input class="uac-in" data-money="1" data-k="units.'+i+'.safmr_custom" value="'+esc(fmtMoney(custom))+'" placeholder="0">'):('$<input class="uac-in srcedit" data-srcedit="safmr" data-si="'+i+'" data-money="1" value="'+esc(fmtMoney(hud))+'"><span class="srctag">· HUD</span>'));
-  const c=safmrCellColors(i);const boxKeySA=src==='custom'?('units.'+i+'.safmr_custom'):('units.'+i+'.safmr_source');
+  const c=cellColor('units.'+i+'.safmr_source');const boxKeySA=src==='custom'?('units.'+i+'.safmr_custom'):('units.'+i+'.safmr_source');   // one colour rule (was safmrCellColors)
   const _lkSA=optLock('units.'+i+'.safmr_custom');
   const menu='<div class="uamenu">'+srcOptRow('data-safmropt="hud" data-safmri="'+i+'"',(hud!==''&&hud!=null)?('$'+fmtMoney(hud)):'','HUD API',src==='hud',src==='hud'?_lkSA:'')+srcOptRow('data-safmropt="rcs" data-safmri="'+i+'"',(rcs!==''&&rcs!=null)?('$'+fmtMoney(rcs)):'','RCS report',src==='rcs',src==='rcs'?_lkSA:'')+'<div class="uaopt'+(src==='custom'?' sel':'')+'" data-safmropt="custom" data-safmri="'+i+'">Custom…'+(src==='custom'?_lkSA:'')+'</div></div>';
   return '<div class="rbox uacell" data-box="'+boxKeySA+'" style="background:'+c[1]+';border-left-color:'+c[0]+'"><div class="uadrop"><div class="uatrigger" tabindex="0"><span class="ualab">'+lab+'</span><span class="cvx">▾</span></div>'+menu+'</div></div>';}
@@ -7880,7 +7922,7 @@ function ocafFactorCell(){const pub=get('ocaf.factor_pub'),fy=get('ocaf.factor_f
   const lab=(src==='custom')
     ?('<input class="uac-in" data-k="ocaf.factor_custom" value="'+esc(custom)+'" placeholder="4.9" style="width:78px"><span class="srctag">% · custom</span>')
     :(pub?('<span class="ualab">'+esc(pub)+'%<span class="srctag long" style="margin-left:6px">· FY'+esc(fy)+' Federal Register</span></span>'):('<span class="ualab" style="color:#8791a5">— pull or enter the factor</span>'));
-  let state,c;if(src==='custom'){const _st=srcCellState('ocaf.factor_custom');c=provColors(_st==='overridden'?'overridden':(_st==='database'?'database':'new'),'ocaf.factor_src');}else{state=pub?srcOf('ocaf.factor_pub'):'new';const _cs=srcCellState('ocaf.factor_custom');if(_cs==='overridden')state='overridden';else if(_cs==='database'&&state==='new')state='database';c=provColors(state,'ocaf.factor_src');}
+  const c=cellColor('ocaf.factor_src');   // one colour rule (unifies the OCAF factor cell)
   const boxKey=(src==='custom')?'ocaf.factor_custom':'ocaf.factor_src';
   const _lkOC=optLock('ocaf.factor_custom');
   const menu='<div class="uamenu">'+srcOptRow('data-ocfopt="fr"',pub?esc(pub+'% · FY'+fy):'','Federal Register',src==='fr',src==='fr'?_lkOC:'')+'<div class="uaopt'+(src==='custom'?' sel':'')+'" data-ocfopt="custom">Custom…'+(src==='custom'?_lkOC:'')+'</div></div>';
@@ -8616,8 +8658,8 @@ function paintCell(k){const gb=groupOf(k);if(gb)return paintGroup(gb);
      function's generic path. Before this the two disagreed by a whole colour, and
      the generic path also declined the rows whose source key the record does not
      hold yet (`if(!s)return` below), leaving them unrepaintable. */
-  const _fam=/^units\.(\d+)\.(ua|safmr)_(source|custom)$/.exec(k);
-  if(_fam){const fc=_fam[2]==='ua'?uaCellColors(+_fam[1]):safmrCellColors(+_fam[1]);
+  const _sp=(typeof srcSpecAny==='function')?srcSpecAny(k):null;
+  if(_sp){const fc=cellColor(_sp.srcKey);   // one colour rule, both painters — every source family (ua/safmr/date/ocaf)
     const fb=document.querySelector('[data-box="'+k+'"]');
     if(fb){fb.style.background=fc[1];fb.style.borderLeftColor=fc[0];}return;}
   if(k==='ca.name'||k==='ca.prefix')return paintCaName();const s=form[k];if(!s)return;
@@ -8626,22 +8668,7 @@ function paintCell(k){const gb=groupOf(k);if(gb)return paintGroup(gb);
      override gray — disagreeing with the badge sitting in the same cell, which has
      always read the pair. That is why the first keystroke came out orange (a full
      re-render, through uaBox) and the second gray (a repaint, through here). */
-  const _ck=coupledKeys(k);
-  // modeOf, not srcOf: a source key saved BLANK reads as "new" even once it has
-  // been changed, so testing for 'overridden' left an emptied override gray while
-  // the badge beside it correctly said otherwise.
-  /* And for a source-backed cell ask srcCellState, the same question the full
-     render asks. Without this the repaint still judged the cell by this key's own
-     history: typing your way back to the figure on file left the cell grey until
-     something else forced a full re-render. */
-  const _cs=srcCellState(k);
-  const _sr=_cs?(_cs==='overridden'?'overridden':(_cs==='database'?'database':'new'))
-    :(_ck.length>1&&modeOf(_ck)==='over')?'overridden'
-    :(offFile(k)&&s.source!=='overridden')?'overridden'
-    :((k==='rent_schedule.date_rents_effective'&&s.source==='database')?'this-cycle':s.source);
-  // The blue "on file" edge belongs to a cell saved empty and STILL empty. Without
-  // the value test it painted blue over whatever was being typed into it.
-  const c=CLR[_sr]||CLR.new;const _bl=(_sr==='new'&&s.db_value===''&&String(s.value==null?'':s.value)==='')?CLR.database[0]:c[0];const box=document.querySelector('[data-box="'+k+'"]');if(box){box.style.background=c[1];box.style.borderLeftColor=_bl;paintTag(k,box);}
+  const c=cellColor(k);const box=document.querySelector('[data-box="'+k+'"]');if(box){box.style.background=c[1];box.style.borderLeftColor=c[0];paintTag(k,box);}   // one colour rule, both painters (was the inline _sr computation)
   // A write-in's color lives on its tick, which is keyed data-wibox rather than
   // data-box, so this repaint used to skip it entirely and the cell only changed
   // color on a full re-render.
@@ -8669,16 +8696,22 @@ function wireArrowNav(){document.querySelectorAll('.fbox:not(.uacell),.rbox:not(
 function srcSpec(k){
   let m=k.match(/^units\.(\d+)\.ua_custom$/);
   if(m)return{srcKey:'units.'+m[1]+'.ua_source',cusKey:k,fallback:defUaSrc(m[1]),names:['exec','rcs'],
-    resolve:ss=>cleanNum(get('units.'+m[1]+'.ua_'+(ss==='rcs'?'rcs':'exec')))};
+    resolve:ss=>cleanNum(get('units.'+m[1]+'.ua_'+(ss==='rcs'?'rcs':'exec'))),figKey:ss=>'units.'+m[1]+'.ua_'+(ss==='rcs'?'rcs':'exec'),unresolved:()=>uaUnresolved(+m[1])};
   m=k.match(/^units\.(\d+)\.safmr_custom$/);
   if(m)return{srcKey:'units.'+m[1]+'.safmr_source',cusKey:k,fallback:defSafmrSrc(m[1]),names:['hud','rcs'],
-    resolve:ss=>cleanNum(get('units.'+m[1]+'.safmr_'+(ss==='rcs'?'rcs':'hud')))};
+    resolve:ss=>cleanNum(get('units.'+m[1]+'.safmr_'+(ss==='rcs'?'rcs':'hud'))),figKey:ss=>'units.'+m[1]+'.safmr_'+(ss==='rcs'?'rcs':'hud'),unresolved:()=>safmrUnresolved(+m[1])};
   if(k==='rent_schedule.date_eff_custom')return{srcKey:'rent_schedule.date_eff_source',cusKey:k,
-    fallback:'rs',names:['rs'],resolve:()=>fmtDate(get('rent_schedule.date_eff_rs'))};
+    fallback:'rs',names:['rs'],resolve:()=>fmtDate(get('rent_schedule.date_eff_rs')),figKey:()=>'rent_schedule.date_eff_rs'};
   if(k==='ocaf.factor_custom')return{srcKey:'ocaf.factor_src',cusKey:k,names:['fr'],
-    fallback:(get('ocaf.factor_pub')?'fr':'custom'),resolve:ss=>ss==='fr'?String(get('ocaf.factor_pub')||''):''};
+    fallback:(get('ocaf.factor_pub')?'fr':'custom'),resolve:ss=>ss==='fr'?String(get('ocaf.factor_pub')||''):'',figKey:()=>'ocaf.factor_pub'};
   return null;
 }
+/* srcSpecAny: srcSpec keys on the *_custom key; the renderer/painter key a source
+   cell on its *_source data-box (FR-9). Accept either — map a source key back to
+   its custom partner — so cellColor(sourceKey) can reach the family logic. */
+function srcSpecAny(k){let sp=srcSpec(k);if(sp)return sp;
+  const cus=k.replace(/\.ua_source$/,'.ua_custom').replace(/\.safmr_source$/,'.safmr_custom').replace(/\.date_eff_source$/,'.date_eff_custom').replace(/\.factor_src$/,'.factor_custom');
+  return cus!==k?srcSpec(cus):null;}
 /* Writes a source-backed cell. Returns false if k isn't one, so callers fall
    through to a plain edit. Matching what is on file restores the on-file source
    rather than staying pinned to custom. */
@@ -8842,13 +8875,27 @@ function wireBody(){
         _refocusSel='[data-srcedit="'+fam+'"]'+(i==null?'':'[data-si="'+i+'"]');
         renderBody();setStatus('Saved this field to the database.');return;}
       if(e.key==='Escape'){if(_pending&&_pending.length){e.preventDefault();e.stopPropagation();revertPending();}}});});
+  document.querySelectorAll('[data-srcopt]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();
+    const key=o.getAttribute('data-srcpick'),src=o.getAttribute('data-srcopt');if(!key)return;
+    const sp=(typeof srcSpecAny==='function')?srcSpecAny(key):null;
+    if(src==='custom'){                                   // reveal the field to type your own
+      if(sp){_pendingSnap=snapPend(coupledKeys(sp.cusKey));srcSetSource(sp.cusKey,'custom');_pending=[sp.srcKey];_refocusSel='[data-k="'+sp.cusKey+'"]';}
+      else{_refocusSel='[data-k="'+key+'"]';}
+      renderBody();return;}
+    if(sp){                                               // Engine A: a resolver pointer
+      _pendingSnap=snapPend(coupledKeys(sp.cusKey));srcSetSource(sp.cusKey,src);if(form[sp.srcKey])form[sp.srcKey].pinned=true;
+      _pending=[sp.srcKey];_refocusSel='[data-box="'+sp.srcKey+'"] .uatrigger';renderBody();return;}
+    _pendingSnap=snapPend([key]);                         // Engine B: write the value (carried on the option) + record its origin
+    const _v=o.getAttribute('data-srcv');
+    if(_v!=null){form=store.editForm(form,key,String(_v));if(form[key]){form[key].origin=src;form[key].pinned=true;}}
+    _pending=[key];_refocusSel='[data-box="'+key+'"] .uatrigger';renderBody();setStatus('Pulled from '+((o.querySelector('.uasub')||{}).textContent||'the source')+'.');}));
   document.querySelectorAll('[data-srck]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();const k=o.getAttribute('data-srck'),_tg=o.getAttribute('data-srctag')||'source';_pendingSnap=snapPend([k]);form=store.editForm(form,k,o.getAttribute('data-srcv'));
     /* A pulled figure is not typed-in data. Into an empty cell it reads as this
        package's own — green, "not saved yet" — rather than plain new; over an
        on-file one it stays an override, but the note says PARSED changed rather
        than just changed. Without this the green state was unreachable from any
        per-cell pull, and the wording blamed the user for the schedule's figure. */
-    markCycle(k);if(/\bRS\b|RCS/.test(_tg)&&form[k])form[k].fromParse=true;
+    markCycle(k);if(/\bRS\b|RCS/.test(_tg)&&form[k])form[k].fromParse=true;if(form[k]&&TAG_ORIGIN[_tg])form[k].origin=TAG_ORIGIN[_tg];
     _pending=[k];_refocusSel='[data-k="'+k+'"]';renderBody();setStatus('Pulled from '+_tg+'.');}));
   document.querySelectorAll('[data-srcgrp]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();const box=o.getAttribute('data-srcgrp');const r=SRCGROUP[box]()[+o.getAttribute('data-srcgix')];if(!r||!r.apply)return;const keys=Object.keys(r.apply);_pendingSnap=snapPend(keys);keys.forEach(k=>{form=store.editForm(form,k,r.apply[k]);});_pending=keys.slice();_refocusSel='[data-box="'+box+'"] input';renderBody();setStatus('Address pulled from '+r.tag+'.');}));
   document.querySelectorAll('[data-pocra]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();const nm=raVal('poc.name');if(!nm)return;const saved=(mpdb?mpdb.listContacts():[]).find(x=>((x.name||'').trim().toLowerCase()===nm.trim().toLowerCase()));const c={name:nm,email:raVal('poc.email')||(saved&&saved.email)||'',phone:raVal('poc.phone')||(saved&&saved.phone)||''};_pendingSnap=snapPend(['poc.name','poc.email','poc.phone']);pocSelectContact(c);_pending=['poc.name','poc.email','poc.phone'];_refocusSel='[data-box="poc.name"] .pocname-in';renderBody();setStatus('POC pulled from Related Affordable.');}));
@@ -8871,11 +8918,16 @@ function wireBody(){
      second click can never be a no-op. stopPropagation keeps the option under it
      from re-selecting. */
   document.querySelectorAll('[data-lock]').forEach(o=>{const rel=async e=>{e.stopPropagation();e.preventDefault();
-    const cusKey=o.getAttribute('data-lock');const sp=srcSpec(cusKey);if(!sp)return;
-    form=store.editForm(form,sp.srcKey,'');if(form[sp.srcKey]){form[sp.srcKey].pinned=false;form[sp.srcKey].origin=null;}
-    const ks=coupledKeys(sp.cusKey);
-    try{form=await store.saveFields(form,ks);}catch(err){saveFailed(err);return;}
-    await refreshSnap();snapForm(ks);clearUndoChain();_pending=null;_pendingSnap=null;
+    const cusKey=o.getAttribute('data-lock');const sp=srcSpec(cusKey);
+    if(sp){                                       // Engine A: releasing clears the explicit source pointer
+      form=store.editForm(form,sp.srcKey,'');if(form[sp.srcKey]){form[sp.srcKey].pinned=false;form[sp.srcKey].origin=null;}
+      const ks=coupledKeys(sp.cusKey);
+      try{form=await store.saveFields(form,ks);}catch(err){saveFailed(err);return;}
+      await refreshSnap();snapForm(ks);clearUndoChain();_pending=null;_pendingSnap=null;
+    }else{                                        // Engine B: unpin ONLY. The lock is metadata — persist the
+      if(form[cusKey])form[cusKey].pinned=false;  // pin bit, NEVER commit the value or move the cell's save-state.
+      try{form=await store.savePin(form,cusKey,false);}catch(err){saveFailed(err);return;}
+    }
     renderBody();setStatus('Released — a fill or pull can update this cell again.');};
     o.addEventListener('click',rel);
     o.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')rel(e);});});
@@ -11462,7 +11514,7 @@ function contactDialog(c){c=c||{};
    ReferenceError at load and took three suites down with zero checks run. An
    arrow defers the lookup to the call, which only ever happens in the browser
    suite, which has the whole bundle. */
-const __API={LABEL_HINTS,rsParseUnitType,rsNum,ocrMapPages:(p)=>ocrMapPages(p),ocrWhy:()=>ocrWhy(),fmtPhone,fmtPhoneInput,fmtDate,sMoney,sPct,sK,analysis,uaResolvedOf,safmrResolvedOf,uaConflict,uaUnresolved,renderMenu,renderLauncher,openMenu,openForm,openLauncher,ringSvg,niceDate,isDirty,overrideCount,isStateKey,attnFlags,pbUtil,clearUncheckedWriteins,srcOf:(k)=>srcOf(k),__openForm:(pid)=>{activePid=pid;return openForm('RCS');},__openCycleForm:(pid,cid)=>{activePid=pid;return openCycleForm(cid);},__renderBody:()=>renderBody(),__docMissing:(id)=>docMissing(id).map(x=>x.label),__docWarns:(id)=>docWarns(id).map(x=>x.label),__edit:(k,v)=>{form=store.editForm(form,k,v);},getVal:(k)=>get(k),modeOf:(kk)=>modeOf(kk),fieldKeys:(k)=>fieldKeys(k),keysCanSave:(ks)=>keysCanSave(ks),keysCanRevert:(ks)=>keysCanRevert(ks),keysNewDirty:(ks)=>keysNewDirty(ks),__revert:(k)=>store.revertForm(form,k),coupledKeys:(k)=>coupledKeys(k),__firstPid:()=>{const ps=mpdb?mpdb.listProperties():[];return ps.length?ps[0].id:null;},__listProps:()=>(mpdb?mpdb.listProperties():[]),__cycles:()=>(mpdb?mpdb.listCycles(activePid):[]),__toggleProg:(p)=>toggleCycleProg(p),packageScore:()=>packageScore(),packageDocs:()=>packageDocs(),scoreCtx:()=>scoreCtx(),__pkgCard:()=>pkgCard(),__boxes:(i)=>({ua:uaBox(i),safmr:safmrBox(i)}),__saveField:async(k)=>{form=await store.saveField(form,k);},__set:(f,u)=>{form=f;UNITS=u;},__cell:(k)=>form[k],__cellState:(k)=>cellState(k),__cellColor:(k)=>cellColor(k),__sourcesFor:(k)=>sourcesFor(k),
+const __API={LABEL_HINTS,rsParseUnitType,rsNum,ocrMapPages:(p)=>ocrMapPages(p),ocrWhy:()=>ocrWhy(),fmtPhone,fmtPhoneInput,fmtDate,sMoney,sPct,sK,analysis,uaResolvedOf,safmrResolvedOf,uaConflict,uaUnresolved,renderMenu,renderLauncher,openMenu,openForm,openLauncher,ringSvg,niceDate,isDirty,overrideCount,isStateKey,attnFlags,pbUtil,clearUncheckedWriteins,srcOf:(k)=>srcOf(k),__openForm:(pid)=>{activePid=pid;return openForm('RCS');},__openCycleForm:(pid,cid)=>{activePid=pid;return openCycleForm(cid);},__renderBody:()=>renderBody(),__docMissing:(id)=>docMissing(id).map(x=>x.label),__docWarns:(id)=>docWarns(id).map(x=>x.label),__edit:(k,v)=>{form=store.editForm(form,k,v);},getVal:(k)=>get(k),modeOf:(kk)=>modeOf(kk),fieldKeys:(k)=>fieldKeys(k),keysCanSave:(ks)=>keysCanSave(ks),keysCanRevert:(ks)=>keysCanRevert(ks),keysNewDirty:(ks)=>keysNewDirty(ks),__revert:(k)=>store.revertForm(form,k),coupledKeys:(k)=>coupledKeys(k),__firstPid:()=>{const ps=mpdb?mpdb.listProperties():[];return ps.length?ps[0].id:null;},__listProps:()=>(mpdb?mpdb.listProperties():[]),__cycles:()=>(mpdb?mpdb.listCycles(activePid):[]),__toggleProg:(p)=>toggleCycleProg(p),packageScore:()=>packageScore(),packageDocs:()=>packageDocs(),scoreCtx:()=>scoreCtx(),__pkgCard:()=>pkgCard(),__boxes:(i)=>({ua:uaBox(i),safmr:safmrBox(i)}),__saveField:async(k)=>{form=await store.saveField(form,k);},__set:(f,u)=>{form=f;UNITS=u;},__cell:(k)=>form[k],__savePin:async(k,p)=>{form=await store.savePin(form,k,p);},__cellState:(k)=>cellState(k),__cellColor:(k)=>cellColor(k),__sourcesFor:(k)=>sourcesFor(k),__sourceMenu:(k)=>sourceMenu(k),__uaCellColors:(i)=>uaCellColors(i),__safmrCellColors:(i)=>safmrCellColors(i),
   /* The whole record, and the snapshot isDirty() measures against. The round-trip
      sweep needs a key-by-key diff (FORM-RULES "Before you deliver" 6): isDirty()
      compares VALUES ONLY, so a hidden side-effect key strands the form dirty with

@@ -59,6 +59,15 @@ function makeStore(adapter, FIELDS) {
       await adapter.saveDb(db);
       for(const key of keys) form[key]={value:db[key].value,source:db[key].value===''?'new':'database',saved_at:db[key].saved_at,prior_value:null,prior_source:null,db_value:db[key].value,origin:db[key].origin,pinned:db[key].pinned};
       return form; },
+    /* Lock persistence is a DIFFERENT measure from the value's save-state: pinning
+       or releasing a source choice must NOT commit the value or move the cell's
+       provenance colour. savePin flips ONLY `pinned` on the stored cell, leaving
+       value / db_value / source / saved_at exactly as they were. If the value was
+       never saved (no db entry) it just sets the working flag, and the pin rides
+       along the next time the value itself is saved. */
+    async savePin(form,key,pinned){ const db=await adapter.getDb();
+      if(db[key]){ db[key].pinned=!!pinned; await adapter.saveDb(db); }
+      if(form[key]) form[key].pinned=!!pinned; return form; },
     async saveToDb(form){ const db=await adapter.getDb();
       for(const key of Object.keys(form)){ const fc=form[key]||blank(); const v=fc.value; db[key]={value:(v==null?'':v),source:'database',saved_at:today(),origin:fc.origin||null,pinned:!!fc.pinned}; }
       await adapter.saveDb(db);
