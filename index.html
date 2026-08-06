@@ -449,6 +449,7 @@ button.gdoc{justify-content:space-between}
 .utsrc{align-self:center;margin-left:2px}
 .uaopt.srcopt:has(+.uaopt:not(.srcopt)){position:relative;margin-bottom:9px}
 .uaopt.srcopt:has(+.uaopt:not(.srcopt))::after{content:'';position:absolute;left:0;right:0;bottom:-5px;border-bottom:1px solid #ccd4e2}
+.uamenu .uadiv{height:0;margin:5px 10px;border-bottom:1px solid #ccd4e2}
 /* The source lock rides the selected option inside the roomy dropdown menu. */
 .uaopt:has(.srclock){position:relative;padding-right:34px}
 .uaopt .srclock{position:absolute;right:9px;top:50%;transform:translateY(-50%);display:inline-flex;align-items:center;color:var(--muted-2);cursor:pointer;padding:3px;border-radius:5px}
@@ -5484,15 +5485,8 @@ function pocSelectContact(ct){form=store.editForm(form,'poc.name',ct.name||'');f
 // edit to email or phone.
 function pocSaveKeys(){return (form['poc.name']&&form['poc.name'].fromPick)?POC_PICK_KEYS.filter(k=>form[k]&&form[k].fromPick):['poc.name'];}
 function pocNote(){const m=modeOf('poc.name');const j=pocSaveKeys().join(',');return `<div class="ovnote" data-ov="poc.name" data-mode="${m}" style="display:${m?'flex':'none'}"><span class="om-over">${overText(['poc.name'])}</span><span class="om-new">new — not saved yet</span><span class="om-cycle">parsed — not saved yet</span><button class="revert" data-rev="${j}">↺ revert</button><button class="save1" data-save1="${j}">✓ save this field</button></div>`;}
-function pocCell(){const k='poc.name';const contacts=(mpdb?mpdb.listContacts():[]);const cur=get(k);const c=cellColors(k);
-  const nvp=raVal('poc.name');
-  const _rp=rcsOf('poc.name');
-  const navRow=(nvp?'<div class="uaopt srcopt" data-pocra="1">'+esc(nvp)+'<span class="uasub">Related Affordable</span></div>':'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">Related Affordable \u00b7 not available</span></div>')
-    +(_rp?('<div class="uaopt srcopt'+(String(_rp)===String(cur)?' sel':'')+'" data-pocrcs="1">'+esc(_rp)+'<span class="uasub">RCS report \u00b7 addressed to</span></div>')
-        :'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">RCS report \u00b7 not available</span></div>');
-  const menu='<div class="uamenu">'+navRow+contacts.map(ct=>'<div class="uaopt" data-pocopt="'+esc(ct.id)+'">'+esc(ct.name)+(ct.email?'<span class="uasub">'+esc(ct.email)+'</span>':'')+'</div>').join('')+'</div>';
-  const pick='<div class="uadrop pocpick"><div class="uatrigger" tabindex="0" title="Pick a saved contact"><span class="cvx">&#9662;</span></div>'+menu+'</div>';
-  return `<div class="field"><div class="flabel">Point of contact</div><div class="fbox poccell" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><input class="pocname-in" data-k="poc.name" value="${esc(cur)}" placeholder="Type a name, or pick a saved contact" autocomplete="off">${srcTags('poc.name')}${pick}</div>${pocNote()}</div>`;}
+function pocCell(){const k='poc.name';const cur=get(k);const c=cellColors(k);
+  return `<div class="field"><div class="flabel">Point of contact</div><div class="fbox poccell" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}"><input class="pocname-in" data-k="poc.name" value="${esc(cur)}" placeholder="Type a name, or pick a saved contact" autocomplete="off">${srcTags('poc.name')}${sourceMenu(k)}</div>${pocNote()}</div>`;}
 /* Saved-contact pickers (appraiser / CA) — same mechanics as the
    PM point-of-contact cell: picking a saved contact fills its whole section as
    a pending change (Enter commits every filled cell, Esc restores what was
@@ -5523,20 +5517,10 @@ function dirFill(pairs){pairs.forEach(p=>{form=store.editForm(form,p[0],p[1]||''
 function dirList(kind){return (mpdb&&mpdb.listDir)?mpdb.listDir(kind):[];}
 function dirSaveKeys(fk){const P=DIR_PICK[fk];return (form[fk]&&form[fk].fromPick)?P.keys.filter(k=>form[k]&&form[k].fromPick):fieldKeys(fk);}
 function dirNote(fk){const P=DIR_PICK[fk];const m=modeOf(P.modeKeys);const j=dirSaveKeys(fk).join(',');return `<div class="ovnote" data-ov="${P.modeKeys.join(',')}" data-mode="${m}" style="display:${m?'flex':'none'}"><span class="om-over">${overText(P.modeKeys)}</span><span class="om-new">new \u2014 not saved yet</span><span class="om-cycle">parsed \u2014 not saved yet</span><button class="revert" data-rev="${j}">\u21ba revert</button><button class="save1" data-save1="${j}">\u2713 save this field</button></div>`;}
-function dirCell(f){const k=f.k;const P=DIR_PICK[k];const list=dirList(P.kind);const cur=get(k);
+function dirCell(f){const k=f.k;const P=DIR_PICK[k];const cur=get(k);
   const c=f.prefix?groupColors([f.prefix,f.k]):cellColors(k);const nameTint=(f.prefix&&partHot(k))?tintStyle(k):'';
   const pre=f.prefix?csDrop(f.prefix,['Ms.','Mr.','Dr.','Mx.'],'\u2014','csnarrow',true,partHot(f.prefix)?tintStyle(f.prefix):''):'';
-  const _dr=DIR_SRCROW[k];const _drv=_dr?_dr.val():null;
-  const srcRow=!_dr?'':(_drv!=null&&_drv!==''
-    ?('<div class="uaopt srcopt'+(String(_drv)===String(cur)?' sel':'')+'" data-srck="'+k+'" data-srcv="'+esc(_drv)+'" data-srctag="'+esc(_dr.tag)+'">'+esc(srcDisp(k,_drv))+'<span class="uasub">'+esc(_dr.tag)+'</span></div>')
-    :('<div class="uaopt srcopt srcdim">\u2014<span class="uasub">'+esc(_dr.tag)+' \u00b7 not available</span></div>'));
-  /* Drawn even with nothing in it. A cell with no dropdown where its
-     neighbours have one reads as an oversight; a dimmed row saying the list is
-     empty is a shorter answer than wondering. */
-  const _none=!srcRow&&!list.length;
-  const menu='<div class="uamenu">'+(_none?('<div class="uaopt srcopt srcdim">\u2014<span class="uasub">No saved '+esc(P.one)+'</span></div>'):(srcRow+list.map(ct=>{const s=P.sub(ct);return '<div class="uaopt" data-dirid="'+esc(ct.id)+'" data-dirfor="'+k+'">'+esc(ct.name)+(s?'<span class="uasub">'+esc(s)+'</span>':'')+'</div>';}).join('')))+'</div>';
-  const pick='<div class="uadrop pocpick"><div class="uatrigger" tabindex="0" title="Pick a saved '+esc(P.one)+'"><span class="cvx">&#9662;</span></div>'+menu+'</div>';
-  return `<div class="field"><div class="flabel">${f.label}</div><div class="fbox poccell" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}">${pre}<input class="pocname-in" type="text" data-k="${k}" style="${nameTint}" value="${esc(cur)}" placeholder="Type a name, or pick a saved ${esc(P.one)}" autocomplete="off">${srcTags(k)}${pick}</div>${dirNote(k)}</div>`;}
+  return `<div class="field"><div class="flabel">${f.label}</div><div class="fbox poccell" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}">${pre}<input class="pocname-in" type="text" data-k="${k}" style="${nameTint}" value="${esc(cur)}" placeholder="Type a name, or pick a saved ${esc(P.one)}" autocomplete="off">${srcTags(k)}${sourceMenu(k)}</div>${dirNote(k)}</div>`;}
 /* ====== External-source dropdowns (Related Affordable / RS / RCS) ======
    Sourced options sit at the top of each cell's dropdown in precedence order;
    a source with no data is a dimmed "\u2014 \u00b7 not available" row, never
@@ -5815,7 +5799,8 @@ function mgmtCell(){const src=get('tenant.mgmt_source')||'property';const propHa
      ${ovNoteAddr('tenant.mgmt')}</div>`;}
   const pretty=propHas?(get('property.addr_street')+', '+get('property.addr_city')+' '+get('property.addr_state')+' '+get('property.addr_zip')).replace(/\s+/g,' ').replace(/^,\s*/,'').trim():'';
   const inner=propHas?('<span class="mgmtprop">'+esc(pretty)+'</span><span class="srctag">· property</span>'):('<span class="mgmtph">Set the property address in Section 2, or pick a different address</span>');
-  const menu='<div class="uamenu"><div class="uaopt'+(src==='property'?' sel':'')+'" data-mgmt="property">Use property address</div><div class="uaopt'+(src==='custom'?' sel':'')+'" data-mgmt="custom">Different address…</div></div>';
+  const propRow='<div class="uaopt srcopt'+(src==='property'?' sel':'')+'" data-mgmt="property">'+(propHas?esc(pretty):'Property address')+'<span class="uasub">'+(propHas?'Property address':'Set it in Section 2')+'</span></div>';
+  const menu='<div class="uamenu">'+propRow+'<div class="uadiv" aria-hidden="true"></div><div class="uaopt'+(src==='custom'?' sel':'')+'" data-mgmt="custom">Custom\u2026</div></div>';
   // mirroring the property address: report that address's record, since that is what prints
   const ovSrc=srcOf('tenant.mgmt_source')==='overridden';const c=ovSrc?CLR.overridden:groupColors(ADDR);
   return '<div class="field"><div class="flabel">Management address</div><div class="fbox mgmtcell" data-box="tenant.mgmt_address" style="background:'+c[1]+';border-left-color:'+c[0]+'"><div class="uadrop"><div class="uatrigger" tabindex="0"><span class="ualab">'+inner+'</span><span class="cvx">▾</span></div>'+menu+'</div>'+(ovSrc?ovIcons('tenant.mgmt_source'):'')+'</div></div>';}
@@ -5897,6 +5882,29 @@ function cellColor(key){return provColors(cellState(key),key);}
    optLock. Families are folded in here as each is wired; today the four Engine-A
    source-pointer cells (UA/SAFMR/effective-date/OCAF factor). Pure + unwired. */
 const SRC_TAG={exec:'Executed RS',rcs:'RCS report',hud:'HUD API',fr:'Federal Register',rs:'Executed RS + 1 yr'};
+// Contact cells (POC / appraiser / CA / signatory names) render the SAME dropdown
+// as every other source cell: document/platform rows on top (they fill the whole
+// section), then every saved contact, then a Custom line. Picking a contact or a
+// doc pins the cell; the padlock releases it. One component, one handler.
+function isContactCell(key){return key==='poc.name'||(typeof DIR_PICK!=='undefined'&&!!DIR_PICK[key]);}
+function contactLines(key){
+  const cur=String(get(key)==null?'':get(key));const org=form[key]&&form[key].origin;
+  const eqn=(x)=>x!=null&&String(x).trim().toLowerCase()===cur.trim().toLowerCase();
+  const out=[];
+  if(key==='poc.name'){
+    const ra=raVal('poc.name');const rm=pocMatchRcs().name;
+    out.push({kind:'doc',src:'cdoc:ra',tag:'Related Affordable',val:(ra==null||ra==='')?null:ra,sel:org==='ra'&&eqn(ra)});
+    out.push({kind:'doc',src:'cdoc:rcs',tag:'RCS report',val:(rm==null||rm==='')?null:rm,sel:org==='rcs'&&eqn(rm)});
+  }else{
+    const dr=DIR_SRCROW[key];
+    if(dr){const v=dr.val();const ori=TAG_ORIGIN[dr.tag]||'doc';out.push({kind:'doc',src:'cdoc:doc',tag:dr.tag,val:(v==null||v==='')?null:v,sel:org===ori&&eqn(v)});}
+  }
+  const list=(key==='poc.name')?(mpdb?mpdb.listContacts():[]):(DIR_PICK[key]?dirList(DIR_PICK[key].kind):[]);
+  const subf=(ct)=>(key==='poc.name')?(ct.email||''):(DIR_PICK[key]?DIR_PICK[key].sub(ct):'');
+  (list||[]).forEach(ct=>out.push({kind:'contact',src:'cpick:'+ct.id,tag:ct.name,val:subf(ct),sel:org==='contact'&&eqn(ct.name)}));
+  out.push({kind:'free',src:'custom',tag:'Custom',val:cur,sel:org==='typed'});
+  return out;
+}
 function sourcesFor(key){
   const sp=(typeof srcSpecAny==='function')?srcSpecAny(key):null;
   if(sp){                                     // Engine A: resolver + shadow figures (UA/SAFMR/date/OCAF)
@@ -5912,6 +5920,7 @@ function sourcesFor(key){
   if(typeof SRCPICK_ROWS!=='undefined'&&SRCPICK_ROWS[key])brows=SRCPICK_ROWS[key]();
   else if(typeof moneySrcRows==='function'){const mr=moneySrcRows(key);if(mr&&mr.length)brows=mr;}
   if(brows.length)return srcLines(key,brows);
+  if(isContactCell(key))return contactLines(key);
   return [];   // kind E — no dropdown; or a family not yet folded in
 }
 /* sourceMenu(key): THE ONE dropdown — the ideal (UA/SAFMR) menu rendered from
@@ -5930,6 +5939,7 @@ function sourceOpts(key,lines){
   const lock=(sel)=>(sel&&pinned)?('<span class="srclock" data-lock="'+esc(key)+'" role="button" tabindex="0" aria-label="Release lock" title="Locked to your choice. Click to release so a fill or pull can update this cell.">'+LOCK_SVG+'</span>'):'';
   return lines.map(l=>{
     const attrs='data-srcpick="'+esc(key)+'" data-srcopt="'+esc(l.src)+'"';
+    if(l.kind==='contact')return '<div class="uaopt'+(l.sel?' sel':'')+'" '+attrs+'>'+esc(l.tag)+(l.val?'<span class="uasub">'+esc(l.val)+'</span>':'')+lock(l.sel)+'</div>';
     if(l.kind==='free')return '<div class="uaopt'+(l.sel?' sel':'')+'" '+attrs+'>Custom\u2026'+lock(l.sel)+'</div>';
     return l.val!=null
       ?'<div class="uaopt srcopt'+(l.sel?' sel':'')+'" '+attrs+' data-srcv="'+esc(l.val)+'">'+esc(srcDisp(key,l.val))+'<span class="uasub">'+esc(l.tag)+'</span>'+lock(l.sel)+'</div>'
@@ -9047,6 +9057,17 @@ function wireBody(){
       if(e.key==='Escape'){if(_pending&&_pending.length){e.preventDefault();e.stopPropagation();revertPending();}}});});
   document.querySelectorAll('[data-srcopt]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();
     const key=o.getAttribute('data-srcpick'),src=o.getAttribute('data-srcopt');if(!key)return;
+    if(src.indexOf('cpick:')===0){const id=src.slice(6);
+      if(key==='poc.name'){const ct=(mpdb?mpdb.listContacts():[]).find(x=>x.id===id);_pendingSnap=snapPend(POC_PICK_KEYS);if(ct)pocSelectContact(ct);_pending=POC_PICK_KEYS.slice();_refocusSel='[data-box="poc.name"] .pocname-in';}
+      else{const P=DIR_PICK[key];const ct=dirList(P.kind).find(x=>x.id===id);_pendingSnap=snapPend(P.keys);if(ct)P.apply(ct);_pending=P.keys.slice();_refocusSel='[data-box="'+key+'"] .pocname-in';}
+      renderBody();return;}
+    if(src.indexOf('cdoc:')===0){const which=src.slice(5);
+      if(key==='poc.name'){
+        if(which==='ra'){const nm=raVal('poc.name');if(nm){const saved=(mpdb?mpdb.listContacts():[]).find(x=>((x.name||'').trim().toLowerCase()===nm.trim().toLowerCase()));const cc={name:nm,email:raVal('poc.email')||(saved&&saved.email)||'',phone:raVal('poc.phone')||(saved&&saved.phone)||''};_pendingSnap=snapPend(POC_PICK_KEYS);pocSelectContact(cc);if(form['poc.name']){form['poc.name'].origin='ra';form['poc.name'].pinned=true;}_pending=POC_PICK_KEYS.slice();_refocusSel='[data-box="poc.name"] .pocname-in';}}
+        else{const pm=pocMatchRcs();if(pm.name){_pendingSnap=snapPend(POC_PICK_KEYS);if(pm.contact)pocSelectContact(pm.contact);else form=store.editForm(form,'poc.name',pm.name);if(form['poc.name']){form['poc.name'].origin='rcs';form['poc.name'].pinned=true;}_pending=POC_PICK_KEYS.slice();_refocusSel='[data-box="poc.name"] .pocname-in';}}
+        renderBody();return;}
+      const dr=DIR_SRCROW[key];const v=dr?dr.val():null;if(v!=null&&v!==''){_pendingSnap=snapPend([key]);form=store.editForm(form,key,String(v));if(form[key]){form[key].origin=TAG_ORIGIN[dr.tag]||'typed';form[key].pinned=true;}}
+      _pending=[key];_refocusSel='[data-box="'+key+'"] .pocname-in';renderBody();return;}
     const sp=(typeof srcSpecAny==='function')?srcSpecAny(key):null;
     if(src==='custom'){                                   // reveal the field to type your own
       if(sp){_pendingSnap=snapPend(coupledKeys(sp.cusKey));srcSetSource(sp.cusKey,'custom');_pending=[sp.srcKey];_refocusSel='[data-k="'+sp.cusKey+'"]';}
