@@ -469,12 +469,14 @@ async function makeDb(adapter, opts) {
      API PARITY with db.supabase.js. */
   const cycleClosed = cid => {
     const c = D.cycles[cid]; if (!c) return false;
+    if (c.reopened_at) return false;   // somebody deliberately said otherwise
     const eff = cyISO(c.effective_date); if (!eff) return false;
     return eff < today();
   };
   const assertCycleOpen = cid => {
     if (!cycleClosed(cid)) return;
-    const e = new Error('This package has already been filed — a later one exists for this property. Filed packages are history and do not change.');
+    const c = D.cycles[cid];
+    const e = new Error('These rents took effect on ' + cyISO(c.effective_date) + '. A package is history once its date has passed \u2014 reopen it if it genuinely still needs work.');
     e.code = 'PACKAGE_CLOSED'; e.cid = cid; throw e;
   };
   const assertPackageFree = (pid, effIn, progs, skipCid) => {
@@ -647,6 +649,14 @@ async function makeDb(adapter, opts) {
     dominantCycleId,
     cycleAnalysis(cid) { return cycleAnalysisOf(cid); },
     cycleClosed(cid) { return cycleClosed(cid); },
+    /* The override. A package locks on its effective date, and HUD's effective
+       date is when rents take force, not when the paperwork stops — so a package
+       still being corrected with the CA after its date has to have a way back.
+       Persisted, not per-session: reopening is a decision, not a mood.
+       It is deliberately one-way. Re-locking would be a second control for a
+       state the date already answers. */
+    reopenCycle(cid) { const c = D.cycles[cid]; if (!c) return Promise.resolve();
+      c.reopened_at = now(); c.updated_at = now(); return persist(); },
     createCycle(pid, opts) {
       const p = D.props[pid]; if (!p) throw new Error('no property ' + pid);
       const o = opts || {}; const cid = nid('cy'); const cells = {};

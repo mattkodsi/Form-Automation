@@ -2199,6 +2199,12 @@ body.scrolled #viewForm .rail{top:60px;max-height:calc(100vh - 78px)}
   box-shadow:inset 3px 0 0 var(--stamp);color:var(--stamp);font-size:12.5px;
   font-weight:600}
 #viewForm.ro .robar span{color:var(--ink-2);font-weight:400}
+/* The way back, kept quiet: this is the rare path, and a loud button beside a
+   warning reads as the thing to press. */
+#viewForm.ro .robar #roReopen{margin-left:auto;flex:0 0 auto;background:none;border:0;
+  font:inherit;font-size:12.5px;font-weight:600;color:var(--stamp);cursor:pointer;
+  text-decoration:underline;text-underline-offset:2px;padding:0 2px}
+#viewForm.ro .robar #roReopen:hover{color:var(--ink)}
 #viewForm:not(.ro) .robar{display:none}
 </style></head>
 <body>
@@ -3991,12 +3997,14 @@ async function makeDb(adapter, opts) {
      API PARITY with db.supabase.js. */
   const cycleClosed = cid => {
     const c = D.cycles[cid]; if (!c) return false;
+    if (c.reopened_at) return false;   // somebody deliberately said otherwise
     const eff = cyISO(c.effective_date); if (!eff) return false;
     return eff < today();
   };
   const assertCycleOpen = cid => {
     if (!cycleClosed(cid)) return;
-    const e = new Error('This package has already been filed — a later one exists for this property. Filed packages are history and do not change.');
+    const c = D.cycles[cid];
+    const e = new Error('These rents took effect on ' + cyISO(c.effective_date) + '. A package is history once its date has passed \u2014 reopen it if it genuinely still needs work.');
     e.code = 'PACKAGE_CLOSED'; e.cid = cid; throw e;
   };
   const assertPackageFree = (pid, effIn, progs, skipCid) => {
@@ -4169,6 +4177,14 @@ async function makeDb(adapter, opts) {
     dominantCycleId,
     cycleAnalysis(cid) { return cycleAnalysisOf(cid); },
     cycleClosed(cid) { return cycleClosed(cid); },
+    /* The override. A package locks on its effective date, and HUD's effective
+       date is when rents take force, not when the paperwork stops — so a package
+       still being corrected with the CA after its date has to have a way back.
+       Persisted, not per-session: reopening is a decision, not a mood.
+       It is deliberately one-way. Re-locking would be a second control for a
+       state the date already answers. */
+    reopenCycle(cid) { const c = D.cycles[cid]; if (!c) return Promise.resolve();
+      c.reopened_at = now(); c.updated_at = now(); return persist(); },
     createCycle(pid, opts) {
       const p = D.props[pid]; if (!p) throw new Error('no property ' + pid);
       const o = opts || {}; const cid = nid('cy'); const cells = {};
@@ -4383,7 +4399,7 @@ function makeSupabaseDb(client) {
     D.hapError = (hp && hp.error) ? String(hp.error.message || hp.error) : '';
     D.hap = (hp && !hp.error && hp.data) ? hp.data : [];
     D.pmName = (au && !au.error && au.data && au.data[0]) ? (au.data[0].pm_name || '') : '';
-    ((cy && cy.data) || []).forEach(c => { D.cycles[c.id] = { id: c.id, property_id: c.property_id, programs: c.programs || '', label: c.label || '', effective_date: c.effective_date || '', cells: c.cells || {}, generated: c.generated || {}, rs_doc: c.rs_doc || {}, rcs_doc: c.rcs_doc || {}, created_at: c.created_at || '', updated_at: c.updated_at || c.created_at || '' }; });
+    ((cy && cy.data) || []).forEach(c => { D.cycles[c.id] = { id: c.id, property_id: c.property_id, programs: c.programs || '', label: c.label || '', effective_date: c.effective_date || '', cells: c.cells || {}, reopened_at: c.reopened_at || null, generated: c.generated || {}, rs_doc: c.rs_doc || {}, rcs_doc: c.rcs_doc || {}, created_at: c.created_at || '', updated_at: c.updated_at || c.created_at || '' }; });
     (pr.data || []).forEach(r => {
       const sa = String(r.updated_at || '').slice(0, 10);
       const p = { id: r.id, created_at: String(r.created_at || '').slice(0, 10), updated_at: r.updated_at || r.created_at, durable: {}, percycle: {} };
@@ -4583,7 +4599,7 @@ function makeSupabaseDb(client) {
     };
     const assertCycleOpen = cid => {
       if (!cycleClosed(cid)) return;
-      const e = new Error('This package has already been filed — a later one exists for this property. Filed packages are history and do not change.');
+      const e = new Error('These rents took effect on ' + cyISO(c.effective_date) + '. A package is history once its date has passed \u2014 reopen it if it genuinely still needs work.');
       e.code = 'PACKAGE_CLOSED'; e.cid = cid; throw e;
     };
   const assertPackageFree = (pid, effIn, progs, skipCid) => {
@@ -4767,7 +4783,7 @@ function makeSupabaseDb(client) {
   }
   async function pushCycle(cid) {
     const c = D.cycles[cid]; if (!c) return;
-    const r = await client.from('cycle').upsert({ id: c.id, property_id: c.property_id, programs: c.programs, label: c.label, effective_date: c.effective_date, cells: c.cells, generated: c.generated, rs_doc: c.rs_doc || {}, rcs_doc: c.rcs_doc || {}, updated_at: now() });
+    const r = await client.from('cycle').upsert({ id: c.id, property_id: c.property_id, programs: c.programs, label: c.label, effective_date: c.effective_date, cells: c.cells, generated: c.generated, rs_doc: c.rs_doc || {}, rcs_doc: c.rcs_doc || {}, ...(c.reopened_at ? { reopened_at: c.reopened_at } : {}), updated_at: now() });
     if (r.error) throw r.error;
   }
 
@@ -4971,6 +4987,11 @@ function makeSupabaseDb(client) {
         return out;
       },
       cycleClosed(cid) { return cycleClosed(cid); },
+      /* See db.js — same rule, same one-way override. The column is sent only
+         when it is set, so a database that has not run the 2026-08-06 migration
+         keeps working for every package nobody has reopened. */
+      reopenCycle(cid) { const c = D.cycles[cid]; if (!c) return Promise.resolve();
+        c.reopened_at = now(); c.updated_at = now(); return enqueue('cy' + cid, () => pushCycle(cid)); },
       saveFlatCycle(cid, map) {
         const c = D.cycles[cid]; if (!c) throw new Error('no cycle ' + cid);
         assertCycleOpen(cid);
@@ -8493,8 +8514,14 @@ function renderBody(){
   const _rb=el('roBar');
   if(_rb){const _cy=(_cyRO&&mpdb&&activeCid)?(mpdb.listCycles(activePid)||[]).find(c=>c.id===activeCid):null;
     _rb.innerHTML=_cyRO?('\u25cf Filed \u2014 read only<span>'
-      +(_cy&&_cy.effective_date?('These rents took effect '+esc(fmtDateLong(_cy.effective_date))+'. A package is history once its date has passed, so nothing here can change.')
-        :'A package is history once its date has passed, so nothing here can change.')+'</span>'):'';}
+      +(_cy&&_cy.effective_date?('These rents took effect '+esc(fmtDateLong(_cy.effective_date))+'. A package is history once its date has passed.')
+        :'A package is history once its date has passed.')+'</span>'
+      +'<button class="txtbtn" id="roReopen">Reopen it</button>'):'';
+    const _rr=el('roReopen');
+    if(_rr)_rr.onclick=()=>dialogConfirm('Reopen this package?',
+      'Its documents have already gone out and its rents are in force. Reopen it only to correct the record of what was filed \u2014 anything entered here stays in this package and cannot reach a later one.',
+      'Reopen',false,async()=>{try{await mpdb.reopenCycle(activeCid);}catch(e){saveFailedModal(e);return;}
+        _cyRO=false;renderBody();renderFormHeader();setStatus('Reopened \u2014 this package can be edited again.');});}
   syncReviewed();const _sy=window.scrollY;const _anchorSel=(_refocusSel&&!_mouseFocus)?_refocusSel:(((Date.now()-_lastClickAt)<2000)?_lastClickSel:null);let _anchorTop=null;if(_anchorSel){try{const _ac=document.querySelector(_anchorSel);if(_ac)_anchorTop=_ac.getBoundingClientRect().top;}catch(e){}}computeSecPos();const _SR={1:renderSources,2:()=>renderFieldSection(FIELD_SECTIONS[0]),3:()=>renderFieldSection(FIELD_SECTIONS[1]),4:()=>renderFieldSection(FIELD_SECTIONS[2]),5:()=>renderFieldSection(FIELD_SECTIONS[3]),6:renderRents,7:renderPartB,8:renderChecklist,9:()=>renderFieldSection(FIELD_SECTIONS[4]),10:renderOcaf,11:renderUaf,12:renderPrincipals};el('sections').innerHTML=visibleSections().map(n=>_SR[n]()).join('');
   renderFormHeader();wireBody();renderCommand();renderBar();renderRail();renderAttention();refreshFooter();
   if(_refocusSel&&!_mouseFocus){try{const _f=document.querySelector(_refocusSel);if(_f&&_f.focus){_f.focus({preventScroll:true});if(/^(INPUT|TEXTAREA)$/.test(_f.tagName)&&typeof _f.setSelectionRange==='function'){const _L=(_f.value||'').length;try{_f.setSelectionRange(_L,_L);}catch(_e){}}}}catch(e){}}_refocusSel=null;
@@ -11640,7 +11667,7 @@ __rcsFill:(opts)=>rcsFillFromParsed(opts),/* The same door for the rent schedule
      would otherwise serve the old bands, which is harmless in production (the
      table is read once at boot) and silently wrong in any suite that seeds
      twice. */
-  __db:()=>mpdb,__openCycleForm:(cid)=>openCycleForm(cid),__launcher:(pid)=>{activePid=pid;return openLauncher(pid);},
+  __db:()=>mpdb,__launcher:(pid)=>{activePid=pid;return openLauncher(pid);},
   __seedHap:async(rows)=>{_hapCache=null;await mpdb._setHapRows(rows);},
   __menuView:()=>menuView,
   __setMenuView:(v)=>{menuView=v;renderMenu();},

@@ -2199,6 +2199,12 @@ body.scrolled #viewForm .rail{top:60px;max-height:calc(100vh - 78px)}
   box-shadow:inset 3px 0 0 var(--stamp);color:var(--stamp);font-size:12.5px;
   font-weight:600}
 #viewForm.ro .robar span{color:var(--ink-2);font-weight:400}
+/* The way back, kept quiet: this is the rare path, and a loud button beside a
+   warning reads as the thing to press. */
+#viewForm.ro .robar #roReopen{margin-left:auto;flex:0 0 auto;background:none;border:0;
+  font:inherit;font-size:12.5px;font-weight:600;color:var(--stamp);cursor:pointer;
+  text-decoration:underline;text-underline-offset:2px;padding:0 2px}
+#viewForm.ro .robar #roReopen:hover{color:var(--ink)}
 #viewForm:not(.ro) .robar{display:none}
 </style></head>
 <body>

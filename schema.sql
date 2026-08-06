@@ -132,6 +132,10 @@ create table public.cycle (
   generated       jsonb not null default '{}'::jsonb,
   rs_doc          jsonb not null default '{}'::jsonb, -- the executed rent schedule's PARSED reading, never its bytes
   rcs_doc         jsonb not null default '{}'::jsonb, -- the RCS study's parsed reading, likewise
+  -- A package locks when its effective date passes. This is the deliberate
+  -- override: set once, by a person, so late work can still be finished.
+  -- Null on every package nobody has reopened, which is nearly all of them.
+  reopened_at     timestamptz,
   created_at      timestamptz not null default now(),
   updated_at      timestamptz not null default now()
 );
@@ -266,3 +270,7 @@ create policy "owner_all_app_contact" on public.app_contact for all using (owner
 --  * HUD SAFMR edge function `hud-safmr` (source in supabase/functions/):
 --    the HUD USER API token lives in Supabase Vault behind a service-role-only
 --    RPC `get_hud_token()` — the token must never ship to the client.
+
+-- ---------------------------------------------------------------------------
+-- 2026-08-06 · the reopen override. Safe to run against an existing database.
+alter table public.cycle add column if not exists reopened_at timestamptz;

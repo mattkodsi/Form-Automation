@@ -3458,8 +3458,14 @@ function renderBody(){
   const _rb=el('roBar');
   if(_rb){const _cy=(_cyRO&&mpdb&&activeCid)?(mpdb.listCycles(activePid)||[]).find(c=>c.id===activeCid):null;
     _rb.innerHTML=_cyRO?('\u25cf Filed \u2014 read only<span>'
-      +(_cy&&_cy.effective_date?('These rents took effect '+esc(fmtDateLong(_cy.effective_date))+'. A package is history once its date has passed, so nothing here can change.')
-        :'A package is history once its date has passed, so nothing here can change.')+'</span>'):'';}
+      +(_cy&&_cy.effective_date?('These rents took effect '+esc(fmtDateLong(_cy.effective_date))+'. A package is history once its date has passed.')
+        :'A package is history once its date has passed.')+'</span>'
+      +'<button class="txtbtn" id="roReopen">Reopen it</button>'):'';
+    const _rr=el('roReopen');
+    if(_rr)_rr.onclick=()=>dialogConfirm('Reopen this package?',
+      'Its documents have already gone out and its rents are in force. Reopen it only to correct the record of what was filed \u2014 anything entered here stays in this package and cannot reach a later one.',
+      'Reopen',false,async()=>{try{await mpdb.reopenCycle(activeCid);}catch(e){saveFailedModal(e);return;}
+        _cyRO=false;renderBody();renderFormHeader();setStatus('Reopened \u2014 this package can be edited again.');});}
   syncReviewed();const _sy=window.scrollY;const _anchorSel=(_refocusSel&&!_mouseFocus)?_refocusSel:(((Date.now()-_lastClickAt)<2000)?_lastClickSel:null);let _anchorTop=null;if(_anchorSel){try{const _ac=document.querySelector(_anchorSel);if(_ac)_anchorTop=_ac.getBoundingClientRect().top;}catch(e){}}computeSecPos();const _SR={1:renderSources,2:()=>renderFieldSection(FIELD_SECTIONS[0]),3:()=>renderFieldSection(FIELD_SECTIONS[1]),4:()=>renderFieldSection(FIELD_SECTIONS[2]),5:()=>renderFieldSection(FIELD_SECTIONS[3]),6:renderRents,7:renderPartB,8:renderChecklist,9:()=>renderFieldSection(FIELD_SECTIONS[4]),10:renderOcaf,11:renderUaf,12:renderPrincipals};el('sections').innerHTML=visibleSections().map(n=>_SR[n]()).join('');
   renderFormHeader();wireBody();renderCommand();renderBar();renderRail();renderAttention();refreshFooter();
   if(_refocusSel&&!_mouseFocus){try{const _f=document.querySelector(_refocusSel);if(_f&&_f.focus){_f.focus({preventScroll:true});if(/^(INPUT|TEXTAREA)$/.test(_f.tagName)&&typeof _f.setSelectionRange==='function'){const _L=(_f.value||'').length;try{_f.setSelectionRange(_L,_L);}catch(_e){}}}}catch(e){}}_refocusSel=null;
@@ -6605,7 +6611,7 @@ __rcsFill:(opts)=>rcsFillFromParsed(opts),/* The same door for the rent schedule
      would otherwise serve the old bands, which is harmless in production (the
      table is read once at boot) and silently wrong in any suite that seeds
      twice. */
-  __db:()=>mpdb,__openCycleForm:(cid)=>openCycleForm(cid),__launcher:(pid)=>{activePid=pid;return openLauncher(pid);},
+  __db:()=>mpdb,__launcher:(pid)=>{activePid=pid;return openLauncher(pid);},
   __seedHap:async(rows)=>{_hapCache=null;await mpdb._setHapRows(rows);},
   __menuView:()=>menuView,
   __setMenuView:(v)=>{menuView=v;renderMenu();},

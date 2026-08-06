@@ -116,7 +116,7 @@ function makeSupabaseDb(client) {
     D.hapError = (hp && hp.error) ? String(hp.error.message || hp.error) : '';
     D.hap = (hp && !hp.error && hp.data) ? hp.data : [];
     D.pmName = (au && !au.error && au.data && au.data[0]) ? (au.data[0].pm_name || '') : '';
-    ((cy && cy.data) || []).forEach(c => { D.cycles[c.id] = { id: c.id, property_id: c.property_id, programs: c.programs || '', label: c.label || '', effective_date: c.effective_date || '', cells: c.cells || {}, generated: c.generated || {}, rs_doc: c.rs_doc || {}, rcs_doc: c.rcs_doc || {}, created_at: c.created_at || '', updated_at: c.updated_at || c.created_at || '' }; });
+    ((cy && cy.data) || []).forEach(c => { D.cycles[c.id] = { id: c.id, property_id: c.property_id, programs: c.programs || '', label: c.label || '', effective_date: c.effective_date || '', cells: c.cells || {}, reopened_at: c.reopened_at || null, generated: c.generated || {}, rs_doc: c.rs_doc || {}, rcs_doc: c.rcs_doc || {}, created_at: c.created_at || '', updated_at: c.updated_at || c.created_at || '' }; });
     (pr.data || []).forEach(r => {
       const sa = String(r.updated_at || '').slice(0, 10);
       const p = { id: r.id, created_at: String(r.created_at || '').slice(0, 10), updated_at: r.updated_at || r.created_at, durable: {}, percycle: {} };
@@ -316,7 +316,7 @@ function makeSupabaseDb(client) {
     };
     const assertCycleOpen = cid => {
       if (!cycleClosed(cid)) return;
-      const e = new Error('This package has already been filed — a later one exists for this property. Filed packages are history and do not change.');
+      const e = new Error('These rents took effect on ' + cyISO(c.effective_date) + '. A package is history once its date has passed \u2014 reopen it if it genuinely still needs work.');
       e.code = 'PACKAGE_CLOSED'; e.cid = cid; throw e;
     };
   const assertPackageFree = (pid, effIn, progs, skipCid) => {
@@ -500,7 +500,7 @@ function makeSupabaseDb(client) {
   }
   async function pushCycle(cid) {
     const c = D.cycles[cid]; if (!c) return;
-    const r = await client.from('cycle').upsert({ id: c.id, property_id: c.property_id, programs: c.programs, label: c.label, effective_date: c.effective_date, cells: c.cells, generated: c.generated, rs_doc: c.rs_doc || {}, rcs_doc: c.rcs_doc || {}, updated_at: now() });
+    const r = await client.from('cycle').upsert({ id: c.id, property_id: c.property_id, programs: c.programs, label: c.label, effective_date: c.effective_date, cells: c.cells, generated: c.generated, rs_doc: c.rs_doc || {}, rcs_doc: c.rcs_doc || {}, ...(c.reopened_at ? { reopened_at: c.reopened_at } : {}), updated_at: now() });
     if (r.error) throw r.error;
   }
 
@@ -704,6 +704,11 @@ function makeSupabaseDb(client) {
         return out;
       },
       cycleClosed(cid) { return cycleClosed(cid); },
+      /* See db.js — same rule, same one-way override. The column is sent only
+         when it is set, so a database that has not run the 2026-08-06 migration
+         keeps working for every package nobody has reopened. */
+      reopenCycle(cid) { const c = D.cycles[cid]; if (!c) return Promise.resolve();
+        c.reopened_at = now(); c.updated_at = now(); return enqueue('cy' + cid, () => pushCycle(cid)); },
       saveFlatCycle(cid, map) {
         const c = D.cycles[cid]; if (!c) throw new Error('no cycle ' + cid);
         assertCycleOpen(cid);
