@@ -9041,6 +9041,14 @@ function dialogInput(title,label,value,okLabel,onOk,extra){ // extra:{label,valu
   const in2=el('dlgIn2');if(in2)in2.addEventListener('keydown',go);
   el('dlgCancel').onclick=closeModal;el('dlgOk').onclick=()=>{const v=(el('dlgIn').value||'').trim();const v2=in2?(in2.value||'').trim():undefined;closeModal();onOk(v,v2);};
 }
+/* A statement, not a question. dialogConfirm always draws Cancel beside its
+   action, which asks the reader to decide something when there is nothing to
+   decide. */
+function dialogAlert(title,body){
+  modal('<div class="dlg-t">'+esc(title)+'</div><div class="dlg-b">'+esc(body)+'</div>'
+    +'<div class="dlg-row"><span class="dlg-sp"></span><button class="btn p" id="dlgOk">OK</button></div>');
+  el('dlgOk').onclick=closeModal;
+}
 function dialogConfirm(title,body,okLabel,danger,onOk){
   modal('<div class="dlg-t">'+esc(title)+'</div><div class="dlg-b">'+body+'</div><div class="dlg-row"><button class="btn" id="dlgCancel">Cancel</button><span class="dlg-sp"></span><button class="btn '+(danger?'danger':'p')+'" id="dlgOk">'+esc(okLabel||'OK')+'</button></div>');
   el('dlgCancel').onclick=closeModal;el('dlgOk').onclick=()=>{closeModal();onOk();};
@@ -10933,8 +10941,20 @@ async function genRentAnalysis(){
 }
 async function genPackage(){
   if(!hasProg('rcs')){await genOcafUafPackage();return;}
-  if(!(window.RCSGen&&window.PDFLib)){setStatus('Generator still loading - try again in a moment.');return;}
-  if(numf(get('units.'+UNITS[0]+'.num_units'))<=0){setStatus('Cannot generate the package with zero units — the first unit type needs a unit count.');return;}
+  /* A refusal has to land where the press did. Both of these used to answer with
+     setStatus and return — and #status is in the toolbar at the top of the page
+     while Generate is in the sticky footer at the bottom, some 760px away at a
+     900px window. The press produced no visible response at all, so the honest
+     reading of the app was that the button was broken. Same refusals, said in
+     the place the reader is looking, and the one that can be acted on says
+     where to go. */
+  if(!(window.RCSGen&&window.PDFLib)){
+    dialogAlert('Still loading','The document generator has not finished loading. Give it a moment and press Generate again.');return;}
+  if(numf(get('units.'+UNITS[0]+'.num_units'))<=0){
+    dialogConfirm('A unit count is needed first',
+      'The rent schedule cannot be built without one. Add the number of units for the first unit type in '
+      +esc(secRef(6))+', then press Generate again.','Take me there',false,()=>gotoSection(6,'units.'+UNITS[0]+'.num_units'));
+    return;}
   let hasLh=false;try{const L=(mpdb&&activePid)?mpdb.getLetterhead(activePid):null;hasLh=!!(L&&L.data);}catch(e){}
   if(!hasLh){const alias=get('tenant.property_alias')||get('property.name')||'the property name';
     dialogConfirm('No letterhead uploaded','The tenant notice will print with a generated header \u2014 the Related logo, \u201c'+esc(alias)+'\u201d, and the management address. A letterhead can be uploaded on the property page.','Generate anyway',false,()=>{__genPackageRun();});return;}
@@ -11064,7 +11084,8 @@ async function measurePdfLetterheadDrop(bytes){ try{
   return Math.min(360,Math.max(110,Math.round(((ph-best)/ph)*792)+36));
 }catch(e){ return null; } }
 async function genOcafUafPackage(){
-  if(!(window.RCSGen&&window.PDFLib)){setStatus('Generator still loading - try again in a moment.');return;}
+  if(!(window.RCSGen&&window.PDFLib)){
+    dialogAlert('Still loading','The document generator has not finished loading. Give it a moment and press Generate again.');return;}
   const A=uafAnalysis();
   const needsNotice=hasProg('uaf')&&A.dec.length>0;
   let hasLh=false;try{const L=(mpdb&&activePid)?mpdb.getLetterhead(activePid):null;hasLh=!!(L&&L.data);}catch(e){}
