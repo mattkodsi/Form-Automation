@@ -5303,7 +5303,7 @@ function dateEffCell(){
   const custom=/^\d{4}-\d{2}-\d{2}$/.test(String(_c0||''))?fmtDate(_c0):_c0;
   const rsLab=rs?(fmtDate(rs)+' · a year after the RS'):'— · no RS date parsed';
   const lab=(src==='custom')?('<input class="uac-in dateeff-in" data-date="1" data-k="rent_schedule.date_eff_custom" value="'+esc(custom)+'" placeholder="mm/dd/yyyy" autocomplete="off">'):(rs?('<input class="uac-in srcedit" data-srcedit="dateeff" data-date="1" value="'+esc(fmtDate(rs))+'"><span class="srctag long">· a year after the RS</span>'):('<span class="ualab">'+esc(rsLab)+'</span>'));
-  let state,c;if(src==='custom'){c=modeOf(['rent_schedule.date_eff_custom','rent_schedule.date_eff_source'])==='over'?provColors('overridden','rent_schedule.date_eff_source'):cellColors('rent_schedule.date_eff_custom');}else{state=rs?srcOf('rent_schedule.date_eff_rs'):'new';c=provColors(state,'rent_schedule.date_eff_source');}
+  const c=cellColor('rent_schedule.date_eff_source');   // one colour rule (unifies the effective-date cell with UA/SAFMR)
   const boxKey=(src==='custom')?'rent_schedule.date_eff_custom':'rent_schedule.date_eff_source';
   const _lkDE=optLock('rent_schedule.date_eff_custom');
   const menu='<div class="uamenu">'+srcOptRow('data-deffopt="rs"',rs?esc(fmtDate(rs)):'','A year after the executed RS',src==='rs',src==='rs'?_lkDE:'')+'<div class="uaopt'+(src==='custom'?' sel':'')+'" data-deffopt="custom">Custom…'+(src==='custom'?_lkDE:'')+'</div></div>';
@@ -7875,7 +7875,7 @@ function ocafFactorCell(){const pub=get('ocaf.factor_pub'),fy=get('ocaf.factor_f
   const lab=(src==='custom')
     ?('<input class="uac-in" data-k="ocaf.factor_custom" value="'+esc(custom)+'" placeholder="4.9" style="width:78px"><span class="srctag">% · custom</span>')
     :(pub?('<span class="ualab">'+esc(pub)+'%<span class="srctag long" style="margin-left:6px">· FY'+esc(fy)+' Federal Register</span></span>'):('<span class="ualab" style="color:#8791a5">— pull or enter the factor</span>'));
-  let state,c;if(src==='custom'){const _st=srcCellState('ocaf.factor_custom');c=provColors(_st==='overridden'?'overridden':(_st==='database'?'database':'new'),'ocaf.factor_src');}else{state=pub?srcOf('ocaf.factor_pub'):'new';const _cs=srcCellState('ocaf.factor_custom');if(_cs==='overridden')state='overridden';else if(_cs==='database'&&state==='new')state='database';c=provColors(state,'ocaf.factor_src');}
+  const c=cellColor('ocaf.factor_src');   // one colour rule (unifies the OCAF factor cell)
   const boxKey=(src==='custom')?'ocaf.factor_custom':'ocaf.factor_src';
   const _lkOC=optLock('ocaf.factor_custom');
   const menu='<div class="uamenu">'+srcOptRow('data-ocfopt="fr"',pub?esc(pub+'% · FY'+fy):'','Federal Register',src==='fr',src==='fr'?_lkOC:'')+'<div class="uaopt'+(src==='custom'?' sel':'')+'" data-ocfopt="custom">Custom…'+(src==='custom'?_lkOC:'')+'</div></div>';
@@ -8611,8 +8611,8 @@ function paintCell(k){const gb=groupOf(k);if(gb)return paintGroup(gb);
      function's generic path. Before this the two disagreed by a whole colour, and
      the generic path also declined the rows whose source key the record does not
      hold yet (`if(!s)return` below), leaving them unrepaintable. */
-  const _fam=/^units\.(\d+)\.(ua|safmr)_(source|custom)$/.exec(k);
-  if(_fam){const fc=cellColor('units.'+_fam[1]+'.'+_fam[2]+'_source');   // one colour rule, both painters (was ua/safmrCellColors)
+  const _sp=(typeof srcSpecAny==='function')?srcSpecAny(k):null;
+  if(_sp){const fc=cellColor(_sp.srcKey);   // one colour rule, both painters — every source family (ua/safmr/date/ocaf)
     const fb=document.querySelector('[data-box="'+k+'"]');
     if(fb){fb.style.background=fc[1];fb.style.borderLeftColor=fc[0];}return;}
   if(k==='ca.name'||k==='ca.prefix')return paintCaName();const s=form[k];if(!s)return;
