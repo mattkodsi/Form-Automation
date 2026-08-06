@@ -185,7 +185,7 @@ body.scrolled #ccbar{transform:translateY(0);opacity:1}
 .card.collapsed .chead{border-bottom:none} .card.collapsed .cbody{display:none}
 .cnum{width:24px;height:24px;border-radius:50%;background:var(--navy);color:var(--surface);font-size:12px;display:flex;align-items:center;justify-content:center;font-weight:600}
 .ctitle{font-size:15px;font-weight:700} .chev{margin-left:8px;color:#aab3c2;transition:transform .15s} .card.collapsed .chev{transform:rotate(-90deg)}
-.pill{margin-left:auto;font-size:11.5px;font-weight:700;padding:4px 12px;border-radius:20px} .pill.ok{background:var(--ok-fill);color:var(--ok)} .pill.warn{background:#fdf0df;color:var(--prov-over)} .pill.neutral{background:#e7f3f1;color:var(--prov-cycle)} .pill.empty{background:var(--page);color:var(--prov-new)}
+.pill{margin-left:auto;font-size:11.5px;font-weight:700;padding:4px 12px;border-radius:20px} .pill.ok{background:var(--ok-fill);color:var(--ok)} .pill.warn{background:#fdf0df;color:var(--prov-over)} .pill.neutral{background:#e7f3f1;color:var(--prov-cycle)} .pill.empty{background:var(--page);color:var(--prov-new)} .pill.ok.cav{color:#537f66} .ri.ok.cav{color:#537f66} .cavt{margin-top:3px;font-size:11px;color:#537f66}
 /* generated-package list: one row per document, readable at a glance */
 .gdocs{display:flex;flex-direction:column;gap:7px;margin-top:16px}
 .gnotes{display:flex;flex-direction:column;gap:5px;margin-top:12px}
@@ -1942,6 +1942,19 @@ body.scrolled #viewForm .rail{top:60px;max-height:calc(100vh - 78px)}
 #viewForm .pill.warn{background:none;color:var(--prov-over)}
 #viewForm .pill.neutral{background:none;color:var(--prov-cycle)}
 #viewForm .pill.empty{background:none;color:var(--ink-3)}
+/* Confirmed, with something still to enter — a gate-3 caveat: the section's
+   documents all generate, and one of them will print without a line it would
+   otherwise carry. Dimmed rather than amber, because the section IS ready and
+   painting it like one that cannot generate flattens a real distinction.
+   #537f66 holds 4.57:1 on white, so the word stays AA-legible at 11.5px; the
+   colour shift alone is only 1.41 against the solid green, which is not enough
+   to read at 14px, so the weight carries the other half of the signal — 400 against
+   the pill's own 600, and 500 against the rail tick's 700. Setting the pill to 600
+   here was a no-op: #viewForm .pill is ALREADY 600, so the dim was colour alone. */
+#viewForm .pill.ok.cav{color:#537f66;font-weight:400}
+#viewForm .ri.ok.cav{color:#537f66;font-weight:500}
+#viewForm .card:has(.pill.ok.cav) .cnum{background:#537f66;color:#fff}
+#viewForm .cavt{margin-top:3px;font-size:11px;color:#537f66}
 #viewForm .cbody{padding:18px 20px}
 #viewForm .flabel,#viewForm .ulab,#viewForm .rhead{font-size:11.5px;font-weight:600;
   color:var(--ink-3);letter-spacing:0;text-transform:none;margin-bottom:5px}
@@ -6099,7 +6112,12 @@ function rsCapacity(){
   return {R,L,N,cut,nrOver,msgs,flags};
 }
 function capNote(){const c=rsCapacity();if(!c.msgs.length)return '';return '<div class="ucnote warn" style="display:block;margin:0 0 10px">\u26a0 '+c.msgs.map(esc).join('<br>')+'</div>';}
-function refreshFlags(){document.querySelectorAll('[data-pill]').forEach(p=>{const n=+p.getAttribute('data-pill');const st=sectionStatus(n);p.className='pill '+(st==='warn'?'warn':'ok');p.textContent=st==='warn'?'review':'confirmed';});renderRail();renderAttention();}
+function refreshFlags(){const _si=sectionIssues();
+  document.querySelectorAll('[data-pill]').forEach(p=>{const n=+p.getAttribute('data-pill');
+    const st=sectionStatus(n,_si),L=PILL_LOOK[st]||PILL_LOOK.ok;
+    p.className=L[0];p.textContent=L[1];
+    if(st==='cav')p.setAttribute('title',cavWhy(_si.cav[n]));else p.removeAttribute('title');});
+  renderRail(_si);renderAttention();}
 function unitCard(i,pos){const trash=UNITS.length>1?`<button class="trash" data-delunit="${i}" title="Delete this unit type">✕</button>`:'';
   const _c=numf(get('units.'+i+'.current')),_p=numf(get('units.'+i+'.proposed'));const _d=_p-_c,_pc=_c>0?Math.round(_d/_c*100):0;
   const metric=(_c>0&&_p>0)?`<span class="ucmetric" data-metric="${i}" style="color:${_d>=0?'#2f6a45':'#9c2b18'}">${sMoney(_d)} · ${sPct(_pc)}</span>`:`<span class="ucmetric" data-metric="${i}"></span>`;
@@ -8000,15 +8018,23 @@ function sectionEmpty(n){const ks=sectionKeys(n);if(!ks.length)return false;
    section that holds it — gate 1's identity keys plus each document's own.
    score.js already tags every one with a `sec`; nothing here decides what is
    required, it only asks. */
-function missingBySection(){
-  const out={};
+/* Both halves of "what is wrong here", from ONE packageScore(). Split because
+   they mean different things to a reader: `miss` stops a document being
+   written, `cav` does not — it changes what the document SAYS. The management
+   street is the clearest case (score.js:167): the tenant notice generates
+   without it and simply never tells the tenant where to inspect the materials.
+   Returned together so the rail can compute both marks off a single score
+   rather than scoring the package once per section. */
+function sectionIssues(){
+  const miss={},cav={};
   try{const S=packageScore();
-    const add=m=>{(m||[]).forEach(x=>{if(x&&x.sec!=null)(out[x.sec]=out[x.sec]||[]).push(x);});};
-    add(S&&S.profile&&S.profile.missing);   // gate 1: is this a real property record
-    add(S&&S.blockers);
-    ((S&&S.docs)||[]).forEach(d=>add(d.missing));
+    const add=(m,into)=>{(m||[]).forEach(x=>{if(x&&x.sec!=null)(into[x.sec]=into[x.sec]||[]).push(x);});};
+    add(S&&S.profile&&S.profile.missing,miss);   // gate 1: is this a real property record
+    add(S&&S.blockers,miss);                     // gate 2: can each document be written
+    ((S&&S.docs)||[]).forEach(d=>add(d.missing,miss));
+    add(S&&S.caveats,cav);                       // gate 3: will it print complete
   }catch(e){}
-  return out;}
+  return {miss:miss,cav:cav};}
 /* An indicator computes; it never asserts (FORM-RULES 15). This used to return
    'confirmed' for any section that merely held SOMETHING and had nothing
    overridden — so a package one click old, carrying only the property name the
@@ -8016,8 +8042,15 @@ function missingBySection(){
    not one document could be built. "Confirmed" now means the package's own
    scoring finds nothing missing in that section, which is the same computation
    the ring and the six-document card have used all along. */
-function sectionStatus(n){
-  if(n===1)return _rcsUpload?'ok':((hasProg('rcs')||hasProg('ocaf'))?'warn':'ok');
+/* `_si` is passed in by the two renderers that mark every section at once, so
+   a repaint scores the package ONCE instead of once per section. */
+function sectionStatus(n,_si){
+  _si=_si||sectionIssues();
+  /* Confirmed, or confirmed-with-a-note. Every path that used to return 'ok'
+     asks this instead, so a caveat cannot reach the rail as a full tick through
+     a branch somebody forgot — which is how sections 10 and 11 drifted. */
+  const _ok=()=>((_si.cav[n]||[]).length?'cav':'ok');
+  if(n===1)return _rcsUpload?_ok():((hasProg('rcs')||hasProg('ocaf'))?'warn':_ok());
   /* Asked BEFORE emptiness, which is the whole point. The blockers sit in a
      section whether or not anybody has typed in it; sectionEmpty only decided
      whether the rail was allowed to look at them. So one character turned the
@@ -8025,13 +8058,30 @@ function sectionStatus(n){
      state never moved — the mark tracked whether you had touched it. Section 1
      has always worked this way (it is excluded from the empty check below and
      says "required and absent" from the start); every section does now. */
-  if((missingBySection()[n]||[]).length)return 'warn';
+  if((_si.miss[n]||[]).length)return 'warn';
   if(sectionEmpty(n))return 'empty';
-  if(n===10){if(sectionKeys(10).some(k=>srcOf(k)==='overridden'))return'warn';const C=ocafCalc();return(C.F>0&&C.R>0)?'ok':'warn';}
-  if(n===11){if(sectionKeys(11).some(k=>srcOf(k)==='overridden'))return'warn';const A=uafAnalysis();if(A.mismatch.length)return'warn';const hasF=UAF_UTILS.some(u=>numf(get('uaf.f_'+u[0]))>0);return(hasF&&A.any)?'ok':'warn';}const over=sectionKeys(n).some(k=>srcOf(k)==='overridden');if(n===6&&(UNITS.some(uaUnresolved)||UNITS.some(i=>srcOf('units.'+i+'.ua_source')==='overridden')||(hasProg('rcs')&&(UNITS.some(safmrUnresolved)||UNITS.some(i=>srcOf('units.'+i+'.safmr_source')==='overridden')||UNITS.some(overCeiling)))||rsCapacity().msgs.length>0))return'warn';return over?'warn':'ok';}
-function sectionPill(n){const st=sectionStatus(n);
-  if(st==='empty')return '<span class="pill empty" data-pill="'+n+'">not started</span>';
-  return st==='warn'?'<span class="pill warn" data-pill="'+n+'">review</span>':'<span class="pill ok" data-pill="'+n+'">confirmed</span>';}
+  if(n===10){if(sectionKeys(10).some(k=>srcOf(k)==='overridden'))return'warn';const C=ocafCalc();return(C.F>0&&C.R>0)?_ok():'warn';}
+  if(n===11){if(sectionKeys(11).some(k=>srcOf(k)==='overridden'))return'warn';const A=uafAnalysis();if(A.mismatch.length)return'warn';const hasF=UAF_UTILS.some(u=>numf(get('uaf.f_'+u[0]))>0);return(hasF&&A.any)?_ok():'warn';}const over=sectionKeys(n).some(k=>srcOf(k)==='overridden');if(n===6&&(UNITS.some(uaUnresolved)||UNITS.some(i=>srcOf('units.'+i+'.ua_source')==='overridden')||(hasProg('rcs')&&(UNITS.some(safmrUnresolved)||UNITS.some(i=>srcOf('units.'+i+'.safmr_source')==='overridden')||UNITS.some(overCeiling)))||rsCapacity().msgs.length>0))return'warn';return over?'warn':_ok();}
+/* ONE place decides how a section's mark looks, because two decided before and
+   they disagreed. sectionPill drew "not started" for an untouched section;
+   refreshFlags — which repaints on EVERY keystroke — drew the same section
+   "confirmed", because it collapsed everything that was not 'warn' to 'ok'. So
+   typing anywhere turned every untouched section green, and the rail beside it
+   went on showing them empty. That is FORM-RULES 13 exactly: a live re-render
+   must draw what the full render draws, and the way to guarantee it is to have
+   one description rather than two implementations. */
+const PILL_LOOK={empty:['pill empty','not started'],warn:['pill warn','review'],
+                 cav:['pill ok cav','confirmed'],ok:['pill ok','confirmed']};
+/* Why the tick is dimmed rather than turned amber: the section IS ready — every
+   document it feeds can be written. Painting it the same colour as a section
+   that cannot generate at all would flatten a distinction that is real. */
+function cavWhy(list){return (list&&list.length)
+  ?('Ready to generate, but still missing: '+list.map(x=>x.label).join(', '))
+  :'';}
+function sectionPill(n,_si){_si=_si||sectionIssues();
+  const st=sectionStatus(n,_si),L=PILL_LOOK[st]||PILL_LOOK.ok;
+  const t=(st==='cav')?(' title="'+esc(cavWhy(_si.cav[n]))+'"'):'';
+  return '<span class="'+L[0]+'" data-pill="'+n+'"'+t+'>'+L[1]+'</span>';}
 function card(n,pill,body){return `<div class="card" data-sec="${n}"><div class="chead"><span class="cnum">${_secPos[n]||n}</span><span class="ctitle">${SECTION_TITLES[n]}</span>${pill}<span class="chev">▾</span></div><div class="cbody">${body}</div></div>`;}
 
 
@@ -8402,15 +8452,22 @@ function attnFlags(){const f=[];const u=UNITS.filter(uaUnresolved).length;if(u)f
    one, and a package one click old read 9 of 10 confirmed. "Confirmed" now
    counts only sections that really are; an untouched one gets a hollow ring and
    counts as neither confirmed nor a problem. */
-function renderRail(){const vis=visibleSections();const st={};vis.forEach(n=>st[n]=(n===7?'ok':sectionStatus(n)));let conf=0;vis.forEach(n=>{if(st[n]==='ok')conf++;});const need=vis.length-conf;
+function renderRail(_si){_si=_si||sectionIssues();
+  const vis=visibleSections();const st={};vis.forEach(n=>st[n]=(n===7?'ok':sectionStatus(n,_si)));
+  /* A dimmed section still counts as confirmed. It IS confirmed — every
+     document it feeds can be written; what is left changes what one of them
+     says. Counting it short would make the ring and this line disagree about a
+     package the ring calls ready. */
+  let conf=0,cavN=0;vis.forEach(n=>{if(st[n]==='ok'||st[n]==='cav')conf++;if(st[n]==='cav')cavN++;});
+  const need=vis.length-conf;
   /* refreshFlags redraws this rail on every keystroke, so a row that HAS focus
      has to get it back — otherwise a keyboard reader standing in the rail is
      thrown out of it by somebody else's repaint. */
   const _af=document.activeElement;const _afs=(_af&&_af.classList&&_af.classList.contains('railitem'))?_af.getAttribute('data-rsec'):null;
-  el('rail').innerHTML='<div class="railbar nofx" id="railbar" aria-hidden="true"></div>'+vis.map(n=>`<button type="button" class="railitem" data-rsec="${n}"><span class="ri ${st[n]==='warn'?'warn':(st[n]==='empty'?'none':'ok')}">${st[n]==='warn'?'!':(st[n]==='empty'?'\u25cb':'✓')}</span><span class="rname">${_secPos[n]||n}. ${SECTION_TITLES[n]}</span></button>`).join('');
+  el('rail').innerHTML='<div class="railbar nofx" id="railbar" aria-hidden="true"></div>'+vis.map(n=>`<button type="button" class="railitem" data-rsec="${n}"><span class="ri ${st[n]==='warn'?'warn':(st[n]==='empty'?'none':(st[n]==='cav'?'ok cav':'ok'))}"${st[n]==='cav'?' title="'+esc(cavWhy(_si.cav[n]))+'"':''}>${st[n]==='warn'?'!':(st[n]==='empty'?'\u25cb':'✓')}</span><span class="rname">${_secPos[n]||n}. ${SECTION_TITLES[n]}</span></button>`).join('');
   if(_afs){const _r=document.querySelector('#rail .railitem[data-rsec="'+_afs+'"]');if(_r&&_r.focus)_r.focus({preventScroll:true});}
   railApply();const _rb=el('railbar');if(_rb&&window.requestAnimationFrame)requestAnimationFrame(()=>{if(_rb.classList)_rb.classList.remove('nofx');});
-  el('railprog').innerHTML=`<b>${conf} of ${vis.length} confirmed</b>${need?`<div class="warnt">${need} section${need===1?"":"s"} still to confirm</div>`:''}<div class="track sm"><div style="width:${conf/vis.length*100}%;background:#1f5480"></div></div>`;
+  el('railprog').innerHTML=`<b>${conf} of ${vis.length} confirmed</b>${need?`<div class="warnt">${need} section${need===1?"":"s"} still to confirm</div>`:''}${cavN?`<div class="cavt">${cavN} confirmed with items left</div>`:''}<div class="track sm"><div style="width:${conf/vis.length*100}%;background:#1f5480"></div></div>`;
   const fl=attnFlags();el('railattn').style.display=fl.length?'block':'none';el('railattn').innerHTML=fl.length?`⚠ <b>${fl.length} thing${fl.length===1?"":"s"} to look at</b>${fl.map(x=>`<div class="sub" style="margin-top:6px">${x}</div>`).join('')}`:'';}
 function renderAttention(){/* the section rail carries the attention list; the old top banner duplicated it */}
 
@@ -11864,6 +11921,8 @@ __rcsFill:(opts)=>rcsFillFromParsed(opts),/* The same door for the rent schedule
   __hapProps:()=>hapProperties(),
   __installRA:()=>installRaSource(),
   __scheduledProg:()=>scheduledProg(),
+  __sectionStatus:(n)=>sectionStatus(n),
+  __sectionIssues:()=>sectionIssues(),
   /* The rail's doors. railBar reads the LIVE box, so it is mid-flight during the
      travel animation — read it after the transition, not during. */
   railRows:()=>[].slice.call(document.querySelectorAll('#rail .railitem')).map(r=>({sec:+r.getAttribute('data-rsec'),label:(r.textContent||'').trim(),active:r.classList.contains('on'),tabIndex:r.tabIndex,ariaCurrent:r.getAttribute('aria-current'),top:r.offsetTop,height:r.offsetHeight})),

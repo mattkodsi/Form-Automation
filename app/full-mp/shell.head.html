@@ -185,7 +185,7 @@ body.scrolled #ccbar{transform:translateY(0);opacity:1}
 .card.collapsed .chead{border-bottom:none} .card.collapsed .cbody{display:none}
 .cnum{width:24px;height:24px;border-radius:50%;background:var(--navy);color:var(--surface);font-size:12px;display:flex;align-items:center;justify-content:center;font-weight:600}
 .ctitle{font-size:15px;font-weight:700} .chev{margin-left:8px;color:#aab3c2;transition:transform .15s} .card.collapsed .chev{transform:rotate(-90deg)}
-.pill{margin-left:auto;font-size:11.5px;font-weight:700;padding:4px 12px;border-radius:20px} .pill.ok{background:var(--ok-fill);color:var(--ok)} .pill.warn{background:#fdf0df;color:var(--prov-over)} .pill.neutral{background:#e7f3f1;color:var(--prov-cycle)} .pill.empty{background:var(--page);color:var(--prov-new)}
+.pill{margin-left:auto;font-size:11.5px;font-weight:700;padding:4px 12px;border-radius:20px} .pill.ok{background:var(--ok-fill);color:var(--ok)} .pill.warn{background:#fdf0df;color:var(--prov-over)} .pill.neutral{background:#e7f3f1;color:var(--prov-cycle)} .pill.empty{background:var(--page);color:var(--prov-new)} .pill.ok.cav{color:#537f66} .ri.ok.cav{color:#537f66} .cavt{margin-top:3px;font-size:11px;color:#537f66}
 /* generated-package list: one row per document, readable at a glance */
 .gdocs{display:flex;flex-direction:column;gap:7px;margin-top:16px}
 .gnotes{display:flex;flex-direction:column;gap:5px;margin-top:12px}
@@ -1942,6 +1942,19 @@ body.scrolled #viewForm .rail{top:60px;max-height:calc(100vh - 78px)}
 #viewForm .pill.warn{background:none;color:var(--prov-over)}
 #viewForm .pill.neutral{background:none;color:var(--prov-cycle)}
 #viewForm .pill.empty{background:none;color:var(--ink-3)}
+/* Confirmed, with something still to enter — a gate-3 caveat: the section's
+   documents all generate, and one of them will print without a line it would
+   otherwise carry. Dimmed rather than amber, because the section IS ready and
+   painting it like one that cannot generate flattens a real distinction.
+   #537f66 holds 4.57:1 on white, so the word stays AA-legible at 11.5px; the
+   colour shift alone is only 1.41 against the solid green, which is not enough
+   to read at 14px, so the weight carries the other half of the signal — 400 against
+   the pill's own 600, and 500 against the rail tick's 700. Setting the pill to 600
+   here was a no-op: #viewForm .pill is ALREADY 600, so the dim was colour alone. */
+#viewForm .pill.ok.cav{color:#537f66;font-weight:400}
+#viewForm .ri.ok.cav{color:#537f66;font-weight:500}
+#viewForm .card:has(.pill.ok.cav) .cnum{background:#537f66;color:#fff}
+#viewForm .cavt{margin-top:3px;font-size:11px;color:#537f66}
 #viewForm .cbody{padding:18px 20px}
 #viewForm .flabel,#viewForm .ulab,#viewForm .rhead{font-size:11.5px;font-weight:600;
   color:var(--ink-3);letter-spacing:0;text-transform:none;margin-bottom:5px}
