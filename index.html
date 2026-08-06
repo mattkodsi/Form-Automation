@@ -5738,15 +5738,45 @@ function cellColor(key){return provColors(cellState(key),key);}
    source-pointer cells (UA/SAFMR/effective-date/OCAF factor). Pure + unwired. */
 const SRC_TAG={exec:'Executed RS',rcs:'RCS report',hud:'HUD API',fr:'Federal Register',rs:'A year after the executed RS'};
 function sourcesFor(key){
-  const sp=(typeof srcSpec==='function')?srcSpec(key):null;
-  if(sp){
+  const sp=(typeof srcSpecAny==='function')?srcSpecAny(key):null;
+  if(sp){                                     // Engine A: resolver + shadow figures (UA/SAFMR/date/OCAF)
     const cur=get(sp.srcKey)||sp.fallback;
     const rows=(sp.names||[]).map(n=>{const v=sp.resolve(n);
       return {kind:'doc',src:n,tag:SRC_TAG[n]||n,val:(v==null||v==='')?null:v,sel:cur===n};});
     rows.push({kind:'free',src:'custom',tag:'Custom',val:get(sp.cusKey),sel:cur==='custom'});
     return rows;
   }
-  return [];   // other families folded in as each is wired
+  // Engine B: table-driven pull cells — text via SRCPICK_ROWS, money via moneySrcRows.
+  // Selection is the cell's own origin (no resolver key); Custom is a typed value.
+  let brows=[];
+  if(typeof SRCPICK_ROWS!=='undefined'&&SRCPICK_ROWS[key])brows=SRCPICK_ROWS[key]();
+  else if(typeof moneySrcRows==='function'){const mr=moneySrcRows(key);if(mr&&mr.length)brows=mr;}
+  if(brows.length){
+    const cur=form[key];const org=cur&&cur.origin;
+    const rows=brows.map(r=>{const oc=TAG_ORIGIN[r.tag];
+      return {kind:'doc',src:oc||r.tag,tag:r.tag,val:(r.val==null||r.val==='')?null:r.val,sel:!!oc&&org===oc};});
+    rows.push({kind:'free',src:'custom',tag:'Custom',val:cur?cur.value:'',sel:org==='typed'});
+    return rows;
+  }
+  return [];   // kind E — no dropdown; or a family not yet folded in
+}
+/* sourceMenu(key): THE ONE dropdown — the ideal (UA/SAFMR) menu rendered from
+   sourcesFor for any cell. Sources (dim when empty, FR-1), always a Custom line
+   for open cells, a padlock on the selected line when the cell is pinned. Every
+   option is keyed data-srcpick=cell / data-srcopt=source so ONE handler serves
+   all line-kinds. Pure + unwired — the wiring replaces srcPick / the *opt menus. */
+function sourceMenu(key){
+  const lines=sourcesFor(key); if(!lines.length)return '';
+  const pinned=!!(form[key]&&form[key].pinned);
+  const lock=(sel)=>(sel&&pinned)?('<span class="srclock" data-lock="'+esc(key)+'" role="button" tabindex="0" aria-label="Release lock" title="Locked to your choice. Click to release so a fill or pull can update this cell.">'+LOCK_SVG+'</span>'):'';
+  const opts=lines.map(l=>{
+    const attrs='data-srcpick="'+esc(key)+'" data-srcopt="'+esc(l.src)+'"';
+    if(l.kind==='free')return '<div class="uaopt'+(l.sel?' sel':'')+'" '+attrs+'>Custom\u2026'+lock(l.sel)+'</div>';
+    return l.val!=null
+      ?'<div class="uaopt srcopt'+(l.sel?' sel':'')+'" '+attrs+'>'+esc(srcDisp(key,l.val))+'<span class="uasub">'+esc(l.tag)+'</span>'+lock(l.sel)+'</div>'
+      :'<div class="uaopt srcopt srcdim" '+attrs+'>\u2014<span class="uasub">'+esc(l.tag)+' \u00b7 not available</span></div>';
+  }).join('');
+  return '<div class="uadrop pocpick"><div class="uatrigger" tabindex="0" title="Pull from a source"><span class="cvx">&#9662;</span></div><div class="uamenu">'+opts+'</div></div>';
 }
 function moneyBox(k,noIcons){const c=boxColor(k);const _rows=moneySrcRows(k);
   const pick=_rows.length?srcPick(k,_rows):'';
@@ -11449,7 +11479,7 @@ function contactDialog(c){c=c||{};
    ReferenceError at load and took three suites down with zero checks run. An
    arrow defers the lookup to the call, which only ever happens in the browser
    suite, which has the whole bundle. */
-const __API={LABEL_HINTS,rsParseUnitType,rsNum,ocrMapPages:(p)=>ocrMapPages(p),ocrWhy:()=>ocrWhy(),fmtPhone,fmtPhoneInput,fmtDate,sMoney,sPct,sK,analysis,uaResolvedOf,safmrResolvedOf,uaConflict,uaUnresolved,renderMenu,renderLauncher,openMenu,openForm,openLauncher,ringSvg,niceDate,isDirty,overrideCount,isStateKey,attnFlags,pbUtil,clearUncheckedWriteins,srcOf:(k)=>srcOf(k),__openForm:(pid)=>{activePid=pid;return openForm('RCS');},__openCycleForm:(pid,cid)=>{activePid=pid;return openCycleForm(cid);},__renderBody:()=>renderBody(),__docMissing:(id)=>docMissing(id).map(x=>x.label),__docWarns:(id)=>docWarns(id).map(x=>x.label),__edit:(k,v)=>{form=store.editForm(form,k,v);},getVal:(k)=>get(k),modeOf:(kk)=>modeOf(kk),fieldKeys:(k)=>fieldKeys(k),keysCanSave:(ks)=>keysCanSave(ks),keysCanRevert:(ks)=>keysCanRevert(ks),keysNewDirty:(ks)=>keysNewDirty(ks),__revert:(k)=>store.revertForm(form,k),coupledKeys:(k)=>coupledKeys(k),__firstPid:()=>{const ps=mpdb?mpdb.listProperties():[];return ps.length?ps[0].id:null;},__listProps:()=>(mpdb?mpdb.listProperties():[]),__cycles:()=>(mpdb?mpdb.listCycles(activePid):[]),__toggleProg:(p)=>toggleCycleProg(p),packageScore:()=>packageScore(),packageDocs:()=>packageDocs(),scoreCtx:()=>scoreCtx(),__pkgCard:()=>pkgCard(),__boxes:(i)=>({ua:uaBox(i),safmr:safmrBox(i)}),__saveField:async(k)=>{form=await store.saveField(form,k);},__set:(f,u)=>{form=f;UNITS=u;},__cell:(k)=>form[k],__cellState:(k)=>cellState(k),__cellColor:(k)=>cellColor(k),__sourcesFor:(k)=>sourcesFor(k),__uaCellColors:(i)=>uaCellColors(i),__safmrCellColors:(i)=>safmrCellColors(i),
+const __API={LABEL_HINTS,rsParseUnitType,rsNum,ocrMapPages:(p)=>ocrMapPages(p),ocrWhy:()=>ocrWhy(),fmtPhone,fmtPhoneInput,fmtDate,sMoney,sPct,sK,analysis,uaResolvedOf,safmrResolvedOf,uaConflict,uaUnresolved,renderMenu,renderLauncher,openMenu,openForm,openLauncher,ringSvg,niceDate,isDirty,overrideCount,isStateKey,attnFlags,pbUtil,clearUncheckedWriteins,srcOf:(k)=>srcOf(k),__openForm:(pid)=>{activePid=pid;return openForm('RCS');},__openCycleForm:(pid,cid)=>{activePid=pid;return openCycleForm(cid);},__renderBody:()=>renderBody(),__docMissing:(id)=>docMissing(id).map(x=>x.label),__docWarns:(id)=>docWarns(id).map(x=>x.label),__edit:(k,v)=>{form=store.editForm(form,k,v);},getVal:(k)=>get(k),modeOf:(kk)=>modeOf(kk),fieldKeys:(k)=>fieldKeys(k),keysCanSave:(ks)=>keysCanSave(ks),keysCanRevert:(ks)=>keysCanRevert(ks),keysNewDirty:(ks)=>keysNewDirty(ks),__revert:(k)=>store.revertForm(form,k),coupledKeys:(k)=>coupledKeys(k),__firstPid:()=>{const ps=mpdb?mpdb.listProperties():[];return ps.length?ps[0].id:null;},__listProps:()=>(mpdb?mpdb.listProperties():[]),__cycles:()=>(mpdb?mpdb.listCycles(activePid):[]),__toggleProg:(p)=>toggleCycleProg(p),packageScore:()=>packageScore(),packageDocs:()=>packageDocs(),scoreCtx:()=>scoreCtx(),__pkgCard:()=>pkgCard(),__boxes:(i)=>({ua:uaBox(i),safmr:safmrBox(i)}),__saveField:async(k)=>{form=await store.saveField(form,k);},__set:(f,u)=>{form=f;UNITS=u;},__cell:(k)=>form[k],__cellState:(k)=>cellState(k),__cellColor:(k)=>cellColor(k),__sourcesFor:(k)=>sourcesFor(k),__sourceMenu:(k)=>sourceMenu(k),__uaCellColors:(i)=>uaCellColors(i),__safmrCellColors:(i)=>safmrCellColors(i),
   /* The whole record, and the snapshot isDirty() measures against. The round-trip
      sweep needs a key-by-key diff (FORM-RULES "Before you deliver" 6): isDirty()
      compares VALUES ONLY, so a hidden side-effect key strands the form dirty with
