@@ -7810,9 +7810,17 @@ function missingBySection(){
    not one document could be built. "Confirmed" now means the package's own
    scoring finds nothing missing in that section, which is the same computation
    the ring and the six-document card have used all along. */
-function sectionStatus(n){if(n!==1&&sectionEmpty(n))return 'empty';
+function sectionStatus(n){
   if(n===1)return _rcsUpload?'ok':((hasProg('rcs')||hasProg('ocaf'))?'warn':'ok');
+  /* Asked BEFORE emptiness, which is the whole point. The blockers sit in a
+     section whether or not anybody has typed in it; sectionEmpty only decided
+     whether the rail was allowed to look at them. So one character turned the
+     ring amber and undoing it turned the ring back, while the section's actual
+     state never moved — the mark tracked whether you had touched it. Section 1
+     has always worked this way (it is excluded from the empty check below and
+     says "required and absent" from the start); every section does now. */
   if((missingBySection()[n]||[]).length)return 'warn';
+  if(sectionEmpty(n))return 'empty';
   if(n===10){if(sectionKeys(10).some(k=>srcOf(k)==='overridden'))return'warn';const C=ocafCalc();return(C.F>0&&C.R>0)?'ok':'warn';}
   if(n===11){if(sectionKeys(11).some(k=>srcOf(k)==='overridden'))return'warn';const A=uafAnalysis();if(A.mismatch.length)return'warn';const hasF=UAF_UTILS.some(u=>numf(get('uaf.f_'+u[0]))>0);return(hasF&&A.any)?'ok':'warn';}const over=sectionKeys(n).some(k=>srcOf(k)==='overridden');if(n===6&&(UNITS.some(uaUnresolved)||UNITS.some(i=>srcOf('units.'+i+'.ua_source')==='overridden')||(hasProg('rcs')&&(UNITS.some(safmrUnresolved)||UNITS.some(i=>srcOf('units.'+i+'.safmr_source')==='overridden')||UNITS.some(overCeiling)))||rsCapacity().msgs.length>0))return'warn';return over?'warn':'ok';}
 function sectionPill(n){const st=sectionStatus(n);
