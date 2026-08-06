@@ -10150,8 +10150,19 @@ function cyclesHtml(hasAction,hap){
      "Start a package". How LOUD the control is answers "is there another way in?"
      — quiet when the schedule offers one above, primary when it does not. What it
      SAYS answers "is this the first?". */
-  const start='<button class="'+(hasAction?'addrow':'btn p')+'" id="bNewCycle">'
-    +(hasAction?'+ ':'')+(cs.length?'Start another package':'Start a package')+'</button>';
+  /* Only where the schedule has no opinion. On a property the tracker carries,
+     this door opened the UNRESTRICTED dialog — any programme, any date — so it
+     could start an RCS in an OCAF year, which is the app contradicting the
+     tracker that owns that fact. Everything it used to be needed for is gone:
+     a second rent action in one year is a second DATE and carries its own
+     schedule row and its own card, and a standalone utility allowance is now
+     contents of the year's package rather than a package of its own. A
+     tracker-carried property always has a way in above this — the current
+     package's card, or nextUpHtml's strip and its button.
+     Off the schedule there is no other door, so it stays. */
+  const _tracked=!!(hap&&hap.action&&hap.action.kind!=='none');
+  const start=_tracked?'':('<button class="'+(hasAction?'addrow':'btn p')+'" id="bNewCycle">'
+    +(hasAction?'+ ':'')+(cs.length?'Start another package':'Start a package')+'</button>');
   if(!cs.length)return '<div class="lh-note" style="margin-top:0;margin-bottom:12px">No packages yet.</div>'+start;
   /* Current is the package the SCHEDULE points at — not the newest one that
      happens to exist. A property that filed 2025 and has not started 2026 showed
@@ -10166,7 +10177,6 @@ function cyclesHtml(hasAction,hap){
      RENEWAL strip that nextUpHtml puts above this list is what says what to
      start, and it renders exactly when the target is unstarted. Off-tracker
      properties have no target at all, so they keep the newest package. */
-  const _tracked=!!(hap&&hap.action&&hap.action.kind!=='none');
   const _tgt=_due?cs.find(c=>c.id===_due):null;
   const cur=_tgt?[_tgt]:(_tracked?[]:[cs.find(c=>c.dominant)||cs[0]]);
   const past=cs.filter(c=>cur.indexOf(c)<0);
