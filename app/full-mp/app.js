@@ -266,12 +266,30 @@ function modeOf(kk){const keys=Array.isArray(kk)?kk:[kk];let _db=false;
    year behind a utility factor each came to be unsaveable in turn. Widening
    here fixes the family rather than the members: what is shown and what is
    saved are now computed from the same set. */
+/* The one cell whose save can only ever refuse. handleZeroUnitCommit already
+   turns this away — "the first unit type needs a unit count" — so the ✓ was a
+   button whose entire behaviour was to say no. The rule stays where it is
+   (FORM-RULES 17: it belongs to the operation); what changes is that the form
+   stops offering the press. Revert is untouched, because getting back to what
+   is on file has to stay available.
+
+   Keyed to the SAME condition the guard uses, not a similar one. A button that
+   disappears under a rule slightly different from the one that refuses is two
+   rules again, and the pair would drift. */
+function saveWouldRefuse(k){const m=/^units\.(\d+)\.num_units$/.exec(k||'');
+  return !!m&&UNITS.length>0&&+m[1]===UNITS[0]&&!(numf(get(k))>0);}
 function ovIcons(kk){const keys=[];(Array.isArray(kk)?kk:[kk]).forEach(function(k){coupledKeys(k).forEach(function(x){if(keys.indexOf(x)<0)keys.push(x);});});const j=keys.join(',');const m=modeOf(keys);
   // A parsed value is exactly as unsaved as a typed one, so it gets the same badge.
   // It costs no more room either: cycle, like new, has nothing to revert TO, so the
   // CSS hides the revert arrow and only the tick shows. (An earlier attempt left
   // that rule out, so both buttons rendered and overflowed the tighter cells.)
-  return `<span class="ovic" data-ovic="${j}" data-mode="${m}" style="display:${m?'inline-flex':'none'}"><button class="miniic rv" data-rev="${j}" title="Revert to on-file">↺</button><button class="miniic sv" data-save1="${j}" title="Save this field to the database">✓</button></span>`;}
+  const _no=keys.some(saveWouldRefuse);
+  /* With the ✓ gone AND the revert hidden by CSS (new and parsed have nothing
+     to revert TO), the span would render as an empty box holding the row open.
+     Nothing to offer means nothing to draw. */
+  const _show=m&&!(_no&&(m==='new'||m==='cycle'));
+  const _sv=_no?'':`<button class="miniic sv" data-save1="${j}" title="Save this field to the database">✓</button>`;
+  return `<span class="ovic" data-ovic="${j}" data-mode="${m}" style="display:${_show?'inline-flex':'none'}"><button class="miniic rv" data-rev="${j}" title="Revert to on-file">↺</button>${_sv}</span>`;}
 
 /* ---- program-driven sections: a cycle's program picks its form ---------- */
 function cycleProgs(){if(activeCid&&mpdb){const cy=mpdb.listCycles(activePid).find(c=>c.id===activeCid);if(cy&&cy.programs.length)return cy.programs;}return ['rcs'];}
@@ -3461,8 +3479,35 @@ function railSet(n){
   const rl=row.closest?row.closest('.rail'):null;const rc=el('rail');
   if(rl&&rc&&rl.scrollHeight>rl.clientHeight+1){const t=rc.offsetTop+row.offsetTop,b=t+row.offsetHeight;
     if(t<rl.scrollTop)rl.scrollTop=t;else if(b>rl.scrollTop+rl.clientHeight)rl.scrollTop=b-rl.clientHeight;}}
+/* A CARET BEATS GEOMETRY. The reading line answers "what is the reader looking
+   at", and it is a good answer right up until the reader is TYPING — at which
+   point the section they are in is not in doubt, and a rail marking the
+   neighbour because that neighbour happens to straddle a line 88px down is
+   simply wrong. Matt: "if I'm literally actively in a cell within y, then the
+   rail needs to understand that."
+
+   Bounded by visibility, deliberately. Focus that has been scrolled off the
+   screen is no longer where the reader is, and a rail pinned to it could never
+   be released by scrolling — you would have to click something to get it back.
+   So the caret wins while you can see it, and the line takes over once you
+   cannot. */
+function railFocusSec(){
+  const a=(typeof document!=='undefined')?document.activeElement:null;
+  if(!a||!a.closest||a===document.body)return null;
+  const card=a.closest('#sections .card[data-sec]');
+  if(!card)return null;
+  const r=a.getBoundingClientRect();
+  const h=window.innerHeight||document.documentElement.clientHeight||0;
+  if(r.bottom<=0||r.top>=h)return null;      // scrolled out of sight: not where the reader is
+  const n=+card.getAttribute('data-sec');
+  return isFinite(n)?n:null;}
 function railApply(){
   if(_railJump&&_railActive!=null){railSet(_railActive);return;}
+  /* Above the pin as well as the line: the pin exists to hold the bar still
+     after a jump, and typing is a later and more explicit statement of where
+     the reader is than the click that jumped them there. */
+  const _f=railFocusSec();
+  if(_f!=null){_railPinSec=null;_railActive=_f;railSet(_f);return;}
   if(_railPinSec!=null){
     if(Math.abs(window.scrollY-_railPinY)<=2){_railActive=_railPinSec;railSet(_railActive);return;}
     _railPinSec=null;}
@@ -3515,6 +3560,11 @@ function railSettle(){
 document.addEventListener('click',e=>{const b=(e.target&&e.target.closest)?e.target.closest('#rail .railitem'):null;
   if(b)railGoto(+b.getAttribute('data-rsec'));});
 window.addEventListener('scroll',railSync,{passive:true});
+/* Both halves: focusout fires BEFORE the next focusin, so leaving a cell for
+   another section has to re-ask, not assume. railSync defers through rAF, by
+   which time document.activeElement has settled on the new element. */
+window.addEventListener('focusin',railSync);
+window.addEventListener('focusout',railSync);
 window.addEventListener('resize',()=>{railObserve();railSync();});
 
 function renderBar(){const a=analysis();const conf=UNITS.filter(uaConflict).length,unres=UNITS.filter(uaUnresolved).length;const uaOk=conf===0||unres===0;
