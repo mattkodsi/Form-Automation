@@ -675,7 +675,7 @@ function fieldCell(f){if(isLocked(f.k))return lockedField(f.k,f.label,raLockShow
   const s=form[f.k]||{value:'',source:'new'};
   const c=f.prefix?groupColors([f.prefix,f.k]):cellColors(f.k);
   const pre=f.prefix?csDrop(f.prefix,['Ms.','Mr.','Dr.','Mx.'],'—','csnarrow',true,partHot(f.prefix)?tintStyle(f.prefix):''):'';
-  return `<div class="field"><div class="flabel">${f.label}</div><div class="fbox" data-box="${f.k}" style="background:${c[1]};border-left-color:${c[0]}">${pre}<input type="text" data-k="${f.k}" style="${f.prefix&&partHot(f.k)?tintStyle(f.k):''}"${f.type==='phone'?' data-phone="1" inputmode="tel" maxlength="14"':''} value="${esc(f.type==='phone'?fmtPhoneInput(s.value):s.value)}" autocomplete="off">${srcTags(f.k)}${SRCPICK_ROWS[f.k]?srcPick(f.k,SRCPICK_ROWS[f.k]()):''}</div>${ovNote(f.prefix?[f.prefix,f.k]:f.k)}</div>`;}
+  return `<div class="field"><div class="flabel">${f.label}</div><div class="fbox" data-box="${f.k}" style="background:${c[1]};border-left-color:${c[0]}">${pre}<input type="text" data-k="${f.k}" style="${f.prefix&&partHot(f.k)?tintStyle(f.k):''}"${f.type==='phone'?' data-phone="1" inputmode="tel" maxlength="14"':''} value="${esc(f.type==='phone'?fmtPhoneInput(s.value):s.value)}" autocomplete="off">${srcTags(f.k)}${sourceMenu(f.k)}</div>${ovNote(f.prefix?[f.prefix,f.k]:f.k)}</div>`;}
 function addrCell(){return compAddrCell(ADDR,'property.addr','Address');}
 function caAddrCell(){return compAddrCell(CA_ADDR,'ca.addr','CA address');}
 function apprAddrCell(){return compAddrCell(APPR_ADDR,'appr.addr','Appraiser address');}
@@ -3927,6 +3927,20 @@ function wireBody(){
         _refocusSel='[data-srcedit="'+fam+'"]'+(i==null?'':'[data-si="'+i+'"]');
         renderBody();setStatus('Saved this field to the database.');return;}
       if(e.key==='Escape'){if(_pending&&_pending.length){e.preventDefault();e.stopPropagation();revertPending();}}});});
+  document.querySelectorAll('[data-srcopt]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();
+    const key=o.getAttribute('data-srcpick'),src=o.getAttribute('data-srcopt');if(!key)return;
+    const sp=(typeof srcSpecAny==='function')?srcSpecAny(key):null;
+    if(src==='custom'){                                   // reveal the field to type your own
+      if(sp){_pendingSnap=snapPend(coupledKeys(sp.cusKey));srcSetSource(sp.cusKey,'custom');_pending=[sp.srcKey];_refocusSel='[data-k="'+sp.cusKey+'"]';}
+      else{_refocusSel='[data-k="'+key+'"]';}
+      renderBody();return;}
+    if(sp){                                               // Engine A: a resolver pointer
+      _pendingSnap=snapPend(coupledKeys(sp.cusKey));srcSetSource(sp.cusKey,src);if(form[sp.srcKey])form[sp.srcKey].pinned=true;
+      _pending=[sp.srcKey];_refocusSel='[data-box="'+sp.srcKey+'"] .uatrigger';renderBody();return;}
+    _pendingSnap=snapPend([key]);                         // Engine B: write the value + record its origin
+    const line=sourcesFor(key).find(l=>l.src===src);
+    if(line&&line.val!=null){form=store.editForm(form,key,String(line.val));if(form[key]){form[key].origin=src;form[key].pinned=true;}}
+    _pending=[key];_refocusSel='[data-box="'+key+'"] .uatrigger';renderBody();setStatus('Pulled from '+(line?line.tag:'source')+'.');}));
   document.querySelectorAll('[data-srck]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();const k=o.getAttribute('data-srck'),_tg=o.getAttribute('data-srctag')||'source';_pendingSnap=snapPend([k]);form=store.editForm(form,k,o.getAttribute('data-srcv'));
     /* A pulled figure is not typed-in data. Into an empty cell it reads as this
        package's own — green, "not saved yet" — rather than plain new; over an
@@ -3956,11 +3970,16 @@ function wireBody(){
      second click can never be a no-op. stopPropagation keeps the option under it
      from re-selecting. */
   document.querySelectorAll('[data-lock]').forEach(o=>{const rel=async e=>{e.stopPropagation();e.preventDefault();
-    const cusKey=o.getAttribute('data-lock');const sp=srcSpec(cusKey);if(!sp)return;
-    form=store.editForm(form,sp.srcKey,'');if(form[sp.srcKey]){form[sp.srcKey].pinned=false;form[sp.srcKey].origin=null;}
-    const ks=coupledKeys(sp.cusKey);
-    try{form=await store.saveFields(form,ks);}catch(err){saveFailed(err);return;}
-    await refreshSnap();snapForm(ks);clearUndoChain();_pending=null;_pendingSnap=null;
+    const cusKey=o.getAttribute('data-lock');const sp=srcSpec(cusKey);
+    if(sp){                                       // Engine A: releasing clears the explicit source pointer
+      form=store.editForm(form,sp.srcKey,'');if(form[sp.srcKey]){form[sp.srcKey].pinned=false;form[sp.srcKey].origin=null;}
+      const ks=coupledKeys(sp.cusKey);
+      try{form=await store.saveFields(form,ks);}catch(err){saveFailed(err);return;}
+      await refreshSnap();snapForm(ks);clearUndoChain();_pending=null;_pendingSnap=null;
+    }else{                                        // Engine B: unpin ONLY. The lock is metadata — persist the
+      if(form[cusKey])form[cusKey].pinned=false;  // pin bit, NEVER commit the value or move the cell's save-state.
+      try{form=await store.savePin(form,cusKey,false);}catch(err){saveFailed(err);return;}
+    }
     renderBody();setStatus('Released — a fill or pull can update this cell again.');};
     o.addEventListener('click',rel);
     o.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')rel(e);});});
@@ -6547,7 +6566,7 @@ function contactDialog(c){c=c||{};
    ReferenceError at load and took three suites down with zero checks run. An
    arrow defers the lookup to the call, which only ever happens in the browser
    suite, which has the whole bundle. */
-const __API={LABEL_HINTS,rsParseUnitType,rsNum,ocrMapPages:(p)=>ocrMapPages(p),ocrWhy:()=>ocrWhy(),fmtPhone,fmtPhoneInput,fmtDate,sMoney,sPct,sK,analysis,uaResolvedOf,safmrResolvedOf,uaConflict,uaUnresolved,renderMenu,renderLauncher,openMenu,openForm,openLauncher,ringSvg,niceDate,isDirty,overrideCount,isStateKey,attnFlags,pbUtil,clearUncheckedWriteins,srcOf:(k)=>srcOf(k),__openForm:(pid)=>{activePid=pid;return openForm('RCS');},__openCycleForm:(pid,cid)=>{activePid=pid;return openCycleForm(cid);},__renderBody:()=>renderBody(),__docMissing:(id)=>docMissing(id).map(x=>x.label),__docWarns:(id)=>docWarns(id).map(x=>x.label),__edit:(k,v)=>{form=store.editForm(form,k,v);},getVal:(k)=>get(k),modeOf:(kk)=>modeOf(kk),fieldKeys:(k)=>fieldKeys(k),keysCanSave:(ks)=>keysCanSave(ks),keysCanRevert:(ks)=>keysCanRevert(ks),keysNewDirty:(ks)=>keysNewDirty(ks),__revert:(k)=>store.revertForm(form,k),coupledKeys:(k)=>coupledKeys(k),__firstPid:()=>{const ps=mpdb?mpdb.listProperties():[];return ps.length?ps[0].id:null;},__listProps:()=>(mpdb?mpdb.listProperties():[]),__cycles:()=>(mpdb?mpdb.listCycles(activePid):[]),__toggleProg:(p)=>toggleCycleProg(p),packageScore:()=>packageScore(),packageDocs:()=>packageDocs(),scoreCtx:()=>scoreCtx(),__pkgCard:()=>pkgCard(),__boxes:(i)=>({ua:uaBox(i),safmr:safmrBox(i)}),__saveField:async(k)=>{form=await store.saveField(form,k);},__set:(f,u)=>{form=f;UNITS=u;},__cell:(k)=>form[k],__cellState:(k)=>cellState(k),__cellColor:(k)=>cellColor(k),__sourcesFor:(k)=>sourcesFor(k),__sourceMenu:(k)=>sourceMenu(k),__uaCellColors:(i)=>uaCellColors(i),__safmrCellColors:(i)=>safmrCellColors(i),
+const __API={LABEL_HINTS,rsParseUnitType,rsNum,ocrMapPages:(p)=>ocrMapPages(p),ocrWhy:()=>ocrWhy(),fmtPhone,fmtPhoneInput,fmtDate,sMoney,sPct,sK,analysis,uaResolvedOf,safmrResolvedOf,uaConflict,uaUnresolved,renderMenu,renderLauncher,openMenu,openForm,openLauncher,ringSvg,niceDate,isDirty,overrideCount,isStateKey,attnFlags,pbUtil,clearUncheckedWriteins,srcOf:(k)=>srcOf(k),__openForm:(pid)=>{activePid=pid;return openForm('RCS');},__openCycleForm:(pid,cid)=>{activePid=pid;return openCycleForm(cid);},__renderBody:()=>renderBody(),__docMissing:(id)=>docMissing(id).map(x=>x.label),__docWarns:(id)=>docWarns(id).map(x=>x.label),__edit:(k,v)=>{form=store.editForm(form,k,v);},getVal:(k)=>get(k),modeOf:(kk)=>modeOf(kk),fieldKeys:(k)=>fieldKeys(k),keysCanSave:(ks)=>keysCanSave(ks),keysCanRevert:(ks)=>keysCanRevert(ks),keysNewDirty:(ks)=>keysNewDirty(ks),__revert:(k)=>store.revertForm(form,k),coupledKeys:(k)=>coupledKeys(k),__firstPid:()=>{const ps=mpdb?mpdb.listProperties():[];return ps.length?ps[0].id:null;},__listProps:()=>(mpdb?mpdb.listProperties():[]),__cycles:()=>(mpdb?mpdb.listCycles(activePid):[]),__toggleProg:(p)=>toggleCycleProg(p),packageScore:()=>packageScore(),packageDocs:()=>packageDocs(),scoreCtx:()=>scoreCtx(),__pkgCard:()=>pkgCard(),__boxes:(i)=>({ua:uaBox(i),safmr:safmrBox(i)}),__saveField:async(k)=>{form=await store.saveField(form,k);},__set:(f,u)=>{form=f;UNITS=u;},__cell:(k)=>form[k],__savePin:async(k,p)=>{form=await store.savePin(form,k,p);},__cellState:(k)=>cellState(k),__cellColor:(k)=>cellColor(k),__sourcesFor:(k)=>sourcesFor(k),__sourceMenu:(k)=>sourceMenu(k),__uaCellColors:(i)=>uaCellColors(i),__safmrCellColors:(i)=>safmrCellColors(i),
   /* The whole record, and the snapshot isDirty() measures against. The round-trip
      sweep needs a key-by-key diff (FORM-RULES "Before you deliver" 6): isDirty()
      compares VALUES ONLY, so a hidden side-effect key strands the form dirty with
