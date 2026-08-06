@@ -2164,6 +2164,42 @@ body.scrolled #viewForm .rail{top:60px;max-height:calc(100vh - 78px)}
   #viewForm .ccard{border-left:0;border-top:1px solid var(--rule-soft)}
   #viewForm .ccard:first-child{border-top:0;
     border-radius:var(--r-card) var(--r-card) 0 0}}
+
+/* ==================================================================
+   A FILED PACKAGE, SHOWN INERT
+   Its effective date has passed, so the rents it sets are the rents in
+   force and it is history. The data layer refuses every write to it
+   (assertCycleOpen in db.js / db.supabase.js); this is what stops the
+   reader typing into something that would only refuse them later.
+
+   Everything stays VISIBLE and legible — the affordability strip, the
+   unit mix, every figure — because the reason to open a filed package
+   is to read what the rents did. Only the means of changing it go.
+   ================================================================== */
+#viewForm.ro input,#viewForm.ro select,#viewForm.ro textarea,
+#viewForm.ro .uatrigger,#viewForm.ro .box,#viewForm.ro .csclear,
+#viewForm.ro .trash,#viewForm.ro .addrow,#viewForm.ro .fuel,#viewForm.ro .fuel3{
+  pointer-events:none}
+#viewForm.ro input,#viewForm.ro select,#viewForm.ro textarea{color:var(--ink)}
+/* The controls that would change or produce the record. Revert, save, the
+   per-cell pair, Update and Generate all go; Back stays. */
+#viewForm.ro .ovnote,#viewForm.ro .ovic,#viewForm.ro .addrow,#viewForm.ro .trash,
+#viewForm.ro .csclear,#viewForm.ro #bSave,#viewForm.ro #bGenerate,
+#viewForm.ro #bFill,#viewForm.ro #bFillFooter,#viewForm.ro .unsaved,
+#viewForm.ro .progs .prog[data-progpill]{pointer-events:none}
+#viewForm.ro .ovnote,#viewForm.ro .ovic,#viewForm.ro .addrow,#viewForm.ro .trash,
+#viewForm.ro .csclear,#viewForm.ro #bSave,#viewForm.ro #bGenerate,
+#viewForm.ro #bFill,#viewForm.ro #bFillFooter,#viewForm.ro .unsaved,
+#viewForm.ro .sfacts,#viewForm.ro .srcfoot{display:none}
+#viewForm.ro .cvx{opacity:.3}
+/* Said once, where the eye lands first, in the stamp red that means a date has
+   already gone by. */
+#viewForm.ro .robar{display:flex;align-items:baseline;gap:10px;margin:16px 28px 0;
+  padding:11px 14px;border-radius:var(--r-ctl);background:var(--stamp-wash);
+  box-shadow:inset 3px 0 0 var(--stamp);color:var(--stamp);font-size:12.5px;
+  font-weight:600}
+#viewForm.ro .robar span{color:var(--ink-2);font-weight:400}
+#viewForm:not(.ro) .robar{display:none}
 </style></head>
 <body>
  <!-- ===================== SIGN IN ===================== -->
@@ -2205,6 +2241,7 @@ body.scrolled #viewForm .rail{top:60px;max-height:calc(100vh - 78px)}
    <div id="ccbar"></div>
    <div class="hdr"><div><h1>Package Builder</h1><div class="sub">HUD Section 8</div></div><div class="hdrmid"><div class="hprop" id="hdrProp">&mdash;</div><span class="hprogram" id="hdrProgram">RCS Package</span></div><div class="progs"><span class="prog on">RCS</span><span class="prog off">OCAF</span><span class="prog off">UAF</span><span class="prog off">BBRA</span></div></div>
    <div class="toolbar"><button class="btn" id="bExit">&larr; Back to property</button><button class="btn" id="bFill">&#8635; Revert to saved</button><span class="status" id="status"></span></div>
+   <div class="robar" id="roBar"></div>
    <div class="wrap">
      <div class="cc" id="cc"></div>
      <div class="layout">

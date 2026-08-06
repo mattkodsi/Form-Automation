@@ -288,6 +288,37 @@ function makeSupabaseDb(client) {
      instead of reporting a failure. */
   const PROGS_OF = c => String((c && c.programs) || '')
     .split(',').map(x => x.trim().toLowerCase()).filter(Boolean);
+    /* ---- a filed package is history ----
+       A package is CLOSED once its effective date has passed. That is the moment
+       the rents it sets are the rents in force and the schedule's next entry takes
+       over as the one being worked on — the same moment it stops being Current on
+       the property page and drops into "Earlier".
+
+       Keyed on the date rather than on "a later package exists", because a later
+       one exists as soon as somebody STARTS it, which can happen while the current
+       one is still being finished. A date cannot be raced.
+
+       Read-only enforced by a UI flag is not enforced: the form has some 110
+       controls and the Enter and Escape handlers behind them, and one that missed
+       the flag would write silently into a package whose documents have already
+       gone to the CA. The invariant belongs to the operation (FORM-RULES 17), so
+       it sits on the write. The form can then be shown inert without that being
+       the thing keeping it safe.
+
+       Deliberately NOT blocked: deleteCycle (removing a mistaken package is a
+       different act from editing a filed one) and setCycleGenerated (re-downloading
+       what was filed changes nothing about the record).
+       API PARITY with db.supabase.js. */
+    const cycleClosed = cid => {
+      const c = D.cycles[cid]; if (!c) return false;
+      const eff = cyISO(c.effective_date); if (!eff) return false;
+      return eff < today();
+    };
+    const assertCycleOpen = cid => {
+      if (!cycleClosed(cid)) return;
+      const e = new Error('This package has already been filed — a later one exists for this property. Filed packages are history and do not change.');
+      e.code = 'PACKAGE_CLOSED'; e.cid = cid; throw e;
+    };
   const assertPackageFree = (pid, effIn, progs, skipCid) => {
     const want = (progs || []).map(x => String(x).trim().toLowerCase()).filter(Boolean);
     if (want.indexOf('rcs') >= 0 && want.indexOf('ocaf') >= 0) {
@@ -672,8 +703,10 @@ function makeSupabaseDb(client) {
         const out = {}; for (const k in c.cells) { const v = c.cells[k].value == null ? '' : String(c.cells[k].value); out[k] = { value: v, source: v === '' ? 'new' : 'database', saved_at: c.cells[k].saved_at || '', origin: (c.cells[k].origin != null ? c.cells[k].origin : (v === '' ? null : 'database')), pinned: !!c.cells[k].pinned }; }
         return out;
       },
+      cycleClosed(cid) { return cycleClosed(cid); },
       saveFlatCycle(cid, map) {
         const c = D.cycles[cid]; if (!c) throw new Error('no cycle ' + cid);
+        assertCycleOpen(cid);
         for (const k in map) c.cells[k] = { value: (map[k] && map[k].value != null) ? String(map[k].value) : '', saved_at: (map[k] && map[k].saved_at) ? map[k].saved_at : today(), origin: (map[k] && map[k].origin != null) ? map[k].origin : null, pinned: !!(map[k] && map[k].pinned) };
         cySyncEff(c);
         c.updated_at = now();
@@ -700,7 +733,7 @@ function makeSupabaseDb(client) {
         c.updated_at = now();
         return enqueue('cy' + cid, () => pushCycle(cid));
       },
-      setCyclePrograms(cid, programs) { const c = D.cycles[cid]; if (!c) return Promise.resolve(); assertPackageFree(c.property_id, c.effective_date, programs, cid); c.programs = (programs || []).join(','); c.updated_at = now(); return enqueue('cy' + cid, () => pushCycle(cid)); },
+      setCyclePrograms(cid, programs) { const c = D.cycles[cid]; if (!c) return Promise.resolve(); assertCycleOpen(cid); assertPackageFree(c.property_id, c.effective_date, programs, cid); c.programs = (programs || []).join(','); c.updated_at = now(); return enqueue('cy' + cid, () => pushCycle(cid)); },
       /* The parsed executed rent schedule, kept with its package. Stores the
          reading, never the PDF bytes: nothing downstream reads _rsUpload.bytes,
          and a schedule is a megabyte the record does not need. Without this the

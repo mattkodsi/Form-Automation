@@ -2164,6 +2164,42 @@ body.scrolled #viewForm .rail{top:60px;max-height:calc(100vh - 78px)}
   #viewForm .ccard{border-left:0;border-top:1px solid var(--rule-soft)}
   #viewForm .ccard:first-child{border-top:0;
     border-radius:var(--r-card) var(--r-card) 0 0}}
+
+/* ==================================================================
+   A FILED PACKAGE, SHOWN INERT
+   Its effective date has passed, so the rents it sets are the rents in
+   force and it is history. The data layer refuses every write to it
+   (assertCycleOpen in db.js / db.supabase.js); this is what stops the
+   reader typing into something that would only refuse them later.
+
+   Everything stays VISIBLE and legible — the affordability strip, the
+   unit mix, every figure — because the reason to open a filed package
+   is to read what the rents did. Only the means of changing it go.
+   ================================================================== */
+#viewForm.ro input,#viewForm.ro select,#viewForm.ro textarea,
+#viewForm.ro .uatrigger,#viewForm.ro .box,#viewForm.ro .csclear,
+#viewForm.ro .trash,#viewForm.ro .addrow,#viewForm.ro .fuel,#viewForm.ro .fuel3{
+  pointer-events:none}
+#viewForm.ro input,#viewForm.ro select,#viewForm.ro textarea{color:var(--ink)}
+/* The controls that would change or produce the record. Revert, save, the
+   per-cell pair, Update and Generate all go; Back stays. */
+#viewForm.ro .ovnote,#viewForm.ro .ovic,#viewForm.ro .addrow,#viewForm.ro .trash,
+#viewForm.ro .csclear,#viewForm.ro #bSave,#viewForm.ro #bGenerate,
+#viewForm.ro #bFill,#viewForm.ro #bFillFooter,#viewForm.ro .unsaved,
+#viewForm.ro .progs .prog[data-progpill]{pointer-events:none}
+#viewForm.ro .ovnote,#viewForm.ro .ovic,#viewForm.ro .addrow,#viewForm.ro .trash,
+#viewForm.ro .csclear,#viewForm.ro #bSave,#viewForm.ro #bGenerate,
+#viewForm.ro #bFill,#viewForm.ro #bFillFooter,#viewForm.ro .unsaved,
+#viewForm.ro .sfacts,#viewForm.ro .srcfoot{display:none}
+#viewForm.ro .cvx{opacity:.3}
+/* Said once, where the eye lands first, in the stamp red that means a date has
+   already gone by. */
+#viewForm.ro .robar{display:flex;align-items:baseline;gap:10px;margin:16px 28px 0;
+  padding:11px 14px;border-radius:var(--r-ctl);background:var(--stamp-wash);
+  box-shadow:inset 3px 0 0 var(--stamp);color:var(--stamp);font-size:12.5px;
+  font-weight:600}
+#viewForm.ro .robar span{color:var(--ink-2);font-weight:400}
+#viewForm:not(.ro) .robar{display:none}
 </style></head>
 <body>
  <!-- ===================== SIGN IN ===================== -->
@@ -2205,6 +2241,7 @@ body.scrolled #viewForm .rail{top:60px;max-height:calc(100vh - 78px)}
    <div id="ccbar"></div>
    <div class="hdr"><div><h1>Package Builder</h1><div class="sub">HUD Section 8</div></div><div class="hdrmid"><div class="hprop" id="hdrProp">&mdash;</div><span class="hprogram" id="hdrProgram">RCS Package</span></div><div class="progs"><span class="prog on">RCS</span><span class="prog off">OCAF</span><span class="prog off">UAF</span><span class="prog off">BBRA</span></div></div>
    <div class="toolbar"><button class="btn" id="bExit">&larr; Back to property</button><button class="btn" id="bFill">&#8635; Revert to saved</button><span class="status" id="status"></span></div>
+   <div class="robar" id="roBar"></div>
    <div class="wrap">
      <div class="cc" id="cc"></div>
      <div class="layout">
@@ -3931,6 +3968,37 @@ async function makeDb(adapter, opts) {
      instead of reporting a failure. */
   const PROGS_OF = c => String((c && c.programs) || '')
     .split(',').map(x => x.trim().toLowerCase()).filter(Boolean);
+  /* ---- a filed package is history ----
+     A package is CLOSED once its effective date has passed. That is the moment
+     the rents it sets are the rents in force and the schedule's next entry takes
+     over as the one being worked on — the same moment it stops being Current on
+     the property page and drops into "Earlier".
+
+     Keyed on the date rather than on "a later package exists", because a later
+     one exists as soon as somebody STARTS it, which can happen while the current
+     one is still being finished. A date cannot be raced.
+
+     Read-only enforced by a UI flag is not enforced: the form has some 110
+     controls and the Enter and Escape handlers behind them, and one that missed
+     the flag would write silently into a package whose documents have already
+     gone to the CA. The invariant belongs to the operation (FORM-RULES 17), so
+     it sits on the write. The form can then be shown inert without that being
+     the thing keeping it safe.
+
+     Deliberately NOT blocked: deleteCycle (removing a mistaken package is a
+     different act from editing a filed one) and setCycleGenerated (re-downloading
+     what was filed changes nothing about the record).
+     API PARITY with db.supabase.js. */
+  const cycleClosed = cid => {
+    const c = D.cycles[cid]; if (!c) return false;
+    const eff = cyISO(c.effective_date); if (!eff) return false;
+    return eff < today();
+  };
+  const assertCycleOpen = cid => {
+    if (!cycleClosed(cid)) return;
+    const e = new Error('This package has already been filed — a later one exists for this property. Filed packages are history and do not change.');
+    e.code = 'PACKAGE_CLOSED'; e.cid = cid; throw e;
+  };
   const assertPackageFree = (pid, effIn, progs, skipCid) => {
     const want = (progs || []).map(x => String(x).trim().toLowerCase()).filter(Boolean);
     if (want.indexOf('rcs') >= 0 && want.indexOf('ocaf') >= 0) {
@@ -4100,6 +4168,7 @@ async function makeDb(adapter, opts) {
     },
     dominantCycleId,
     cycleAnalysis(cid) { return cycleAnalysisOf(cid); },
+    cycleClosed(cid) { return cycleClosed(cid); },
     createCycle(pid, opts) {
       const p = D.props[pid]; if (!p) throw new Error('no property ' + pid);
       const o = opts || {}; const cid = nid('cy'); const cells = {};
@@ -4129,6 +4198,7 @@ async function makeDb(adapter, opts) {
     },
     saveFlatCycle(cid, map) {
       const c = D.cycles[cid]; if (!c) throw new Error('no cycle ' + cid);
+      assertCycleOpen(cid);
       for (const k in map) c.cells[k] = { value: (map[k] && map[k].value != null) ? String(map[k].value) : '', saved_at: (map[k] && map[k].saved_at) ? map[k].saved_at : today(), origin: (map[k] && map[k].origin != null) ? map[k].origin : null, pinned: !!(map[k] && map[k].pinned) };
       cySyncEff(c);
       c.updated_at = now();
@@ -4155,7 +4225,7 @@ async function makeDb(adapter, opts) {
       c.updated_at = now();
       return persist();
     },
-    setCyclePrograms(cid, programs) { const c = D.cycles[cid]; if (!c) return Promise.resolve(); assertPackageFree(c.property_id, c.effective_date, programs, cid); c.programs = (programs || []).join(','); c.updated_at = now(); return persist(); },
+    setCyclePrograms(cid, programs) { const c = D.cycles[cid]; if (!c) return Promise.resolve(); assertCycleOpen(cid); assertPackageFree(c.property_id, c.effective_date, programs, cid); c.programs = (programs || []).join(','); c.updated_at = now(); return persist(); },
     /* API parity with db.supabase.js's rs_doc surface — see CLAUDE.md: a
        stand-in that answers differently from the real backend makes every test
        that uses it a fiction. */
@@ -4485,6 +4555,37 @@ function makeSupabaseDb(client) {
      instead of reporting a failure. */
   const PROGS_OF = c => String((c && c.programs) || '')
     .split(',').map(x => x.trim().toLowerCase()).filter(Boolean);
+    /* ---- a filed package is history ----
+       A package is CLOSED once its effective date has passed. That is the moment
+       the rents it sets are the rents in force and the schedule's next entry takes
+       over as the one being worked on — the same moment it stops being Current on
+       the property page and drops into "Earlier".
+
+       Keyed on the date rather than on "a later package exists", because a later
+       one exists as soon as somebody STARTS it, which can happen while the current
+       one is still being finished. A date cannot be raced.
+
+       Read-only enforced by a UI flag is not enforced: the form has some 110
+       controls and the Enter and Escape handlers behind them, and one that missed
+       the flag would write silently into a package whose documents have already
+       gone to the CA. The invariant belongs to the operation (FORM-RULES 17), so
+       it sits on the write. The form can then be shown inert without that being
+       the thing keeping it safe.
+
+       Deliberately NOT blocked: deleteCycle (removing a mistaken package is a
+       different act from editing a filed one) and setCycleGenerated (re-downloading
+       what was filed changes nothing about the record).
+       API PARITY with db.supabase.js. */
+    const cycleClosed = cid => {
+      const c = D.cycles[cid]; if (!c) return false;
+      const eff = cyISO(c.effective_date); if (!eff) return false;
+      return eff < today();
+    };
+    const assertCycleOpen = cid => {
+      if (!cycleClosed(cid)) return;
+      const e = new Error('This package has already been filed — a later one exists for this property. Filed packages are history and do not change.');
+      e.code = 'PACKAGE_CLOSED'; e.cid = cid; throw e;
+    };
   const assertPackageFree = (pid, effIn, progs, skipCid) => {
     const want = (progs || []).map(x => String(x).trim().toLowerCase()).filter(Boolean);
     if (want.indexOf('rcs') >= 0 && want.indexOf('ocaf') >= 0) {
@@ -4869,8 +4970,10 @@ function makeSupabaseDb(client) {
         const out = {}; for (const k in c.cells) { const v = c.cells[k].value == null ? '' : String(c.cells[k].value); out[k] = { value: v, source: v === '' ? 'new' : 'database', saved_at: c.cells[k].saved_at || '', origin: (c.cells[k].origin != null ? c.cells[k].origin : (v === '' ? null : 'database')), pinned: !!c.cells[k].pinned }; }
         return out;
       },
+      cycleClosed(cid) { return cycleClosed(cid); },
       saveFlatCycle(cid, map) {
         const c = D.cycles[cid]; if (!c) throw new Error('no cycle ' + cid);
+        assertCycleOpen(cid);
         for (const k in map) c.cells[k] = { value: (map[k] && map[k].value != null) ? String(map[k].value) : '', saved_at: (map[k] && map[k].saved_at) ? map[k].saved_at : today(), origin: (map[k] && map[k].origin != null) ? map[k].origin : null, pinned: !!(map[k] && map[k].pinned) };
         cySyncEff(c);
         c.updated_at = now();
@@ -4897,7 +5000,7 @@ function makeSupabaseDb(client) {
         c.updated_at = now();
         return enqueue('cy' + cid, () => pushCycle(cid));
       },
-      setCyclePrograms(cid, programs) { const c = D.cycles[cid]; if (!c) return Promise.resolve(); assertPackageFree(c.property_id, c.effective_date, programs, cid); c.programs = (programs || []).join(','); c.updated_at = now(); return enqueue('cy' + cid, () => pushCycle(cid)); },
+      setCyclePrograms(cid, programs) { const c = D.cycles[cid]; if (!c) return Promise.resolve(); assertCycleOpen(cid); assertPackageFree(c.property_id, c.effective_date, programs, cid); c.programs = (programs || []).join(','); c.updated_at = now(); return enqueue('cy' + cid, () => pushCycle(cid)); },
       /* The parsed executed rent schedule, kept with its package. Stores the
          reading, never the PDF bytes: nothing downstream reads _rsUpload.bytes,
          and a schedule is a megabyte the record does not need. Without this the
@@ -5036,7 +5139,8 @@ const ALL_KEYS=Object.keys(SEED).map(k=>({key:k}));
 let mpdb=null, activePid=null, activeCid=null, _cyFresh=null;
 const bridge={getDb:async()=>mpdb?(activeCid?mpdb.getFlatCycle(activeCid):mpdb.getFlat(activePid)):{},saveDb:async(m)=>{_cyFresh=null;return activeCid?mpdb.saveFlatCycle(activeCid,m):mpdb.saveFlat(activePid,m);},clearDb:async()=>{}};
 const store=makeStore(bridge,ALL_KEYS);
-let form=store.emptyForm(); let UNITS=[0]; let NONREV=[]; let NS8=[]; let PRINCIPALS=[0]; let _undoStack=[]; let _undoNR=[]; let _undoLI=[]; let _undoPR=[]; let _pending=null,_refocusSel=null,_pendingSnap=null; let _rcsUpload=null; let _rcsBusy=null; let _rsUpload=null; let _rsArm=false;let _rsBusy=null;   // while set, the upload row shows what is being read
+let form=store.emptyForm(); let UNITS=[0]; let NONREV=[]; let NS8=[]; let PRINCIPALS=[0]; let _cyRO=false;   // this package is filed history — the form is shown inert
+let _undoStack=[]; let _undoNR=[]; let _undoLI=[]; let _undoPR=[]; let _pending=null,_refocusSel=null,_pendingSnap=null; let _rcsUpload=null; let _rcsBusy=null; let _rsUpload=null; let _rsArm=false;let _rsBusy=null;   // while set, the upload row shows what is being read
 let _dlgEnter=null;                  // while a dialog is open, Enter presses its primary button
 
 /* [hue, fill, label]. The HUES are a contract with tests behind them and do not
@@ -8382,14 +8486,24 @@ function syncReviewed(){const held=k=>{const c=form[k];return !!(c&&c.db_value==
   const drop=(k,live)=>{if(get(k)==='1'&&!live&&!held(k))form=store.editForm(form,k,'');};
   UNITS.forEach(i=>{drop('units.'+i+'.ua_reviewed',uaConflict(i));drop('units.'+i+'.safmr_reviewed',safmrConflictOf(i));
     drop('units.'+i+'.type_reviewed',typeConflict(i));drop('units.'+i+'.num_reviewed',numConflict(i));});}
-function renderBody(){syncReviewed();const _sy=window.scrollY;const _anchorSel=(_refocusSel&&!_mouseFocus)?_refocusSel:(((Date.now()-_lastClickAt)<2000)?_lastClickSel:null);let _anchorTop=null;if(_anchorSel){try{const _ac=document.querySelector(_anchorSel);if(_ac)_anchorTop=_ac.getBoundingClientRect().top;}catch(e){}}computeSecPos();const _SR={1:renderSources,2:()=>renderFieldSection(FIELD_SECTIONS[0]),3:()=>renderFieldSection(FIELD_SECTIONS[1]),4:()=>renderFieldSection(FIELD_SECTIONS[2]),5:()=>renderFieldSection(FIELD_SECTIONS[3]),6:renderRents,7:renderPartB,8:renderChecklist,9:()=>renderFieldSection(FIELD_SECTIONS[4]),10:renderOcaf,11:renderUaf,12:renderPrincipals};el('sections').innerHTML=visibleSections().map(n=>_SR[n]()).join('');
+function renderBody(){
+  /* One class on the view, read by one CSS rule. Nothing downstream branches on
+     it, so the editable path is exactly the path it has always been. */
+  const _vf=el('viewForm');if(_vf)_vf.classList.toggle('ro',!!_cyRO);
+  const _rb=el('roBar');
+  if(_rb){const _cy=(_cyRO&&mpdb&&activeCid)?(mpdb.listCycles(activePid)||[]).find(c=>c.id===activeCid):null;
+    _rb.innerHTML=_cyRO?('\u25cf Filed \u2014 read only<span>'
+      +(_cy&&_cy.effective_date?('These rents took effect '+esc(fmtDateLong(_cy.effective_date))+'. A package is history once its date has passed, so nothing here can change.')
+        :'A package is history once its date has passed, so nothing here can change.')+'</span>'):'';}
+  syncReviewed();const _sy=window.scrollY;const _anchorSel=(_refocusSel&&!_mouseFocus)?_refocusSel:(((Date.now()-_lastClickAt)<2000)?_lastClickSel:null);let _anchorTop=null;if(_anchorSel){try{const _ac=document.querySelector(_anchorSel);if(_ac)_anchorTop=_ac.getBoundingClientRect().top;}catch(e){}}computeSecPos();const _SR={1:renderSources,2:()=>renderFieldSection(FIELD_SECTIONS[0]),3:()=>renderFieldSection(FIELD_SECTIONS[1]),4:()=>renderFieldSection(FIELD_SECTIONS[2]),5:()=>renderFieldSection(FIELD_SECTIONS[3]),6:renderRents,7:renderPartB,8:renderChecklist,9:()=>renderFieldSection(FIELD_SECTIONS[4]),10:renderOcaf,11:renderUaf,12:renderPrincipals};el('sections').innerHTML=visibleSections().map(n=>_SR[n]()).join('');
   renderFormHeader();wireBody();renderCommand();renderBar();renderRail();renderAttention();refreshFooter();
   if(_refocusSel&&!_mouseFocus){try{const _f=document.querySelector(_refocusSel);if(_f&&_f.focus){_f.focus({preventScroll:true});if(/^(INPUT|TEXTAREA)$/.test(_f.tagName)&&typeof _f.setSelectionRange==='function'){const _L=(_f.value||'').length;try{_f.setSelectionRange(_L,_L);}catch(_e){}}}}catch(e){}}_refocusSel=null;
   if(_anchorSel&&_anchorTop!=null){try{const _a2=document.querySelector(_anchorSel);if(_a2){const _nt=_a2.getBoundingClientRect().top;window.scrollTo(0,window.scrollY+(_nt-_anchorTop));}else window.scrollTo(0,_sy);}catch(e){try{window.scrollTo(0,_sy);}catch(_z){}}}else{try{window.scrollTo(0,_sy);}catch(e){}}
   /* after the scroll restore, not before: the observer's band and the bar's
      answer are both geometry, and renderBody's last act moves the page. */
   railObserve();railApply();}
-async function commitPending(){if(!_pending||!_pending.length)return;const keys=_pending;_pending=null;if(handleZeroUnitCommit(keys))return;for(const _pk of ['poc.phone','appr.phone'])if(keys.indexOf(_pk)>=0){const _d=(get(_pk)||'').replace(/\D/g,'');if(_d.length!==0&&_d.length!==10){setStatus('Enter a complete 10-digit phone before saving.');return;}}keys.forEach(k=>{const m=k.match(/^partb\.writein\.(e1|e2|e3|e4|e5|s1|s2|s3|s4|s5|s6)(\.on)?$/);if(m)clearUncheckedWriteins([m[1]]);});const _sk=[];keys.forEach(k=>{const gb=groupOf(k);(gb?ADDR_GROUPS[gb]:coupledKeys(k)).forEach(kk=>{if(_sk.indexOf(kk)<0)_sk.push(kk);});});try{form=await store.saveFields(form,_sk);}catch(e){saveFailed(e);return;}await refreshSnap();snapForm(_sk);_pendingSnap=null;clearUndoChain();_refocusSel=refocusSelForKey(keys[0]);renderBody();setStatus('Saved this field to the database.');}
+async function commitPending(){if(_cyRO)return;   // filed history: Enter has nothing to commit
+  if(!_pending||!_pending.length)return;const keys=_pending;_pending=null;if(handleZeroUnitCommit(keys))return;for(const _pk of ['poc.phone','appr.phone'])if(keys.indexOf(_pk)>=0){const _d=(get(_pk)||'').replace(/\D/g,'');if(_d.length!==0&&_d.length!==10){setStatus('Enter a complete 10-digit phone before saving.');return;}}keys.forEach(k=>{const m=k.match(/^partb\.writein\.(e1|e2|e3|e4|e5|s1|s2|s3|s4|s5|s6)(\.on)?$/);if(m)clearUncheckedWriteins([m[1]]);});const _sk=[];keys.forEach(k=>{const gb=groupOf(k);(gb?ADDR_GROUPS[gb]:coupledKeys(k)).forEach(kk=>{if(_sk.indexOf(kk)<0)_sk.push(kk);});});try{form=await store.saveFields(form,_sk);}catch(e){saveFailed(e);return;}await refreshSnap();snapForm(_sk);_pendingSnap=null;clearUndoChain();_refocusSel=refocusSelForKey(keys[0]);renderBody();setStatus('Saved this field to the database.');}
 /* A cell's save/revert pair sits in one of three places: inside the cell for a
    roomy one (.ovic), beside it for a plain text field (.ovnote), or below the row
    under its own column for a unit row (.uracts). Escape and Enter have to reach
@@ -10416,8 +10530,14 @@ function newCycleDialog(pre){
     }
   };
 }
+/* A package whose effective date has passed is history. The data layer refuses
+   every write to it (assertCycleOpen), so this class is an AFFORDANCE, not the
+   guarantee: it stops the reader typing into something that would only refuse
+   them later. If a control ever escapes the rule below, the worst that happens
+   is a refusal message — not a silent edit to a package the CA already has. */
+function cycleIsClosed(cid){try{return !!(mpdb&&mpdb.cycleClosed&&mpdb.cycleClosed(cid));}catch(e){return false;}}
 async function openCycleForm(cid){
-  activeCid=cid;_cyFresh=null;
+  activeCid=cid;_cyFresh=null;_cyRO=cycleIsClosed(cid);
   const cy=mpdb.listCycles(activePid).find(c=>c.id===cid);
   activeProgram=cy?cy.programs.map(x=>PROG_NAMES[x]||x).join(' + '):'RCS';
   _undoStack=[];_undoNR=[];_undoLI=[];_undoPR=[];_undoChain=[];_rcsUpload=null;_rsUpload=null;_rsArm=false;_rsFill=null;_rcsFill=null;
@@ -11520,7 +11640,7 @@ __rcsFill:(opts)=>rcsFillFromParsed(opts),/* The same door for the rent schedule
      would otherwise serve the old bands, which is harmless in production (the
      table is read once at boot) and silently wrong in any suite that seeds
      twice. */
-  __db:()=>mpdb,
+  __db:()=>mpdb,__openCycleForm:(cid)=>openCycleForm(cid),__launcher:(pid)=>{activePid=pid;return openLauncher(pid);},
   __seedHap:async(rows)=>{_hapCache=null;await mpdb._setHapRows(rows);},
   __menuView:()=>menuView,
   __setMenuView:(v)=>{menuView=v;renderMenu();},
