@@ -5236,7 +5236,7 @@ let mpdb=null, activePid=null, activeCid=null, _cyFresh=null;
 const bridge={getDb:async()=>mpdb?(activeCid?mpdb.getFlatCycle(activeCid):mpdb.getFlat(activePid)):{},saveDb:async(m)=>{_cyFresh=null;return activeCid?mpdb.saveFlatCycle(activeCid,m):mpdb.saveFlat(activePid,m);},clearDb:async()=>{}};
 const store=makeStore(bridge,ALL_KEYS);
 let form=store.emptyForm(); let UNITS=[0]; let NONREV=[]; let NS8=[]; let PRINCIPALS=[0]; let _cyRO=false;   // this package is filed history — the form is shown inert
-let _undoStack=[]; let _undoNR=[]; let _undoLI=[]; let _undoPR=[]; let _pending=null,_refocusSel=null,_pendingSnap=null; let _rcsUpload=null; let _rcsBusy=null; let _rsUpload=null; let _rsArm=false;let _rsBusy=null;   // while set, the upload row shows what is being read
+let _undoStack=[]; let _undoNR=[]; let _undoLI=[]; let _undoPR=[]; let _pending=null,_refocusSel=null,_reopenBox=null,_pendingSnap=null; /* _reopenBox: after a render, re-open this cell's source menu — re-clicking the SELECTED option locks it, so keep the menu up to show the padlock */ let _rcsUpload=null; let _rcsBusy=null; let _rsUpload=null; let _rsArm=false;let _rsBusy=null;   // while set, the upload row shows what is being read
 let _dlgEnter=null;                  // while a dialog is open, Enter presses its primary button
 
 /* [hue, fill, label]. The HUES are a contract with tests behind them and do not
@@ -8774,6 +8774,10 @@ function renderBody(){
   syncReviewed();const _sy=window.scrollY;const _anchorSel=(_refocusSel&&!_mouseFocus)?_refocusSel:(((Date.now()-_lastClickAt)<2000)?_lastClickSel:null);let _anchorTop=null;if(_anchorSel){try{const _ac=document.querySelector(_anchorSel);if(_ac)_anchorTop=_ac.getBoundingClientRect().top;}catch(e){}}computeSecPos();const _SR={1:renderSources,2:()=>renderFieldSection(FIELD_SECTIONS[0]),3:()=>renderFieldSection(FIELD_SECTIONS[1]),4:()=>renderFieldSection(FIELD_SECTIONS[2]),5:()=>renderFieldSection(FIELD_SECTIONS[3]),6:renderRents,7:renderPartB,8:renderChecklist,9:()=>renderFieldSection(FIELD_SECTIONS[4]),10:renderOcaf,11:renderUaf,12:renderPrincipals};el('sections').innerHTML=visibleSections().map(n=>_SR[n]()).join('');
   renderFormHeader();wireBody();renderCommand();renderBar();renderRail();renderAttention();refreshFooter();
   if(_refocusSel&&!_mouseFocus){try{const _f=document.querySelector(_refocusSel);if(_f&&_f.focus){_f.focus({preventScroll:true});if(/^(INPUT|TEXTAREA)$/.test(_f.tagName)&&typeof _f.setSelectionRange==='function'){const _L=(_f.value||'').length;try{_f.setSelectionRange(_L,_L);}catch(_e){}}}}catch(e){}}_refocusSel=null;
+  /* Re-clicking the option already selected LOCKS the cell (pins it). Leave the menu
+     up so the padlock that just appeared on that line is seen, instead of closing on
+     an action the reader may not have known they took. A first-time pick still closes. */
+  if(_reopenBox){try{const _rb=document.querySelector('[data-box="'+_reopenBox+'"]');const _rd=_rb&&(_rb.querySelector('.uadrop:not(.cs)')||_rb.querySelector('.uadrop'));if(_rd)_rd.classList.add('open');}catch(e){}}_reopenBox=null;
   if(_anchorSel&&_anchorTop!=null){try{const _a2=document.querySelector(_anchorSel);if(_a2){const _nt=_a2.getBoundingClientRect().top;window.scrollTo(0,window.scrollY+(_nt-_anchorTop));}else window.scrollTo(0,_sy);}catch(e){try{window.scrollTo(0,_sy);}catch(_z){}}}else{try{window.scrollTo(0,_sy);}catch(e){}}
   /* after the scroll restore, not before: the observer's band and the bar's
      answer are both geometry, and renderBody's last act moves the page. */
@@ -9228,6 +9232,9 @@ function wireBody(){
       if(e.key==='Escape'){if(_pending&&_pending.length){e.preventDefault();e.stopPropagation();revertPending();}}});});
   document.querySelectorAll('[data-srcopt]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();
     const key=o.getAttribute('data-srcpick'),src=o.getAttribute('data-srcopt');if(!key)return;
+    /* Already the selected line? Re-clicking it only LOCKS the cell — keep the menu
+       open after the render so the padlock is seen (a first-time pick still closes). */
+    if(o.classList.contains('sel')){const _cb=o.closest('[data-box]');_reopenBox=_cb?_cb.getAttribute('data-box'):null;}else _reopenBox=null;
     if(src.indexOf('cpick:')===0){const id=src.slice(6);
       if(key==='poc.name'){const ct=(mpdb?mpdb.listContacts():[]).find(x=>x.id===id);_pendingSnap=snapPend(POC_PICK_KEYS);if(ct)pocSelectContact(ct);_pending=POC_PICK_KEYS.slice();_refocusSel='[data-box="poc.name"] .pocname-in';}
       else{const P=DIR_PICK[key];const ct=dirList(P.kind).find(x=>x.id===id);_pendingSnap=snapPend(P.keys);if(ct)P.apply(ct);_pending=P.keys.slice();_refocusSel='[data-box="'+key+'"] .pocname-in';}
