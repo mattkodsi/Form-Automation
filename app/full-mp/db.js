@@ -116,9 +116,13 @@ function computeAnalysis(form) {
   let cg = 0, pg = 0, tot = 0, sc = 0, sp = 0, nd = 0, cgC = 0, pgC = 0, ceilC = 0, tTot = 0, tPr = 0, ceil = 0, safmrMissing = false, safmrOver = 0;
   units.forEach(i => {
     const n = num(val('units.' + i + '.num_units')), cur = num(val('units.' + i + '.current')), pro = num(val('units.' + i + '.proposed'));
-    const ue = num(val('units.' + i + '.ua_exec')), ur = num(val('units.' + i + '.ua_rcs'));
-    const usrc = val('units.' + i + '.ua_source') || (ue > 0 ? 'exec' : (ur > 0 ? 'rcs' : 'custom'));
-    const ua = usrc === 'rcs' ? num(val('units.' + i + '.ua_rcs')) : (usrc === 'custom' ? num(val('units.' + i + '.ua_custom')) : num(val('units.' + i + '.ua_exec')));
+    // Flattened: ua_custom is the one allowance value; fall back to the legacy resolver for older records.
+    const uc = val('units.' + i + '.ua_custom');
+    let ua;
+    if (uc !== '' && uc != null) { ua = num(uc); }
+    else { const ue = num(val('units.' + i + '.ua_exec')), ur = num(val('units.' + i + '.ua_rcs'));
+      const usrc = val('units.' + i + '.ua_source') || (ue > 0 ? 'exec' : (ur > 0 ? 'rcs' : 'custom'));
+      ua = usrc === 'rcs' ? num(val('units.' + i + '.ua_rcs')) : (usrc === 'custom' ? num(val('units.' + i + '.ua_custom')) : num(val('units.' + i + '.ua_exec'))); }
     const safmr = safmrResolvedFrom(val, i);
     cg += (cur + ua) * n; pg += (pro + ua) * n; tot += n;
     if (safmr > 0) { ceil += safmr * n; if (pro > 0 && pro >= safmr) safmrOver++; } else if (n > 0) safmrMissing = true; // safmr = the 150% SAFMR ceiling per unit, entered/parsed directly (future HUD API pull must x1.5 its base value); per-type over when net proposed >= it

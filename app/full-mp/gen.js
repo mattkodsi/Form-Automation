@@ -427,9 +427,14 @@ const addrLine=(street,city,state,zip)=>{
         // schedule states the last one. Three properties filed the study's.
         // Defaulting flatly to 'exec' printed a BLANK allowance whenever the UA had
         // come from the RCS report — and gross rent is what the 150% test turns on.
-        const _ue=nmv(g('units.'+i+'.ua_exec')),_ur=nmv(g('units.'+i+'.ua_rcs'));
-        const us=g('units.'+i+'.ua_source')||(_ur>0?'rcs':(_ue>0?'exec':'custom'));
-        const ua=us==='rcs'?_ur:(us==='custom'?nmv(g('units.'+i+'.ua_custom')):_ue);
+        // Flattened: units.N.ua_custom is the one allowance value. Records saved before
+        // the flatten carry ua_exec/ua_rcs, so fall back to the old study-first resolver.
+        const _uc=g('units.'+i+'.ua_custom');
+        let ua;
+        if(_uc!==''&&_uc!=null){ua=nmv(_uc);}
+        else{const _ue=nmv(g('units.'+i+'.ua_exec')),_ur=nmv(g('units.'+i+'.ua_rcs'));
+          const us=g('units.'+i+'.ua_source')||(_ur>0?'rcs':(_ue>0?'exec':'custom'));
+          ua=us==='rcs'?_ur:(us==='custom'?nmv(g('units.'+i+'.ua_custom')):_ue);}
         // A proposed rent nobody has set yet is blank, not 0 — on a HUD form a
         // printed 0 reads as a real figure. An entered 0 still prints.
         const praw=g('units.'+i+'.proposed'), hasP=praw!==''&&praw!=null;

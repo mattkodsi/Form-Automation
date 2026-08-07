@@ -327,15 +327,19 @@ function defUaSrc(i){return uaHas('units.'+i+'.ua_rcs')?'rcs':(uaHas('units.'+i+
    that moves between runs cannot be the default for a federal filing when the
    appraiser has printed one in the document. */
 function defSafmrSrc(i){const h=numf(get('units.'+i+'.safmr_hud')),r=numf(get('units.'+i+'.safmr_rcs'));return r>0?'rcs':(h>0?'hud':'custom');}
-function uaResolvedOf(i){const src=get('units.'+i+'.ua_source')||defUaSrc(i);if(src==='rcs')return numf(get('units.'+i+'.ua_rcs'));if(src==='custom')return numf(get('units.'+i+'.ua_custom'));return numf(get('units.'+i+'.ua_exec'));}
+/* Flattened (2026-08-07): the utility allowance is ONE value now — units.N.ua_custom —
+   filled study-first by the parses (see the fill), overridable from the dropdown or by
+   typing, exactly like the contract rent beside it. No pointer, no shadow figures, no
+   conflict to resolve: the study's figure and the schedule's are two rows in the cell's
+   own dropdown, the same as the bedroom/bath and unit-count cells. The study-first
+   DEFAULT (which figure the fill writes) is preserved in the fill, not here. */
+function uaResolvedOf(i){return numf(get('units.'+i+'.ua_custom'));}
 /* A property with every utility owner-paid has a real $0 allowance. Testing
-   >0 threw it away: the schedule's own $0 was unreadable, a $0-vs-$50
-   disagreement was not a disagreement, and the RCS workbook's 150% column came
-   through blank. The file already knows the right test — has(), below. */
+   >0 threw it away: the schedule's own $0 was unreadable and the RCS workbook's
+   150% column came through blank. The file already knows the right test — has(). */
 function uaHas(k){const v=get(k);return v!==''&&v!=null;}
-function uaConflict(i){const ek='units.'+i+'.ua_exec',rk='units.'+i+'.ua_rcs';return uaHas(ek)&&uaHas(rk)&&numf(get(ek))!==numf(get(rk));}   // two sources disagreeing — an absent RCS figure is not a disagreement
-function uaReviewedOf(i){return get('units.'+i+'.ua_reviewed')==='1';}
-function uaUnresolved(i){return uaConflict(i)&&!uaReviewedOf(i);}
+function uaConflict(i){return false;}     // disagreement dropped — it is two dropdown rows now
+function uaUnresolved(i){return false;}
 /* HUD tests the 150% ceiling against the GROSS rent — contract rent plus the
    utility allowance. The aggregate PASS/OVER and the figure printed on the
    92458 always did; the per-unit chip, the over-ceiling counter and the
@@ -640,6 +644,7 @@ function moneySrcRows(k){
   let m;
   if((m=k.match(/^units\.(\d+)\.current$/)))return [{tag:'Executed RS',val:rsUnit(+m[1],'rent')}];
   if((m=k.match(/^units\.(\d+)\.proposed$/)))return [{tag:'RCS report',val:rcsUnitVal(+m[1],'proposed')}];
+  if((m=k.match(/^units\.(\d+)\.ua_custom$/)))return [{tag:'RCS report',val:rcsUnitVal(+m[1],'ua')},{tag:'Executed RS',val:uaExecOffer(+m[1])}];   // UA flattened: the study (default) then the schedule; $0-safe via uaExecOffer
   if((m=k.match(/^nonrev\.(\d+)\.rent$/)))return [{tag:'Executed RS',val:rsFamVal('nonrev',+m[1],'rent')},{tag:'RCS report',val:rcsNonrevVal(+m[1])}];
   if((m=k.match(/^ns8\.(\d+)\.avg_rent$/)))return [{tag:'Executed RS',val:rsFamVal('ns8',+m[1],'rent')}];
   return [];}
@@ -916,15 +921,7 @@ function brbaBox(brK,baK){const c=groupColors([brK,baK]);
 
    which is the disagreement the address cells already solved with groupOf /
    paintGroup. One computation, both painters. */
-function uaCellColors(i){
-  const src=get('units.'+i+'.ua_source')||defUaSrc(i),exec=get('units.'+i+'.ua_exec'),rcs=get('units.'+i+'.ua_rcs'),custom=get('units.'+i+'.ua_custom');
-  const hasAny=numf(exec)>0||numf(rcs)>0||numf(custom)>0;
-  if(src==='custom'){const _st=srcCellState('units.'+i+'.ua_custom');return provColors(_st==='overridden'?'overridden':(_st==='database'?'database':'new'),'units.'+i+'.ua_source');}
-  let state=hasAny?srcOf(src==='rcs'?('units.'+i+'.ua_rcs'):('units.'+i+'.ua_exec')):'new';
-  const overSrc=srcOf('units.'+i+'.ua_source')==='overridden';const _cs=srcCellState('units.'+i+'.ua_custom');
-  if(_cs==='overridden')state='overridden';else if(_cs==='database'&&state==='new')state='database';
-  if(uaUnresolved(i)||overSrc)state='overridden';
-  return provColors(state,'units.'+i+'.ua_source');}
+function uaCellColors(i){return cellColor('units.'+i+'.ua_custom');}   // flat: one key, the one colour rule — like every plain money cell
 function safmrCellColors(i){
   const src=get('units.'+i+'.safmr_source')||defSafmrSrc(i),hud=get('units.'+i+'.safmr_hud'),rcs=get('units.'+i+'.safmr_rcs'),custom=get('units.'+i+'.safmr_custom');
   const hasAny=numf(hud)>0||numf(rcs)>0||numf(custom)>0;
@@ -934,18 +931,33 @@ function safmrCellColors(i){
   if(_cs==='overridden')state='overridden';else if(_cs==='database'&&state==='new')state='database';
   if(safmrUnresolved(i)||overSrc)state='overridden';
   return provColors(state,'units.'+i+'.safmr_source');}
-function uaBox(i){const src=get('units.'+i+'.ua_source')||defUaSrc(i);
-  const _r=uaResolvedOf(i);const _v=numf(_r)>0?fmtMoney(_r):'';
-  /* Same shape as the rent cells beside it (moneyBox): a plain value + the ONE
-     source dropdown, blank when empty. Typing edits the current source figure;
-     on a document source the srcedit handler switches it to custom, as before. */
-  const _edit=(src==='custom')?('data-k="units.'+i+'.ua_custom"'):('class="srcedit" data-srcedit="ua" data-si="'+i+'"');
-  const c=cellColor('units.'+i+'.ua_source');const boxKeyUA=src==='custom'?('units.'+i+'.ua_custom'):('units.'+i+'.ua_source');
-  return '<div class="rbox money" data-box="'+boxKeyUA+'" style="background:'+c[1]+';border-left-color:'+c[0]+'"><span class="cur">$</span><input type="text" data-money="1" '+_edit+' value="'+esc(_v)+'">'+srcTags('units.'+i+'.ua_source')+sourceMenu('units.'+i+'.ua_source')+'</div>';}
-function uaNoteCell(i){const conf=uaConflict(i),overSrc=srcOf('units.'+i+'.ua_source')==='overridden';if(!conf&&!overSrc)return '';const ex=get('units.'+i+'.ua_exec'),rc=get('units.'+i+'.ua_rcs');
-  if(conf&&uaUnresolved(i))return '<div class="ucnote warn">⚠ exec '+money(numf(ex))+' · RCS '+money(numf(rc))+' <span class="pick"><button class="urev sv" data-uaok="'+i+'">approve '+money(uaResolvedOf(i))+'</button></span></div>';
-  const src=get('units.'+i+'.ua_source')||defUaSrc(i);const chosen=src==='rcs'?'the study':(src==='custom'?'your own figure':'the executed schedule');
-  return '<div class="ucnote ok">✓ '+chosen+(src==='custom'?'':' ('+money(uaResolvedOf(i))+')')+'</div>';}
+/* Legacy migration (2026-08-07): a package saved before UA was flattened holds
+   ua_exec / ua_rcs / ua_source and an empty ua_custom. Seed the one value from the old
+   study-first resolution, as DATABASE-state so the loaded package reads as on file (not
+   unsaved) and its next real save persists ua_custom for good. Idempotent: it fires only
+   where ua_custom is empty and a legacy figure is present, so a fresh package or a second
+   pass is left untouched. Runs in the load paths, after deriveUnits, before snapForm. */
+function migrateFlatUA(){(UNITS||[]).forEach(function(i){
+  const ck='units.'+i+'.ua_custom',cc=form[ck];
+  if(cc&&cc.value!==''&&cc.value!=null)return;                       // already the single value
+  const ex=get('units.'+i+'.ua_exec'),rc=get('units.'+i+'.ua_rcs'),sr=get('units.'+i+'.ua_source');
+  const has=v=>v!==''&&v!=null;
+  if(!has(ex)&&!has(rc))return;                                      // nothing legacy to carry over
+  const src=sr||(has(rc)?'rcs':'exec');                             // the old study-first default
+  const v=src==='rcs'?rc:ex;                                        // ('custom' with an empty ua_custom has nothing to seed)
+  if(!has(v))return;
+  const sa=(form['units.'+i+'.ua_exec']&&form['units.'+i+'.ua_exec'].saved_at)||(form['units.'+i+'.ua_rcs']&&form['units.'+i+'.ua_rcs'].saved_at)||null;
+  form[ck]={value:String(v),source:'database',saved_at:sa,prior_value:null,prior_source:null,db_value:String(v),origin:src==='rcs'?'rcs':'rs',pinned:false};
+});}
+/* The executed schedule's allowance, offered to the dropdown $0-safe. rsUnit drops
+   a real 0 (an owner-paid unit's $0 is a value, not a blank), so the cell reads the
+   parse directly here — the same $0-safe rule the resolver's uaHas already keeps. */
+function uaExecOffer(i){try{const u=_rsUpload&&_rsUpload.parsed&&_rsUpload.parsed.units;const r=u&&u[i];const v=r&&r.ua;return (v==null||v==='')?null:String(v);}catch(e){return null;}}
+/* A plain money cell now, identical in shape to the contract rent beside it. Its two
+   source rows — the study (the default) and the schedule — come from moneySrcRows, and
+   ovIcons is added by the row (col), so noIcons is set. */
+function uaBox(i){return moneyBox('units.'+i+'.ua_custom',1);}
+function uaNoteCell(i){return '';}   // the study's reading lives in the cell's dropdown now; a difference is not a thing to resolve before the row can be saved
 function typeConflict(i){const br=get('units.'+i+'.br'),ba=get('units.'+i+'.ba'),brR=get('units.'+i+'.br_rcs'),baR=get('units.'+i+'.ba_rcs');const has=(brR!==''&&brR!=null)||(baR!==''&&baR!=null);return has&&((brR&&brR!==br)||(baR&&baR!==ba));}
 function typeReviewedOf(i){return get('units.'+i+'.type_reviewed')==='1';}
 function typeUnresolved(i){return typeConflict(i)&&!typeReviewedOf(i);}
@@ -1227,7 +1239,7 @@ function rsOf(k){
      badge could be computed for the bedroom count, the bath count or the
      designation — the three cells most obviously read off Part A. */
   m=k.match(/^units\.(\d+)\.(br|ba|label)$/);         if(m)return rsBrBa(k);
-  m=k.match(/^units\.(\d+)\.ua_exec$/);               if(m)return rsUnit(+m[1],'ua');
+  m=k.match(/^units\.(\d+)\.ua_custom$/);             if(m)return uaExecOffer(+m[1]);   // the schedule's allowance is the UA cell's RS side now ($0-safe)
   m=k.match(/^(nonrev|ns8)\.(\d+)\.(br|ba)$/);        if(m)return rsFamVal(m[1],+m[2],m[3]);
   m=k.match(/^principals\.(\d+)\.(name|title)$/);       if(m)return rsPrin(+m[1],m[2]);
   if(k.indexOf('partb.')===0){const P=_rsUpload&&_rsUpload.parsed&&_rsUpload.parsed.partb;const v=P?P[k]:null;return (v==null||v==='')?null:String(v);}
@@ -1238,7 +1250,7 @@ function rsOf(k){
 function rsTag(k){
   const v=get(k); if(v===''||v==null)return '';
   const r=rsOf(k); if(r==null||r==='')return '';
-  const num=/^(units|ns8|nonrev)\.\d+\.(current|proposed|num_units|rent|avg_rent)$/.test(k);
+  const num=/^(units|ns8|nonrev)\.\d+\.(current|proposed|num_units|ua_custom|rent|avg_rent)$/.test(k);
   const same=num?(numf(v)===numf(r)):(String(v)===String(r));
   return same?'<span class="srctag rstag">RS</span>':'';}
 /* What the renderers ask for. rsTag and rcsTag stay pure — the suites assert
@@ -1588,6 +1600,7 @@ function rcsOf(k){
     return p.contact.phone?fmtPhone(p.contact.phone):null;}
   let m=k.match(/^units\.(\d+)\.proposed$/);   if(m)return rcsUnitVal(+m[1],'proposed');
   m=k.match(/^units\.(\d+)\.ua_rcs$/);         if(m)return rcsUnitVal(+m[1],'ua');
+  m=k.match(/^units\.(\d+)\.ua_custom$/);       if(m)return rcsUnitVal(+m[1],'ua');   // the study's allowance is the UA cell's RCS side now
   m=k.match(/^units\.(\d+)\.safmr_rcs$/);      if(m)return rcsUnitVal(+m[1],'safmr');
   m=k.match(/^nonrev\.(\d+)\.rent$/);          if(m)return rcsNonrevVal(+m[1]);
   /* The study's side of the unit mix. The form has held these three cells, and
@@ -1604,7 +1617,7 @@ function rcsOf(k){
 function rcsTag(k){
   const v=get(k); if(v===''||v==null)return '';
   const r=rcsOf(k); if(r==null||r==='')return '';
-  const num=/^(units\.\d+\.(proposed|ua_rcs|safmr_rcs|num_rcs)|nonrev\.\d+\.rent)$/.test(k);
+  const num=/^(units\.\d+\.(proposed|ua_rcs|ua_custom|safmr_rcs|num_rcs)|nonrev\.\d+\.rent)$/.test(k);
   /* The study gives ten bare digits and the cell holds "(708) 500-2380". Compared
      as strings those differ, so the one cell whose value is reformatted on the
      way in would have shown no source tag at all. */
@@ -1618,7 +1631,7 @@ const RCS_SCALARS=['appr.firm','appr.name','appr.email','appr.phone','appr.addr_
                    'property.name','property.addr_street','property.addr_city','property.addr_state','property.addr_zip','property.s8'];
 function rcsFillKeys(){
   const ks=RCS_SCALARS.concat(['poc.name','poc.email','poc.phone']);
-  (UNITS||[]).forEach(function(i){['proposed','ua_rcs','safmr_rcs','br_rcs','ba_rcs','num_rcs'].forEach(function(f){ks.push('units.'+i+'.'+f);});});
+  (UNITS||[]).forEach(function(i){['proposed','ua_custom','safmr_rcs','br_rcs','ba_rcs','num_rcs'].forEach(function(f){ks.push('units.'+i+'.'+f);});});
   (NONREV||[]).forEach(function(i){ks.push('nonrev.'+i+'.rent');});
   /* A key the schedule answers for is not one the study fills, so it is not one
      the study may claim a source badge on either (rule 15: an indicator
@@ -1667,7 +1680,7 @@ function rcsFillFromParsed(opts){
     if(!m.u)return;
     if(m.idx>=0)claimed.add(m.idx);
     if(m.u.proposed!=='')setk('units.'+i+'.proposed',m.u.proposed);
-    if(m.u.ua!=='')setk('units.'+i+'.ua_rcs',m.u.ua);
+    if(m.u.ua!==''&&m.u.ua!=null)put('units.'+i+'.ua_custom',m.u.ua);   // the study's allowance IS the value (study-first) — put, not setk, so it wins over the schedule; $0 is a real allowance
     if(m.u.safmr!=='')setk('units.'+i+'.safmr_rcs',m.u.safmr);
     /* What the STUDY says this row is. The form's own br/ba/num_units keep
        coming from the executed schedule; these sit beside them so the two can
@@ -1733,7 +1746,7 @@ function rcsFillFromParsed(opts){
     put('units.'+ni+'.br_rcs',_b);if(_a)put('units.'+ni+'.ba_rcs',_a);
     if(u.count!=='')put('units.'+ni+'.num_rcs',u.count);
     if(u.proposed!=='')put('units.'+ni+'.proposed',u.proposed);
-    if(u.ua!=='')put('units.'+ni+'.ua_rcs',u.ua);
+    if(u.ua!==''&&u.ua!=null)put('units.'+ni+'.ua_custom',u.ua);
     if(u.safmr!=='')put('units.'+ni+'.safmr_rcs',u.safmr);
     if(reuse<0)UNITS.push(ni);added.push(u.type||_b);
   });
@@ -1815,13 +1828,9 @@ function rcsChecks(){
     else if(tv===''&&on)out.push(chk('warn','Appraiser\u2019s licence \u00b7 temporary',
       'the study answers \u201cno\u201d \u00b7 item 14 is ticked, which certifies a copy that is not required')); }
 
-  /* Utility allowance: the study against the executed schedule. */
-  let same=0;const diff=[];
-  (UNITS||[]).forEach(function(i){
-    const r=numf(get('units.'+i+'.ua_rcs')),e=numf(get('units.'+i+'.ua_exec'));
-    if(r>0&&e>0){if(r===e)same++;else diff.push(lab(i)+' '+M(r)+' vs '+M(e));}});
-  if(same||diff.length)out.push(chk(diff.length?'warn':'ok','Utility allowance · study vs schedule',
-    diff.length?('differs — '+diff.join(' · ')):(same+' unit type'+(same===1?'':'s')+' agree')));
+  /* Utility allowance: the study-vs-schedule cross-check was dropped with the UA
+     disagreement warning (Matt, 2026-08-06). UA is one value now; the study's figure
+     and the schedule's are the two rows of the cell's own dropdown. */
 
   /* The 150% ceiling: the study against the HUD pull. */
   let ssame=0;const sdiff=[];
@@ -2742,12 +2751,14 @@ function rsFillFromParsed(opts){const P=_rsUpload&&_rsUpload.parsed;if(!P)return
   P.principals.forEach((p,ix)=>{setk('principals.'+ix+'.name',p.name);setk('principals.'+ix+'.title',p.title);});
   P.units.forEach((u,ix)=>{const bb=rsParseUnitType(u.type);setk('units.'+ix+'.br',bb.br);setk('units.'+ix+'.ba',bb.ba);setk('units.'+ix+'.label',bb.label);
     setk('units.'+ix+'.num_units',u.count);setk('units.'+ix+'.current',u.rent);
-    /* Record the figure, do not pin the choice. Writing 'exec' here made the
-       upload ORDER decide the allowance: schedule-first nailed the source to the
-       prior year before the study had been read, and study-first left it free.
-       Leaving it unset lets defUaSrc answer the same way whichever file arrived
-       first, which is what a source dropdown the PM never touched should do. */
-    if(u.ua!==''&&u.ua>0)setk('units.'+ix+'.ua_exec',u.ua);});
+    /* The schedule's allowance fills the one UA value — but the STUDY wins. Order
+       cannot decide it: the RCS fill writes ua_custom with origin 'rcs' and leaves it
+       unpinned; whichever file arrives first, once the study has filled this cell the
+       schedule defers to it. RS-first writes the schedule figure and the study's later
+       fill overwrites it; RCS-first fills the study and this skips. $0 is a real
+       allowance (owner-paid utilities), so no >0 guard. */
+    { const _uak='units.'+ix+'.ua_custom',_c=form[_uak];
+      if(!(_c&&_c.origin==='rcs'&&!_c.pinned)&&u.ua!==''&&u.ua!=null)setk(_uak,u.ua); }});
   if(P.ns8&&P.ns8.length){form=store.editForm(form,'ns8.enabled','1');mark('ns8.enabled');
     P.ns8.forEach((u,ix)=>{const bb=rsParseUnitType(u.type);setk('ns8.'+ix+'.br',bb.br);setk('ns8.'+ix+'.ba',bb.ba);
       setk('ns8.'+ix+'.num_units',u.count);setk('ns8.'+ix+'.avg_rent',u.rent);});}
@@ -2930,8 +2941,8 @@ function sectionKeys(n){if(n===10)return ['ocaf.g','ocaf.rate_type','ocaf.ds_ann
   if(n===8)return CHECKLIST_FLAT.map((it,i)=>'check.'+i);
   /* `label` belongs here. It is the unit type's own name — plainly content in
      this section — and leaving it out meant a reader who had typed one could
-     still be told the section was not started. */
-  if(n===6)return UNITS.flatMap(i=>['units.'+i+'.br','units.'+i+'.ba','units.'+i+'.label','units.'+i+'.num_units','units.'+i+'.current','units.'+i+'.proposed','units.'+i+'.ua_source','units.'+i+'.safmr_source']);const fs=FIELD_SECTIONS.find(s=>s.n===n);return fs?fs.fields.flatMap(f=>f.type==='sigtitle'?['sig.title','sig.principal']:f.type==='pair'?f.items.map(x=>x.k):f.type==='addr'?ADDR:(f.type==='caaddr'?CA_ADDR:(f.type==='appraddr'?APPR_ADDR:(f.type==='mgmtaddr'?MGMT_ADDR:(f.prefix?[f.prefix,f.k]:[f.k]))))):[];}
+     still be told the section was not started. ua_custom is the flattened UA cell. */
+  if(n===6)return UNITS.flatMap(i=>['units.'+i+'.br','units.'+i+'.ba','units.'+i+'.label','units.'+i+'.num_units','units.'+i+'.current','units.'+i+'.proposed','units.'+i+'.ua_custom','units.'+i+'.safmr_source']);const fs=FIELD_SECTIONS.find(s=>s.n===n);return fs?fs.fields.flatMap(f=>f.type==='sigtitle'?['sig.title','sig.principal']:f.type==='pair'?f.items.map(x=>x.k):f.type==='addr'?ADDR:(f.type==='caaddr'?CA_ADDR:(f.type==='appraddr'?APPR_ADDR:(f.type==='mgmtaddr'?MGMT_ADDR:(f.prefix?[f.prefix,f.k]:[f.k]))))):[];}
 /* A section nobody has filled in is not "confirmed". The status only ever asked
    whether something was overridden or in conflict, so a brand-new property showed
    ten green "confirmed" chips over an entirely empty form — on a compliance tool
@@ -3223,7 +3234,7 @@ async function uafApplyUas(){let n=0;
      figure. Refuse until every priced utility has a factor. */
   const gaps=[];UNITS.forEach(i=>{uafRow(i).parts.forEach(p=>{if(p.cur>0&&!(p.f>0)&&gaps.indexOf(p.label)<0)gaps.push(p.label);});});
   if(gaps.length){setStatus('Cannot apply: no published factor for '+gaps.join(', ')+'. Pull the factors, or enter one by hand, before applying.');return;}
-  UNITS.forEach(i=>{const r=uafRow(i);if(r.curSum>0&&r.newSum>0){srcEditKey('units.'+i+'.ua_custom',String(r.newSum));form=store.editForm(form,'units.'+i+'.ua_reviewed','1');n++;}});
+  UNITS.forEach(i=>{const r=uafRow(i);if(r.curSum>0&&r.newSum>0){const _uak='units.'+i+'.ua_custom';form=store.editForm(form,_uak,String(r.newSum));if(form[_uak]){form[_uak].origin='typed';form[_uak].pinned=true;}n++;}});   // the UAF worksheet's own total is a deliberate figure — pin it so a re-parse leaves it
   if(n){renderBody();setStatus('Set the new UA for '+n+' unit type'+(n===1?'':'s')+' (as the custom UA source in '+secRef(6)+') — review, then “Update property profile”.');}
   else setStatus('Enter UA components and factors first.');}
 
@@ -3612,7 +3623,7 @@ function renderBar(){const a=analysis();const conf=UNITS.filter(uaConflict).leng
    moment it opened. */
 function syncReviewed(){const held=k=>{const c=form[k];return !!(c&&c.db_value==='1');};
   const drop=(k,live)=>{if(get(k)==='1'&&!live&&!held(k))form=store.editForm(form,k,'');};
-  UNITS.forEach(i=>{drop('units.'+i+'.ua_reviewed',uaConflict(i));drop('units.'+i+'.safmr_reviewed',safmrConflictOf(i));
+  UNITS.forEach(i=>{drop('units.'+i+'.safmr_reviewed',safmrConflictOf(i));
     drop('units.'+i+'.type_reviewed',typeConflict(i));drop('units.'+i+'.num_reviewed',numConflict(i));});}
 function renderBody(){
   /* One class on the view, read by one CSS rule. Nothing downstream branches on
@@ -3759,8 +3770,8 @@ function fieldKeys(k){if(k==='ca.name')return ['ca.prefix','ca.name'];const gb=g
    The figure keys belong to the cell, so they are coupled to it (rule 17: the
    rule belongs to the operation, not to the button) and the pair is built from
    this list rather than a second one that could drift from it. */
-function coupledKeys(k){const m=k.match(/^(units\.\d+)\.(ua|safmr)_(custom|source|reviewed)$/);
-  if(m){const b=m[1]+'.'+m[2];const figs=m[2]==='ua'?[b+'_exec',b+'_rcs']:[b+'_rcs',b+'_hud'];
+function coupledKeys(k){const m=k.match(/^(units\.\d+)\.(safmr)_(custom|source|reviewed)$/);   // UA flattened: units.N.ua_custom is a plain cell, coupled to nothing
+  if(m){const b=m[1]+'.'+m[2];const figs=[b+'_rcs',b+'_hud'];
     return [k].concat([b+'_custom',b+'_source',b+'_reviewed'].concat(figs).filter(x=>x!==k));}
   /* The date the schedule wrote is the third cell of the source-backed shape,
      after the utility allowance and the 150% ceiling: the figure lives in
@@ -3900,10 +3911,10 @@ function wireArrowNav(){document.querySelectorAll('.fbox:not(.uacell),.rbox:not(
    srcSpec is the single place that knows a custom key's partner source key and
    how to read the figure each non-custom source holds. */
 function srcSpec(k){
-  let m=k.match(/^units\.(\d+)\.ua_custom$/);
-  if(m)return{srcKey:'units.'+m[1]+'.ua_source',cusKey:k,fallback:defUaSrc(m[1]),names:['exec','rcs'],
-    resolve:ss=>cleanNum(get('units.'+m[1]+'.ua_'+(ss==='rcs'?'rcs':'exec'))),figKey:ss=>'units.'+m[1]+'.ua_'+(ss==='rcs'?'rcs':'exec'),unresolved:()=>uaUnresolved(+m[1])};
-  m=k.match(/^units\.(\d+)\.safmr_custom$/);
+  /* UA is no longer a resolver cell (flattened 2026-08-07): units.N.ua_custom is a
+     plain money cell, so it must NOT return a spec here — that keeps typing a plain
+     edit and lets its dropdown pick fall through to the table-driven engine. */
+  let m=k.match(/^units\.(\d+)\.safmr_custom$/);
   if(m)return{srcKey:'units.'+m[1]+'.safmr_source',cusKey:k,fallback:defSafmrSrc(m[1]),names:['hud','rcs'],
     resolve:ss=>cleanNum(get('units.'+m[1]+'.safmr_'+(ss==='rcs'?'rcs':'hud'))),figKey:ss=>'units.'+m[1]+'.safmr_'+(ss==='rcs'?'rcs':'hud'),unresolved:()=>safmrUnresolved(+m[1])};
   if(k==='rent_schedule.date_eff_custom')return{srcKey:'rent_schedule.date_eff_source',cusKey:k,
@@ -5786,7 +5797,7 @@ async function openCycleForm(cid){
      gate's own comment says must never happen. */
   _rsFill=(_rsUpload&&_rsUpload.fill)||null;_rcsFill=(_rcsUpload&&_rcsUpload.fill)||null;
   await refreshSnap();form=await store.fillForm();
-  fixSavedToggles();applyChecklistDefaults();deriveUnits();
+  fixSavedToggles();applyChecklistDefaults();deriveUnits();migrateFlatUA();
   /* …and now that there is a form to check them against, a record that describes
      nothing on it is retired. deriveUnits() first: every unit key a record names
      is read through UNITS. */
@@ -5934,7 +5945,7 @@ function requestSave(afterSave){
    literal 17, because a list that grows and a loop that does not is how the
    last item of a form goes quietly unset. */
 function applyChecklistDefaults(){if(Object.keys(DBSNAP).some(k=>/^check\.\d+$/.test(k)))return;for(let i=0;i<CHECKLIST_FLAT.length;i++)form=store.editForm(form,'check.'+i,checkSeed(i));}
-async function openForm(program){activeProgram=program||'RCS';_undoStack=[];_undoNR=[];_undoLI=[];_undoPR=[];_undoChain=[];_rcsUpload=null;_rsUpload=null;_rsArm=false;_rsFill=null;_rcsFill=null;await mpdb.setActive(activePid);await refreshSnap();form=await store.fillForm();fixSavedToggles();applyChecklistDefaults();deriveUnits();applyRaLocked();snapForm();renderFormHeader();renderBody();show('Form');window.scrollTo(0,0);ensureHudSafmr({});}
+async function openForm(program){activeProgram=program||'RCS';_undoStack=[];_undoNR=[];_undoLI=[];_undoPR=[];_undoChain=[];_rcsUpload=null;_rsUpload=null;_rsArm=false;_rsFill=null;_rcsFill=null;await mpdb.setActive(activePid);await refreshSnap();form=await store.fillForm();fixSavedToggles();applyChecklistDefaults();deriveUnits();migrateFlatUA();applyRaLocked();snapForm();renderFormHeader();renderBody();show('Form');window.scrollTo(0,0);ensureHudSafmr({});}
 function renderFormHeader(){
   if(el('hdrProp'))el('hdrProp').textContent=(get('property.name')||'(unnamed property)');
   if(el('hdrProgram'))el('hdrProgram').textContent=activeProgram+' Package';
@@ -6356,7 +6367,7 @@ function buildRentAnalysisBytes(){
     ||((br,ba)=>String(br||'')+(ba?'/'+ba:''));   // the old shape, if gen.js has not loaded yet
   const rows=UNITS.map(i=>({type:ut(get('units.'+i+'.br'),get('units.'+i+'.ba'),get('units.'+i+'.label')),
     units:nn(get('units.'+i+'.num_units')),cur:nn(get('units.'+i+'.current')),pro:nn(get('units.'+i+'.proposed')),
-    ua:uaHas('units.'+i+'.ua_exec')||uaHas('units.'+i+'.ua_rcs')||uaHas('units.'+i+'.ua_custom')?uaResolvedOf(i):null,safmr150:safmrResolvedOf(i)>0?safmrResolvedOf(i):null}));
+    ua:uaHas('units.'+i+'.ua_custom')?uaResolvedOf(i):null,safmr150:safmrResolvedOf(i)>0?safmrResolvedOf(i):null}));
   return window.RCSXlsx.rentAnalysis({propertyName:get('property.name')||'Property',apprFirm:get('appr.firm')||'',rows});}
 async function genRentAnalysis(){
   if(!window.RCSXlsx){setStatus('Excel generator still loading \u2014 try again in a moment.');return;}
@@ -6747,8 +6758,7 @@ async function selftestSeed(){
     m['units.'+i+'.br']=u.br; m['units.'+i+'.ba']=u.ba; m['units.'+i+'.label']=u.label;
     m['units.'+i+'.num_units']=String(u.n);
     m['units.'+i+'.current']=String(u.cur); m['units.'+i+'.proposed']=String(u.pro);
-    m['units.'+i+'.ua_exec']=String(u.ua);
-    if(u.uaR)m['units.'+i+'.ua_rcs']=String(u.uaR);       // one real conflict to resolve
+    m['units.'+i+'.ua_custom']=String(u.uaR!=null&&u.uaR!==''?u.uaR:u.ua);   // the one allowance value, study-first
     m['units.'+i+'.safmr_hud']=String(u.safmr);
   });
   m['nonrev.0.br']='1BR'; m['nonrev.0.ba']='1BA'; m['nonrev.0.num_units']='1';

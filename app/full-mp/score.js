@@ -314,9 +314,9 @@ function packageScore(read,ctx){
   docs.forEach(d=>{if(d.produce==='upload'){if(!d.required)g3.push({key:'@'+d.id,label:'the CA package (filed with the package)',sec:1,ok:d.ready});return;}
     docCaveatReqs(read,ctx,d.id).forEach(w=>{if(!owned['k:'+w.key])g3.push(w);});});
   units.forEach(i=>{
-    const ek='units.'+i+'.ua_exec',rk='units.'+i+'.ua_rcs';
-    if(uaHas(read,ek)&&uaHas(read,rk)&&numf(read(ek))!==numf(read(rk)))
-      g3.push({key:'units.'+i+'.ua_reviewed',label:'utility allowance conflict, unit type '+(i+1),sec:6,ok:read('units.'+i+'.ua_reviewed')==='1'});
+    /* UA flattened (2026-08-07): the allowance is one value, so a study-vs-schedule
+       difference is no longer a conflict that gates the score — it is two dropdown
+       rows. No ua_reviewed item here. */
     const sh=numf(read('units.'+i+'.safmr_hud')),sr=numf(read('units.'+i+'.safmr_rcs'));
     if(sh>0&&sr>0&&sh!==sr)
       g3.push({key:'units.'+i+'.safmr_reviewed',label:'150% SAFMR conflict, unit type '+(i+1),sec:6,ok:read('units.'+i+'.safmr_reviewed')==='1'});
