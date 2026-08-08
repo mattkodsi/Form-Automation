@@ -634,8 +634,11 @@ const addrLine=(street,city,state,zip)=>{
     const t12=nmv2(g('ocaf.ds_t12')),f12=nmv2(g('ocaf.ds_f12'));
     const K=fl?((t12>0&&f12>0)?Math.min(t12,f12):(t12||f12)):nmv2(g('ocaf.ds_annual'));
     const L=J*K,M=F-L;
-    const src=g('ocaf.factor_src')||(g('ocaf.factor_pub')?'fr':'custom');
-    const pct=src==='custom'?nmv2(g('ocaf.factor_custom')):nmv2(g('ocaf.factor_pub'));
+    /* Flattened: the OCAF factor is one value now (ocaf.factor_custom). Prefer it; fall back to the
+       published figure for a legacy record written before the flatten. factor_src is gone — a cell's
+       origin lives on the cell, not in a separate pointer key. */
+    const pct=nmv2(g('ocaf.factor_custom'))||nmv2(g('ocaf.factor_pub'));
+    const src=nmv2(g('ocaf.factor_custom'))?'custom':'fr';
     const N=pct>0?1+pct/100:0,O=M*N,P=L+O,Q=P;
     const R=(F>0&&N>0)?Math.round(Q/F*1000)/1000:0;
     return {rows,e,F,G,H,I,J,K,L,M,pct,N,O,P,Q,R,fl,t12,f12,src,fy:g('ocaf.factor_fy'),pub:g('ocaf.factor_pubdate'),state:g('property.addr_state')};

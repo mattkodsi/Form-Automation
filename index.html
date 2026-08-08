@@ -3249,8 +3249,9 @@ const hasReal=(read,k)=>{const v=String(read(k)==null?'':read(k)).trim();return 
    If you change a precedence in app.js, change it here, and the parity checks in
    test_rcs.js will tell you if you forget. */
 const dateEffResolved=read=>read('rent_schedule.date_eff_ra')||read('rent_schedule.date_eff_custom')||read('rent_schedule.date_eff_rs')||read('rent_schedule.date_rents_effective');   // flattened: RA lock, then the one value, then legacy fallbacks
-const ocafFactorResolved=read=>{const src=read('ocaf.factor_src')||(read('ocaf.factor_pub')?'fr':'custom');
-  return src==='custom'?numf(read('ocaf.factor_custom')):numf(read('ocaf.factor_pub'));};
+// Flattened: the OCAF factor is one value now (ocaf.factor_custom). Prefer it; fall back to the
+// published figure for a legacy record read before the flatten seeded it.
+const ocafFactorResolved=read=>numf(read('ocaf.factor_custom'))||numf(read('ocaf.factor_pub'));
 const uaHas=(read,k)=>{const v=read(k);return v!==''&&v!=null;};
 const defUaSrc=(read,i)=>uaHas(read,'units.'+i+'.ua_rcs')?'rcs':(uaHas(read,'units.'+i+'.ua_exec')?'exec':'custom');
 const uaResolvedOf=(read,i)=>{const src=read('units.'+i+'.ua_source')||defUaSrc(read,i);
@@ -5781,6 +5782,7 @@ function moneySrcRows(k){
   if((m=k.match(/^units\.(\d+)\.ua_custom$/)))return [{tag:'RCS report',val:rcsUnitVal(+m[1],'ua')},{tag:'Executed RS',val:uaExecOffer(+m[1])}];   // UA flattened: the study (default) then the schedule; $0-safe via uaExecOffer
   if((m=k.match(/^units\.(\d+)\.safmr_custom$/)))return [{tag:'RCS report',val:rcsUnitVal(+m[1],'safmr')},{tag:'HUD API',val:safmrHudOffer(+m[1])}];   // SAFMR flattened: the study's ceiling (default) then the live HUD pull
   if(k==='rent_schedule.date_eff_custom')return [{tag:'Executed RS + 1 yr',val:dateEffRsOffer()}];   // date flattened: the schedule's date +1yr, offered live from the upload
+  if(k==='ocaf.factor_custom'){const pub=get('ocaf.factor_pub');return [{tag:'Federal Register',val:pub?String(pub):null}];}   // OCAF flattened: the published factor is the one source (stored from the FR pull); the FY shows in the OCAF header
   if((m=k.match(/^nonrev\.(\d+)\.rent$/)))return [{tag:'Executed RS',val:rsFamVal('nonrev',+m[1],'rent')},{tag:'RCS report',val:rcsNonrevVal(+m[1])}];
   if((m=k.match(/^ns8\.(\d+)\.avg_rent$/)))return [{tag:'Executed RS',val:rsFamVal('ns8',+m[1],'rent')}];
   return [];}
@@ -6085,6 +6087,12 @@ function migrateFlatCells(){const has=v=>v!==''&&v!=null;
   { const ck='rent_schedule.date_eff_custom',cc=form[ck];
     if(!(cc&&has(cc.value))){const v=get('rent_schedule.date_eff_rs')||get('rent_schedule.date_rents_effective');
       if(has(v))seed(ck,v,'rs',['rent_schedule.date_eff_rs','rent_schedule.date_rents_effective']);}}
+  /* OCAF factor: the Federal Register value (factor_pub), seeded into the one flat value for a
+     legacy record whose FR pull predates the flatten. No cross-cycle carry — the factor is pulled
+     fresh each OCAF year — so this only lifts a value already stored on THIS record. */
+  { const ck='ocaf.factor_custom',cc=form[ck];
+    if(!(cc&&has(cc.value))){const v=get('ocaf.factor_pub');
+      if(has(v))seed(ck,v,'fr',['ocaf.factor_pub']);}}
 }
 /* The executed schedule's allowance, offered to the dropdown $0-safe. rsUnit drops
    a real 0 (an owner-paid unit's $0 is a value, not a blank), so the cell reads the
@@ -8074,7 +8082,7 @@ function renderSources(){
      study at all. */
   return card(1,sectionPill(1),'<div class="srcgrid">'+rs+rcs+'</div>'+foot);}
 
-function sectionKeys(n){if(n===10)return ['ocaf.g','ocaf.rate_type','ocaf.ds_annual','ocaf.ds_t12','ocaf.ds_f12','ocaf.factor_pub','ocaf.factor_custom','ocaf.factor_src'];
+function sectionKeys(n){if(n===10)return ['ocaf.g','ocaf.rate_type','ocaf.ds_annual','ocaf.ds_t12','ocaf.ds_f12','ocaf.factor_pub','ocaf.factor_custom'];
   if(n===11)return ['uaf.f_oil','uaf.f_gas','uaf.f_electric','uaf.f_water'].concat(UNITS.flatMap(i=>UAF_UTILS.map(u=>'units.'+i+'.uac_'+u[0])));
   if(n===12)return PRINCIPALS.flatMap(i=>['principals.'+i+'.name','principals.'+i+'.title']);
   /* Part B and the checklist are built from CHECKBOXES, so neither appears in
@@ -8217,7 +8225,10 @@ function dateParts(v){
   if(!(mo>=1&&mo<=12)||!(d>=1&&d<=31)||!(y>=1900&&y<=2200))return null;
   return {y:y,m:mo,d:d};}
 function effYear(){const p=dateParts(dateEffResolved());return p?String(p.y):'';}
-function ocafFactorResolved(){const src=get('ocaf.factor_src')||(get('ocaf.factor_pub')?'fr':'custom');return src==='custom'?numf(get('ocaf.factor_custom')):numf(get('ocaf.factor_pub'));}
+/* Flattened (2026-08-07): the OCAF factor is ONE value now — ocaf.factor_custom — the Federal
+   Register pull fills it (FR-first) or the user types it. factor_pub + fy/pubdate/state stay as the
+   pull's provenance (the dropdown offer + the "already current" check), coupled to the value. */
+function ocafFactorResolved(){return numf(get('ocaf.factor_custom'));}
 function ocafK(){const rt=get('ocaf.rate_type')||'Fixed rate';if(/floating/i.test(rt)){const t=numf(get('ocaf.ds_t12')),f=numf(get('ocaf.ds_f12'));return (t>0&&f>0)?Math.min(t,f):(t||f);}return numf(get('ocaf.ds_annual'));}
 function ocafCalc(){let e=0;UNITS.forEach(i=>{e+=numf(get('units.'+i+'.num_units'))*numf(get('units.'+i+'.current'));});
   const F=e*12,G=numf(get('ocaf.g'));
@@ -8226,18 +8237,12 @@ function ocafCalc(){let e=0;UNITS.forEach(i=>{e+=numf(get('units.'+i+'.num_units
   const pct=ocafFactorResolved(),N=pct>0?1+pct/100:0,O=M*N,P=L+O,Q=P;
   const R=(F>0&&N>0)?Math.round(Q/F*1000)/1000:0;   // HUD-9625 rounds the increase factor to 3 decimals
   return{e,F,G,H,I,J,K,L,M,pct,N,O,P,Q,R};}
-function ocafFactorCell(){const pub=get('ocaf.factor_pub'),fy=get('ocaf.factor_fy');
-  const src=get('ocaf.factor_src')||(pub?'fr':'custom');const custom=get('ocaf.factor_custom');
-  const c=cellColor('ocaf.factor_src');
-  const boxKey=(src==='custom')?'ocaf.factor_custom':'ocaf.factor_src';
-  const _lkOC=optLock('ocaf.factor_custom');
-  // Same shape as every other cell: the value + the one caret dropdown. The
-  // published figure is chosen from the menu; either is edited in place.
-  const _val=(src==='custom')?(custom||''):(pub?String(pub):'');
-  const _edit=(src==='custom')?('data-k="ocaf.factor_custom"'):('class="srcedit" data-srcedit="ocaf"');
-  const input='<input type="text" '+_edit+' value="'+esc(_val)+'" placeholder="4.9" style="flex:1;min-width:0"><span class="cur" style="padding:0 8px 0 2px">%</span>';
-  const menu='<div class="uamenu">'+srcOptRow('data-ocfopt="fr"',pub?esc(pub+'% \u00b7 FY'+fy):'','Federal Register',src==='fr',src==='fr'?_lkOC:'')+'<div class="uaopt'+(src==='custom'?' sel':'')+'" data-ocfopt="custom">Custom\u2026'+(src==='custom'?_lkOC:'')+'</div></div>';
-  return '<div class="rbox money" data-box="'+boxKey+'" style="background:'+c[1]+';border-left-color:'+c[0]+';max-width:330px;flex:0 1 auto">'+input+'<div class="uadrop pocpick"><div class="uatrigger" tabindex="0" title="Pick a source"><span class="cvx">&#9662;</span></div>'+menu+'</div>'+ovIcons(coupledKeys('ocaf.factor_custom'))+'</div>';}
+function ocafFactorCell(){const k='ocaf.factor_custom';const c=cellColor(k);
+  /* Flat now: one value (the factor %) + the one source dropdown, like every other cell. The Federal
+     Register figure is the one document source (from moneySrcRows); the pull's FY/date/state ride
+     with the value via coupledKeys. Plain data-k input (no money mask) so 1.042 keeps its decimals. */
+  const input='<input type="text" data-k="'+k+'" value="'+esc(get(k)||'')+'" placeholder="4.9" style="flex:1;min-width:0"><span class="cur" style="padding:0 8px 0 2px">%</span>';
+  return '<div class="rbox money" data-box="'+k+'" style="background:'+c[1]+';border-left-color:'+c[0]+';max-width:330px;flex:0 1 auto">'+input+srcTags(k)+sourceMenu(k)+ovIcons(coupledKeys(k))+'</div>';}
 function renderOcaf(){const C=ocafCalc();
   const rt=get('ocaf.rate_type')||'Fixed rate';const fl=/floating/i.test(rt);
   const fy=get('ocaf.factor_fy'),pd=get('ocaf.factor_pubdate');const st=get('property.addr_state');
@@ -8281,7 +8286,7 @@ function refreshOcafLines(k){if(k&&!/^(ocaf|units|ns8)\./.test(k))return;if(!doc
   UNITS.forEach(i=>{const cur=numf(get('units.'+i+'.current'));const nv=(cur>0&&C.R>0)?Math.round(cur*C.R):0;const b=document.querySelector('[data-ocnr="'+i+'"]');if(b)b.textContent=nv?money(nv):'—';});}
 async function pullOcafFactor(opts){opts=opts||{};const auto=!!opts.auto;
   if(!supaClient){if(!auto)setStatus('The OCAF pull needs the hosted backend — sign in first.');return;}
-  if(auto){if(get('ocaf.factor_src')==='custom')return; // the user opted out of the pull
+  if(auto){const _fc=form['ocaf.factor_custom'];if(_fc&&_fc.pinned&&_fc.value!==''&&_fc.value!=null)return; // a deliberately-pinned factor opts out of the auto-pull (flattened: was factor_src==='custom')
     if(!apiPrereq('ocaf').ok)return;
     if(get('ocaf.factor_pub')&&String(get('ocaf.factor_fy'))===String(effYear())&&get('ocaf.factor_state')===(get('property.addr_state')||''))return;} // already current
   const b0=el('pullOcaf');if(b0)b0.disabled=true;if(!auto)setStatus('Pulling the OCAF notice from the Federal Register…');
@@ -8292,12 +8297,16 @@ async function pullOcafFactor(opts){opts=opts||{};const auto=!!opts.auto;
     if(v==null&&d.national!=null){v=d.national;usedNat=true;}
     if(v==null)throw new Error('No factor for state '+(stt||'(none)')+' in the FY'+d.fy+' notice.');
     if(auto&&String(d.fy)!==String(effYear())){setStatus('The FY'+effYear()+' OCAF isn’t published yet — latest is FY'+d.fy+'. Pull it manually, or enter a custom factor.');return;}
-    form=store.editForm(form,'ocaf.factor_pub',String(v));form=store.editForm(form,'ocaf.factor_fy',String(d.fy||''));form=store.editForm(form,'ocaf.factor_pubdate',String(d.publication_date||''));form=store.editForm(form,'ocaf.factor_state',usedNat?'US':stt);srcSetSource('ocaf.factor_custom','fr');
-    /* srcSetSource ran editForm, which PINS — but a Federal Register pull is the
-       hierarchy's default source, not a deliberate user lock, so stamp these keys
-       the way the RS/RCS fills stamp theirs: origin 'fr', pinned false. Otherwise
-       an auto-pulled factor reads as locked and the source padlock would lie. */
-    ['ocaf.factor_pub','ocaf.factor_fy','ocaf.factor_pubdate','ocaf.factor_state','ocaf.factor_src'].forEach(k=>{markCycle(k);if(form[k]){form[k].origin='fr';form[k].pinned=false;}});
+    form=store.editForm(form,'ocaf.factor_pub',String(v));form=store.editForm(form,'ocaf.factor_fy',String(d.fy||''));form=store.editForm(form,'ocaf.factor_pubdate',String(d.publication_date||''));form=store.editForm(form,'ocaf.factor_state',usedNat?'US':stt);
+    /* Flattened: the published figure fills the one value (factor_custom) unless a
+       deliberate factor is pinned. factor_pub/fy/pubdate/state stay as the dropdown
+       offer + provenance that rides with the value. A Federal Register pull is the
+       hierarchy's default source, not a user lock, so stamp the keys we write the way
+       the RS/RCS fills stamp theirs: origin 'fr', pinned false — otherwise an
+       auto-pulled factor would read as locked and the source padlock would lie. */
+    const _fc=form['ocaf.factor_custom'],_wroteFc=!(_fc&&_fc.pinned&&_fc.value!==''&&_fc.value!=null);
+    if(_wroteFc)form=store.editForm(form,'ocaf.factor_custom',String(v));
+    ['ocaf.factor_pub','ocaf.factor_fy','ocaf.factor_pubdate','ocaf.factor_state'].concat(_wroteFc?['ocaf.factor_custom']:[]).forEach(k=>{markCycle(k);if(form[k]){form[k].origin='fr';form[k].pinned=false;}});
     renderBody();
     setStatus('FY'+d.fy+' OCAF '+(usedNat?'(national average — set the property state in '+secRef(2)+' for the state factor)':('for '+stt))+': '+v+'% — published '+fmtDateLong(d.publication_date)+'. Review, then “Update property profile”.');
   }catch(e){if(!auto)setStatus('OCAF pull failed: '+(e&&e.message?e.message:e));}
@@ -8923,7 +8932,7 @@ function fieldKeys(k){if(k==='ca.name')return ['ca.prefix','ca.name'];const gb=g
    rule belongs to the operation, not to the button) and the pair is built from
    this list rather than a second one that could drift from it. */
 function coupledKeys(k){   // UA, SAFMR and the effective date flattened: their *_custom cells are plain, coupled to nothing
-  const OCAF_F=['ocaf.factor_custom','ocaf.factor_src','ocaf.factor_pub','ocaf.factor_fy','ocaf.factor_pubdate','ocaf.factor_state'];
+  const OCAF_F=['ocaf.factor_custom','ocaf.factor_pub','ocaf.factor_fy','ocaf.factor_pubdate','ocaf.factor_state'];   // flattened: the value + the FR provenance that rides with it; the dead factor_src pointer is gone
   if(OCAF_F.indexOf(k)>=0)return [k].concat(OCAF_F.filter(x=>x!==k));
   /* Each utility factor has its own cell and its own pair; the fiscal year, the
      state and the publication date that came down with them have none. They ride
@@ -9052,11 +9061,9 @@ function wireArrowNav(){document.querySelectorAll('.fbox:not(.uacell),.rbox:not(
    srcSpec is the single place that knows a custom key's partner source key and
    how to read the figure each non-custom source holds. */
 function srcSpec(k){
-  /* UA, SAFMR and the effective date are no longer resolver cells (flattened 2026-08-07): their
-     *_custom cells are plain, so none returns a spec here — typing stays a plain edit and their
-     dropdown picks fall through to the table-driven engine (moneySrcRows). OCAF is the last resolver. */
-  if(k==='ocaf.factor_custom')return{srcKey:'ocaf.factor_src',cusKey:k,names:['fr'],
-    fallback:(get('ocaf.factor_pub')?'fr':'custom'),resolve:ss=>ss==='fr'?String(get('ocaf.factor_pub')||''):'',figKey:()=>'ocaf.factor_pub'};
+  /* No resolver cells remain (all four flattened 2026-08-07): UA, SAFMR, the effective date and now the
+     OCAF factor are plain *_custom cells, so nothing returns a spec here — typing stays a plain edit and
+     every dropdown pick falls through to the table-driven engine (moneySrcRows / Engine B). */
   return null;
 }
 /* srcSpecAny: srcSpec keys on the *_custom key; the renderer/painter key a source
@@ -14186,8 +14193,11 @@ const addrLine=(street,city,state,zip)=>{
     const t12=nmv2(g('ocaf.ds_t12')),f12=nmv2(g('ocaf.ds_f12'));
     const K=fl?((t12>0&&f12>0)?Math.min(t12,f12):(t12||f12)):nmv2(g('ocaf.ds_annual'));
     const L=J*K,M=F-L;
-    const src=g('ocaf.factor_src')||(g('ocaf.factor_pub')?'fr':'custom');
-    const pct=src==='custom'?nmv2(g('ocaf.factor_custom')):nmv2(g('ocaf.factor_pub'));
+    /* Flattened: the OCAF factor is one value now (ocaf.factor_custom). Prefer it; fall back to the
+       published figure for a legacy record written before the flatten. factor_src is gone — a cell's
+       origin lives on the cell, not in a separate pointer key. */
+    const pct=nmv2(g('ocaf.factor_custom'))||nmv2(g('ocaf.factor_pub'));
+    const src=nmv2(g('ocaf.factor_custom'))?'custom':'fr';
     const N=pct>0?1+pct/100:0,O=M*N,P=L+O,Q=P;
     const R=(F>0&&N>0)?Math.round(Q/F*1000)/1000:0;
     return {rows,e,F,G,H,I,J,K,L,M,pct,N,O,P,Q,R,fl,t12,f12,src,fy:g('ocaf.factor_fy'),pub:g('ocaf.factor_pubdate'),state:g('property.addr_state')};

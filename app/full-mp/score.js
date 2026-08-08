@@ -51,8 +51,9 @@ const hasReal=(read,k)=>{const v=String(read(k)==null?'':read(k)).trim();return 
    If you change a precedence in app.js, change it here, and the parity checks in
    test_rcs.js will tell you if you forget. */
 const dateEffResolved=read=>read('rent_schedule.date_eff_ra')||read('rent_schedule.date_eff_custom')||read('rent_schedule.date_eff_rs')||read('rent_schedule.date_rents_effective');   // flattened: RA lock, then the one value, then legacy fallbacks
-const ocafFactorResolved=read=>{const src=read('ocaf.factor_src')||(read('ocaf.factor_pub')?'fr':'custom');
-  return src==='custom'?numf(read('ocaf.factor_custom')):numf(read('ocaf.factor_pub'));};
+// Flattened: the OCAF factor is one value now (ocaf.factor_custom). Prefer it; fall back to the
+// published figure for a legacy record read before the flatten seeded it.
+const ocafFactorResolved=read=>numf(read('ocaf.factor_custom'))||numf(read('ocaf.factor_pub'));
 const uaHas=(read,k)=>{const v=read(k);return v!==''&&v!=null;};
 const defUaSrc=(read,i)=>uaHas(read,'units.'+i+'.ua_rcs')?'rcs':(uaHas(read,'units.'+i+'.ua_exec')?'exec':'custom');
 const uaResolvedOf=(read,i)=>{const src=read('units.'+i+'.ua_source')||defUaSrc(read,i);
