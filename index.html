@@ -3248,8 +3248,7 @@ const hasReal=(read,k)=>{const v=String(read(k)==null?'':read(k)).trim();return 
 
    If you change a precedence in app.js, change it here, and the parity checks in
    test_rcs.js will tell you if you forget. */
-const dateEffResolved=read=>{const src=read('rent_schedule.date_eff_source')||(read('rent_schedule.date_eff_rs')?'rs':'custom');
-  return src==='custom'?(read('rent_schedule.date_eff_custom')||read('rent_schedule.date_rents_effective')):read('rent_schedule.date_eff_rs');};
+const dateEffResolved=read=>read('rent_schedule.date_eff_ra')||read('rent_schedule.date_eff_custom')||read('rent_schedule.date_eff_rs')||read('rent_schedule.date_rents_effective');   // flattened: RA lock, then the one value, then legacy fallbacks
 const ocafFactorResolved=read=>{const src=read('ocaf.factor_src')||(read('ocaf.factor_pub')?'fr':'custom');
   return src==='custom'?numf(read('ocaf.factor_custom')):numf(read('ocaf.factor_pub'));};
 const uaHas=(read,k)=>{const v=read(k);return v!==''&&v!=null;};
@@ -4095,13 +4094,13 @@ async function makeDb(adapter, opts) {
   };
   function cySyncEff(c) {
     // the form's date-rents-effective drives the cycle's date + year label
-    const src = (c.cells['rent_schedule.date_eff_source'] || {}).value;
-    /* Related Affordable outranks both. It is written only when their database
-       answered, and it is per-cycle and non-carrying, so it stays the answer for
-       THIS package even if that database later says something else. */
+    /* Related Affordable outranks all. It is written only when their database answered, and it is
+       per-cycle and non-carrying, so it stays the answer for THIS package even if that database later
+       says something else. Flattened: after the RA lock, the one value (date_eff_custom); date_eff_rs
+       is the legacy fallback for records saved before the flatten. */
     const eff = cyISO((c.cells['rent_schedule.date_eff_ra'] || {}).value
-      || (src === 'custom' ? (c.cells['rent_schedule.date_eff_custom'] || {}).value
-      : ((c.cells['rent_schedule.date_eff_rs'] || {}).value || (c.cells['rent_schedule.date_eff_custom'] || {}).value)));
+      || (c.cells['rent_schedule.date_eff_custom'] || {}).value
+      || (c.cells['rent_schedule.date_eff_rs'] || {}).value);
     if (eff) { c.effective_date = eff; const y = eff.slice(0, 4); if (y) c.label = y; }
   }
   function cycleAnalysisOf(cid) {
@@ -5509,26 +5508,29 @@ function csDrop(key,options,ph,cls,clearable,tint,claim,subs){const cur=get(key)
      mouse was the odd one out. One pattern: if it holds a value, it can be
      cleared where you are looking at it. */
   const clr=(has&&clearable!==false)?'<span class="csclear" data-csclear="'+key+'" title="Clear">✕</span>':'';return '<div class="uadrop cs '+(cls||'')+(has?' clearable':'')+'"><div class="uatrigger" tabindex="0" data-trigfor="'+key+'"'+(tint?' style="'+tint+'"':'')+'><span class="ualab">'+esc(lab)+'</span>'+(groupOf(key)?'':srcTags(key))+clr+'<span class="cvx">▾</span></div><div class="uamenu">'+menu+'</div></div>';}
+/* Flattened (2026-08-07): the effective date is ONE value now — rent_schedule.date_eff_custom —
+   filled from the executed schedule (+1yr) or typed. The RA tracker still OVERRIDES it: when the
+   Related Affordable seam binds the date, date_eff_ra wins and the cell is locked (see dateEffCell).
+   Legacy fallback (date_eff_rs / date_rents_effective) covers records saved before the flatten. */
 function dateEffResolved(){const ra=get('rent_schedule.date_eff_ra');if(ra)return ra;
-  const src=get('rent_schedule.date_eff_source')||(get('rent_schedule.date_eff_rs')?'rs':'custom');return src==='custom'?(get('rent_schedule.date_eff_custom')||get('rent_schedule.date_rents_effective')):get('rent_schedule.date_eff_rs');}
+  return get('rent_schedule.date_eff_custom')||get('rent_schedule.date_eff_rs')||get('rent_schedule.date_rents_effective');}
+/* The executed schedule's date + 1yr, offered to the dropdown live from the upload — the same way
+   the allowance reads the schedule. So no stored date_eff_rs is needed on a fresh package. */
+function dateEffRsOffer(){try{const p=_rsUpload&&_rsUpload.parsed;const d=p&&p.scalars&&p.scalars['rs_date'];if(!d)return null;const nx=rsYearOn(d);return nx?fmtDate(nx):null;}catch(e){return null;}}
 function dateEffCell(){
   if(isLocked('rent_schedule.date_eff'))
     return lockedField('rent_schedule.date_eff','Date rents will be effective',raLockShow('rent_schedule.date_eff'));
-  const rs=get('rent_schedule.date_eff_rs');const src=get('rent_schedule.date_eff_source')||(rs?'rs':'custom');
-  const _c0=get('rent_schedule.date_eff_custom')||get('rent_schedule.date_rents_effective');
-  const custom=/^\d{4}-\d{2}-\d{2}$/.test(String(_c0||''))?fmtDate(_c0):_c0;
-  const c=cellColor('rent_schedule.date_eff_source');
-  const boxKey=(src==='custom')?'rent_schedule.date_eff_custom':'rent_schedule.date_eff_source';
-  const _lkDE=optLock('rent_schedule.date_eff_custom');
-  // Same shape as every other cell now: the value + the one caret dropdown. When
-  // the source is the RS date, typing nudges it to custom (srcedit), as before.
-  const _val=(src==='custom')?(custom||''):(rs?fmtDate(rs):'');
-  const _cls=(src==='custom')?'dateeff-in':'srcedit dateeff-in';
-  const _edit=(src==='custom')?('data-k="rent_schedule.date_eff_custom"'):('data-srcedit="dateeff"');
-  const input='<input type="text" class="'+_cls+'" data-date="1" '+_edit+' value="'+esc(_val)+'" placeholder="mm/dd/yyyy" autocomplete="off">';
-  const menu='<div class="uamenu">'+srcOptRow('','','Related Affordable',false,'')+srcOptRow('data-deffopt="rs"',rs?esc(fmtDate(rs)):'','Executed RS + 1 yr',src==='rs',src==='rs'?_lkDE:'')+'<div class="uaopt'+(src==='custom'?' sel':'')+'" data-deffopt="custom">Custom\u2026'+(src==='custom'?_lkDE:'')+'</div></div>';
-  const _bad=(src==='custom')&&String(custom||'').trim()!==''&&!dateParts(custom);
-  return `<div class="field"><div class="flabel">Date rents will be effective</div>${_bad?'<div class="ucnote warn" style="margin:0 0 4px">\u26a0 That is not a date \u2014 enter it as mm/dd/yyyy.</div>':''}<div class="fbox" data-box="${boxKey}" style="background:${c[1]};border-left-color:${c[0]}">${input}<div class="uadrop pocpick"><div class="uatrigger" tabindex="0" title="Pick a source"><span class="cvx">&#9662;</span></div>${menu}</div>${ovIcons(['rent_schedule.date_eff_custom','rent_schedule.date_eff_source','rent_schedule.date_eff_rs'])}</div></div>`;
+  /* Flat now: one value + the one source dropdown, like every other cell. The value is
+     rent_schedule.date_eff_custom; the schedule's date (+1yr) is the one document source,
+     offered from moneySrcRows. Typing edits the value (data-date masks it); picking the
+     schedule row writes it. The RA lock above still pre-empts the whole cell. */
+  const k='rent_schedule.date_eff_custom';
+  const v0=get(k)||get('rent_schedule.date_rents_effective');
+  const val=/^\d{4}-\d{2}-\d{2}$/.test(String(v0||''))?fmtDate(v0):v0;
+  const c=cellColor(k);
+  const _bad=String(val||'').trim()!==''&&!dateParts(val);
+  const input='<input type="text" class="dateeff-in" data-date="1" data-k="'+k+'" value="'+esc(val||'')+'" placeholder="mm/dd/yyyy" autocomplete="off">';
+  return `<div class="field"><div class="flabel">Date rents will be effective</div>${_bad?'<div class="ucnote warn" style="margin:0 0 4px">\u26a0 That is not a date \u2014 enter it as mm/dd/yyyy.</div>':''}<div class="fbox" data-box="${k}" style="background:${c[1]};border-left-color:${c[0]}">${input}${srcTags(k)}${sourceMenu(k)}${ovIcons(k)}</div></div>`;
 }
 const POC_PICK_KEYS=['poc.name','poc.email','poc.phone'];
 function pocSelectContact(ct){form=store.editForm(form,'poc.name',ct.name||'');form=store.editForm(form,'poc.email',ct.email||'');form=store.editForm(form,'poc.phone',fmtPhoneInput(ct.phone||''));
@@ -5778,6 +5780,7 @@ function moneySrcRows(k){
   if((m=k.match(/^units\.(\d+)\.proposed$/)))return [{tag:'RCS report',val:rcsUnitVal(+m[1],'proposed')}];
   if((m=k.match(/^units\.(\d+)\.ua_custom$/)))return [{tag:'RCS report',val:rcsUnitVal(+m[1],'ua')},{tag:'Executed RS',val:uaExecOffer(+m[1])}];   // UA flattened: the study (default) then the schedule; $0-safe via uaExecOffer
   if((m=k.match(/^units\.(\d+)\.safmr_custom$/)))return [{tag:'RCS report',val:rcsUnitVal(+m[1],'safmr')},{tag:'HUD API',val:safmrHudOffer(+m[1])}];   // SAFMR flattened: the study's ceiling (default) then the live HUD pull
+  if(k==='rent_schedule.date_eff_custom')return [{tag:'Executed RS + 1 yr',val:dateEffRsOffer()}];   // date flattened: the schedule's date +1yr, offered live from the upload
   if((m=k.match(/^nonrev\.(\d+)\.rent$/)))return [{tag:'Executed RS',val:rsFamVal('nonrev',+m[1],'rent')},{tag:'RCS report',val:rcsNonrevVal(+m[1])}];
   if((m=k.match(/^ns8\.(\d+)\.avg_rent$/)))return [{tag:'Executed RS',val:rsFamVal('ns8',+m[1],'rent')}];
   return [];}
@@ -5920,7 +5923,7 @@ function boxColor(k){return cellColors(k);}
    by family, each behind the full green gate (the two-painter sweep, the exact
    rgb assertions, the coupledKeys arrays are the tripwires). */
 const AUTO_ORIGINS={rs:1,rcs:1,hud:1,fr:1,ra:1,contact:1,carried:1};
-const TAG_ORIGIN={'Executed RS':'rs','RCS report':'rcs','Related Affordable':'ra','HUD API':'hud','Federal Register':'fr'};   // a per-cell pull's source tag -> the origin cellColor reads
+const TAG_ORIGIN={'Executed RS':'rs','Executed RS + 1 yr':'rs','RCS report':'rcs','Related Affordable':'ra','HUD API':'hud','Federal Register':'fr'};   // a per-cell pull's source tag -> the origin cellColor reads
 function cellState(key){
   const sp=(typeof srcSpecAny==='function')?srcSpecAny(key):null;
   if(sp){                                     // a source-family cell: reproduce the family painter (FR-4)
@@ -6076,7 +6079,13 @@ function migrateFlatCells(){const has=v=>v!==''&&v!=null;
       if(!(cc&&has(cc.value))){const hd=get('units.'+i+'.safmr_hud'),rc=get('units.'+i+'.safmr_rcs'),sr=get('units.'+i+'.safmr_source');
         if(has(hd)||has(rc)){const src=sr||(has(rc)?'rcs':'hud');const v=src==='rcs'?rc:hd;
           if(has(v))seed(ck,v,src==='rcs'?'rcs':'hud',['units.'+i+'.safmr_rcs','units.'+i+'.safmr_hud']);}} }
-  });}
+  });
+  /* Effective date: the schedule's date (+1yr), or the old typed custom (already in date_eff_custom).
+     The RA lock (date_eff_ra) is separate and pre-empts the cell regardless. */
+  { const ck='rent_schedule.date_eff_custom',cc=form[ck];
+    if(!(cc&&has(cc.value))){const v=get('rent_schedule.date_eff_rs')||get('rent_schedule.date_rents_effective');
+      if(has(v))seed(ck,v,'rs',['rent_schedule.date_eff_rs','rent_schedule.date_rents_effective']);}}
+}
 /* The executed schedule's allowance, offered to the dropdown $0-safe. rsUnit drops
    a real 0 (an owner-paid unit's $0 is a value, not a blank), so the cell reads the
    parse directly here — the same $0-safe rule the resolver's uaHas already keeps. */
@@ -7878,8 +7887,11 @@ function rsFillFromParsed(opts){const P=_rsUpload&&_rsUpload.parsed;if(!P)return
   setk('owner.entity_type',P.scalars['owner.entity_type']);
   setk('owner.entity_type_other',P.scalars['owner.entity_type_other']);
   if(P.scalars['rs_date']){const nx=rsYearOn(P.scalars['rs_date']);
-    if(nx){form=store.editForm(form,'rent_schedule.date_eff_rs',nx);mark('rent_schedule.date_eff_rs');
-      if(!get('rent_schedule.date_eff_custom')){srcSetSource('rent_schedule.date_eff_custom','rs');mark('rent_schedule.date_eff_source');}}}
+    if(nx){
+      // Flattened: the schedule's date (+1yr) IS the value unless a deliberate one is pinned. mark() sets
+      // origin 'rs'; the dropdown offer reads the schedule live (dateEffRsOffer), so no date_eff_rs is stored.
+      const dk='rent_schedule.date_eff_custom',dc=form[dk];
+      if(!(dc&&dc.pinned&&dc.value!==''&&dc.value!=null)){form=store.editForm(form,dk,nx);mark(dk);}}}
   setk('sig.name',P.scalars['sig.name']);setk('sig.title',P.scalars['sig.title']);setk('sig.principal',P.scalars['sig.principal']);
   if(P.partb){const CHK=P.partb._checked||{};
     Object.keys(P.partb).forEach(k=>{if(k==='_checked')return;
@@ -8910,16 +8922,7 @@ function fieldKeys(k){if(k==='ca.name')return ['ca.prefix','ca.name'];const gb=g
    The figure keys belong to the cell, so they are coupled to it (rule 17: the
    rule belongs to the operation, not to the button) and the pair is built from
    this list rather than a second one that could drift from it. */
-function coupledKeys(k){   // UA and SAFMR flattened: units.N.ua_custom / safmr_custom are plain cells, coupled to nothing
-  /* The date the schedule wrote is the third cell of the source-backed shape,
-     after the utility allowance and the 150% ceiling: the figure lives in
-     date_eff_rs while the pair was keyed to custom+source alone. A parsed date
-     therefore painted itself green, correctly, and offered nothing to press —
-     and the cell went further and rendered the pair ONLY when the date had been
-     typed by hand, so the one state that always has something to save was the
-     one state with no button. */
-  if(/^rent_schedule\.date_eff_(custom|source|rs)$/.test(k))
-    return [k].concat(['rent_schedule.date_eff_custom','rent_schedule.date_eff_source','rent_schedule.date_eff_rs'].filter(x=>x!==k));
+function coupledKeys(k){   // UA, SAFMR and the effective date flattened: their *_custom cells are plain, coupled to nothing
   const OCAF_F=['ocaf.factor_custom','ocaf.factor_src','ocaf.factor_pub','ocaf.factor_fy','ocaf.factor_pubdate','ocaf.factor_state'];
   if(OCAF_F.indexOf(k)>=0)return [k].concat(OCAF_F.filter(x=>x!==k));
   /* Each utility factor has its own cell and its own pair; the fiscal year, the
@@ -9049,12 +9052,9 @@ function wireArrowNav(){document.querySelectorAll('.fbox:not(.uacell),.rbox:not(
    srcSpec is the single place that knows a custom key's partner source key and
    how to read the figure each non-custom source holds. */
 function srcSpec(k){
-  /* UA and SAFMR are no longer resolver cells (flattened 2026-08-07): units.N.ua_custom and
-     units.N.safmr_custom are plain money cells, so neither returns a spec here — typing stays a plain
-     edit and their dropdown picks fall through to the table-driven engine (moneySrcRows). */
-  let m;
-  if(k==='rent_schedule.date_eff_custom')return{srcKey:'rent_schedule.date_eff_source',cusKey:k,
-    fallback:'rs',names:['rs'],resolve:()=>fmtDate(get('rent_schedule.date_eff_rs')),figKey:()=>'rent_schedule.date_eff_rs'};
+  /* UA, SAFMR and the effective date are no longer resolver cells (flattened 2026-08-07): their
+     *_custom cells are plain, so none returns a spec here — typing stays a plain edit and their
+     dropdown picks fall through to the table-driven engine (moneySrcRows). OCAF is the last resolver. */
   if(k==='ocaf.factor_custom')return{srcKey:'ocaf.factor_src',cusKey:k,names:['fr'],
     fallback:(get('ocaf.factor_pub')?'fr':'custom'),resolve:ss=>ss==='fr'?String(get('ocaf.factor_pub')||''):'',figKey:()=>'ocaf.factor_pub'};
   return null;
@@ -9262,7 +9262,7 @@ function wireBody(){
     _pendingSnap=snapPend([key]);                         // Engine B: write the value (carried on the option) + record its origin
     const _v=o.getAttribute('data-srcv');
     if(_v!=null){form=store.editForm(form,key,String(_v));if(form[key]){form[key].origin=src;form[key].pinned=true;}}
-    _pending=[key];_refocusSel='[data-box="'+key+'"] .uatrigger';renderBody();setStatus('Pulled from '+((o.querySelector('.uasub')||{}).textContent||'the source')+'.');}));
+    _pending=[key];_refocusSel='[data-box="'+key+'"] .uatrigger';renderBody();refreshIfPrereq([key]);setStatus('Pulled from '+((o.querySelector('.uasub')||{}).textContent||'the source')+'.');}));
   document.querySelectorAll('[data-srck]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();const k=o.getAttribute('data-srck'),_tg=o.getAttribute('data-srctag')||'source';_pendingSnap=snapPend([k]);form=store.editForm(form,k,o.getAttribute('data-srcv'));
     /* A pulled figure is not typed-in data. Into an empty cell it reads as this
        package's own — green, "not saved yet" — rather than plain new; over an
@@ -13896,7 +13896,8 @@ const addrLine=(street,city,state,zip)=>{
           _raw[String(n)]=String(num); out=_show(n,num); }
         f.setText(out); f.setFontSize(9); f.updateAppearances(font); _wrote++; }catch(e){ _missed++; } };
     const C=n=>{ try{ form.getCheckBox(String(n)).check(); }catch(e){} };
-    const _de=(g('rent_schedule.date_eff_ra')||(g('rent_schedule.date_eff_source')==='custom'?(g('rent_schedule.date_eff_custom')||g('rent_schedule.date_eff_rs')||g('rent_schedule.date_rents_effective')):(g('rent_schedule.date_eff_rs')||g('rent_schedule.date_eff_custom')||g('rent_schedule.date_rents_effective'))));
+    // Flattened: RA lock wins, then the one value (date_eff_custom), then legacy fallbacks for old records.
+    const _de=(g('rent_schedule.date_eff_ra')||g('rent_schedule.date_eff_custom')||g('rent_schedule.date_eff_rs')||g('rent_schedule.date_rents_effective'));
     const _dei=_toISO(_de);
     /* Both names, the way the executed copy prints them. app.js splits a slashed
        Part A project name on the way IN - "Sample Property/Sample Property"
@@ -14170,7 +14171,7 @@ const addrLine=(street,city,state,zip)=>{
   const m2=n=>'$'+(Number(n)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
   const idxOf=(rec,pre)=>[...new Set(Object.keys(rec).map(k=>(k.match(new RegExp('^'+pre+'\\.(\\d+)\\.'))||[])[1]).filter(x=>x!=null))].sort((a,b)=>a-b);
   const utype2=(br,ba,dg)=>{const b=String(br||'').replace(/(\d+)\s*BR/i,'$1 BR').trim();const a=String(ba||'').replace(/(\d+(?:\.\d+)?)\s*BA/i,'$1 BA').trim();const t=(b&&a)?(b+' / '+a):(b||a||'—');const d=String(dg||'').trim();return d?(t+' '+d):t;};
-  const effOf=rec=>{const g=k=>rec[k]!=null?String(rec[k]):'';const de=(g('rent_schedule.date_eff_ra')||(g('rent_schedule.date_eff_source')==='custom'?(g('rent_schedule.date_eff_custom')||g('rent_schedule.date_eff_rs')||g('rent_schedule.date_rents_effective')):(g('rent_schedule.date_eff_rs')||g('rent_schedule.date_eff_custom')||g('rent_schedule.date_rents_effective'))));
+  const effOf=rec=>{const g=k=>rec[k]!=null?String(rec[k]):'';const de=(g('rent_schedule.date_eff_ra')||g('rent_schedule.date_eff_custom')||g('rent_schedule.date_eff_rs')||g('rent_schedule.date_rents_effective'));   // flattened: RA lock, then the one value, then legacy fallbacks
     const s=String(de||'').trim();let m=s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);if(m)return monthY(m[3]+'-'+('0'+m[1]).slice(-2)+'-'+('0'+m[2]).slice(-2));return monthY(s);};
   const UAF_UTILS_G=[['oil','Oil'],['gas','Natural Gas'],['electric','Electric'],['water','Water / Sewer / Trash']];
   function ocafCalcRec(rec){
