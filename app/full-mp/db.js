@@ -100,9 +100,9 @@ function unitIndices(form) {
     Reads the SAME flat form the UI uses, so the menu and the command center
     never diverge. */
 function safmrResolvedFrom(val, i) {
-  const sh = num(val('units.' + i + '.safmr_hud')), sr = num(val('units.' + i + '.safmr_rcs'));
+  const c = num(val('units.' + i + '.safmr_custom')); if (c > 0) return c; // flattened: the one 150% value
+  const sh = num(val('units.' + i + '.safmr_hud')), sr = num(val('units.' + i + '.safmr_rcs')); // legacy fallback for older records
   const src = val('units.' + i + '.safmr_source') || (sh > 0 ? 'hud' : (sr > 0 ? 'rcs' : 'custom'));
-  if (src === 'custom') return num(val('units.' + i + '.safmr_custom'));
   return src === 'rcs' ? (sr || sh) : (sh || sr); // HUD trumps by default
 }
 function computeAnalysis(form) {

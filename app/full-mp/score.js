@@ -61,9 +61,10 @@ const uaResolvedOf=(read,i)=>{const src=read('units.'+i+'.ua_source')||defUaSrc(
   if(src==='custom')return numf(read('units.'+i+'.ua_custom'));
   return numf(read('units.'+i+'.ua_exec'));};
 const defSafmrSrc=(read,i)=>{const h=numf(read('units.'+i+'.safmr_hud')),r=numf(read('units.'+i+'.safmr_rcs'));return r>0?'rcs':(h>0?'hud':'custom');};
-const safmrResolvedOf=(read,i)=>{const src=read('units.'+i+'.safmr_source')||defSafmrSrc(read,i);
-  const sh=numf(read('units.'+i+'.safmr_hud')),sr=numf(read('units.'+i+'.safmr_rcs')),sc=numf(read('units.'+i+'.safmr_custom'));
-  return src==='custom'?sc:(src==='rcs'?(sr||sh):(sh||sr));};
+const safmrResolvedOf=(read,i)=>{const c=numf(read('units.'+i+'.safmr_custom'));if(c>0)return c;   // flattened: the one 150% value
+  const src=read('units.'+i+'.safmr_source')||defSafmrSrc(read,i);   // legacy fallback for records saved before the flatten
+  const sh=numf(read('units.'+i+'.safmr_hud')),sr=numf(read('units.'+i+'.safmr_rcs'));
+  return src==='rcs'?(sr||sh):(sh||sr);};
 const UAF_UTILS=['oil','gas','electric','water'];
 function uafFigures(read,units){   // {any, dec} — the two facts the UAF documents turn on
   let any=false,dec=0;
@@ -314,12 +315,9 @@ function packageScore(read,ctx){
   docs.forEach(d=>{if(d.produce==='upload'){if(!d.required)g3.push({key:'@'+d.id,label:'the CA package (filed with the package)',sec:1,ok:d.ready});return;}
     docCaveatReqs(read,ctx,d.id).forEach(w=>{if(!owned['k:'+w.key])g3.push(w);});});
   units.forEach(i=>{
-    /* UA flattened (2026-08-07): the allowance is one value, so a study-vs-schedule
-       difference is no longer a conflict that gates the score — it is two dropdown
-       rows. No ua_reviewed item here. */
-    const sh=numf(read('units.'+i+'.safmr_hud')),sr=numf(read('units.'+i+'.safmr_rcs'));
-    if(sh>0&&sr>0&&sh!==sr)
-      g3.push({key:'units.'+i+'.safmr_reviewed',label:'150% SAFMR conflict, unit type '+(i+1),sec:6,ok:read('units.'+i+'.safmr_reviewed')==='1'});
+    /* UA and SAFMR flattened (2026-08-07): a study-vs-schedule / study-vs-HUD difference is no
+       longer a conflict that gates the score — it is two dropdown rows. No *_reviewed items here.
+       (The "a 150% SAFMR for every unit type" requirement below still stands.) */
     const br=read('units.'+i+'.br'),ba=read('units.'+i+'.ba'),brR=read('units.'+i+'.br_rcs'),baR=read('units.'+i+'.ba_rcs');
     if(((brR!==''&&brR!=null)||(baR!==''&&baR!=null))&&((brR&&brR!==br)||(baR&&baR!==ba)))
       g3.push({key:'units.'+i+'.type_reviewed',label:'unit type conflict, unit type '+(i+1),sec:6,ok:read('units.'+i+'.type_reviewed')==='1'});
