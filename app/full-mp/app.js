@@ -543,6 +543,41 @@ function applyRaLocked(){
   });
 }
 function isLocked(cell){return raLockVal(cell)!=null;}
+/* RA auto-fill (note G5/G16/G20). Runs at form open, after applyRaLocked and
+   before snapForm — so a filled default never opens the form dirty (rule 20).
+   Overrides any NON-PINNED cell and skips a pinned one (the settled override
+   rule); writes UNPINNED so the cell keeps tracking RA until the user claims it. */
+function raFillUnpinned(k,v){ if(v==null||v==='')return; if(form[k]&&form[k].pinned)return;
+  form=store.editForm(form,k,String(v)); if(form[k]){form[k].origin='ra';form[k].pinned=false;} markCycle(k); }
+/* On a match-MISS we fill the name from the raw RA value; the siblings a PRIOR match
+   left no longer describe this person, so clear the non-pinned ones (a pinned sibling is
+   the user's own and is kept). Stops "new name, old email/phone" reaching a document —
+   the PM/CA-turnover case this feature is for. */
+function raClearUnpinned(k){ if(!form[k]||form[k].pinned)return; if(form[k].value===''||form[k].value==null)return;
+  form=store.editForm(form,k,''); if(form[k]){form[k].origin='ra';form[k].pinned=false;} markCycle(k); }
+function applyRaContacts(){
+  // POC — the property's Portfolio Manager; a first-initial+last match auto-fills the contact card.
+  if(!(form['poc.name']&&form['poc.name'].pinned)){
+    const nm=raVal('poc.name');
+    if(nm){const hit=matchContact(nm,(mpdb?mpdb.listContacts():[]));
+      if(hit){pocSelectContact(hit);['poc.name','poc.email','poc.phone'].forEach(k=>{if(form[k]){form[k].origin='contact';form[k].pinned=false;}markCycle(k);});}
+      else{raFillUnpinned('poc.name',nm);['poc.email','poc.phone'].forEach(raClearUnpinned);}}
+  }
+  // CA — a matched contact fills the whole card; else fill name from RA and org from the HAP org.
+  if(!(form['ca.name']&&form['ca.name'].pinned)){
+    const nm=raVal('ca.name'),hap=raVal('ca.org');
+    const hit=nm?matchContact(nm,dirList('ca')):null;
+    if(hit){DIR_PICK['ca.name'].apply(hit);
+      DIR_PICK['ca.name'].keys.forEach(k=>{if(form[k]){form[k].origin='contact';form[k].pinned=false;}markCycle(k);});
+      // blank org from the contact falls back to the HAP org (decided 2026-08-08)
+      if((!hit.org||hit.org==='')&&hap)raFillUnpinned('ca.org',hap);
+    }else{ if(nm){raFillUnpinned('ca.name',nm);['ca.prefix','ca.position','ca.addr_street','ca.addr_city','ca.addr_state','ca.addr_zip'].forEach(raClearUnpinned);} raFillUnpinned('ca.org',hap); }
+  }else if(!(form['ca.org']&&form['ca.org'].pinned)){ raFillUnpinned('ca.org',raVal('ca.org')); }
+  // Sender — Community Manager (else Regional CM); name + title fill together.
+  if(!(form['tenant.sender_name']&&form['tenant.sender_name'].pinned)){
+    const s=raSenderResolve(); if(s.name){raFillUnpinned('tenant.sender_name',s.name);raFillUnpinned('tenant.sender_title',s.title);}
+  }
+}
 /* Drawn, not typed: a padlock emoji renders in a different family on every
    platform, and rule 16's spirit is that nothing user-visible is left to chance. */
 const lockGlyph=cls=>'<svg class="'+cls+'" viewBox="0 0 24 24" aria-hidden="true">'
@@ -5846,6 +5881,7 @@ async function openCycleForm(cid){
   if(!fillSurvived(_rsFill,rsTag))_rsFill=null;
   if(!fillSurvived(_rcsFill,rcsTag))_rcsFill=null;
   applyRaLocked();
+  applyRaContacts();
   snapForm();renderFormHeader();renderBody();
   show('Form');window.scrollTo(0,0);
   if(cy&&cy.dominant&&cy.programs.indexOf('rcs')>=0)ensureHudSafmr({});   // auto-pull: dominant RCS cycles only
@@ -5987,7 +6023,7 @@ function requestSave(afterSave){
    literal 17, because a list that grows and a loop that does not is how the
    last item of a form goes quietly unset. */
 function applyChecklistDefaults(){if(Object.keys(DBSNAP).some(k=>/^check\.\d+$/.test(k)))return;for(let i=0;i<CHECKLIST_FLAT.length;i++)form=store.editForm(form,'check.'+i,checkSeed(i));}
-async function openForm(program){activeProgram=program||'RCS';_undoStack=[];_undoNR=[];_undoLI=[];_undoPR=[];_undoChain=[];_rcsUpload=null;_rsUpload=null;_rsArm=false;_rsFill=null;_rcsFill=null;await mpdb.setActive(activePid);await refreshSnap();form=await store.fillForm();fixSavedToggles();applyChecklistDefaults();deriveUnits();migrateFlatCells();applyRaLocked();snapForm();renderFormHeader();renderBody();show('Form');window.scrollTo(0,0);ensureHudSafmr({});}
+async function openForm(program){activeProgram=program||'RCS';_undoStack=[];_undoNR=[];_undoLI=[];_undoPR=[];_undoChain=[];_rcsUpload=null;_rsUpload=null;_rsArm=false;_rsFill=null;_rcsFill=null;await mpdb.setActive(activePid);await refreshSnap();form=await store.fillForm();fixSavedToggles();applyChecklistDefaults();deriveUnits();migrateFlatCells();applyRaLocked();applyRaContacts();snapForm();renderFormHeader();renderBody();show('Form');window.scrollTo(0,0);ensureHudSafmr({});}
 function renderFormHeader(){
   if(el('hdrProp'))el('hdrProp').textContent=(get('property.name')||'(unnamed property)');
   if(el('hdrProgram'))el('hdrProgram').textContent=activeProgram+' Package';
@@ -6952,6 +6988,7 @@ __rcsFill:(opts)=>rcsFillFromParsed(opts),/* The same door for the rent schedule
   __hapProps:()=>hapProperties(),
   __installRA:()=>installRaSource(),
   __raVal:(k)=>raVal(k),
+  __applyRaContacts:()=>applyRaContacts(),
   __scheduledProg:()=>scheduledProg(),
   __sectionStatus:(n)=>sectionStatus(n),
   __sectionIssues:()=>sectionIssues(),
