@@ -466,7 +466,16 @@ function dirCell(f){const k=f.k;const P=DIR_PICK[k];const cur=get(k);
    answer from that snapshot, and call renderBody() when fresh data lands.
    Executed-RS / RCS-report rows stay "not available" until document parsing
    lands (still a stub); they render now so all three sources light up
-   uniformly. The form never writes back to the RA platform. */
+   uniformly. The form never writes back to the RA platform.
+
+   Keys a provider may answer, beyond the RA-locked property.name and
+   rent_schedule.date_rents_effective (see RA-LOCKED CELLS below): poc.name
+   (point of contact) and ca.org (contract administrator organization) are
+   wired in this build to the HAP tracker's Portfolio Mgr and Contract Admin
+   columns. ca.name, tenant.property_alias, tenant.community_manager and
+   tenant.regional_cm are part of the contract too, but the tracker does not
+   carry them, so they stay null/dim here until an Affordable-database
+   provider answers for them. */
 function raProps(){try{const p=window.RASource;const l=(p&&p.listProperties)?p.listProperties():[];return Array.isArray(l)?l:[];}catch(e){return [];}}
 function raVal(k){try{const p=window.RASource;const v=(p&&p.value)?p.value(k):null;return (v==null||v==='')?null:String(v);}catch(e){return null;}}
 
@@ -4734,13 +4743,14 @@ let _raSnap=null;
 function raSnapshot(){
   const key=String(activePid||'')+'|'+String(activeCid||'')+'|'+(_hapCache?_hapCache.src:'-');
   if(_raSnap&&_raSnap.key===key)return _raSnap;
-  const s={key:key,name:null,eff:null};
+  const s={key:key,name:null,eff:null,pm:null,ca:null};
   try{
     const H=window.RCSHap,rows=hapAll();
     const code=(H&&rows&&mpdb&&mpdb.raCodeOfPid&&activePid)?mpdb.raCodeOfPid(activePid):null;
     const mine=code?rows.filter(r=>r.code===code):[];
     if(mine.length){
       s.name=mine[0].name||null;
+      s.pm=mine[0].pm||null; s.ca=mine[0].ca||null;
       /* THE TRAP, and the reason this is not simply targetFor(). A package
          takes its effective date when it is started and keeps it — which is
          precisely what RA_LOCK_WHY promises the reader. Answering with the
@@ -4786,6 +4796,8 @@ function raTrackerSource(){return{
     const s=raSnapshot();
     if(k==='property.name')return s.name;
     if(k==='rent_schedule.date_rents_effective')return s.eff;
+    if(k==='poc.name')return s.pm;
+    if(k==='ca.org')return s.ca;
     return null;   // every other RA-sourced cell stays "not available": the tracker does not carry it
   },
 };}
@@ -6934,6 +6946,7 @@ __rcsFill:(opts)=>rcsFillFromParsed(opts),/* The same door for the rent schedule
   __menuCounts:()=>Object.assign({},_menuCounts),
   __hapProps:()=>hapProperties(),
   __installRA:()=>installRaSource(),
+  __raVal:(k)=>raVal(k),
   __scheduledProg:()=>scheduledProg(),
   __sectionStatus:(n)=>sectionStatus(n),
   __sectionIssues:()=>sectionIssues(),
@@ -6965,6 +6978,16 @@ if(RADEMO&&typeof window!=='undefined'&&!window.RASource)window.RASource={
         const c=mpdb&&activeCid&&(mpdb.listCycles(activePid)||[]).find(x=>x.id===activeCid);
         return (c&&c.effective_date)||null;
       }
+      /* These six are not derived from the property's own record the way the two
+         locked cells are — they are ordinary (unlocked) dropdown source rows, so a
+         demo string is a choice the reader can see and decline, not a value forced
+         onto the page. Representative names, not this property's real ones. */
+      if(k==='poc.name')return 'Dana Fields';
+      if(k==='ca.org')return 'Southwest Housing Compliance Corporation';
+      if(k==='ca.name')return 'Alma Reyes';
+      if(k==='tenant.property_alias')return 'The Willows';
+      if(k==='tenant.community_manager')return 'Priya Nair';
+      if(k==='tenant.regional_cm')return 'Sam Okafor';
     }catch(e){}
     return null;
   },
