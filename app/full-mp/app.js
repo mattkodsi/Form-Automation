@@ -1479,19 +1479,27 @@ function nameParts(x){
   if(!t.length)return null;
   const nm=v=>String(v).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z]/g,'');
   return {first:nm(t[0]),last:nm(t[t.length-1])};}
-/* Same surname, and first names that agree as far as the shorter one goes.
-   Two characters minimum: "M." must not claim every Kim in the book. */
+/* One matcher for every place a name is matched to a saved contact (FORM-RULES 17):
+   first TWO letters of the first name + last name, case-insensitive (Matt, 2026-08-08).
+   Two letters tolerates spelling variations (Claire/Clarice) yet tells Claire from Carl,
+   and a first name under two letters — a bare initial like "C." — cannot match, which
+   keeps the standing "a bare initial never claims a surname" guard. Two contacts that
+   share the two-letter prefix + last name are indistinguishable, so that yields no
+   match and nothing is auto-picked on a guess. */
+function contactHits(name,list){
+  const a=nameParts(name); if(!a||!a.first||!a.last||a.first.length<2)return [];
+  const lc=s=>String(s||'').toLowerCase();
+  const a2=lc(a.first.slice(0,2)),al=lc(a.last);
+  return (list||[]).filter(ct=>{const b=nameParts(ct&&ct.name);
+    return !!(b&&b.first&&b.last&&b.first.length>=2&&lc(b.first.slice(0,2))===a2&&lc(b.last)===al);});
+}
+function matchContact(name,list){const h=contactHits(name,list);return h.length===1?h[0]:null;}
+
 function pocMatchRcs(){
   const name=rcsPocName();
   if(!name)return {name:null,contact:null,many:false};
-  const a=nameParts(name);
-  if(!a||!a.last)return {name:name,contact:null,many:false};
   let list=[];try{list=(mpdb&&mpdb.listContacts)?mpdb.listContacts():[];}catch(e){}
-  const hits=list.filter(ct=>{const b=nameParts(ct&&ct.name);
-    if(!b||!b.last||b.last!==a.last)return false;
-    if(b.first===a.first)return true;
-    const n=Math.min(a.first.length,b.first.length);
-    return n>=2&&a.first.slice(0,n)===b.first.slice(0,n);});
+  const hits=contactHits(name,list);
   return {name:name,contact:hits.length===1?hits[0]:null,many:hits.length>1};}
 
 /* Match a form row to a study line on bedrooms and baths — never on position,
@@ -6861,7 +6869,7 @@ function contactDialog(c){c=c||{};
    ReferenceError at load and took three suites down with zero checks run. An
    arrow defers the lookup to the call, which only ever happens in the browser
    suite, which has the whole bundle. */
-const __API={LABEL_HINTS,rsParseUnitType,rsNum,ocrMapPages:(p)=>ocrMapPages(p),ocrWhy:()=>ocrWhy(),fmtPhone,fmtPhoneInput,fmtDate,sMoney,sPct,sK,analysis,uaResolvedOf,safmrResolvedOf,uaConflict,uaUnresolved,renderMenu,renderLauncher,openMenu,openForm,openLauncher,ringSvg,niceDate,isDirty,overrideCount,isStateKey,attnFlags,pbUtil,clearUncheckedWriteins,srcOf:(k)=>srcOf(k),__openForm:(pid)=>{activePid=pid;return openForm('RCS');},__openCycleForm:(pid,cid)=>{activePid=pid;return openCycleForm(cid);},__renderBody:()=>renderBody(),__docMissing:(id)=>docMissing(id).map(x=>x.label),__docWarns:(id)=>docWarns(id).map(x=>x.label),__edit:(k,v)=>{form=store.editForm(form,k,v);},getVal:(k)=>get(k),modeOf:(kk)=>modeOf(kk),fieldKeys:(k)=>fieldKeys(k),keysCanSave:(ks)=>keysCanSave(ks),keysCanRevert:(ks)=>keysCanRevert(ks),keysNewDirty:(ks)=>keysNewDirty(ks),__revert:(k)=>store.revertForm(form,k),coupledKeys:(k)=>coupledKeys(k),__firstPid:()=>{const ps=mpdb?mpdb.listProperties():[];return ps.length?ps[0].id:null;},__listProps:()=>(mpdb?mpdb.listProperties():[]),__cycles:()=>(mpdb?mpdb.listCycles(activePid):[]),__toggleProg:(p)=>toggleCycleProg(p),packageScore:()=>packageScore(),packageDocs:()=>packageDocs(),scoreCtx:()=>scoreCtx(),__pkgCard:()=>pkgCard(),__boxes:(i)=>({ua:uaBox(i),safmr:safmrBox(i)}),__saveField:async(k)=>{form=await store.saveField(form,k);},__set:(f,u)=>{form=f;UNITS=u;},__cell:(k)=>form[k],__savePin:async(k,p)=>{form=await store.savePin(form,k,p);},__cellState:(k)=>cellState(k),__cellColor:(k)=>cellColor(k),__sourcesFor:(k)=>sourcesFor(k),__sourceMenu:(k)=>sourceMenu(k),__uaCellColors:(i)=>uaCellColors(i),__safmrCellColors:(i)=>safmrCellColors(i),
+const __API={matchContact:(n,l)=>matchContact(n,l),contactHits:(n,l)=>contactHits(n,l),LABEL_HINTS,rsParseUnitType,rsNum,ocrMapPages:(p)=>ocrMapPages(p),ocrWhy:()=>ocrWhy(),fmtPhone,fmtPhoneInput,fmtDate,sMoney,sPct,sK,analysis,uaResolvedOf,safmrResolvedOf,uaConflict,uaUnresolved,renderMenu,renderLauncher,openMenu,openForm,openLauncher,ringSvg,niceDate,isDirty,overrideCount,isStateKey,attnFlags,pbUtil,clearUncheckedWriteins,srcOf:(k)=>srcOf(k),__openForm:(pid)=>{activePid=pid;return openForm('RCS');},__openCycleForm:(pid,cid)=>{activePid=pid;return openCycleForm(cid);},__renderBody:()=>renderBody(),__docMissing:(id)=>docMissing(id).map(x=>x.label),__docWarns:(id)=>docWarns(id).map(x=>x.label),__edit:(k,v)=>{form=store.editForm(form,k,v);},getVal:(k)=>get(k),modeOf:(kk)=>modeOf(kk),fieldKeys:(k)=>fieldKeys(k),keysCanSave:(ks)=>keysCanSave(ks),keysCanRevert:(ks)=>keysCanRevert(ks),keysNewDirty:(ks)=>keysNewDirty(ks),__revert:(k)=>store.revertForm(form,k),coupledKeys:(k)=>coupledKeys(k),__firstPid:()=>{const ps=mpdb?mpdb.listProperties():[];return ps.length?ps[0].id:null;},__listProps:()=>(mpdb?mpdb.listProperties():[]),__cycles:()=>(mpdb?mpdb.listCycles(activePid):[]),__toggleProg:(p)=>toggleCycleProg(p),packageScore:()=>packageScore(),packageDocs:()=>packageDocs(),scoreCtx:()=>scoreCtx(),__pkgCard:()=>pkgCard(),__boxes:(i)=>({ua:uaBox(i),safmr:safmrBox(i)}),__saveField:async(k)=>{form=await store.saveField(form,k);},__set:(f,u)=>{form=f;UNITS=u;},__cell:(k)=>form[k],__savePin:async(k,p)=>{form=await store.savePin(form,k,p);},__cellState:(k)=>cellState(k),__cellColor:(k)=>cellColor(k),__sourcesFor:(k)=>sourcesFor(k),__sourceMenu:(k)=>sourceMenu(k),__uaCellColors:(i)=>uaCellColors(i),__safmrCellColors:(i)=>safmrCellColors(i),
   /* The whole record, and the snapshot isDirty() measures against. The round-trip
      sweep needs a key-by-key diff (FORM-RULES "Before you deliver" 6): isDirty()
      compares VALUES ONLY, so a hidden side-effect key strands the form dirty with
