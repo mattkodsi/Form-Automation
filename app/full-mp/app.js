@@ -596,6 +596,12 @@ function srcPick(k,rows){
     :'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">'+esc(r.tag)+' \u00b7 not available</span></div>').join('')+'</div>';
   return '<div class="uadrop pocpick"><div class="uatrigger" tabindex="0" title="Pull from a source"><span class="cvx">&#9662;</span></div>'+menu+'</div>';
 }
+/* The tenant-notice sender is the property's Community Manager (note G16/G21); the
+   Regional CM is the fallback when there is no CM on file. Title tracks the person. */
+function raSenderResolve(){const cm=raVal('tenant.community_manager'),rcm=raVal('tenant.regional_cm');
+  const name=cm||rcm||null;
+  const title=cm?'Community Manager':(rcm?'Regional Community Manager':'');
+  return {name:name,title:name?title:''};}
 /* Per-cell source rows in precedence order (spec \u00a73). val:null renders dim. */
 const SRCPICK_ROWS={
  'property.name':()=>[{tag:'Executed RS',val:splitProjectName(rsVal('property.name')).name},
@@ -605,9 +611,11 @@ const SRCPICK_ROWS={
     name — dim reads as "the RS does not say", which is the truth. Offering
     nothing at all reads as "this cell has no source", which is not. */
  'tenant.property_alias':()=>[{tag:'Executed RS',val:splitProjectName(rsVal('property.name')).alias},
+   {tag:'Related Affordable',val:raVal('tenant.property_alias')},
    {tag:'RCS report',val:splitProjectName(rcsVal('property.name')).alias}],
- 'property.fha':()=>[{tag:'Executed RS',val:rsVal('property.fha')},{tag:'Related Affordable',val:raVal('property.fha')}],
+ 'property.fha':()=>[{tag:'Executed RS',val:rsVal('property.fha')}],
  'property.s8':()=>[{tag:'Executed RS',val:rsVal('property.s8')},{tag:'RCS report',val:rcsVal('property.s8')}],
+ 'ca.org':()=>[{tag:'Related Affordable',val:raVal('ca.org')}],
  'owner.entity_type_other':()=>[{tag:'Executed RS',val:rsVal('owner.entity_type_other')}],
  'owner.entity_name':()=>[{tag:'Executed RS',val:rsVal('owner.entity_name')},{tag:'Related Affordable',val:raVal('owner.entity_name')}],
  'sig.title':()=>[{tag:'Executed RS',val:rsVal('sig.title')}],
@@ -617,12 +625,11 @@ const SRCPICK_ROWS={
  'poc.phone':()=>[{tag:'RCS report',val:rcsOf('poc.phone')}],
  /* The sender of the tenant notice is a person at the management company, whom
     no document names — the platform does. */
- 'tenant.sender_name':()=>[{tag:'Related Affordable',val:raVal('tenant.sender_name')}],
- 'tenant.sender_title':()=>[{tag:'Related Affordable',val:raVal('tenant.sender_title')}],
+ 'tenant.sender_name':()=>[{tag:'Related Affordable',val:raSenderResolve().name}],
+ 'tenant.sender_title':()=>[{tag:'Related Affordable',val:raSenderResolve().title}],
  'appr.firm':()=>[{tag:'RCS report',val:rcsVal('appr.firm')}],
  'appr.email':()=>[{tag:'RCS report',val:rcsVal('appr.email')}],
  'appr.phone':()=>[{tag:'RCS report',val:rcsVal('appr.phone')?fmtPhoneInput(rcsVal('appr.phone')):null}],
- 'tenant.sender_name':()=>[{tag:'Related Affordable',val:raVal('tenant.sender_name')}],
 };
 /* Address groups: one dropdown pulls the whole street/city/state/zip group. */
 const SRCGROUP={
@@ -648,7 +655,7 @@ function srcGroupPick(box){
    unconditionally as "not available" — so the signatory's name sat dim while
    the parser had had the answer since the upload, and the title beside it
    offered the same value live. */
-const DIR_SRCROW={'appr.name':{tag:'RCS report',val:()=>rcsVal('appr.name')},'sig.name':{tag:'Executed RS',val:()=>rsVal('sig.name')}};
+const DIR_SRCROW={'appr.name':{tag:'RCS report',val:()=>rcsVal('appr.name')},'sig.name':{tag:'Executed RS',val:()=>rsVal('sig.name')},'ca.name':{tag:'Related Affordable',val:()=>raVal('ca.name')}};
 /* Every document that can supply this cell, in precedence order — not one tag
    guessed per key. A non-revenue rent is filled from the STUDY (the appraiser
    prices the unit whatever it is used for), yet its menu named the schedule
@@ -708,13 +715,11 @@ function addrCell(){return compAddrCell(ADDR,'property.addr','Address');}
 function caAddrCell(){return compAddrCell(CA_ADDR,'ca.addr','CA address');}
 function apprAddrCell(){return compAddrCell(APPR_ADDR,'appr.addr','Appraiser address');}
 function selectCell(f){const c=cellColors(f.k);const _et=f.k==='owner.entity_type';
-  const _ecur=_et?get(f.k):'';const _rsET=_et?rsVal('owner.entity_type'):null;const nv=_et?raVal('owner.entity_type'):null;
-  const _rsSel=!!(_rsET&&_rsET===_ecur),_nvSel=!!(nv&&nv===_ecur&&!_rsSel);   // precedence order: the schedule answers first
-  let dd=csDrop(f.k,f.opts,f.ph||'Select…','',false,'',(_rsSel||_nvSel)?_ecur:null);
+  const _ecur=_et?get(f.k):'';const _rsET=_et?rsVal('owner.entity_type'):null;
+  const _rsSel=!!(_rsET&&_rsET===_ecur);
+  let dd=csDrop(f.k,f.opts,f.ph||'Select…','',false,'',_rsSel?_ecur:null);
   if(_et){
-    const navRows=(_rsET?'<div class="uaopt srcopt'+(_rsSel?' sel':'')+'" data-cskey="owner.entity_type" data-csopt="'+esc(_rsET)+'">'+esc(_rsET)+'<span class="uasub">Executed RS</span></div>':'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>')
-      +(nv?'<div class="uaopt srcopt'+(_nvSel?' sel':'')+'" data-cskey="owner.entity_type" data-csopt="'+esc(nv)+'">'+esc(nv)+'<span class="uasub">Related Affordable</span></div>'
-          :'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">Related Affordable \u00b7 not available</span></div>');
+    const navRows=(_rsET?'<div class="uaopt srcopt'+(_rsSel?' sel':'')+'" data-cskey="owner.entity_type" data-csopt="'+esc(_rsET)+'">'+esc(_rsET)+'<span class="uasub">Executed RS</span></div>':'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>');
     dd=dd.replace('<div class="uamenu">','<div class="uamenu">'+navRows);}
   const sel=`<div class="field"><div class="flabel">${f.label}</div><div class="fbox seldrop" data-box="${f.k}" style="background:${c[1]};border-left-color:${c[0]}">${dd}</div>${ovNote(f.k)}</div>`;
   if(f.k==='owner.entity_type'&&get(f.k)==='Other (specify)'){const ok='owner.entity_type_other';const oc=cellColors(ok);
