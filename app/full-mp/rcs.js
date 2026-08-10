@@ -254,9 +254,14 @@ function readSignature(txt,S){
   let si=-1;
   for(let i=0;i<txt.length;i++)if(/^(sincerely|respectfully)/i.test(txt[i])){si=i;break;}
   if(si<0)return;
-  for(let i=si+1;i<Math.min(si+7,txt.length);i++){
+  /* Count NON-BLANK lines, not raw ones: a signed letter leaves a gap between "Sincerely,"
+     and the printed name for the signature, and the size of that gap is a rendering accident
+     of the scan/extraction. A raw six-line window let that gap push the name out of reach
+     (Oak Center's Belfry survey, 2026-08-10 — five blank lines parsed, six did not). */
+  for(let i=si+1,seen=0;i<txt.length&&seen<7;i++){
     const t=txt[i].trim();
     if(!t)continue;
+    seen++;
     if(/license|certified|job\s*no|^[A-Z]{2,4}\/[A-Z]{2,4}$|president|associate|appraiser/i.test(t))continue;
     if(FIRMY.test(t))continue;                     // the firm's own name, not the person who signed
     if(NAME_LINE.test(t)){S['appr.name']=t;return;}
