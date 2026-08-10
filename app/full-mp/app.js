@@ -348,7 +348,11 @@ function uaUnresolved(i){return false;}
    contract rent plus the allowance, summed over units — against the summed 150%
    SAFMR ceiling. An earlier build made the per-unit chip gross too, which failed
    unit types the survey passes (a 3BR at $4,675 < $4,695 rent, $4,742 gross);
-   db.js already judged the per-unit test rent-only, and app.js now matches it. */
+   db.js already judged the per-unit test rent-only, and app.js now matches it.
+   The per-unit result is INFORMATIONAL — it colours the row (safmrNote) and adds a
+   side-rail note (attnFlags), but it does NOT drive the section to REVIEW
+   (2026-08-10, the owner): a single unit above its own 150% SAFMR is not a
+   compliance failure; only the AGGREGATE GPR 150% test is. */
 function grossOf(i){return numf(get('units.'+i+'.proposed'))+uaResolvedOf(i);}   // gross = rent + allowance; used only by the AGGREGATE gross-potential figures
 function overCeiling(i){const r=safmrResolvedOf(i);const pro=numf(get('units.'+i+'.proposed'));return r>0&&pro>0&&pro>=r;}   // per-unit: contract rent only (no allowance) — matches the survey and db.js
 /* Flattened (2026-08-07): the 150% ceiling is ONE value now — units.N.safmr_custom — filled
@@ -1066,7 +1070,7 @@ function safmrNote(i){const res=safmrResolvedOf(i);
   if(res>0){const pro=numf(get('units.'+i+'.proposed'));const ok=pro<res;
     // the figure judged is the proposed CONTRACT rent alone — the per-unit "As Is" 150%
     // test excludes the allowance (which enters only the aggregate gross-potential test)
-    if(pro>0)return '<div class="ucnote '+(ok?'ok':'warn')+'">'+(ok?'✓ ':'✗ ')+money(pro)+(ok?' < ':' ≥ ')+money(res)+' · 150% SAFMR</div>';return '<div class="ucnote ok">150% SAFMR $'+res.toLocaleString()+'</div>';}
+    if(pro>0)return '<div class="ucnote '+(ok?'ok':'warn')+'">'+(ok?'✓ ':'✗ ')+money(pro)+(ok?' < ':' ≥ ')+money(res)+'</div>';return '<div class="ucnote ok">150% SAFMR $'+res.toLocaleString()+'</div>';}
   /* Name what is missing, in the cell that is empty because of it. The pull is
      keyed to the PROPERTY's ZIP in section 2 — HUD's rents are per the building's
      own location — and an appraiser address filled in below is easy to read as
@@ -3119,7 +3123,7 @@ function sectionStatus(n,_si){
   if(sectionEmpty(n))return 'empty';
   if((_si.miss[n]||[]).length)return 'warn';
   if(n===10){if(sectionKeys(10).some(k=>srcOf(k)==='overridden'))return'warn';const C=ocafCalc();return(C.F>0&&C.R>0)?_ok():'warn';}
-  if(n===11){if(sectionKeys(11).some(k=>srcOf(k)==='overridden'))return'warn';const A=uafAnalysis();if(A.mismatch.length)return'warn';const hasF=UAF_UTILS.some(u=>numf(get('uaf.f_'+u[0]))>0);return(hasF&&A.any)?_ok():'warn';}const over=sectionKeys(n).some(k=>srcOf(k)==='overridden');if(n===6&&(UNITS.some(uaUnresolved)||UNITS.some(i=>srcOf('units.'+i+'.ua_source')==='overridden')||(hasProg('rcs')&&(UNITS.some(safmrUnresolved)||UNITS.some(i=>srcOf('units.'+i+'.safmr_source')==='overridden')||UNITS.some(overCeiling)))||rsCapacity().msgs.length>0))return'warn';return over?'warn':_ok();}
+  if(n===11){if(sectionKeys(11).some(k=>srcOf(k)==='overridden'))return'warn';const A=uafAnalysis();if(A.mismatch.length)return'warn';const hasF=UAF_UTILS.some(u=>numf(get('uaf.f_'+u[0]))>0);return(hasF&&A.any)?_ok():'warn';}const over=sectionKeys(n).some(k=>srcOf(k)==='overridden');if(n===6&&(UNITS.some(uaUnresolved)||UNITS.some(i=>srcOf('units.'+i+'.ua_source')==='overridden')||(hasProg('rcs')&&(UNITS.some(safmrUnresolved)||UNITS.some(i=>srcOf('units.'+i+'.safmr_source')==='overridden')))||rsCapacity().msgs.length>0))return'warn';return over?'warn':_ok();}
 /* ONE place decides how a section's mark looks, because two decided before and
    they disagreed. sectionPill drew "not started" for an untouched section;
    refreshFlags — which repaints on EVERY keystroke — drew the same section
