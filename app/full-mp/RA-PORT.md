@@ -53,17 +53,54 @@ next handoff.
    passes the picked registry id through natively; the Supabase adapter ignores
    the 2nd arg, the RA adapter uses it for read-only AUM prefill)
 
-## What the RASource seam is now ASKED for (2026-07-30)
+## What the RASource seam is ASKED for (2026-08-10)
 
-`window.RASource.value(k)` was consulted only for per-cell source ROWS — an
-offer the user could take or leave. It now also decides two cells outright:
-whenever it answers, the cell stops being editable, because the renewal calendar
-and this app cannot both own one fact.
+`raVal(k)` → `window.RASource.value(k)` is now consulted for **15 keys**. Two of
+them *lock* the cell outright when the seam answers (the renewal calendar and this
+app cannot both own one fact); the other thirteen are offered as a **"Related
+Affordable" source row** the user may take or leave.
 
-| `k` | What the app does with an answer |
+**Locking keys** — a non-null answer makes the cell read-only:
+
+| `k` | Effect of an answer |
 |---|---|
-| `property.name` | Locks the name cell; the rename dialog becomes the tenant alias alone |
+| `property.name` | Locks the name cell; the rename control becomes the tenant alias alone |
 | `rent_schedule.date_rents_effective` | Locks the effective-date cell; stored as `date_eff_ra`, outranks the executed schedule and any typed date, and sets the package's own effective date |
+
+**Offer keys** — a non-null answer adds a pickable "Related Affordable" source row:
+`poc.name`, `poc.email`, `poc.phone`, `ca.name`, `ca.org`, `owner.entity_name`,
+`property.addr_street`, `property.addr_city`, `property.addr_state`,
+`property.addr_zip`, `tenant.property_alias`, `tenant.community_manager`,
+`tenant.regional_cm`.
+
+### What the AUM provider actually answers (the Azure wiring)
+
+`build-ra.py` patch 4 wires `RASource.value(k)` to `mpdb.aumValue(activePid, k)`,
+which projects the AUM master registry through `AUM_PREFILL`. It answers **8** of
+the 15 keys and returns `null` for the other 7:
+
+| Answered from AUM (8) | AUM record field |
+|---|---|
+| `property.name` | `property_name` |
+| `property.addr_street` | `address` (or `street_address`) |
+| `property.addr_city` | `city` |
+| `property.addr_state` | `state` |
+| `property.addr_zip` | `zip` |
+| `owner.entity_name` | `partnership_name` |
+| `tenant.property_alias` | `aka_name` (skipped when `"N/A"`) |
+| `ca.org` | `section_8_contract_administrator` |
+
+Returns `null`, staying app-owned: `rent_schedule.date_rents_effective`, `poc.name`,
+`poc.email`, `poc.phone`, `ca.name`, `tenant.community_manager`, `tenant.regional_cm`.
+(`aumFor` matches a property's `ra_property_code` against each AUM record's `RAID`
+or `ra_master_id`; `aumIndex()` additionally reads `total_units`.)
+
+**Consequence to know:** `property.name` is in AUM, so the **name locks** on the
+Azure port. `rent_schedule.date_rents_effective` is **not** in AUM, so the **date
+lock does not fire** there — if Related wants the effective date owned by the
+calendar, the AUM projection (or another `RASource`) must return it; today it stays
+editable. (On our own Supabase build the provider is `raTrackerSource()`, the HAP
+tracker, which answers both name and date.)
 
 Three things worth knowing on the Azure side:
 
@@ -80,10 +117,39 @@ Three things worth knowing on the Azure side:
 Note on escaping: `build-ra.py` is Python — any literal `\uXXXX` text inside our
 JS (e.g. in comments) must be written double-backslashed in its anchor strings.
 
-## Divergence status (2026-07-16)
+## Divergence status (2026-08-10)
 
-The RA integrator's returned sources = our commit `669f875` exactly (app.js/shell byte-identical;
-core/db/gen/xlsx/templates/tests identical to current). Our later commits
-(`616f863` Navigator sourcing UI, `d915338` menu restyle) are what their copy is
-missing — the updated `build-ra.py` here already targets them, so sending them
-the current folder + these two files is a complete, verified handoff.
+The last full source drop to the RA integrator was the **2026-07-16** copy
+(reference in `_archive/ra-integrator/ra-port-2026-07-16/`). Our sources have moved
+a long way since — the four-resolver-cell flatten, the provenance overhaul, the
+RA-seam POC/CA source rows, the HAP-tracker home page, the privacy scrub, and this
+parity pass — so a by-commit "N behind" count is no longer the useful frame. The
+handoff is **the current source folder plus the two hand-back copies below**, and
+the anchor gate (`python3 build-ra.py /tmp/x.html` printing `built …`) is what
+guarantees it assembles against our current `app.js`/`shell.head.html`.
+
+- **`db.cosmos.js`** — brought to **full API parity** with `db.supabase.js` on
+  2026-08-10. The whole cycle surface (`listCycles`/`createCycle`/`saveFlatCycle`/
+  `pruneCycleCells`/`setCyclePrograms`/`getCycleRs`/`setCycleRs`/`getCycleRcs`/
+  `setCycleRcs`/`setCycleGenerated`/`cycleAnalysis`/`cycleScore`/`cycleClosed`/
+  `reopenCycle`/`dominantCycleId`), the HAP + identity surface (`hapRows`/`hapError`/
+  `getPmName`/`setPmName`/`clearAll`), and the RA-code binding (`setRaCode`/
+  `propByRaCode`/`raCodeOfPid`) now match method-for-method, plus the cosmos-only
+  `aumIndex`/`aumValue` prefill surface. The registry link is `ra_property_code`
+  (legacy `raMasterId` docs are read through a load-time fallback). The client
+  POSTs to `/api/rcs/*` REST endpoints; the new server-side needs are a `cycles[]`/
+  `hap[]`/`hapError`/`pmName` addition to `GET /api/rcs/bootstrap`, plus
+  `POST /api/rcs/cycle`, `/cycle-delete`, `/pm-name`, `/clear-all`, and a cycles
+  container (assumed pk `/property_id`).
+- **`build-ra.py`** — the assert-guarded patch set + the assembly order
+  (`… db.js + db.cosmos.js + app + ocr + gen …`).
+
+**One correction traveling with this drop.** While bringing `db.cosmos.js` to
+parity we found `db.supabase.js`'s `cycleClosed` ignored `reopened_at` (so **Reopen
+was a no-op** — the form re-locked and a closed-package save then threw a
+`ReferenceError` from an undefined `c` in `assertCycleOpen`, instead of a clean
+`PACKAGE_CLOSED`). `db.js` and `db.cosmos.js` were already correct; `db.supabase.js`
+is now aligned, and `test_db.js` guards all three against the drift recurring.
+
+To send a handoff: run the anchor gate, then send this folder + `db.cosmos.js` +
+`build-ra.py`.

@@ -77,8 +77,10 @@ const CROSSWALK = {
   'units.{i}.proposed': ['units[].proposed_contract_rent', 'unit_cycle_value.proposed_contract_rent'],
   'units.{i}.ua_exec': ['units[].ua_from_exec_rs', 'unit_cycle_value.ua_from_exec_rs'],
   'units.{i}.ua_rcs': ['units[].ua_from_rcs', 'unit_cycle_value.ua_from_rcs'],
+  'units.{i}.ua_custom': ['units[].ua_custom', 'unit_cycle_value.ua_custom'],   // the flatten's single resolved allowance — the value the app now reads/writes (2026-08-10)
   'units.{i}.safmr_hud': ['units[].safmr_from_hud', 'unit_cycle_value.safmr_from_hud'],
   'units.{i}.safmr_rcs': ['units[].safmr_from_rcs', 'unit_cycle_value.safmr_from_rcs'],
+  'units.{i}.safmr_custom': ['units[].safmr_custom', 'unit_cycle_value.safmr_custom'],   // the flatten's single resolved 150% SAFMR (2026-08-10)
   'check.{i}': ['checklist.items[17]', 'checklist_item.checked'],
   'nonrev.{i}.use': ['units[].nonrev_use', 'unit_type.nonrev_use'],
   'nonrev.{i}.rent': ['units[].nonrev_rent', 'unit_type.nonrev_rent'],

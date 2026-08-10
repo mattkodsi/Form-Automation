@@ -312,11 +312,13 @@ function makeSupabaseDb(client) {
        API PARITY with db.supabase.js. */
     const cycleClosed = cid => {
       const c = D.cycles[cid]; if (!c) return false;
+      if (c.reopened_at) return false;   // somebody deliberately said otherwise
       const eff = cyISO(c.effective_date); if (!eff) return false;
       return eff < today();
     };
     const assertCycleOpen = cid => {
       if (!cycleClosed(cid)) return;
+      const c = D.cycles[cid];
       const e = new Error('These rents took effect on ' + cyISO(c.effective_date) + '. A package is history once its date has passed \u2014 reopen it if it genuinely still needs work.');
       e.code = 'PACKAGE_CLOSED'; e.cid = cid; throw e;
     };
