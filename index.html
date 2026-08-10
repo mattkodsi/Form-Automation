@@ -12736,13 +12736,22 @@ async function findLetter(rd){
      that page prints "MARKET RENTAL ANALYSIS ....... 17" as an entry — enough
      to look like the letter continuing, and it swallowed the contents page. */
   const pages=[head];
+  let brk=-1;                          // the page the table-run stopped ON — already read, a sign-off candidate
   for(let j=1;j<=LETTER_TAIL&&head+j<rd.pageCount;j++){
     const k=pageKey(await get(head+j));
-    if(TOC.test(k))break;
-    if(!LETTER_TABLE.test(k))break;
+    if(TOC.test(k)){brk=head+j;break;}
+    if(!LETTER_TABLE.test(k)){brk=head+j;break;}
     pages.push(head+j);
     if(LETTER_END.test(k))break;      // signed off: nothing after this is letter
   }
+  /* The sign-off can sit on its OWN page after the tables, carrying no rent table of its own —
+     Oak Center's Belfry letter prints "Sincerely, / <names> / <credentials>" on a page with no
+     table, so the table-tail loop stops ON that page and never hands it to readSignature, and the
+     appraiser's name goes unread (2026-08-10). That page is ALREADY read, so take it without another
+     page read — but only on a real closing (sincerely / respectfully submitted), never on the bare
+     "Job No." footer that rides every page of the report (which is why LETTER_END is too broad here). */
+  if(brk>=0&&pages.indexOf(brk)<0){const bk=pageKey(runs[brk]||[]);
+    if(/sincerely|respectfullysubmitted/.test(bk)&&!TOC.test(bk))pages.push(brk);}
   return {pages:pages,runs:runs,read:read,found:true};
 }
 
@@ -12890,6 +12899,10 @@ function readSignature(txt,S){
     if(/license|certified|job\s*no|^[A-Z]{2,4}\/[A-Z]{2,4}$|president|associate|appraiser/i.test(t))continue;
     if(FIRMY.test(t))continue;                     // the firm's own name, not the person who signed
     if(NAME_LINE.test(t)){S['appr.name']=t;return;}
+    /* "Name, Title" on one printed line — the appraiser signs "Kyle L. Bjerke, Partner". Take the
+       name before the comma when it reads as a person's (2-4 capitalised tokens); the title after
+       it (Partner, President …) is not part of the name. Cornerstone signs this way (2026-08-10). */
+    { const cm=t.match(/^([^,]+),\s*\S/); if(cm&&NAME_LINE.test(cm[1].trim())){S['appr.name']=cm[1].trim();return;} }
     /* Two appraisers, side by side, on one printed line.
        One appraisal firm and another both sign some letters in two columns, so the line
        assembles as "Jordan M. Smith   Casey A Doe" - six tokens where a name
