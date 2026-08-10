@@ -5595,7 +5595,16 @@ function dirCell(f){const k=f.k;const P=DIR_PICK[k];const cur=get(k);
    answer from that snapshot, and call renderBody() when fresh data lands.
    Executed-RS / RCS-report rows stay "not available" until document parsing
    lands (still a stub); they render now so all three sources light up
-   uniformly. The form never writes back to the RA platform. */
+   uniformly. The form never writes back to the RA platform.
+
+   Keys a provider may answer, beyond the RA-locked property.name and
+   rent_schedule.date_rents_effective (see RA-LOCKED CELLS below): poc.name
+   (point of contact) and ca.org (contract administrator organization) are
+   wired in this build to the HAP tracker's Portfolio Mgr and Contract Admin
+   columns. ca.name, tenant.property_alias, tenant.community_manager and
+   tenant.regional_cm are part of the contract too, but the tracker does not
+   carry them, so they stay null/dim here until an Affordable-database
+   provider answers for them. */
 function raProps(){try{const p=window.RASource;const l=(p&&p.listProperties)?p.listProperties():[];return Array.isArray(l)?l:[];}catch(e){return [];}}
 function raVal(k){try{const p=window.RASource;const v=(p&&p.value)?p.value(k):null;return (v==null||v==='')?null:String(v);}catch(e){return null;}}
 
@@ -5663,6 +5672,41 @@ function applyRaLocked(){
   });
 }
 function isLocked(cell){return raLockVal(cell)!=null;}
+/* RA auto-fill (note G5/G16/G20). Runs at form open, after applyRaLocked and
+   before snapForm — so a filled default never opens the form dirty (rule 20).
+   Overrides any NON-PINNED cell and skips a pinned one (the settled override
+   rule); writes UNPINNED so the cell keeps tracking RA until the user claims it. */
+function raFillUnpinned(k,v){ if(v==null||v==='')return; if(form[k]&&form[k].pinned)return;
+  form=store.editForm(form,k,String(v)); if(form[k]){form[k].origin='ra';form[k].pinned=false;} markCycle(k); }
+/* On a match-MISS we fill the name from the raw RA value; the siblings a PRIOR match
+   left no longer describe this person, so clear the non-pinned ones (a pinned sibling is
+   the user's own and is kept). Stops "new name, old email/phone" reaching a document —
+   the PM/CA-turnover case this feature is for. */
+function raClearUnpinned(k){ if(!form[k]||form[k].pinned)return; if(form[k].value===''||form[k].value==null)return;
+  form=store.editForm(form,k,''); if(form[k]){form[k].origin='ra';form[k].pinned=false;} markCycle(k); }
+function applyRaContacts(){
+  // POC — the property's Portfolio Manager; a first-initial+last match auto-fills the contact card.
+  if(!(form['poc.name']&&form['poc.name'].pinned)){
+    const nm=raVal('poc.name');
+    if(nm){const hit=matchContact(nm,(mpdb?mpdb.listContacts():[]));
+      if(hit){pocSelectContact(hit);['poc.name','poc.email','poc.phone'].forEach(k=>{if(form[k]){form[k].origin='contact';form[k].pinned=false;}markCycle(k);});}
+      else{raFillUnpinned('poc.name',nm);['poc.email','poc.phone'].forEach(raClearUnpinned);}}
+  }
+  // CA — a matched contact fills the whole card; else fill name from RA and org from the HAP org.
+  if(!(form['ca.name']&&form['ca.name'].pinned)){
+    const nm=raVal('ca.name'),hap=raVal('ca.org');
+    const hit=nm?matchContact(nm,dirList('ca')):null;
+    if(hit){DIR_PICK['ca.name'].apply(hit);
+      DIR_PICK['ca.name'].keys.forEach(k=>{if(form[k]){form[k].origin='contact';form[k].pinned=false;}markCycle(k);});
+      // blank org from the contact falls back to the HAP org (decided 2026-08-08)
+      if((!hit.org||hit.org==='')&&hap)raFillUnpinned('ca.org',hap);
+    }else{ if(nm){raFillUnpinned('ca.name',nm);['ca.prefix','ca.position','ca.addr_street','ca.addr_city','ca.addr_state','ca.addr_zip'].forEach(raClearUnpinned);} raFillUnpinned('ca.org',hap); }
+  }else if(!(form['ca.org']&&form['ca.org'].pinned)){ raFillUnpinned('ca.org',raVal('ca.org')); }
+  // Sender — Community Manager (else Regional CM); name + title fill together.
+  if(!(form['tenant.sender_name']&&form['tenant.sender_name'].pinned)){
+    const s=raSenderResolve(); if(s.name){raFillUnpinned('tenant.sender_name',s.name);raFillUnpinned('tenant.sender_title',s.title);}
+  }
+}
 /* Drawn, not typed: a padlock emoji renders in a different family on every
    platform, and rule 16's spirit is that nothing user-visible is left to chance. */
 const lockGlyph=cls=>'<svg class="'+cls+'" viewBox="0 0 24 24" aria-hidden="true">'
@@ -5716,6 +5760,12 @@ function srcPick(k,rows){
     :'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">'+esc(r.tag)+' \u00b7 not available</span></div>').join('')+'</div>';
   return '<div class="uadrop pocpick"><div class="uatrigger" tabindex="0" title="Pull from a source"><span class="cvx">&#9662;</span></div>'+menu+'</div>';
 }
+/* The tenant-notice sender is the property's Community Manager (note G16/G21); the
+   Regional CM is the fallback when there is no CM on file. Title tracks the person. */
+function raSenderResolve(){const cm=raVal('tenant.community_manager'),rcm=raVal('tenant.regional_cm');
+  const name=cm||rcm||null;
+  const title=cm?'Community Manager':(rcm?'Regional Community Manager':'');
+  return {name:name,title:name?title:''};}
 /* Per-cell source rows in precedence order (spec \u00a73). val:null renders dim. */
 const SRCPICK_ROWS={
  'property.name':()=>[{tag:'Executed RS',val:splitProjectName(rsVal('property.name')).name},
@@ -5725,9 +5775,11 @@ const SRCPICK_ROWS={
     name — dim reads as "the RS does not say", which is the truth. Offering
     nothing at all reads as "this cell has no source", which is not. */
  'tenant.property_alias':()=>[{tag:'Executed RS',val:splitProjectName(rsVal('property.name')).alias},
+   {tag:'Related Affordable',val:raVal('tenant.property_alias')},
    {tag:'RCS report',val:splitProjectName(rcsVal('property.name')).alias}],
- 'property.fha':()=>[{tag:'Executed RS',val:rsVal('property.fha')},{tag:'Related Affordable',val:raVal('property.fha')}],
+ 'property.fha':()=>[{tag:'Executed RS',val:rsVal('property.fha')}],
  'property.s8':()=>[{tag:'Executed RS',val:rsVal('property.s8')},{tag:'RCS report',val:rcsVal('property.s8')}],
+ 'ca.org':()=>[{tag:'Related Affordable',val:raVal('ca.org')}],
  'owner.entity_type_other':()=>[{tag:'Executed RS',val:rsVal('owner.entity_type_other')}],
  'owner.entity_name':()=>[{tag:'Executed RS',val:rsVal('owner.entity_name')},{tag:'Related Affordable',val:raVal('owner.entity_name')}],
  'sig.title':()=>[{tag:'Executed RS',val:rsVal('sig.title')}],
@@ -5737,12 +5789,11 @@ const SRCPICK_ROWS={
  'poc.phone':()=>[{tag:'RCS report',val:rcsOf('poc.phone')}],
  /* The sender of the tenant notice is a person at the management company, whom
     no document names — the platform does. */
- 'tenant.sender_name':()=>[{tag:'Related Affordable',val:raVal('tenant.sender_name')}],
- 'tenant.sender_title':()=>[{tag:'Related Affordable',val:raVal('tenant.sender_title')}],
+ 'tenant.sender_name':()=>[{tag:'Related Affordable',val:raSenderResolve().name}],
+ 'tenant.sender_title':()=>[{tag:'Related Affordable',val:raSenderResolve().title}],
  'appr.firm':()=>[{tag:'RCS report',val:rcsVal('appr.firm')}],
  'appr.email':()=>[{tag:'RCS report',val:rcsVal('appr.email')}],
  'appr.phone':()=>[{tag:'RCS report',val:rcsVal('appr.phone')?fmtPhoneInput(rcsVal('appr.phone')):null}],
- 'tenant.sender_name':()=>[{tag:'Related Affordable',val:raVal('tenant.sender_name')}],
 };
 /* Address groups: one dropdown pulls the whole street/city/state/zip group. */
 const SRCGROUP={
@@ -5768,7 +5819,7 @@ function srcGroupPick(box){
    unconditionally as "not available" — so the signatory's name sat dim while
    the parser had had the answer since the upload, and the title beside it
    offered the same value live. */
-const DIR_SRCROW={'appr.name':{tag:'RCS report',val:()=>rcsVal('appr.name')},'sig.name':{tag:'Executed RS',val:()=>rsVal('sig.name')}};
+const DIR_SRCROW={'appr.name':{tag:'RCS report',val:()=>rcsVal('appr.name')},'sig.name':{tag:'Executed RS',val:()=>rsVal('sig.name')},'ca.name':{tag:'Related Affordable',val:()=>raVal('ca.name')}};
 /* Every document that can supply this cell, in precedence order — not one tag
    guessed per key. A non-revenue rent is filled from the STUDY (the appraiser
    prices the unit whatever it is used for), yet its menu named the schedule
@@ -5828,13 +5879,11 @@ function addrCell(){return compAddrCell(ADDR,'property.addr','Address');}
 function caAddrCell(){return compAddrCell(CA_ADDR,'ca.addr','CA address');}
 function apprAddrCell(){return compAddrCell(APPR_ADDR,'appr.addr','Appraiser address');}
 function selectCell(f){const c=cellColors(f.k);const _et=f.k==='owner.entity_type';
-  const _ecur=_et?get(f.k):'';const _rsET=_et?rsVal('owner.entity_type'):null;const nv=_et?raVal('owner.entity_type'):null;
-  const _rsSel=!!(_rsET&&_rsET===_ecur),_nvSel=!!(nv&&nv===_ecur&&!_rsSel);   // precedence order: the schedule answers first
-  let dd=csDrop(f.k,f.opts,f.ph||'Select…','',false,'',(_rsSel||_nvSel)?_ecur:null);
+  const _ecur=_et?get(f.k):'';const _rsET=_et?rsVal('owner.entity_type'):null;
+  const _rsSel=!!(_rsET&&_rsET===_ecur);
+  let dd=csDrop(f.k,f.opts,f.ph||'Select…','',false,'',_rsSel?_ecur:null);
   if(_et){
-    const navRows=(_rsET?'<div class="uaopt srcopt'+(_rsSel?' sel':'')+'" data-cskey="owner.entity_type" data-csopt="'+esc(_rsET)+'">'+esc(_rsET)+'<span class="uasub">Executed RS</span></div>':'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>')
-      +(nv?'<div class="uaopt srcopt'+(_nvSel?' sel':'')+'" data-cskey="owner.entity_type" data-csopt="'+esc(nv)+'">'+esc(nv)+'<span class="uasub">Related Affordable</span></div>'
-          :'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">Related Affordable \u00b7 not available</span></div>');
+    const navRows=(_rsET?'<div class="uaopt srcopt'+(_rsSel?' sel':'')+'" data-cskey="owner.entity_type" data-csopt="'+esc(_rsET)+'">'+esc(_rsET)+'<span class="uasub">Executed RS</span></div>':'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">Executed RS \u00b7 not available</span></div>');
     dd=dd.replace('<div class="uamenu">','<div class="uamenu">'+navRows);}
   const sel=`<div class="field"><div class="flabel">${f.label}</div><div class="fbox seldrop" data-box="${f.k}" style="background:${c[1]};border-left-color:${c[0]}">${dd}</div>${ovNote(f.k)}</div>`;
   if(f.k==='owner.entity_type'&&get(f.k)==='Other (specify)'){const ok='owner.entity_type_other';const oc=cellColors(ok);
@@ -6608,19 +6657,27 @@ function nameParts(x){
   if(!t.length)return null;
   const nm=v=>String(v).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z]/g,'');
   return {first:nm(t[0]),last:nm(t[t.length-1])};}
-/* Same surname, and first names that agree as far as the shorter one goes.
-   Two characters minimum: "M." must not claim every Kim in the book. */
+/* One matcher for every place a name is matched to a saved contact (FORM-RULES 17):
+   first TWO letters of the first name + last name, case-insensitive (Matt, 2026-08-08).
+   Two letters tolerates spelling variations (Claire/Clarice) yet tells Claire from Carl,
+   and a first name under two letters — a bare initial like "C." — cannot match, which
+   keeps the standing "a bare initial never claims a surname" guard. Two contacts that
+   share the two-letter prefix + last name are indistinguishable, so that yields no
+   match and nothing is auto-picked on a guess. */
+function contactHits(name,list){
+  const a=nameParts(name); if(!a||!a.first||!a.last||a.first.length<2)return [];
+  const lc=s=>String(s||'').toLowerCase();
+  const a2=lc(a.first.slice(0,2)),al=lc(a.last);
+  return (list||[]).filter(ct=>{const b=nameParts(ct&&ct.name);
+    return !!(b&&b.first&&b.last&&b.first.length>=2&&lc(b.first.slice(0,2))===a2&&lc(b.last)===al);});
+}
+function matchContact(name,list){const h=contactHits(name,list);return h.length===1?h[0]:null;}
+
 function pocMatchRcs(){
   const name=rcsPocName();
   if(!name)return {name:null,contact:null,many:false};
-  const a=nameParts(name);
-  if(!a||!a.last)return {name:name,contact:null,many:false};
   let list=[];try{list=(mpdb&&mpdb.listContacts)?mpdb.listContacts():[];}catch(e){}
-  const hits=list.filter(ct=>{const b=nameParts(ct&&ct.name);
-    if(!b||!b.last||b.last!==a.last)return false;
-    if(b.first===a.first)return true;
-    const n=Math.min(a.first.length,b.first.length);
-    return n>=2&&a.first.slice(0,n)===b.first.slice(0,n);});
+  const hits=contactHits(name,list);
   return {name:name,contact:hits.length===1?hits[0]:null,many:hits.length>1};}
 
 /* Match a form row to a study line on bedrooms and baths — never on position,
@@ -9855,13 +9912,14 @@ let _raSnap=null;
 function raSnapshot(){
   const key=String(activePid||'')+'|'+String(activeCid||'')+'|'+(_hapCache?_hapCache.src:'-');
   if(_raSnap&&_raSnap.key===key)return _raSnap;
-  const s={key:key,name:null,eff:null};
+  const s={key:key,name:null,eff:null,pm:null,ca:null};
   try{
     const H=window.RCSHap,rows=hapAll();
     const code=(H&&rows&&mpdb&&mpdb.raCodeOfPid&&activePid)?mpdb.raCodeOfPid(activePid):null;
     const mine=code?rows.filter(r=>r.code===code):[];
     if(mine.length){
       s.name=mine[0].name||null;
+      s.pm=mine[0].pm||null; s.ca=mine[0].ca||null;
       /* THE TRAP, and the reason this is not simply targetFor(). A package
          takes its effective date when it is started and keeps it — which is
          precisely what RA_LOCK_WHY promises the reader. Answering with the
@@ -9907,6 +9965,8 @@ function raTrackerSource(){return{
     const s=raSnapshot();
     if(k==='property.name')return s.name;
     if(k==='rent_schedule.date_rents_effective')return s.eff;
+    if(k==='poc.name')return s.pm;
+    if(k==='ca.org')return s.ca;
     return null;   // every other RA-sourced cell stays "not available": the tracker does not carry it
   },
 };}
@@ -10950,6 +11010,7 @@ async function openCycleForm(cid){
   if(!fillSurvived(_rsFill,rsTag))_rsFill=null;
   if(!fillSurvived(_rcsFill,rcsTag))_rcsFill=null;
   applyRaLocked();
+  applyRaContacts();
   snapForm();renderFormHeader();renderBody();
   show('Form');window.scrollTo(0,0);
   if(cy&&cy.dominant&&cy.programs.indexOf('rcs')>=0)ensureHudSafmr({});   // auto-pull: dominant RCS cycles only
@@ -11091,7 +11152,7 @@ function requestSave(afterSave){
    literal 17, because a list that grows and a loop that does not is how the
    last item of a form goes quietly unset. */
 function applyChecklistDefaults(){if(Object.keys(DBSNAP).some(k=>/^check\.\d+$/.test(k)))return;for(let i=0;i<CHECKLIST_FLAT.length;i++)form=store.editForm(form,'check.'+i,checkSeed(i));}
-async function openForm(program){activeProgram=program||'RCS';_undoStack=[];_undoNR=[];_undoLI=[];_undoPR=[];_undoChain=[];_rcsUpload=null;_rsUpload=null;_rsArm=false;_rsFill=null;_rcsFill=null;await mpdb.setActive(activePid);await refreshSnap();form=await store.fillForm();fixSavedToggles();applyChecklistDefaults();deriveUnits();migrateFlatCells();applyRaLocked();snapForm();renderFormHeader();renderBody();show('Form');window.scrollTo(0,0);ensureHudSafmr({});}
+async function openForm(program){activeProgram=program||'RCS';_undoStack=[];_undoNR=[];_undoLI=[];_undoPR=[];_undoChain=[];_rcsUpload=null;_rsUpload=null;_rsArm=false;_rsFill=null;_rcsFill=null;await mpdb.setActive(activePid);await refreshSnap();form=await store.fillForm();fixSavedToggles();applyChecklistDefaults();deriveUnits();migrateFlatCells();applyRaLocked();applyRaContacts();snapForm();renderFormHeader();renderBody();show('Form');window.scrollTo(0,0);ensureHudSafmr({});}
 function renderFormHeader(){
   if(el('hdrProp'))el('hdrProp').textContent=(get('property.name')||'(unnamed property)');
   if(el('hdrProgram'))el('hdrProgram').textContent=activeProgram+' Package';
@@ -11990,7 +12051,7 @@ function contactDialog(c){c=c||{};
    ReferenceError at load and took three suites down with zero checks run. An
    arrow defers the lookup to the call, which only ever happens in the browser
    suite, which has the whole bundle. */
-const __API={LABEL_HINTS,rsParseUnitType,rsNum,ocrMapPages:(p)=>ocrMapPages(p),ocrWhy:()=>ocrWhy(),fmtPhone,fmtPhoneInput,fmtDate,sMoney,sPct,sK,analysis,uaResolvedOf,safmrResolvedOf,uaConflict,uaUnresolved,renderMenu,renderLauncher,openMenu,openForm,openLauncher,ringSvg,niceDate,isDirty,overrideCount,isStateKey,attnFlags,pbUtil,clearUncheckedWriteins,srcOf:(k)=>srcOf(k),__openForm:(pid)=>{activePid=pid;return openForm('RCS');},__openCycleForm:(pid,cid)=>{activePid=pid;return openCycleForm(cid);},__renderBody:()=>renderBody(),__docMissing:(id)=>docMissing(id).map(x=>x.label),__docWarns:(id)=>docWarns(id).map(x=>x.label),__edit:(k,v)=>{form=store.editForm(form,k,v);},getVal:(k)=>get(k),modeOf:(kk)=>modeOf(kk),fieldKeys:(k)=>fieldKeys(k),keysCanSave:(ks)=>keysCanSave(ks),keysCanRevert:(ks)=>keysCanRevert(ks),keysNewDirty:(ks)=>keysNewDirty(ks),__revert:(k)=>store.revertForm(form,k),coupledKeys:(k)=>coupledKeys(k),__firstPid:()=>{const ps=mpdb?mpdb.listProperties():[];return ps.length?ps[0].id:null;},__listProps:()=>(mpdb?mpdb.listProperties():[]),__cycles:()=>(mpdb?mpdb.listCycles(activePid):[]),__toggleProg:(p)=>toggleCycleProg(p),packageScore:()=>packageScore(),packageDocs:()=>packageDocs(),scoreCtx:()=>scoreCtx(),__pkgCard:()=>pkgCard(),__boxes:(i)=>({ua:uaBox(i),safmr:safmrBox(i)}),__saveField:async(k)=>{form=await store.saveField(form,k);},__set:(f,u)=>{form=f;UNITS=u;},__cell:(k)=>form[k],__savePin:async(k,p)=>{form=await store.savePin(form,k,p);},__cellState:(k)=>cellState(k),__cellColor:(k)=>cellColor(k),__sourcesFor:(k)=>sourcesFor(k),__sourceMenu:(k)=>sourceMenu(k),__uaCellColors:(i)=>uaCellColors(i),__safmrCellColors:(i)=>safmrCellColors(i),
+const __API={matchContact:(n,l)=>matchContact(n,l),contactHits:(n,l)=>contactHits(n,l),LABEL_HINTS,rsParseUnitType,rsNum,ocrMapPages:(p)=>ocrMapPages(p),ocrWhy:()=>ocrWhy(),fmtPhone,fmtPhoneInput,fmtDate,sMoney,sPct,sK,analysis,uaResolvedOf,safmrResolvedOf,uaConflict,uaUnresolved,renderMenu,renderLauncher,openMenu,openForm,openLauncher,ringSvg,niceDate,isDirty,overrideCount,isStateKey,attnFlags,pbUtil,clearUncheckedWriteins,srcOf:(k)=>srcOf(k),__openForm:(pid)=>{activePid=pid;return openForm('RCS');},__openCycleForm:(pid,cid)=>{activePid=pid;return openCycleForm(cid);},__renderBody:()=>renderBody(),__docMissing:(id)=>docMissing(id).map(x=>x.label),__docWarns:(id)=>docWarns(id).map(x=>x.label),__edit:(k,v)=>{form=store.editForm(form,k,v);},getVal:(k)=>get(k),modeOf:(kk)=>modeOf(kk),fieldKeys:(k)=>fieldKeys(k),keysCanSave:(ks)=>keysCanSave(ks),keysCanRevert:(ks)=>keysCanRevert(ks),keysNewDirty:(ks)=>keysNewDirty(ks),__revert:(k)=>store.revertForm(form,k),coupledKeys:(k)=>coupledKeys(k),__firstPid:()=>{const ps=mpdb?mpdb.listProperties():[];return ps.length?ps[0].id:null;},__listProps:()=>(mpdb?mpdb.listProperties():[]),__cycles:()=>(mpdb?mpdb.listCycles(activePid):[]),__toggleProg:(p)=>toggleCycleProg(p),packageScore:()=>packageScore(),packageDocs:()=>packageDocs(),scoreCtx:()=>scoreCtx(),__pkgCard:()=>pkgCard(),__boxes:(i)=>({ua:uaBox(i),safmr:safmrBox(i)}),__saveField:async(k)=>{form=await store.saveField(form,k);},__set:(f,u)=>{form=f;UNITS=u;},__cell:(k)=>form[k],__savePin:async(k,p)=>{form=await store.savePin(form,k,p);},__cellState:(k)=>cellState(k),__cellColor:(k)=>cellColor(k),__sourcesFor:(k)=>sourcesFor(k),__sourceMenu:(k)=>sourceMenu(k),__uaCellColors:(i)=>uaCellColors(i),__safmrCellColors:(i)=>safmrCellColors(i),
   /* The whole record, and the snapshot isDirty() measures against. The round-trip
      sweep needs a key-by-key diff (FORM-RULES "Before you deliver" 6): isDirty()
      compares VALUES ONLY, so a hidden side-effect key strands the form dirty with
@@ -12055,6 +12116,8 @@ __rcsFill:(opts)=>rcsFillFromParsed(opts),/* The same door for the rent schedule
   __menuCounts:()=>Object.assign({},_menuCounts),
   __hapProps:()=>hapProperties(),
   __installRA:()=>installRaSource(),
+  __raVal:(k)=>raVal(k),
+  __applyRaContacts:()=>applyRaContacts(),
   __scheduledProg:()=>scheduledProg(),
   __sectionStatus:(n)=>sectionStatus(n),
   __sectionIssues:()=>sectionIssues(),
@@ -12086,6 +12149,16 @@ if(RADEMO&&typeof window!=='undefined'&&!window.RASource)window.RASource={
         const c=mpdb&&activeCid&&(mpdb.listCycles(activePid)||[]).find(x=>x.id===activeCid);
         return (c&&c.effective_date)||null;
       }
+      /* These six are not derived from the property's own record the way the two
+         locked cells are — they are ordinary (unlocked) dropdown source rows, so a
+         demo string is a choice the reader can see and decline, not a value forced
+         onto the page. Representative names, not this property's real ones. */
+      if(k==='poc.name')return 'Dana Fields';
+      if(k==='ca.org')return 'Southwest Housing Compliance Corporation';
+      if(k==='ca.name')return 'Alma Reyes';
+      if(k==='tenant.property_alias')return 'The Willows';
+      if(k==='tenant.community_manager')return 'Priya Nair';
+      if(k==='tenant.regional_cm')return 'Sam Okafor';
     }catch(e){}
     return null;
   },
