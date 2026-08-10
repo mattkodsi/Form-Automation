@@ -9,7 +9,7 @@
 # you are poking at from writing to the same session as your real work. Add
 # ?selftest=1 to any URL to get seeded fake data and skip signing in entirely.
 set -u
-G=/Users/owner/Desktop/github
+G="$(cd "$(dirname "$0")/.." && pwd)"
 LANES=("main:$G/Form-Automation:8080" "redesign:$G/Form-Automation-UI:8081" "audit:$G/Form-Automation-AUDIT:8082")
 
 stop_all(){ for l in "${LANES[@]}"; do p="${l##*:}"

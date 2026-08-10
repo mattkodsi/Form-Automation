@@ -116,7 +116,7 @@ Then clear the editor so the key isn't left sitting on screen.
 ## Step 6 — Deploy the function
 
 ```bash
-supabase functions deploy ocr-rs --project-ref plgegtosqwehriqecaui
+supabase functions deploy ocr-rs --project-ref YOUR_PROJECT_REF
 ```
 
 ## Step 7 — Try it
@@ -149,9 +149,9 @@ Nothing in the code names an account, so this is not a decision you're stuck wit
   **Always redeploy `ocr-rs` afterwards.** It caches the endpoint and key in memory
   after its first lookup, so a warm server keeps using the old key until replaced.
 
-- **the RA integrator's Azure port:** unaffected by any of this. His build points at
-  `/api/ocr-rs` inside Related's own tenancy (`RA-PORT.md`, anchor 3b), so he
-  supplies his own resource and never touches this key.
+- **The RA integrator's Azure port:** unaffected by any of this. Their build points at
+  `/api/ocr-rs` inside Related's own tenancy (`RA-PORT.md`, anchor 3b), so they
+  supply their own resource and never touch this key.
 
 One thing to be deliberate about: while this runs on a personal subscription, real
 owner and tenant documents pass through **your** Azure account. That's fine for the

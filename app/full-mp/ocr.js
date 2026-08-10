@@ -168,7 +168,7 @@ function ocrMap(words,rects,tplPg,f){ // registered words -> {fieldId: text}
   Object.keys(hit).forEach(id=>{
     // Reading order, and it has to be by LINE first. Comparing raw y put words
     // that share a line in height order — a word sitting a fraction of a point
-    // lower won the comparison — which turned "Sample Property" into "Woods Willow"
+    // lower won the comparison — which turned "Sample Gardens" into "Gardens Sample"
     // and, worse, scrambled the "Non-Section 8" divider until rsRows stopped
     // recognising it and filed every unassisted unit as Section 8.
     const ws=hit[id].slice().sort((a,b)=>b.y-a.y), lines=[];
@@ -178,8 +178,8 @@ function ocrMap(words,rects,tplPg,f){ // registered words -> {fieldId: text}
        registered onto the template before it is read, so ocrDropLabels can drop a
        label it recognises AT its own position - but a label OCR read slightly
        differently, or one printed at a pitch our blank does not share, survives
-       that test and lands in a box. Sample Property came back from OCR as
-       "Sample Property Apts. Part A Apartment Rents Show the actual". Same helper
+       that test and lands in a box. Example Gardens came back from OCR as
+       "Example Gardens Apts. Part A Apartment Rents Show the actual". Same helper
        as the text tier, so one page cannot be scrubbed two ways. */
     const txt=lines.map(L=>L.w.sort((a,b)=>a.x-b.x).map(o=>o.s).join(' '));
     const v=(typeof rsDropFormLines==='function'?rsDropFormLines(txt,tplPg):txt).join(' ').trim();

@@ -4,8 +4,8 @@ const BR_OPTS=['Studio','1BR','2BR','3BR','4BR','5BR']; const BA_OPTS=['1BA','1.
 /* What a schedule prints after the bedroom count is the unit's LABEL. HUD
    defines nothing here — the 92458 only asks you to show "other features that
    cause rents to vary" — and the corpus takes it at its word: "E" and "F" at
-   Sample Property, "Elderly" and "Family" at Sample Property, "Patio" at Lansing
-   Manor. 4350.3 supplies the idea behind the common ones, units "designated for
+   one sample property, "Elderly" and "Family" at another, "Patio" at a third.
+   4350.3 supplies the idea behind the common ones, units "designated for
    specific family types, such as those who are elderly or disabled", with the
    reserved quantity a set-aside — but it is one example of the field, not its
    definition. So this is free text, and the count beside it is the set-aside. */
@@ -13,7 +13,7 @@ const BR_OPTS=['Studio','1BR','2BR','3BR','4BR','5BR']; const BA_OPTS=['1BA','1.
    An enum of four could only hold two of the four things the corpus actually
    prints: "1 BR E" and "2 Bedroom, Elderly" matched, "1Bedroom Patio" did not —
    the parser kept the bedroom count and threw "Patio" away, and the generated
-   schedule then printed Sample Property's two 1-bedroom types identically at
+   schedule then printed a sample property's two 1-bedroom types identically at
    different rents. These four are autocomplete entries and nothing more; any
    text is valid, and what the schedule said is what the schedule gets back. */
 const LABEL_HINTS=['Elderly','Family','Disabled','Near-elderly'];
@@ -78,19 +78,19 @@ SEED['partb.writein.u1.fuel']=['',D];
    work/. One net, two very different items, and both came out wrong:
 
    * "Scope of Work" (4) was left OFF on every property, though all 34 studies in
-     the corpus carry the section - Belfry heads it "Scope of Assignment", which
-     is why looking for the literal phrase finds nothing. HUD lists it as
-     required RCS material, and the team's own 2026 checklist for Colonial
-     Village ticks it. The older filed exhibits leave it blank; they under-report
-     material that is in the package, and the app does not copy that.
+     the corpus carry the section - one appraisal firm heads it "Scope of
+     Assignment", which is why looking for the literal phrase finds nothing. HUD
+     lists it as required RCS material, and the team's own 2026 checklist for a
+     sample property ticks it. The older filed exhibits leave it blank; they
+     under-report material that is in the package, and the app does not copy that.
    * "Copy of RCS Appraiser's License (only if relying upon a temporary license)"
      (14) was ticked ON on every property. HUD prints the condition inside the
      item; the STUDY answers it (readChecklist in rcs.js), and an unanswered
      conditional stays OFF. Five filed checklists read by eye tick this item on
-     all five - true on Sample Property and Sample Property, whose appraiser held a
-     New Jersey temporary practice permit, and false on Walden, Sample Property
-     and Sample Property, whose appraisers held permanent licences. The app
-     ticks the two and leaves the rest for the study to answer.
+     all five - true on one sample property and another, whose appraiser held a
+     New Jersey temporary practice permit, and false on a sample property (the
+     one named above) and two more, whose appraisers held permanent licences.
+     The app ticks the two and leaves the rest for the study to answer.
 
    One helper, used by BOTH the key manifest and the new-property default -
    which disagreed with it: the manifest tested the label, the default hardcoded
@@ -115,8 +115,8 @@ let _dlgEnter=null;                  // while a dialog is open, Enter presses it
    left edge — the same marker the home page uses for urgency, at cell scale.
    These values are twinned with the --prov-*-fill tokens in the #viewForm block
    of shell.head.html. Change one, change both. */
-/* The COLOR names the SAVE/FILL STATE; the in-cell tag names the SOURCE (Matt,
-   2026-08-05). Labels rewritten to match: Saved / Auto-filled / Changed / Not
+/* The COLOR names the SAVE/FILL STATE; the in-cell tag names the SOURCE (the
+   owner, 2026-08-05). Labels rewritten to match: Saved / Auto-filled / Changed / Not
    saved — dropping "database", "(this package)", and "overridden". */
 const CLR={database:['#2563eb','#eef1f5','Saved'],'this-cycle':['#0f766e','#e9f5f2','Auto-filled — not saved'],overridden:['#b45309','#fbf1e6','Changed — not saved'],'auto-calculated':['#2563eb','#eef1f5','Auto-calc'],'new':['#64748b','#eef1f5','Not saved']};
 /* Dates are stamped in New York, not UTC. toISOString() rolls over at 7 or 8pm
@@ -308,7 +308,7 @@ function deriveUnits(){const u=new Set([0]),nr=new Set(),lh=new Set(),pr=new Set
 /* The STUDY comes first, not the prior schedule. Column 5 of the HUD-92458 is
    the allowance in effect for the NEW term; the executed schedule states last
    term's. Preferring it printed the prior year's allowance on every property in
-   the corpus, and on Sample Property, Sample Property I and Northcross the study's own
+   the corpus, and on one sample property, another and a third the study's own
    table is exactly what the team filed -- the right figure was in a file the app
    had been handed, and it used the other one. Where a third document governs
    (a CA exhibit, a UA workbook, a UAF notice) the study is still the nearer of
@@ -316,14 +316,14 @@ function deriveUnits(){const u=new Set([0]),nr=new Set(),lh=new Set(),pr=new Set
 function defUaSrc(i){return uaHas('units.'+i+'.ua_rcs')?'rcs':(uaHas('units.'+i+'.ua_exec')?'exec':'custom');}
 /* The STUDY's own printed table comes first, not the HUD pull, and there are two
    independent reasons. The team used the study's figure on every property audited
-   -- Westwood's study prints 1,120/1,570/1,850 and the pull gave 1,254/1,743/2,104,
-   Sycamore's prints 990/1,230 and the pull gave 1,149/1,427, Hampshire's prints
+   -- one property's study prints 1,120/1,570/1,850 and the pull gave 1,254/1,743/2,104,
+   another's prints 990/1,230 and the pull gave 1,149/1,427, a third's prints
    1,500/1,810 and the pull gave 1,590/1,916, and in each case the filed workbook
-   used the study. And the pull is not stable: driving Ebony twice in one afternoon
-   returned 2,511/2,780/3,465 and then 2,655/2,910/3,644, neither matching its
-   study's 2,490/2,730/3,420.
+   used the study. And the pull is not stable: driving a fourth property's pull
+   twice in one afternoon returned 2,511/2,780/3,465 and then 2,655/2,910/3,644,
+   neither matching its study's 2,490/2,730/3,420.
 
-   The 150% test turns on this figure. Sample Property passes it by $12. A number
+   The 150% test turns on this figure. A sample property passes it by $12. A number
    that moves between runs cannot be the default for a federal filing when the
    appraiser has printed one in the document. */
 function defSafmrSrc(i){const h=numf(get('units.'+i+'.safmr_hud')),r=numf(get('units.'+i+'.safmr_rcs'));return r>0?'rcs':(h>0?'hud':'custom');}
@@ -434,7 +434,7 @@ const DIR_PICK={
   apply:ct=>dirFill([['appr.name',ct.name],['appr.firm',ct.firm],['appr.email',ct.email],['appr.phone',fmtPhoneInput(ct.phone||'')],['appr.addr_street',ct.addr_street],['appr.addr_city',ct.addr_city],['appr.addr_state',ct.addr_state],['appr.addr_zip',ct.addr_zip]]),
   sub:ct=>[ct.firm,dirAddrLine(ct)].filter(Boolean).join(' \u00b7 ')||ct.email||''},
  'ca.name':caDir(['ca.prefix','ca.name'],ct=>[ct.title,ct.org,dirAddrLine(ct)].filter(Boolean).join(' \u00b7 ')),
- /* CA has ONE contact card, on the name (Matt, 2026-08-05): picking it fills the
+ /* CA has ONE contact card, on the name (the owner, 2026-08-05): picking it fills the
     whole section — prefix, position, org, and the address. ca.position and ca.org
     are plain cells now, filled by that card, matching the appraiser section. */
  'sig.name':{kind:'signatory',one:'signatory',keys:['sig.name','sig.title'],modeKeys:['sig.name'],
@@ -455,7 +455,7 @@ function dirCell(f){const k=f.k;const P=DIR_PICK[k];const cur=get(k);
 /* ====== External-source dropdowns (Related Affordable / RS / RCS) ======
    Sourced options sit at the top of each cell's dropdown in precedence order;
    a source with no data is a dimmed "\u2014 \u00b7 not available" row, never
-   an error. (Spec history: _archive/the RA integrator/NAVIGATOR-SOURCING-SPEC.md.)
+   an error. (Spec history: an early archived sourcing spec from the RA integrator.)
    No Related Affordable (RA) platform provider ships in this build. The RA
    integration plugs in by setting window.RASource before boot:
      listProperties() -> [{id, name}]   portfolio for the New-property picker
@@ -497,10 +497,11 @@ const RA_LOCKED={
   'property.name':{ask:'property.name',write:'property.name'},
   /* The cell is keyed 'rent_schedule.date_eff' — its own stable identity, which
      is NOT one of the three keys it flips data-box between (rule 9). `ask` is
-     the ordinary flat key, so the RA integrator's aumValue maps a name that already means
-     something on his side; `write` is where the answer lands on our side. */
+     the ordinary flat key, so the RA integrator's aumValue maps a name that
+     already means something on their side; `write` is where the answer lands on
+     our side. */
   'rent_schedule.date_eff':{ask:'rent_schedule.date_rents_effective',write:'rent_schedule.date_eff_ra',
-    /* the RA integrator's database answers in whatever shape it holds. Everything below this
+    /* The RA integrator's database answers in whatever shape it holds. Everything below this
        line assumes ISO, and a raw US date in a data-date box reformats itself on
        the first keystroke — the fault this cell already carries a comment about. */
     norm:v=>{const p=dateParts(v);return p?(String(p.y)+'-'+String(p.m).padStart(2,'0')+'-'+String(p.d).padStart(2,'0')):null;},
@@ -1380,8 +1381,8 @@ const rsFuelOf=v=>{v=String(v||'').trim().toUpperCase();return /^[EFG]$/.test(v)
 function rsPartB(V,definite){ // ids are gen.js's Part B map, read back the way it writes
   // CHK marks a DEFINITE read (on or off). Only tier 1 may claim one: a form field
   // literally says checked or unchecked. Reading position, an absent tick means only
-  // that nothing was found there — on this Sample Property copy the ticks are not text at
-  // all — so tiers 2 and 3 may switch a box ON but must never report one as off.
+  // that nothing was found there — on this copy from a sample property the ticks are
+  // not text at all — so tiers 2 and 3 may switch a box ON but must never report one as off.
   const out={};const CHK={};
   [99,100,101,102,103,104,105].forEach((id,k)=>{const v=!!V(id);out['partb.equipment.'+k]=v?'1':'';CHK['partb.equipment.'+k]=1;});
   [116,118,120,122,124].forEach((id,k)=>{const v=!!V(id);out['partb.utilities.'+k]=v?'1':'';CHK['partb.utilities.'+k]=1;});
@@ -1447,7 +1448,7 @@ function rcsCsRow(k){const v=rcsBrBa(k);
   return v?('<div class="uaopt srcopt'+((String(get(k)==null?'':get(k))===String(v))?' sel':'')+'" data-cskey="'+k+'" data-csopt="'+esc(v)+'">'+esc(v)+'<span class="uasub">RCS report</span></div>')
           :'<div class="uaopt srcopt srcdim">\u2014<span class="uasub">RCS report \u00b7 not available</span></div>';}
 /* HUD-92458 Part A has ONE project-name box, and a property known to its tenants
-   by another name is typed into it as "Sample Property/Sample Property".
+   by another name is typed into it as "Example Gardens/Example Townhomes".
    Two facts in one field: the registry name, and the name on the tenant notice.
 
    Splitting it was written into the FILL and nowhere else, so pressing "Fill form
@@ -1478,7 +1479,7 @@ function rsVal(k){try{const p=_rsUpload&&_rsUpload.parsed;const v=p&&p.scalars?p
    them away while rsRecall/rcsRecall faithfully restored the readings beside
    them. Two consequences, both measured: the source tile went back to saying no
    values had been applied, and the roster re-read in rsFillFromParsed — the
-   whole of M59 — is GATED on _rcsFill, so after a reload Matt's studio /
+   whole of M59 — is GATED on _rcsFill, so after a reload the owner's studio /
    one-bedroom defect came straight back (proved in real chromium: the second
    studio variant took the one-bedroom's rent and both 1BR variants took
    nothing). The record belongs with the reading, per cycle, which also stops it
@@ -1494,7 +1495,7 @@ function rsRecall(){if(!(activeCid&&mpdb&&mpdb.getCycleRs))return null;
    instantly -- but pdf-lib has no decryption at all, and ignoreEncryption does
    not skip encryption, it defers the failure to the page tree. So a study that
    a human can plainly read arrived here as "Expected instance of e". Six of the
-   portfolio's properties file their studies this way, Sample Property's current
+   portfolio's properties file their studies this way, a sample property's current
    cycle among them. Unlock before anything tries to read, and fall back to the
    original bytes rather than fail the upload: a file we cannot unlock is no
    worse off than before. */
@@ -1529,7 +1530,7 @@ function nameParts(x){
   const nm=v=>String(v).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z]/g,'');
   return {first:nm(t[0]),last:nm(t[t.length-1])};}
 /* One matcher for every place a name is matched to a saved contact (FORM-RULES 17):
-   first TWO letters of the first name + last name, case-insensitive (Matt, 2026-08-08).
+   first TWO letters of the first name + last name, case-insensitive (the owner, 2026-08-08).
    Two letters tolerates spelling variations (Claire/Clarice) yet tells Claire from Carl,
    and a first name under two letters — a bare initial like "C." — cannot match, which
    keeps the standing "a bare initial never claims a surname" guard. Two contacts that
@@ -1555,7 +1556,7 @@ function pocMatchRcs(){
    which would put a 2BR rent on a 3BR row.
 
    When TWO study lines answer to one form row the answer is not "pick one".
-   Sample Property prices "1BR/1BA without patio" at $1,190 and "1BR/1BA with
+   A sample property prices "1BR/1BA without patio" at $1,190 and "1BR/1BA with
    patio" at $1,200: same bedrooms, same baths, different rents, and nothing on
    the form says which row is which. So an ambiguous match fills nothing and
    says so. */
@@ -1580,7 +1581,7 @@ function rcsBaOf(u){const b=u&&u.ba;if(b==null||b==='')return '';const t=String(
    A study line with a figure on it but no usable bedroom count is invisible to
    the matching below -- it is not a candidate, so the remaining line for that
    bedroom count reads as the ONLY one, the count tiebreak never runs, and its
-   rent is written into every row of that shape. Sample Property's schedule came
+   rent is written into every row of that shape. A sample property's schedule came
    out $2,550 short exactly that way: "IBR/1BA" (capital I) and "2BR /1BA"
    (internal space) both failed to parse, so both 1BR rows took the other 1BR
    line's $2,025 and both 2BR rows took $2,650. A parse miss became a wrong
@@ -1605,7 +1606,7 @@ function rcsMatch(i){
     ix.push(j);});
   const hit=ix.map(function(j){return p.units[j];});
   /* Two study lines, one form row — but the unit COUNT usually tells them
-     apart. The rent schedule writes Lansing's rows as "1Bedroom" (32) and
+     apart. The rent schedule writes the same property's rows as "1Bedroom" (32) and
      "1Bedroom Patio" (68); the form keeps the counts even though the word
      "Patio" is lost turning that into bedrooms and baths. The study prices
      "1BR/1BA without patio" for 32 units and "with patio" for 68. Counts are a
@@ -1885,9 +1886,9 @@ function rcsChecks(){
       +un.map(function(u){return '\u201c'+esc(String(u.type||'').trim()||'(blank)')+'\u201d';}).join(', ')
       +'. Check every proposed rent against the study by hand: a line we cannot place cannot be matched to a row.')); }
 
-  /* The Section 8 number, across every document that carries one. Belfry
-     prints it under an "FHA Project No." label and Riverside Gardens's own grid
-     disagrees with its own letter, so this is not a formality. */
+  /* The Section 8 number, across every document that carries one. One appraisal
+     firm prints it under an "FHA Project No." label and a sample property's own
+     grid disagrees with its own letter, so this is not a formality. */
   const N=v=>String(v).replace(/[^A-Za-z0-9]/g,'').toUpperCase();
   const src=[['the study',rcsVal('property.s8')],['the schedule',rsVal('property.s8')],['on file',get('property.s8')]]
     .filter(function(x){return x[1];});
@@ -1911,7 +1912,7 @@ function rcsChecks(){
       'the study answers \u201cno\u201d \u00b7 item 14 is ticked, which certifies a copy that is not required')); }
 
   /* Utility allowance: the study-vs-schedule cross-check was dropped with the UA
-     disagreement warning (Matt, 2026-08-06). UA is one value now; the study's figure
+     disagreement warning (the owner, 2026-08-06). UA is one value now; the study's figure
      and the schedule's are the two rows of the cell's own dropdown. */
 
   /* The 150% ceiling: the study against the HUD pull. */
@@ -1974,21 +1975,21 @@ function rsYearOn(iso){const m=String(iso||'').match(/^(\d{4})-(\d{2})-(\d{2})/)
 /* Three spellings the real corpus uses that the first pass could not read, each
    found by parsing all 34 filed schedules rather than by imagining them:
 
-   "BR3"      puts the number AFTER the letters — Sample Property, 333 Holly and
-              The Pines all write it that way.
+   "BR3"      puts the number AFTER the letters — three sample properties write
+              it that way.
    "2BR2BA"   runs the bath count straight on, so the \b after "br" never fires
-              because the next character is a digit — 333 Holly, Oaks on North
-              Plaza.
-   "0 BEDROOM" is how Sample Property writes a studio. One property, but the reader
-              on the other side of the form, rcsBrOf, has always mapped zero
-              bedrooms to Studio, so this is the same asymmetry rather than one
-              document's quirk. It cost real money: an unparseable type makes a
+              because the next character is a digit — two more sample properties
+              do this.
+   "0 BEDROOM" is how another sample property writes a studio. One property, but
+              the reader on the other side of the form, rcsBrOf, has always mapped
+              zero bedrooms to Studio, so this is the same asymmetry rather than
+              one document's quirk. It cost real money: an unparseable type makes a
               row rcsMatch skips, the study's studio line then goes down the
               homeless path and adds a SECOND row for the same 17 units, and the
               generated HUD form claims 100 units instead of 83.
 
-   Not fixed, deliberately: "3613", "16R", "2BIRMBA-ADA" and "2lBA", all from
-   Sample Property, which are OCR misreads of a poor scan and not a naming
+   Not fixed, deliberately: "3613", "16R", "2BIRMBA-ADA" and "2lBA", all from a
+   single sample property's poor scan, which are OCR misreads and not a naming
    convention. Guessing at those would be inventing unit types. */
 function rsParseUnitType(t){t=String(t||'');let br='',ba='';
   const asBr=n=>(String(n)==='0')?'Studio':(BR_OPTS.indexOf(n+'BR')>=0?n+'BR':'');
@@ -1997,12 +1998,12 @@ function rsParseUnitType(t){t=String(t||'');let br='',ba='';
          ||t.match(/\bbr\s*(\d+)/i);                            // "BR3"
     if(m)br=asBr(m[1]);
     if(!br){const bare=t.trim().match(/^(\d+)$/);if(bare)br=asBr(bare[1]);}}const b=t.match(/(\d+(?:\.\d+)?)\s*(?:ba\b|bath)/i);if(b&&BA_OPTS.indexOf(b[1]+'BA')>=0)ba=b[1]+'BA';
-  /* Both spellings appear across the real corpus: "1 BR E" / "1 BR F" at Beacon
-     Hill, "1 Bedroom, Elderly" / "1 Bedroom, Family" at Sample Property. A bare
+  /* Both spellings appear across the real corpus: "1 BR E" / "1 BR F" at one
+     sample property, "1 Bedroom, Elderly" / "1 Bedroom, Family" at another. A bare
      letter counts only at the very end of the string, so an F inside a word can
      never designate a row. */
-  /* Whatever the column says beyond the counts IS the label, verbatim. Beacon
-     Hill keeps "E" and Sample Property keeps "Elderly" — the two documents really
+  /* Whatever the column says beyond the counts IS the label, verbatim. One sample
+     property keeps "E" and another keeps "Elderly" — the two documents really
      do say different things, and a filing that echoes its source is worth more
      than one that normalises it. Bedrooms and baths are parsed exactly as
      before: the SAFMR pull, the ceiling maths and the RCS row matching all key
@@ -2090,23 +2091,24 @@ async function rsRuns(txt,ctx){ // content stream -> ctx.runs [{s,x,y,d}] in pag
        (51)Tj  4.071 0 Td  (632)Tj  5.643 0 Td  [($1,)-35.7 (710)]TJ
 
      welded to "1 BR / 1 BA51632$1,710" and every row pattern needs \s+ between
-     the count and the next column, so 333 Holly and Sample Property read as ZERO
-     unit types and their whole packages went unwritten. Their sibling Cornerstone
-     studies, The Pines and Sample Property, read fine only because Acrobat
-     emitted the same row as one TJ array. One template, two PDFMaker outputs.
+     the count and the next column, so two sample properties, both studies from
+     another appraisal firm, read as ZERO unit types and their whole packages
+     went unwritten. Two sibling studies from the same firm read fine only
+     because Acrobat emitted the same row as one TJ array. One template, two
+     PDFMaker outputs.
 
      The threshold comes from measuring the corpus, and it is deliberately high.
      Cell gaps are an order of magnitude wider than anything inside a cell: their
-     medians run 44 to 125pt across the Cornerstone studies, while intra-cell
+     medians run 44 to 125pt across that firm's studies, while intra-cell
      moves reach about 22pt. 25pt sits in that gap. A lower value was tried first
      and rejected with evidence - at 1.5pt the reader began splitting figures, and
-     the suite caught it on Sample Property.
+     the suite caught it on another sample property.
 
      So this only ever separates CELLS, never words. A page that positions each
      word with its own small Td gets no spaces from this rule, which is a real
      limitation and not an oversight: the rule exists to stop a table row welding
      into one string, and buying word spacing too would cost the margin that
-     makes the cell case safe. Belfry's studies use no horizontal Td moves at all,
+     makes the cell case safe. One appraisal firm's studies use no horizontal Td moves at all,
      so nothing this rule does can reach them.
 
      Note the fix is here and NOT in the row patterns. Relaxing \s+ to \s* would
@@ -2118,7 +2120,7 @@ async function rsRuns(txt,ctx){ // content stream -> ctx.runs [{s,x,y,d}] in pag
   const emit=str=>{if(!str)return;
     if(gap){gap=false;
       /* One boundary no width rule can judge: the inside of a printed figure.
-         Sample Property draws "$1,580" as "$1," then a pen move then "580", and that
+         A sample property draws "$1,580" as "$1," then a pen move then "580", and that
          move is as wide as the moves between its own table cells - the same page
          prints the same figure unsplit a few columns later. So no threshold can
          separate them there. A digit-comma-digit boundary can only be one number
@@ -2217,10 +2219,10 @@ async function rsFieldRects(){ // field id -> {pg,x,y,w,h} from our own template
      the "Part A - Apartment Rents" divider prints its baseline 1.95pt INSIDE
      field 1's window. So the divider was collected as part of the project name
      and four schedules filed themselves under names like
-       ShilohVillageApts.      PartA-ApartmentRents
-       11fkaCreek333HollyHollyPartA-ApartmentRents
-       ThePinesfkaWoodGlenApartmentsPartA-ApartmentRents
-       OaksonINorthP,lazafkaNorthPlazaApartmentsPartA-ApartmentRents
+       SampleVillageApts.      PartA-ApartmentRents
+       11fkaCreekSampleParkSampleParkPartA-ApartmentRents
+       SamplePinesfkaGlenApartmentsPartA-ApartmentRents
+       SampleTerracefkaParkApartmentsPartA-ApartmentRents
      - the name reaching every generated document and all three filenames.
 
      Declining the misaligned pages did NOT fix this, which is worth recording:
@@ -2253,11 +2255,11 @@ async function rsFieldRects(){ // field id -> {pg,x,y,w,h} from our own template
    reproduces one of the blank form's own printed lines is the form talking.
 
    This is the complement the positional dropper lacks, and it is what finishes
-   the project names. Clamping field 1 to its row-mates' floor fixed Shiloh
-   Village and improved Sample Property, and could not reach 333 Holly or The
-   Pines, where the divider prints ABOVE that floor. It also could not reach tier
-   3 at all, which is where declining the misaligned pages sent them: Shiloh came
-   back from OCR as "Sample Property Apts. Part A Apartment Rents Show the actual".
+   the project names. Clamping field 1 to its row-mates' floor fixed one sample
+   property and improved another, and could not reach two more, where the
+   divider prints ABOVE that floor. It also could not reach tier 3 at all, which
+   is where declining the misaligned pages sent them: one of them came back from
+   OCR as "Sample Property Apts. Part A Apartment Rents Show the actual".
 
    The 8-character floor keeps this away from short values. "Part A - Apartment
    Rents" normalises to 19 characters and "Show the actual" to 13, while a value
@@ -2288,11 +2290,11 @@ function rsDropFormLines(lines,tplPg){
    Sorting the runs by descending baseline and joining them was right for a page
    whose lines are exactly level, and wrong for a page carrying a scanner's own
    text layer, where one printed line arrives as several baselines a fraction of
-   a point apart. 333 Holly's project name prints as "333 Holly fka Holly Creek
-   II" on one line, and its OCR layer gives that line four baselines - 693.36,
-   693.24, 693.12, 691.20 - so ordering by height returned
-     11 | fka Creek | 333 | Holly Holly
-   which is where "11fkaCreek333HollyHolly" came from. The "11" is the scanner's
+   a point apart. A sample property's project name prints as "200 Cedar fka
+   Cedar Court II" on one line, and its OCR layer gives that line four baselines
+   - 693.36, 693.24, 693.12, 691.20 - so ordering by height returned
+     11 | fka Court | 200 | Cedar Cedar
+   which is where "11fkaCourt200CedarCedar" came from. The "11" is the scanner's
    reading of the roman numeral II, at a third the font size of its neighbours.
    rsLines already solved exactly this for the HAP-number label - "sorting each
    line by x removes the dependency instead of widening it" - and rsMapRects
@@ -2307,12 +2309,12 @@ function rsBoxText(inside,tplPg){
     if(L&&Math.abs(L.y-r.y)<=RS_LINE)L.runs.push(r);
     else lines.push({y:r.y,runs:[r]});});
   const txt=lines.map(L=>L.runs.sort((a,b)=>a.x-b.x).map(r=>r.s).join('')
-    /* One space, however many the page drew. Sample Property's name arrived as
-       "Friendship  Court" once the Td-gap rule started restoring a space beside
+    /* One space, however many the page drew. A sample property's name arrived as
+       "Example  Court" once the Td-gap rule started restoring a space beside
        one the run already carried, and that reached the stored name, the workbook
        title and every output filename. rcs.js's own lines() has collapsed
        whitespace this way from the start; this is the same treatment, not a new
-       idea, and the six spaces inside "Sample Property Apts.      " were only ever
+       idea, and the six spaces inside "SampleVillageApts.      " were only ever
        trailing, so nothing legible is lost. */
     .replace(/\s+/g,' ').trim()).filter(Boolean);
   return rsDropFormLines(txt,tplPg).join(' ').trim();}
@@ -2336,7 +2338,7 @@ function rsMapRects(pageRuns,rects,tplPg){ // one page's runs -> {fieldId: text}
    Fitting each axis independently over a page's own label correspondences --
    which is a more generous model than the similarity fit tier 3 uses -- still
    leaves a median error of 3.2 to 9.0 points on those pages, with maxima of 13
-   to 16: more than one printed row. On Sample Property the implied shift walks
+   to 16: more than one printed row. On a sample property the implied shift walks
    from -1.4pt at the top of the page to -45pt at the bottom, because that
    printing sets Part B's rows on a 14.4pt pitch where ours uses 10.92. These
    are different PRINTINGS of the form, not displaced copies of ours, so no
@@ -2351,7 +2353,7 @@ function rsMapRects(pageRuns,rects,tplPg){ // one page's runs -> {fieldId: text}
    same rsAssembleFields, whose reconciliation against the schedule's own
    printed monthly total is what decides whether the read is believed. That gate
    is why this can be attempted at all on a scanner's text layer, where the
-   characters are themselves a guess: Sample Property's read $111,198 where
+   characters are themselves a guess: another sample property's read $111,198 where
    the page prints $91,922, and a row set that does not add up to the printed
    total is refused rather than filed.
 
@@ -2372,7 +2374,7 @@ function rsColHeads(runs){
      collected and the columns are then taken in order, each the leftmost that
      still sits right of the one before -- the only assignment a table admits,
      which discards the strays without having to recognise them as strays. On
-     The Pines that alone is the difference between reading Col. 4 at x 258,
+     a sample property that alone is the difference between reading Col. 4 at x 258,
      where its figures are, and at x 169, where the yearly-total caption is. */
   const cand={};
   const add=(n,x)=>{if(n>=1&&n<=8)(cand[n]=cand[n]||[]).push(x);};
@@ -2528,8 +2530,8 @@ function rsAssembleFields(V){
    come back with NO rent rows at all and the app would call it read: a green
    tile saying “read”, “Fill form from RS” armed, and Enter bound to it. Two real
    documents do exactly that. Our own blank HUD-92458 template, uploaded by
-   mistake, is one. The other is filed: Sample Property' “HUD Rent Schedule -
-   Sample Property eff. 04.01.26.pdf” carries all 232 fields with 39 of them
+   mistake, is one. The other is filed: a sample property's “HUD Rent Schedule -
+   Sample Towers eff. 04.01.26.pdf” carries all 232 fields with 39 of them
    filled in — and every one of those 39 is the string “0”, including the printed
    monthly total. Tier 1 returned {scalars:{},units:[],ns8:[]} and the form said
    the schedule had been read.
@@ -2625,11 +2627,11 @@ async function rsTplRuns(){ // the blank template's own printed text, read once
    coordinates describe where the words landed on the glass, not where the form
    puts them. Nothing checked which kind of page had arrived, so four schedules
    were read through boxes sitting over the wrong printing and the reader
-   reported success on all four. Sample Property came back with the form's
+   reported success on all four. One sample property came back with the form's
    own heading swallowed into the Project Name box -- a project called
-   "OaksonINorthP,lazafkaNorthPlazaApartmentsPartA-ApartmentRents" -- a 14-unit
-   row at $111,198 a month, and a monthly potential of $1,642,642 where the page
-   prints $91,922. Sample Property, 333 Holly and The Pines each did the same, and
+   "ExampleITerraceP,lazafkaExampleTerraceApartmentsPartA-ApartmentRents" -- a
+   14-unit row at $111,198 a month, and a monthly potential of $1,642,642 where
+   the page prints $91,922. Three more sample properties each did the same, and
    each of them named itself "...PartA-ApartmentRents" too.
 
    Measured over the whole corpus the premise is not marginal, it is binary. A
@@ -2698,7 +2700,7 @@ async function rsTextFields(pages){
   const clean=(rs,tp)=>rsDropTplLabels(rs,tplr&&tplr[tp]);
   const okA=rsTplPremiseHolds(rsTplAlign(pages[pg0],tplr&&tplr[0]));
   /* The premise is asked of EACH half, because each half is read through our own
-     rectangles. Sample Property and Mapleview require it from the other side: their
+     rectangles. Two more sample properties require it from the other side: their
      page 1 is a printing we cannot place while their page 2 is ours exactly, so
      the halves are judged apart or the certification page is lost with the rent
      roll. */
@@ -2852,8 +2854,8 @@ function rsFillFromParsed(opts){const P=_rsUpload&&_rsUpload.parsed;if(!P)return
       /* A superintendent's apartment that earns nothing has a real rent of $0,
          and the executed schedule states it. Testing >0 threw that away, and the
          empty cell was then filled by the study's figure for the same bedroom
-         count -- so Part D charged rent loss that does not exist: Ebony 3,700
-         where the schedule says 0, Sycamore 1,450, Woodbury 2,075, each of them
+         count -- so Part D charged rent loss that does not exist: one property 3,700
+         where the schedule says 0, another 1,450, a third 2,075, each of them
          the contract rent of a DIFFERENT, revenue-earning unit. Same lesson the
          allowance learned three fixes ago: a stated zero is a figure. */
       if(u.rent!==''&&u.rent!=null)setk('nonrev.'+ix+'.rent',u.rent);
@@ -2874,11 +2876,11 @@ function rsFillFromParsed(opts){const P=_rsUpload&&_rsUpload.parsed;if(!P)return
      that and the loop above writes units.0..N positionally straight over those
      rows, and the study's proposed rents stay where they were put.
 
-     Measured, real, and the shape Matt found independently: a study with two
+     Measured, real, and the shape the owner found independently: a study with two
      lines (all studios, all one-bedrooms) against a schedule with four rows
      (two studio variants, two 1BR variants) leaves the one-bedroom figure
      sitting on the SECOND STUDIO. Across the corpus this order-dependence
-     moved Sample Property's total contract rent by $143,950 between the two
+     moved a sample property's total contract rent by $143,950 between the two
      orders, on the document that goes to HUD.
 
      So once the schedule has laid down the real roster, the study is read
@@ -3073,7 +3075,7 @@ function sectionStatus(n,_si){
   const _ok=()=>((_si.cav[n]||[]).length?'cav':'ok');
   if(n===1)return _rcsUpload?_ok():((hasProg('rcs')||hasProg('ocaf'))?'warn':_ok());
   /* NOT STARTED first, and it means exactly one thing: this section holds
-     nothing. Matt, 2026-08-06 — "NOT STARTED when genuinely every cell
+     nothing. The owner, 2026-08-06 — "NOT STARTED when genuinely every cell
      untouched ... then NEEDS REVIEW all the way until all requirements are
      met." Asking the score first painted a brand-new package amber the whole
      way down its rail, which tells a reader they have eight problems when the
@@ -3597,7 +3599,7 @@ function railSet(n){
    at", and it is a good answer right up until the reader is TYPING — at which
    point the section they are in is not in doubt, and a rail marking the
    neighbour because that neighbour happens to straddle a line 88px down is
-   simply wrong. Matt: "if I'm literally actively in a cell within y, then the
+   simply wrong. The owner: "if I'm literally actively in a cell within y, then the
    rail needs to understand that."
 
    Bounded by visibility, deliberately. Focus that has been scrolled off the
@@ -4221,8 +4223,8 @@ function wireBody(){
   document.querySelectorAll('[data-ocfopt]').forEach(o=>o.addEventListener('click',e=>{e.stopPropagation();_pendingSnap=snapPend(['ocaf.factor_custom','ocaf.factor_src']);srcSetSource('ocaf.factor_custom',o.getAttribute('data-ocfopt'));_pending=['ocaf.factor_src'];_refocusSel='[data-box="ocaf.factor_src"] .uatrigger';renderBody();}));
   /* The source lock's RELEASE (increment 2). Clears the explicit source so the
      hierarchy governs again and unpins — this is what un-sticks a cell locked to
-     Custom. Saved IMMEDIATELY and OUTSIDE the pending/save-revert flow (Matt's
-     rule): no snapPend, no _pending; the change is persisted here and the
+     Custom. Saved IMMEDIATELY and OUTSIDE the pending/save-revert flow (the
+     owner's rule): no snapPend, no _pending; the change is persisted here and the
      snapshot re-taken, so the footer never shows it as an unsaved change and a
      second click can never be a no-op. stopPropagation keeps the option under it
      from re-selecting. */
@@ -4487,7 +4489,7 @@ function openMenu(){activeCid=null;renderWho();renderMenu();show('Menu');}
    with one another: properties the tracker knows about, and records made before
    the tracker existed (or by hand) that carry no code. The second group is shown
    under its own heading rather than matched by name, because matching names
-   across two systems is how one firm's Sample Property becomes another's. */
+   across two systems is how one firm's name for a property becomes another's. */
 function hapAll(){
   try{
     const H=window.RCSHap;if(!H)return null;
@@ -4511,7 +4513,7 @@ let _menuWheel=false;
    fast it arrived, whether its deltas were decaying, how long the wheel had been
    moving — and decided from that whether to open, how hard to resist, and what to
    draw. Every one of those was a judgement about the reader's hand, every one
-   behaved differently on a trackpad and a mouse, and Matt got a hint that
+   behaved differently on a trackpad and a mouse, and the owner got a hint that
    "sometimes displays a bob and line, sometimes does not, sometimes delayed/late,
    and sometimes is glitchy as shit."
 
@@ -4523,7 +4525,7 @@ let _menuWheel=false;
    Rule 1 is a DISTANCE, not a stillness. It was a quarter-second gap with no wheel
    in it, and on a trackpad that gap does not exist: momentum keeps firing for over
    a second after the fingers lift, so a second swipe arrives inside the tail of the
-   first. Matt: "the scroll up on a trackpad like mac doesnt work at all... scrolling
+   first. The owner: "the scroll up on a trackpad like mac doesnt work at all... scrolling
    up only does something when i navigate my mouse directly on top of the banner and
    then scroll up." Over the banner there is nothing under the cursor to scroll, so
    no momentum is generated, so the gap appears — the rule was working by accident of
@@ -4684,7 +4686,7 @@ function _togglePast(){
   /* The rows are ALREADY in the page — renderMenu writes them on every render and
      hides them — so opening the drawer is a hidden attribute and one word on a
      button. Rebuilding all 229 rows to change those two things is where the lag
-     came from: Matt, "its still a tiny bit laggy". renderMenu stays as the fallback
+     came from: the owner, "its still a tiny bit laggy". renderMenu stays as the fallback
      for a toggle on a render that has not drawn the drawer. */
   const w=el('mPastWrap'),b=el('mPast');
   if(w&&b&&b.classList&&w.hasAttribute){
@@ -4770,9 +4772,9 @@ function hapForPid(pid){return hapProperties().find(x=>x.id===pid)||null;}
 /* ── Related Affordable, arriving down the tracker's pipe ─────────────────
    The renewal-calendar CSV was exported FROM Related Affordable's database. It
    is not a stand-in for that source; it is that source's data arriving by a
-   different route. So the name and date locks do not have to wait on the RA integrator's
-   provider — this is what makes them fire on the properties RA actually
-   carries. His provider is injected before boot and wins outright, and so does
+   different route. So the name and date locks do not have to wait on the RA
+   integrator's provider — this is what makes them fire on the properties RA
+   actually carries. Their provider is injected before boot and wins outright, and so does
    ?ra=1, because both set window.RASource before boot installs this one.
 
    Cached, and not as an optimisation. raVal() runs on every render of every
@@ -4969,7 +4971,7 @@ function windowPickHtml(){
 }
 /* Read left to right this is now the order of the work: everything, then what is
    coming, then what is beyond it, then what is behind, then what is off the
-   schedule entirely. Matt set it. What is BEHIND comes fourth rather than second
+   schedule entirely. The owner set it. What is BEHIND comes fourth rather than second
    because it is not the thing to look at first — it drains on its own as each
    increase date arrives.
 
@@ -4989,7 +4991,7 @@ const MENU_VIEWS=[
    was baked at load, so choosing 60 days left the strip reading "52 within 90
    days" beside a heading reading DUE WITHIN 60 DAYS — the count moved and the
    words did not, which is the worst of the two failures because the figure looks
-   authoritative. Matt caught it on screen; the suite caught it the same minute. */
+   authoritative. The owner caught it on screen; the suite caught it the same minute. */
 function viewLabel(k,n){
   if(k==='all')return n===1?'property':'properties';
   if(k==='now')return 'within '+MENU_WINDOW+' days';
@@ -5039,7 +5041,7 @@ function menuViewCopy(k){
    where a year holds two startable rows of the same program — and it lives in
    hap.js where the real corpus can hold it to account. A copy here would be a
    second implementation that drifts: the first draft of it had neither the exact
-   match nor the concurrency guard, so on Sample Property the rail and the button
+   match nor the concurrency guard, so on a sample property the rail and the button
    would have disagreed about whether the September package existed.
 
    Undated is disjoint from the rest for free: deadline is computed from
@@ -5101,7 +5103,7 @@ function dueLine(p){
   if(!p.deadline)return '<div class="pc-due ok">No date scheduled</div>';
   const d=p.days;
   if(d==null)return '<div class="pc-due ok">No date scheduled</div>';
-  /* Overdue is not an alarm. Matt: "anything overdue has already been
+  /* Overdue is not an alarm. The owner: "anything overdue has already been
      completed" — the tracker carries the deadline, not the filing, so a past
      date means the package went in and the row has not caught up. Shouting
      "119 days late" in red across a hundred and three rows buried the handful
@@ -5385,7 +5387,7 @@ function renderMenu(){
      The flat single-list version this replaces was honest about the calendar and
      wrong about the job: it opened on eighty rows of what is behind, and the
      twenty-one that can actually be worked today sat somewhere down the middle
-     of one very long scroll. Matt: "i want those upcoming ones to go back to
+     of one very long scroll. The owner: "i want those upcoming ones to go back to
      being prominent and taking up the top of the page like it used to be".
 
      So: a banner saying how many are past due (closed), the live panel, then the
@@ -5706,7 +5708,7 @@ function cyclesHtml(hasAction,hap){
   /* Draft/Generated says only whether a button has been pressed. What a reader
      wants is how far along the package is and what is holding it — which score.js
      has computed all along, for the property ring, and which the cards had no way
-     to ask for one package at a time. Matt: "the generated tag tells you NOTHING.
+     to ask for one package at a time. The owner: "the generated tag tells you NOTHING.
      what happened to that intensive code session creating the ultimate scoring
      system for package completion?" */
   const scOf=c=>{try{return mpdb.cycleScore?mpdb.cycleScore(c.id):null;}catch(e){return null;}};
@@ -5796,7 +5798,7 @@ function newCycleDialog(pre){
      shape of the hand-started one. Under one package per effective date there is
      no second package the greyed card could ever describe, so it was offering a
      choice that could not be made and could not be acted on — and inviting the
-     app to look like it disagreed with the tracker. Matt's call, 2026-08-05. */
+     app to look like it disagreed with the tracker. The owner's call, 2026-08-05. */
   const lockedCard=(tag,name,sub)=>
     '<div class="cypg set" title="'+esc(_WHY_PROG)+'">'
       +'<span class="cyc-tag">'+tag+'</span>'
@@ -6151,7 +6153,7 @@ function dlFile(bytes,name,mime){const blob=new Blob([bytes],{type:mime||'applic
 function dlPdf(bytes,name){dlFile(bytes,name,'application/pdf');}
 function formRec(){const rec={};for(const k in form)rec[k]=form[k].value;return rec;}
 function dataUrlToBytes(u){try{const i=String(u||'').indexOf(',');if(i<0)return null;return b64ToBytes(u.slice(i+1));}catch(e){return null;}}
-/* One unusable source must not cost the whole package. Sample Property's study is
+/* One unusable source must not cost the whole package. A sample property's study is
    AES-256 encrypted -- revision 6, streams and strings, extraction disabled -- and
    pdf-lib loads it under ignoreEncryption but cannot copy a page out of it. It
    throws "Expected instance of e, but got instance of undefined", and that
@@ -6438,8 +6440,8 @@ function buildRentAnalysisBytes(){
   const nn=v=>{const n=numf(v);return n>0?n:null;};
   /* The same label the rent schedule prints, from the same function, so the two
      documents in one package cannot disagree about what a unit type is called.
-     Built here by hand this dropped the designation entirely: Morningside
-     Court's "1 BR / 1 BA S" and "1 BR / 1 BA Large" both came out "1BR/1BA",
+     Built here by hand this dropped the designation entirely: a sample
+     property's "1 BR / 1 BA S" and "1 BR / 1 BA Large" both came out "1BR/1BA",
      two different unit types at two different rents wearing one label. */
   const ut=(window.RCSGen&&window.RCSGen.utype)
     ||((br,ba)=>String(br||'')+(ba?'/'+ba:''));   // the old shape, if gen.js has not loaded yet
@@ -6786,7 +6788,7 @@ const RADEMO=(typeof location!=='undefined')&&/[?&]ra=1(&|$)/.test(location.sear
    conditional halves never ran: no unit rows past the first, no 150% analysis,
    no rent arithmetic, and no package to hang a program off. A test property
    that holds no data tests the empty case only, and says nothing about the one
-   Matt actually opens.
+   the owner actually opens.
 
    Six unit types across two buildings, a utility allowance conflict on one row
    (exec 31 vs RCS 34) so the resolve path is reachable, and a SAFMR high enough
@@ -6798,7 +6800,7 @@ async function selftestSeed(){
      was dormant only because makeDb always seeds a demo property, so this branch
      never ran — and adding a coded property to the seed below is exactly the
      change that would have woken it. */
-  const pid=ps.length?ps[0].id:(await mpdb.createProperty('Sample Property Apartments')).pid;
+  const pid=ps.length?ps[0].id:(await mpdb.createProperty('Example Apartments')).pid;
   /* Seed once per browser profile, not once per property: makeDb already ships a
      demo record with a single unit row, so keying off "has any units" meant the
      seed never ran at all. The marker also keeps a reload from wiping edits made
@@ -6813,20 +6815,20 @@ async function selftestSeed(){
     {br:'4BR',ba:'2BA',n:4,cur:1780,pro:1954,ua:55,safmr:2455,label:'Family'},
   ];
   const m={
-    'property.name':'Sample Property Apartments','property.alias':'Sample Property',
-    'property.addr_street':'1450 Woodward Avenue','property.addr_city':'Detroit',
-    'property.addr_state':'MI','property.addr_zip':'48226',
+    'property.name':'Example Apartments','property.alias':'Example',
+    'property.addr_street':'300 Riverside Avenue','property.addr_city':'Rivertown',
+    'property.addr_state':'MI','property.addr_zip':'00000',
     'property.fha':'000-00000','property.s8':'XX00-X000-000',
     'property.total_units':String(U.reduce((a,u)=>a+u.n,0)),
-    'owner.entity_name':'Sample Property Preservation LP','owner.entity_type':'Limited Partnership',
+    'owner.entity_name':'Example Preservation LP','owner.entity_type':'Limited Partnership',
     'principals.0.name':'Jordan Doe','principals.0.title':'Managing Member',
-    'poc.name':'Jordan Doe','poc.email':'dwhitfield@example.com','poc.phone':'3135550142',
+    'poc.name':'Jordan Doe','poc.email':'jdoe@example.com','poc.phone':'5555550142',
     'ca.name':'Alex Carter','ca.prefix':'Ms.','ca.position':'Contract Specialist',
     'ca.org':'State Housing Agency',
-    'ca.addr_street':'100 Main Street','ca.addr_city':'Lansing','ca.addr_state':'MI','ca.addr_zip':'48912',
+    'ca.addr_street':'100 Main Street','ca.addr_city':'Springfield','ca.addr_state':'MI','ca.addr_zip':'00000',
     'appr.name':'Taylor Reed','appr.firm':'Sample Valuation Group',
-    'appr.email':'appraiser@example.com','appr.phone':'3135550188',
-    'appr.addr_street':'220 Larned Street','appr.addr_city':'Detroit','appr.addr_state':'MI','appr.addr_zip':'48226',
+    'appr.email':'appraiser@example.com','appr.phone':'5555550188',
+    'appr.addr_street':'200 Center Street','appr.addr_city':'Rivertown','appr.addr_state':'MI','appr.addr_zip':'00000',
     'sig.name':'Jordan Doe','sig.title':'Managing Member',
     'tenant.sender_name':'Jordan Doe','tenant.sender_title':'Managing Member',
     'rent_schedule.date_rents_effective':'2026-03-01',
@@ -7024,12 +7026,12 @@ if(RADEMO&&typeof window!=='undefined'&&!window.RASource)window.RASource={
          locked cells are — they are ordinary (unlocked) dropdown source rows, so a
          demo string is a choice the reader can see and decline, not a value forced
          onto the page. Representative names, not this property's real ones. */
-      if(k==='poc.name')return 'Dana Fields';
-      if(k==='ca.org')return 'Southwest Housing Compliance Corporation';
-      if(k==='ca.name')return 'Alma Reyes';
-      if(k==='tenant.property_alias')return 'The Willows';
-      if(k==='tenant.community_manager')return 'Priya Nair';
-      if(k==='tenant.regional_cm')return 'Sam Okafor';
+      if(k==='poc.name')return 'Jordan Doe';
+      if(k==='ca.org')return 'Regional Housing Agency';
+      if(k==='ca.name')return 'Alex Carter';
+      if(k==='tenant.property_alias')return 'The Meadows';
+      if(k==='tenant.community_manager')return 'Jordan Lee';
+      if(k==='tenant.regional_cm')return 'Casey Kim';
     }catch(e){}
     return null;
   },

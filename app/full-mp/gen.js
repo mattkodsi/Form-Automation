@@ -19,7 +19,7 @@
 
      It lives out here, and is exported, because the workbook was building its
      own label - `br + '/' + ba` in app.js's buildRentAnalysisBytes - and so
-     dropped the designation and the spacing both. Sample Property's two
+     dropped the designation and the spacing both. A sample property's two
      one-bedroom types print as "1 BR / 1 BA S" and "1 BR / 1 BA Large" on the
      rent schedule and as "1BR/1BA" twice in the workbook beside it, which is
      the very fault the paragraph above was written about, reappearing in the
@@ -177,7 +177,7 @@ const addrLine=(street,city,state,zip)=>{
     for(let i=0;i<17;i++){ try{ const cb=form.getCheckBox('Check Box'+(i+1)); if(String(rec['check.'+i]||'')==='1')cb.check(); else cb.uncheck(); }catch(e){ _cbMissed++; } }
     if(_cbMissed>8) throw new Error('Checklist template mismatch: '+_cbMissed+' of 17 boxes could not be set — do not file the result.');
     /* The signatory line is now a real form field (Text6) on the template — the
-       hard-coded "Alex Morgan" name and the white cover box it needed are gone. */
+       hard-coded sample signatory name and the white cover box it needed are gone. */
     /* Match the Date field's rendered value exactly — both are TimesRoman, pure
        black; the Date value is drawn at 12 (a few lines up), so the signatory is
        drawn at 12 too. The old size-11 override rendered a point smaller than the
@@ -279,7 +279,7 @@ const addrLine=(street,city,state,zip)=>{
        four potentials — which we had just taught to write "$76,918" — were worse
        still, being less parseable again.
 
-       Measured on two real filed schedules (Sample Property and Sample Property,
+       Measured on two real filed schedules (two sample properties,
        2025, 232 fields each, different preparers): every numeric value is stored
        RAW and carries a baked, FORMATTED appearance. Field 9 is "1147" and draws
        "1,147"; field 95 is "83135" and draws "$83,135"; field 97 is "0" and draws
@@ -348,7 +348,7 @@ const addrLine=(street,city,state,zip)=>{
     const _de=(g('rent_schedule.date_eff_ra')||g('rent_schedule.date_eff_custom')||g('rent_schedule.date_eff_rs')||g('rent_schedule.date_rents_effective'));
     const _dei=_toISO(_de);
     /* Both names, the way the executed copy prints them. app.js splits a slashed
-       Part A project name on the way IN - "Sample Property/Sample Property"
+       Part A project name on the way IN - "[Property Name]/[Alias]"
        becomes property.name plus tenant.property_alias - and only the first half
        was written back, so the one form HUD identifies the project by lost half
        its identity while the app was holding both values. The alias is consumed
@@ -381,7 +381,7 @@ const addrLine=(street,city,state,zip)=>{
        This loop used to clear all eight columns of all eleven rows, on the
        reasoning that "every unused row kept its zeros and the filing went out
        showing 0 units at $0 down the page". The live HUD form says otherwise, and
-       Matt's screenshot of it shows the rule: the blue cells are inputs and go
+       the owner's screenshot of it shows the rule: the blue cells are inputs and go
        blank, the white ones calculate and read 0 even when empty. Measured on the
        blank template, which agrees exactly — row 0 ships as
            "" "" "" "0" "" "0" "" "0"
@@ -401,11 +401,11 @@ const addrLine=(street,city,state,zip)=>{
        FORM, beside the box rather than inside it — which is why they read "0"
        where the four potentials below read "$0". */
     /* THE FOUR POTENTIALS CARRY A DOLLAR SIGN; THE PER-ROW COLUMNS DO NOT. Read off
-       Sample Property's own executed 2023 schedule: Col. 3 prints 1,061, Col. 4
+       a sample property's own executed 2023 schedule: Col. 3 prints 1,061, Col. 4
        33,952, Col. 5 129 and Col. 6 1,190 — all bare — while the four boxes
        underneath print $76,918, $923,016, $0 and $0. Ours printed all six bare, so
        the four totals were missing a character the form prints on every filed copy.
-       Matt found it by eye in a minute; the 34-property sweep could not see it at
+       The owner found it by eye in a minute; the 34-property sweep could not see it at
        all, because extract.js:96 and compare.js:68 strip `$` from BOTH sides before
        comparing. The comparator was built to compare figures and was blind to
        presentation, and nothing said so.
@@ -413,8 +413,8 @@ const addrLine=(street,city,state,zip)=>{
        Market rent potential prints $0 rather than blank. The earlier reasoning here
        — that we do not collect the market rents it sums, so a stated zero is a
        claim we cannot support — is wrong about this form: the filed copies print
-       $0, and Section 236 market rents are what the box is for. Matt's call, and
-       the executed copy agrees with him. */
+       $0, and Section 236 market rents are what the box is for. The owner's call, and
+       the executed copy agrees. */
     const dmoney=v=>'$'+money(v);
     let bannerRow=null;let ptU=0,ptC=0;   // totals of the rows actually printed
     plan.forEach((row,r)=>{ const base=7+r*8;
@@ -451,28 +451,28 @@ const addrLine=(street,city,state,zip)=>{
       /* Column 1 of Part A is the UNIT TYPE. Printing the use put "Manager's
          Unit" and "Superintendent" where the executed copies print "3 Bedroom"
          and "2 BR" — the use has its own column in Part D and does not belong
-         here twice. And the row's rent was never printed at all, so Oak
-         Center's manager's unit rented at $1,728 fell out of Col. 4 and out of
+         here twice. And the row's rent was never printed at all, so one
+         property's manager's unit rented at $1,728 fell out of Col. 4 and out of
          the monthly potential: 277,700 where the filed schedule foots 279,428.
          A non-revenue unit still occupies the building and still extends. */
       /* The rent is deliberately NOT printed here, and that is a decision with
-         evidence behind it. Printing it fixed Oak Center exactly -- 277,700 became
+         evidence behind it. Printing it fixed that property exactly -- 277,700 became
          the filed 279,428 -- and broke two others, because the figure we hold is
-         not the figure the schedule shows: Ebony's non-revenue unit rents at $0
-         and we store 3,700, Morh's is 5,100 for the new term and we store last
-         year's 4,763. On Morh the unit also occupies a units.* row already, so
+         not the figure the schedule shows: one property's non-revenue unit rents at $0
+         and we store 3,700, another's is 5,100 for the new term and we store last
+         year's 4,763. On that second property the unit also occupies a units.* row already, so
          adding it a second time double-counts. A wrong rent in Column 3 of a
          federal form is no better than a missing one, so until nonrev.<i>.rent
          is trustworthy this row prints its type and its count and stops. */
       else { const nn=nmv(g('nonrev.'+i+'.num_units'))||1;
         const nrType=utype(g('nonrev.'+i+'.br'),g('nonrev.'+i+'.ba'));
-        /* COLUMNS 3 AND 5 STATE A ZERO. Matt, 2026-07-30, and it settles the
+        /* COLUMNS 3 AND 5 STATE A ZERO. The owner, 2026-07-30, and it settles the
            dilemma the comment above spent three properties on: the question was
            never which rent to print here, it was that a non-revenue unit earns no
            CONTRACT RENT and carries no ALLOWANCE. Zero is not a guess about the
            document, it is the fact about the unit — which is why it is safe where
-           printing nonrev.<i>.rent was not (Ebony's rents at $0 and we store
-           3,700; Morh's is 5,100 for the new term and we store last year's 4,763).
+           printing nonrev.<i>.rent was not (one property's rents at $0 and we store
+           3,700; another's is 5,100 for the new term and we store last year's 4,763).
            Blank left a reader to wonder whether the figure was withheld. */
         T(base, nrType||g('nonrev.'+i+'.use')); T(base+1,nn); T(base+2,'0'); T(base+4,'0'); ptU+=nn; }
     });
@@ -530,7 +530,7 @@ const addrLine=(street,city,state,zip)=>{
     const dUse=[159,162,165,168,171],dType=[160,163,166,169,172],dRent=[161,164,167,170,173]; let dr=0,trl=0;
     /* PART D COLUMN 3 IS THE CONTRACT RENT FOR THE TERM BEING FILED, so it is the
        PROPOSED rent for that unit type — not the rent the unit carried last term.
-       Matt, 2026-07-30: Sample Property's leasing office printed 1,147, which is
+       The owner, 2026-07-30: a sample property's leasing office printed 1,147, which is
        the figure read off the EXECUTED schedule, where the filing states 1,850.
        nonrev.<i>.rent holds what the prior schedule said; the proposed figure for
        the same bedroom/bath type lives on its units.<j> row, so that is where this
@@ -558,9 +558,9 @@ const addrLine=(street,city,state,zip)=>{
        Checked against the filed copies before changing, because a filed schedule
        that printed it blank would have outranked the blank template. None does.
        Every field-complete 92458 available carries "0" here when Part D is empty —
-       Sample Property 2025 (unsigned), Sample Property eff. 08.01.25 (unsigned), and the
+       one sample property's 2025 schedule (unsigned), another's effective 08.01.25 (unsigned), and the
        blank package copy "05. [Property Name] - Draft Rent Schedule.pdf" — while
-       Sample Property, the one WITH a Part D row, carries its sum, 1147. No
+       a third, the one WITH a Part D row, carries its sum, 1147. No
        counterexample, so the blank was ours alone.
 
        The dollar sign a reader sees beside this box is PRINTED ON THE FORM, not in

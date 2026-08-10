@@ -244,13 +244,14 @@ function makeSupabaseDb(client) {
      that remembers it, and three routes never did: creating a property with no
      name and naming it afterwards, renaming one onto a name already taken, and
      a plain save of property.name — which is exactly what applying an executed
-     schedule's parse does. The live record grew three "Sample Property"s and three
-     "Sample Property"s with that dialog check in place the whole time.
+     schedule's parse does. The live record grew three duplicates of one sample
+     property and three of another with that dialog check in place the whole
+     time.
 
      So the rule lives in the data layer and the dialog keeps the courtesy:
      callers that ask first still open the existing profile and never see this
-     throw. Case- and space-insensitive, because "Sample Property" and "beacon
-     hill " are the same building. */
+     throw. Case- and space-insensitive, because "Sample Property" and "sample
+     property " are the same building. */
   const nameKey = s => String(s == null ? '' : s).trim().toLowerCase();
   const propByName = (name, skipPid) => {
     const k = nameKey(name); if (!k) return null;
@@ -278,7 +279,7 @@ function makeSupabaseDb(client) {
      write was never guarded at all. The collision is gone because the second row
      is.
 
-     Sample Property (90111) is untouched: its two 2026 OCAFs are two DATES
+     A sample property (90111) is untouched: its two 2026 OCAFs are two DATES
      (09-01 and 12-06). The rule is per date, never per year.
 
      Undated packages are not guarded — there is no key to be unique against.
@@ -379,7 +380,7 @@ function makeSupabaseDb(client) {
   /* Scored for ONE package, not for the property. The launcher lists every package
      a property has and each is at a different point; scoring only the dominant
      cycle left the rest with nothing to say but "Draft", which is not a fact about
-     how far along anything is. Matt: "the generated tag tells you NOTHING." Same
+     how far along anything is. The owner: "the generated tag tells you NOTHING." Same
      arithmetic, same tables, one argument more. */
   function scoreOfCycle(pid, cid) {
     const p = D.props[pid]; if (!p || !SCORE) return { pct: 0, gate: 'profile', docsReady: 0, docsTotal: 0 };
@@ -462,7 +463,7 @@ function makeSupabaseDb(client) {
     || /^units\.\d+\.(ua|safmr|num|type)_reviewed$/.test(k)
     || /^units\.\d+\.uac_[a-z]+$/.test(k)
     || /^check\.\d+$/.test(k)
-    /* The appraiser no longer carries (Matt, 2026-08-05, reversing 2026-07-30).
+    /* The appraiser no longer carries (the owner, 2026-08-05, reversing 2026-07-30).
        It is re-read from the study each cycle. A stale appraiser name on the
        transmittal letter is exactly the silent wrong a fresh study corrects; the
        firm coming back is a five-field re-entry, not a licence to guess. */

@@ -4,9 +4,9 @@
    program it is, and whose property it is. This file turns that into something
    the app can navigate by. It reads; it never writes back.
 
-   WHY THIS FILE IS SO FORGIVING. The integration happens on Michael the RA integrator's
-   machine, and we will not see his container until we are standing at it. Any
-   shape we agree today is a shape he has to hit blind. So the contract is the
+   WHY THIS FILE IS SO FORGIVING. The integration happens on the RA integrator's
+   machine, and we will not see their container until we are standing at it. Any
+   shape we agree today is a shape they have to hit blind. So the contract is the
    smallest one there is — hand us rows, in whatever form you have them — and
    every accommodation lives here: column names are matched by meaning rather
    than spelling, dates are accepted in six formats, and a row that cannot be
@@ -251,7 +251,7 @@
      because a data module that owns copy is a data module nobody can restyle.
 
      It lives here and not in app.js so it can be held to the real 2853-row
-     corpus in node, where Bastrop, Sample Property and Sample Property already are; and
+     corpus in node, where several of its named properties already are; and
      because a second copy in app.js would be one rule with two implementations,
      which is the shape CLAUDE.md's parity warning is about. hap.js stays
      read-only: cycles arrive as an argument. */
@@ -261,22 +261,22 @@
      renews. Measured against the export, that is wrong as a blanket rule:
 
        · a mid-schedule EXPIRES — one with a startable row after it — is an
-         option-term boundary and occurs on exactly four properties (Crossroads
-         of Shoreview 75948, Roosevelt 90020, Sample Property 90030, Luther
-         Towers 90111). There the contract carries on and the row is stepped over.
+         option-term boundary and occurs on exactly four properties (codes
+         75948, 90020, 90030 and 90111). There the contract carries on and the
+         row is stepped over.
        · a schedule that ENDS on an EXPIRES is 125 properties, and its date
          matches the Contract Exp column: 122 of the 125 agree within a year
-         either way. Sample Property expires 2029-06-26 against a contract ending
-         2029-06-30; Greenacres 2027-10-01 against 2027-09-30.
+         either way. One property expires 2029-06-26 against a contract ending
+         2029-06-30; another expires 2027-10-01 against 2027-09-30.
        · the horizon theory fails on the distribution besides. Properties whose
          last row is startable pile up at the export's edge — 99 of 103 in 2039
          or 2040 — while terminal-EXPIRES years spread evenly from 2027 to 2040.
          The tracker stops on purpose.
 
      Three properties are the exception, their contract running two years or more
-     past the EXPIRES row: Sample Property (75444), Sample Property (79612)
-     and Sample Property (90063) — the one the original design generalised from. That is
-     a gap in the schedule, not an expiry, and it is said differently.
+     past the EXPIRES row (codes 75444, 79612 and 90063) — the last of which is
+     the one the original design generalised from. That is a gap in the
+     schedule, not an expiry, and it is said differently.
 
      Either way the property STAYS listed and is never rendered finished or
      retired: the tracker records a date, not an outcome, and whether a contract
@@ -334,7 +334,7 @@
     };
 
     /* Two startable rows in one calendar year means year+program cannot identify
-       a package. Sample Property (90111) is the only one of the 249 with that
+       a package. One property (code 90111) is the only one of the 249 with that
        shape — OCAF 2026-09-01 and OCAF 2026-12-06, same label, same program — so
        the loose match is switched off for exactly it, and the September package
        cannot be mistaken for the December one. */
@@ -388,7 +388,7 @@
 
   /* ---- the seam -------------------------------------------------------- */
 
-  /* the RA integrator sets window.HAPSource. Everything below is accepted, because being
+  /* The RA integrator sets window.HAPSource. Everything below is accepted, because being
      particular about the handshake is how an on-site integration turns into a
      debugging session:
          an array of rows                         window.HAPSource = [...]

@@ -839,7 +839,7 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
 #viewMenu .mgrid.rows .pcard[data-band="now"]{box-shadow:inset 3px 0 0 var(--stamp)}
 #viewMenu .mgrid.rows .pcard[data-band="now"] .pc-due{color:var(--stamp);font-weight:600}
 /* Past due carries the SAME quiet rule as everything further out, not an alarm.
-   Matt, on the earlier draft: "anything overdue has already been completed" —
+   The owner, on the earlier draft: "anything overdue has already been completed" —
    the tracker records the deadline, not the filing. What separates the two sides
    of today is the today-line, which is positional and needs no colour. */
 /* Blue is what is COMING UP. It was on the behind-the-line rows too, which made two
@@ -1008,7 +1008,7 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
 #viewMenu .mgrid.rows .pcard:hover .pc-act .btn:not(:disabled){color:#fff;
   border-color:#1c3247;background:#1c3247;box-shadow:0 2px 6px rgba(16,29,43,.35);transform:translateY(-1px)}
 #viewMenu .mgrid.rows .pc-act .btn:hover:not(:disabled){border-color:#1c3247;background:#1c3247;color:#fff;box-shadow:0 2px 6px rgba(16,29,43,.35);transform:translateY(-1px)}
-/* "make that an actual button" — Matt, of the ledger's hover-only affordance.
+/* "make that an actual button" — the owner, of the ledger's hover-only affordance.
    The live panel that used to carry a solid slab is gone, so the emphasis moves
    onto the rows themselves: everything from today back to the start of the
    schedule reads as pressable AT REST and fills in on hover. Rows further out

@@ -1,24 +1,24 @@
 # RA port (the RA integrator / Azure) — the anchor contract
 
-the RA integrator's integration (received back 2026-07-16, reference copy in
-`_archive/the RA integrator/ra-port-2026-07-16/`, kept out of git) treats this folder's
-sources as **pristine** — he never edits them. His `build-ra.py` concatenates
+The RA integrator's port (received back 2026-07-16, reference copy in
+`_archive/ra-integrator/ra-port-2026-07-16/`, kept out of git) treats this folder's
+sources as **pristine** — the RA integrator never edits them. Their `build-ra.py` concatenates
 them and applies **assert-guarded, in-memory patches** to swap the backend:
 
 - drops `lib/supabase.min.js` + `config.js` + `db.supabase.js`, adds `db.cosmos.js`
 - patches `app.js`/`shell.head.html`: Supabase auth → App Service Easy Auth (Entra),
   `makeSupabaseDb` → `makeCosmosDb`, the HUD SAFMR edge function → `/api/hud-safmr`,
-  and wires our `window.RASource` seam to his AUM master registry
+  and wires our `window.RASource` seam to their AUM master registry
   (`aumIndex()`/`aumValue()` on the adapter — read-only; nothing writes back to AUM).
 
 Every patch asserts **exactly one match**, so if a seam string in our sources
-moves, his build fails loudly instead of silently shipping a broken port.
+moves, their build fails loudly instead of silently shipping a broken port.
 
 ## What this means for us (the contract)
 
 **`db.cosmos.js` and `build-ra.py` in this folder are the hand-back copies** —
 updated by us whenever our changes move an anchor, and included in every source
-drop we send him. They are NOT part of our own build (`build.sh`/`deliver.sh`
+drop we send them. They are NOT part of our own build (`build.sh`/`deliver.sh`
 ignore them; our app still builds and ships on Supabase, unchanged).
 
 **Post-edit gate** (add to the usual rebuild/NUL/syntax checks): after touching
@@ -82,8 +82,8 @@ JS (e.g. in comments) must be written double-backslashed in its anchor strings.
 
 ## Divergence status (2026-07-16)
 
-His returned sources = our commit `669f875` exactly (app.js/shell byte-identical;
+The RA integrator's returned sources = our commit `669f875` exactly (app.js/shell byte-identical;
 core/db/gen/xlsx/templates/tests identical to current). Our later commits
-(`616f863` Navigator sourcing UI, `d915338` menu restyle) are what his copy is
-missing — the updated `build-ra.py` here already targets them, so sending him
+(`616f863` Navigator sourcing UI, `d915338` menu restyle) are what their copy is
+missing — the updated `build-ra.py` here already targets them, so sending them
 the current folder + these two files is a complete, verified handoff.

@@ -11,8 +11,8 @@
    OCR bills per page, so the page list this module settles on is the bill.
 
    THE ONE FACT EVERYTHING RESTS ON: runs fragment mid-word. The letterhead
-   arrives as "BELFRY VA"+"LUATION"; a phone number as "("+"708"+") "+"500"+
-   "-"+"2380". Nothing may be matched against a single run. Everything matches
+   arrives as "SAMPLE VA"+"LUATION"; a phone number as "("+"555"+") "+"555"+
+   "-"+"0199". Nothing may be matched against a single run. Everything matches
    against an assembled line, and every anchor goes through norm() — because
    re-exporting the same document destroys word spacing, drops curly quotes,
    and shifts every y coordinate. Absolute y is never an anchor. */
@@ -28,7 +28,7 @@ function norm(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');}
 
    tol=5 is measured, not chosen. Two things sit off their own baseline: a
    small-caps capital rides ~2pt high ("AS IS" arrives at y=118.0 and 120.0),
-   and a superscript ordinal rides ~4pt high — Cornerstone writes "1132 24th
+   and a superscript ordinal rides ~4pt high — another appraisal firm writes "1132 24th
    Street" and the "th" lands on its own line, so the address read back as
    "1132 24 Street" with a stray "th" above it. Both merge at 5 (the widest observed is 4.04). Nothing real
    is closer than 7.7pt (the tightest grid row pitch), so 5 cannot weld two
@@ -54,8 +54,8 @@ function dec(s){const t=String(s==null?'':s).replace(/[^0-9.]/g,'');if(!t)return
 /* A page's whole text, normalized, for anchor testing. */
 function pageKey(runs){return lines(runs).map(function(l){return norm(l.text);}).join('|');}
 
-/* The transmittal letter names itself differently per firm: Belfry heads its
-   subject block "Market Rental Analysis", Cornerstone writes "Re: Rent
+/* The transmittal letter names itself differently per firm: one appraisal firm heads its
+   subject block "Market Rental Analysis", another writes "Re: Rent
    Comparability Study". Either opens a letter. */
 const LETTER_HEAD=/marketrentalanalysis|rerentcomparabilitystudy/;
 /* The tables, which may sit on the letter's first page or its second. */
@@ -70,7 +70,7 @@ const LETTER_SCAN_CAP=14;
 /* How many pages after the heading may still belong to the letter. */
 const LETTER_TAIL=2;
 /* A closing means the letter is over, so there is no next page to go looking
-   at. Belfry signs off "Sincerely / Taylor Reed / ... / Job No. 26-124". */
+   at. One appraisal firm signs off "Sincerely / Jordan M. Smith / ... / Job No. 26-124". */
 const LETTER_END=/sincerely|respectfullysubmitted|jobno/;
 /* PROBE ORDER, NOT PAGE ORDER. Measured over eight real documents the letter
    begins at index 1 in every standalone study and at 5 in a full renewal
@@ -160,9 +160,9 @@ function isoDate(t){
   return '';
 }
 
-/* THE MISLABELLED NUMBER. Belfry prints the Section 8 contract number under an
-   "FHA Project No." label — verified across five of its studies — and Fairview
-   labels the same thing "Section 8 Project Number". Cornerstone gets it right
+/* THE MISLABELLED NUMBER. One appraisal firm prints the Section 8 contract number under an
+   "FHA Project No." label — verified across five of its studies — and a sample property's
+   study labels the same thing "Section 8 Project Number". Another appraisal firm gets it right
    and says "Section 8 Contract #". All of them mean property.s8. None of them
    is ever written to property.fha, and "N/A" is not a value. */
 const S8_LABEL=/(?:fha\s*(?:project\s*)?(?:n[o0]\b|#)|section\s*8\s*(?:contract|project)\s*(?:number|no|#)?)\s*\.?\s*:?\s*#?\s*\[?\s*([A-Za-z0-9][A-Za-z0-9\-]{4,})/i;
@@ -175,8 +175,8 @@ function s8From(t){
   return v;
 }
 
-/* The sender block. Belfry stacks firm / street / city-state-zip / (P) / (E)
-   under the date; Cornerstone heads the page with its name and keeps its
+/* The sender block. One appraisal firm stacks firm / street / city-state-zip / (P) / (E)
+   under the date; another heads the page with its name and keeps its
    contact details on the title page instead. */
 const FIRMY=/valuation|appraisal|appraiser|associates|advisors|realty|consulting|group\b/i;
 function readSender(txt,S,window){
@@ -184,8 +184,8 @@ function readSender(txt,S,window){
   for(let i=0;i<Math.min(txt.length,window||8);i++){
     const t=txt[i];
     if(!FIRMY.test(t))continue;
-    /* An address is not a name. Sample Property's letter puts the appraiser's
-       e-mail on line 2, so FIRMY matched "(E) appraiser@example.com" - the
+    /* An address is not a name. A sample property's letter puts the appraiser's
+       e-mail on line 2, so FIRMY matched "(E) appraiser@samplevaluation.com" - the
        domain contains "valuation" - and appr.firm was stored as that whole
        string, which then went out on the owner cover letter's certifications.
        The title-page fallback declines to overwrite a firm it thinks it has, so
@@ -215,7 +215,7 @@ function readSender(txt,S,window){
 }
 
 /* The subject block: heading, then name, street, city/state/zip, and usually a
-   number. Belfry heads it "Market Rental Analysis", Cornerstone "Re: Rent
+   number. One appraisal firm heads it "Market Rental Analysis", another "Re: Rent
    Comparability Study" — same four lines under either. */
 function readSubject(txt,S,warn){
   const N=txt.map(norm);
@@ -223,8 +223,8 @@ function readSubject(txt,S,warn){
   for(let i=0;i<N.length;i++)if(LETTER_HEAD.test(N[i])){mi=i;break;}
   if(mi<0){warn.push('The letter has no subject heading, so the property could not be identified.');return;}
   let nm=(txt[mi+1]||'').trim();
-  /* Fairview writes the number inside the name: "Sample Property (Section 8
-     Project Number: NJ390013022)". Take the number, then drop the bracket. */
+  /* Some studies write the number inside the name: "[Property Name] (Section 8
+     Project Number: XX000000000)". Take the number, then drop the bracket. */
   const par=nm.match(/\(([^)]*)\)\s*$/);
   if(par){const v=s8From(par[1]);if(v)S['property.s8']=v;nm=nm.slice(0,par.index).trim();}
   if(nm)S['property.name']=nm.replace(/,\s*$/,'');
@@ -261,18 +261,17 @@ function readSignature(txt,S){
     if(FIRMY.test(t))continue;                     // the firm's own name, not the person who signed
     if(NAME_LINE.test(t)){S['appr.name']=t;return;}
     /* Two appraisers, side by side, on one printed line.
-       Belfry and Cornerstone both sign some letters in two columns, so the line
-       assembles as "Taylor Reed   Casey Doe" - six tokens where a name
+       One appraisal firm and another both sign some letters in two columns, so the line
+       assembles as "Jordan M. Smith   Casey A Doe" - six tokens where a name
        is two to four - and the pattern above rejects it. The lines that follow
        are then eaten by the license/certified/president/associate skips and the
        window runs out, so appr.name comes back empty. It is a requirement of the
-       OWNER COVER LETTER, so on Sample Property, Sample Property and Northgate
-       Terrace CA this alone withheld a document.
+       OWNER COVER LETTER, so on three properties in the corpus this alone withheld a document.
 
        Split down the MIDDLE, not at the first place that parses. Two columns hold
        one name each, so a balanced split is the one that reflects the layout -
-       and trying every split position instead would accept "Aaron M." from
-       "Aaron M. | Zabel Morgan Lane", which parses just as well and is not
+       and trying every split position instead would accept "Jordan M." from
+       "Jordan M. | Smith Morgan A. Lane", which parses just as well and is not
        a person. The lead appraiser signs on the left, which is the name the filed
        letters carry. */
     const tk=t.split(/\s+/), n=tk.length;
@@ -299,19 +298,19 @@ function readSignature(txt,S){
 
    1. THE SIGNATURE BLOCK, on a page the reader already holds. Three real
       studies name one:
-        Sample Property      "New Jersey Temporary Practice Permit / License No.: TP018-25"
-        Sample Property  "New Jersey Temporary Visiting" / "Practice Permit"
-        Sample Property      "CA Temporary Certified General Appraiser License No. 3012633-001"
-      Hampshire's is the reason this reads a TWO-LINE window and not a line:
+        Property A  "New Jersey Temporary Practice Permit / License No.: TP000-00"
+        Property B  "New Jersey Temporary Visiting" / "Practice Permit"
+        Property C  "CA Temporary Certified General Appraiser License No. 0000000-000"
+      Property B's is the reason this reads a TWO-LINE window and not a line:
       "Temporary Visiting" ends one line and "Practice Permit" begins the next,
       so a line-at-a-time test finds "temporary" with no "permit" beside it and
       reports nothing. Measured over all 31 studies the app can open, the window
-      fires on exactly Sample Property and Sample Property and nowhere else - and
+      fires on exactly Property A and Property B and nowhere else - and
       those are precisely the two whose FILED checklists tick the item.
 
    2. THE CERTIFICATION, Appendix 9-1-4 item 12: "Did you prepare the RCS under a
       temporary license? No". Eleven of the 34 studies print it; ten answer No and
-      Sample Property answers Yes. It sits 8 to 18 pages from the end, so the reader
+      Property C answers Yes. It sits 8 to 18 pages from the end, so the reader
       does not go looking for it - but when a page holding it is already in hand
       it is the appraiser's sworn answer and it is read.
 
@@ -335,7 +334,7 @@ function readChecklist(txt,S,warn){
        form - the exact fault this function exists to end. */
     if(/didyouprepare|ifsoattachacopy/.test(w))continue;
     /* "temporary" beside a TITLE, not beside any word starting "licen". A bare
-       co-occurrence is too loose: Sample Property's study says "units were
+       co-occurrence is too loose: Property C's study says "units were
        temporarily taken offline" in one place and "all required licenses,
        consents" in another, and two ordinary sentences must never tick a
        certification. What the three real signature blocks print is a title -
@@ -365,15 +364,15 @@ const WORDNUM={one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,te
    understood cost a rent. Measured across the 34-property corpus: 15 of 98
    priced unit lines in 7 studies returned no bedroom count, and a line with no
    bedroom count is invisible to rcsMatch -- so its row silently took a
-   DIFFERENT unit type's rent rather than none. Sample Property's schedule came
+   DIFFERENT unit type's rent rather than none. One property's schedule came
    out $2,550 short that way.
 
-     IBR/1BA      Sample Property, Sample Property, Sample Property  -- capital I, not 1
-     3B/1BA       Sample Property                            -- B alone
-     4B/2BA       Sample Property
-     1BD/1BA      North Park                                  -- BD
-     1-BR/1 BA    New Horizons                                -- hyphen separator
-     One-Bedroom  Sample Property                                 -- hyphen before the word
+     IBR/1BA      seen on three properties in the corpus       -- capital I, not 1
+     3B/1BA       seen on one property, alongside 4B/2BA below -- B alone
+     4B/2BA       same property as above
+     1BD/1BA      seen on another property                     -- BD
+     1-BR/1 BA    seen on another property                     -- hyphen separator
+     One-Bedroom  seen on another property                     -- hyphen before the word
 
    The bare B is the one that needs care: "1BA" must never read as one bedroom,
    so every bedroom token is followed by (?![a-z]) -- B before A fails, B before
@@ -397,24 +396,24 @@ function parseType(t){
 }
 
 /* The unit type is NOT one token and the grid flag is NOT always spaced off.
-   Lansing prints "1BR/1BA without patio 32 575 $1,190 $2.07 Y" — an ^(\S+)
+   A sample property's study prints "1BR/1BA without patio 32 575 $1,190 $2.07 Y" — an ^(\S+)
    type would capture "1BR/1BA" and collapse that row into its "with patio"
-   twin, losing a rent. Cornerstone prints "1 BR / 1 BA 31 818 $1,870 $2.29Y",
+   twin, losing a rent. Another appraisal firm prints "1 BR / 1 BA 31 818 $1,870 $2.29Y",
    the flag welded to the PSF. Hence a lazy type that stops at the first
    standalone integer, and \s* before the flag. */
-/* \s* between the type and the count, not \s+: Cornerstone's Sample Property welds
+/* \s* between the type and the count, not \s+: one study from another appraisal firm welds
    them — "1 BR / 1 BA30 537 $1,580 $2.94Y" is a 30-unit 1BR of 537 sq ft. The
    type is lazy, so the shortest reading that satisfies the whole row wins and
    "1 BR / 1 BA" is preferred over "1 BR / 1 BA3". */
 /* The concluded-rent row, and the only place most studies print the rent at all.
    Two ways it was being missed, both worth a package:
 
-   Sample Property writes the area with its unit -- "1BR/1BA 90 640 SF $2,000
+   One property's study writes the area with its unit -- "1BR/1BA 90 640 SF $2,000
    $3.13 Y" -- and the literal SF sat where the pattern expected the rent. BOTH
    of its rows failed, so its Column 3, Column 4, Column 6, both totals and Part F
    all printed blank against a study that says $2,000 and $2,400 in plain sight.
 
-   Circle Park's last row -- "3BR/1.5BA TH 58 1200 $4,675 $3.90" -- simply has no
+   Another property's last row -- "3BR/1.5BA TH 58 1200 $4,675 $3.90" -- simply has no
    Y in the PREPARED GRID column, though the grid exists later in the same
    document. Requiring that Y cost 58 units their rent: $271,150 a month.
 
@@ -428,7 +427,7 @@ const ROW_4C  =/^(.+?)\s*(\d+)\s+\$([\d,]+)\s+\$([\d,]+)\s*$/;                  
 /* The type with its bath count removed. Two rows that agree on everything but
    the bathroom are one unit type described twice; two rows that differ by a
    qualifier are genuinely two. */
-/* One study, one unit type, two spellings. North Park's transmittal table says
+/* One study, one unit type, two spellings. A sample property's transmittal table says
    1BD/1BA and its SAFMR and gross-renewal tables say 1BR/1BA -- the same four
    apartments written two ways -- so the roster keyed on the raw string found
    SEVEN unit types in a four-type property and printed three ghost rows. It also
@@ -437,17 +436,17 @@ const ROW_4C  =/^(.+?)\s*(\d+)\s+\$([\d,]+)\s+\$([\d,]+)\s*$/;                  
    document ended up with two different UA policies down one column.
 
    BD and BR both mean bedroom. Normalising them to one key is enough on its own,
-   and it cannot merge rows that a study means to keep apart -- Sample Property's
+   and it cannot merge rows that a study means to keep apart -- a sample property's
    "1BR/1BA with patio" and "without patio" stay two keys, because they differ by
    more than the letter. */
 function typeKey(t){return norm(String(t||'')).replace(/(\d)bd/g,'$1br');}
 function typeStem(t){return typeKey(String(t||'').replace(/\d+(?:\.\d+)?\s*(?:ba\b|bath[a-z]*)/ig,''));}
 
-/* Keyed on the FULL type string first, because Lansing prices "1BR/1BA without
+/* Keyed on the FULL type string first, because a sample property prices "1BR/1BA without
    patio" ($1,190) and "1BR/1BA with patio" ($1,200) as two separate rows and a
    bedrooms+baths key would merge them and lose a rent.
 
-   But a document also disagrees with ITSELF: Fairview's unit table says
+   But a document also disagrees with ITSELF: another sample property's unit table says
    "3BR/2BA" and both its rent tables say "3BR/1.5BA" — same 70 units, same
    $3,275, one unit type written two ways. Matched on the stem plus an
    identical unit count, that merges; "with patio" vs "without patio" does not,
@@ -456,7 +455,7 @@ function upsert(units,type,page,count){
   const k=typeKey(type);
   for(let i=0;i<units.length;i++)if(typeKey(units[i].type)===k)return units[i];
   /* A later table appends a designation the roster's own table did not carry.
-     Walden's conclusion prints "1BR/1BA (B)" and its comparison and gross-renewal
+     A sample property's conclusion prints "1BR/1BA (B)" and its comparison and gross-renewal
      tables print "1BR/1BA (B) Senior" -- the same thirty apartments -- so a ghost
      row appeared holding an allowance and a ceiling and no rent, because only the
      conclusion table states one. A name that extends an existing name, over the
@@ -489,13 +488,13 @@ function upsert(units,type,page,count){
 /* A SAFMR row must never CREATE a unit type. HUD publishes the small-area FMR
    per BEDROOM COUNT, so that table names sizes ("2BR") where the concluded-rent
    table names unit types ("2BR/1BA TH"). Routed through upsert(), the mismatch
-   appended three phantom rows to Northcross — a three-type property the app then
+   appended three phantom rows to a sample property — a three-type property the app then
    read as having six, each phantom carrying a SAFMR and no units and no rent.
 
    Attach to what the roster already has: the exact type, else the stem, else
    EVERY row with that bedroom count. The last of those is not a fallback but the
    right answer — when two unit types share a size they share a SAFMR, which is
-   how Circle Park's flat and townhouse rows both come to be priced against the
+   how a sample property's flat and townhouse rows both come to be priced against the
    same ceiling. If nothing matches, the figure is dropped rather than invented. */
 function applySafmrBase(units,type,base){
   const k=typeKey(type),stem=typeStem(type),br=parseType(type).br;
@@ -587,7 +586,7 @@ async function readLetter(rd){
     readChecklist(held,S,warn); }
   perPage.forEach(function(x){readTables(x.txt,x.pi,units,totals,seen);});
 
-  /* Cornerstone keeps its address, telephone and e-mail on the title page
+  /* Another appraisal firm keeps its address, telephone and e-mail on the title page
      rather than in the letter. One extra page, and ONLY when something is
      actually missing — never as a matter of course. */
   if((!S['appr.email']||!S['appr.phone']||!S['appr.addr_street'])&&rd.pageCount>0){
@@ -608,14 +607,14 @@ async function readLetter(rd){
   });
   /* The 150% ceiling.
 
-     Where the study prints it (Belfry does, per unit type) it is read, and
+     Where the study prints it (one appraisal firm does, per unit type) it is read, and
      checked against the SAFMR the same study printed — 1.5x, exactly, on all
      nine unit types across five studies.
 
-     Where the study prints only a total (Cornerstone does) the per-type
+     Where the study prints only a total (another appraisal firm does) the per-type
      ceiling is DERIVED from the base. That is not the parser inventing a
      figure: 150% of SAFMR is arithmetic fixed by Chapter Nine, the app already
-     stores round(1.5 x base) for the HUD pull in safmr_hud, and Cornerstone
+     stores round(1.5 x base) for the HUD pull in safmr_hud, and that firm
      performs the same multiplication itself at the total level. The flag says
      it was derived so the cell can be honest about where it came from. */
   units.forEach(function(u){

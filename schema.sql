@@ -93,10 +93,10 @@ create index property_owner_idx on public.property(owner_id);
 -- layer (assertNameFree in db.js / db.supabase.js / db.cosmos.js), but the app
 -- is not the only thing that can write here: a second client, a direct insert,
 -- or the next adapter would all be free to make a twin. The live record grew
--- three "Sample Property"s and three "Sample Property"s while the only check lived
--- in a dialog, so the constraint belongs where the rows do.
+-- three copies of one sample property and three of another while the only
+-- check lived in a dialog, so the constraint belongs where the rows do.
 --
--- NOT YET APPLIED TO THE LIVE DATABASE (project plgegtosqwehriqecaui): creating
+-- NOT YET APPLIED TO THE LIVE DATABASE: creating
 -- it fails while those duplicate rows exist. Give the twins distinct names
 -- first — renaming them in the app is enough, and no row need be deleted — then
 -- run this statement once. A fresh database gets it from this file.

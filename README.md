@@ -13,7 +13,7 @@ registration is closed)
 
 | # | Document | How |
 |---|----------|-----|
-| 01 | Cover letter to the Contract Administrator | Composed from scratch (pdf-lib), Related letterhead |
+| 01 | Cover letter to the Contract Administrator | Composed from scratch (pdf-lib), platform letterhead |
 | 02 | Owner cover letter (10 certifications) | Composed from scratch |
 | 03 | Owner's checklist | HUD template PDF, AcroForm fill |
 | 04 | RCS report | User-uploaded PDF, passed through |
@@ -60,7 +60,7 @@ app/full-mp/
   shell.head.html           HTML skeleton + all CSS + the four views
   config.js                 Supabase URL + anon (public) key
   core.js                   keyed-cell store: save/revert/override semantics
-  db.js                     pure helpers + legacy localStorage data layer (kept for tests)
+  db.js                     pure helpers + localStorage data layer (reference stand-in)
   db.supabase.js            Supabase data layer (drop-in adapter)
   app.js                    the whole UI: menu, launcher, form, contacts, generation
   gen.js                    PDF generation (pure: record → bytes)
@@ -68,11 +68,10 @@ app/full-mp/
   templates.js              base64 PDF templates (large — do not open in an editor)
   lib/                      vendored pdf-lib + supabase-js
   build.sh                  concatenate source → index.html
-  deliver.sh                build + syntax checks + tests (requires Node)
-  test_db.js, test_interactions.js, smoke_combined.js
-supabase/functions/hud-safmr/index.ts   HUD SAFMR edge function
+  build-ra.py               RA-integration build (patches source via anchor strings)
+  RA-PORT.md                RA-integration wiring guide (data-layer contract + anchors)
+supabase/functions/         edge functions (HUD SAFMR, OCR)
 schema.sql                  full database DDL + RLS
-HANDOFF-NAVIGATOR.md        integration guide (written for an AI/engineer)
 ```
 
 ## Running it
@@ -83,19 +82,18 @@ HANDOFF-NAVIGATOR.md        integration guide (written for an AI/engineer)
   `hud-safmr` function with a HUD USER API token in Vault, and point
   `app/full-mp/config.js` at your project URL + anon key, then rebuild.
 - **Rebuild after editing source**: `bash app/full-mp/build.sh` (writes
-  `index.html` at the repo root). With Node available, `bash
-  app/full-mp/deliver.sh` also runs the test suites.
+  `index.html` at the repo root).
 
 ## Private handoff extras (not in this repository)
 
 The privately-shared handoff package additionally contains `SECRETS.md` (the
-HUD USER API token and where it lives), `seed-data.sql` (Matt's real starting
-data: the Sample Property property and the shared contact directories), and
-the Sample Property letterhead PDF. Those files hold a live credential and
+HUD USER API token and where it lives), `seed-data.sql` (the owner's real
+starting data: a sample property and the shared contact directories), and
+that property's letterhead PDF. Those files hold a live credential and
 personal contact data — they are deliberately excluded from this public repo.
 
 ## Integrating into another system
 
-Read **`HANDOFF-NAVIGATOR.md`** — it documents the data model (flat-key
+Read **`app/full-mp/RA-PORT.md`** — it documents the data model (flat-key
 dictionary), the exact data-layer interface to implement against your own
 database, the generation pipeline, and the known sharp edges.

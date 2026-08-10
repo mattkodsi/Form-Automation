@@ -146,22 +146,22 @@ function computeSalutation(form) {
   return 'Dear ' + (prefix ? prefix + ' ' : '') + last;
 }
 
-/* ---- Riverside Gardens seed (the worked sample; also the first-run demo row) --- */
+/* ---- Sample-property seed (the worked sample; also the first-run demo row) --- */
 function gatesSeedFlat() {
   const f = {
     'property.name': 'Riverside Gardens Apartments',
-    'property.addr_street': '100 Main Street', 'property.addr_city': 'Wilmette',
-    'property.addr_state': 'IL', 'property.addr_zip': '60091', 'property.s8': 'IL00X000000',
-    'owner.entity_name': 'Riverside Gardens Preservation, L.P.', 'owner.entity_type': 'Limited Partnership',
-    'poc.name': 'Jordan Doe', 'poc.email': 'jdoe@example.com', 'poc.phone': '(929) 618-8405',
-    'owner.gp': 'Related (GP)', 'sig.name': 'Alex Morgan', 'sig.title': 'Vice President',
+    'property.addr_street': '100 Main Street', 'property.addr_city': 'Springfield',
+    'property.addr_state': 'IL', 'property.addr_zip': '00000', 'property.s8': 'IL00X000000',
+    'owner.entity_name': 'Example Preservation, L.P.', 'owner.entity_type': 'Limited Partnership',
+    'poc.name': 'Jordan Doe', 'poc.email': 'jdoe@example.com', 'poc.phone': '(555) 555-0100',
+    'owner.gp': 'Example GP', 'sig.name': 'Alex Morgan', 'sig.title': 'Vice President',
     /* Part G. The HUD-92458 does not ask for the principals, it instructs:
        "List all Principals Comprising Mortgagor Entity". This seed exists to be a
        record whose rent schedule CAN be written, so it has to carry one. */
     'principals.0.name': 'Alex Morgan', 'principals.0.title': 'Vice President',
     'ca.org': 'Regional Housing Agency', 'ca.prefix': 'Ms.', 'ca.name': 'Sam Rivera', 'ca.position': 'Asset Manager',
-    'ca.addr_street': '200 Center Street, Suite 310', 'ca.addr_city': 'Tucker', 'ca.addr_state': 'GA', 'ca.addr_zip': '30084-5860',
-    'appr.firm': 'Belfry Valuation', 'appr.name': 'Taylor Reed', 'appr.email': 'appraiser@example.com', 'appr.phone': '(708) 500-2380',
+    'ca.addr_street': '200 Center Street, Suite 100', 'ca.addr_city': 'Rivertown', 'ca.addr_state': 'GA', 'ca.addr_zip': '00000',
+    'appr.firm': 'Sample Valuation', 'appr.name': 'Taylor Reed', 'appr.email': 'appraiser@example.com', 'appr.phone': '(555) 555-0188',
     'units.0.br': '1BR', 'units.0.ba': '1BA', 'units.0.num_units': '51', 'units.0.current': '1903', 'units.0.proposed': '2725',
     'units.0.ua_exec': '31', 'units.0.ua_rcs': '31', 'units.0.ua_source': 'exec', 'units.0.ua_reviewed': '', 'units.0.ua_custom': '', 'rent_schedule.date_rents_effective': '2026-09-01', 'rent_schedule.date_eff_rs': '2026-09-01', 'rent_schedule.date_eff_source': 'rs', 'rent_schedule.date_eff_custom': '',
     'units.0.safmr_rcs': '3435', 'units.0.safmr_hud': '3495', 'units.0.safmr_source': 'hud', 'units.0.safmr_reviewed': '',
@@ -288,13 +288,14 @@ async function makeDb(adapter, opts) {
      that remembers it, and three routes never did: creating a property with no
      name and naming it afterwards, renaming one onto a name already taken, and
      a plain save of property.name — which is exactly what applying an executed
-     schedule's parse does. The live record grew three "Sample Property"s and three
-     "Sample Property"s with that dialog check in place the whole time.
+     schedule's parse does. The live record grew three duplicates of one sample
+     property and three of another with that dialog check in place the whole
+     time.
 
      So the rule lives in the data layer and the dialog keeps the courtesy:
      callers that ask first still open the existing profile and never see this
-     throw. Case- and space-insensitive, because "Sample Property" and "beacon
-     hill " are the same building. */
+     throw. Case- and space-insensitive, because "Sample Property" and "sample
+     property " are the same building. */
   const nameKey = s => String(s == null ? '' : s).trim().toLowerCase();
   const propByName = (name, skipPid) => {
     const k = nameKey(name); if (!k) return null;
@@ -333,7 +334,7 @@ async function makeDb(adapter, opts) {
   /* Scored for ONE package, not for the property. The launcher lists every package
      a property has and each is at a different point; scoring only the dominant
      cycle left the rest with nothing to say but "Draft", which is not a fact about
-     how far along anything is. Matt: "the generated tag tells you NOTHING." Same
+     how far along anything is. The owner: "the generated tag tells you NOTHING." Same
      arithmetic, same tables, one argument more. */
   function scoreOfCycle(pid, cid) {
     const p = D.props[pid]; if (!p || !SCORE) return { pct: 0, gate: 'profile', docsReady: 0, docsTotal: 0 };
@@ -404,7 +405,7 @@ async function makeDb(adapter, opts) {
     || /^units\.\d+\.(ua|safmr|num|type)_reviewed$/.test(k)
     || /^units\.\d+\.uac_[a-z]+$/.test(k)
     || /^check\.\d+$/.test(k)
-    /* The appraiser no longer carries (Matt, 2026-08-05, reversing 2026-07-30).
+    /* The appraiser no longer carries (the owner, 2026-08-05, reversing 2026-07-30).
        It is re-read from the study each cycle. A stale appraiser name on the
        transmittal letter is exactly the silent wrong a fresh study corrects; the
        firm coming back is a five-field re-entry, not a licence to guess. */
@@ -450,7 +451,7 @@ async function makeDb(adapter, opts) {
      write was never guarded at all. The collision is gone because the second row
      is.
 
-     Sample Property (90111) is untouched: its two 2026 OCAFs are two DATES
+     A sample property (90111) is untouched: its two 2026 OCAFs are two DATES
      (09-01 and 12-06). The rule is per date, never per year.
 
      Undated packages are not guarded — there is no key to be unique against.
@@ -591,7 +592,7 @@ async function makeDb(adapter, opts) {
   /** One property's headline analysis, for the launcher summary. */
   function propertyAnalysis(pid) { const domId = dominantCycleId(pid); if (domId) return cycleAnalysisOf(domId); return computeAnalysis(loadForm(pid)); }
 
-  if (_needSeed) { if (opts.seed !== false) { seedGates(); D.meta.contacts = [{ id: 'k1', name: 'Jordan Doe', email: 'jdoe@example.com', phone: '(929) 618-8405' }]; } await adapter.set(D); }
+  if (_needSeed) { if (opts.seed !== false) { seedGates(); D.meta.contacts = [{ id: 'k1', name: 'Jordan Doe', email: 'jdoe@example.com', phone: '(555) 555-0100' }]; } await adapter.set(D); }
   else if (opts && opts.persistMigration !== false) { await adapter.set(D); }
 
   return {

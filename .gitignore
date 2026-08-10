@@ -8,7 +8,6 @@ navigator-mock-handoff.zip
 # local tooling — Claude Code settings + worktrees, never product code
 .claude/
 .DS_Store
-_archive/the RA integrator/ra-port-2026-07-16/
 
 # browser-session console logs from local tooling — never a deliverable
 .playwright-mcp/
@@ -22,3 +21,35 @@ _archive/corpus-cache/
 # rendered screenshots from `node app/full-mp/shots.js` — derived from the
 # build on every run, and binaries never belong in this repo
 app/full-mp/_shots/
+
+# --- privacy cleanup (2026-08): keep locally, never commit ---
+# handoffs, planning notes, project guide, real-data samples
+SESSION-HANDOFF-*.md
+To-Do List.md
+Revisions.md
+PLAN-NEXT.md
+CYCLES-OCAF-UAF-DESIGN.md
+CLAUDE.md
+ACCEPTANCE-*.pdf
+# design docs, research, archived real data (whole trees)
+docs/
+_archive/
+Reference & Research/
+.interface-design/
+# dev-only: test suite + fixtures + engineering docs (hold real data)
+app/full-mp/test_*.js
+app/full-mp/smoke_combined.js
+app/full-mp/shots.js
+app/full-mp/cdplib.js
+app/full-mp/run_tests.sh
+app/full-mp/deliver.sh
+app/full-mp/fixture_*.json
+app/full-mp/corpus/
+app/full-mp/AUDIT-BACKLOG.md
+app/full-mp/CELL-MODEL.md
+app/full-mp/DOC-REQUIREMENTS.md
+app/full-mp/FORM-RULES.md
+
+# audit campaign notes — real property ground-truth data, never commit
+_audit/
+unitrows-after.png

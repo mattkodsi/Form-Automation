@@ -150,7 +150,7 @@ function docReqs(read,ctx,id){
     /* Part G of the HUD-92458 does not ask, it instructs: "List all Principals
        Comprising Mortgagor Entity: provide name and title of each principal."
        A schedule filed with that block empty is an incomplete federal form, so
-       this is a blocker and not a caveat. Matt, 2026-08-06. */
+       this is a blocker and not a caveat. The owner, 2026-08-06. */
     add('principals.0.name','at least one principal (Part G)',12,
       (ctx.principals||[0]).some(i=>hasReal(read,'principals.'+i+'.name')));}
   if(id==='ocafws'||id==='exhibita'||id==='dsevid'){

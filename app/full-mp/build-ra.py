@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """build-ra.py — build rcs.html (RA/Azure port) from the intern's sources.
 
-2026-07-16 update (owner): the intern sources now include the external-source
+2026-07-16 update (the owner): the intern sources now include the external-source
 UI natively (per-cell source dropdowns + closest-match create combobox behind
 a window.RASource seam), and createProperty(name, pickedId) passes the picked
 registry id through natively. Patch 4 therefore shrinks to ONE step: supply
@@ -152,7 +152,7 @@ app = patch(app,
   await boot();
 });""",
     """window.addEventListener('DOMContentLoaded',async()=>{
-  /* RA port (2026-07-15i, Mike's call): ANY signed-in RA user goes straight
+  /* RA port (2026-07-15i, RA's call): ANY signed-in RA user goes straight
      into RCS — no module gate, no access panel. The App Service session
      already authenticated this request (server.js gates every *.html on the
      user/admin role), and the rcs-* API endpoints enforce the same

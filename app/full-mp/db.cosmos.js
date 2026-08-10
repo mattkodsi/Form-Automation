@@ -1,7 +1,7 @@
 /* db.cosmos.js — RA Platform (Cosmos DB) data layer for the RCS app.
    Drop-in replacement for makeSupabaseDb(client): same public method surface,
    so app.js/core.js/gen.js run unchanged. Written for the Azure port
-   (2026-07-15) per HANDOFF-owner §4 and RCS-Automation-Integration-REVIEW §4.
+   (2026-07-15) per the RA integration design notes.
 
    Model: ONE Cosmos document per property (container RcsProperties, pk /id):
      { id, type:'rcsProperty', raMasterId, created_at, updated_at,
@@ -90,13 +90,14 @@ function makeCosmosDb() {
      that remembers it, and three routes never did: creating a property with no
      name and naming it afterwards, renaming one onto a name already taken, and
      a plain save of property.name — which is exactly what applying an executed
-     schedule's parse does. The live record grew three "Sample Property"s and three
-     "Sample Property"s with that dialog check in place the whole time.
+     schedule's parse does. The live record grew three duplicates of one sample
+     property and three of another with that dialog check in place the whole
+     time.
 
      So the rule lives in the data layer and the dialog keeps the courtesy:
      callers that ask first still open the existing profile and never see this
-     throw. Case- and space-insensitive, because "Sample Property" and "beacon
-     hill " are the same building. */
+     throw. Case- and space-insensitive, because "Sample Property" and "sample
+     property " are the same building. */
   const nameKey = s => String(s == null ? '' : s).trim().toLowerCase();
   const propByName = (name, skipPid) => {
     const k = nameKey(name); if (!k) return null;
@@ -153,7 +154,7 @@ function makeCosmosDb() {
   }
 
   /* ---- per-property write serialization + push coalescing -----------------
-     (verbatim pattern from db.supabase.js — see HANDOFF-owner §4) */
+     (verbatim pattern from db.supabase.js — see the RA integration design notes) */
   const _q = {};
   function enqueue(pid, fn) { const prev = _q[pid] || Promise.resolve(); const next = prev.then(fn, fn); _q[pid] = next.catch(() => { }); return next; }
   const _pend = {};
