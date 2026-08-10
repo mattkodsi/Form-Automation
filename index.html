@@ -5461,11 +5461,11 @@ function defUaSrc(i){return uaHas('units.'+i+'.ua_rcs')?'rcs':(uaHas('units.'+i+
    appraiser has printed one in the document. */
 function defSafmrSrc(i){const h=numf(get('units.'+i+'.safmr_hud')),r=numf(get('units.'+i+'.safmr_rcs'));return r>0?'rcs':(h>0?'hud':'custom');}
 /* Flattened (2026-08-07): the utility allowance is ONE value now — units.N.ua_custom —
-   filled study-first by the parses (see the fill), overridable from the dropdown or by
+   filled schedule-first by the parses (see the fill), overridable from the dropdown or by
    typing, exactly like the contract rent beside it. No pointer, no shadow figures, no
-   conflict to resolve: the study's figure and the schedule's are two rows in the cell's
-   own dropdown, the same as the bedroom/bath and unit-count cells. The study-first
-   DEFAULT (which figure the fill writes) is preserved in the fill, not here. */
+   conflict to resolve: the schedule's figure and the study's are two rows in the cell's
+   own dropdown, the same as the bedroom/bath and unit-count cells. The schedule-first
+   DEFAULT (2026-08-10: the executed RS is the more reliable allowance) lives in the fill, not here. */
 function uaResolvedOf(i){return numf(get('units.'+i+'.ua_custom'));}
 /* A property with every utility owner-paid has a real $0 allowance. Testing
    >0 threw it away: the schedule's own $0 was unreadable and the RCS workbook's
@@ -5839,7 +5839,7 @@ function moneySrcRows(k){
   let m;
   if((m=k.match(/^units\.(\d+)\.current$/)))return [{tag:'Executed RS',val:rsUnit(+m[1],'rent')}];
   if((m=k.match(/^units\.(\d+)\.proposed$/)))return [{tag:'RCS report',val:rcsUnitVal(+m[1],'proposed')}];
-  if((m=k.match(/^units\.(\d+)\.ua_custom$/)))return [{tag:'RCS report',val:rcsUnitVal(+m[1],'ua')},{tag:'Executed RS',val:uaExecOffer(+m[1])}];   // UA flattened: the study (default) then the schedule; $0-safe via uaExecOffer
+  if((m=k.match(/^units\.(\d+)\.ua_custom$/)))return [{tag:'Executed RS',val:uaExecOffer(+m[1])},{tag:'RCS report',val:rcsUnitVal(+m[1],'ua')}];   // UA flattened: the schedule (default) then the study — RS-first; $0-safe via uaExecOffer
   if((m=k.match(/^units\.(\d+)\.safmr_custom$/)))return [{tag:'RCS report',val:rcsUnitVal(+m[1],'safmr')},{tag:'HUD API',val:safmrHudOffer(+m[1])}];   // SAFMR flattened: the study's ceiling (default) then the live HUD pull
   if(k==='rent_schedule.date_eff_custom')return [{tag:'Executed RS + 1 yr',val:dateEffRsOffer()}];   // date flattened: the schedule's date +1yr, offered live from the upload
   if(k==='ocaf.factor_custom'){const pub=get('ocaf.factor_pub');return [{tag:'Federal Register',val:pub?String(pub):null}];}   // OCAF flattened: the published factor is the one source (stored from the FR pull); the FY shows in the OCAF header
@@ -6129,10 +6129,10 @@ function migrateFlatCells(){const has=v=>v!==''&&v!=null;
   const seed=(ck,v,org,saKeys)=>{const sa=saKeys.map(k=>form[k]&&form[k].saved_at).find(Boolean)||null;
     form[ck]={value:String(v),source:'database',saved_at:sa,prior_value:null,prior_source:null,db_value:String(v),origin:org,pinned:false};};
   (UNITS||[]).forEach(function(i){
-    /* Utility allowance: study (ua_rcs) then schedule (ua_exec). */
+    /* Utility allowance: schedule (ua_exec) then study (ua_rcs) — RS-first, matching db.js. */
     { const ck='units.'+i+'.ua_custom',cc=form[ck];
       if(!(cc&&has(cc.value))){const ex=get('units.'+i+'.ua_exec'),rc=get('units.'+i+'.ua_rcs'),sr=get('units.'+i+'.ua_source');
-        if(has(ex)||has(rc)){const src=sr||(has(rc)?'rcs':'exec');const v=src==='rcs'?rc:ex;
+        if(has(ex)||has(rc)){const src=sr||(has(ex)?'exec':'rcs');const v=src==='rcs'?rc:ex;
           if(has(v))seed(ck,v,src==='rcs'?'rcs':'rs',['units.'+i+'.ua_exec','units.'+i+'.ua_rcs']);}} }
     /* 150% SAFMR: study (safmr_rcs) then HUD (safmr_hud). */
     { const ck='units.'+i+'.safmr_custom',cc=form[ck];
@@ -6901,7 +6901,7 @@ function rcsFillFromParsed(opts){
     if(!m.u)return;
     if(m.idx>=0)claimed.add(m.idx);
     if(m.u.proposed!=='')setk('units.'+i+'.proposed',m.u.proposed);
-    if(m.u.ua!==''&&m.u.ua!=null)put('units.'+i+'.ua_custom',m.u.ua);   // the study's allowance IS the value (study-first) — put, not setk, so it wins over the schedule; $0 is a real allowance
+    { const _uc=form['units.'+i+'.ua_custom']; if(!(_uc&&(_uc.pinned||_uc.origin==='rs'))&&m.u.ua!==''&&m.u.ua!=null)put('units.'+i+'.ua_custom',m.u.ua); }   // schedule-first for UA (2026-08-10): the study fills only where the schedule has not; put still protects a pinned figure; $0 is a real allowance
     if(m.u.safmr!==''&&m.u.safmr!=null)put('units.'+i+'.safmr_custom',m.u.safmr);   // the study's 150% ceiling IS the value (study-first) — put so it wins over the HUD pull
     /* What the STUDY says this row is. The form's own br/ba/num_units keep
        coming from the executed schedule; these sit beside them so the two can
@@ -6967,7 +6967,7 @@ function rcsFillFromParsed(opts){
     put('units.'+ni+'.br_rcs',_b);if(_a)put('units.'+ni+'.ba_rcs',_a);
     if(u.count!=='')put('units.'+ni+'.num_rcs',u.count);
     if(u.proposed!=='')put('units.'+ni+'.proposed',u.proposed);
-    if(u.ua!==''&&u.ua!=null)put('units.'+ni+'.ua_custom',u.ua);
+    { const _uc=form['units.'+ni+'.ua_custom']; if(!(_uc&&(_uc.pinned||_uc.origin==='rs'))&&u.ua!==''&&u.ua!=null)put('units.'+ni+'.ua_custom',u.ua); }   // schedule-first for UA: study fills only where the schedule has not
     if(u.safmr!==''&&u.safmr!=null)put('units.'+ni+'.safmr_custom',u.safmr);
     if(reuse<0)UNITS.push(ni);added.push(u.type||_b);
   });
@@ -7976,14 +7976,15 @@ function rsFillFromParsed(opts){const P=_rsUpload&&_rsUpload.parsed;if(!P)return
   P.principals.forEach((p,ix)=>{setk('principals.'+ix+'.name',p.name);setk('principals.'+ix+'.title',p.title);});
   P.units.forEach((u,ix)=>{const bb=rsParseUnitType(u.type);setk('units.'+ix+'.br',bb.br);setk('units.'+ix+'.ba',bb.ba);setk('units.'+ix+'.label',bb.label);
     setk('units.'+ix+'.num_units',u.count);setk('units.'+ix+'.current',u.rent);
-    /* The schedule's allowance fills the one UA value — but the STUDY wins. Order
-       cannot decide it: the RCS fill writes ua_custom with origin 'rcs' and leaves it
-       unpinned; whichever file arrives first, once the study has filled this cell the
-       schedule defers to it. RS-first writes the schedule figure and the study's later
-       fill overwrites it; RCS-first fills the study and this skips. $0 is a real
-       allowance (owner-paid utilities), so no >0 guard. */
-    { const _uak='units.'+ix+'.ua_custom',_c=form[_uak];
-      if(!(_c&&_c.origin==='rcs'&&!_c.pinned)&&u.ua!==''&&u.ua!=null)setk(_uak,u.ua); }});
+    /* Schedule-first for the UA (2026-08-10): the executed rent schedule is the more
+       reliable allowance. Any UAF adjustment made between this schedule and the study
+       also flows through this app and is validated there, so the study must not
+       outrank the schedule for UA. The schedule writes it here (setk still protects a
+       pinned figure); the RCS fill defers to an rs-origin cell. Order cannot decide it
+       — whichever file arrives first, the schedule holds the cell once it has filled
+       it. $0 is a real allowance (owner-paid utilities), so no >0 guard. */
+    { const _uak='units.'+ix+'.ua_custom';
+      if(u.ua!==''&&u.ua!=null)setk(_uak,u.ua); }});
   if(P.ns8&&P.ns8.length){form=store.editForm(form,'ns8.enabled','1');mark('ns8.enabled');
     P.ns8.forEach((u,ix)=>{const bb=rsParseUnitType(u.type);setk('ns8.'+ix+'.br',bb.br);setk('ns8.'+ix+'.ba',bb.ba);
       setk('ns8.'+ix+'.num_units',u.count);setk('ns8.'+ix+'.avg_rent',u.rent);});}
@@ -12006,7 +12007,7 @@ async function selftestSeed(){
     m['units.'+i+'.br']=u.br; m['units.'+i+'.ba']=u.ba; m['units.'+i+'.label']=u.label;
     m['units.'+i+'.num_units']=String(u.n);
     m['units.'+i+'.current']=String(u.cur); m['units.'+i+'.proposed']=String(u.pro);
-    m['units.'+i+'.ua_custom']=String(u.uaR!=null&&u.uaR!==''?u.uaR:u.ua);   // the one allowance value, study-first
+    m['units.'+i+'.ua_custom']=String(u.ua!=null&&u.ua!==''?u.ua:u.uaR);   // the one allowance value, schedule-first (RS)
     m['units.'+i+'.safmr_custom']=String(u.safmr);   // SAFMR flattened: the one 150% ceiling value
   });
   m['nonrev.0.br']='1BR'; m['nonrev.0.ba']='1BA'; m['nonrev.0.num_units']='1';
