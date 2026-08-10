@@ -1427,9 +1427,18 @@ function rsSigInto(outp,partH){
   if(!sig)for(let i=0;i<outp.principals.length;i++){const p=outp.principals[i];
     if(!p.title){const c=rsSigOf(p.name,known);if(c){sig=c;break;}}}
   if(!sig)return;
-  // whichever half of the form carried it, the signatory is not also a principal
+  // A Part G row is the signatory's own line misplaced from Part H ONLY when it is a BARE name
+  // (no title of its own) equal to the signatory. A row that carries a title — even one embedded
+  // in a "Name, Title of Principal" string, e.g. "David Pearson, Vice President of GP" — is a
+  // genuine principal who ALSO signed: split its name and title so it reads as a proper principal
+  // entry, and keep it. (Before 2026-08-10 such a row was deleted, so a signing principal vanished.)
   const same=(a,b)=>String(a||'').trim().toLowerCase()===String(b||'').trim().toLowerCase();
-  outp.principals=outp.principals.filter(p=>{if(p.title)return true;const c=rsSigOf(p.name);return !(c&&same(c.name,sig.name));});
+  outp.principals=outp.principals.map(p=>{
+    if(p.title)return p;
+    const c=rsSigOf(p.name,known);
+    if(c){const ci=p.name.indexOf(',');return {name:c.name,title:ci>=0?p.name.slice(ci+1).trim():(sig.title||'')};}
+    return p;
+  }).filter(p=>p.title||!same(p.name,sig.name));
   outp.scalars['sig.name']=sig.name;outp.scalars['sig.title']=sig.title;outp.scalars['sig.principal']=sig.principal;}
 function rsPrin(i,f){try{const p=_rsUpload&&_rsUpload.parsed&&_rsUpload.parsed.principals;const r=p&&p[i];const v=r&&r[f];return (v==null||v==='')?null:String(v);}catch(e){return null;}}
 function rsUnit(i,f){try{const u=_rsUpload&&_rsUpload.parsed&&_rsUpload.parsed.units;const r=u&&u[i];const v=r&&r[f];return (v==null||v===''||v===0)?null:String(v);}catch(e){return null;}}
@@ -1724,7 +1733,13 @@ function rcsFillKeys(){
   /* A key the schedule answers for is not one the study fills, so it is not one
      the study may claim a source badge on either (rule 15: an indicator
      computes, it never asserts). */
-  return ks.filter(function(k){if(rsOffers(k))return false;const r=rcsOf(k);return r!=null&&r!=='';});
+  return ks.filter(function(k){if(rsOffers(k))return false;const r=rcsOf(k);if(r==null||r==='')return false;
+    /* UA is RS-first (#4, 2026-08-10): the schedule answers for the allowance, so the study claims and
+       badges the ua_custom cell ONLY when its value actually came from the study. When the schedule — or
+       a saved RS choice — holds the cell, rcsTag is empty and the study must not claim it (over-claiming
+       it broke the "every filled key is rcsTag-covered" invariant, since RS-sourced values carry no RCS tag). */
+    if(/^units\.\d+\.ua_custom$/.test(k)&&rcsTag(k)==='')return false;
+    return r!=null&&r!=='';});
 }
 function rcsFillFromParsed(opts){
   const P=_rcsUpload&&_rcsUpload.parsed;if(!P)return;
