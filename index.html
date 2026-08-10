@@ -5471,13 +5471,17 @@ function uaResolvedOf(i){return numf(get('units.'+i+'.ua_custom'));}
 function uaHas(k){const v=get(k);return v!==''&&v!=null;}
 function uaConflict(i){return false;}     // disagreement dropped — it is two dropdown rows now
 function uaUnresolved(i){return false;}
-/* HUD tests the 150% ceiling against the GROSS rent — contract rent plus the
-   utility allowance. The aggregate PASS/OVER and the figure printed on the
-   92458 always did; the per-unit chip, the over-ceiling counter and the
-   Section 6 pill compared the contract rent alone, so a unit type could show a
-   green tick on its own row while pushing the property over the ceiling. */
-function grossOf(i){return numf(get('units.'+i+'.proposed'))+uaResolvedOf(i);}
-function overCeiling(i){const r=safmrResolvedOf(i);return r>0&&numf(get('units.'+i+'.proposed'))>0&&grossOf(i)>=r;}
+/* Two 150% tests judge different figures — verified against the appraiser's filed
+   survey. The PER-UNIT test (the chip in safmrNote and the over-ceiling counter)
+   compares the proposed CONTRACT rent alone against that unit's 150% SAFMR: the
+   survey's per-unit "As Is" table excludes the utility allowance. The AGGREGATE
+   test (analysis()/computeAnalysis) compares the property's GROSS rent potential —
+   contract rent plus the allowance, summed over units — against the summed 150%
+   SAFMR ceiling. An earlier build made the per-unit chip gross too, which failed
+   unit types the survey passes (a 3BR at $4,675 < $4,695 rent, $4,742 gross);
+   db.js already judged the per-unit test rent-only, and app.js now matches it. */
+function grossOf(i){return numf(get('units.'+i+'.proposed'))+uaResolvedOf(i);}   // gross = rent + allowance; used only by the AGGREGATE gross-potential figures
+function overCeiling(i){const r=safmrResolvedOf(i);const pro=numf(get('units.'+i+'.proposed'));return r>0&&pro>0&&pro>=r;}   // per-unit: contract rent only (no allowance) — matches the survey and db.js
 /* Flattened (2026-08-07): the 150% ceiling is ONE value now — units.N.safmr_custom — filled
    study-first (the study's printed table, then the HUD pull) by the RCS parse and the HUD fetch,
    overridable from the dropdown or by typing. No pointer, no shadow figures, no conflict: the study's
@@ -6190,9 +6194,10 @@ function safmrBox(i){return moneyBox('units.'+i+'.safmr_custom',1);}   // a plai
 function safmrNote(i){const res=safmrResolvedOf(i);
   /* No conflict branch — the study's ceiling and HUD's are two dropdown rows now. This note is
      only the 150% test READOUT (pass/over) and the "needed for the 150% test" prompt. */
-  if(res>0){const pro=numf(get('units.'+i+'.proposed'));const gr=grossOf(i);const ok=gr<res;
-    // the figure shown is the one being judged: rent + allowance, as HUD compares it
-    if(pro>0)return '<div class="ucnote '+(ok?'ok':'warn')+'">'+(ok?'✓ ':'✗ ')+money(gr)+(ok?' < ':' ≥ ')+money(res)+' · 150% SAFMR'+(uaResolvedOf(i)>0?' (rent + UA)':'')+'</div>';return '<div class="ucnote ok">150% SAFMR $'+res.toLocaleString()+'</div>';}
+  if(res>0){const pro=numf(get('units.'+i+'.proposed'));const ok=pro<res;
+    // the figure judged is the proposed CONTRACT rent alone — the per-unit "As Is" 150%
+    // test excludes the allowance (which enters only the aggregate gross-potential test)
+    if(pro>0)return '<div class="ucnote '+(ok?'ok':'warn')+'">'+(ok?'✓ ':'✗ ')+money(pro)+(ok?' < ':' ≥ ')+money(res)+' · 150% SAFMR</div>';return '<div class="ucnote ok">150% SAFMR $'+res.toLocaleString()+'</div>';}
   /* Name what is missing, in the cell that is empty because of it. The pull is
      keyed to the PROPERTY's ZIP in section 2 — HUD's rents are per the building's
      own location — and an appraiser address filled in below is easy to read as
