@@ -8708,9 +8708,39 @@ function railPick(){
     const n=cards.length-T.k;
     const j=Math.min(n-1,Math.max(0,Math.floor((y-T.start)/(T.maxY-T.start)*n)));
     return +cards[T.k+j].getAttribute('data-sec');}
+  /* THE HANDOVER, and why the line alone was not enough. The line answers "the
+     last heading you scrolled past", and for most of this form that named the
+     PREVIOUS section: a card's final sliver tucked under the sticky chrome
+     holds the line while the next card fills the whole window below it. Matt,
+     2026-08-07, with three screenshots, one per boundary. Measured over the
+     whole document afterwards: 27 of 150 scroll positions named a card holding
+     less than a quarter of the window while another held more than half.
+
+     So the line picks the CANDIDATE, and then the reader's eye breaks the tie:
+     of the card you are leaving and the card you are entering, the one you can
+     see more of wins. No tuned threshold — whichever is bigger.
+
+     Two rules that were tried and are worse, both measured, both here so they
+     are not tried again:
+       · "whichever card fills most of the window", with no line at all. A
+         section SHORTER than the window can be flanked by two long ones that
+         each show more of themselves than it holds in total, so its row never
+         lights. Six of ten rows became unreachable.
+       · moving the line down to ~38% of the window. It fixes the sliver case
+         but breaks the opposite one: scroll a SHORT section's heading to the
+         top of the window and the line has already sunk past it into the next
+         card, so the rail disagrees with the heading under your eye. Six of
+         eight sections here are shorter than that offset.
+     Comparing the two candidates keeps the line at 88, so a heading brought to
+     the top still names its own section whatever that section's height. */
+  const h=window.innerHeight||(document.documentElement||{}).clientHeight||0;
+  const seen=cd=>{const r=cd.getBoundingClientRect();
+    return Math.max(0,Math.min(r.bottom,h)-Math.max(r.top,RAIL_LINE));};
   let above=null,below=null;
   for(let i=0;i<cards.length;i++){const r=cards[i].getBoundingClientRect();
-    if(r.top<=RAIL_LINE&&r.bottom>RAIL_LINE)return +cards[i].getAttribute('data-sec');
+    if(r.top<=RAIL_LINE&&r.bottom>RAIL_LINE){
+      const nx=cards[i+1];
+      return +((nx&&seen(nx)>seen(cards[i]))?nx:cards[i]).getAttribute('data-sec');}
     if(r.bottom<=RAIL_LINE)above=cards[i];else if(!below&&r.top>RAIL_LINE)below=cards[i];}
   const c=below||above;return c?+c.getAttribute('data-sec'):null;}
 function railSet(n){
@@ -12132,6 +12162,10 @@ __rcsFill:(opts)=>rcsFillFromParsed(opts),/* The same door for the rent schedule
   railPin:()=>_railPinSec,
   railBar:()=>{const b=el('railbar'),r=el('rail');if(!b||!r)return null;const bb=b.getBoundingClientRect(),rr=r.getBoundingClientRect();return {top:bb.top-rr.top,height:bb.height,opacity:+getComputedStyle(b).opacity};},
   railGoto:(n)=>railGoto(n),
+  /* Synchronous, for a sweep: railSync defers through rAF, so a loop that
+     scrolls and reads the DOM in one turn reads the PREVIOUS answer at every
+     step — a sweep built that way measures nothing and looks authoritative. */
+  railPickNow:()=>{railApply();return _railActive;},
   railLine:()=>RAIL_LINE,
   /* What the tail is, so a check can compute the expected answer near the foot
      of the page instead of hardcoding this file's arithmetic. */
