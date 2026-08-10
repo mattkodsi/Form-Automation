@@ -3458,7 +3458,15 @@ const WARNICON='<svg class="wicon" viewBox="0 0 24 24" aria-hidden="true">'
   +'<circle cx="12" cy="17.4" r="1.2" fill="currentColor"/></svg>';
 function chk(st,name,note){const ic=st==='warn'?WARNICON:(st==='info'?'ⓘ':'✓');const cl=st==='warn'?'warn':(st==='info'?'info':'ok');return `<div class="chk" data-st="${cl}"><span class="${cl}">${ic}</span><div><b>${name}</b><div class="sub">${note}</div></div></div>`;}
 
-function isStateKey(k){return /\.(ua_reviewed|safmr_reviewed|type_reviewed|num_reviewed|ua_custom|safmr_custom)$/.test(k)||k==='tenant.mgmt_source'||k==='poc.mode'||/^poc\.custom_/.test(k)||k==='rent_schedule.date_eff_source'||k==='rent_schedule.date_eff_custom'||k==='ocaf.factor_src'||k==='ocaf.factor_custom';}
+/* Keys that are NOT user-facing value cells and must never count as an unsaved
+   override. Besides the flattened *_custom value cells and the *_reviewed flags,
+   this covers the internal comparison SHADOWS the flatten left behind: the
+   study/schedule/HUD offers (ua_exec, ua_rcs, safmr_rcs, safmr_hud, br_rcs, ba_rcs,
+   num_rcs), the legacy source pointers (ua_source, safmr_source) and the date offers
+   (date_eff_rs, date_eff_ra, date_rents_effective). None of these render a cell, so an
+   'overridden' one used to count as a phantom "N unsaved override" with no amber cell
+   anywhere in the form (2026-08-10). isStateKey feeds overrideCount only. */
+function isStateKey(k){return /\.(ua_reviewed|safmr_reviewed|type_reviewed|num_reviewed|ua_custom|safmr_custom|ua_exec|ua_rcs|ua_source|safmr_rcs|safmr_hud|safmr_source|br_rcs|ba_rcs|num_rcs)$/.test(k)||k==='tenant.mgmt_source'||k==='poc.mode'||/^poc\.custom_/.test(k)||/^rent_schedule\.(date_eff_source|date_eff_custom|date_eff_rs|date_eff_ra|date_rents_effective)$/.test(k)||k==='ocaf.factor_src'||k==='ocaf.factor_custom';}
 function overrideCount(){const grouped=new Set();for(const b in ADDR_GROUPS)ADDR_GROUPS[b].forEach(k=>grouped.add(k));UNITS.forEach(i=>{grouped.add('units.'+i+'.br');grouped.add('units.'+i+'.ba');});
   for(let i=0;i<5;i++){grouped.add('partb.utilities.'+i);grouped.add('partb.fuel.'+i);}
   const wiBases=new Set();Object.keys(form).forEach(k=>{const m=k.match(/^partb\.writein\.([a-z0-9]+)(\.on|\.fuel)?$/);if(m){grouped.add(k);wiBases.add(m[1]);}});
