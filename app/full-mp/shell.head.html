@@ -670,6 +670,7 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surf
 .fbox.locked .lockv{flex:1;min-width:0;padding:9px 11px;font-size:14px;color:var(--ink);
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .fbox.locked .lockmk{flex:0 0 auto;width:13px;height:13px;color:var(--muted);cursor:help}
+.fbox.locked>.lockmk{margin-right:11px}   /* dialog lockedLine drops a bare glyph flush to the edge; give it the same right gap the form's .lockmkw wrapper already has (child combinator leaves the wrapped one untouched) */
 .fbox.locked .lockmkw{flex:0 0 auto;display:inline-flex;align-items:center;margin-right:11px;cursor:help}
 .mgmtswitch{color:var(--indigo);font-weight:600;cursor:pointer;font-size:10.5px;margin-left:6px}
 .mgmtph{color:var(--muted-4);font-style:italic}
@@ -2020,6 +2021,7 @@ body.scrolled #viewForm .rail{top:60px;max-height:calc(100vh - 78px)}
 #viewForm .uaopt.hl{background:var(--sunk);color:var(--ledger)}
 #viewForm .uasub{font-size:11px;color:var(--ink-3)}
 #viewForm .srctag{font-size:10.5px;color:var(--ink-3)}
+#viewForm .ucells .rbox .srctag,#viewForm .pdrow .rbox .srctag{margin-right:8px}   /* keep the ellipsised RS·RCS agreement badge clear of the source-dropdown caret in the narrow unit cells */
 #viewForm .uac-in,#viewForm .rbox input.uac-in,#viewForm .mgmt-in,#viewForm .ulab-in{
   color:var(--ink);border-bottom-color:var(--line-6)}
 #viewForm .uacustom{border-bottom-color:var(--kraft-line)}
