@@ -1111,7 +1111,11 @@ function refreshFlags(){const _si=sectionIssues();
   document.querySelectorAll('[data-pill]').forEach(p=>{const n=+p.getAttribute('data-pill');
     const st=sectionStatus(n,_si),L=PILL_LOOK[st]||PILL_LOOK.ok;
     p.className=L[0];p.textContent=L[1];
-    if(st==='cav')p.setAttribute('title',cavWhy(_si.cav[n]));else p.removeAttribute('title');});
+    if(st==='cav')p.setAttribute('title',cavWhy(_si.cav[n]));else p.removeAttribute('title');
+    /* keep the #3 section popover in step with the pill it hangs off (FORM-RULES 13) */
+    const gpw=p.closest('.gpw.secpill');
+    if(gpw){gpw.classList.toggle('haspop',st==='warn');
+      const pin=gpw.querySelector('[data-secpop]');if(pin)pin.innerHTML=secpopInner(n,st,_si);}});
   renderRail(_si);renderAttention();}
 function unitCard(i,pos){const trash=UNITS.length>1?`<button class="trash" data-delunit="${i}" title="Delete this unit type">✕</button>`:'';
   const _c=numf(get('units.'+i+'.current')),_p=numf(get('units.'+i+'.proposed'));const _d=_p-_c,_pc=_c>0?Math.round(_d/_c*100):0;
@@ -3132,10 +3136,26 @@ const PILL_LOOK={empty:['pill empty','not started'],warn:['pill warn','review'],
 function cavWhy(list){return (list&&list.length)
   ?('Ready to generate, but still missing: '+list.map(x=>x.label).join(', '))
   :'';}
+/* #3 (2026-08-10): the "review" pill carries a hover popover naming the required cells still
+   to fill in THIS section — the same list the generation tab shows, scoped by the `sec` that
+   score.js already tags each requirement with (sectionIssues groups them). Clicking one jumps
+   to the cell. When a section is warn for a reason that is not a missing cell (an unsaved
+   change or a value to resolve), the popover says so rather than opening empty. */
+function secpopInner(n,st,_si){
+  if(st!=='warn')return '';
+  const miss=_si.miss[n]||[];
+  return miss.length
+    ? '<div class="gpop-h">To finish this section</div><div class="gpop-l">'+miss.map(x=>gpf(x,'')).join('')+'</div>'
+    : '<div class="gpop-h">Needs review</div><div class="secpop-note">A change here isn’t saved yet, or a value needs resolving — see the amber cells below.</div>';}
 function sectionPill(n,_si){_si=_si||sectionIssues();
   const st=sectionStatus(n,_si),L=PILL_LOOK[st]||PILL_LOOK.ok;
   const t=(st==='cav')?(' title="'+esc(cavWhy(_si.cav[n]))+'"'):'';
-  return '<span class="'+L[0]+'" data-pill="'+n+'"'+t+'>'+L[1]+'</span>';}
+  /* Always wrapped, popover container always present, so refreshFlags can sync the mark and
+     the popover on every keystroke without rebuilding the structure; `haspop` gates the CSS
+     hover so only a review section opens one. */
+  return '<span class="gpw secpill'+(st==='warn'?' haspop':'')+'">'
+    +'<span class="'+L[0]+'" data-pill="'+n+'"'+t+'>'+L[1]+'</span>'
+    +'<div class="gpop secgpop"><div class="gpop-in" data-secpop="'+n+'">'+secpopInner(n,st,_si)+'</div></div></span>';}
 function card(n,pill,body){return `<div class="card" data-sec="${n}"><div class="chead"><span class="cnum">${_secPos[n]||n}</span><span class="ctitle">${SECTION_TITLES[n]}</span>${pill}<span class="chev">▾</span></div><div class="cbody">${body}</div></div>`;}
 
 
@@ -4105,6 +4125,14 @@ function srcEditKey(k,val){
   return true;
 }
 function wireBody(){
+  /* #3: section-popover chips (any [data-goto] rendered in the form body) jump to the cell.
+     Delegated on the stable #sections container so refreshFlags' popover innerHTML swaps do
+     not drop the handler, and guarded so renderBody does not stack duplicates. */
+  { const _sec=document.getElementById('sections');
+    if(_sec&&!_sec._gotoWired){_sec._gotoWired=true;
+      _sec.addEventListener('click',function(e){const b=e.target.closest('[data-goto]');if(!b||!_sec.contains(b))return;
+        e.preventDefault();e.stopPropagation();
+        gotoSection(+b.getAttribute('data-goto'),b.getAttribute('data-gotok')||'');});} }
   document.querySelectorAll('input[data-k]').forEach(inp=>{const k=inp.getAttribute('data-k'),wion=inp.getAttribute('data-wion');
     inp.addEventListener('input',()=>{pushCellUndo(k);let v=inp.value;if(inp.getAttribute('data-phone')){v=fmtPhoneInput(v);inp.value=v;}else if(inp.getAttribute('data-money')){v=cleanNum(v);inp.value=fmtMoney(v);}else if(inp.getAttribute('data-date')){
       /* Keep the caret where the reader left it. The mask lays the digits out

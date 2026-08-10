@@ -391,6 +391,14 @@ button.gdoc{justify-content:space-between}
    dialog reading as an accusation and starts it reading as an instruction. */
 .gpf-w{display:block;font-size:11px;color:var(--muted-2);margin-top:1px;line-height:1.35}
 .gpf-s .gpf-n{color:#a3855e;font-weight:600}
+/* #3: the section "review" pill's hover popover — reuses .gpop/.gpf, gated so only a review
+   section (.haspop) opens one, and kept to the right of the card header where the pill sits. */
+.secpill{margin-left:auto}
+.secpill>.pill{margin-left:0}
+.secpill:hover>.gpop,.secpill:focus-within>.gpop{display:none}
+.secpill.haspop:hover>.gpop,.secpill.haspop:focus-within>.gpop{display:block}
+.secgpop{width:300px}
+.secpop-note{font-size:12px;color:var(--muted-2);padding:2px 9px 5px;line-height:1.4}
 
 .cbody{padding:16px} /* grid-auto-flow:column is what lets renderFieldSection emit its cells column by
    column — the order Tab has to walk — while the rows go on sharing their
