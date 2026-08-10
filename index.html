@@ -12674,6 +12674,14 @@ function lines(runs,tol){
 }
 
 function money(s){const t=String(s==null?'':s).replace(/[^0-9.]/g,'');if(!t)return '';const n=parseFloat(t);return isFinite(n)?Math.round(n):'';}
+/* A study TOTAL can reach us split by an extractor-injected mid-number space ("$291,420" ->
+   "$2 91,420", since rsRuns turns a wide kerning gap into a space and its anti-split guard only
+   protects a digit-COMMA boundary). The total regexes below capture across single spaces
+   ((?:\s+[\d,]+)*); this de-spaces the capture, but ONLY when the result is one clean US-grouped
+   amount — so a total that happens to be followed by another number ("$291,420 12 units") falls
+   back to the first run and can never weld two separate figures into one. (2026-08-10) */
+function totMoney(cap){const flat=String(cap).replace(/\s+/g,'');
+  return /^\d{1,3}(,\d{3})*$|^\d+$/.test(flat)?money(flat):money((String(cap).match(/[\d,]+/)||[''])[0]);}
 function dec(s){const t=String(s==null?'':s).replace(/[^0-9.]/g,'');if(!t)return '';const n=parseFloat(t);return isFinite(n)?Math.round(n*100)/100:'';}
 
 /* A page's whole text, normalized, for anchor testing. */
@@ -12745,7 +12753,7 @@ async function findLetter(rd){
     if(LETTER_END.test(k))break;      // signed off: nothing after this is letter
   }
   /* The sign-off can sit on its OWN page after the tables, carrying no rent table of its own —
-     Oak Center's Belfry letter prints "Sincerely, / <names> / <credentials>" on a page with no
+     a Belfry letter prints "Sincerely, / <names> / <credentials>" on a page with no
      table, so the table-tail loop stops ON that page and never hands it to readSignature, and the
      appraiser's name goes unread (2026-08-10). That page is ALREADY read, so take it without another
      page read — but only on a real closing (sincerely / respectfully submitted), never on the bare
@@ -12891,7 +12899,7 @@ function readSignature(txt,S){
   /* Count NON-BLANK lines, not raw ones: a signed letter leaves a gap between "Sincerely,"
      and the printed name for the signature, and the size of that gap is a rendering accident
      of the scan/extraction. A raw six-line window let that gap push the name out of reach
-     (Oak Center's Belfry survey, 2026-08-10 — five blank lines parsed, six did not). */
+     (a Belfry survey, 2026-08-10 — five blank lines parsed, six did not). */
   for(let i=si+1,seen=0;i<txt.length&&seen<7;i++){
     const t=txt[i].trim();
     if(!t)continue;
@@ -12899,7 +12907,7 @@ function readSignature(txt,S){
     if(/license|certified|job\s*no|^[A-Z]{2,4}\/[A-Z]{2,4}$|president|associate|appraiser/i.test(t))continue;
     if(FIRMY.test(t))continue;                     // the firm's own name, not the person who signed
     if(NAME_LINE.test(t)){S['appr.name']=t;return;}
-    /* "Name, Title" on one printed line — the appraiser signs "Kyle L. Bjerke, Partner". Take the
+    /* "Name, Title" on one printed line — the appraiser signs "Riley T. Nguyen, Partner". Take the
        name before the comma when it reads as a person's (2-4 capitalised tokens); the title after
        it (Partner, President …) is not part of the name. Cornerstone signs this way (2026-08-10). */
     { const cm=t.match(/^([^,]+),\s*\S/); if(cm&&NAME_LINE.test(cm[1].trim())){S['appr.name']=cm[1].trim();return;} }
@@ -13156,12 +13164,12 @@ function readTables(txt,pi,units,totals,seen){
     if(n.indexOf('safmrgrossrenewalpotentialcalculation')>=0||n.indexOf('safmrgrossrentpotentialcalculation')>=0){section='safmr';return;}
     if(n.indexOf('grossrentpotentialcalculation')>=0){section='owner';return;}
     let m;
-    if((m=t.match(/total\s+gross\s+renewal\s+rent\s*:?\s*\$([\d,]+)/i))){totals.grossRenewal=money(m[1]);return;}
-    if((m=t.match(/total\s+(?:\d{4}\s+)?gross\s+(?:safmr|fmr)\s+rent\s*:?\s*\$([\d,]+)/i))){totals.grossSafmrBase=money(m[1]);return;}
-    if((m=t.match(/150%\s*of\s*(?:the\s*)?(?:safmr|fmr)\s+gross\s+rent[^$]*\$([\d,]+)/i))){totals.grossSafmr150=money(m[1]);return;}
-    if((m=t.match(/less\s+than\s+150%\s+of\s+the\s+safmr\s+gross\s+rent\s+potential\s+of\s+\$([\d,]+)/i))){if(totals.grossSafmr150==null)totals.grossSafmr150=money(m[1]);return;}
-    if((m=t.match(/^total\s*\$([\d,]+)/i))){if(totals.grossRenewal==null)totals.grossRenewal=money(m[1]);return;}
-    if((m=t.match(/subject.{0,3}s\s+concluded\s+gross\s+rent[^$]*\$([\d,]+)/i))){totals.grossRenewal=money(m[1]);return;}
+    if((m=t.match(/total\s+gross\s+renewal\s+rent\s*:?\s*\$([\d,]+(?:\s+[\d,]+)*)/i))){totals.grossRenewal=totMoney(m[1]);return;}
+    if((m=t.match(/total\s+(?:\d{4}\s+)?gross\s+(?:safmr|fmr)\s+rent\s*:?\s*\$([\d,]+(?:\s+[\d,]+)*)/i))){totals.grossSafmrBase=totMoney(m[1]);return;}
+    if((m=t.match(/150%\s*of\s*(?:the\s*)?(?:safmr|fmr)\s+gross\s+rent[^$]*\$([\d,]+(?:\s+[\d,]+)*)/i))){totals.grossSafmr150=totMoney(m[1]);return;}
+    if((m=t.match(/less\s+than\s+150%\s+of\s+the\s+safmr\s+gross\s+rent\s+potential\s+of\s+\$([\d,]+(?:\s+[\d,]+)*)/i))){if(totals.grossSafmr150==null)totals.grossSafmr150=totMoney(m[1]);return;}
+    if((m=t.match(/^total\s*\$([\d,]+(?:\s+[\d,]+)*)/i))){if(totals.grossRenewal==null)totals.grossRenewal=totMoney(m[1]);return;}
+    if((m=t.match(/subject.{0,3}s\s+concluded\s+gross\s+rent[^$]*\$([\d,]+(?:\s+[\d,]+)*)/i))){totals.grossRenewal=totMoney(m[1]);return;}
 
     if((m=t.match(ROW_MAIN))){
       const u=upsert(units,m[1],pi,money(m[2]));
