@@ -5186,6 +5186,11 @@ const ADDR_GROUPS={'property.addr':ADDR,'ca.addr':CA_ADDR,'tenant.mgmt':MGMT_ADD
 const PARTB={equipment:['Range','Refrigerator','Air Conditioner','Disposal','Dishwasher','Carpet','Drapes'],utilities:['Heating','Cooling','Hot Water','Cooking','Lights, etc.'],services:['Parking','Laundry','Swimming Pool','Tennis Courts','Nursing Care','Linen/Maid Service']};
 const CHECKLIST_FLAT=['Signed cover letter','Signed owner’s checklist','Scope of repair','Appraiser’s transmittal letter','Scope of work','Subject description (+ photos)','Subject’s market area ID','Neighborhood description','Selection-of-comparables narrative','Locator map (subject + comps)','Rent comparability grid (per type)','Adjustments & conclusions narrative','Comparable profiles (+ photo)','Appraiser’s certification','Appraiser’s license copy (if temp)','Gross rents computation (project + SAFMR)','Gross rents vs SAFMR comparison'];
 const SECTION_TITLES={1:'Source documents',2:'Property',3:'Point of contact & signatory',4:'Contract administrator',5:'Appraiser',6:'Rents & unit mix',7:'Items included in rent (Part B)',8:"Owner’s checklist",9:'Tenant notice',10:'OCAF rent adjustment (HUD-9625)',11:'Utility allowance factors',12:'Principals'};
+/* Which rent-adjustment programs this build offers. build-ra.py narrows this to
+   ['rcs'] for the RCS-only release (OCAF/UAF disabled). Keep the default literal
+   ['rcs','ocaf','uaf'] intact and unique — it is the build-ra.py patch anchor. */
+let ENABLED_PROGRAMS=['rcs','ocaf','uaf'];
+function progEnabled(p){return ENABLED_PROGRAMS.indexOf(p)>=0;}
 /* HUD publishes exactly four UAF categories per state (UtilAllow_FY file). */
 const UAF_UTILS=[['oil','Oil'],['gas','Natural Gas'],['electric','Electric'],['water','Water / Sewer / Trash']];
 const D='database',T='this-cycle',O='overridden';
@@ -12249,6 +12254,9 @@ __rcsFill:(opts)=>rcsFillFromParsed(opts),/* The same door for the rent schedule
   /* The route that was unreachable: a record already in the registry under
      the schedule's own name, carrying no tracker code. */
   __openHap:(code)=>openHapProperty(code),
+  /* Test-only hooks for the program gate (Task 6's browser visual check):
+     read the resolved flag, or flip it to simulate a narrowed build. */
+  __progEnabled:(p)=>progEnabled(p),__setEnabledPrograms:(a)=>{ENABLED_PROGRAMS=(a||[]).slice();},
   __fmt:{num:fmtNum,phone:fmtPhone,email:fmtEmail,date:fmtDate}};
 if(typeof module!=='undefined')module.exports=__API;
 if(SELFTEST)window.__t=__API;   // browser gets the identical surface, flag-gated
