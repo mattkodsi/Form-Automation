@@ -11292,10 +11292,10 @@ function renderFormHeader(){
     const sched=scheduledProg();
     const SCHED='The renewal schedule has this as '+(sched==='ocaf'?'an OCAF':'an RCS')+' year \u2014 change it in the schedule';
     const rcsDis=(!on('rcs')&&on('ocaf'))||(sched==='rcs'&&on('rcs'));
-    const ocafDis=(!on('ocaf')&&on('rcs'))||(sched==='ocaf'&&on('ocaf'));
+    const ocafDis=!progEnabled('ocaf')||(!on('ocaf')&&on('rcs'))||(sched==='ocaf'&&on('ocaf'));
     wrap.innerHTML=pill('rcs',rcsDis,(sched==='rcs'&&on('rcs'))?SCHED:(rcsDis?EXCL:(on('rcs')?'Remove the RCS from this package':'Add an RCS to this package')),sched==='rcs'&&on('rcs'))
-      +pill('ocaf',ocafDis,(sched==='ocaf'&&on('ocaf'))?SCHED:(ocafDis?EXCL:(on('ocaf')?'Remove the OCAF from this package':'Add an OCAF to this package')),sched==='ocaf'&&on('ocaf'))
-      +pill('uaf',false,on('uaf')?'Remove the UAF from this package':'Add a UAF to this package')
+      +pill('ocaf',ocafDis,(sched==='ocaf'&&on('ocaf'))?SCHED:(!progEnabled('ocaf')?'Not available in this version':(ocafDis?EXCL:(on('ocaf')?'Remove the OCAF from this package':'Add an OCAF to this package'))),sched==='ocaf'&&on('ocaf'))
+      +pill('uaf',!progEnabled('uaf'),progEnabled('uaf')?(on('uaf')?'Remove the UAF from this package':'Add a UAF to this package'):'Not available in this version')
       +'<span class="prog off dis" title="Coming soon">BBRA</span>';
     wrap.querySelectorAll('[data-progpill]').forEach(x=>x.onclick=()=>toggleCycleProg(x.getAttribute('data-progpill')));
   }
@@ -11316,6 +11316,7 @@ function scheduledProg(){
 }
 async function toggleCycleProg(p){
   if(!activeCid)return;
+  if(!progEnabled(p)){setStatus((PROG_NAMES[p]||p.toUpperCase())+' is not available in this version.');return;}
   const cy=mpdb.listCycles(activePid).find(c=>c.id===activeCid);if(!cy)return;
   const has=cy.programs.indexOf(p)>=0;
   /* Defensive: the pill for the scheduled rent action is not clickable (see
