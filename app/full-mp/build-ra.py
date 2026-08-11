@@ -64,6 +64,13 @@ app = patch(app,
     "mpdb=await makeCosmosDb();",
     'adapter swap')
 
+# ── 1b. RCS-only release: OCAF/UAF are not figured out yet, so this build offers
+#      RCS alone. One flag; the app's four program surfaces read it.
+app = patch(app,
+    "let ENABLED_PROGRAMS=['rcs','ocaf','uaf'];",
+    "let ENABLED_PROGRAMS=['rcs'];",
+    'programs: RCS-only')
+
 # ── 2. HUD SAFMR: Supabase edge function → RA Azure Function ───────────────
 app = patch(app,
     "if(!supaClient){if(manual)setStatus('HUD SAFMR pull needs the hosted backend — sign in first.');return;}",
