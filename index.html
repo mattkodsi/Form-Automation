@@ -11077,7 +11077,7 @@ function newCycleDialog(pre){
      handlers reaching across to each other. */
   el('dlgCancel').onclick=closeModal;
   el('dlgOk').onclick=async()=>{
-    const programs=[];
+    let programs=[];
     if(_fixed)programs.push(_fixProg);
     else{if(rcs.checked)programs.push('rcs');if(ocaf&&ocaf.checked)programs.push('ocaf');}
     if(uaf&&uaf.checked)programs.push('uaf');programs=programs.filter(progEnabled);
