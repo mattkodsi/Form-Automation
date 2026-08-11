@@ -4857,8 +4857,12 @@ function hapProperties(){
       status:H.statusFor(rows,code,today), days:d?H.daysBetween(today,d.deadline):null,
       action:act,
     };
-  });
+  }).filter(hapCardEnabled);
 }
+/* A card is hidden when its next renewal is a program this build does not offer.
+   The RCS-only release drops OCAF-year properties until they reach an RCS year;
+   they carry no other program, so this only ever gates OCAF. */
+function hapCardEnabled(c){return progEnabled('ocaf')||!(c&&c.action&&c.action.programs&&c.action.programs[0]==='ocaf');}
 
 /* The launcher's action and the card's action are the same fact, so they are the
    same derivation. Two renderers computing one answer separately is how one of
