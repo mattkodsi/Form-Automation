@@ -5914,10 +5914,10 @@ function newCycleDialog(pre){
                ?lockedCard('OCAF','Factor adjustment','HUD\u2019s published factor sets the rents.')
                :lockedCard('RCS','Market reset','A rent comparability study sets the rents.'))
             :(card('cyRCS','RCS','Market reset','A rent comparability study sets the rents.')
-             +card('cyOCAF','OCAF','Factor adjustment','HUD\u2019s published factor sets the rents.')))
+             +(progEnabled('ocaf')?card('cyOCAF','OCAF','Factor adjustment','HUD\u2019s published factor sets the rents.'):'')))
     +'</div></div>'
-    +'<div class="dlg-field"><label class="cyaddl">Also in this package</label>'
-    +'<label class="cyopt cyadd"><input type="checkbox" id="cyUAF"> <span><b>UAF</b> \u2014 revise the utility allowances</span></label></div>'
+    +(progEnabled('uaf')?('<div class="dlg-field"><label class="cyaddl">Also in this package</label>'
+    +'<label class="cyopt cyadd"><input type="checkbox" id="cyUAF"> <span><b>UAF</b> \u2014 revise the utility allowances</span></label></div>'):'')
     +'<div class="dlg-field"><label>Rents effective</label>'
     +(_fixed?lockedLine(fmtDateLong(_fixEff),_WHY_EFF)
       :('<input id="cyEff" autocomplete="off" value="'+esc((pre&&pre.effective)?fmtDate(pre.effective):effPh)+'" placeholder="'+esc(effPh||'mm/dd/yyyy')+'">'))+'</div>'
@@ -5934,8 +5934,8 @@ function newCycleDialog(pre){
   el('dlgOk').onclick=async()=>{
     const programs=[];
     if(_fixed)programs.push(_fixProg);
-    else{if(rcs.checked)programs.push('rcs');if(ocaf.checked)programs.push('ocaf');}
-    if(uaf.checked)programs.push('uaf');
+    else{if(rcs.checked)programs.push('rcs');if(ocaf&&ocaf.checked)programs.push('ocaf');}
+    if(uaf&&uaf.checked)programs.push('uaf');programs=programs.filter(progEnabled);
     if(!programs.length){err.textContent='Choose how the rents are being set \u2014 a market reset or a factor adjustment.';return;}
     /* No cyEff input exists when the schedule fixed the date, so read the fact,
        not the control that would have held it. */
