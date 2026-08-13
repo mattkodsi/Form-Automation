@@ -23,12 +23,12 @@ narrows it.)
 
 ```bash
 python3 build-ra.py ../rcs.html   # asserts the seam patches + no-Supabase/no-secret guards; prints "built …"
-node test_db.js                   # data-layer checks, incl. a guard that all three adapters stay in parity
 ```
 
-If a `build-ra.py` assert fails, an anchor string moved in `app.js`/`shell.head.html`.
-Update that patch to the new text (keep the replacement's intent); `RA-PORT.md` lists
-the anchors and documents the RASource seam in full.
+`build-ra.py`'s asserts are the build gate. If one fails, an anchor string moved in
+`app.js`/`shell.head.html` — update that patch (keep the replacement's intent); `RA-PORT.md`
+lists the anchors and documents the RASource seam in full. (The app's own test suites are
+internal and not part of this drop.)
 
 ## The two files you maintain against your backend
 
