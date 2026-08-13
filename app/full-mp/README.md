@@ -4,6 +4,21 @@ Sources for `/rcs.html`. Every `*.js`/`*.html` file **except `db.cosmos.js` and
 `build-ra.py`** is pristine app source shared with our own Supabase build — do not
 hand-edit it. The RA-specific backend swap is applied at build time.
 
+## This is the RCS-only release
+
+This build offers **RCS renewals only** — OCAF and UAF are turned off. `build-ra.py`
+narrows one flag (`ENABLED_PROGRAMS` → `['rcs']`), which the app reads in four places:
+
+- the home page **hides OCAF-year properties** until they reach an RCS year;
+- **"Start a package"** offers only RCS (no OCAF card, no UAF checkbox);
+- the form-header **OCAF and UAF pills are greyed** and unclickable;
+- `createCycle` refuses a non-RCS program even if one slips through the UI.
+
+To give this port OCAF/UAF later, delete the single `programs: RCS-only` patch in
+`build-ra.py` — nothing else changes. (Our own Supabase build keeps all three programs;
+the flag defaults to `['rcs','ocaf','uaf']`, and `build-ra.py` is the only thing that
+narrows it.)
+
 ## Build
 
 ```bash

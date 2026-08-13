@@ -52,6 +52,9 @@ next handoff.
 (the create dialog needs NO patch anymore — `createProperty(name, pickedId)`
    passes the picked registry id through natively; the Supabase adapter ignores
    the 2nd arg, the RA adapter uses it for read-only AUM prefill)
+5. `let ENABLED_PROGRAMS=['rcs','ocaf','uaf'];` — narrowed to `['rcs']` for the
+   **RCS-only release** (OCAF/UAF off). The app reads the flag in four places (home
+   hide, new-package dialog, form pills, `createCycle` guard); see `README.md`.
 
 ## What the RASource seam is ASKED for (2026-08-10)
 
@@ -150,6 +153,12 @@ was a no-op** — the form re-locked and a closed-package save then threw a
 `ReferenceError` from an undefined `c` in `assertCycleOpen`, instead of a clean
 `PACKAGE_CLOSED`). `db.js` and `db.cosmos.js` were already correct; `db.supabase.js`
 is now aligned, and `test_db.js` guards all three against the drift recurring.
+
+**This drop is RCS-only.** OCAF and UAF are turned off via the `ENABLED_PROGRAMS`
+patch (anchor 5): the home hides OCAF-year properties, the new-package dialog offers
+only RCS, and the OCAF/UAF pills are greyed. To re-enable them for this port later,
+delete that one patch — our own Supabase build keeps all three. `README.md` has the
+four surfaces spelled out.
 
 To send a handoff: run the anchor gate, then send this folder + `db.cosmos.js` +
 `build-ra.py`.
