@@ -53,3 +53,8 @@ app/full-mp/FORM-RULES.md
 # audit campaign notes — real property ground-truth data, never commit
 _audit/
 unitrows-after.png
+
+# Shareable demo build (internal tooling — not part of the shipped set)
+app/full-mp/build-demo.py
+app/full-mp/demo-assets/
+Rivermark Affordable Demo.html
