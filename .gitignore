@@ -58,3 +58,7 @@ unitrows-after.png
 app/full-mp/build-demo.py
 app/full-mp/demo-assets/
 Rivermark Affordable Demo.html
+
+# Hosted demo tooling (local only)
+app/full-mp/build-demo-hosted.py
+app/full-mp/demo-seed-gen.py
